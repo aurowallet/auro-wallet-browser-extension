@@ -1,0 +1,84 @@
+@import "../../common.scss";
+.input-indicator {
+  height: 1px;
+}
+.input-indicator-hignlight {
+  background-color: #6d5ffe;
+}
+.input-indicator-err {
+  background-color: #f95051;
+}
+.input-indicator-common {
+  background-color: rgba(203, 203, 203, 1);
+}
+.input-wrapper {
+  width: 100%;
+  padding: 10px 30px 0px;
+}
+.input-wrapper-row { 
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 10px 0 6px;
+  position: relative;
+}
+.pwd-show-status {
+  position: absolute;
+  right: 0px;
+  width: 18px;
+  margin: 0 16px;
+}
+
+.pwd-lable {
+  color: #666666;
+  font-size: $font-size-content;
+  margin-bottom: 0px;
+}
+.create-input {
+  flex: 1;
+  height: 42px;
+  outline-color: rgba(109, 95, 254, 1);
+  border: 1px solid #cccccc;
+  font-size: $font-size-content;
+  color: #3a3a3a;
+  caret-color: rgba(109, 95, 254, 1);
+  border-radius: 6px;
+  &:active {
+    border: 1px solid #6d5ffe;
+  }
+}
+.error-tip {
+  margin: 0;
+  font-size: $font-size-desc;
+  color: #666666;
+  line-height: 20px;
+  margin-left: 4px;
+  padding: 2px;
+}
+
+.error-tip-img {
+  width: 15px;
+  height: 15px;
+}
+
+.error-tip-container-show {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  -webkit-transition: height 0.6s;
+  -moz-transition: height 0.6s;
+  -o-transition: height 0.6s;
+  transition: height 0.6s;
+}
+.error-tip-container-hide {
+  display: none;
+  flex-direction: row;
+  align-items: center;
+  -webkit-transition: 0 0.6s;
+  -moz-transition: 0 0.6s;
+  -o-transition: 0 0.6s;
+  transition: 0 0.6s;
+}
+.error-tip-container-none {
+  display: none;
+}

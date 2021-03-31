@@ -1,0 +1,39 @@
+.node-container {
+  background: #FFFFFF;
+  box-shadow: 0 12px 30px 0 rgba(37,34,117,0.08);
+  border-radius: 10px;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: row;
+  margin-top: 10px;
+  cursor: pointer;
+  &:first-child {
+    margin-top: 0;
+  }
+  .node-info {
+    flex: 1;
+  }
+  .option-img{
+    width: 16px;
+    height: 16px;
+  }
+
+  .option-img-container{
+    padding: 10px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+  .pubkey {
+    font-size: 12px;
+  }
+  .stack {
+    font-size: 10px;
+  }
+  .pubkey,.stack {
+    color: #999999;
+    span {
+      color: #333;
+    }
+  }
+}

@@ -1,0 +1,61 @@
+@import "../../common.scss";
+
+.about-container {
+    padding: 0px 27px;
+    margin-top: 10px;
+    position: relative;
+    flex-direction: column;
+}
+.about-top-container {
+    text-align: center;
+}
+.about-home-logo {
+    width: 60px;
+    height: 60px;
+}
+.about-wallet-name {
+    margin: 0;
+    font-size: $font-size-content;
+    color: #000000;
+}
+.about-wallet-version {
+    margin: 0;
+    font-size: $font-size-content;
+    color: #999999;
+    margin-top: 4px;
+}
+.about-tip-description {
+    margin: 0;
+    color: #000000;
+    font-size: $font-size-content;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.about-item-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+.about-item-title {
+    margin: 0;
+    color: #999999;
+    font-size: $font-size-content;
+}
+.about-item-content {
+    margin: 0;
+    color: #000000;
+    font-size: $font-size-content;
+}
+.about-follow-icon {
+    width: 20px;
+    height: 20px;
+    margin-left: 8px;
+}
+
+.about-follow-container{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}

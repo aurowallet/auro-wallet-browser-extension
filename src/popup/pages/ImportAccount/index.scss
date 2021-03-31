@@ -1,0 +1,28 @@
+@import "../../common.scss";
+
+.import-container {
+    margin: 10px 30px;
+}
+.import-title {
+    margin: 0;
+    font-size: $font-size-content;
+    color: #666666;
+    letter-spacing: 0;
+}
+.text-area-input {
+    margin: 0;
+    width: 100%;
+    resize: none;
+    margin-top: 8px;
+    font-size: $font-size-content;
+    color: #333333;
+    min-height: 180px;
+
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    padding: 20px 20px 20px 20px;
+    outline-color: rgba(109, 95, 254, 1);
+    &:active {
+        border: 1px solid #6d5ffe;
+    }
+}

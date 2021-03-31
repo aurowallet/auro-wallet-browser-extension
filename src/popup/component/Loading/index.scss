@@ -1,0 +1,23 @@
+.loading-container {
+  background: rgba(0, 0, 0, 0.7);
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.common-loading {
+  width: 80px;
+  height: 80px;
+}
+.figure-show {
+  width: 6.25em;
+  height: 6.25em;
+}
+.figure-hide {
+  display: none;
+}

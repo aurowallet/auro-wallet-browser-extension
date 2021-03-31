@@ -1,0 +1,139 @@
+@import "../../common.scss";
+.staking-root {
+  font-family: HelveticaNeue-Medium;
+  width: 100%;
+  height: 600px !important;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  .stacking-content {
+    padding: 20px;
+    padding-bottom: 70px;
+    overflow: scroll;
+    flex: 1;
+  }
+  .module {
+    margin-top: 20px;
+  }
+  .epoch-module {
+    margin-top: 0;
+  }
+  .title {
+    font-size: $font-size-content;
+    color: #020028;
+    letter-spacing: 0;
+  }
+  .panel {
+    position: relative;
+    font-family: HelveticaNeue;
+    margin-top: 12px;
+    font-size: $font-size-desc;
+    line-height: $font-size-desc;
+    background: #ffffff;
+    box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
+    border-radius: 10px;
+    padding: 20px;
+    overflow: hidden;
+    min-height: 100px;
+  }
+  .panel label {
+    color: #333333;
+    letter-spacing: 0;
+    min-width: 60px;
+  }
+  .panel .item {
+    display: flex;
+    margin-top: 12px;
+    &.multi {
+      flex-direction: column;
+      .value {
+        margin-top: 20px;
+      }
+    }
+  }
+  .time-value {
+    > span {
+      background: #f5f5f5;
+      border-radius: 4px;
+      font-size: $font-size-desc-small;
+      line-height: 1;
+      padding: 3px 7px;
+      border: 1px solid #979797;
+    }
+    > span.sep {
+      background: transparent;
+      padding: 3px 4px;
+      border: 0;
+    }
+  }
+  .operate-con {
+    text-align: center;
+    .go-stacking {
+      font-family: HelveticaNeue;
+      font-size: $font-size-content;
+      color: #7055ff;
+      letter-spacing: 0;
+      line-height: 16px;
+      margin: 24px auto 0;
+      display: inline-block;
+      text-align: justify;
+      .double-arrow {
+        width: 14px;
+        margin-left: 3px;
+      }
+    }
+  }
+  .delegation-label {
+    font-family: HelveticaNeue;
+    font-size: $font-size-desc-small;
+    color: #96969a;
+    margin-top: 11px;
+    &.first {
+      margin-top: 0;
+    }
+  }
+  .delegation-value {
+    font-family: HelveticaNeue;
+    font-size: $font-size-desc;
+    color: #000000;
+    margin-top: 5px;
+  }
+  .change-btn {
+    background: #6b5dfb;
+    border-radius: 16px;
+    font-family: HelveticaNeue;
+    font-size: $font-size-desc;
+    color: #ffffff;
+    letter-spacing: 0;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .change-pos {
+    position: absolute;
+    z-index: 1;
+    right: 20px;
+    top: 20px;
+  }
+  .circle-con {
+    position: absolute;
+    right: 35px;
+    top: 20px;
+    width: 75px;
+    height: 75px;
+  }
+  .highlight {
+    color: #737BE4;
+    font-family: HelveticaNeue-Bold;
+  }
+  .CircularProgressbar-path {
+    stroke: url(#circleGradient);
+  }
+  .CircularProgressbar-trail {
+    stroke: #d3e1ed;
+  }
+  .CircularProgressbar-text {
+    fill: #1e1f20;
+    font-size: 16px;
+  }
+}

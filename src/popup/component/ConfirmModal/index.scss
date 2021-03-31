@@ -1,0 +1,54 @@
+@import "../../common.scss";
+
+.confirm-container {
+    background: rgba(0, 0, 0, 0.7);
+    position: absolute;
+    margin: auto;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.confirm-container-hide {
+    display: none;
+}
+.confirm-content-container {
+    width: 100%;
+    background: #ffffff;
+    box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 0px 30px;
+}
+
+.confirm-title {
+    margin: 0;
+    font-size: $font-size-title-small;
+    color: #333333;
+    letter-spacing: 0;
+    text-align: justify;
+    line-height: 15px;
+    text-align: center;
+}
+.confirm-content {
+    margin: 0;
+    font-size: $font-size-content;
+    color: #666666;
+    letter-spacing: 0;
+    margin-top: 18px;
+}
+.confirm-button-container {
+    margin-top: 34px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.confirm-button-container-nocancel {
+    margin-top: 34px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}

@@ -1,0 +1,23 @@
+.App {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.App-header {
+  display: flex;
+  flex-direction: column;
+  width: 375px;
+  height: 600px;
+}
+body {
+  margin: 0;
+}
+p{
+  margin: 0;
+  padding: 0;
+  -webkit-user-select: none;
+  -moz-user-select:none;
+  -o-user-select:none;
+  -ms-user-select:none;
+}
+

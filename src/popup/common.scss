@@ -1,0 +1,27 @@
+//描述文本
+$font-size-title-big: 24px;
+
+//页面标题，button按键，testmodal标题
+$font-size-title: 18px;
+
+//二级标题
+$font-size-title-small: 16px;
+
+//文本内容
+$font-size-content: 14px;
+
+//描述文本
+$font-size-desc: 12px;
+
+//二级描述文本
+$font-size-desc-small: 12px;
+
+$page-margin-top: 0px;
+
+.click-cursor {
+    cursor: pointer;
+}
+
+.click-cursor-disable {
+    cursor: not-allowed;
+}

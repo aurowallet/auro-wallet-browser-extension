@@ -1,0 +1,48 @@
+@import "../../common.scss";
+.receive-container {
+    text-align: center;
+    margin-top: 25px;
+}
+.receive-content-container {
+    background: #ffffff;
+    box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
+    border-radius: 10px;
+    border-radius: 10px;
+    padding: 20px 30px 40px 30px;
+    margin: 25px 28px;
+}
+.qr-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.receive-address-container {
+    text-align: center;
+}
+.receive-address-title {
+    margin: 0;
+    font-size: $font-size-desc;
+    color: #999999;
+    margin-top: 5px;
+}
+.receive-address-detail {
+    margin: 0;
+    font-size: $font-size-desc;
+    color: #404040;
+    text-align: center;
+    word-wrap: break-word;
+}
+.receive-bottom-container {
+    margin-top: 32px;
+}
+.receive-home-logo {
+    width: 75px;
+    height: 75px;
+}
+
+.receive-scan-tip {
+    margin: 0;
+    font-size: $font-size-desc;
+    color: #999999;
+    margin-top: 5px;
+}

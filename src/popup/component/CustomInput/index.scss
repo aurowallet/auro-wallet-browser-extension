@@ -1,0 +1,61 @@
+@import "../../common.scss";
+.input-indicator-1 {
+  height: 1px;
+  width: 315px;
+}
+.input-indicator-hignlight-1 {
+  background-color: #6d5ffe;
+}
+.input-indicator-err-1 {
+  background-color: #f95051;
+}
+.input-indicator-common-1 {
+  background-color: rgba(203, 203, 203, 1);
+}
+.input-wrapper-1 {
+  width: 100%;
+  padding: 2px 30px;
+}
+.input-wrapper-row-1 {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 10px 0 6px;
+}
+.pwd-show-status-1 {
+  width: 18px;
+  margin: 0 16px;
+}
+.pwd-lable-1 {
+  margin: 0;
+  font-size: $font-size-content;
+  color: #666666;
+  letter-spacing: 0;
+  line-height: 16px;
+}
+.create-input-1 {
+  flex: 1;
+  height: 42px;
+  border: 1px solid #cccccc;
+  outline-color: rgba(109, 95, 254, 1);
+  border-radius: 6px;
+  font-size: $font-size-content;
+  caret-color: rgba(109, 95, 254, 1);
+  color: #333333;
+  padding: 0 10px;
+  &:active {
+    border: 1px solid #6d5ffe;
+  }
+}
+
+.lable-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.pwd-lable-desc-1 {
+  margin: 0;
+  font-size: $font-size-desc-small;
+  color: #666666;
+}

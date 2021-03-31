@@ -1,0 +1,21 @@
+@import "../../common.scss";
+.security-content-container {
+    display: flex;
+    flex-direction: row;
+    padding: 16px 0px;
+    margin: 0px 30px;
+    justify-content: space-between;
+    border-bottom: 1px solid #eeeeee;
+    align-items: center;
+}
+
+.security-content-title {
+    margin: 0;
+    font-size: $font-size-content;
+    color: #01000d;
+    line-height: 16px;
+}
+.sec-arrow {
+    width: 8px;
+    height: 13px;
+}

@@ -1,0 +1,52 @@
+@import "../../common.scss";
+
+.welcome_container {
+  margin: 0; /*清除默认样式*/
+  height: 100%;
+  background-color: white;
+  position: relative;
+  text-align: center;
+}
+
+.iconImg {
+  width: 40px;
+  height: 40px;
+}
+
+.topContainer {
+  padding: 0 21px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.middleContainer {
+  margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+.bottomTip {
+  position: absolute;
+  bottom: 27px;
+  margin: auto;
+  left: 0;
+  right: 0;
+  font-size: $font-size-desc;
+  color: #b9b9b9;
+}
+
+.language-container {
+  position: absolute;
+  right: 30px;
+  top: 50px;
+}
+.welcome-arrow {
+  width: 13px;
+  height: 8px;
+}
+.welcome-left-bg{
+  width: 375px;
+  height: 262px;
+}

@@ -1,0 +1,46 @@
+@import "../../common.scss";
+
+.create_container {
+  margin: 0; 
+  height: 100%;
+  background-color: white;
+  position: relative;
+}
+.topContainer {
+  width: 100%;
+  margin: 34px 0px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 25px;
+}
+.logo {
+  width: 43px;
+  height: 43px;
+}
+.welcome-btn {
+  padding: 0px 52px;
+  color: #ffffff;
+  font-size: $font-size-title;
+}
+.welcome-btn-disable {
+  padding: 0px 52px;
+  background: rgba(109, 95, 254, 0.6);
+}
+
+.welcome-btn-usable {
+  padding: 0px 52px;
+  background: rgba(109, 95, 254, 1);
+}
+.bottom-container {
+  position: absolute;
+  bottom: 20px;
+  text-align: center;
+  margin-left: 0px;
+  width: 100%;
+}
+.create-desc {
+  padding: 10px 30px;
+  font-size: $font-size-desc;
+  color: rgba(185, 185, 185, 1);
+}
