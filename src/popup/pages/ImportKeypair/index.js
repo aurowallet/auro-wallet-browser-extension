@@ -37,7 +37,9 @@ class ImportKeypair extends React.Component {
       })
     }
   }
-  goToCreate = () => {
+  goToCreate = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
     Loading.show()
     sendMsg({
       action: MINA_IMPORT_KEY_STORE,
@@ -124,7 +126,7 @@ class ImportKeypair extends React.Component {
       />
     )
   }
-  renderDescContainer=(content1,content2)=>{ 
+  renderDescContainer=(content1,content2)=>{
     return(<div className={"keypair-input-container-desc"}>
         <p className={"import-title-keystore"}>{content1}</p>
         <p className={"import-title-keystore"}>{content2}</p>
@@ -140,12 +142,12 @@ class ImportKeypair extends React.Component {
       <CustomView
         title={getLanguage('importKeyStore')}
         history={this.props.history}>
-        <div className="import-keypair-container">
+        <form className="import-keypair-container" onSubmit={this.goToCreate}>
           {this.renderContentContainer(getLanguage("pleaseInputKeyPair"))}
           {this.renderInput()}
           {this.renderPwdInput()}
           {this.renderDescContainer(getLanguage("importAccount_2"),getLanguage("importAccount_3"))}
-        </div>
+        </form>
         {this.renderBotton()}
       </CustomView>
     )
