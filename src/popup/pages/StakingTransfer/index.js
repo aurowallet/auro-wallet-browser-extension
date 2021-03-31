@@ -185,15 +185,14 @@ class StakingTransfer extends React.Component {
     this.modal.current.setModalVisable(false)
   }
   onConfirm = () => {
-    //todo ceshi
-  /*  if (!addressValid(this.state.nodeAddress)) {
+    if (!addressValid(this.state.nodeAddress)) {
       Toast.info(getLanguage('sendAddressError'))
       return
     }
     if (this.state.fee > this.props.balance) {
       Toast.info(getLanguage('balanceNotEnough'));
       return;
-    }*/
+    }
     this.modal.current.setModalVisable(true)
   }
   onMemoChange = (e) => {
