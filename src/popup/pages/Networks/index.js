@@ -159,7 +159,6 @@ class NetworkPage extends React.Component {
         return false
     }
     onAddNetConfig = () => {
-        // 查看是否符合规则
         if (!urlValid(this.state.netUrl)) {
             Toast.info(getLanguage("urlError_1"))
             return
@@ -168,7 +167,6 @@ class NetworkPage extends React.Component {
             Toast.info(getLanguage('urlError_2'))
             return
         }
-        // 查看是否已存在
         setTimeout(() => {
             this.onCloseModal()
             let addItem = {

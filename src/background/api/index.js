@@ -11,7 +11,7 @@ import { getBalanceBody, getStackTxSend, getTxHistoryBody, getTxSend, getTxStatu
  */
 export async function getBalance(address) {
   let txBody = getBalanceBody(address)
-  let result = await startFetchMyQuery(txBody, GQL_URL)
+  let result = await startFetchMyQuery(txBody, GQL_URL).catch(()=>{})
   return result
 }
 /**
@@ -22,15 +22,6 @@ export async function getTxStatus(paymentId) {
   let txBody = getTxStatusBody(paymentId)
   let result = await startFetchMyQuery(txBody, GQL_URL)
   return result
-}
-
-/**
- * 获取交易记录
- */
-export async function getTxHistory(address) {
-  let txBody = getTxHistoryBody(address)
-  let res = await startFetchMyQuery(txBody, GQL_URL)
-  return res
 }
 
 /**
@@ -145,12 +136,7 @@ export async function getAboutInfo(){
  */
 export async function getTransactionList(address){
   let txUrl = TRANSACTION_URL+ "/transactions?account="+address +"&limit="+TX_LIST_LENGTH//TRANSACTION_URL+address
-  let txList = await commonFetch(txUrl).catch(error=>{
-    return {error}
-   })
-   if(txList.error){
-    return []
-   }
+  let txList = await commonFetch(txUrl).catch(()=>[])
    return txList
 
 }
@@ -162,7 +148,7 @@ export async function getTransactionList(address){
  */
 export async function getPendingTxList(address){
   let txBody = getPendingTxBody(address)
-  let result = await startFetchMyQuery(txBody, GQL_URL)
+  let result = await startFetchMyQuery(txBody, GQL_URL).catch(()=>[])
   let list =  result.pooledUserCommands ||[]
   return list
 }
@@ -172,7 +158,7 @@ export async function getPendingTxList(address){
  */
  export async function getBalanceBatch(addressList) {
   let txBody = getBalanceBatchBody(addressList)
-  let result = await startFetchMyQuery(txBody, GQL_URL)
+  let result = await startFetchMyQuery(txBody, GQL_URL).catch(()=>[])
   return result
 }
 

@@ -33,7 +33,6 @@ class RestoreAccount extends React.Component {
     }
   }
   goToCreate = () => {
-    // 如果长度不够，则提示，长度不符合
     let mnemonic = this.state.mnemonic
     mnemonic = trimSpace(mnemonic)
     let mneList = mnemonic.split(" ")
@@ -54,7 +53,6 @@ class RestoreAccount extends React.Component {
       }
     },
       async (currentAccount) => {
-        // 如果有账户
         this.props.updateCurrentAccount(currentAccount)
         this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE)
         this.props.history.push({

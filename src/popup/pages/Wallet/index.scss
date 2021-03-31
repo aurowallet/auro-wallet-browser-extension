@@ -29,6 +29,7 @@
     font-size: $font-size-desc;
     color: #666666;
     margin-top: 14px;
+    hyphens: auto; 
 }
 .wallet-home-logo {
     width: 60px;
@@ -86,6 +87,7 @@
     font-size: $font-size-desc;
     color: #333333;
     margin-left: 14px;
+    hyphens: auto; 
 }
 .reminder-container-txHistory {
     min-height: 150px;

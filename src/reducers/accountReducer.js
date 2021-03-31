@@ -100,7 +100,6 @@ const accountInfo = (state = initState, action) => {
             }
             txPendingList = txPendingList.reverse()
             txPendingList = pendingTx(txPendingList)
-            // txList = resultTx(txList)
             return {
                 ...state,
                 txList:[...txPendingList,...txList]

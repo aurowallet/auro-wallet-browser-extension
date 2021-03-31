@@ -30,7 +30,6 @@ class HomePage extends React.Component {
   }
 
   componentDidMount() {
-    // 更新网络类型
     this.fetchLocalNetConfig()
   }
   getLocalNetConfig = () => {
@@ -51,7 +50,6 @@ class HomePage extends React.Component {
     }
     this.props.updateNetConfig(config)
     return config
-    // 更新reducer
   }
   fetchLocalNetConfig = () => {
     let config = this.getLocalNetConfig()

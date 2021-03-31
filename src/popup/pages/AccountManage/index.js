@@ -63,6 +63,9 @@ class AccountManagePage extends React.Component {
     }
   }
   setBalance2Account=(accountList,balanceList)=>{
+    if(balanceList && balanceList.length == 0){
+      return accountList
+    }
     for (let index = 0; index < accountList.length; index++) {
       const account = accountList[index];
       let accountBalance = balanceList[account.address]
@@ -117,8 +120,6 @@ class AccountManagePage extends React.Component {
     });
   }
   goImport = () => {
-    //在这里处理
-    // 传递 账户数量就可以
     let accountTypeList = this.state.accountList.filter((item, index) => {
       return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE
     })

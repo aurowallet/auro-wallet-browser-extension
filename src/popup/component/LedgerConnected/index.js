@@ -30,7 +30,7 @@ export class LedgerConnected extends React.Component {
     return (<div className={'ledger-connect-tip-container'}>
       {
         this.props.tips.map((tip)=>{
-          return  <p className="wallet-tip-description" key={tip}>{getLanguage(tip)}</p>
+          return <p className="wallet-tip-description" key={tip} dangerouslySetInnerHTML={{__html:getLanguage(tip)}}/>
         })
       }
     </div>)

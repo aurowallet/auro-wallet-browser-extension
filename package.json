@@ -36,6 +36,7 @@
     "react-circular-progressbar": "^2.0.3",
     "react-compound-slider": "3.3.1",
     "react-dom": "^17.0.1",
+    "react-helmet": "6.1.0",
     "react-i18next": "^11.8.2",
     "react-redux": "^7.2.2",
     "react-router": "5.1.2",

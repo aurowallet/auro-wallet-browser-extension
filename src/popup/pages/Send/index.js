@@ -96,7 +96,6 @@ class SendPage extends React.Component {
         fee: feeRecom[1].value
       })
     }
-    // 请求余额
     let account = await getBalance(address)
     if (account.account) {
       this.props.updateNetAccount(account.account)
@@ -422,7 +421,7 @@ class SendPage extends React.Component {
   onClickFee = (item, index) => {
     this.callSetState({
       feeSelect: index,
-      fee: item.fee//获取网络的fee
+      fee: item.fee
     })
   }
   renderButtonFee = () => {

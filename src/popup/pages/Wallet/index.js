@@ -10,7 +10,7 @@ import pointNormal from "../../../assets/images/pointNormal.png";
 import receive from "../../../assets/images/receive.png";
 import reminder from "../../../assets/images/reminder.png";
 import txArrow from "../../../assets/images/txArrow.png";
-import { getBalance, getPendingTxList, getTransactionList, getTxHistory } from "../../../background/api";
+import { getBalance, getPendingTxList, getTransactionList } from "../../../background/api";
 import { cointypes, EXPLORER_URL } from '../../../../config';
 import { getLanguage } from "../../../i18n";
 import { updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
@@ -77,7 +77,6 @@ class Wallet extends React.Component {
     if (this.props.currentAccount.address && nextProps.currentAccount.address !== this.props.currentAccount.address) {
       this.fetchData(nextProps.currentAccount.address)
     }
-    // this.setBottomTipType()
   }
 
   setBottomTipType = () => {
@@ -86,7 +85,7 @@ class Wallet extends React.Component {
     let lastType = this.state.bottomTipType
 
     if(netConfig.netType !== NET_CONFIG_DEFAULT){
-      lastType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT //BOTTOM_TYPE_NOT_DEFAULT
+      lastType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT 
     }
     if (lastType !== this.state.bottomTipType) {
       this.callSetState({
@@ -101,7 +100,6 @@ class Wallet extends React.Component {
   }
   fetchData = async (address) => {
     let netConfig = this.props.netConfig
-    // 请求余额
     let account = await getBalance(address)
     if (account.error) {
       Toast.info(getLanguage('nodeError'))
@@ -112,11 +110,9 @@ class Wallet extends React.Component {
       this.callSetState({
         isLoading:true
       })
-      // 请求交易记录
       let txList = await getTransactionList(address)
       let txPendingList = await getPendingTxList(address)
       let newList = [...txPendingList,...txList]
-      //获取pending记录
       
         if(newList.length>0){
           this.callSetState({
@@ -268,7 +264,6 @@ class Wallet extends React.Component {
             <p className="tx-item-address">{showAddress}</p>
             <p className={cx({
               "tx-item-amount":true,
-              // [statusColor]: true
               })}>{amount} {cointypes.symbol}</p>
           </div>
           <div className={'tx-bottom-container'}>

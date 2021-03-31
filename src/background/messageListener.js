@@ -49,7 +49,7 @@ function internalMessageListener(message, sender, sendResponse) {
     case MINA_SET_UNLOCKED_STATUS:
       sendResponse(apiService.setUnlockedStatus(payload));
       break;
-    case MINA_APP_SUBMIT_PWD:// TODO
+    case MINA_APP_SUBMIT_PWD:
       apiService.submitPassword(payload).then((res, err) => {
         sendResponse(res);
       })
@@ -63,7 +63,7 @@ function internalMessageListener(message, sender, sendResponse) {
         sendResponse(account);
       })
       break;
-    case MINA_IMPORT_HD_ACCOUNT:// TODO
+    case MINA_IMPORT_HD_ACCOUNT:
       apiService.addImportAccount(payload.privateKey, payload.accountName).then((account) => {
         sendResponse(account);
       })
@@ -78,7 +78,7 @@ function internalMessageListener(message, sender, sendResponse) {
         sendResponse(account);
       })
       break;
-    case MINA_CHANGE_DELETE_ACCOUNT:// TODO
+    case MINA_CHANGE_DELETE_ACCOUNT:
       apiService.deleteAccount(payload.address, payload.password).then((account) => {
         sendResponse(account);
       })
@@ -86,17 +86,17 @@ function internalMessageListener(message, sender, sendResponse) {
     case MINA_CHECKOUT_PASSWORD:
       sendResponse(apiService.checkPassword(payload.password))
       break;
-    case MINA_GET_MNE:// TODO
+    case MINA_GET_MNE:
       apiService.getMnemonic(payload.password).then((mne) => {
         sendResponse(mne);
       })
       break;
-    case MINA_GET_PRIVATE_KEY:// TODO
+    case MINA_GET_PRIVATE_KEY:
       apiService.getPrivateKey(payload.address, payload.password).then((privateKey) => {
         sendResponse(privateKey);
       })
       break;
-    case MINA_CHANGE_SEC_PASSWORD:// TODO
+    case MINA_CHANGE_SEC_PASSWORD:
       apiService.updateSecPassword(payload.oldPassword, payload.password).then((account) => {
         sendResponse(account);
       })

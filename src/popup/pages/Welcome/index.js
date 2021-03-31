@@ -46,9 +46,7 @@ class Welcome extends React.Component {
   }
 
   initLocal = () => {
-    //初始化
     get(null).then(dataObj => {
-      //如果没有数据，则在这里申请创建新的助记词
       if (dataObj && !dataObj.keyringData) {
         this.callSetState({
           newAccount: true
@@ -80,7 +78,6 @@ class Welcome extends React.Component {
     }
     )
   };
-  //创建
   goToCreate = () => {
     if (this.state.newAccount) {
       let mne = generateMne()

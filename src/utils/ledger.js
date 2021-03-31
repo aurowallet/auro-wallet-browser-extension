@@ -116,7 +116,6 @@ export async function requestSignPayment (app, body) {
 }
 
 async function requestSign(app, body, type) {
-  // fromAddress, toAddress, fee, nonce, memo
   let amount = body.amount || 0
   let decimal = new BigNumber(10).pow(cointypes.decimals)
   let sendFee = new BigNumber(body.fee).multipliedBy(decimal).toNumber()

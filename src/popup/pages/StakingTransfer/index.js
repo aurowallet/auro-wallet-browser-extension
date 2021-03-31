@@ -23,7 +23,7 @@ import {addressSlice} from "../../../utils/utils";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import {ACCOUNT_TYPE} from "../../../constant/walletType";
 import {checkLedgerConnect, requestSignDelegation} from "../../../utils/ledger";
-
+import modalClose from "../../../assets/images/modalClose.png";
 const FEE_RECOMMED_DEFAULT = 1
 const FEE_RECOMMED_CUSTOM = -1
 
@@ -93,7 +93,6 @@ class StakingTransfer extends React.Component {
         fee: feeRecom[1].value
       })
     }
-    // 请求余额
     let account = await getBalance(address)
     if (account.account) {
       this.props.dispatch(updateNetAccount(account.account))
@@ -206,7 +205,7 @@ class StakingTransfer extends React.Component {
   onClickFee = (item, index) => {
     this.callSetState({
       feeSelect: index,
-      fee: item.fee//获取网络的fee
+      fee: item.fee
     })
   }
   onFeeInput = (e) => {
@@ -221,7 +220,6 @@ class StakingTransfer extends React.Component {
     })
   }
   setBtnStatus = () => {
-    // 检查余额
   }
   onNonceInput = (e) => {
     let nonce = e.target.value
@@ -271,6 +269,9 @@ class StakingTransfer extends React.Component {
         <img className={"confirm-loading-img"} src={loadingCommon} />
       </div>)
   }
+  onCloseModal = () => {
+    this.modal.current.setModalVisable(false)
+  }
   renderConfirmModal = () => {
     let title = this.state.confirmModalLoading ? "waitLedgerConfirm":"sendDetail"
     return (<TestModal
@@ -279,6 +280,7 @@ class StakingTransfer extends React.Component {
       title={getLanguage(title)}
     >
       {this.state.confirmModalLoading ? this.renderLoadingView(): this.renderConfirmView()}
+      {this.state.confirmModalLoading ? <></> : <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />}
     </TestModal>)
   }
   renderConfirmView = () => {

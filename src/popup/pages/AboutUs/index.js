@@ -75,10 +75,11 @@ class AboutUs extends React.Component {
     if (!this.state.changelog) {
       return <></>
     }
+    let showLog = "mina-wallet-chrome-extension"//VERSION_CONFIG
     return (
       <div className={"about-item-container"}>
         <p className={"about-item-title"}>{getLanguage('versionInfo')}</p>
-        <p onClick={() => this.onClick(this.state.changelog)} className={"about-item-content click-cursor"}>{this.state.changelog}</p>
+        <p onClick={() => this.onClick(this.state.changelog)} className={"about-item-content click-cursor"}>{showLog}</p>
       </div>
     )
   }

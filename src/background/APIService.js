@@ -21,7 +21,7 @@ const default_account_name = "Account 1"
 class APIService {
     constructor() {
         this.memStore = new ObservableStore({
-            isUnlocked: false,//需要处理一下，输完密码就解锁，还是备份完助记词在解锁
+            isUnlocked: false,
             data: '',
             password: '',
             currentAccount: {},
@@ -58,18 +58,13 @@ class APIService {
     }
     setUnlockedStatus(status) {
         let account = this.memStore.getState().currentAccount
-        if (!status) {//如果是已锁定，则把私钥和助记词清除
+        if (!status) {
             this.memStore.updateState({ currentAccount: { ...account } })
         }
         this.memStore.updateState({ isUnlocked: status })
     };
     getCurrentAccount = async () => {
-        // 先去拿账户,有账户，
-        // 则去判断是否需要锁定
-        // 无账户，则直接进入欢迎页
-        let localAccount = await get("keyringData")//保存在本地插件存储
-        // 如果有，说明有账户,则直接返回账户
-        // 如果没有，则查看是否处于锁定
+        let localAccount = await get("keyringData")
         let currentAccount = this.getStore().currentAccount
         let isUnlocked = this.getStore().isUnlocked
         if (localAccount && localAccount.keyringData) {
@@ -83,13 +78,13 @@ class APIService {
     createPwd = (password) => {
         this.memStore.updateState({ password })
     }
-    createAccount = async (mnemonic) => {//创建钱包是不要wallet的
+    createAccount = async (mnemonic) => {
         let wallet = await importWalletByMnemonic(mnemonic)
         let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
         const account = {
             address: wallet.pubKey,
-            privateKey: priKeyEncrypt,//wallet.priKey,
-            type: ACCOUNT_TYPE.WALLET_INSIDE,//"import",
+            privateKey: priKeyEncrypt,
+            type: ACCOUNT_TYPE.WALLET_INSIDE,
             hdPath: wallet.hdIndex,
             accountName: default_account_name,
             typeIndex: 1
@@ -109,15 +104,12 @@ class APIService {
 
         encryptData = await encryptUtils.encrypt(this.getStore().password, keyringData)
         this.memStore.updateState({ data: keyringData })
-        save({ keyringData: encryptData })//保存在本地插件存储
-        // 在保存一下在 本地存储
+        save({ keyringData: encryptData })
         this.memStore.updateState({ currentAccount: account })
-        // this.memStore.updateState({ isUnlocked: true })
         this.setUnlockedStatus(true)
 
         return this.getAccountWithoutPrivate(account)
     }
-    //做一下处理
     getAllAccount = () => {
         let data = this.getStore().data
         let accountList = data[0].accounts
@@ -132,16 +124,13 @@ class APIService {
         }
     }
     addHDNewAccount = async (accountName) => {
-        // 先根据助记词生成私钥
-        // 然后将地址加密
         let data = this.getStore().data
         let accounts = data[0].accounts
 
         let createList = accounts.filter((item, index) => {
-            return item.type === ACCOUNT_TYPE.WALLET_INSIDE//"import"
+            return item.type === ACCOUNT_TYPE.WALLET_INSIDE
         })
         if (createList.length > 0) {
-            // 轮训拿到所有的index
             let maxHdIndex = createList[createList.length - 1].hdPath
             let lastHdIndex = maxHdIndex + 1
             let typeIndex = createList[createList.length - 1].typeIndex + 1
@@ -154,8 +143,8 @@ class APIService {
 
             const account = {
                 address: wallet.pubKey,
-                privateKey: priKeyEncrypt,//wallet.priKey,
-                type: ACCOUNT_TYPE.WALLET_INSIDE,//"import",
+                privateKey: priKeyEncrypt,
+                type: ACCOUNT_TYPE.WALLET_INSIDE,
                 hdPath: lastHdIndex,
                 accountName,
                 typeIndex: typeIndex
@@ -165,8 +154,7 @@ class APIService {
             let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
 
             this.memStore.updateState({ data: data })
-            save({ keyringData: encryptData })//保存在本地插件存储
-            // 在保存一下在 本地存储
+            save({ keyringData: encryptData })
             this.memStore.updateState({ currentAccount: account })
             return this.getAccountWithoutPrivate(account)
         }
@@ -215,8 +203,7 @@ class APIService {
             let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
 
             this.memStore.updateState({ data: data })
-            save({ keyringData: encryptData })//保存在本地插件存储
-            // 在保存一下在 本地存储
+            save({ keyringData: encryptData })
             this.memStore.updateState({ currentAccount: account })
             return this.getAccountWithoutPrivate(account)
         } catch (error) {
@@ -270,7 +257,7 @@ class APIService {
 
             const account = {
                 address: address,
-                type: ACCOUNT_TYPE.WALLET_LEDGER,//"outside",
+                type: ACCOUNT_TYPE.WALLET_LEDGER,
                 accountName,
                 typeIndex
             }
@@ -279,8 +266,7 @@ class APIService {
             let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
 
             this.memStore.updateState({ data: data })
-            save({ keyringData: encryptData })//保存在本地插件存储
-            // 在保存一下在 本地存储
+            save({ keyringData: encryptData })
             this.memStore.updateState({ currentAccount: account })
             return this.getAccountWithoutPrivate(account)
         } catch (error) {
@@ -302,7 +288,7 @@ class APIService {
 
                 let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
                 this.memStore.updateState({ data: data })
-                save({ keyringData: encryptData })//保存在本地插件存储
+                save({ keyringData: encryptData })
                 this.memStore.updateState({ currentAccount: account })
             }
         }
@@ -317,8 +303,6 @@ class APIService {
         }
     }
     changeAccountName = async (address, accountName) => {
-        // 先查找到修改的账户
-        // 修改用户名
         let data = this.getStore().data
         let accounts = data[0].accounts
         let account
@@ -329,7 +313,7 @@ class APIService {
                 account = accounts[index]
                 let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
                 this.memStore.updateState({ data: data })
-                save({ keyringData: encryptData })//保存在本地插件存储
+                save({ keyringData: encryptData })
                 break
             }
         }
@@ -351,8 +335,8 @@ class APIService {
             data[0].accounts = accounts
             let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
             this.memStore.updateState({ data: data, currentAccount })
-            save({ keyringData: encryptData })//保存在本地插件存储
-            return this.getAccountWithoutPrivate(currentAccount)//{accountList:data[0].accounts}
+            save({ keyringData: encryptData })
+            return this.getAccountWithoutPrivate(currentAccount)
         } else {
             return { error: 'passwordError' ,type:"local"}
         }
@@ -369,8 +353,6 @@ class APIService {
         }
     }
     updateSecPassword = async (oldPwd, pwd) => {
-        // 先解开之前的加密数据
-        // 将原先的加密数据重新加密存储
         try {
             let isCorrect = this.checkPassword(oldPwd)
             if (isCorrect) {
@@ -384,13 +366,9 @@ class APIService {
                 let newAccounts = []
                 for (let index = 0; index < accounts.length; index++) {
                     const account = accounts[index];
-                    //用旧密码加密的私钥
                     let privateKeyEn = account.privateKey
-                    //用旧密码 解密私钥
                     let privateKey = await encryptUtils.decrypt(oldPwd, privateKeyEn)
-                    // 用新密码加密私钥
                     privateKey = await encryptUtils.encrypt(pwd, privateKey)
-                    //更新数组数据
                     let newAccount = {
                         ...account,
                         privateKey,
@@ -400,7 +378,6 @@ class APIService {
                 data[0].accounts = newAccounts
                 data[0].mnemonic = mnemonic
 
-                // 修改密码。本地保存的私钥，重新加密 TODO
                 let encryptData = await encryptUtils.encrypt(pwd, data)
                 this.memStore.updateState({ password: pwd })
                 await removeValue("keyringData")
@@ -454,10 +431,6 @@ class APIService {
                 return { error: signedTx.error }
             }
             let postRes = await sendTx(signedTx.payload, signedTx.signature).catch(error => { error })
-            // let detail = postRes.sendPayment && postRes.sendPayment.payment || {}
-            // if(detail.id){
-            //     this.notification(detail.id,detail.from)
-            // }
             return { ...postRes }
         } catch (err) {
             return { error: err }
@@ -472,10 +445,6 @@ class APIService {
                 return { error: signedTx.error }
             }
             let postRes = await sendStackTx(signedTx.payload, signedTx.signature).catch(error => { error })
-            // let detail = postRes.sendDelegation && postRes.sendDelegation.delegation || {}
-            // if(detail.from){
-            //     this.notification(detail.id,detail.from)
-            // }
             return { ...postRes }
         } catch (err) {
             return { error: err }
@@ -504,8 +473,6 @@ class APIService {
     }
     fetchTransactionStatus = (paymentId, hash) => {
         getTxStatus(paymentId).then((data) => {
-            // 只要不是pending，就继续请求
-            // 不然就设置最终状态
             if (data && data.transactionStatus && (
                 (data.transactionStatus === STATUS.TX_STATUS_INCLUDED
                     || data.transactionStatus === STATUS.TX_STATUS_UNKNOWN)

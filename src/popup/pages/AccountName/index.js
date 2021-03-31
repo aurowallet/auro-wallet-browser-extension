@@ -56,7 +56,6 @@ class AccountName extends React.Component {
       this.callSetState({
         accountName: name
       },() => {
-        // 校验用户名长度
         let checkResult = nameLengthCheck(this.state.accountName)
         if (checkResult) {
           this.callSetState({

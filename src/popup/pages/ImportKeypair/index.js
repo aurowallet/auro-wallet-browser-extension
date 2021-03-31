@@ -51,7 +51,7 @@ class ImportKeypair extends React.Component {
     },
       async (account) => {
         Loading.hide()
-        if (account.error) {//如果是数组，且 则返回正确
+        if (account.error) {
           if(account.type === "local"){
             Toast.info(getLanguage(account.error))
           }else{
@@ -61,7 +61,7 @@ class ImportKeypair extends React.Component {
         } else {
           this.props.updateCurrentAccount(account)
           setTimeout(() => {
-            this.props.history.replace({ // todo  返回的路由有问题
+            this.props.history.replace({ 
               pathname: "/account_manage",
             })
           }, 300);
