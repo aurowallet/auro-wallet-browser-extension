@@ -36,6 +36,7 @@ class LedgerConnect extends React.Component {
     }
   }
   onDisconnected = () => {
+    console.log('on disconnected')
     this.callSetState({
       connected: false
     })
@@ -45,13 +46,16 @@ class LedgerConnect extends React.Component {
     let opened = this.state.opened
     try {
       if (this.transport) {
-        console.log('create it!')
+        console.log('destroy port')
         this.transport.off('disconnect', this.onDisconnected)
-        this.transport.close()
+        try {
+          await this.transport.close()
+        } catch (e) {
+
+        }
       }
-      this.transport = await Transport.create();
+      this.transport = await Transport.create()
       connected = true
-      console.log('onDisconnected', this.onDisconnected)
       this.transport.on('disconnect', this.onDisconnected)
     } catch (e) {
       console.log(e, 'port error')

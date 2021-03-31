@@ -89,10 +89,10 @@ class AccountName extends React.Component {
         params: {
           "accountName": accountText
         },
-      }) 
+      })
     } else if(fromType === ACCOUNT_NAME_FROM_TYPE.LEDGER){
       await checkLedgerConnect()
-      this.props.history.push({
+      this.props.history.replace({
         pathname: "/ledger_import",
         params: {
           "accountName": accountText
@@ -112,7 +112,7 @@ class AccountName extends React.Component {
         payload: { accountName: accountText }
       }, (account) => {
         this.props.updateCurrentAccount(account)
-        this.props.history.replace({ 
+        this.props.history.replace({
           pathname: "/account_manage",
         })
       })
@@ -134,7 +134,7 @@ class AccountName extends React.Component {
   onSubmit = (event) => {
     event.preventDefault();
   }
-  render() { 
+  render() {
     return (
       <CustomView
         title={getLanguage("accountName")}
