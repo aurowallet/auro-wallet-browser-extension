@@ -36,7 +36,6 @@ class LedgerConnect extends React.Component {
     }
   }
   onDisconnected = () => {
-    console.log('on disconnected')
     this.callSetState({
       connected: false
     })
@@ -46,7 +45,6 @@ class LedgerConnect extends React.Component {
     let opened = this.state.opened
     try {
       if (this.transport) {
-        console.log('destroy port')
         this.transport.off('disconnect', this.onDisconnected)
         try {
           await this.transport.close()
@@ -58,22 +56,18 @@ class LedgerConnect extends React.Component {
       connected = true
       this.transport.on('disconnect', this.onDisconnected)
     } catch (e) {
-      console.log(e, 'port error')
       connected = false
     }
 
-    console.log('transport', this.transport)
     try {
       this.app = new MinaLedgerJS(this.transport)
       const result = await this.app.getAppName()
-      console.log('result', result);
       if (result.name === 'Mina') {
         opened = true
       } else {
         opened = false
       }
     } catch (e) {
-      console.log('app e', e)
       opened = false
     }
     this.callSetState({
@@ -81,13 +75,11 @@ class LedgerConnect extends React.Component {
       connected
     })
     if (opened && connected) {
-      console.log('send message')
       sendMsg({
         action: LEDGER_CONNECTED_SUCCESSFULLY,
       },()=>{
         this.transport.close()
         this.transport = null
-        console.log('close ledger')
         this.callSetState({
           connectCompleted: true
         })

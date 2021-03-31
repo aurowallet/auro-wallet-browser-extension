@@ -32,7 +32,6 @@ function axiosRetryInterceptor(err) {
     });
     // Return the promise in which recalls axios to retry the request
     return backoff.then(function () {
-        console.log(`request failed , retrying:${config.url}`);
         return axios(config);
     });
 }

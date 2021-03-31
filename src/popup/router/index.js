@@ -37,7 +37,6 @@ export function getAllRouter() {
   return (
     <HashRouter useHistory={useHistory} >
       <Switch>
-        {/*<Route path="/" exact component={LedgerImport} />*/}
         <Route path="/" exact component={MainRouter} />
         <Route path="/createpassword" component={CreatePassword} />
         <Route path="/showmnemonic" component={ShowMnemonic} />

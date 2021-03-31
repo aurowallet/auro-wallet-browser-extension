@@ -46,7 +46,6 @@ export async function openPopupWindow(
           resolve(windowData)
         })
       })
-      console.log('createdWindow1', createdWindow)
       lastWindowIds[channel] = createdWindow?.id;
     }
   } else {
@@ -55,7 +54,6 @@ export async function openPopupWindow(
         resolve(windowData)
       })
     })
-    console.log('createdWindow2', createdWindow)
     lastWindowIds[channel] = createdWindow?.id;
   }
 
@@ -69,14 +67,12 @@ export async function openPopupWindow(
     }
   }
   window.lastWindowIds = lastWindowIds
-  console.log('channel', channel, lastWindowIds)
   return lastWindowIds[channel];
 }
 
 export function closePopupWindow(channel) {
   (async () => {
     const windowId = lastWindowIds[channel];
-    console.log('windowId', windowId)
     if (windowId) {
       await chrome.windows.remove(windowId);
     }

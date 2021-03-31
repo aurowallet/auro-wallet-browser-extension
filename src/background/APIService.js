@@ -226,7 +226,7 @@ class APIService {
     }
     /**
      * 通过keystore导入钱包
-     * @param {*} keypair 
+     * @param {*} keystore
      * @param {*} password 
      * @param {*} accountName 
      * @returns 
@@ -262,7 +262,7 @@ class APIService {
                 return item.type === ACCOUNT_TYPE.WALLET_LEDGER//"import"
             })
             let typeIndex = ""
-            if (ledgerList.length == 0) {
+            if (ledgerList.length === 0) {
                 typeIndex = 1
             } else {
                 typeIndex = ledgerList[ledgerList.length - 1].typeIndex + 1
@@ -521,7 +521,6 @@ class APIService {
                 }, 5000);
             }
         }).catch((error) => {
-            console.log('fetchTransactionStatus=error', error)
             this.timer = setTimeout(() => {
                 this.fetchTransactionStatus(paymentId, hash);
             }, 5000);
