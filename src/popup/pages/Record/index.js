@@ -19,7 +19,10 @@ const DECIMALS = cointypes.decimals
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
   TX_STATUS_SUCCESS: "applied",
-  TX_STATUS_FAILED: "failed"
+  TX_STATUS_INCLUDED: "INCLUDED",
+
+  TX_STATUS_FAILED: "failed",
+  TX_STATUS_UNKNOWN: "UNKNOWN"
 }
 
 class Record extends React.Component {
@@ -111,11 +114,13 @@ class Record extends React.Component {
     }
     switch (this.state.txStatus) {
       case STATUS.TX_STATUS_SUCCESS:
+      case STATUS.TX_STATUS_INCLUDED:
         status.source = success,
           status.text = getLanguage('backup_success_title')
         status.className = "tx-success-title"
         break;
       case STATUS.TX_STATUS_FAILED:
+      case STATUS.TX_STATUS_UNKNOWN:
         status.source = txFailed,
           status.text = getLanguage('txFailed')
         status.className = "tx-failed-title"

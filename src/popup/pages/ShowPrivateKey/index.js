@@ -70,7 +70,7 @@ class ShowPrivateKeyPage extends React.Component {
         title={getLanguage('showPrivateKey')}
         history={this.props.history}>
         <div className="mne-show-container">
-          {this.renderTip()}
+          {/* {this.renderTip()} */}
           {this.renderAddress()}
           {this.renderKey()}
           {this.renderCopy()}

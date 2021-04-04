@@ -51,7 +51,7 @@
   "postFailed": "广播失败",
   "sendAddressError": "请输入有效地址",
   "amountError": "您输入的金额格式有误，请核对后重新输入",
-  "balanceNotEnough": "钱包余额不足",
+  "balanceNotEnough": "账户余额不足",
   "txHash": "交易哈希",
   "goToExplrer": "去浏览器查看详情",
   "details": "详情",
@@ -178,5 +178,12 @@
   "pleaseInputPriKey":"请将私钥输入在下方",
   "privateKey":"私钥",
   "importKeyStore":"导入Keystore",
-  "ledgerConnect":"连接 Ledger"
+  "ledgerConnect":"连接 Ledger",
+
+  "inputFeeError":"请输入有效的矿工费",
+  "inputNonceError":"请输入有效的Nonce",
+  "APPLIED":"完成",
+  "FAILED":"失败",
+  "PENDING":"等待",
+  "changeSecPassword":"修改安全密码"
 }

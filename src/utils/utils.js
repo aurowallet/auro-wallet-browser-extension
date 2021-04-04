@@ -154,7 +154,17 @@ export function isNumber(n, includeE = false) {
     return isNum;
 }
 
-
+/**
+ * 校验是否是大于0 的整数
+ * @param {*} n 
+ * @param {*} includeE 
+ * @returns 
+ */
+export function isTrueNumber(n) {
+    let isNum = !!String(n).match(/^([1-9][0-9]*)$/);
+    return isNum;
+}
+  
 /**
  * 校验用户名长度 默认16位
  * @param {*} name

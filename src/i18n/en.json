@@ -176,5 +176,12 @@
     "pleaseInputPriKey":"Please enter the private key below",
     "privateKey":"Private Key",
     "importKeyStore":"Import Keystore",
-    "ledgerConnect":"Connect Ledger" 
+    "ledgerConnect":"Connect Ledger" ,
+
+    "inputFeeError":"Please enter a valid fee",
+    "inputNonceError":"Please enter a valid nonce",
+    "APPLIED":"APPLIED",
+    "FAILED":"FAILED",
+    "PENDING":"PENDING",
+    "changeSecPassword":"Change Security Password"
 }

@@ -178,10 +178,10 @@ class Reset extends React.Component {
             </div>
         )
     }
-    render() {
+    render() { 
         return (
             <CustomView
-                title={getLanguage('securityPassword')}
+                title={getLanguage('changeSecPassword')}
                 history={this.props.history}>
                 <form onSubmit={this.onSubmit}>
                     <div className="reset-container">

@@ -100,6 +100,9 @@ class Wallet extends React.Component {
   }
   fetchData = async (address) => {
     let netConfig = this.props.netConfig
+    this.callSetState({
+      isLoading:true
+    })
     let account = await getBalance(address)
     if (account.error) {
       Toast.info(getLanguage('nodeError'))
@@ -107,9 +110,6 @@ class Wallet extends React.Component {
       this.props.updateNetAccount(account.account)
     }
     if (netConfig.netType === NET_CONFIG_DEFAULT) {
-      this.callSetState({
-        isLoading:true
-      })
       let txList = await getTransactionList(address)
       let txPendingList = await getPendingTxList(address)
       let newList = [...txPendingList,...txList]
@@ -131,6 +131,10 @@ class Wallet extends React.Component {
         }
       
       this.props.updateAccountTx(txList, txPendingList)
+    }else{
+      this.callSetState({
+        isLoading:false
+      })
     }
     this.props.updateShouldRequest(false)
   }
@@ -251,6 +255,7 @@ class Wallet extends React.Component {
     amount = getDisplayAmount(amount, 2)
     amount = isReceive ? "+" + amount : "-" + amount
     let status = item.status
+    let statusText = getLanguage(status && status.toUpperCase())
     let imgSource = this.getTxSource(item)
     let statusColor = this.getStatusColor(item)
     return (
@@ -271,7 +276,7 @@ class Wallet extends React.Component {
             <p className={cx({
               "tx-item-status": true,
               [statusColor]: true
-            })}>{status && status.toUpperCase()}</p>
+            })}>{statusText}</p>
           </div>
         </div>
         <div className={"tx-item-right"}>

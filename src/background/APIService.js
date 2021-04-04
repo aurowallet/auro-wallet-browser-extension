@@ -11,9 +11,9 @@ const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore
 const encryptUtils = require('browser-passworder')
 
 const STATUS = {
-    TX_STATUS_PENDING: "TX_STATUS_PENDING",
-    TX_STATUS_INCLUDED: "TX_STATUS_INCLUDED",
-    TX_STATUS_UNKNOWN: "TX_STATUS_UNKNOWN"
+    TX_STATUS_PENDING: "PENDING",
+    TX_STATUS_INCLUDED: "INCLUDED",
+    TX_STATUS_UNKNOWN: "UNKNOWN"
 }
 
 
@@ -452,6 +452,7 @@ class APIService {
     }
 
     notification = (hash) => {
+        console.log('notification===0',hash)
         let id = hash
         chrome.notifications &&
             chrome.notifications.onClicked.addListener(function (id) {
@@ -460,6 +461,7 @@ class APIService {
             });
         let title = getLanguage('notificationTitle')
         let message = getLanguage('notificationContent')
+        console.log('notification===1',message)
         chrome.notifications.create(id, {
             title: title,
             message: message,
@@ -482,6 +484,10 @@ class APIService {
                     action: TX_SUCCESS,
                 });
                 this.notification(hash)
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                  }
             } else {
                 this.timer = setTimeout(() => {
                     this.fetchTransactionStatus(paymentId, hash);

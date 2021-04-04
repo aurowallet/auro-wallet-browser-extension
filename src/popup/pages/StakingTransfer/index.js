@@ -19,7 +19,7 @@ import TestModal from '../../component/TestModal';
 import Toast from '../../component/Toast';
 import './index.scss';
 import {addressValid} from "../../../utils/validator";
-import {addressSlice} from "../../../utils/utils";
+import {addressSlice, trimSpace,isTrueNumber,isNumber} from "../../../utils/utils";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import {ACCOUNT_TYPE} from "../../../constant/walletType";
 import {checkLedgerConnect, requestSignDelegation} from "../../../utils/ledger";
@@ -134,9 +134,9 @@ class StakingTransfer extends React.Component {
     let netAccount = this.props.netAccount
     let fromAddress = currentAccount.address
     let toAddress = this.state.nodeAddress
-    let nonce = this.state.nonce || netAccount.inferredNonce
+    let nonce = trimSpace(this.state.nonce) || netAccount.inferredNonce
     let memo = this.state.memo || ""
-    let fee = this.state.inputFee || this.state.fee
+    let fee = trimSpace(this.state.inputFee) || this.state.fee
     const payload = {
       fromAddress, toAddress, fee, nonce, memo
     }
@@ -191,6 +191,16 @@ class StakingTransfer extends React.Component {
     if (this.state.fee > this.props.balance) {
       Toast.info(getLanguage('balanceNotEnough'));
       return;
+    }
+    let inputFee = trimSpace(this.state.inputFee)
+    if (inputFee.length > 0 && !isNumber(inputFee)) {
+      Toast.info(getLanguage('inputFeeError'))
+      return
+    }
+    let nonce = trimSpace(this.state.nonce)
+    if (nonce.length > 0 && !isTrueNumber(nonce)) {
+      Toast.info(getLanguage('inputNonceError'))
+      return
     }
     this.modal.current.setModalVisable(true)
   }

@@ -14,7 +14,7 @@ import { getLanguage } from "../../../i18n";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect, requestSignPayment } from "../../../utils/ledger";
-import { getDisplayAmount, isNumber } from "../../../utils/utils";
+import { getDisplayAmount, isNumber,trimSpace ,isTrueNumber} from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import Button from "../../component/Button";
 import CustomInput from "../../component/CustomInput";
@@ -279,16 +279,28 @@ class SendPage extends React.Component {
     )
   }
   onConfirm = async () => {
-    if (!addressValid(this.state.toAddress)) {
+    let toAddress = trimSpace(this.state.toAddress)
+    if (!addressValid(toAddress)) {
       Toast.info(getLanguage('sendAddressError'))
       return
     }
-    if (!isNumber(this.state.amount) || !new BigNumber(this.state.amount).gt(0)) {
+    let amount = trimSpace(this.state.amount)
+    if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
       Toast.info(getLanguage('amountError'))
       return
     }
-    if (new BigNumber(this.state.amount).gt(this.props.balance)) {
+    if (new BigNumber(amount).gt(amount)) {
       Toast.info(getLanguage('balanceNotEnough'))
+      return
+    }
+    let inputFee = trimSpace(this.state.inputFee)
+    if (inputFee.length > 0 && !isNumber(inputFee)) {
+      Toast.info(getLanguage('inputFeeError'))
+      return
+    }
+    let nonce = trimSpace(this.state.nonce)
+    if (nonce.length > 0 && !isTrueNumber(nonce)) {
+      Toast.info(getLanguage('inputNonceError'))
       return
     }
     this.modal.current.setModalVisable(true)
@@ -321,11 +333,11 @@ class SendPage extends React.Component {
     let currentAccount = this.props.currentAccount
     let netAccount = this.props.netAccount
     let fromAddress = currentAccount.address
-    let toAddress = this.state.toAddress
+    let toAddress = trimSpace(this.state.toAddress)
     let amount = new BigNumber(this.state.amount).toNumber()
-    let nonce = this.state.nonce || netAccount.inferredNonce
+    let nonce = trimSpace(this.state.nonce)|| netAccount.inferredNonce
     let memo = this.state.memo || ""
-    let fee = this.state.inputFee || this.state.fee
+    let fee = trimSpace(this.state.inputFee) || this.state.fee
     let payload = {
       fromAddress, toAddress, amount, fee, nonce, memo
     }
