@@ -78,6 +78,9 @@
       margin: 24px auto 0;
       display: inline-block;
       text-align: justify;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       .double-arrow {
         width: 14px;
         margin-left: 3px;

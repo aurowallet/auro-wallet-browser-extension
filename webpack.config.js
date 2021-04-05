@@ -34,11 +34,6 @@ module.exports = (env, argv) => {
         },
         {
           test: /\.js$/, exclude: /node_modules/, loader: "babel-loader",
-          options: {
-            plugins: [
-              ['import', { libraryName: 'antd', style: 'css' }]  
-            ],
-          },
         },
         {
           test: /\.jsx$/,
@@ -47,9 +42,6 @@ module.exports = (env, argv) => {
             loader: "babel-loader",
             options: {
               presets: ["@babel/env", "@babel/react"], 
-              plugins: [
-                ['import', { libraryName: 'antd', style: 'css' }]  
-              ],
             },
           },
         },

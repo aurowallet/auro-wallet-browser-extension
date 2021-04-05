@@ -1,6 +1,11 @@
 .App {
   user-select: none;
   -webkit-user-drag: none;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box; // 1
+  }
 }
 
 .App-header {
@@ -12,12 +17,22 @@
 body {
   margin: 0;
 }
-p{
+p {
   margin: 0;
   padding: 0;
   -webkit-user-select: none;
-  -moz-user-select:none;
-  -o-user-select:none;
-  -ms-user-select:none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  -ms-user-select: none;
 }
 
+input,
+button,
+select,
+optgroup,
+textarea {
+  margin: 0; 
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+}
