@@ -14,7 +14,6 @@ import {
   getLanguage,
   languageOption
 } from "../../../i18n";
-import { updateMne } from "../../../reducers/accountReducer";
 import { setLanguage } from "../../../reducers/appReducer";
 import { setWelcomeNextRoute } from "../../../reducers/cache";
 import Button, { BUTTON_TYPE_HOME_BUTTON } from "../../component/Button";
@@ -79,10 +78,6 @@ class Welcome extends React.Component {
     )
   };
   goToCreate = () => {
-    if (this.state.newAccount) {
-      let mne = generateMne()
-      this.props.updateMne(mne)
-    }
     let nextRoute = "backup_tips"
     this.props.setWelcomeNextRoute(nextRoute)
     this.props.history.push({
@@ -141,9 +136,6 @@ function mapDispatchToProps(dispatch) {
   return {
     setLanguage: (lan) => {
       dispatch(setLanguage(lan));
-    },
-    updateMne: (mne) => {
-      dispatch(updateMne(mne))
     },
     setWelcomeNextRoute: (nextRoute) => {
       dispatch(setWelcomeNextRoute(nextRoute))

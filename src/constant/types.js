@@ -103,6 +103,13 @@ export const MINA_CHECK_TX_STATUS = "MINA_CHECK_TX_STATUS"
  */
   export const MINA_IMPORT_KEY_STORE = "MINA_IMPORT_KEY_STORE"
 
+
+
+/**
+ * 后台生成助记词
+ */
+  export const MINA_GET_CREATE_MNEMONIC = "MINA_GET_CREATE_MNEMONIC"
+
 // ====================================================================================bottom back to popup
 
 /**

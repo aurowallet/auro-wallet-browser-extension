@@ -1,7 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { MINA_GET_CREATE_MNEMONIC, MINA_NEW_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -13,25 +13,33 @@ import "./index.scss";
 class BackupMnemonics extends React.Component {
   constructor(props) {
     super(props);
-    const password = props.location.params?.password ?? "";
-    let mnemonic = props.location.params?.mnemonic ?? ""
-    let mneList = mnemonic.split(" ")
-    for (let i = 0; i < mneList.length; i++) {
-      const index = Math.floor(Math.random() * mneList.length);
-      [mneList[i], mneList[index]] = [mneList[index], mneList[i]];
-    }
     this.state = {
-      password: password,
-      mnemonic: mnemonic,
-      list: mneList.map((v) => {
-        return {
-          name: v,
-          selected: false,
-        };
-      }),
+      mnemonic: "",
+      list:[],
       selectlist: [],
     };
     this.isUnMounted = false;
+  }
+  componentDidMount(){
+    sendMsg({
+      action: MINA_GET_CREATE_MNEMONIC,
+    }, (mnemonic) => { 
+        let mneList = mnemonic.split(" ")
+        for (let i = 0; i < mneList.length; i++) {
+          const index = Math.floor(Math.random() * mneList.length);
+          [mneList[i], mneList[index]] = [mneList[index], mneList[i]];
+        }
+        let list = mneList.map((v) => {
+          return {
+            name: v,
+            selected: false,
+          };
+        })
+      this.callSetState({
+        mnemonic: mnemonic,
+        list
+      })
+    })
   }
   componentWillUnmount(){
     this.isUnMounted = true;
@@ -46,8 +54,7 @@ class BackupMnemonics extends React.Component {
     }
   }
   compareList = () => {
-    const { selectlist } = this.state;
-    let mnemonic = this.props.location.params?.mnemonic ?? "";
+    const { selectlist,mnemonic } = this.state;
     let mneList = mnemonic.split(" ")
     return selectlist.map((v) => v.name).join("") == mneList.join("");
   };
@@ -58,7 +65,6 @@ class BackupMnemonics extends React.Component {
       sendMsg({
         action: MINA_NEW_HD_ACCOUNT,
         payload: {
-          pwd: this.state.password,
           mne: this.state.mnemonic,
         }
       },

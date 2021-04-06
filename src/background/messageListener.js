@@ -20,7 +20,8 @@ import {
   MINA_SEND_STACK_TRANSTRACTION,
   MINA_CHECK_TX_STATUS,
   MINA_IMPORT_LEDGER,
-  MINA_IMPORT_KEY_STORE
+  MINA_IMPORT_KEY_STORE ,
+  MINA_GET_CREATE_MNEMONIC
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -129,6 +130,9 @@ function internalMessageListener(message, sender, sendResponse) {
         sendResponse(account);
       })
       break;
+    case MINA_GET_CREATE_MNEMONIC:
+      sendResponse(apiService.getCreateMnemonic())
+      break
     default:
       break;
   }

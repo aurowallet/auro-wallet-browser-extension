@@ -7,7 +7,7 @@ import { get, removeValue, save } from './storageService';
 import {ACCOUNT_TYPE} from "../constant/walletType"
 
 const ObservableStore = require('obs-store')
-const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore } = require('./accountService')
+const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
 const encryptUtils = require('browser-passworder')
 
 const STATUS = {
@@ -25,11 +25,22 @@ class APIService {
             data: '',
             password: '',
             currentAccount: {},
+            mne:""
         })
     }
     getStore = () => {
         return this.memStore.getState()
     };
+    getCreateMnemonic=()=>{
+        let mne = this.getStore().mne
+        if(mne){
+            return mne
+        }else{
+            let mnemonic = generateMne()
+            this.memStore.updateState({ mne: mnemonic })
+            return mnemonic
+        }
+    }
     filterCurrentAccount = (accountList, currentAddress) => {
         for (let index = 0; index < accountList.length; index++) {
             const account = accountList[index];
@@ -79,6 +90,7 @@ class APIService {
         this.memStore.updateState({ password })
     }
     createAccount = async (mnemonic) => {
+        this.memStore.updateState({ mne: "" })
         let wallet = await importWalletByMnemonic(mnemonic)
         let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
         const account = {
