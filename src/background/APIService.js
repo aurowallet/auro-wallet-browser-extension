@@ -328,10 +328,11 @@ class APIService {
             accounts = accounts.filter((item, index) => {
                 return item.address !== address
             })
-
-            let currentAccount = accounts[0]
-            data[0].currentAddress = currentAccount.address
-
+            let currentAccount = this.getStore().currentAccount
+            if(address === currentAccount.address){
+                currentAccount = accounts[0]
+                data[0].currentAddress = currentAccount.address
+            }
             data[0].accounts = accounts
             let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
             this.memStore.updateState({ data: data, currentAccount })
@@ -452,7 +453,6 @@ class APIService {
     }
 
     notification = (hash) => {
-        console.log('notification===0',hash)
         let id = hash
         chrome.notifications &&
             chrome.notifications.onClicked.addListener(function (id) {
@@ -461,7 +461,6 @@ class APIService {
             });
         let title = getLanguage('notificationTitle')
         let message = getLanguage('notificationContent')
-        console.log('notification===1',message)
         chrome.notifications.create(id, {
             title: title,
             message: message,
