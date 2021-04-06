@@ -7,6 +7,7 @@
     "@babel/preset-env": "7.12.7",
     "@babel/preset-react": "7.12.7",
     "@babel/runtime": "^7.12.5",
+    "@babel/register": "^7.5.5",
     "@ledgerhq/hw-transport-webusb": "^5.46.0",
     "@o1labs/client-sdk": "1.0.0",
     "@reduxjs/toolkit": "^1.4.0",
@@ -44,15 +45,16 @@
     "redux": "^4.0.5",
     "safe-buffer": "^5.2.1",
     "valid-url": "^1.0.9",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "mocha": "8.3.2"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
     "eject": "react-scripts eject",
     "buildProd": "webpack --mode production",
-    "dev": "webpack --mode development --progress --watch"
+    "dev": "webpack --mode development --progress --watch",
+    "test": "mocha --timeout 5000 --require node_modules/@babel/register \"test/unit/**/*.js\""
   },
   "eslintConfig": {
     "extends": [
@@ -80,6 +82,7 @@
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "7.12.12",
     "@babel/plugin-transform-runtime": "^7.12.1",
+    "assert": "2.0.0",
     "babel-plugin-import": "1.13.3",
     "webpack-cli": "^4.2.0"
   }

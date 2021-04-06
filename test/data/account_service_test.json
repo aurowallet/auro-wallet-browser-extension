@@ -1,0 +1,20 @@
+{
+    "importWalletByMnemonic":{ 
+        "priKey": "EKEjdAVBfHwuS7crogwpXLeTbwQTWbd2W2RyhPpCZpfHQSLJ1zyS",
+        "pubKey": "B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM",
+        "hdIndex": 0 
+    },
+    "importWalletByKeystore":{
+        "password":"123456",
+        "keystore":{"box_primitive":"xsalsa20poly1305","pw_primitive":"argon2i","nonce":"7bhBLFhx8v8uR9N9gVxbK721VZRqQ9X4zEh4xAq","pwsalt":"AnJ9HJKcGdiWpssG76s7p3Hzh3TG","pwdiff":[134217728,6],"ciphertext":"BRKKEJcPFrcmsJjkWunysYrpb65hQgBeqzBDRbzrRPhS49CEHVgn48X21Peq9MwAzKeEPdFFB"},
+        "result":{ 
+            "priKey": "EKF4XaKafQXHUHTxSA9qTYsBxk9VV5oGDe4CmcZY52bsQFs1GnRs",
+            "pubKey": "B62qkhhWkJdZx9MAZHd67VqBAX7FVbzSizqsFYqMKvQu4kPNyFxxCmB" }
+    },
+    "importWalletByPrivateKey":{
+        "privateKey":"EKF4XaKafQXHUHTxSA9qTYsBxk9VV5oGDe4CmcZY52bsQFs1GnRs",
+        "result":{ 
+            "priKey": "EKF4XaKafQXHUHTxSA9qTYsBxk9VV5oGDe4CmcZY52bsQFs1GnRs",
+            "pubKey": "B62qkhhWkJdZx9MAZHd67VqBAX7FVbzSizqsFYqMKvQu4kPNyFxxCmB" }
+    }
+}
