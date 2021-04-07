@@ -133,7 +133,7 @@ class AccountManagePage extends React.Component {
   }
   goAddLedger=()=>{
     let accountTypeList = this.state.accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE
+      return item.type === ACCOUNT_TYPE.WALLET_LEDGER
     })
     let accountCount = this.getAccountTypeIndex(accountTypeList)
     this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.LEDGER)
