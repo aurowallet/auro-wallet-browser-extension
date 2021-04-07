@@ -66,8 +66,8 @@ export function getAllRouter() {
         <Route path="/reset_password" component={ResetPassword} />
         <Route path="/backup_tips" component={BackupTips} />
 
-        <Route path="/stacking_list" component={StakingList} />
-        <Route path="/stacking_transfer" component={StakingTransfer} />
+        <Route path="/staking_list" component={StakingList} />
+        <Route path="/staking_transfer" component={StakingTransfer} />
         <Route path="/ledger_connect" component={LedgerConnect} />
         <Route path="/ledger_import" component={LedgerImport} />
 

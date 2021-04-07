@@ -4,7 +4,7 @@
 
 import { BASE_INFO_URL, GQL_URL, TRANSACTION_URL, TX_LIST_LENGTH } from "../../../config";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBody, getStackTxSend, getTxHistoryBody, getTxSend, getTxStatusBody ,getPendingTxBody, getBalanceBatchBody} from './gqlparams';
+import { getBalanceBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody ,getPendingTxBody, getBalanceBatchBody} from './gqlparams';
 
 /**
  * 获取余额
@@ -35,8 +35,8 @@ export async function sendTx(payload,signature){
 /**
  * 质押
  */
-export async function sendStackTx(payload,signature){
-  let txBody =  getStackTxSend(payload,signature)
+export async function sendStakeTx(payload,signature){
+  let txBody =  getStakeTxSend(payload,signature)
   let res = await startFetchMyMutation(txBody, GQL_URL);
   return res
 }

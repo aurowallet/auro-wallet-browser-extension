@@ -5,9 +5,9 @@ import { withRouter } from "react-router-dom";
 import downArrow from "../../../assets/images/downArrow.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import arrow from '../../../assets/images/txArrow.png';
-import {getBalance, getFeeRecom, sendStackTx} from '../../../background/api';
+import {getBalance, getFeeRecom, sendStakeTx} from '../../../background/api';
 import { cointypes } from "../../../../config";
-import { MINA_CHECK_TX_STATUS, MINA_SEND_STACK_TRANSTRACTION } from "../../../constant/types";
+import { MINA_CHECK_TX_STATUS, MINA_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
 import { getLanguage } from '../../../i18n';
 import { updateNetAccount, updateShouldRequest } from '../../../reducers/accountReducer';
 import { sendMsg } from "../../../utils/commonMsg";
@@ -125,7 +125,7 @@ class StakingTransfer extends React.Component {
         Toast.info(error.message)
         return
       }
-      let postRes = await sendStackTx(payload, {rawSignature: signature}).catch(error => error)
+      let postRes = await sendStakeTx(payload, {rawSignature: signature}).catch(error => error)
       this.onSubmitSuccess(postRes)
     }
   }
@@ -146,7 +146,7 @@ class StakingTransfer extends React.Component {
     this.modal.current.setModalVisable(false)
     Loading.show()
     sendMsg({
-      action: MINA_SEND_STACK_TRANSTRACTION,
+      action: MINA_SEND_STAKE_TRANSTRACTION,
       payload
     }, (data) => {
       Loading.hide()
@@ -257,10 +257,10 @@ class StakingTransfer extends React.Component {
   }
   onChooseNode = () => {
     this.props.history.replace({
-      pathname: "/stacking_list",
+      pathname: "/staking_list",
       params: {
         nodeAddress: this.state.nodeAddress,
-        fromPage: 'stackingTransfer'
+        fromPage: 'stakingTransfer'
       }
     });
   }
@@ -306,7 +306,7 @@ class StakingTransfer extends React.Component {
     let memo = this.state.memo;
     return (
       <div className={"confirm-modal-container"}>
-        {this.state.nodeName ? this.renderConfirmItem(getLanguage('stackProvider'), this.state.nodeName, true) : null }
+        {this.state.nodeName ? this.renderConfirmItem(getLanguage('stakeProvider'), this.state.nodeName, true) : null }
         {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.props.currentAccount.address)}
         {nonce && this.renderConfirmItem("Nonce", nonce)}
@@ -327,11 +327,11 @@ class StakingTransfer extends React.Component {
   renderNodeProvider = () => {
     if (this.state.menuAdd) {
       return <CustomInput
-        label={getLanguage('stackingProviderName')}
+        label={getLanguage('stakingProviderName')}
         onTextInput={this.onProviderChange} />
     } else {
       return <div className={'select-node-con'}>
-        <label className={'provider-title'}>{getLanguage('stackingProviderName')}</label>
+        <label className={'provider-title'}>{getLanguage('stakingProviderName')}</label>
         <div className={'selected-value click-cursor'} onClick={this.onChooseNode}>
           <div className={'selected-value-text'}>{this.state.nodeName ?? addressSlice(this.state.nodeAddress)}</div>
           <div className={'arrow-con'}>

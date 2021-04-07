@@ -52,7 +52,7 @@ export function getTxStatusBody(paymentId) {
 
 
 
-export function getStackTxSend(input, signature) {
+export function getStakeTxSend(input, signature) {
   let fee = input.fee
   let to = input.to
   let from = input.from

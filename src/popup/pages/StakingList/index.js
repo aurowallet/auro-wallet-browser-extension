@@ -56,14 +56,14 @@ class StakingList extends React.Component {
       Toast.info(getLanguage('selectNode'))
       return;
     }
-    if (this.fromPage === 'stackingTransfer') {
+    if (this.fromPage === 'stakingTransfer') {
       this.props.history.replace({
-        pathname: "/stacking_transfer",
+        pathname: "/staking_transfer",
         params: nodeParams
       });
     } else {
       this.props.history.push({
-        pathname: "/stacking_transfer",
+        pathname: "/staking_transfer",
         params: nodeParams
       });
     }
@@ -142,7 +142,7 @@ class StakingList extends React.Component {
       showMenu: false
     });
     this.props.history.push({
-      pathname: "/stacking_transfer",
+      pathname: "/staking_transfer",
       params: {
         menuAdd: true
       }
@@ -180,7 +180,7 @@ class StakingList extends React.Component {
   render() {
     return (
       <CustomView
-        className={'stacking-list-page'}
+        className={'staking-list-page'}
         title={getLanguage('nodeProviders')}
         rightComponent={this.renderAddBtn()}
         history={this.props.history}>

@@ -17,7 +17,7 @@ import {
   MINA_CHANGE_SEC_PASSWORD,
   MINA_GET_CURRENT_PRIVATE_KEY,
   MINA_SEND_TRANSTRACTION,
-  MINA_SEND_STACK_TRANSTRACTION,
+  MINA_SEND_STAKE_TRANSTRACTION,
   MINA_CHECK_TX_STATUS,
   MINA_IMPORT_LEDGER,
   MINA_IMPORT_KEY_STORE ,
@@ -112,8 +112,8 @@ function internalMessageListener(message, sender, sendResponse) {
         sendResponse(result);
       })
       break;
-    case MINA_SEND_STACK_TRANSTRACTION:
-      apiService.sendStackTransaction(payload).then((result) => {
+    case MINA_SEND_STAKE_TRANSTRACTION:
+      apiService.sendStakTransaction(payload).then((result) => {
         sendResponse(result);
       })
       break;

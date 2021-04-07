@@ -15,7 +15,7 @@ class NodeItem extends React.Component {
         <div className={'node-info'}>
           <div className={'node-name'}>{this.props.node.nodeName ?? 'Staking Node'}</div>
           <div className={'pubkey'}>{addressSlice(this.props.node.nodeAddress, 10)}</div>
-          <div className={'stack'}>{getLanguage('totalStack')}:<span>{this.props.node.totalStake} MINA</span></div>
+          <div className={'stake'}>{getLanguage('totalStake')}:<span>{this.props.node.totalStake} MINA</span></div>
         </div>
         <div className={"option-img-container"}>
           <img className={"option-img"} src={imgSource} />

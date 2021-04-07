@@ -1,7 +1,7 @@
 import { EXPLORER_URL } from '../../config';
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from '../constant/types';
 import { getLanguage } from '../i18n';
-import { getTxStatus, sendStackTx, sendTx } from './api';
+import { getTxStatus, sendStakeTx, sendTx } from './api';
 import { signPayment, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import {ACCOUNT_TYPE} from "../constant/walletType"
@@ -449,7 +449,7 @@ class APIService {
             return { error: err }
         }
     }
-    sendStackTransaction = async (params) => {
+    sendStakTransaction = async (params) => {
         try {
             let { fromAddress, toAddress, fee, nonce, memo } = params;
             const privateKey = await this.getCurrentPrivateKey()
@@ -457,7 +457,7 @@ class APIService {
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
-            let postRes = await sendStackTx(signedTx.payload, signedTx.signature).catch(error => { error })
+            let postRes = await sendStakeTx(signedTx.payload, signedTx.signature).catch(error => { error })
             return { ...postRes }
         } catch (err) {
             return { error: err }

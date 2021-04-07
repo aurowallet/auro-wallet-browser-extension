@@ -7,7 +7,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  .stacking-content {
+  .staking-content {
     padding: 20px;
     padding-bottom: 70px;
     overflow: scroll;
@@ -69,7 +69,7 @@
   }
   .operate-con {
     text-align: center;
-    .go-stacking {
+    .go-staking {
       font-family: HelveticaNeue;
       font-size: $font-size-content;
       color: #7055ff;

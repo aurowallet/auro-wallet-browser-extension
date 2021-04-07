@@ -114,9 +114,9 @@ class Staking extends React.Component {
       validatorDetail
     });
   }
-  goStacking = () => {
+  goStaking = () => {
     this.props.history.push({
-      pathname: "/stacking_list",
+      pathname: "/staking_list",
       params: {
         nodeAddress: this.state.delegatePublicKey
       }
@@ -139,7 +139,7 @@ class Staking extends React.Component {
         nodeName = delegateNode.nodeName;
       }
     }
-    return (<div className={'stacking-content'}>
+    return (<div className={'staking-content'}>
       <div className={'module epoch-module'}>
         <div className={'title'}>{getLanguage('epochInfo')}</div>
         <div className={'panel'}>
@@ -178,19 +178,19 @@ class Staking extends React.Component {
                   !delegatePublicKey ? <EmptyGuide /> :
                     <>
                       <div className={'change-pos'}>
-                        <div className={'change-btn  click-cursor'} onClick={this.goStacking}>{getLanguage('changeNode')}</div>
+                        <div className={'change-btn  click-cursor'} onClick={this.goStaking}>{getLanguage('changeNode')}</div>
                       </div>
                       {
                         nodeName && <>
-                          <div className={'delegation-label first'}>{getLanguage('stackingProviderName')}</div>
+                          <div className={'delegation-label first'}>{getLanguage('stakingProviderName')}</div>
                           <div className={'delegation-value'}>{nodeName}</div>
                         </>
                       }
-                      <div className={'delegation-label'}>{getLanguage('stackingProviderAddress')}</div>
+                      <div className={'delegation-label'}>{getLanguage('stakingProviderAddress')}</div>
                       <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
                       {
                         validatorDetail && <>
-                          <div className={'delegation-label'}>{getLanguage('totalStack')}</div>
+                          <div className={'delegation-label'}>{getLanguage('totalStake')}</div>
                           <div className={'delegation-value'}>{getAmountForUI(validatorDetail.stake)}</div>
                           <div className={'delegation-label'}>{getLanguage('blockCreated')}</div>
                           <div className={'delegation-value'}>{validatorDetail.blocks_created}</div>
@@ -205,8 +205,8 @@ class Staking extends React.Component {
       </div>
       {
         !this.state.delegatePublicKey && (<div className={'operate-con'}>
-          <div className={'go-stacking click-cursor'} onClick={this.goStacking}>
-            {getLanguage('goStack')}
+          <div className={'go-staking click-cursor'} onClick={this.goStaking}>
+            {getLanguage('goStake')}
             <img className={'double-arrow'} src={goNext} />
           </div>
         </div>)
