@@ -132,7 +132,7 @@ class Staking extends React.Component {
   renderContent() {
     const { stakingList } = this.props;
     const { validatorDetail, delegatePublicKey } = this.state;
-    let nodeName = 'Staking Node';
+    let nodeName = 'Block Producer';
     if (delegatePublicKey) {
       let delegateNode = stakingList.find(({ nodeAddress }) => nodeAddress === delegatePublicKey);
       if (delegateNode && delegateNode.nodeName) {
@@ -182,17 +182,17 @@ class Staking extends React.Component {
                       </div>
                       {
                         nodeName && <>
-                          <div className={'delegation-label first'}>{getLanguage('stakingProviderName')}</div>
+                          <div className={'delegation-label first'}>{getLanguage('blockProducerName')}</div>
                           <div className={'delegation-value'}>{nodeName}</div>
                         </>
                       }
-                      <div className={'delegation-label'}>{getLanguage('stakingProviderAddress')}</div>
+                      <div className={'delegation-label'}>{getLanguage('blockProducerAddress')}</div>
                       <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
                       {
                         validatorDetail && <>
-                          <div className={'delegation-label'}>{getLanguage('totalStake')}</div>
+                          <div className={'delegation-label'}>{getLanguage('producerTotalStake')}</div>
                           <div className={'delegation-value'}>{getAmountForUI(validatorDetail.stake)}</div>
-                          <div className={'delegation-label'}>{getLanguage('blockCreated')}</div>
+                          <div className={'delegation-label'}>{getLanguage('blocksProduced')}</div>
                           <div className={'delegation-value'}>{validatorDetail.blocks_created}</div>
                         </>
                       }

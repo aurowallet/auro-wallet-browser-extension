@@ -181,7 +181,7 @@ class StakingList extends React.Component {
     return (
       <CustomView
         className={'staking-list-page'}
-        title={getLanguage('nodeProviders')}
+        title={getLanguage('blockProducerList')}
         rightComponent={this.renderAddBtn()}
         history={this.props.history}>
         <div className={'page-content'}>

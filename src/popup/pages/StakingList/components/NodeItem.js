@@ -13,7 +13,7 @@ class NodeItem extends React.Component {
     return (
       <div className={'node-container  click-cursor'} onClick={this.props.onClick}>
         <div className={'node-info'}>
-          <div className={'node-name'}>{this.props.node.nodeName ?? 'Staking Node'}</div>
+          <div className={'node-name'}>{this.props.node.nodeName ?? 'Block Producer'}</div>
           <div className={'pubkey'}>{addressSlice(this.props.node.nodeAddress, 10)}</div>
           <div className={'stake'}>{getLanguage('totalStake')}:<span>{this.props.node.totalStake} MINA</span></div>
         </div>

@@ -103,7 +103,7 @@
   "urlError_1": "请输入有效的节点地址",
   "urlError_2": "地址已存在",
   "prompt": "提示",
-  "deleteAccountTip": "删除的账号只能通过私记词或者私钥恢复，请确认你已经备份好助记词和私钥。",
+  "deleteAccountTip": "删除的账户只能通过私记词或者私钥恢复，请确认你已经备份好助记词和私钥。",
   "isee": "我知道了",
   "minaHomeTip": "根据Mina的网络特性，激活账户需要消耗1个MINA用于购买区块存储空间，此费用将会在首次转入时扣除，并非钱包收取。",
   "minaHomeTitle": "提醒",
@@ -185,5 +185,12 @@
   "APPLIED":"完成",
   "FAILED":"失败",
   "PENDING":"等待",
-  "changeSecPassword":"修改安全密码"
+  "changeSecPassword":"修改安全密码",
+
+  "blockProducerList":"出块节点列表",
+  "blockProducerName":"出块节点名称",
+  "blockProducerAddress":"出块节点地址",
+  "producerTotalStake":"总计委托数量",
+  "blocksProduced":"累计出块数量",
+  "confirmEnv":"请确保你所使用的系统及网络环境绝对安全再执行些操作。"
 }

@@ -214,7 +214,7 @@ class NetworkPage extends React.Component {
                     value={this.state.netUrl}
                     onTextInput={this.onTextInput}
                 />
-                <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />
+                {/* <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} /> */}
             </div>)
     }
     onAdd = (e) => {

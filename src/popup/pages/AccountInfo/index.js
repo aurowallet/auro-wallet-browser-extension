@@ -174,7 +174,7 @@ class AccountInfo extends React.Component {
           errorTipShow={this.state.errorTipShow}
           showTip={getLanguage("accountNameLimit")}
         />
-        <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />
+        {/* <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} /> */}
       </div>)
   }
   renderChangeModal = () => {
