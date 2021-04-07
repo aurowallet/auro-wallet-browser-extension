@@ -14,6 +14,8 @@ MinaWallet is aiming to provide a more convenient entrance of the mina network.
 - Intuitive Assets management.
 - Simplified staking.
 - Available for Chrome.
+<!-- ## Architecture
+[![Architecture Diagram](./docs/mina-extension.png)][1] -->
 
 ### Building
 
@@ -26,3 +28,5 @@ Extension's build output is placed in `/dist`, and you can check out [this page]
 ## LICENSE
 
 [MIT](LICENSE)
+
+<!-- [1]:https://www.nomnoml.com/#file/mina-extension -->
