@@ -289,13 +289,15 @@ class SendPage extends React.Component {
       Toast.info(getLanguage('amountError'))
       return
     }
-    if (new BigNumber(amount).gt(amount)) {
-      Toast.info(getLanguage('balanceNotEnough'))
-      return
-    }
     let inputFee = trimSpace(this.state.inputFee)
     if (inputFee.length > 0 && !isNumber(inputFee)) {
       Toast.info(getLanguage('inputFeeError'))
+      return
+    }
+    let fee = trimSpace(this.state.inputFee) || this.state.fee
+    let maxAmount = new BigNumber(amount).plus(fee).toString()
+    if (new BigNumber(amount).gt(maxAmount)) {
+      Toast.info(getLanguage('balanceNotEnough'))
       return
     }
     let nonce = trimSpace(this.state.nonce)
