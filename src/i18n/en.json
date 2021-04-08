@@ -125,7 +125,7 @@
     "welcomeBack": "Welcome Back!",
     "accountNameLimit": "No more than 16 characters",
     "addressQrTip": "Scan the QR code and transfer MINA to it",
-    "goToExplorer": "View transaction records through browser",
+    "goToExplorer": "View transaction records through explorer",
     "homeNoTx": "Non-default node, unable to provide transaction records",
     "versionInfo": "Version Log",
     "followUs": "Follow Us",
