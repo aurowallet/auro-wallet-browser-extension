@@ -89,21 +89,11 @@ class Welcome extends React.Component {
     return (
       <div className="welcome_container">
         <img className={"welcome-left-bg"} src={welcomeBg}></img>
-        <img style={{
-          position: "absolute",
-          left: "30px",
-          top: "40px",
-          width: "54px",
-          height: "49px"
-        }} src={logo}></img>
-        <div className={'language-container'}>
-          {this.renderLanMenu()}
+        <div className={'welcome-top-container'}>
+          <img className={'welcome-left-logo'} src={logo}></img>
+            {this.renderLanMenu()}
         </div>
-        <div style={{
-          marginTop: "40px",
-          width: "100%",
-          textAlign: "center",
-        }}>
+        <div className={'welcome-button-container'}>
           <Button
             buttonType={BUTTON_TYPE_HOME_BUTTON}
             propsClass={'welcome-create-button'}

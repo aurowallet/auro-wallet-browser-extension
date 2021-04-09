@@ -4,10 +4,10 @@ import React from "react";
 import { connect } from "react-redux";
 import goNext from "../../../assets/images/goNext.png";
 import homeNoTx from "../../../assets/images/homeNoTx.png";
-import home_logo from "../../../assets/images/home_logo.png";
+import home_logo from "../../../assets/images/transparentLogo.png";
 import home_wallet from "../../../assets/images/home_wallet.png";
 import pointNormal from "../../../assets/images/pointNormal.png";
-import receive from "../../../assets/images/receive.png";
+
 import reminder from "../../../assets/images/reminder.png";
 import txArrow from "../../../assets/images/txArrow.png";
 import { getBalance, getPendingTxList, getTransactionList } from "../../../background/api";

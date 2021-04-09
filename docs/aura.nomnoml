@@ -1,6 +1,6 @@
 [<actor>user]
 
-[mina-ui|
+[Aura-ui|
    [tools|
      react
      redux
@@ -32,10 +32,10 @@
    [actions]:->[reducers]
    [reducers]:->[components]
 ]
-[user]<->[mina-ui]
+[user]<->[Aura-ui]
 
 
-[mina-background|
+[Aura-background|
   
   [id store]
   
@@ -66,5 +66,5 @@
   ]
 ]
 
-[mina-background]<->[mina-ui]
-[mina-background]<->[service-data]
+[Aura-background]<->[Aura-ui]
+[Aura-background]<->[service-data]

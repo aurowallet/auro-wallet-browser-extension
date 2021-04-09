@@ -24,7 +24,7 @@
       "128": "img/128.png",
       "512": "img/512.png"
 		},
-    "default_title": "Mina Wallet",
+    "default_title": "Aura Wallet",
     "default_popup": "popup.html"
   },
   "permissions": [
