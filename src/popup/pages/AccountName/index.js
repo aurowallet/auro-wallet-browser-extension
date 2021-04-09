@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_CREATE_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_CREATE_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -107,7 +107,7 @@ class AccountName extends React.Component {
 
     } else {
       sendMsg({
-        action: MINA_CREATE_HD_ACCOUNT,
+        action: WALLET_CREATE_HD_ACCOUNT,
         payload: { accountName: accountText }
       }, (account) => {
         this.props.updateCurrentAccount(account)

@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { validateMnemonic } from "../../../background/accountService";
-import { MINA_IMPORT_KEY_STORE, MINA_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_IMPORT_KEY_STORE, WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -42,7 +42,7 @@ class ImportKeypair extends React.Component {
     e.stopPropagation()
     Loading.show()
     sendMsg({
-      action: MINA_IMPORT_KEY_STORE,
+      action: WALLET_IMPORT_KEY_STORE,
       payload: {
         keypair: this.state.keypair,
         password: this.state.pwd,

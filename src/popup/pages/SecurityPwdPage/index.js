@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { SEC_DELETE_ACCOUNT, SEC_SHOW_MNEMONIC, SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
-import { MINA_CHANGE_DELETE_ACCOUNT, MINA_GET_MNE, MINA_GET_PRIVATE_KEY } from "../../../constant/types";
+import { WALLET_CHANGE_DELETE_ACCOUNT, WALLET_GET_MNE, WALLET_GET_PRIVATE_KEY } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -100,7 +100,7 @@ class SecurityPwdPage extends React.Component {
     switch (action) {
       case SEC_DELETE_ACCOUNT:
         sendMsg({
-          action: MINA_CHANGE_DELETE_ACCOUNT,
+          action: WALLET_CHANGE_DELETE_ACCOUNT,
           payload: {
             address: this.address,
             password: this.state.pwd
@@ -130,7 +130,7 @@ class SecurityPwdPage extends React.Component {
         break;
       case SEC_SHOW_PRIVATE_KEY:
         sendMsg({
-          action: MINA_GET_PRIVATE_KEY,
+          action: WALLET_GET_PRIVATE_KEY,
           payload: {
             password: this.state.pwd,
             address: this.address
@@ -163,7 +163,7 @@ class SecurityPwdPage extends React.Component {
         break
       case SEC_SHOW_MNEMONIC:
         sendMsg({
-          action: MINA_GET_MNE,
+          action: WALLET_GET_MNE,
           payload: {
             password: this.state.pwd
           }

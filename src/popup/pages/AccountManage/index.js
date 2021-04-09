@@ -10,7 +10,7 @@ import select_account_no from "../../../assets/images/select_account_no.png";
 import select_account_ok from "../../../assets/images/select_account_ok.png";
 import { getBalanceBatch } from "../../../background/api";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
-import { MINA_CHANGE_CURRENT_ACCOUNT, MINA_GET_ALL_ACCOUNT, MINA_SET_UNLOCKED_STATUS } from "../../../constant/types";
+import { WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
@@ -36,7 +36,7 @@ class AccountManagePage extends React.Component {
 
   componentDidMount() {
     sendMsg({
-      action: MINA_GET_ALL_ACCOUNT,
+      action: WALLET_GET_ALL_ACCOUNT,
     }, (account) => {
       this.callSetState({
         accountList: this.setListFilter(account.accounts),
@@ -148,7 +148,7 @@ class AccountManagePage extends React.Component {
   onClickAccount = (item) => {
     if (item.address !== this.state.currentAddress) {
       sendMsg({
-        action: MINA_CHANGE_CURRENT_ACCOUNT,
+        action: WALLET_CHANGE_CURRENT_ACCOUNT,
         payload: item.address
       }, (account) => {
         if (account.accountList && account.accountList.length > 0) {
@@ -248,7 +248,7 @@ class AccountManagePage extends React.Component {
   }
   onClickLock = () => {
     sendMsg({
-      action: MINA_SET_UNLOCKED_STATUS,
+      action: WALLET_SET_UNLOCKED_STATUS,
       payload: false
     }, (res) => { })
     this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE)

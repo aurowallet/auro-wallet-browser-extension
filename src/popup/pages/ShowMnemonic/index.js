@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_GET_CREATE_MNEMONIC } from "../../../constant/types";
+import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
@@ -28,7 +28,7 @@ class ShowMnemonic extends React.Component {
   }
   componentDidMount() {
     sendMsg({
-      action: MINA_GET_CREATE_MNEMONIC,
+      action: WALLET_GET_CREATE_MNEMONIC,
     }, (mnemonic) => { 
       this.callSetState({
         mnemonic: mnemonic

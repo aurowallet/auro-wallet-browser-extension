@@ -7,7 +7,7 @@ import pwd_right from "../../../assets/images/pwd_right.png";
 import arrow from '../../../assets/images/txArrow.png';
 import {getBalance, getFeeRecom, sendStakeTx} from '../../../background/api';
 import { cointypes } from "../../../../config";
-import { MINA_CHECK_TX_STATUS, MINA_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
+import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
 import { getLanguage } from '../../../i18n';
 import { updateNetAccount, updateShouldRequest } from '../../../reducers/accountReducer';
 import { sendMsg } from "../../../utils/commonMsg";
@@ -146,7 +146,7 @@ class StakingTransfer extends React.Component {
     this.modal.current.setModalVisable(false)
     Loading.show()
     sendMsg({
-      action: MINA_SEND_STAKE_TRANSTRACTION,
+      action: WALLET_SEND_STAKE_TRANSTRACTION,
       payload
     }, (data) => {
       Loading.hide()
@@ -170,7 +170,7 @@ class StakingTransfer extends React.Component {
     this.props.dispatch(updateShouldRequest(true))
     let detail = data.sendDelegation && data.sendDelegation.delegation || {}
     sendMsg({
-      action: MINA_CHECK_TX_STATUS,
+      action: WALLET_CHECK_TX_STATUS,
       payload: {
         paymentId: detail.id,
         hash: detail.hash,

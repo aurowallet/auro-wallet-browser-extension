@@ -12,7 +12,7 @@ import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import "./index.scss";
 import { openTab, sendMsg } from '../../../utils/commonMsg';
-import { FROM_BACK_TO_RECORD, MINA_CHECK_TX_STATUS, TX_SUCCESS } from '../../../constant/types';
+import { FROM_BACK_TO_RECORD, WALLET_CHECK_TX_STATUS, TX_SUCCESS } from '../../../constant/types';
 import cx from "classnames";
 const DECIMALS = cointypes.decimals
 

@@ -1,7 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_GET_CREATE_MNEMONIC, MINA_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_GET_CREATE_MNEMONIC, WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -22,7 +22,7 @@ class BackupMnemonics extends React.Component {
   }
   componentDidMount(){
     sendMsg({
-      action: MINA_GET_CREATE_MNEMONIC,
+      action: WALLET_GET_CREATE_MNEMONIC,
     }, (mnemonic) => { 
         let mneList = mnemonic.split(" ")
         for (let i = 0; i < mneList.length; i++) {
@@ -63,7 +63,7 @@ class BackupMnemonics extends React.Component {
     let bool = this.compareList();
     if (bool) {
       sendMsg({
-        action: MINA_NEW_HD_ACCOUNT,
+        action: WALLET_NEW_HD_ACCOUNT,
         payload: {
           mne: this.state.mnemonic,
         }

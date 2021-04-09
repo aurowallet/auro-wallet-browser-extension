@@ -8,7 +8,7 @@ import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import modalClose from "../../../assets/images/modalClose.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import { getBalance, getFeeRecom, sendPayment } from "../../../background/api";
-import { MINA_CHECK_TX_STATUS, MINA_SEND_TRANSTRACTION } from "../../../constant/types";
+import { WALLET_CHECK_TX_STATUS, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
@@ -349,7 +349,7 @@ class SendPage extends React.Component {
     Loading.show()
     this.modal.current.setModalVisable(false)
     sendMsg({
-      action: MINA_SEND_TRANSTRACTION,
+      action: WALLET_SEND_TRANSTRACTION,
       payload
     }, (data) => {
       Loading.hide()
@@ -373,7 +373,7 @@ class SendPage extends React.Component {
     let detail = data.sendPayment && data.sendPayment.payment || {}
     this.props.updateShouldRequest(true)
     sendMsg({
-      action: MINA_CHECK_TX_STATUS,
+      action: WALLET_CHECK_TX_STATUS,
       payload: {
         paymentId: detail.id,
         hash: detail.hash,

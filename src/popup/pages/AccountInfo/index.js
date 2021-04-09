@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import modalClose from "../../../assets/images/modalClose.png";
 import txArrow from "../../../assets/images/txArrow.png";
 import { SEC_DELETE_ACCOUNT, SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
-import { MINA_CHANGE_ACCOUNT_NAME } from "../../../constant/types";
+import { WALLET_CHANGE_ACCOUNT_NAME } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -107,7 +107,7 @@ class AccountInfo extends React.Component {
       return
     }
     sendMsg({
-      action: MINA_CHANGE_ACCOUNT_NAME,
+      action: WALLET_CHANGE_ACCOUNT_NAME,
       payload: {
         address: this.state.account.address,
         accountName: this.state.inputAccountName

@@ -6,7 +6,7 @@ import { getLocal, saveLocal } from "./background/localStorage";
 import * as storage from "./background/storageService";
 import { LOCK_TIME, network_config } from "../config";
 import { NET_WORK_CONFIG } from "./constant/storageKey";
-import { MINA_APP_CONNECT, MINA_GET_CURRENT_ACCOUNT, MINA_SET_UNLOCKED_STATUS } from "./constant/types";
+import { WALLET_APP_CONNECT, WALLET_GET_CURRENT_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "./constant/types";
 import "./i18n";
 import App from "./popup/App";
 import rootReducer from "./reducers";
@@ -33,7 +33,7 @@ function getLocalNetConfig() {
 }
 async function getLocalStatus(store) {
   sendMsg({
-    action: MINA_GET_CURRENT_ACCOUNT,
+    action: WALLET_GET_CURRENT_ACCOUNT,
   },
     async (currentAccount) => {
       if (currentAccount && currentAccount.localAccount && currentAccount.localAccount.keyringData) {
@@ -56,7 +56,7 @@ async function getLockStatus(store, account) {
       store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
     } else {
       sendMsg({
-        action: MINA_SET_UNLOCKED_STATUS,
+        action: WALLET_SET_UNLOCKED_STATUS,
         payload: false
       }, (res) => { })
       store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE))
@@ -76,7 +76,7 @@ export const applicationEntry = {
   },
 
   async appInit(store) {
-    chrome.runtime.connect({ name: MINA_APP_CONNECT });
+    chrome.runtime.connect({ name: WALLET_APP_CONNECT });
     await getLocalStatus(store)
     getLocalNetConfig()
   },

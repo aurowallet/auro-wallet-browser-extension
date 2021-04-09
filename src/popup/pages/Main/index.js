@@ -8,7 +8,7 @@ import staking_active from "../../../assets/images/staking_active.png";
 import staking_common from "../../../assets/images/staking_common.png";
 import { getLocal, saveLocal } from "../../../background/localStorage";
 import { NET_WORK_CONFIG } from "../../../constant/storageKey";
-import { MINA_GET_CURRENT_ACCOUNT } from "../../../constant/types";
+import { WALLET_GET_CURRENT_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { updateCurrentNetwork, updateNetConfig } from "../../../reducers/network";

@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_IMPORT_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_IMPORT_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -49,7 +49,7 @@ class ImportAccount extends React.Component {
   };
   goToCreate = () => {
     sendMsg({
-      action: MINA_IMPORT_HD_ACCOUNT,
+      action: WALLET_IMPORT_HD_ACCOUNT,
       payload: {
         privateKey: this.state.privateKey.replace(/[\r\n]/g, ""),
         accountName: this.state.accountName

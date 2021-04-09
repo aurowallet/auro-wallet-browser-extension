@@ -9,7 +9,7 @@ import "./index.scss";
 import {checkLedgerConnect, requestAccount} from "../../../utils/ledger";
 import Toast from "../../component/Toast";
 import {sendMsg} from "../../../utils/commonMsg";
-import {MINA_IMPORT_LEDGER} from "../../../constant/types";
+import {WALLET_IMPORT_LEDGER} from "../../../constant/types";
 import {updateCurrentAccount} from "../../../reducers/accountReducer";
 import {LedgerConnected} from "../../component/LedgerConnected";
 
@@ -51,7 +51,7 @@ class LedgerImport extends React.Component {
             address: publicKey,
             accountName: this.accountName
           },
-          action: MINA_IMPORT_LEDGER
+          action: WALLET_IMPORT_LEDGER
         },(account)=>{
           if (account.error) {
             if(account.type === "local"){

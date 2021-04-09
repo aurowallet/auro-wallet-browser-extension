@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { validateMnemonic } from "../../../background/accountService";
-import { MINA_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -46,7 +46,7 @@ class RestoreAccount extends React.Component {
       return
     } 
     sendMsg({
-      action: MINA_NEW_HD_ACCOUNT,
+      action: WALLET_NEW_HD_ACCOUNT,
       payload: {
         pwd: this.state.password,
         mne: mnemonic
