@@ -310,9 +310,9 @@ class Wallet extends React.Component {
     return (<>
       <div className={"reminder-top-container"}>
         <img src={reminder} className={"reminder-img"} />
-        <p className={"reminder-title"}>{getLanguage('minaHomeTitle')}</p>
+        <p className={"reminder-title"}>{getLanguage('walletHomeTitle')}</p>
       </div>
-      <p className={"reminder-content"}>{getLanguage('minaHomeTip')}</p>
+      <p className={"reminder-content"}>{getLanguage('walletHomeTip')}</p>
     </>)
   }
   getBottomRenderContainer = (child) => {

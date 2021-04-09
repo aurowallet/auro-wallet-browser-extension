@@ -64,14 +64,14 @@ class AboutUs extends React.Component {
   renderTopInfo = () => {
     return (<div className={'about-top-container'}>
       <img src={home_logo} className={"about-home-logo"} />
-      <p className={"about-wallet-name"}>{getLanguage('minaWallet')}</p>
+      <p className={"about-wallet-name"}>{getLanguage('walletName')}</p>
       <p className={"about-wallet-version"}>{VERSION_CONFIG}</p>
     </div>)
   }
-  renderTopMinaDesc = () => {
-    return (<p className="about-tip-description">{getLanguage('minaAbout')}</p>)
+  renderTopDesc = () => {
+    return (<p className="about-tip-description">{getLanguage('walletAbout')}</p>)
   }
-  renderTopMinaGit = () => {
+  rendergitInfo = () => {
     if (!this.state.changelog) {
       return <></>
     }
@@ -86,7 +86,7 @@ class AboutUs extends React.Component {
   onClick = (url) => {
     openTab(url)
   }
-  renderTopMinaFollow = () => {
+  renderWalletFollow = () => {
     if (this.state.followus.length <= 0) {
       return <></>
     }
@@ -113,9 +113,9 @@ class AboutUs extends React.Component {
         history={this.props.history}>
         <div className="about-container">
           {this.renderTopInfo()}
-          {this.renderTopMinaDesc()}
-          {this.renderTopMinaGit()}
-          {this.renderTopMinaFollow()}
+          {this.renderTopDesc()}
+          {this.rendergitInfo()}
+          {this.renderWalletFollow()}
         </div>
       </CustomView>)
   }

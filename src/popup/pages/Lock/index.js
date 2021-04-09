@@ -106,7 +106,7 @@ class LockPage extends React.Component {
     render() {
         return (
             <CustomView
-                title={getLanguage('minaWallet')}
+                title={getLanguage('walletName')}
                 noBack={true}
                 isReceive={true}
                 history={this.props.history}>

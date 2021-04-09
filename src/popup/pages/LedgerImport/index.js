@@ -79,7 +79,7 @@ class LedgerImport extends React.Component {
   render() {
     return (
       <CustomView
-        title={getLanguage('minaWallet')}
+        title={getLanguage('walletName')}
         history={this.props.history}>
         <LedgerConnected tips={['ledgerImportTip']}/>
         {this.renderBottonBtn()}
