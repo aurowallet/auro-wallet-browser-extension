@@ -5,31 +5,9 @@
   overflow: scroll;
   padding-bottom: 50px;
 }
-.wallet-top-background {
-  background-image: url("../../../assets/images/home_background.png");
-  height: 283px;
-}
-.wallet-top-container {
-  padding: 30px 28px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 .wallet-home-wallet {
   width: 30px;
   height: 30px;
-}
-.wallet-info {
-  background: #ffffff;
-  box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
-  border-radius: 20px;
-  border-radius: 20px;
-  width: 319px;
-  height: 183px;
-  margin: 20px 28px 0px 28px;
-  padding: 16px 20px;
-  position: relative;
 }
 p {
   margin: 0;
@@ -171,7 +149,7 @@ p {
   margin: 0;
 }
 .tx-container {
-  margin-top: 59px;
+  margin-top: 70px;
   padding: 0px 28px;
 }
 

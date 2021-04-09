@@ -3,7 +3,7 @@
     background: #ffffff;
     box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
     border-radius: 20px;
-    margin: 50px 28px 0px;
+    margin: 60px 28px 0px;
     padding: 20px 20px;
 }
 .reminder-top-container {
@@ -29,7 +29,7 @@
     font-size: $font-size-desc;
     color: #666666;
     margin-top: 14px;
-    hyphens: auto; 
+    hyphens: auto;
 }
 .wallet-home-logo {
     height: 30px;
@@ -62,7 +62,7 @@
     justify-content: center;
     align-items: center;
 }
-.home-bottom-explorer{
+.home-bottom-explorer {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -86,23 +86,46 @@
     font-size: $font-size-desc;
     color: #333333;
     margin-left: 14px;
-    hyphens: auto; 
+    hyphens: auto;
 }
 .reminder-container-txHistory {
     min-height: 150px;
 }
 
-.home-bottom-loading{
+.home-bottom-loading {
     min-height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
-.loading-img{
+.loading-img {
     width: 30px;
     height: 30px;
 }
-.loading-text{
+.loading-text {
     margin: 0px;
     margin-left: 10px;
 }
+.wallet-top-container {
+    padding: 30px 28px 30px 28px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.wallet-top-background {
+    background-image: url("../../../assets/images/home_background.png");
+    height: 220px;
+}
+
+.wallet-info {
+    background: #ffffff;
+    box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
+    border-radius: 20px;
+    border-radius: 20px;
+    width: 319px;
+    height: 183px;
+    margin: 0px 28px 0px 28px;
+    padding: 16px 20px;
+    position: relative;
+  }

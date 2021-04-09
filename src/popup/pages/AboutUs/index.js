@@ -25,7 +25,8 @@ class AboutUs extends React.Component {
     super(props);
     this.state = {
       changelog: "",
-      followus: []
+      followus: [],
+      gitReponame:""
     };
     this.isUnMounted = false;
   }
@@ -51,6 +52,7 @@ class AboutUs extends React.Component {
       return
     }
     let changelog = aboutInfo.changelog ? aboutInfo.changelog : ""
+    let gitReponame = aboutInfo.gitReponame ? aboutInfo.gitReponame : ""
     let followus = aboutInfo.followus && aboutInfo.followus.length > 0 ? aboutInfo.followus : []
     followus = followus.map((item, index) => {
       item.source = followSource[item.name]
@@ -58,7 +60,8 @@ class AboutUs extends React.Component {
     })
     this.callSetState({
       changelog,
-      followus
+      followus,
+      gitReponame
     })
   }
   renderTopInfo = () => {
@@ -75,7 +78,7 @@ class AboutUs extends React.Component {
     if (!this.state.changelog) {
       return <></>
     }
-    let showLog = "mina-wallet-chrome-extension"//VERSION_CONFIG
+    let showLog = this.state.gitReponame
     return (
       <div className={"about-item-container"}>
         <p className={"about-item-title"}>{getLanguage('versionInfo')}</p>
