@@ -1,10 +1,10 @@
 {
     "appName": {
-        "message": "Aura Wallet",
+        "message": "Auro Wallet",
         "description": "The name of the application"
     },
     "appDescription": {
-        "message": "Aura Protocol Browser Extension Wallet",
+        "message": "Mina Protocol Browser Extension Wallet",
         "description": "The description of the application"
     }
 }
