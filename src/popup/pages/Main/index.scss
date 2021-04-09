@@ -137,7 +137,7 @@ p {
   // margin-bottom: 10px;
 }
 .tx-item-address {
-  font-size: $font-size-desc-small;
+  font-size: $font-size-content;
   color: #000000;
   margin: 0 0;
 }
@@ -149,7 +149,7 @@ p {
   -webkit-transform: scale(0.9);
 }
 .tx-item-amount {
-  font-size: $font-size-desc-small;
+  font-size: $font-size-content;
   color: #343434;
   text-align: right;
   margin: 0;

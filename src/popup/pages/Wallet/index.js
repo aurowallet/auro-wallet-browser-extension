@@ -249,7 +249,7 @@ class Wallet extends React.Component {
     if (item.type.toLowerCase() === "payment" || item.type.toLowerCase() === "delegation") {
       isReceive = item.receiver.toLowerCase() === this.props.currentAccount.address.toLowerCase()
     }
-    let showAddress = addressSlice(isReceive ? item.sender : item.receiver)
+    let showAddress = addressSlice(isReceive ? item.sender : item.receiver , 8)
     showAddress = !showAddress ? item.type.toUpperCase() : showAddress
     let amount = amountDecimals(item.amount, cointypes.decimals)
     amount = getDisplayAmount(amount, 2)
@@ -269,7 +269,7 @@ class Wallet extends React.Component {
             <p className="tx-item-address">{showAddress}</p>
             <p className={cx({
               "tx-item-amount":true,
-              })}>{amount} {cointypes.symbol}</p>
+              })}>{amount}</p>
           </div>
           <div className={'tx-bottom-container'}>
             <p className="tx-item-time">{item.time}</p>

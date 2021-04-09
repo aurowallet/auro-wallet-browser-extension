@@ -5,7 +5,6 @@ import purpleArrow from "../../../assets/images/rightPurpleArrow.png";
 import whiteArrow from "../../../assets/images/rightWhiteArrow.png";
 import logo from "../../../assets/images/transparentLogo.png";
 import welcomeBg from "../../../assets/images/welcomeBg.png";
-import { generateMne } from "../../../background/accountService";
 import { get } from "../../../background/storageService";
 import {
   changeLanguage,

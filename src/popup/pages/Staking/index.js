@@ -1,5 +1,5 @@
 import React from "react";
-import { CircularProgressbar } from 'react-circular-progressbar';
+import { CircularProgressbar,buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
@@ -145,7 +145,7 @@ class Staking extends React.Component {
         <div className={'panel'}>
           <div className={'item'}>
             <label>Epoch</label>
-            <span className={'value highlight'}>{this.state.epoch}</span>
+            <span className={'value-highlight'}>{this.state.epoch}</span>
           </div>
           <div className={'item'}>
             <label>Slot</label>
@@ -163,7 +163,9 @@ class Staking extends React.Component {
           </div>
           <div className={'circle-con'}>
             <GradientSVG rotation={90} startColor={'#A642FF'} endColor={'#737BE4'} idCSS={'circleGradient'}/>
-            <CircularProgressbar strokeWidth={12} value={this.state.percentage} text={`${this.state.percentage}%`} />
+            <CircularProgressbar styles={buildStyles({
+              textSize: '18px'
+            })} strokeWidth={10} value={this.state.percentage} text={`${this.state.percentage}%`} />
           </div>
         </div>
       </div>
