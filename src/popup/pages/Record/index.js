@@ -14,6 +14,8 @@ import "./index.scss";
 import { openTab, sendMsg } from '../../../utils/commonMsg';
 import { FROM_BACK_TO_RECORD, WALLET_CHECK_TX_STATUS, TX_SUCCESS } from '../../../constant/types';
 import cx from "classnames";
+import extension from 'extensionizer'
+
 const DECIMALS = cointypes.decimals
 
 const STATUS = {
@@ -51,7 +53,7 @@ class Record extends React.Component {
     }
   }
   startListener = () => {
-    chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    extension.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       const { type, action } = message;
       if (type === FROM_BACK_TO_RECORD && action === TX_SUCCESS) {
         this.callSetState({

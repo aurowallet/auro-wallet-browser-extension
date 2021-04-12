@@ -74,6 +74,9 @@ class AccountName extends React.Component {
     if (this.isClicked) {
       return
     }
+    setTimeout(()=>{
+      this.isClicked = false
+    },500)
     this.isClicked = true
     let accountText = ""
     if (this.state.accountName.length <= 0) {

@@ -12,7 +12,7 @@ import { getBalanceBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatu
 export async function getBalance(address) {
   let txBody = getBalanceBody(address)
   let result = await startFetchMyQuery(txBody, GQL_URL).catch(()=>{})
-  return result
+  return {address,account:result}
 }
 /**
  * 获取交易状态
@@ -137,7 +137,7 @@ export async function getAboutInfo(){
 export async function getTransactionList(address){
   let txUrl = TRANSACTION_URL+ "/transactions?account="+address +"&limit="+TX_LIST_LENGTH//TRANSACTION_URL+address
   let txList = await commonFetch(txUrl).catch(()=>[])
-   return txList
+   return {txList,address}
 
 }
 
@@ -150,7 +150,7 @@ export async function getPendingTxList(address){
   let txBody = getPendingTxBody(address)
   let result = await startFetchMyQuery(txBody, GQL_URL).catch(()=>[])
   let list =  result.pooledUserCommands ||[]
-  return list
+  return {txList:list,address}
 }
 
 /**

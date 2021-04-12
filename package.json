@@ -46,7 +46,8 @@
     "safe-buffer": "^5.2.1",
     "valid-url": "^1.0.9",
     "webpack": "4.44.2",
-    "mocha": "8.3.2"
+    "mocha": "8.3.2",
+    "extensionizer":"1.0.1"
   },
   "scripts": {
     "start": "react-scripts start",

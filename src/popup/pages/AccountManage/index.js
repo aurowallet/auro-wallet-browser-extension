@@ -20,7 +20,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice, amountDecimals } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import "./index.scss";
-
+import Toast from "../../component/Toast";
 
 class AccountManagePage extends React.Component {
   constructor(props) {
@@ -132,6 +132,11 @@ class AccountManagePage extends React.Component {
     });
   }
   goAddLedger=()=>{
+    const isLedgerCapable = (!window || window&&!window.USB)
+    if(isLedgerCapable){
+      Toast.info(getLanguage("ledgerNotSupport"))
+      return 
+    }
     let accountTypeList = this.state.accountList.filter((item, index) => {
       return item.type === ACCOUNT_TYPE.WALLET_LEDGER
     })

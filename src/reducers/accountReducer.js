@@ -101,7 +101,12 @@ const accountInfo = (state = initState, action) => {
             return {
                 ...state,
                 currentAccount: account,
-                shouldRefresh:true
+                balance: "0.0000",
+                txList: [],
+                netAccount: {},
+                nonce: "",
+                shouldRefresh:true,
+                
             }
         case UPDATE_NET_ACCOUNT:
             let netAccount = action.account

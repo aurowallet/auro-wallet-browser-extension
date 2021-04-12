@@ -20,11 +20,12 @@ import {
   WALLET_SEND_STAKE_TRANSTRACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_IMPORT_LEDGER,
-  WALLET_IMPORT_KEY_STORE ,
+  WALLET_IMPORT_KEY_STORE,
   WALLET_GET_CREATE_MNEMONIC
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
+import extension from 'extensionizer'
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
@@ -153,6 +154,6 @@ function onConnectListener(externalPort) {
   });
 }
 export function setupMessageListeners() {
-  chrome.runtime.onMessage.addListener(internalMessageListener);
-  chrome.runtime.onConnect.addListener(onConnectListener);
+  extension.runtime.onMessage.addListener(internalMessageListener);
+  extension.runtime.onConnect.addListener(onConnectListener);
 }

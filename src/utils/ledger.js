@@ -7,6 +7,7 @@ import BigNumber from "bignumber.js";
 import {cointypes} from "../../config";
 import Toast from "../popup/component/Toast";
 import {getLanguage} from "../i18n";
+import extension from 'extensionizer'
 const status = {
   rejected: 'CONDITIONS_OF_USE_NOT_SATISFIED',
 }
@@ -16,13 +17,13 @@ function initLedgerWindowListener () {
       const { action } = message
       switch (action) {
         case LEDGER_CONNECTED_SUCCESSFULLY:
-          chrome.runtime.onMessage.removeListener(onMessage)
+          extension.runtime.onMessage.removeListener(onMessage)
           resolve()
           sendResponse && sendResponse()
           break
       }
     }
-    chrome.runtime.onMessage.addListener(onMessage)
+    extension.runtime.onMessage.addListener(onMessage)
   })
 }
 async function openLedgerWindow () {

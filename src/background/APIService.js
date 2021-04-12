@@ -5,6 +5,7 @@ import { getTxStatus, sendStakeTx, sendTx } from './api';
 import { signPayment, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import {ACCOUNT_TYPE} from "../constant/walletType"
+import extension from 'extensionizer'
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -466,14 +467,14 @@ class APIService {
 
     notification = (hash) => {
         let id = hash
-        chrome.notifications &&
-            chrome.notifications.onClicked.addListener(function (id) {
+        extension.notifications &&
+        extension.notifications.onClicked.addListener(function (id) {
                 let url = EXPLORER_URL + id
-                window.open(url);
+                extension.tabs.create({ url: url });
             });
         let title = getLanguage('notificationTitle')
         let message = getLanguage('notificationContent')
-        chrome.notifications.create(id, {
+        extension.notifications.create(id, {
             title: title,
             message: message,
             iconUrl: '/img/128.png',
@@ -490,7 +491,7 @@ class APIService {
                 (data.transactionStatus === STATUS.TX_STATUS_INCLUDED
                     || data.transactionStatus === STATUS.TX_STATUS_UNKNOWN)
             )) {
-                chrome.runtime.sendMessage({
+                extension.runtime.sendMessage({
                     type: FROM_BACK_TO_RECORD,
                     action: TX_SUCCESS,
                 });

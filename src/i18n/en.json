@@ -190,5 +190,6 @@
     "blockProducerAddress":"Block Producer Address",
     "producerTotalStake":"Total Stake",
     "blocksProduced":"Blocks Produced",
-    "confirmEnv":"Please ensure that the system and network environment you are using is absolutely safe before performing this operation"
+    "confirmEnv":"Please ensure that the system and network environment you are using is absolutely safe before performing this operation",
+    "ledgerNotSupport":"This browser does not support Ledger temporarily"
 }

@@ -14,7 +14,7 @@ import { updateCurrentAccount } from "./reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
 import { NET_CONFIG_DEFAULT } from "./reducers/network";
 import { sendMsg } from "./utils/commonMsg";
-
+import extension from 'extensionizer'
 
 function getLocalNetConfig() {
   let localNetConfig = getLocal(NET_WORK_CONFIG)
@@ -76,7 +76,7 @@ export const applicationEntry = {
   },
 
   async appInit(store) {
-    chrome.runtime.connect({ name: WALLET_APP_CONNECT });
+    extension.runtime.connect({ name: WALLET_APP_CONNECT });
     await getLocalStatus(store)
     getLocalNetConfig()
   },

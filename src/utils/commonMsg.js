@@ -1,4 +1,4 @@
-
+import extension from 'extensionizer'
 /**
  * 发送消息的封装类
  * @param {*} message 
@@ -6,7 +6,7 @@
  */
 export function sendMsg(message, sendResponse) {
   const { messageSource, action, payload } = message
-  chrome.runtime.sendMessage(
+  extension.runtime.sendMessage(
     {
       messageSource, action, payload
     },
@@ -22,7 +22,7 @@ export function sendMsg(message, sendResponse) {
  * @param {*} url 
  */
 export function openTab(url){
-  chrome.tabs.create({
+  extension.tabs.create({
     url: url,
   });
 }

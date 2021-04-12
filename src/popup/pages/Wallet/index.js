@@ -99,21 +99,35 @@ class Wallet extends React.Component {
     this.props.setBottomType(this.state.bottomTipType)
   }
   fetchData = async (address) => {
+    let { currentAccount, shouldRefresh } = this.props
+    let currentAddress = currentAccount.address
+
     let netConfig = this.props.netConfig
     this.callSetState({
       isLoading:true
     })
-    let account = await getBalance(address)
+    let accountData = await getBalance(address)
+    let account = accountData.account
+    let balanceAddress = accountData.address
     if (account.error) {
       Toast.info(getLanguage('nodeError'))
-    } else if (account && account.account) {
+    } else if (account && account.account && balanceAddress === address) {
       this.props.updateNetAccount(account.account)
     }
     if (netConfig.netType === NET_CONFIG_DEFAULT) {
-      let txList = await getTransactionList(address)
-      let txPendingList = await getPendingTxList(address)
-      let newList = [...txPendingList,...txList]
-      
+      let txData = await getTransactionList(address)
+      let txAddress = txData.address
+      let txList = txData.txList
+      let txPendingData = await getPendingTxList(address)
+      let txPendingList = txPendingData.txList
+      let txPendingAddress = txPendingData.address
+      let newList = []
+      if(currentAddress === txPendingAddress){
+        newList = [...txPendingList]
+      }
+      if(currentAddress === txAddress){
+        newList = [...newList,...txList]
+      }
         if(newList.length>0){
           this.callSetState({
             isLoading: false,

@@ -93,7 +93,8 @@ class StakingTransfer extends React.Component {
         fee: feeRecom[1].value
       })
     }
-    let account = await getBalance(address)
+    let accountData = await getBalance(address)
+    let account = accountData.account
     if (account.account) {
       this.props.dispatch(updateNetAccount(account.account))
     }
