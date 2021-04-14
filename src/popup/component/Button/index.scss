@@ -1,6 +1,6 @@
 @import "../../common.scss";
 
-$common-btn-width: 100px;
+$common-btn-width: 120px;
 
 .common-button {
   border: none;
@@ -46,6 +46,8 @@ $common-btn-width: 100px;
   width: $common-btn-width;
   background: #6b5dfb;
   padding: 0px 0px;
+  margin-left: 0px;
+  margin-right: 0px;
   &:hover {
     background: #4f3efd;
   }
@@ -54,6 +56,8 @@ $common-btn-width: 100px;
   width: $common-btn-width;
   background: #00c89c;
   padding: 0px 0px;
+  margin-left: 0px;
+  margin-right: 0px;
   &:hover {
     background: #00af88;
   }
