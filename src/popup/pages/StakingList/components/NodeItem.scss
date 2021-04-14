@@ -1,3 +1,4 @@
+@import "../../../common.scss";
 .node-container {
   background: #FFFFFF;
   box-shadow: 0 12px 30px 0 rgba(37,34,117,0.08);
@@ -25,15 +26,19 @@
     align-items: center;
   }
   .pubkey {
-    font-size: 12px;
+    font-size: $font-size-desc;
+    margin: 4px 0px;
   }
   .stake {
-    font-size: 10px;
+    font-size: $font-size-desc;
   }
   .pubkey,.stake {
     color: #999999;
     span {
       color: #333;
     }
+  }
+  .node-name{
+    font-size: $font-size-content;
   }
 }

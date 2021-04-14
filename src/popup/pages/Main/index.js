@@ -30,41 +30,6 @@ class HomePage extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchLocalNetConfig()
-  }
-  getLocalNetConfig = () => {
-    let localNetConfig = getLocal(NET_WORK_CONFIG)
-    let config
-    if (!localNetConfig) {
-      let netList = network_config.map((item) => {
-        item.type = NET_CONFIG_DEFAULT
-        return item
-      })
-      config = {
-        currentUrl: netList[0].url,
-        netList: netList
-      }
-      saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
-    } else {
-      config = JSON.parse(localNetConfig)
-    }
-    this.props.updateNetConfig(config)
-    return config
-  }
-  fetchLocalNetConfig = () => {
-    let config = this.getLocalNetConfig()
-    let list = config.netList
-    let currentConfig = {}
-    for (let index = 0; index < list.length; index++) {
-      const netconfig = list[index];
-      if(config.currentUrl === netconfig.url){
-        currentConfig = netconfig
-        break
-      }
-    }
-    if(currentConfig.url){
-      this.props.updateCurrentNetwork(currentConfig.url, currentConfig.type)
-    }
   }
   onChangeRouteIndex = (index) => {
     this.props.updateHomeIndex(index)

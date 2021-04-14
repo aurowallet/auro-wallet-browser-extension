@@ -68,7 +68,7 @@ const initState = {
     accountCount: "",
     accountInfo: {},
     welcomeNextRoute: "",
-    homeBottomType:"BOTTOM_TYPE_NONE",
+    homeBottomType:"BOTTOM_TYPE_LOADING",
 };
 
 const cacheReducer = (state = initState, action) => {

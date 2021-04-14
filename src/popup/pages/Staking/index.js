@@ -45,7 +45,6 @@ class Staking extends React.Component {
       this.callSetState({
         loading: true
       },async ()=>{
-          this.props.dispatch(getStakingList());
           Promise.all([
             fetchDaemonStatus(),
             fetchDelegationInfo(this.props.currentAccount.address),
@@ -56,19 +55,24 @@ class Staking extends React.Component {
             this.props.dispatch(updateDelegationInfo(account));
 
             if(daemonStatus.stateHash){
-              const { block } = await fetchBlockInfo(daemonStatus.stateHash);
-              this.props.dispatch(updateBlockInfo(block));
-              this.fetchEpochData(daemonStatus,block)
+              fetchBlockInfo(daemonStatus.stateHash).then((blockInfo)=>{
+                let block = blockInfo.block
+                if(block){
+                  this.props.dispatch(updateBlockInfo(block));
+                  this.fetchEpochData(daemonStatus,block)
+                }
+              });
             }
 
             let isSelf = this.props.currentAccount.address === account.delegate;
             let validatorDetail = null;
             if (!isSelf && account.delegate) {
-              const validatorDetailResp = await fetchValidatorDetail(account.delegate).catch(()=>null)
-              validatorDetail = validatorDetailResp?.validator;
-              this.props.dispatch(updateValidatorDetail(validatorDetail));
+              fetchValidatorDetail(account.delegate).then((validatorDetailResp)=>{
+                validatorDetail = validatorDetailResp?.validator;
+                this.props.dispatch(updateValidatorDetail(validatorDetail));
+                this.setDelegationInfo(account,validatorDetail)
+              }).catch(()=>null)
             }
-            this.setDelegationInfo(account,validatorDetail)
             this.callSetState({
               loading: false
             });
@@ -78,7 +82,7 @@ class Staking extends React.Component {
               loading: false
             });
           })
-
+          this.props.dispatch(getStakingList());
       });
     }else{
       this.fetchEpochData(this.props.daemonStatus,this.props.block)
@@ -87,25 +91,28 @@ class Staking extends React.Component {
   }
 
   async fetchEpochData(daemonStatus,block) {
-    const slotsPerEpoch = daemonStatus.consensusConfiguration.slotsPerEpoch;
-    const slotDuration = daemonStatus.consensusConfiguration.slotDuration;
-    const slot = block.protocolState.consensusState.slot;
-    const epoch = block.protocolState.consensusState.epoch;
-    const lastTime = (slotsPerEpoch - slot) * slotDuration / 1000;
-    const days = Math.floor(lastTime / 60 / 60 / 24);
-    const leave1 = lastTime % (24 * 3600);
-    const hours = Math.floor(leave1 / (3600));
-    const leave2 = leave1 % 3600;
-    const minutes = Math.floor(leave2 / 60);
-    this.callSetState({
-      slotsPerEpoch,
-      epoch,
-      slot,
-      days,
-      hours,
-      minutes,
-      percentage: parseInt((100 * slot / slotsPerEpoch).toFixed(0))
-    });
+    if((daemonStatus&& daemonStatus.consensusConfiguration )
+      && (block&&block.protocolState)){
+        const slotsPerEpoch = daemonStatus.consensusConfiguration.slotsPerEpoch;
+        const slotDuration = daemonStatus.consensusConfiguration.slotDuration;
+        const slot = block.protocolState.consensusState.slot;
+        const epoch = block.protocolState.consensusState.epoch;
+        const lastTime = (slotsPerEpoch - slot) * slotDuration / 1000;
+        const days = Math.floor(lastTime / 60 / 60 / 24);
+        const leave1 = lastTime % (24 * 3600);
+        const hours = Math.floor(leave1 / (3600));
+        const leave2 = leave1 % 3600;
+        const minutes = Math.floor(leave2 / 60);
+        this.callSetState({
+          slotsPerEpoch,
+          epoch,
+          slot,
+          days,
+          hours,
+          minutes,
+          percentage: parseInt((100 * slot / slotsPerEpoch).toFixed(0))
+        });
+    }
   }
   async setDelegationInfo(account,validatorDetail) {
     let isSelf = this.props.currentAccount.address === account.delegate;

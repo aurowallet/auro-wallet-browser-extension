@@ -69,7 +69,7 @@ class AccountManagePage extends React.Component {
     for (let index = 0; index < accountList.length; index++) {
       const account = accountList[index];
       let accountBalance = balanceList[account.address]
-      if(accountBalance.length>0){
+      if(accountBalance && accountBalance.length>0){
         let balance = accountBalance[0].balance.total
         balance = amountDecimals(balance, cointypes.decimals)
         accountList[index].balance = balance

@@ -12,11 +12,11 @@ import App from "./popup/App";
 import rootReducer from "./reducers";
 import { updateCurrentAccount } from "./reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
-import { NET_CONFIG_DEFAULT } from "./reducers/network";
+import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
 import { sendMsg } from "./utils/commonMsg";
 import extension from 'extensionizer'
 
-function getLocalNetConfig() {
+function getLocalNetConfig(store) {
   let localNetConfig = getLocal(NET_WORK_CONFIG)
   let config
   if (!localNetConfig) {
@@ -28,7 +28,10 @@ function getLocalNetConfig() {
       currentUrl: netList[0].url,
       netList: netList
     }
+    store.dispatch(updateNetConfig(config))
     saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+  }else{
+    store.dispatch(updateNetConfig(JSON.parse(localNetConfig)))
   }
 }
 async function getLocalStatus(store) {
@@ -78,7 +81,7 @@ export const applicationEntry = {
   async appInit(store) {
     extension.runtime.connect({ name: WALLET_APP_CONNECT });
     await getLocalStatus(store)
-    getLocalNetConfig()
+    getLocalNetConfig(store)
   },
   createReduxStore() {
     this.reduxStore = configureStore({

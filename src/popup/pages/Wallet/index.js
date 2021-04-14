@@ -10,7 +10,7 @@ import pointNormal from "../../../assets/images/pointNormal.png";
 
 import reminder from "../../../assets/images/reminder.png";
 import txArrow from "../../../assets/images/txArrow.png";
-import { getBalance, getPendingTxList, getTransactionList } from "../../../background/api";
+import { fetchDaemonStatus, getBalance, getPendingTxList, getTransactionList } from "../../../background/api";
 import { cointypes, EXPLORER_URL } from '../../../../config';
 import { getLanguage } from "../../../i18n";
 import { updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
@@ -27,13 +27,14 @@ import txReceive from "../../../assets/images/txReceive.png";
 import txSend from "../../../assets/images/txSend.png";
 import txCommonType from "../../../assets/images/txCommonType.png";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
+import { ERROR_TYPE } from '../../../constant/errType';
 
 
-const BOTTOM_TYPE ={
-  BOTTOM_TYPE_NONE:"BOTTOM_TYPE_NONE",
-  BOTTOM_TYPE_NOT_DEFAULT:"BOTTOM_TYPE_NOT_DEFAULT",
-  BOTTOM_TYPE_SHOW_TX:"BOTTOM_TYPE_SHOW_TX",
-  BOTTOM_TYPE_SHOW_REMINDER:"BOTTOM_TYPE_SHOW_REMINDER",
+const BOTTOM_TYPE = {
+  BOTTOM_TYPE_NOT_DEFAULT: "BOTTOM_TYPE_NOT_DEFAULT", // 不是默认节点
+  BOTTOM_TYPE_SHOW_TX: "BOTTOM_TYPE_SHOW_TX",  // 展示交易记录
+  BOTTOM_TYPE_SHOW_REMINDER: "BOTTOM_TYPE_SHOW_REMINDER",  //展示没有交易记录，
+  BOTTOM_TYPE_LOADING: "BOTTOM_TYPE_LOADING",// 展示loading
 }
 
 const STATUS = {
@@ -48,109 +49,107 @@ class Wallet extends React.Component {
     this.state = {
       balance: "0.0000",
       txList: props.txList,
-      bottomTipType: props.cache.homeBottomType||BOTTOM_TYPE.BOTTOM_TYPE_NONE,
-      isLoading: false,
+      bottomTipType: props.cache.homeBottomType || BOTTOM_TYPE.BOTTOM_TYPE_LOADING,
     }
     this.isUnMounted = false;
   }
   componentWillUnmount() {
     this.isUnMounted = true;
   }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
+  callSetState = (data, callback) => { 
+    if (!this.isUnMounted) {
       this.setState({
         ...data
-      },()=>{
-        callback&&callback()
+      }, () => {
+        callback && callback()
       })
     }
   }
   async componentDidMount() {
-    let { currentAccount, shouldRefresh } = this.props
+    let { currentAccount } = this.props
     let address = currentAccount.address
-    this.setBottomTipType()
-    if (shouldRefresh && !this.isUnMounted) {
-      this.fetchData(address)
-    }
+    this.setBottomTipType(() => this.fetchData(address))
   }
-  componentWillReceiveProps(nextProps) {
-    if (this.props.currentAccount.address && nextProps.currentAccount.address !== this.props.currentAccount.address) {
-      this.fetchData(nextProps.currentAccount.address)
+  setBottomTipType = (callback) => {
+    let { shouldRefresh } = this.props
+    if (!shouldRefresh) {
+      return
     }
-  }
 
-  setBottomTipType = () => {
-    let balance = this.props.balance
     let netConfig = this.props.netConfig
     let lastType = this.state.bottomTipType
-
-    if(netConfig.netType !== NET_CONFIG_DEFAULT){
-      lastType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT 
+    if (netConfig.netType !== NET_CONFIG_DEFAULT) {
+      lastType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT
+    }else{//如果是默认节点的话
+      // 查看本地是否有交易记录
+      let txList = this.props.txList
+      if (txList.length <= 0) {
+        lastType = BOTTOM_TYPE.BOTTOM_TYPE_LOADING  
+      }else{
+        lastType = BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX
+      }
     }
     if (lastType !== this.state.bottomTipType) {
       this.callSetState({
         bottomTipType: lastType
-      },()=>{
+      }, () => {
         this.setHomeBottomType()
+        callback && callback()
       })
+    } else {
+      callback && callback()
     }
   }
-  setHomeBottomType=()=>{
+  setHomeBottomType = () => {
     this.props.setBottomType(this.state.bottomTipType)
   }
   fetchData = async (address) => {
     let { currentAccount, shouldRefresh } = this.props
     let currentAddress = currentAccount.address
-
-    let netConfig = this.props.netConfig
-    this.callSetState({
-      isLoading:true
-    })
-    let accountData = await getBalance(address)
-    let account = accountData.account
-    let balanceAddress = accountData.address
-    if (account.error) {
-      Toast.info(getLanguage('nodeError'))
-    } else if (account && account.account && balanceAddress === address) {
-      this.props.updateNetAccount(account.account)
-    }
-    if (netConfig.netType === NET_CONFIG_DEFAULT) {
-      let txData = await getTransactionList(address)
-      let txAddress = txData.address
-      let txList = txData.txList
-      let txPendingData = await getPendingTxList(address)
-      let txPendingList = txPendingData.txList
-      let txPendingAddress = txPendingData.address
-      let newList = []
-      if(currentAddress === txPendingAddress){
-        newList = [...txPendingList]
-      }
-      if(currentAddress === txAddress){
-        newList = [...newList,...txList]
-      }
-        if(newList.length>0){
-          this.callSetState({
-            isLoading: false,
-            bottomTipType:BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX
-          },()=>{
-            this.setHomeBottomType()
-          })
-        }else{
-          this.callSetState({
-            isLoading: false,
-            bottomTipType:BOTTOM_TYPE.BOTTOM_TYPE_SHOW_REMINDER
-          },()=>{
-            this.setHomeBottomType()
-          })
+    // if (!shouldRefresh) {
+    //   return
+    // }
+    this.props.updateShouldRequest(false)
+    getBalance(address).then((accountData) => {
+      let account = accountData.account
+      let balanceAddress = accountData.address
+      if (account.error) {
+        if(account.error !== ERROR_TYPE.CanceRequest){
+          Toast.info(getLanguage('nodeError'))
         }
-      
-      this.props.updateAccountTx(txList, txPendingList)
-    }else{
+      } else if (account && account.account && balanceAddress === currentAddress) {
+        this.props.updateNetAccount(account.account)
+      }
+    })
+    if (this.state.bottomTipType !== BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT) {
       this.callSetState({
-        isLoading:false
+        bottomTipType: BOTTOM_TYPE.BOTTOM_TYPE_LOADING
+      })
+      let txList = getTransactionList(address)
+      let pendingTxList = getPendingTxList(address)
+      Promise.all([txList, pendingTxList]).then((data) => {
+        let txData = data[0]
+        let txAddress = txData.address
+        let txList = txData.txList
+        
+        let txPendingData = data[1]
+        let txPendingList = txPendingData.txList
+        let txPendingAddress = txPendingData.address
+        let newList = []
+        if (currentAddress === txPendingAddress) {
+          newList = [...txPendingList]
+        }
+        if (currentAddress === txAddress) {
+          newList = [...newList, ...txList]
+        }
+        this.callSetState({
+          bottomTipType: BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX
+        }, () => {
+          this.setHomeBottomType()
+        })
+        this.props.updateAccountTx(txList, txPendingList)
       })
     }
-    this.props.updateShouldRequest(false)
   }
 
   onClickAddress = () => {
@@ -263,7 +262,7 @@ class Wallet extends React.Component {
     if (item.type.toLowerCase() === "payment" || item.type.toLowerCase() === "delegation") {
       isReceive = item.receiver.toLowerCase() === this.props.currentAccount.address.toLowerCase()
     }
-    let showAddress = addressSlice(isReceive ? item.sender : item.receiver , 8)
+    let showAddress = addressSlice(isReceive ? item.sender : item.receiver, 8)
     showAddress = !showAddress ? item.type.toUpperCase() : showAddress
     let amount = amountDecimals(item.amount, cointypes.decimals)
     amount = getDisplayAmount(amount, 2)
@@ -282,8 +281,8 @@ class Wallet extends React.Component {
           <div className={"tx-top-container"}>
             <p className="tx-item-address">{showAddress}</p>
             <p className={cx({
-              "tx-item-amount":true,
-              })}>{amount}</p>
+              "tx-item-amount": true,
+            })}>{amount}</p>
           </div>
           <div className={'tx-bottom-container'}>
             <p className="tx-item-time">{item.time}</p>
@@ -302,7 +301,7 @@ class Wallet extends React.Component {
   renderHistory = () => {
     let txList = this.props.txList
     if (txList.length <= 0) {
-      return (<></>)
+      return this.getBottomRenderContainer(this.renderNoBalance())
     }
     return (
       <div className={"tx-container"}>
@@ -349,19 +348,15 @@ class Wallet extends React.Component {
 
   getBottomRender = () => {
     let child
-    if (this.state.isLoading) {
-      child = this.renderLoading()
-      return this.getBottomRenderContainer(child)
-    }
     switch (this.state.bottomTipType) {
+      case BOTTOM_TYPE.BOTTOM_TYPE_LOADING:
+        child = this.renderLoading()
+        return this.getBottomRenderContainer(child)
       case BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT:
         child = this.renderNoTx()
-      return this.getBottomRenderContainer(child)
-      case BOTTOM_TYPE.BOTTOM_TYPE_SHOW_REMINDER:
-        child = this.renderNoBalance()
         return this.getBottomRenderContainer(child)
-        case BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX:
-          return this.renderHistory()
+      case BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX:
+        return this.renderHistory()
       default:
         return <></>
     }
