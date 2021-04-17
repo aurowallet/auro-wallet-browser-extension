@@ -169,7 +169,7 @@
   "pleaseConnectLedger":"将Ledger连接到电脑",
   "pleaseOpenInLedger":"在Ledger硬件中打开Mina的App",
   "ledgerRejected": "已被Ledger拒绝",
-  "back2extension": "请在返回钱包应用中继续操作。",
+  "back2extension": "请返回钱包应用中继续操作。",
   "dontclose": "在此之前<b>请勿关闭</b>此窗口。",
   "confirmInfoLedger":"请在Ledger钱包中进行确认",
   "keystoreError":"keystore格式错误或密码不正确",

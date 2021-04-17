@@ -28,8 +28,9 @@
     "default_popup": "popup.html"
   },
   "permissions": [
-    "storage", "activeTab",
-    "tabs", "history",
+    "storage", 
+    "activeTab",
+    "tabs", 
     "unlimitedStorage",
     "notifications"
   ],
