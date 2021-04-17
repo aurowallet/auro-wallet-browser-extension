@@ -5,7 +5,9 @@ import purpleArrow from "../../../assets/images/rightPurpleArrow.png";
 import whiteArrow from "../../../assets/images/rightWhiteArrow.png";
 import logo from "../../../assets/images/transparentLogo.png";
 import welcomeBg from "../../../assets/images/welcomeBg.png";
+import { getLocal } from "../../../background/localStorage";
 import { get } from "../../../background/storageService";
+import { USER_AGREEMENT } from "../../../constant/storageKey";
 import {
   changeLanguage,
   default_language,
@@ -14,7 +16,7 @@ import {
   languageOption
 } from "../../../i18n";
 import { setLanguage } from "../../../reducers/appReducer";
-import { setWelcomeNextRoute } from "../../../reducers/cache";
+import { setWelcomeNextRoute, updateProtocolFrom } from "../../../reducers/cache";
 import Button, { BUTTON_TYPE_HOME_BUTTON } from "../../component/Button";
 import Select from "../../component/Select";
 import "./index.scss";
@@ -22,7 +24,8 @@ class Welcome extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      newAccount: false
+      newAccount: false,
+      isGotoProtocol:true
     }
     this.isUnMounted = false;
   }
@@ -44,6 +47,13 @@ class Welcome extends React.Component {
   }
 
   initLocal = () => {
+    // 先去获取本地的隐私协议是否同意
+    let agreeStatus = getLocal(USER_AGREEMENT)
+    if(agreeStatus){
+      this.callSetState({
+        isGotoProtocol:false
+      })
+    }
     get(null).then(dataObj => {
       if (dataObj && !dataObj.keyringData) {
         this.callSetState({
@@ -70,19 +80,35 @@ class Welcome extends React.Component {
     )
   }
   goToPage = (nextRoute) => {
-    this.props.setWelcomeNextRoute(nextRoute)
-    this.props.history.push({
-      pathname: "/createpassword",
+    // 有协议，先进入协议，然后输入密码。进入主要操作界面
+    // 没有协议，进入输入面膜，然后进入主要操作界面
+    if(this.state.isGotoProtocol){
+      this.props.updateProtocolFrom("/createpassword")
+      this.props.setWelcomeNextRoute(nextRoute)
+      this.props.history.push({
+        pathname: "protocol_page"
+      })
+    }else{
+      this.props.setWelcomeNextRoute(nextRoute)
+      this.props.history.push({
+        pathname: "/createpassword",
+      })
     }
-    )
+    // 更新下一步的路由
   };
-  goToCreate = () => {
-    let nextRoute = "backup_tips"
-    this.props.setWelcomeNextRoute(nextRoute)
-    this.props.history.push({
-      pathname: "/createpassword",
+  goToCreate = (nextRoute) => {
+    if(this.state.isGotoProtocol){
+      this.props.updateProtocolFrom("/createpassword")
+      this.props.updateProtocolFrom(nextRoute)
+      this.props.history.push({
+        pathname: "protocol_page",
+      })
+    }else{
+      this.props.setWelcomeNextRoute(nextRoute)
+      this.props.history.push({
+        pathname: "/createpassword",
+      })
     }
-    )
   };
 
   render() {
@@ -128,7 +154,11 @@ function mapDispatchToProps(dispatch) {
     },
     setWelcomeNextRoute: (nextRoute) => {
       dispatch(setWelcomeNextRoute(nextRoute))
-    }
+    },
+    
+    updateProtocolFrom: (nextRoute) => {
+      dispatch(updateProtocolFrom(nextRoute))
+    },
   };
 }
 
