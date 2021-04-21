@@ -99,7 +99,7 @@ class Welcome extends React.Component {
   goToCreate = (nextRoute) => {
     if(this.state.isGotoProtocol){
       this.props.updateProtocolFrom("/createpassword")
-      this.props.updateProtocolFrom(nextRoute)
+      this.props.setWelcomeNextRoute(nextRoute)
       this.props.history.push({
         pathname: "protocol_page",
       })
