@@ -77,7 +77,20 @@ module.exports = (env, argv) => {
     node: {
       fs: 'empty',
       'child_process': 'empty'
-    }
+    },
+    optimization: {
+      splitChunks: {
+        chunks: "all",
+        minSize: 4194300,  
+        cacheGroups: {
+          default: {
+            name: 'common',
+            chunks: 'initial',
+            minChunks: 2,  
+          },
+        }
+      }
+    },
   };
   if (isDev) {
     config.devtool = 'cheap-module-source-map';

@@ -34,7 +34,7 @@
   ],
   "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["background.js","common.js"],
     "persistent": true
   }
 }
