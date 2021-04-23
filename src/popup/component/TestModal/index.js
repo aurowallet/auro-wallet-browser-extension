@@ -1,6 +1,7 @@
 import cx from "classnames";
 import React, { Component } from "react";
 import "./index.scss";
+import PropTypes from 'prop-types'
 export default class TestModal extends Component {
     constructor(props) {
         super(props);
@@ -43,4 +44,15 @@ export default class TestModal extends Component {
             </div>
         )
     }
+}
+
+TestModal.defaultProps = {
+    title: "",
+    touchToClose:false,
+    children:""
+}
+TestModal.propTypes = {
+    title: PropTypes.string,
+    touchToClose:PropTypes.bool,
+    children:PropTypes.element
 }

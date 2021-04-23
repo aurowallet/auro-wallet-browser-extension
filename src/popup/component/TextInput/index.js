@@ -6,6 +6,7 @@ import pwd_error from "../../../assets/images/pwd_error.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import { getLanguage } from "../../../i18n";
 import "./index.scss";
+import PropTypes from 'prop-types'
 
 
 export default class TextInput extends Component {
@@ -99,4 +100,23 @@ export default class TextInput extends Component {
             </div>
         );
     }
+}
+
+TextInput.defaultProps = {
+    label:"",
+    placeholder:"",
+    value:"",
+    showErrorTag:false, 
+    matchList:[],
+    onTextInput:()=>{},
+    errorTip:"",
+}
+TextInput.propTypes = {
+    label:PropTypes.string,
+    placeholder:PropTypes.string,
+    value:PropTypes.string,
+    showErrorTag:PropTypes.bool, 
+    matchList:PropTypes.array,
+    onTextInput:PropTypes.func,
+    errorTip:PropTypes.string,
 }

@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import pwd_error from "../../../assets/images/pwd_error.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import "./index.scss";
+import PropTypes from 'prop-types'
 export default class CustomInput extends Component {
     constructor(props) {
         super(props);
@@ -67,4 +68,44 @@ export default class CustomInput extends Component {
             </div>
         );
     }
+}
+
+CustomInput.defaultProps = { 
+    label: "",
+    descLabel: "",
+    onTextInput: () => { },
+    placeholder: "",
+    value: "",
+    errorTipShow: false,
+    showTip: "",
+}
+CustomInput.propTypes = {
+    /**
+     * 主标题
+     */
+    label: PropTypes.string,
+    /**
+    * 副标题
+    */
+    descLabel: PropTypes.string,
+    /**
+     * 输入时的回调
+     */
+    onTextInput: PropTypes.func,
+    /**
+   * 默认输入
+   */
+    placeholder: PropTypes.string,
+    /**
+    * 当前输入
+    */
+    value: PropTypes.string,
+    /**
+     * 是否展示错误数据
+     */
+    errorTipShow: PropTypes.bool,
+    /**
+    * 展示的提示
+    */
+    showTip: PropTypes.string,
 }

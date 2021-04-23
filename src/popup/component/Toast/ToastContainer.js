@@ -5,10 +5,13 @@ import ToastItem from './ToastItem';
 
 const default_duration = 2000
 class ToastContainer extends Component {
-    state = {
-        isShowMask: false, 
-        toastList: [], 
-        currentToast: {}
+    constructor(props) {
+        super(props);
+        this.state = {
+            isShowMask: false, 
+            toastList: [], 
+            currentToast: {}
+        };
     }
 
     pushToast = (toastProps) => {

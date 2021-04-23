@@ -55,7 +55,9 @@
     "eject": "react-scripts eject",
     "buildProd": "webpack --mode production",
     "dev": "webpack --mode development --progress --watch",
-    "test": "mocha --timeout 5000 --require node_modules/@babel/register \"test/unit/**/*.js\""
+    "test": "mocha --timeout 5000 --require node_modules/@babel/register \"test/unit/**/*.js\"",
+    "storybook": "start-storybook -p 6006 -s public",
+    "build-storybook": "build-storybook -s public"
   },
   "eslintConfig": {
     "extends": [
@@ -83,8 +85,16 @@
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "7.12.12",
     "@babel/plugin-transform-runtime": "^7.12.1",
+    "@storybook/addon-actions": "^6.2.9",
+    "@storybook/addon-essentials": "^6.2.9",
+    "@storybook/addon-links": "^6.2.9",
+    "@storybook/node-logger": "^6.2.9",
+    "@storybook/preset-create-react-app": "^3.1.7",
+    "@storybook/addon-knobs":"6.2.9",
+    "@storybook/react": "^6.3.0-alpha.13",
     "assert": "2.0.0",
     "babel-plugin-import": "1.13.3",
-    "webpack-cli": "^4.2.0"
+    "webpack-cli": "^4.2.0",
+    "url-loader": "4.1.1"
   }
 }

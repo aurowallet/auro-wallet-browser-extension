@@ -1,6 +1,6 @@
 import React from "react";
 import "./index.scss";
-
+import PropTypes from 'prop-types'
 export default class Tabs extends React.Component {
   constructor(props) {
     super(props);
@@ -59,4 +59,14 @@ export default class Tabs extends React.Component {
       </div>
     );
   }
+}
+
+
+Tabs.defaultProps = {
+  currentActiveIndex:0, 
+  onChangeIndex:()=>{},
+}
+Tabs.propTypes = {
+  currentActiveIndex:PropTypes.number, 
+  onChangeIndex:PropTypes.func
 }

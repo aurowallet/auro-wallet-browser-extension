@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import back_arrow from "../../../assets/images/back_arrow.png";
 import back_arrow_white from "../../../assets/images/back_arrow_white.png";
 import "./index.scss";
+import PropTypes from 'prop-types'
 class CustomView extends React.Component {
     constructor(props) {
         super(props);
@@ -27,7 +28,7 @@ class CustomView extends React.Component {
     }
     render() {
         const { title, backRoute, noi18n, noBack, isReceive, className } = this.props
-        let realTitle = title//noi18n ? title : getLanguage(title)
+        let realTitle = title
         let backImage = isReceive ? back_arrow_white : back_arrow
         return (
             <div className={cx({
@@ -62,11 +63,25 @@ class CustomView extends React.Component {
         );
     }
 }
+export default CustomView
 
-const mapStateToProps = (state) => ({});
-
-function mapDispatchToProps(dispatch) {
-    return {};
+CustomView.defaultProps = {
+    title:"", 
+    backRoute:"", 
+    noBack:false, 
+    isReceive:false, 
+    className:"",
+    onGoBack:"",
+    rightComponent:"",
+    children:""
 }
-
-export default connect(mapStateToProps, mapDispatchToProps)(CustomView);
+CustomView.propTypes = {
+    title:PropTypes.string, 
+    backRoute:PropTypes.string, 
+    noBack:PropTypes.bool, 
+    isReceive:PropTypes.bool, 
+    className:PropTypes.string,
+    onGoBack:PropTypes.func,
+    rightComponent:PropTypes.element,
+    children:PropTypes.element
+}
