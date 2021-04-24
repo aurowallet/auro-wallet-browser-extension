@@ -21,15 +21,23 @@ Auro Wallet is aiming to provide a more convenient entrance of the mina network.
 
 #### Dependencies
 
-- `react 16.x.x` 
+- `react 17.x.x` 
 - `npm 6.x.x` 
 - `node v10.18.x` 
 
-## Dev
+## Build
 Auro Wallet extension repo uses git-secret to encrypt the endpoints and the api keys. So, you can't build this without creating your own config file. You should create your own `config.js` file in the folder. Refer to the `config.example.js` sample file to create your own configuration.
+
+Dev
 ```sh
 npm run dev
+```
+
+Production
+```sh
+npm run build
 ``` 
+
 Extension's build output is placed in `/dist`, and you can check out [this page](https://developer.chrome.com/extensions/getstarted) for installing the developing extension.  
 
 ## UI TEST
