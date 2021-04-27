@@ -194,6 +194,6 @@
   "blocksProduced":"累计出块数量",
   "confirmEnv":"请确保你所使用的系统及网络环境绝对安全再执行些操作。",
   "ledgerNotSupport":"此浏览器暂时不支持Ledger",
-  "userAgree":"用户协议",
+  "userAgree":"使用条款",
   "agree":"同意"
 }
