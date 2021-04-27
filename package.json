@@ -50,9 +50,7 @@
     "extensionizer":"1.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "eject": "react-scripts eject",
+    "build": "webpack --mode production",
     "buildProd": "webpack --mode production",
     "dev": "webpack --mode development --progress --watch",
     "test": "mocha --timeout 5000 --require node_modules/@babel/register \"test/unit/**/*.js\"",
