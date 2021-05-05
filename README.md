@@ -4,11 +4,12 @@
 
 Auro Wallet provide one-stop management for MINA assets, convenient staking, and the private key is self-owned. Auro Wallet is aiming to provide a more convenient entrance of the Mina protocol.
 
-- Friendly UI.
+- Friendly UI/UX.
 - Secure local accounts storage.
 - Intuitive Assets management.
 - Simplified staking.
 - Available for Chrome&Firefox.
+- Support English and Chineses.
 
 ## Architecture
 [![Architecture Diagram](./docs/auro-extension-wallet.png)][1]
