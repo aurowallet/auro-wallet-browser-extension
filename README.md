@@ -14,8 +14,8 @@ Auro Wallet is aiming to provide a more convenient entrance of the mina network.
 - Intuitive Assets management.
 - Simplified staking.
 - Available for Chrome.
-<!-- ## Architecture
-[![Architecture Diagram](./docs/auro-extension-wallet.png)][1] -->
+## Architecture
+[![Architecture Diagram](./docs/auro-extension-wallet.png)][1]
 
 ### Building
 
@@ -57,4 +57,4 @@ npm run test
 
 [MIT](LICENSE)
 
-<!-- [1]:https://www.nomnoml.com/#file/auro-extension-wallet -->
+[1]:https://www.nomnoml.com/#file/auro-extension-wallet
