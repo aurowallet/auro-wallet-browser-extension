@@ -1,31 +1,29 @@
-# Auro Wallet-extension
+# Auro Wallet Browser Extension
 
 Mina Protocol browser extension wallet.
 
-### Introduction
+## Introduction
 
-Auro Wallet provide one-stop management for mina assets, convenient staking, and the private key is self-owned. 
-
-
-Auro Wallet is aiming to provide a more convenient entrance of the mina network.
+Auro Wallet provide one-stop management for MINA assets, convenient staking, and the private key is self-owned. Auro Wallet is aiming to provide a more convenient entrance of the Mina protocol.
 
 - Friendly UI.
 - Secure local accounts storage.
 - Intuitive Assets management.
 - Simplified staking.
-- Available for Chrome.
+- Available for Chrome&Firefox.
+
 ## Architecture
 [![Architecture Diagram](./docs/auro-extension-wallet.png)][1]
 
-### Building
+## Building
 
-#### Dependencies
+### Dependencies
 
 - `react 17.x.x` 
 - `npm 6.x.x` 
 - `node v10.18.x` 
 
-## Build
+### Build
 Auro Wallet extension repo uses git-secret to encrypt the endpoints and the api keys. So, you can't build this without creating your own config file. You should create your own `config.js` file in the folder. Refer to the `config.example.js` sample file to create your own configuration.
 
 Dev
@@ -40,12 +38,14 @@ npm run build
 
 Extension's build output is placed in `/dist`, and you can check out [this page](https://developer.chrome.com/extensions/getstarted) for installing the developing extension.  
 
-## UI TEST
+## Test
+
+### UI TEST
 
 ```sh
 npm run storybook
 ``` 
-## LIB TEST
+### LIB TEST
 
 run bottom sh and will open url in the chrome http://localhost:6006/
 
