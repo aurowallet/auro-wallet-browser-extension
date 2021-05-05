@@ -1,7 +1,5 @@
 # Auro Wallet Browser Extension
 
-Mina Protocol browser extension wallet.
-
 ## Introduction
 
 Auro Wallet provide one-stop management for MINA assets, convenient staking, and the private key is self-owned. Auro Wallet is aiming to provide a more convenient entrance of the Mina protocol.
@@ -40,12 +38,12 @@ Extension's build output is placed in `/dist`, and you can check out [this page]
 
 ## Test
 
-### UI TEST
+### UI Test
 
 ```sh
 npm run storybook
 ``` 
-### LIB TEST
+### LIB Test
 
 run bottom sh and will open url in the chrome http://localhost:6006/
 
