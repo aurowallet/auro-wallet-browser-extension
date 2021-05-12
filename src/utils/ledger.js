@@ -96,8 +96,8 @@ export async function checkLedgerConnect() {
   return {ledgerApp: app}
 }
 
-export async function requestAccount(app) {
-  const {publicKey, returnCode, statusText, ...others} = await app.getAddress(0)
+export async function requestAccount(app, accountIndex) {
+  const {publicKey, returnCode, statusText, ...others} = await app.getAddress(accountIndex)
   if (statusText === status.rejected) {
     return {rejected: true, publicKey: null}
   }

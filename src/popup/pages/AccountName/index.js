@@ -13,6 +13,8 @@ import {openPopupWindow} from "../../../utils/popup";
 import {checkLedgerConnect} from "../../../utils/ledger";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
 import { updateAccoutType } from "../../../reducers/cache";
+import cx from "classnames";
+import downArrow from "../../../assets/images/downArrow.png";
 
 class AccountName extends React.Component {
   constructor(props) {
@@ -34,7 +36,9 @@ class AccountName extends React.Component {
       btnClick: true,
       accountCount,
       errorTipShow: false,
-      placeholderText: placeholderText + parseInt(accountCount)
+      placeholderText: placeholderText + parseInt(accountCount),
+      isOpenAdvance: false,
+      accountIndex: 0
     };
     this.isClicked = false
     this.isUnMounted = false;
@@ -97,7 +101,8 @@ class AccountName extends React.Component {
       this.props.history.replace({
         pathname: "/ledger_import",
         params: {
-          "accountName": accountText
+          "accountName": accountText,
+          "accountIndex": this.state.accountIndex
         },
       })
     } else if(fromType === ACCOUNT_NAME_FROM_TYPE.KEYPAIR){
@@ -121,6 +126,36 @@ class AccountName extends React.Component {
     }
     this.isClicked = false
   }
+  onAccountIndexChange = (e)=> {
+    var accountIndex = +e.target.value;
+    this.setState({
+      accountIndex,
+    });
+  }
+  onOpenAdvance = () => {
+    this.callSetState({
+      isOpenAdvance: !this.state.isOpenAdvance
+    })
+  }
+  renderAdvance = () => {
+    if (this.props.cache.fromType !== ACCOUNT_NAME_FROM_TYPE.LEDGER) {
+      return null;
+    }
+    const { isOpenAdvance } = this.state;
+    return (
+      <div className="advancer-outer-container">
+        <div
+          onClick={this.onOpenAdvance}
+          className="advancer-container click-cursor">
+          <p className="advance-content">{getLanguage('advanceMode')}</p>
+          <img className={cx({
+            "down-normal": true,
+            "up-advance": isOpenAdvance,
+            "down-advance": !isOpenAdvance
+          })} src={downArrow}></img>
+        </div>
+      </div>)
+  }
   renderBottonBtn = () => {
     let {fromType} = this.props.cache
     let buttonText = fromType === ACCOUNT_NAME_FROM_TYPE.INSIDE? 'confirm_1' : 'next'
@@ -132,6 +167,24 @@ class AccountName extends React.Component {
           disabled={!this.state.btnClick}
         />
       </div>)
+  }
+  renderLedgerHDPath(){
+    const { isOpenAdvance } = this.state;
+    if (this.props.cache.fromType !== ACCOUNT_NAME_FROM_TYPE.LEDGER) {
+      return null;
+    }
+    if (!isOpenAdvance) {
+      return null;
+    }
+    return <div className={'ledger-derived-path'}>
+      <div>HD派生路径</div>
+      <div className={'ledger-derived-input'}>m / 44' / 12586' / '<input
+        type='number'
+        min="0"
+        step="1"
+        onChange={this.onAccountIndexChange}
+        value={this.state.accountIndex}/>'/0/0</div>
+    </div>
   }
   onSubmit = (event) => {
     event.preventDefault();
@@ -150,6 +203,10 @@ class AccountName extends React.Component {
               errorTipShow={this.state.errorTipShow}
               showTip={getLanguage("accountNameLimit")}
               onTextInput={this.onAccountInput} />
+            <div className={'ledger-path-container'}>
+              {this.renderAdvance()}
+              {this.renderLedgerHDPath()}
+            </div>
             {this.renderBottonBtn()}
           </div>
         </form>
