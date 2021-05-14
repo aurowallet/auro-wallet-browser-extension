@@ -97,6 +97,11 @@ export const WALLET_CHECK_TX_STATUS = "WALLET_CHECK_TX_STATUS"
  */
  export const WALLET_IMPORT_LEDGER = "WALLET_IMPORT_LEDGER"
 
+/**
+ * 导入watch mode钱包
+ */
+ export const WALLET_IMPORT_WATCH_MODE = "WALLET_IMPORT_WATCH_MODE"
+
 
  /**
  * 导入keystore钱包

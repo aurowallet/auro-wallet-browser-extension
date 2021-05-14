@@ -193,5 +193,8 @@
     "confirmEnv":"Please ensure that the system and network environment you are using is absolutely safe before performing this operation",
     "ledgerNotSupport":"This browser does not support Ledger temporarily",
     "userAgree":"Terms and conditions",
-    "agree":"Agree"
+    "agree":"Agree",
+    "watchAccount": "Watch Mode",
+    "textWatchModeAddress": "Enter or paste wallet address",
+    "hdDerivedPath": "HD Path"
 }

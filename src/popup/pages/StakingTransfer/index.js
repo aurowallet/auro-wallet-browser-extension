@@ -318,8 +318,11 @@ class StakingTransfer extends React.Component {
     )
   }
   renderConfirmButton = () => {
+    let currentAccount = this.props.currentAccount
+    let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
     return (
       <Button
+        disabled={disabled}
         content={getLanguage('confirm')}
         onClick={this.doTransfer}
       />

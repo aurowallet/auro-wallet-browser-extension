@@ -96,7 +96,10 @@ class AccountManagePage extends React.Component {
     let ledgerList = newList.filter((item, index) => {
       return item.type === ACCOUNT_TYPE.WALLET_LEDGER
     })
-    return [...createList, ...importList,...ledgerList]
+    let watchList = newList.filter((item, index) => {
+      return item.type === ACCOUNT_TYPE.WALLET_WATCH
+    })
+    return [...createList, ...importList,...ledgerList, ...watchList]
   }
   getAccountTypeIndex = (list) => {
     if (list.length === 0) {

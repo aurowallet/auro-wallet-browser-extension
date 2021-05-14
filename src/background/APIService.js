@@ -172,6 +172,29 @@ class APIService {
             return this.getAccountWithoutPrivate(account)
         }
     };
+    _checkWalletRepeat(accounts, address) {
+        let error = {}
+        for (let index = 0; index < accounts.length; index++) {
+            const account = accounts[index];
+            if (account.address === address) {
+                error = { "error": 'improtRepeat',type:"local" }
+                break
+            }
+        }
+        return error;
+    }
+    _findWalletIndex(accounts, type) {
+        let importList = accounts.filter((item, index) => {
+            return item.type === type
+        })
+        let typeIndex = ""
+        if (importList.length === 0) {
+            typeIndex = 1
+        } else {
+            typeIndex = importList[importList.length - 1].typeIndex + 1
+        }
+        return typeIndex;
+    }
     /**
      *  私钥导入
      */
@@ -181,27 +204,11 @@ class APIService {
 
             let data = this.getStore().data
             let accounts = data[0].accounts
-            let error = {}
-
-            for (let index = 0; index < accounts.length; index++) {
-                const account = accounts[index];
-                if (account.address === wallet.pubKey) {
-                    error = { "error": 'improtRepeat',type:"local" }
-                    break
-                }
-            }
+            let error = this._checkWalletRepeat(accounts, wallet.pubKey);
             if (error.error) {
                 return error
             }
-            let importList = accounts.filter((item, index) => {
-                return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE//"import"
-            })
-            let typeIndex = ""
-            if (importList.length == 0) {
-                typeIndex = 1
-            } else {
-                typeIndex = importList[importList.length - 1].typeIndex + 1
-            }
+            let typeIndex = this._findWalletIndex(accounts, ACCOUNT_TYPE.WALLET_OUTSIDE);
 
             let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
             const account = {
@@ -239,6 +246,33 @@ class APIService {
         let currentAccount = await this.addImportAccount(wallet.priKey,accountName)
         return currentAccount
     }
+    addWatchModeAccount = async (address, accountName) => {
+       try {
+           let data = this.getStore().data
+           let accounts = data[0].accounts
+           let error = this._checkWalletRepeat(accounts, address);
+           if (error.error) {
+               return error
+           }
+           let typeIndex = this._findWalletIndex(accounts, ACCOUNT_TYPE.WALLET_WATCH);
+           const account = {
+               address: address,
+               type: ACCOUNT_TYPE.WALLET_WATCH,
+               accountName,
+               typeIndex
+           }
+           data[0].currentAddress = account.address
+           data[0].accounts.push(account)
+           let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
+
+           this.memStore.updateState({ data: data })
+           save({ keyringData: encryptData })
+           this.memStore.updateState({ currentAccount: account })
+           return this.getAccountWithoutPrivate(account)
+       } catch (error) {
+           return { "error": JSON.stringify(error)}
+       }
+    }
     /**
      * 导入ledger钱包
      */
@@ -246,27 +280,11 @@ class APIService {
         try {
             let data = this.getStore().data
             let accounts = data[0].accounts
-            let error = {}
-
-            for (let index = 0; index < accounts.length; index++) {
-                const account = accounts[index];
-                if (account.address === address) {
-                    error = { "error": 'improtRepeat',type:"local" }
-                    break
-                }
-            }
+            let error = this._checkWalletRepeat(accounts, address);
             if (error.error) {
                 return error
             }
-            let ledgerList = accounts.filter((item, index) => {
-                return item.type === ACCOUNT_TYPE.WALLET_LEDGER//"import"
-            })
-            let typeIndex = ""
-            if (ledgerList.length === 0) {
-                typeIndex = 1
-            } else {
-                typeIndex = ledgerList[ledgerList.length - 1].typeIndex + 1
-            }
+            let typeIndex = this._findWalletIndex(accounts, ACCOUNT_TYPE.WALLET_LEDGER);
 
             const account = {
                 address: address,

@@ -388,9 +388,12 @@ class SendPage extends React.Component {
     })
   }
   renderConfirmButton = () => {
+    let currentAccount = this.props.currentAccount
+    let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
     return (
       <div className={"send-confirm-container"}>
         <Button
+          disabled={disabled}
           content={getLanguage('confirm')}
           onClick={this.clickNextStep}
         />

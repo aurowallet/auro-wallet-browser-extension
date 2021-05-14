@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { WALLET_CREATE_HD_ACCOUNT } from "../../../constant/types";
+import {WALLET_CREATE_HD_ACCOUNT, WALLET_IMPORT_LEDGER, WALLET_IMPORT_WATCH_MODE} from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -12,9 +12,11 @@ import "./index.scss";
 import {openPopupWindow} from "../../../utils/popup";
 import {checkLedgerConnect} from "../../../utils/ledger";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
-import { updateAccoutType } from "../../../reducers/cache";
+import {setChangeAccountName, updateAccoutType} from "../../../reducers/cache";
 import cx from "classnames";
 import downArrow from "../../../assets/images/downArrow.png";
+import Toast from "../../component/Toast";
+import {addressValid} from "../../../utils/validator";
 
 class AccountName extends React.Component {
   constructor(props) {
@@ -26,8 +28,10 @@ class AccountName extends React.Component {
       placeholderText = "Import Account "
     }else if(fromType === ACCOUNT_NAME_FROM_TYPE.LEDGER){
       placeholderText =  "Ledger Account "
-    }else if(fromType === ACCOUNT_NAME_FROM_TYPE.KEYPAIR){
+    } else if(fromType === ACCOUNT_NAME_FROM_TYPE.KEYPAIR){
       placeholderText =  "Import Account "
+    }  else if(fromType === ACCOUNT_NAME_FROM_TYPE.WATCHMODE){
+      placeholderText =  "Watched Account "
     } else{
       placeholderText = "Account "
     }
@@ -38,7 +42,8 @@ class AccountName extends React.Component {
       errorTipShow: false,
       placeholderText: placeholderText + parseInt(accountCount),
       isOpenAdvance: false,
-      accountIndex: 0
+      accountIndex: 0,
+      watchModeAddress: ''
     };
     this.isClicked = false
     this.isUnMounted = false;
@@ -73,6 +78,31 @@ class AccountName extends React.Component {
           })
         }
       })
+  }
+  onImportWatchModeAccount(accountName) {
+    if (!addressValid(this.state.watchModeAddress)) {
+      Toast.info(getLanguage('sendAddressError'))
+      return
+    }
+    sendMsg({
+      payload: {
+        address: this.state.watchModeAddress,
+        accountName: accountName
+      },
+      action: WALLET_IMPORT_WATCH_MODE
+    },(account)=>{
+      console.log('account', account)
+      if (account.error) {
+        if(account.type === "local"){
+          Toast.info(getLanguage(account.error))
+        } else {
+          Toast.info(account.error)
+        }
+      } else {
+        this.props.updateCurrentAccount(account)
+        this.props.history.go(-1)
+      }
+    })
   }
   goToNext = async () => {
     if (this.isClicked) {
@@ -112,8 +142,9 @@ class AccountName extends React.Component {
           "accountName": accountText
         },
       })
-
-    } else {
+    } else if (fromType === ACCOUNT_NAME_FROM_TYPE.WATCHMODE){
+      this.onImportWatchModeAccount(accountText)
+    }else {
       sendMsg({
         action: WALLET_CREATE_HD_ACCOUNT,
         payload: { accountName: accountText }
@@ -130,6 +161,12 @@ class AccountName extends React.Component {
     var accountIndex = +e.target.value;
     this.setState({
       accountIndex,
+    });
+  }
+  onWatchModeInput = (e)=> {
+    var watchModeAddress = e.target.value;
+    this.setState({
+      watchModeAddress,
     });
   }
   onOpenAdvance = () => {
@@ -168,6 +205,15 @@ class AccountName extends React.Component {
         />
       </div>)
   }
+  renderWatchModeAddressInput() {
+    return <div className={'watchmode-input-container'}>
+       <textarea
+         className={"watchmode-area-input"}
+         placeholder={getLanguage('textWatchModeAddress')}
+         value={this.state.watchModeAddress}
+         onChange={this.onWatchModeInput} />
+    </div>
+  }
   renderLedgerHDPath(){
     const { isOpenAdvance } = this.state;
     if (this.props.cache.fromType !== ACCOUNT_NAME_FROM_TYPE.LEDGER) {
@@ -190,9 +236,10 @@ class AccountName extends React.Component {
     event.preventDefault();
   }
   render() {
+    let isWatchMode = this.props.cache.fromType === ACCOUNT_NAME_FROM_TYPE.WATCHMODE
     return (
       <CustomView
-        title={getLanguage("accountName")}
+        title={getLanguage(isWatchMode ? "watchAccount" :"accountName")}
         history={this.props.history}>
         <form onSubmit={this.onSubmit}>
           <div className={"account-name-container"}>
@@ -203,10 +250,15 @@ class AccountName extends React.Component {
               errorTipShow={this.state.errorTipShow}
               showTip={getLanguage("accountNameLimit")}
               onTextInput={this.onAccountInput} />
-            <div className={'ledger-path-container'}>
-              {this.renderAdvance()}
-              {this.renderLedgerHDPath()}
-            </div>
+            {
+              this.props.cache.fromType === ACCOUNT_NAME_FROM_TYPE.LEDGER ? <div className={'ledger-path-container'}>
+                {this.renderAdvance()}
+                {this.renderLedgerHDPath()}
+              </div> : null
+            }
+            {
+              isWatchMode ? this.renderWatchModeAddressInput() : null
+            }
             {this.renderBottonBtn()}
           </div>
         </form>

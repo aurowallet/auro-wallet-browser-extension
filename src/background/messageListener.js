@@ -21,7 +21,7 @@ import {
   WALLET_CHECK_TX_STATUS,
   WALLET_IMPORT_LEDGER,
   WALLET_IMPORT_KEY_STORE,
-  WALLET_GET_CREATE_MNEMONIC
+  WALLET_GET_CREATE_MNEMONIC, WALLET_IMPORT_WATCH_MODE
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -123,6 +123,11 @@ function internalMessageListener(message, sender, sendResponse) {
       break;
     case WALLET_IMPORT_LEDGER:
       apiService.addLedgerAccount(payload.address, payload.accountName).then((account) => {
+        sendResponse(account);
+      })
+      break;
+    case WALLET_IMPORT_WATCH_MODE:
+      apiService.addWatchModeAccount(payload.address, payload.accountName).then((account) => {
         sendResponse(account);
       })
       break;
