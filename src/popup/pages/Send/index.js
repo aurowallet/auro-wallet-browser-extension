@@ -319,7 +319,9 @@ class SendPage extends React.Component {
         confirmModalLoading: true
       })
       this.modal.current.setModalVisable(true)
-      const { signature, payload, error } = await requestSignPayment(ledgerApp, params)
+      let currentAccount = this.props.currentAccount
+      console.log('currentAccount', currentAccount, typeof currentAccount.hdPath)
+      const { signature, payload, error } = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
       this.modal.current.setModalVisable(false)
       this.callSetState({
         confirmModalLoading: false

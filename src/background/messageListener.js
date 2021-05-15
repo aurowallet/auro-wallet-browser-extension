@@ -122,7 +122,7 @@ function internalMessageListener(message, sender, sendResponse) {
       sendResponse(apiService.checkTxStatus(payload.paymentId, payload.hash));
       break;
     case WALLET_IMPORT_LEDGER:
-      apiService.addLedgerAccount(payload.address, payload.accountName).then((account) => {
+      apiService.addLedgerAccount(payload.address, payload.accountName, payload.accountIndex).then((account) => {
         sendResponse(account);
       })
       break;

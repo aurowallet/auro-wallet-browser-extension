@@ -108,22 +108,22 @@ export async function requestAccount(app, accountIndex) {
   }
 }
 
-export async function requestSignDelegation (app, body) {
-  return requestSign(app, body, TxType.DELEGATION)
+export async function requestSignDelegation (app, body, ledgerAccountIndex) {
+  return requestSign(app, body, TxType.DELEGATION, ledgerAccountIndex)
 }
 
-export async function requestSignPayment (app, body) {
-  return requestSign(app, body, TxType.PAYMENT)
+export async function requestSignPayment (app, body, ledgerAccountIndex) {
+  return requestSign(app, body, TxType.PAYMENT, ledgerAccountIndex)
 }
 
-async function requestSign(app, body, type) {
+async function requestSign(app, body, type, ledgerAccountIndex) {
   let amount = body.amount || 0
   let decimal = new BigNumber(10).pow(cointypes.decimals)
   let sendFee = new BigNumber(body.fee).multipliedBy(decimal).toNumber()
   let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber()
   let payload = {
     txType: type,
-    senderAccount: 0,
+    senderAccount: ledgerAccountIndex,
     senderAddress: body.fromAddress,
     receiverAddress: body.toAddress,
     amount: sendAmount,

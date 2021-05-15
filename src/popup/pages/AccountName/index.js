@@ -223,13 +223,13 @@ class AccountName extends React.Component {
       return null;
     }
     return <div className={'ledger-derived-path'}>
-      <div>HD派生路径</div>
-      <div className={'ledger-derived-input'}>m / 44' / 12586' / '<input
+      <div>{getLanguage('hdDerivedPath')}</div>
+      <div className={'ledger-derived-input'}>m / 44' / 12586' / <input
         type='number'
         min="0"
         step="1"
         onChange={this.onAccountIndexChange}
-        value={this.state.accountIndex}/>'/0/0</div>
+        value={this.state.accountIndex}/> ' / 0 / 0</div>
     </div>
   }
   onSubmit = (event) => {

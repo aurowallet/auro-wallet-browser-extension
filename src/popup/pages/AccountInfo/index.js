@@ -193,7 +193,9 @@ class AccountInfo extends React.Component {
   }
   render() {
     let hideDelete = this.state.account.type === ACCOUNT_TYPE.WALLET_INSIDE
-    let hideImport = this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH
+    let isLedger = this.state.account.type === ACCOUNT_TYPE.WALLET_LEDGER
+    let hideExport = this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH 
+      ||  isLedger
     let showAddress = this.state.account.address
     return (
       <CustomView
@@ -201,8 +203,9 @@ class AccountInfo extends React.Component {
         history={this.props.history}>
         <div className="account-info-container">
           {this.renderInfo(getLanguage('accountAddress'), showAddress, this.copyAddress, true)}
+          {isLedger ? this.renderInfo(getLanguage('hdDerivedPath'), `m / 44' / 12586' / ${this.state.account.hdPath} ' / 0 / 0`, null, true) : null}
           {this.renderInfo(getLanguage('accountName'), this.state.account.accountName, this.changeAccountName)}
-          {!hideImport ?this.renderInfo(getLanguage('exportPrivateKey'), "", this.showPrivateKey) : null}
+          {!hideExport ?this.renderInfo(getLanguage('exportPrivateKey'), "", this.showPrivateKey) : null}
           {!hideDelete ? this.renderInfo(getLanguage("accountDelete"), "", this.deleteAccount) : null}
         </div>
         <form onSubmit={this.onSubmit}>

@@ -61,9 +61,9 @@ class ImportPage extends React.Component {
       fromType: ACCOUNT_NAME_FROM_TYPE.WATCHMODE,
       accountCount
     })
-    this.props.history.push({
+    this.props.history.replace({
       pathname: "/account_name",
-    });
+    })
   }
   importKepair = () => {
     this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR)
@@ -83,7 +83,7 @@ class ImportPage extends React.Component {
   render() {
     return (
       <CustomView
-        title={getLanguage('importAccount')}
+        title={getLanguage('importEntry')}
         history={this.props.history}>
         {this.renderImportOption()}
       </CustomView>)

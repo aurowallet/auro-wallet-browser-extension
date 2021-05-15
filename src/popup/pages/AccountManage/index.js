@@ -188,6 +188,9 @@ class AccountManagePage extends React.Component {
       case ACCOUNT_TYPE.WALLET_LEDGER:
         typeText = "Ledger"
           break;
+      case ACCOUNT_TYPE.WALLET_WATCH:
+        typeText = getLanguage('watchLabel')
+        break;
       default:
         break;
     }
@@ -209,7 +212,8 @@ class AccountManagePage extends React.Component {
             <p className={cx({
               "account-item-type": showImport,
               "account-item-type-none": !showImport,
-              "account-ledger-tip" : item.type === ACCOUNT_TYPE.WALLET_LEDGER
+              "account-ledger-tip" : item.type === ACCOUNT_TYPE.WALLET_LEDGER,
+              "account-watch-tip" : item.type === ACCOUNT_TYPE.WALLET_WATCH,
             })}>{showImport}</p>
           </div>
           <p className={"account-item-address"}>{addressSlice(item.address)}</p>

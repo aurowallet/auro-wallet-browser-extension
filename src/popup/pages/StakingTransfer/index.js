@@ -117,7 +117,8 @@ class StakingTransfer extends React.Component {
         confirmModalLoading: true
       })
       this.modal.current.setModalVisable(true)
-      const {signature,payload, error} = await requestSignDelegation(ledgerApp, params)
+      let currentAccount = this.props.currentAccount
+      const {signature,payload, error} = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
       this.modal.current.setModalVisable(false)
       this.callSetState({
         confirmModalLoading: false

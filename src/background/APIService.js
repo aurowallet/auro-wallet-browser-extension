@@ -276,7 +276,7 @@ class APIService {
     /**
      * 导入ledger钱包
      */
-    addLedgerAccount = async (address, accountName)=>{
+    addLedgerAccount = async (address, accountName, ledgerPathAccountIndex)=>{
         try {
             let data = this.getStore().data
             let accounts = data[0].accounts
@@ -290,6 +290,7 @@ class APIService {
                 address: address,
                 type: ACCOUNT_TYPE.WALLET_LEDGER,
                 accountName,
+                hdPath: ledgerPathAccountIndex,
                 typeIndex
             }
             data[0].currentAddress = account.address
