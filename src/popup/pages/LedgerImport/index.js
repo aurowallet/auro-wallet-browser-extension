@@ -50,6 +50,7 @@ class LedgerImport extends React.Component {
         sendMsg({
           payload: {
             address: publicKey,
+            accountIndex: this.accountIndex,
             accountName: this.accountName
           },
           action: WALLET_IMPORT_LEDGER

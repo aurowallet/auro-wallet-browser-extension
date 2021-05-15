@@ -117,7 +117,8 @@ class StakingTransfer extends React.Component {
         confirmModalLoading: true
       })
       this.modal.current.setModalVisable(true)
-      const {signature,payload, error} = await requestSignDelegation(ledgerApp, params)
+      let currentAccount = this.props.currentAccount
+      const {signature,payload, error} = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
       this.modal.current.setModalVisable(false)
       this.callSetState({
         confirmModalLoading: false
@@ -318,8 +319,11 @@ class StakingTransfer extends React.Component {
     )
   }
   renderConfirmButton = () => {
+    let currentAccount = this.props.currentAccount
+    let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
     return (
       <Button
+        disabled={disabled}
         content={getLanguage('confirm')}
         onClick={this.doTransfer}
       />
@@ -328,6 +332,7 @@ class StakingTransfer extends React.Component {
   renderNodeProvider = () => {
     if (this.state.menuAdd) {
       return <CustomInput
+        value={this.state.nodeAddress}
         label={getLanguage('stakingProviderName')}
         onTextInput={this.onProviderChange} />
     } else {
@@ -428,6 +433,7 @@ class StakingTransfer extends React.Component {
             }
             <div className={'memo-con'}>
               <CustomInput
+                value={this.state.memo}
                 label={getLanguage('memo')}
                 onTextInput={this.onMemoChange} />
             </div>

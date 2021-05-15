@@ -96,7 +96,10 @@ class AccountManagePage extends React.Component {
     let ledgerList = newList.filter((item, index) => {
       return item.type === ACCOUNT_TYPE.WALLET_LEDGER
     })
-    return [...createList, ...importList,...ledgerList]
+    let watchList = newList.filter((item, index) => {
+      return item.type === ACCOUNT_TYPE.WALLET_WATCH
+    })
+    return [...createList, ...importList,...ledgerList, ...watchList]
   }
   getAccountTypeIndex = (list) => {
     if (list.length === 0) {
@@ -185,6 +188,9 @@ class AccountManagePage extends React.Component {
       case ACCOUNT_TYPE.WALLET_LEDGER:
         typeText = "Ledger"
           break;
+      case ACCOUNT_TYPE.WALLET_WATCH:
+        typeText = getLanguage('watchLabel')
+        break;
       default:
         break;
     }
@@ -206,7 +212,8 @@ class AccountManagePage extends React.Component {
             <p className={cx({
               "account-item-type": showImport,
               "account-item-type-none": !showImport,
-              "account-ledger-tip" : item.type === ACCOUNT_TYPE.WALLET_LEDGER
+              "account-ledger-tip" : item.type === ACCOUNT_TYPE.WALLET_LEDGER,
+              "account-watch-tip" : item.type === ACCOUNT_TYPE.WALLET_WATCH,
             })}>{showImport}</p>
           </div>
           <p className={"account-item-address"}>{addressSlice(item.address)}</p>

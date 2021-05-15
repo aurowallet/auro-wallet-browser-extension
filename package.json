@@ -6,8 +6,8 @@
     "@babel/plugin-proposal-class-properties": "7.12.1",
     "@babel/preset-env": "7.12.7",
     "@babel/preset-react": "7.12.7",
-    "@babel/runtime": "7.12.5",
     "@babel/register": "7.5.5",
+    "@babel/runtime": "7.12.5",
     "@ledgerhq/hw-transport-webusb": "5.46.0",
     "@o1labs/client-sdk": "1.0.0",
     "@reduxjs/toolkit": "1.4.0",
@@ -25,9 +25,11 @@
     "bs58check": "2.1.2",
     "classnames": "2.2.6",
     "copy-webpack-plugin": "6.3.2",
+    "extensionizer": "1.0.1",
     "i18next": "19.8.4",
     "libsodium-wrappers": "0.7.9",
     "mina-ledger-js": "1.0.6",
+    "mocha": "8.3.2",
     "node-sass": "4.14.1",
     "obs-store": "4.0.3",
     "prop-types": "15.7.2",
@@ -45,9 +47,7 @@
     "redux": "4.0.5",
     "safe-buffer": "5.2.1",
     "valid-url": "1.0.9",
-    "webpack": "4.44.2",
-    "mocha": "8.3.2",
-    "extensionizer": "1.0.1"
+    "webpack": "4.44.2"
   },
   "scripts": {
     "build": "webpack --mode production",
@@ -85,14 +85,14 @@
     "@babel/plugin-transform-runtime": "7.12.1",
     "@storybook/addon-actions": "6.2.9",
     "@storybook/addon-essentials": "6.2.9",
+    "@storybook/addon-knobs": "6.2.9",
     "@storybook/addon-links": "6.2.9",
     "@storybook/node-logger": "6.2.9",
     "@storybook/preset-create-react-app": "3.1.7",
-    "@storybook/addon-knobs": "6.2.9",
     "@storybook/react": "6.3.0-alpha.13",
     "assert": "2.0.0",
     "babel-plugin-import": "1.13.3",
-    "webpack-cli": "4.2.0",
-    "url-loader": "4.1.1"
+    "url-loader": "4.1.1",
+    "webpack-cli": "4.2.0"
   }
 }

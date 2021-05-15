@@ -3,7 +3,7 @@
     margin-top: $page-margin-top;
 }
 .ledger-path-container{
-    margin-top: 20px;
+    margin-top: 10px;
     font-size: 14px;
     color: #666666;
 }
@@ -11,10 +11,29 @@
     margin: 13px 0 0 30px;
 }
 .ledger-derived-input{
-    margin-top: 18px;
+    margin-top: 10px;
     input{
         width: 47px;
         border: 1px solid #666666;
         border-radius: 6px;
+    }
+}
+.watchmode-input-container {
+    margin-top: 12px;
+    padding: 0 30px;
+    .watchmode-area-input {
+        border: 1px solid #CCCCCC;
+        border-radius: 6px;
+        display: block;
+        width: 100%;
+        padding: 10px;
+        min-height: 72px;
+        font-size: 14px;
+        caret-color: #6d5ffe;
+        color: #333333;
+        outline-color: #6d5ffe;
+        &:active {
+            border: 1px solid #6d5ffe;
+        }
     }
 }

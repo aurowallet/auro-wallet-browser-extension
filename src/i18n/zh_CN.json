@@ -116,7 +116,7 @@
   "confirmDeleteNode": "确认删除节点",
   "deleteSuccess": "删除成功",
   "backupSuccess": "成功",
-  "walletAbout": "Auro Wallet 是一款由Bit Cat团队开发的社区钱包，它简便易用，完全开源，目前支持Mina主网的所有功能。",
+  "walletAbout": "Auro Wallet 是一款由 Bit Cat 团队开发的社区钱包，它简便易用，完全开源，目前支持 Mina 主网的所有功能。",
   "copyTipContent": "复制私钥存在风险，剪切板容易被第三方应用监听并盗取。",
   "copyConfirm": "仍要复制",
   "copyCancel": "不再复制",
@@ -195,5 +195,11 @@
   "confirmEnv":"请确保你所使用的系统及网络环境绝对安全再执行些操作。",
   "ledgerNotSupport":"此浏览器暂时不支持Ledger",
   "userAgree":"使用条款",
-  "agree":"同意"
+  "agree":"同意",
+  "watchAccount": "观察账户",
+  "textWatchModeAddress": "输入或粘贴钱包地址",
+  "hdDerivedPath": "HD 派生路径",
+  "watchLabel": "观察",
+  "importEntry": "导入",
+  "exportCSV": "导出交易记录"
 }
