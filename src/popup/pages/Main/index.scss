@@ -142,15 +142,38 @@ p {
   width: 5.3px;
   height: 10.7px;
 }
+
+@keyframes  refreshAni {
+  0%{
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .tx-title {
   font-size: $font-size-content;
   color: #020028;
   letter-spacing: 0;
   margin: 0;
+  .refresh-icon-con{
+    float: right;
+    cursor: pointer;
+    &.loading {
+      animation: refreshAni .8s infinite linear;
+      transform-origin: 10px 10px;
+    }
+    img {
+      fill: #00af88;
+      width: 20px;
+    }
+  }
 }
 .tx-container {
   margin-top: 70px;
   padding: 0px 28px;
+
 }
 
 ::-webkit-scrollbar {
