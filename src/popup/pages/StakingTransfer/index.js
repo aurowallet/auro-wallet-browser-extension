@@ -332,6 +332,7 @@ class StakingTransfer extends React.Component {
   renderNodeProvider = () => {
     if (this.state.menuAdd) {
       return <CustomInput
+        value={this.state.nodeAddress}
         label={getLanguage('stakingProviderName')}
         onTextInput={this.onProviderChange} />
     } else {
@@ -432,6 +433,7 @@ class StakingTransfer extends React.Component {
             }
             <div className={'memo-con'}>
               <CustomInput
+                value={this.state.memo}
                 label={getLanguage('memo')}
                 onTextInput={this.onMemoChange} />
             </div>
