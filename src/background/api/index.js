@@ -104,10 +104,14 @@ export async function getAboutInfo(){
 /**
  * 交易记录
  * @param {*} address
+ * @param {*} limit
  * @returns
  */
-export async function getTransactionList(address){
-  let txUrl = TRANSACTION_URL+ "/transactions?account="+address +"&limit="+TX_LIST_LENGTH//TRANSACTION_URL+address
+export async function getTransactionList(address, limit = TX_LIST_LENGTH){
+  let txUrl = TRANSACTION_URL+ "/transactions?account="+address//TRANSACTION_URL+address
+  if (limit) {
+    txUrl += "&limit=" + limit
+  }
   let txList = await commonFetch(txUrl).catch(()=>[])
    return {txList,address}
 

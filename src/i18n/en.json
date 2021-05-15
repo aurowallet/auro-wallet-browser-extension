@@ -198,5 +198,6 @@
     "textWatchModeAddress": "Enter or paste wallet address",
     "hdDerivedPath": "HD Path",
     "watchLabel": "Watch",
-    "importEntry": "Import"
+    "importEntry": "Import",
+    "exportCSV": "Export transaction history"
 }
