@@ -64,24 +64,3 @@ class CustomView extends React.Component {
     }
 }
 export default CustomView
-
-CustomView.defaultProps = {
-    title:"", 
-    backRoute:"", 
-    noBack:false, 
-    isReceive:false, 
-    className:"",
-    onGoBack:"",
-    rightComponent:"",
-    children:""
-}
-CustomView.propTypes = {
-    title:PropTypes.string, 
-    backRoute:PropTypes.string, 
-    noBack:PropTypes.bool, 
-    isReceive:PropTypes.bool, 
-    className:PropTypes.string,
-    onGoBack:PropTypes.func,
-    rightComponent:PropTypes.element,
-    children:PropTypes.element
-}

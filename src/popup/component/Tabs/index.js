@@ -60,13 +60,3 @@ export default class Tabs extends React.Component {
     );
   }
 }
-
-
-Tabs.defaultProps = {
-  currentActiveIndex:0, 
-  onChangeIndex:()=>{},
-}
-Tabs.propTypes = {
-  currentActiveIndex:PropTypes.number, 
-  onChangeIndex:PropTypes.func
-}

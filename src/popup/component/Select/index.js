@@ -91,17 +91,3 @@ export default class Select extends Component {
     );
   }
 }
-
-
-Select.defaultProps = {
-  label:"", 
-  options:[], 
-  defaultValue:"",
-  onChange:()=>{}
-}
-Select.propTypes = {
-  label:PropTypes.string, 
-  options:PropTypes.array, 
-  defaultValue:PropTypes.string,
-  onChange:PropTypes.func
-}

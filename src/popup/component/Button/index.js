@@ -58,32 +58,3 @@ export default class Button extends Component {
         );
     }
 }
-Button.defaultProps = { 
-    content: "",
-    onClick: () => { },
-    disabled: false,
-    propsClass: "",
-    buttonType: ""
-}
-Button.propTypes = {
-    /**
-     * button text
-     */
-    content: PropTypes.string,
-    /**
-     * 点击事件回调
-     */
-    onClick: PropTypes.func,
-    /**
-     * 是否可以点击
-     */
-    disabled: PropTypes.bool,
-    /**
-      * 私有属性
-      */
-    propsClass: PropTypes.string,
-    /**
-     * button 的类型
-     */
-    buttonType: PropTypes.arrayOf(BUTTON_TYPE_CANCEL,BUTTON_TYPE_CONFIRM,BUTTON_TYPE_HOME_BUTTON)
-}

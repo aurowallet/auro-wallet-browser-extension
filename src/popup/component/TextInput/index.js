@@ -101,22 +101,3 @@ export default class TextInput extends Component {
         );
     }
 }
-
-TextInput.defaultProps = {
-    label:"",
-    placeholder:"",
-    value:"",
-    showErrorTag:false, 
-    matchList:[],
-    onTextInput:()=>{},
-    errorTip:"",
-}
-TextInput.propTypes = {
-    label:PropTypes.string,
-    placeholder:PropTypes.string,
-    value:PropTypes.string,
-    showErrorTag:PropTypes.bool, 
-    matchList:PropTypes.array,
-    onTextInput:PropTypes.func,
-    errorTip:PropTypes.string,
-}

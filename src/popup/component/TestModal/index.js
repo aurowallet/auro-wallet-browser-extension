@@ -45,14 +45,3 @@ export default class TestModal extends Component {
         )
     }
 }
-
-TestModal.defaultProps = {
-    title: "",
-    touchToClose:false,
-    children:""
-}
-TestModal.propTypes = {
-    title: PropTypes.string,
-    touchToClose:PropTypes.bool,
-    children:PropTypes.element
-}
