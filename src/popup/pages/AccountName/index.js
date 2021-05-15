@@ -195,7 +195,10 @@ class AccountName extends React.Component {
   }
   renderBottonBtn = () => {
     let {fromType} = this.props.cache
-    let buttonText = fromType === ACCOUNT_NAME_FROM_TYPE.INSIDE? 'confirm_1' : 'next'
+    let buttonText = 'next'
+    if(fromType === ACCOUNT_NAME_FROM_TYPE.INSIDE || fromType === ACCOUNT_NAME_FROM_TYPE.WATCHMODE){
+      buttonText = 'confirm_1'
+    }
     return (
       <div className="bottom-container">
         <Button
