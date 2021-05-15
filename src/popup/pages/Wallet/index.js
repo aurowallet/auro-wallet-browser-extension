@@ -27,6 +27,7 @@ import txReceive from "../../../assets/images/txReceive.png";
 import txSend from "../../../assets/images/txSend.png";
 import txCommonType from "../../../assets/images/txCommonType.png";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
+import refreshIcon from "../../../assets/images/refresh.svg";
 import { ERROR_TYPE } from '../../../constant/errType';
 
 
@@ -50,6 +51,7 @@ class Wallet extends React.Component {
       balance: "0.0000",
       txList: props.txList,
       bottomTipType: props.cache.homeBottomType || BOTTOM_TYPE.BOTTOM_TYPE_LOADING,
+      refreshing: false
     }
     this.isUnMounted = false;
   }
@@ -103,7 +105,7 @@ class Wallet extends React.Component {
   setHomeBottomType = () => {
     this.props.setBottomType(this.state.bottomTipType)
   }
-  fetchData = async (address) => {
+  fetchData = async (address, silent = false) => {
     let { currentAccount, shouldRefresh } = this.props
     let currentAddress = currentAccount.address
     // if (!shouldRefresh) {
@@ -122,12 +124,14 @@ class Wallet extends React.Component {
       }
     })
     if (this.state.bottomTipType !== BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT) {
-      this.callSetState({
-        bottomTipType: BOTTOM_TYPE.BOTTOM_TYPE_LOADING
-      })
+      if (!silent) {
+        this.callSetState({
+          bottomTipType: BOTTOM_TYPE.BOTTOM_TYPE_LOADING
+        })
+      }
       let txList = getTransactionList(address)
       let pendingTxList = getPendingTxList(address)
-      Promise.all([txList, pendingTxList]).then((data) => {
+      await Promise.all([txList, pendingTxList]).then((data) => {
         let txData = data[0]
         let txAddress = txData.address
         let txList = txData.txList
@@ -158,6 +162,18 @@ class Wallet extends React.Component {
       Toast.info(getLanguage('copySuccess'))
     })
 
+  }
+  onRefresh = async () => {
+    if (this.state.refreshing) {
+      return
+    }
+    this.setState({
+      refreshing: true
+    })
+    await this.fetchData(this.props.currentAccount.address, true)
+    this.setState({
+      refreshing: false
+    })
   }
   renderAccount = () => {
     let { currentAccount, balance, netAccount } = this.props
@@ -305,7 +321,14 @@ class Wallet extends React.Component {
     }
     return (
       <div className={"tx-container"}>
-        <p className="tx-title">{getLanguage('history')}</p>
+        <p className="tx-title">
+          {getLanguage('history')}
+          <div
+            className={cx('refresh-icon-con', {'loading': this.state.refreshing})}
+            onClick={this.onRefresh}>
+            <img src={refreshIcon}/>
+          </div>
+        </p>
         {txList.map((item, index) => {
           return this.renderTxList(item, index)
         })}
