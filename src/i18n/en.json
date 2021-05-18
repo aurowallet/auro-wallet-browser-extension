@@ -199,5 +199,6 @@
     "hdDerivedPath": "HD Path",
     "watchLabel": "Watch",
     "importEntry": "Import",
-    "exportCSV": "Export Transaction History"
+    "exportCSV": "Export Transaction History",
+    "ledgerUserTip":"Tips: You need to create an account first to use Ledger Wallet"
 }

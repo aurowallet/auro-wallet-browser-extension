@@ -138,6 +138,7 @@ class Welcome extends React.Component {
             <img className={"welcome-arrow"} src={purpleArrow}></img>
           </Button>
         </div>
+        <p className="bottomTipLedger" >{getLanguage("ledgerUserTip")}</p>
         <p className="bottomTip" >Powered by Bit Cat</p>
       </div>)
   }

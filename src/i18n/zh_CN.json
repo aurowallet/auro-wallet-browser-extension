@@ -201,5 +201,6 @@
   "hdDerivedPath": "HD 派生路径",
   "watchLabel": "观察",
   "importEntry": "导入",
-  "exportCSV": "导出交易记录"
+  "exportCSV": "导出交易记录",
+  "ledgerUserTip":"提示: 使用 Ledger 钱包，请先[创建账户]"
 }
