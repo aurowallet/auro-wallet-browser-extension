@@ -67,15 +67,17 @@ class Staking extends React.Component {
             let isSelf = this.props.currentAccount.address === account.delegate;
             let validatorDetail = null;
             if (!isSelf && account.delegate) {
-              fetchValidatorDetail(account.delegate).then((validatorDetailResp)=>{
+              await fetchValidatorDetail(account.delegate).then((validatorDetailResp)=>{
                 validatorDetail = validatorDetailResp?.validator;
                 this.props.dispatch(updateValidatorDetail(validatorDetail));
                 this.setDelegationInfo(account,validatorDetail)
-              }).catch(()=>null)
+              }).catch(()=>{
+                this.setDelegationInfo(account, null)
+              })
             }
             this.callSetState({
               loading: false
-            });
+            })
           }).catch((err)=>{
             Toast.info(getLanguage('nodeError'))
             this.callSetState({

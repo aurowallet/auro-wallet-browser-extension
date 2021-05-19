@@ -200,5 +200,5 @@
     "watchLabel": "Watch",
     "importEntry": "Import",
     "exportCSV": "Export Transaction History",
-    "ledgerUserTip":"Tips: You need to create an account first to use Ledger Wallet"
+    "ledgerUserTip":"Tips: If you want to connect Ledger, you need to [Create Wallet] or [Restore Wallet] first."
 }
