@@ -134,7 +134,7 @@
     "delegationInfo": "Delegation Info",
     "emptyDelegateTitle": "You have not yet delegate your MINA",
     "emptyDelegateDesc1": "Delegating MINA is an alternative option to staking it directly, with the benefit of not having to maintain a node that is always connected to the network.",
-    "emptyDelegateDesc2": "The Block Producer will distribute revenue according toyour delegation weight，It depends on the setting of the staking provider.",
+    "emptyDelegateDesc2": "The Block Producer will distribute revenue according toyour delegation weight，It depends on the setting of the Block Producer.",
     "changeNode": "Change",
     "stakingProviderName": "Block Producer",
     "stakingProviderAddress": "Provider Address",
