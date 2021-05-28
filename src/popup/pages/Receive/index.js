@@ -27,7 +27,7 @@ class ReceivePage extends React.Component {
     return (
       <div className={"receive-scan-container"}>
         <div className={"receive-home-logo-container"}>
-          <img src={home_logo} className={"receive-home-logo"} />
+          <img src={home_logo} className={"receive-wallet-logo"} />
         </div>
         <div
           className="qr-image"
