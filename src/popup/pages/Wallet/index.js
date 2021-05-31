@@ -321,14 +321,14 @@ class Wallet extends React.Component {
     }
     return (
       <div className={"tx-container"}>
-        <p className="tx-title">
+        <div className="tx-title">
           {getLanguage('history')}
           <div
             className={cx('refresh-icon-con', {'loading': this.state.refreshing})}
             onClick={this.onRefresh}>
             <img src={refreshIcon}/>
           </div>
-        </p>
+        </div>
         {txList.map((item, index) => {
           return this.renderTxList(item, index)
         })}

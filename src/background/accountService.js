@@ -1,4 +1,4 @@
-import * as RawSDK from '@o1labs/client-sdk/src/client_sdk.bc';
+import * as CodaSDK from '@o1labs/client-sdk';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
 import { generateMnemonic } from "bip39";
@@ -47,7 +47,7 @@ export async function importWalletByMnemonic(mnemonic, index = 0) {
     const childPrivateKey = reverse(child0.privateKey)
     const privateKeyHex = `5a01${childPrivateKey.toString('hex')}`
     const privateKey = bs58check.encode(Buffer.from(privateKeyHex, 'hex'))
-    const publicKey = RawSDK.codaSDK.publicKeyOfPrivateKey(privateKey)
+    const publicKey = CodaSDK.derivePublicKey(privateKey)
     return {
         priKey: privateKey,
         pubKey: publicKey,
@@ -76,7 +76,7 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
         const privateKeyHex = '5a' + sodium.crypto_secretbox_open_easy(ciphertext, nonce, key, 'hex')
         const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
         const privateKey = bs58check.encode(privateKeyBuffer)
-        const publicKey = RawSDK.codaSDK.publicKeyOfPrivateKey(privateKey)
+        const publicKey = CodaSDK.derivePublicKey(privateKey)
         return {
             priKey: privateKey,
             pubKey: publicKey,
@@ -87,7 +87,7 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
     }
 }
 export function importWalletByPrivateKey(privateKey) {
-    const publicKey = RawSDK.codaSDK.publicKeyOfPrivateKey(privateKey)
+    const publicKey = CodaSDK.derivePublicKey(privateKey)
     return {
         priKey: privateKey,
         pubKey: publicKey,
