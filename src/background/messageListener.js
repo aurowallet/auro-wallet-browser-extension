@@ -21,7 +21,8 @@ import {
   WALLET_CHECK_TX_STATUS,
   WALLET_IMPORT_LEDGER,
   WALLET_IMPORT_KEY_STORE,
-  WALLET_GET_CREATE_MNEMONIC, WALLET_IMPORT_WATCH_MODE
+  WALLET_GET_CREATE_MNEMONIC, WALLET_IMPORT_WATCH_MODE,
+  WALLET_RESET_LAST_ACTIVE_TIME
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -137,8 +138,10 @@ function internalMessageListener(message, sender, sendResponse) {
       })
       break;
     case WALLET_GET_CREATE_MNEMONIC:
-      sendResponse(apiService.getCreateMnemonic())
+      sendResponse(apiService.getCreateMnemonic(payload.isNewMne))
       break
+    case WALLET_RESET_LAST_ACTIVE_TIME:
+      sendResponse(apiService.setLastActiveTime())
     default:
       break;
   }

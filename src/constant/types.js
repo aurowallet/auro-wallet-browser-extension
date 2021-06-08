@@ -95,25 +95,34 @@ export const WALLET_CHECK_TX_STATUS = "WALLET_CHECK_TX_STATUS"
 /**
  * 导入ledger钱包
  */
- export const WALLET_IMPORT_LEDGER = "WALLET_IMPORT_LEDGER"
+export const WALLET_IMPORT_LEDGER = "WALLET_IMPORT_LEDGER"
 
 /**
  * 导入watch mode钱包
  */
- export const WALLET_IMPORT_WATCH_MODE = "WALLET_IMPORT_WATCH_MODE"
+export const WALLET_IMPORT_WATCH_MODE = "WALLET_IMPORT_WATCH_MODE"
 
 
- /**
- * 导入keystore钱包
- */
-  export const WALLET_IMPORT_KEY_STORE = "WALLET_IMPORT_KEY_STORE"
+/**
+* 导入keystore钱包
+*/
+export const WALLET_IMPORT_KEY_STORE = "WALLET_IMPORT_KEY_STORE"
 
 
 
 /**
  * 后台生成助记词
  */
-  export const WALLET_GET_CREATE_MNEMONIC = "WALLET_GET_CREATE_MNEMONIC"
+export const WALLET_GET_CREATE_MNEMONIC = "WALLET_GET_CREATE_MNEMONIC"
+
+
+/**
+ * 更新最后活跃时间
+ */
+export const WALLET_RESET_LAST_ACTIVE_TIME = "WALLET_RESET_LAST_ACTIVE_TIME"
+
+
+
 
 // ====================================================================================bottom back to popup
 
@@ -127,9 +136,14 @@ export const FROM_BACK_TO_RECORD = "FROM_BACK_TO_RECORD"
  */
 export const TX_SUCCESS = "TX_SUCCESS"
 
+/**
+ * 进入锁定页面
+ */
+export const SET_LOCK = "SET_LOCK"
+
 
 /**
  * LEDGER 连接成功
  * @type {string}
  */
-export const  LEDGER_CONNECTED_SUCCESSFULLY = 'LEDGER_CONNECTED_SUCCESSFULLY';
+export const LEDGER_CONNECTED_SUCCESSFULLY = 'LEDGER_CONNECTED_SUCCESSFULLY';

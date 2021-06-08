@@ -29,6 +29,9 @@ class ShowMnemonic extends React.Component {
   componentDidMount() {
     sendMsg({
       action: WALLET_GET_CREATE_MNEMONIC,
+      payload:{
+        isNewMne:true
+      }
     }, (mnemonic) => { 
       this.callSetState({
         mnemonic: mnemonic
