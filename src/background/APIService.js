@@ -1,10 +1,10 @@
-import { EXPLORER_URL } from '../../config';
-import { FROM_BACK_TO_RECORD, TX_SUCCESS } from '../constant/types';
+import { EXPLORER_URL, LOCK_TIME } from '../../config';
+import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
 import { getLanguage } from '../i18n';
 import { getTxStatus, sendStakeTx, sendTx } from './api';
 import { signPayment, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
-import {ACCOUNT_TYPE} from "../constant/walletType"
+import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
 
 const ObservableStore = require('obs-store')
@@ -26,20 +26,26 @@ class APIService {
             data: '',
             password: '',
             currentAccount: {},
-            mne:""
+            mne: ""
         })
     }
     getStore = () => {
         return this.memStore.getState()
     };
-    getCreateMnemonic=()=>{
-        let mne = this.getStore().mne
-        if(mne){
-            return mne
-        }else{
+    getCreateMnemonic = (isNewMne) => {
+        if (isNewMne) {
             let mnemonic = generateMne()
             this.memStore.updateState({ mne: mnemonic })
             return mnemonic
+        } else {
+            let mne = this.getStore().mne
+            if (mne) {
+                return mne
+            } else {
+                let mnemonic = generateMne()
+                this.memStore.updateState({ mne: mnemonic })
+                return mnemonic
+            }
         }
     }
     filterCurrentAccount = (accountList, currentAddress) => {
@@ -62,16 +68,41 @@ class APIService {
             })
             return this.getAccountWithoutPrivate(currentAccount)
         } catch (error) {
-            return { error: 'passwordError',type:"local" }
+            return { error: 'passwordError', type: "local" }
         }
     };
     checkPassword(password) {
         return this.getStore().password === password
     }
+    setLastActiveTime() {
+        const timeoutMinutes = LOCK_TIME
+        let localData = this.getStore().data
+        let isUnlocked = this.getStore().isUnlocked
+        if (localData && isUnlocked) {
+            if (this.timer) {
+                clearTimeout(this.timer)
+            }
+            if (!timeoutMinutes) {
+                return
+            }
+
+            this.timer = setTimeout(() => {
+                this.setUnlockedStatus(false)
+            }, timeoutMinutes * 60 * 1000)
+        }
+
+    }
     setUnlockedStatus(status) {
         let account = this.memStore.getState().currentAccount
         if (!status) {
-            this.memStore.updateState({ currentAccount: { ...account } })
+            this.memStore.updateState({
+                currentAccount: { ...account },
+                password: ""
+            })
+            extension.runtime.sendMessage({
+                type: FROM_BACK_TO_RECORD,
+                action: SET_LOCK,
+            });
         }
         this.memStore.updateState({ isUnlocked: status })
     };
@@ -177,7 +208,7 @@ class APIService {
         for (let index = 0; index < accounts.length; index++) {
             const account = accounts[index];
             if (account.address === address) {
-                error = { "error": 'improtRepeat',type:"local" }
+                error = { "error": 'improtRepeat', type: "local" }
                 break
             }
         }
@@ -227,7 +258,7 @@ class APIService {
             this.memStore.updateState({ currentAccount: account })
             return this.getAccountWithoutPrivate(account)
         } catch (error) {
-            return { "error": "privateError" ,type:"local"}
+            return { "error": "privateError", type: "local" }
         }
 
     }
@@ -238,45 +269,45 @@ class APIService {
      * @param {*} accountName 
      * @returns 
      */
-    addAccountByKeyStore = async(keystore,password,accountName)=>{
-        let wallet = await importWalletByKeystore(keystore,password)
-        if(wallet.error){
+    addAccountByKeyStore = async (keystore, password, accountName) => {
+        let wallet = await importWalletByKeystore(keystore, password)
+        if (wallet.error) {
             return wallet
         }
-        let currentAccount = await this.addImportAccount(wallet.priKey,accountName)
+        let currentAccount = await this.addImportAccount(wallet.priKey, accountName)
         return currentAccount
     }
     addWatchModeAccount = async (address, accountName) => {
-       try {
-           let data = this.getStore().data
-           let accounts = data[0].accounts
-           let error = this._checkWalletRepeat(accounts, address);
-           if (error.error) {
-               return error
-           }
-           let typeIndex = this._findWalletIndex(accounts, ACCOUNT_TYPE.WALLET_WATCH);
-           const account = {
-               address: address,
-               type: ACCOUNT_TYPE.WALLET_WATCH,
-               accountName,
-               typeIndex
-           }
-           data[0].currentAddress = account.address
-           data[0].accounts.push(account)
-           let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
+        try {
+            let data = this.getStore().data
+            let accounts = data[0].accounts
+            let error = this._checkWalletRepeat(accounts, address);
+            if (error.error) {
+                return error
+            }
+            let typeIndex = this._findWalletIndex(accounts, ACCOUNT_TYPE.WALLET_WATCH);
+            const account = {
+                address: address,
+                type: ACCOUNT_TYPE.WALLET_WATCH,
+                accountName,
+                typeIndex
+            }
+            data[0].currentAddress = account.address
+            data[0].accounts.push(account)
+            let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
 
-           this.memStore.updateState({ data: data })
-           save({ keyringData: encryptData })
-           this.memStore.updateState({ currentAccount: account })
-           return this.getAccountWithoutPrivate(account)
-       } catch (error) {
-           return { "error": JSON.stringify(error)}
-       }
+            this.memStore.updateState({ data: data })
+            save({ keyringData: encryptData })
+            this.memStore.updateState({ currentAccount: account })
+            return this.getAccountWithoutPrivate(account)
+        } catch (error) {
+            return { "error": JSON.stringify(error) }
+        }
     }
     /**
      * 导入ledger钱包
      */
-    addLedgerAccount = async (address, accountName, ledgerPathAccountIndex)=>{
+    addLedgerAccount = async (address, accountName, ledgerPathAccountIndex) => {
         try {
             let data = this.getStore().data
             let accounts = data[0].accounts
@@ -302,7 +333,7 @@ class APIService {
             this.memStore.updateState({ currentAccount: account })
             return this.getAccountWithoutPrivate(account)
         } catch (error) {
-            return { "error": JSON.stringify(error)}
+            return { "error": JSON.stringify(error) }
         }
     }
     /**
@@ -361,7 +392,7 @@ class APIService {
                 return item.address !== address
             })
             let currentAccount = this.getStore().currentAccount
-            if(address === currentAccount.address){
+            if (address === currentAccount.address) {
                 currentAccount = accounts[0]
                 data[0].currentAddress = currentAccount.address
             }
@@ -371,7 +402,7 @@ class APIService {
             save({ keyringData: encryptData })
             return this.getAccountWithoutPrivate(currentAccount)
         } else {
-            return { error: 'passwordError' ,type:"local"}
+            return { error: 'passwordError', type: "local" }
         }
     }
     getMnemonic = async (pwd) => {
@@ -382,7 +413,7 @@ class APIService {
             let mnemonic = await encryptUtils.decrypt(this.getStore().password, mnemonicEn)
             return mnemonic
         } else {
-            return { error: 'passwordError',type:"local" }
+            return { error: 'passwordError', type: "local" }
         }
     }
     updateSecPassword = async (oldPwd, pwd) => {
@@ -417,10 +448,10 @@ class APIService {
                 await save({ keyringData: encryptData })
                 return { code: 0 }
             } else {
-                return { error: 'passwordError',type:"local" }
+                return { error: 'passwordError', type: "local" }
             }
         } catch (error) {
-            return { error: 'passwordError',type:"local" }
+            return { error: 'passwordError', type: "local" }
         }
 
     }
@@ -436,7 +467,7 @@ class APIService {
             const privateKey = await encryptUtils.decrypt(pwd, nowAccount.privateKey)
             return privateKey
         } else {
-            return { error: 'passwordError',type:"local" }
+            return { error: 'passwordError', type: "local" }
         }
     }
     getCurrentPrivateKey = async () => {
@@ -487,7 +518,7 @@ class APIService {
     notification = (hash) => {
         let id = hash
         extension.notifications &&
-        extension.notifications.onClicked.addListener(function (id) {
+            extension.notifications.onClicked.addListener(function (id) {
                 let url = EXPLORER_URL + id
                 extension.tabs.create({ url: url });
             });
@@ -518,7 +549,7 @@ class APIService {
                 if (this.timer) {
                     clearTimeout(this.timer);
                     this.timer = null;
-                  }
+                }
             } else {
                 this.timer = setTimeout(() => {
                     this.fetchTransactionStatus(paymentId, hash);

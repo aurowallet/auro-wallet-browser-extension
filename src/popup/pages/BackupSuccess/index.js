@@ -54,8 +54,6 @@ class BackupSuccess extends React.Component {
     )
   }
   render() { 
-    // const type = this.props.location.params?.type ?? "";
-    // let tip = type === "restore" ?"backup_success_restore": "backup_success"
     return (
       <CustomView
         title={getLanguage('backup_success_title')}

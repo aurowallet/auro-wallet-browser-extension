@@ -23,6 +23,9 @@ class BackupMnemonics extends React.Component {
   componentDidMount(){
     sendMsg({
       action: WALLET_GET_CREATE_MNEMONIC,
+      payload:{
+        isNewMne:false
+      }
     }, (mnemonic) => { 
         let mneList = mnemonic.split(" ")
         for (let i = 0; i < mneList.length; i++) {

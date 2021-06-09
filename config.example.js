@@ -7,9 +7,9 @@ export const cointypes = {
   decimals:9
 }
 /**
- * 锁定时间，默认10分钟
+ * 锁定时间，默认24小时
  */
-export const LOCK_TIME = 120 * 60 * 1000
+ export const LOCK_TIME = 24 * 60  
 
 /**
  * 系统版本

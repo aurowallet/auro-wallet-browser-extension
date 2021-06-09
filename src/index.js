@@ -40,35 +40,17 @@ async function getLocalStatus(store) {
   },
     async (currentAccount) => {
       if (currentAccount && currentAccount.localAccount && currentAccount.localAccount.keyringData) {
-        await getLockStatus(store, currentAccount)
+        if(currentAccount.isUnlocked){
+          store.dispatch(updateCurrentAccount(currentAccount))
+          store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
+        }else{
+          store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE))
+        }
       } else {
         store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.WELCOME))
       }
     })
 }
-
-async function getLockStatus(store, account) {
-  const { AppState } = await storage.get("AppState");
-  let lockTime = LOCK_TIME
-  if (AppState) {
-    const { lastClosed } = AppState;
-    const now = Date.now();
-    const offset = now - lastClosed;
-    if (offset < lockTime && account.isUnlocked && account.address) {
-      store.dispatch(updateCurrentAccount(account))
-      store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
-    } else {
-      sendMsg({
-        action: WALLET_SET_UNLOCKED_STATUS,
-        payload: false
-      }, (res) => { })
-      store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE))
-    }
-  } else {
-    store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.WELCOME))
-  }
-}
-
 
 
 export const applicationEntry = {

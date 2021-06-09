@@ -263,10 +263,6 @@ class AccountManagePage extends React.Component {
       action: WALLET_SET_UNLOCKED_STATUS,
       payload: false
     }, (res) => { })
-    this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE)
-    this.props.history.push({
-      pathname: "/",
-    });
   }
   renderLockBtn = () => {
     return (

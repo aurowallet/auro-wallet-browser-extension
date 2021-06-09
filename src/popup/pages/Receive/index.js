@@ -21,7 +21,7 @@ class ReceivePage extends React.Component {
   renderQrView = () => {
     let { address } = this.props.currentAccount
     const qrImage = qrCode(4, 'M')
-    let qrData = cointypes.symbol.toLowerCase() + ":"+ address
+    let qrData = address
     qrImage.addData(qrData)
     qrImage.make()
     return (
@@ -80,6 +80,7 @@ class ReceivePage extends React.Component {
             {this.renderAddress()}
             {this.rednerCopyButton()}
           </div>
+          <p className="bottomTip" >Powered by Bit Cat</p>
         </div>
       </CustomView>
     )

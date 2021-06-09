@@ -1,6 +1,6 @@
 {
   "name": "auro-wallet",
-  "version": "0.1.0",
+  "version": "1.0.5",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.12.1",
@@ -47,7 +47,8 @@
     "redux": "4.0.5",
     "safe-buffer": "5.2.1",
     "valid-url": "1.0.9",
-    "webpack": "4.44.2"
+    "webpack": "4.44.2",
+    "react-idle-timer": "4.2.5"
   },
   "scripts": {
     "build": "webpack --mode production",
