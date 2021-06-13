@@ -142,6 +142,7 @@ function internalMessageListener(message, sender, sendResponse) {
       break
     case WALLET_RESET_LAST_ACTIVE_TIME:
       sendResponse(apiService.setLastActiveTime())
+      break
     default:
       break;
   }

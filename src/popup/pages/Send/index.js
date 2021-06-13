@@ -297,7 +297,7 @@ class SendPage extends React.Component {
     }
     let fee = trimSpace(this.state.inputFee) || this.state.fee
     let maxAmount = new BigNumber(amount).plus(fee).toString()
-    if (new BigNumber(amount).gt(maxAmount)) {
+    if (new BigNumber(maxAmount).gt(amount)) {
       Toast.info(getLanguage('balanceNotEnough'))
       return
     }
