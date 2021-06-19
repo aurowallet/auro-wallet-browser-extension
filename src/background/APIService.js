@@ -79,14 +79,14 @@ class APIService {
         let localData = this.getStore().data
         let isUnlocked = this.getStore().isUnlocked
         if (localData && isUnlocked) {
-            if (this.timer) {
-                clearTimeout(this.timer)
+            if (this.activeTimer) {
+                clearTimeout(this.activeTimer)
             }
             if (!timeoutMinutes) {
                 return
             }
 
-            this.timer = setTimeout(() => {
+            this.activeTimer = setTimeout(() => {
                 this.setUnlockedStatus(false)
             }, timeoutMinutes * 60 * 1000)
         }

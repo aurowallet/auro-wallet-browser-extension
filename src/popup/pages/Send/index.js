@@ -280,6 +280,7 @@ class SendPage extends React.Component {
     )
   }
   onConfirm = async () => {
+    let { balance} = this.props
     let toAddress = trimSpace(this.state.toAddress)
     if (!addressValid(toAddress)) {
       Toast.info(getLanguage('sendAddressError'))
@@ -297,7 +298,7 @@ class SendPage extends React.Component {
     }
     let fee = trimSpace(this.state.inputFee) || this.state.fee
     let maxAmount = new BigNumber(amount).plus(fee).toString()
-    if (new BigNumber(maxAmount).gt(amount)) {
+    if (new BigNumber(maxAmount).gt(balance)) {
       Toast.info(getLanguage('balanceNotEnough'))
       return
     }
