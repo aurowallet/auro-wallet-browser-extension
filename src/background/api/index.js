@@ -36,7 +36,6 @@ function _getGQLVariables(payload, signature, includeAmount = true) {
   let isRawSignature = !!signature.rawSignature;
   let variables = {
     fee: payload.fee,
-
     to: payload.to,
     from: payload.from,
     nonce: payload.nonce,
@@ -52,6 +51,10 @@ function _getGQLVariables(payload, signature, includeAmount = true) {
     variables.field = signature.field
     variables.scalar = signature.scalar
   }
+  for (let pro in variables) {
+    variables[pro] = String(variables[pro] || "")
+  }
+  return variables
 }
 /**
  * 转账
@@ -59,7 +62,7 @@ function _getGQLVariables(payload, signature, includeAmount = true) {
 export async function sendTx(payload,signature){
   const variables = _getGQLVariables(payload, signature, true)
   let txBody =  getTxSend(!!variables.rawSignature)
-  let res = await startFetchMyMutation(txBody, GQL_URL, variables);
+  let res = await startFetchMyMutation(txBody, GQL_URL, variables)
   return res
 }
 /**

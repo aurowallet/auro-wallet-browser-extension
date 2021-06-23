@@ -55,9 +55,9 @@ export function getTxStatusBody(paymentId) {
 export function getStackTxSend(isRawSignature) {
   return (`
 mutation MyMutation($fee:String!, $amount:String!, 
-$to: String!, $from: String!, nonce:String!, memo: String!,
+$to: String!, $from: String!, $nonce:String!, $memo: String!,
 $validUntil: String!,
-${isRawSignature ? `$rawSignature: String!` : `$scalar: : String!, $field: String!`}) {
+${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!`}) {
   sendDelegation(
     input: {
       fee: $fee,
@@ -98,10 +98,10 @@ ${isRawSignature ? `$rawSignature: String!` : `$scalar: : String!, $field: Strin
  */
 export function getTxSend(isRawSignature) {
   return (`
-mutation MyMutation($fee:String!, $amount:String!, 
-$to: String!, $from: String!, nonce:String!, memo: String!,
+mutation MyMutation($fee:String!, $amount:String!,
+$to: String!, $from: String!, $nonce:String!, $memo: String!,
 $validUntil: String!,
-${isRawSignature ? `$rawSignature: String!` : `$scalar: : String!, $field: String!`}
+${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!`}
 ) {
   sendPayment(
     input: {
