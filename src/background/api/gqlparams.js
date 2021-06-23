@@ -3,7 +3,7 @@
  */
 export function getBalanceBody(publicKey) {
   return `
-  query MyQuery {
+  query accountBalance {
     account(publicKey: "${publicKey}") {
       balance {
         total
@@ -23,7 +23,7 @@ export function getBalanceBody(publicKey) {
  */
 export function getTxHistoryBody(from = "B62qqVN4og5PTPL1vgn5t9LH2oXooy3VqSRzXC6BUQmBWM2pZU6xABE", limit = 20, sortBy = "DATETIME_DESC") {
   return `
-  query MyQuery {
+  query txHistory {
     transactions(limit: ${limit}, sortBy: ${sortBy}, query: {from: "${from}"}) {
       fee
       canonical
@@ -44,7 +44,7 @@ export function getTxHistoryBody(from = "B62qqVN4og5PTPL1vgn5t9LH2oXooy3VqSRzXC6
 
 export function getTxStatusBody(paymentId) {
   return `
-  query MyQuery {
+  query txStatus {
     transactionStatus(payment: "${paymentId}")
   }
   `
@@ -144,7 +144,7 @@ ${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!
 
 export function getPendingTxBody(publicKey) {
   return `
-  query MyQuery {
+  query pengdingTx {
     pooledUserCommands(publicKey: "${publicKey}") {
       id
       nonce
@@ -182,8 +182,49 @@ export function getBalanceBatchBody(addressList){
   }
   let realBody = realList.map((address)=>balanceBodyBase(address))
   return`
-  query MyQuery {
+  query batchBalance {
     ${realBody}
   }
+  `
+}
+
+
+export function getDaemonStatusBody(){
+  return `
+  query daemonStatus {
+    daemonStatus {
+      stateHash
+      blockchainLength
+      consensusConfiguration {
+        epochDuration
+        slotDuration
+        slotsPerEpoch
+      }
+    }
+  }
+  `
+}
+export function  getBlockInfoBody(stateHash){
+  return `
+  query blockInfo {
+    block(stateHash: "${stateHash}") {
+      protocolState {
+        consensusState {
+          epoch
+          slot
+        }
+      }
+    }
+  }
+  `
+}
+
+export function getDelegationInfoBody(publicKey){
+  return `
+  query delegationInfo {
+    account(publicKey: "${publicKey}") {
+        delegate
+      }
+    }
   `
 }

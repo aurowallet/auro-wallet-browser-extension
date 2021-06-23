@@ -46,3 +46,22 @@
     color: #999999;
     margin-top: 5px;
 }
+
+.receive-wallet-logo {
+    width: 30px;
+    height: 30px;
+}
+.receive-home-logo-container{
+    position: absolute; 
+    left: 0; 
+    top: 0; 
+    right: 0; 
+    bottom: 0;
+    margin: auto;  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.receive-scan-container{
+    position: relative;
+}

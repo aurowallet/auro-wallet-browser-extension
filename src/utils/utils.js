@@ -31,7 +31,6 @@ function toNonExponential(num_str) {
             sym = "";
         var numStr = num_str.toString();
         if (numStr[0] == "-") {
-            // 如果为负数，转成正数处理，先去掉‘-’号，并保存‘-’.
             numStr = numStr.substr(1);
             sym = "-";
         }
@@ -55,7 +54,6 @@ function toNonExponential(num_str) {
             if (Number(power) >= 0) {
                 var subres = resValue.substr(dotIndex);
                 power = Number(power);
-                //幂数大于小数点后面的数字位数时，后面加0
                 for (var i = 0; i <= power - subres.length; i++) {
                     resArr.push("0");
                 }
@@ -65,7 +63,6 @@ function toNonExponential(num_str) {
             } else {
                 power = power.replace("-", "");
                 power = Number(power);
-                //幂数大于等于 小数点的index位置, 前面加0
                 for (var i = 0; i < power - dotIndex; i++) {
                     resArr.unshift("0");
                 }
@@ -157,7 +154,17 @@ export function isNumber(n, includeE = false) {
     return isNum;
 }
 
-
+/**
+ * 校验是否是大于0 的整数
+ * @param {*} n 
+ * @param {*} includeE 
+ * @returns 
+ */
+export function isTrueNumber(n) {
+    let isNum = !!String(n).match(/^([1-9][0-9]*)$/);
+    return isNum;
+}
+  
 /**
  * 校验用户名长度 默认16位
  * @param {*} name

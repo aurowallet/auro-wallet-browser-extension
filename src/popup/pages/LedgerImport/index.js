@@ -9,7 +9,7 @@ import "./index.scss";
 import {checkLedgerConnect, requestAccount} from "../../../utils/ledger";
 import Toast from "../../component/Toast";
 import {sendMsg} from "../../../utils/commonMsg";
-import {MINA_IMPORT_LEDGER} from "../../../constant/types";
+import {WALLET_IMPORT_LEDGER} from "../../../constant/types";
 import {updateCurrentAccount} from "../../../reducers/accountReducer";
 import {LedgerConnected} from "../../component/LedgerConnected";
 
@@ -17,7 +17,8 @@ class LedgerImport extends React.Component {
   constructor(props) {
     let params = props.location?.params || {};
     super(props);
-    this.accountName = params.accountName
+    this.accountName = params.accountName;
+    this.accountIndex = params.accountIndex;
     this.state = {
     };
   }
@@ -41,7 +42,7 @@ class LedgerImport extends React.Component {
     const {ledgerApp} = await checkLedgerConnect()
     if (ledgerApp) {
       Loading.show()
-      const {publicKey, rejected} = await requestAccount(ledgerApp)
+      const {publicKey, rejected} = await requestAccount(ledgerApp, this.accountIndex)
       Loading.hide()
       if (rejected) {
         Toast.info(getLanguage('ledgerRejected'))
@@ -49,9 +50,10 @@ class LedgerImport extends React.Component {
         sendMsg({
           payload: {
             address: publicKey,
+            accountIndex: this.accountIndex,
             accountName: this.accountName
           },
-          action: MINA_IMPORT_LEDGER
+          action: WALLET_IMPORT_LEDGER
         },(account)=>{
           if (account.error) {
             if(account.type === "local"){
@@ -79,7 +81,7 @@ class LedgerImport extends React.Component {
   render() {
     return (
       <CustomView
-        title={getLanguage('minaWallet')}
+        title={getLanguage('walletName')}
         history={this.props.history}>
         <LedgerConnected tips={['ledgerImportTip']}/>
         {this.renderBottonBtn()}

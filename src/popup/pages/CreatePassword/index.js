@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_CREATE_PWD } from "../../../constant/types";
+import { WALLET_CREATE_PWD } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { setLanguage } from "../../../reducers/appReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -55,7 +55,7 @@ class CreatePassword extends React.Component {
   goToCreate = () => {
     let { welcomeNextRoute } = this.props.cache
     sendMsg({
-      action: MINA_CREATE_PWD,
+      action: WALLET_CREATE_PWD,
       payload: {
         pwd: this.state.confirmPwd,
       }

@@ -1,0 +1,70 @@
+[<actor>user]
+
+[Auro-ui|
+   [tools|
+     react
+     redux
+     thunk
+   ]
+   [components|
+     app
+     account-info
+     accounts-manage
+     send-page
+     stake-page
+     setting-page
+     locked-page
+     ...
+   ]
+   [reducers|
+     app
+     account
+     entry-route
+     cache
+     ...
+   ]
+   [actions|
+     update-account
+     update-route
+     ...
+   ]
+   [components]:->[actions]
+   [actions]:->[reducers]
+   [reducers]:->[components]
+]
+[user]<->[Auro-ui]
+
+
+[Auro-background|
+  
+  [id store]
+  
+  [config manager|
+    [service-data config]
+    [encrypted keys]
+    [account list]
+  ]
+  
+  [id store]<->[config manager]
+]
+
+[service-data |
+  [mina-graphql |
+    balance
+    send-tx
+    pending-tx
+    tx-status
+    stake-info
+    block-info
+  ]
+  [mina-indexer |
+    validator-Detail
+    validator-list
+    fee-recommend
+    about-info
+    result-tx
+  ]
+]
+
+[Auro-background]<->[Auro-ui]
+[Auro-background]<->[service-data]

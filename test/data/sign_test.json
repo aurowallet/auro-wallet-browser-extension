@@ -1,0 +1,21 @@
+{
+    "signPayment":{
+        "privateKey":"EKEjdAVBfHwuS7crogwpXLeTbwQTWbd2W2RyhPpCZpfHQSLJ1zyS", 
+        "fromAddress":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM", 
+        "toAddress":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM", 
+        "amount":"1", 
+        "fee":"0.001", 
+        "nonce":"0", 
+        "memo":"",
+        "result":{"publicKey":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM","signature":{"field":"22518377339243955944398416845895130304881242552599365459326523521766271389309","scalar":"26151524085394054745612553732474602581639335080070448236034547354108876847052"},"payload":{"to":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM","from":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM","fee":"1000000","amount":"1000000000","nonce":"0","memo":"","validUntil":"4294967295"}}
+    },
+    "stakePayment":{
+        "privateKey":"EKEjdAVBfHwuS7crogwpXLeTbwQTWbd2W2RyhPpCZpfHQSLJ1zyS", 
+        "fromAddress":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM", 
+        "toAddress":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM", 
+        "fee":"0.001", 
+        "nonce":"1", 
+        "memo":"",
+        "result":{"publicKey":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM","signature":{"field":"26131563651395491008221000338284020960319928911355360772451866857824465826884","scalar":"6314109655328575756138641447738579105792002762898874726962745107763086348770"},"payload":{"to":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM","from":"B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM","fee":"1000000","nonce":"1","memo":"","validUntil":"4294967295"}}
+    }
+}

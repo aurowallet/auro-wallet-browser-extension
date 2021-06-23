@@ -4,15 +4,15 @@
 
 import { BASE_INFO_URL, GQL_URL, TRANSACTION_URL, TX_LIST_LENGTH } from "../../../config";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBody, getStackTxSend, getTxHistoryBody, getTxSend, getTxStatusBody ,getPendingTxBody, getBalanceBatchBody} from './gqlparams';
+import { getBalanceBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody ,getPendingTxBody, getBalanceBatchBody, getDaemonStatusBody, getBlockInfoBody, getDelegationInfoBody} from './gqlparams';
 
 /**
  * 获取余额
  */
 export async function getBalance(address) {
   let txBody = getBalanceBody(address)
-  let result = await startFetchMyQuery(txBody, GQL_URL)
-  return result
+  let result = await startFetchMyQuery(txBody, GQL_URL,"extensionAccountInfo").catch((err)=>err)
+  return {address,account:result}
 }
 /**
  * 获取交易状态
@@ -81,57 +81,29 @@ export async function sendStackTx(payload,signature){
  * @returns {Promise<{error: *}>}
  */
 export async function fetchDaemonStatus() {
-  const query = `
-  query MyQuery {
-    daemonStatus {
-      stateHash
-      blockchainLength
-      consensusConfiguration {
-        epochDuration
-        slotDuration
-        slotsPerEpoch
-      }
-    }
-  }
-  `;
+  const query = getDaemonStatusBody()
   let res = await startFetchMyQuery(query, GQL_URL);
   return res;
 }
 
 export async function fetchBlockInfo(stateHash) {
-  const query = `query MyQuery {
-    block(stateHash: "${stateHash}") {
-      protocolState {
-        consensusState {
-          epoch
-          slot
-        }
-      }
-    }
-  }`
-
+  const query = getBlockInfoBody(stateHash)
   let res = await startFetchMyQuery(query, GQL_URL);
   return res;
 }
 
 export async function fetchDelegationInfo(publicKey) {
-  const query = `query MyQuery {
-  account(publicKey: "${publicKey}") {
-      delegate
-    }
-  }
-  `;
-// /validators/
-  let res = await startFetchMyQuery(query, GQL_URL);
+  const query = getDelegationInfoBody(publicKey)
+  let res = await startFetchMyQuery(query, GQL_URL,"extensionAccountInfo");
   return res;
 }
 
 export async function fetchValidatorDetail(id) {
-  const data = await fetch( `${TRANSACTION_URL}/validators/${id}`).then((res)=>res.json())
+  const data = await commonFetch( `${TRANSACTION_URL}/validators/${id}`)
   return data;
 }
 export async function fetchStakingList() {
-  const data = await fetch(TRANSACTION_URL+'/validators').then((res)=>res.json())
+  const data = await commonFetch(TRANSACTION_URL+'/validators')
   return data;
 }
 
@@ -140,7 +112,7 @@ export async function fetchStakingList() {
  */
 export async function getFeeRecom(){
   let feeUrl = BASE_INFO_URL+"minter_fee.json"
-  const result = await fetch(feeUrl).then((res)=>res.json()).catch(err=>[])
+  const result = await commonFetch(feeUrl).catch(err=>[])
   return result
 }
 
@@ -161,17 +133,16 @@ export async function getAboutInfo(){
 /**
  * 交易记录
  * @param {*} address
+ * @param {*} limit
  * @returns
  */
-export async function getTransactionList(address){
-  let txUrl = TRANSACTION_URL+ "/transactions?account="+address +"&limit="+TX_LIST_LENGTH//TRANSACTION_URL+address
-  let txList = await commonFetch(txUrl).catch(error=>{
-    return {error}
-   })
-   if(txList.error){
-    return []
-   }
-   return txList
+export async function getTransactionList(address, limit = TX_LIST_LENGTH){
+  let txUrl = TRANSACTION_URL+ "/transactions?account="+address//TRANSACTION_URL+address
+  if (limit) {
+    txUrl += "&limit=" + limit
+  }
+  let txList = await commonFetch(txUrl).catch(()=>[])
+   return {txList,address}
 
 }
 
@@ -182,9 +153,9 @@ export async function getTransactionList(address){
  */
 export async function getPendingTxList(address){
   let txBody = getPendingTxBody(address)
-  let result = await startFetchMyQuery(txBody, GQL_URL)
+  let result = await startFetchMyQuery(txBody, GQL_URL,"extensionAccountInfo").catch(()=>[])
   let list =  result.pooledUserCommands ||[]
-  return list
+  return {txList:list,address}
 }
 
 /**
@@ -192,7 +163,7 @@ export async function getPendingTxList(address){
  */
  export async function getBalanceBatch(addressList) {
   let txBody = getBalanceBatchBody(addressList)
-  let result = await startFetchMyQuery(txBody, GQL_URL)
+  let result = await startFetchMyQuery(txBody, GQL_URL).catch(()=>{})
   return result
 }
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { CircularProgressbar } from 'react-circular-progressbar';
+import { CircularProgressbar,buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
@@ -45,7 +45,6 @@ class Staking extends React.Component {
       this.callSetState({
         loading: true
       },async ()=>{
-          this.props.dispatch(getStakingList());
           Promise.all([
             fetchDaemonStatus(),
             fetchDelegationInfo(this.props.currentAccount.address),
@@ -56,29 +55,36 @@ class Staking extends React.Component {
             this.props.dispatch(updateDelegationInfo(account));
 
             if(daemonStatus.stateHash){
-              const { block } = await fetchBlockInfo(daemonStatus.stateHash);
-              this.props.dispatch(updateBlockInfo(block));
-              this.fetchEpochData(daemonStatus,block)
+              fetchBlockInfo(daemonStatus.stateHash).then((blockInfo)=>{
+                let block = blockInfo.block
+                if(block){
+                  this.props.dispatch(updateBlockInfo(block));
+                  this.fetchEpochData(daemonStatus,block)
+                }
+              });
             }
 
             let isSelf = this.props.currentAccount.address === account.delegate;
             let validatorDetail = null;
             if (!isSelf && account.delegate) {
-              const validatorDetailResp = await fetchValidatorDetail(account.delegate).catch(()=>null)
-              validatorDetail = validatorDetailResp?.validator;
-              this.props.dispatch(updateValidatorDetail(validatorDetail));
+              await fetchValidatorDetail(account.delegate).then((validatorDetailResp)=>{
+                validatorDetail = validatorDetailResp?.validator;
+                this.props.dispatch(updateValidatorDetail(validatorDetail));
+                this.setDelegationInfo(account,validatorDetail)
+              }).catch(()=>{
+                this.setDelegationInfo(account, null)
+              })
             }
-            this.setDelegationInfo(account,validatorDetail)
             this.callSetState({
               loading: false
-            });
+            })
           }).catch((err)=>{
             Toast.info(getLanguage('nodeError'))
             this.callSetState({
               loading: false
             });
           })
-
+          this.props.dispatch(getStakingList());
       });
     }else{
       this.fetchEpochData(this.props.daemonStatus,this.props.block)
@@ -87,25 +93,28 @@ class Staking extends React.Component {
   }
 
   async fetchEpochData(daemonStatus,block) {
-    const slotsPerEpoch = daemonStatus.consensusConfiguration.slotsPerEpoch;
-    const slotDuration = daemonStatus.consensusConfiguration.slotDuration;
-    const slot = block.protocolState.consensusState.slot;
-    const epoch = block.protocolState.consensusState.epoch;
-    const lastTime = (slotsPerEpoch - slot) * slotDuration / 1000;
-    const days = Math.floor(lastTime / 60 / 60 / 24);
-    const leave1 = lastTime % (24 * 3600);
-    const hours = Math.floor(leave1 / (3600));
-    const leave2 = leave1 % 3600;
-    const minutes = Math.floor(leave2 / 60);
-    this.callSetState({
-      slotsPerEpoch,
-      epoch,
-      slot,
-      days,
-      hours,
-      minutes,
-      percentage: parseInt((100 * slot / slotsPerEpoch).toFixed(0))
-    });
+    if((daemonStatus&& daemonStatus.consensusConfiguration )
+      && (block&&block.protocolState)){
+        const slotsPerEpoch = daemonStatus.consensusConfiguration.slotsPerEpoch;
+        const slotDuration = daemonStatus.consensusConfiguration.slotDuration;
+        const slot = block.protocolState.consensusState.slot;
+        const epoch = block.protocolState.consensusState.epoch;
+        const lastTime = (slotsPerEpoch - slot) * slotDuration / 1000;
+        const days = Math.floor(lastTime / 60 / 60 / 24);
+        const leave1 = lastTime % (24 * 3600);
+        const hours = Math.floor(leave1 / (3600));
+        const leave2 = leave1 % 3600;
+        const minutes = Math.floor(leave2 / 60);
+        this.callSetState({
+          slotsPerEpoch,
+          epoch,
+          slot,
+          days,
+          hours,
+          minutes,
+          percentage: parseInt((100 * slot / slotsPerEpoch).toFixed(0))
+        });
+    }
   }
   async setDelegationInfo(account,validatorDetail) {
     let isSelf = this.props.currentAccount.address === account.delegate;
@@ -114,9 +123,9 @@ class Staking extends React.Component {
       validatorDetail
     });
   }
-  goStacking = () => {
+  goStaking = () => {
     this.props.history.push({
-      pathname: "/stacking_list",
+      pathname: "/staking_list",
       params: {
         nodeAddress: this.state.delegatePublicKey
       }
@@ -132,20 +141,20 @@ class Staking extends React.Component {
   renderContent() {
     const { stakingList } = this.props;
     const { validatorDetail, delegatePublicKey } = this.state;
-    let nodeName = 'Staking Node';
+    let nodeName = 'Block Producer';
     if (delegatePublicKey) {
       let delegateNode = stakingList.find(({ nodeAddress }) => nodeAddress === delegatePublicKey);
       if (delegateNode && delegateNode.nodeName) {
         nodeName = delegateNode.nodeName;
       }
     }
-    return (<div className={'stacking-content'}>
+    return (<div className={'staking-content'}>
       <div className={'module epoch-module'}>
         <div className={'title'}>{getLanguage('epochInfo')}</div>
         <div className={'panel'}>
           <div className={'item'}>
             <label>Epoch</label>
-            <span className={'value highlight'}>{this.state.epoch}</span>
+            <span className={'value-highlight'}>{this.state.epoch}</span>
           </div>
           <div className={'item'}>
             <label>Slot</label>
@@ -163,7 +172,9 @@ class Staking extends React.Component {
           </div>
           <div className={'circle-con'}>
             <GradientSVG rotation={90} startColor={'#A642FF'} endColor={'#737BE4'} idCSS={'circleGradient'}/>
-            <CircularProgressbar strokeWidth={12} value={this.state.percentage} text={`${this.state.percentage}%`} />
+            <CircularProgressbar styles={buildStyles({
+              textSize: '18px'
+            })} strokeWidth={10} value={this.state.percentage} text={`${this.state.percentage}%`} />
           </div>
         </div>
       </div>
@@ -178,21 +189,21 @@ class Staking extends React.Component {
                   !delegatePublicKey ? <EmptyGuide /> :
                     <>
                       <div className={'change-pos'}>
-                        <div className={'change-btn  click-cursor'} onClick={this.goStacking}>{getLanguage('changeNode')}</div>
+                        <div className={'change-btn  click-cursor'} onClick={this.goStaking}>{getLanguage('changeNode')}</div>
                       </div>
                       {
                         nodeName && <>
-                          <div className={'delegation-label first'}>{getLanguage('stackingProviderName')}</div>
+                          <div className={'delegation-label first'}>{getLanguage('blockProducerName')}</div>
                           <div className={'delegation-value'}>{nodeName}</div>
                         </>
                       }
-                      <div className={'delegation-label'}>{getLanguage('stackingProviderAddress')}</div>
+                      <div className={'delegation-label'}>{getLanguage('blockProducerAddress')}</div>
                       <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
                       {
                         validatorDetail && <>
-                          <div className={'delegation-label'}>{getLanguage('totalStack')}</div>
+                          <div className={'delegation-label'}>{getLanguage('producerTotalStake')}</div>
                           <div className={'delegation-value'}>{getAmountForUI(validatorDetail.stake)}</div>
-                          <div className={'delegation-label'}>{getLanguage('blockCreated')}</div>
+                          <div className={'delegation-label'}>{getLanguage('blocksProduced')}</div>
                           <div className={'delegation-value'}>{validatorDetail.blocks_created}</div>
                         </>
                       }
@@ -205,8 +216,8 @@ class Staking extends React.Component {
       </div>
       {
         !this.state.delegatePublicKey && (<div className={'operate-con'}>
-          <div className={'go-stacking click-cursor'} onClick={this.goStacking}>
-            {getLanguage('goStack')}
+          <div className={'go-staking click-cursor'} onClick={this.goStaking}>
+            {getLanguage('goStake')}
             <img className={'double-arrow'} src={goNext} />
           </div>
         </div>)

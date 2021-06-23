@@ -1,12 +1,13 @@
-const chromeStorage = chrome.storage && chrome.storage.local
+import extension from 'extensionizer'
+const extensionStorage = extension.storage && extension.storage.local
 
 /**
  * 存储在本地存储
  */
 export function save(value) {
     return new Promise((resolve, reject) => {
-        chromeStorage.set(value, () => {
-            let error = chrome.runtime.lastError
+        extensionStorage.set(value, () => {
+            let error = extension.runtime.lastError
             if (error) {
                 reject(error);
             }
@@ -22,8 +23,8 @@ export function save(value) {
  */
 export function get(value) {
     return new Promise((resolve, reject) => {
-        chromeStorage.get(value, items => {
-            let error = chrome.runtime.lastError
+        extensionStorage.get(value, items => {
+            let error = extension.runtime.lastError
             if (error) {
                 reject(error);
             }
@@ -38,8 +39,8 @@ export function get(value) {
  */
 export function removeValue(value) {
     return new Promise((resolve, reject) => {
-        chromeStorage.remove(value, () => {
-            let error = chrome.runtime.lastError
+        extensionStorage.remove(value, () => {
+            let error = extension.runtime.lastError
             if (error) {
                 reject(error);
             }
@@ -52,5 +53,5 @@ export function removeValue(value) {
  * 移除所有存储
  */
 export function clearStorage() {
-    chromeStorage.clear();
+    extensionStorage.clear();
 }

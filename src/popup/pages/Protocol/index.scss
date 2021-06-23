@@ -1,0 +1,29 @@
+@import "../../common.scss";
+
+.protocol-container-common {
+    padding: 0px 27px;
+    // margin-top: 10px;
+    position: relative;
+    flex-direction: column;
+    height: 85%;
+}
+.protocol-container-btn{
+    margin-top: 10px;
+    height: 78%;
+}
+.user-agree-container-common {
+    display: flex;
+    height: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    overflow-y: scroll;
+}
+.user-agree-container-border {
+    border: 1px solid #cccccc;
+}
+.user-agree-content {
+    font-size: $font-size-content;
+    color: #333;
+    hyphens: auto;
+    white-space: pre-wrap;
+}

@@ -23,10 +23,6 @@
     color: #01000d;
     line-height: 22px;
 }
-.setting-outter-container {
-}
-.setting-inner-container {
-}
 
 .tab-common-title {
     margin: 0px;
@@ -36,6 +32,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    font-family: HelveticaNeue-Medium;
+    font-size: $font-size-title-small;
 }
 .setting-config-item-left {
     display: flex;

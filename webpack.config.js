@@ -34,11 +34,6 @@ module.exports = (env, argv) => {
         },
         {
           test: /\.js$/, exclude: /node_modules/, loader: "babel-loader",
-          options: {
-            plugins: [
-              ['import', { libraryName: 'antd', style: 'css' }]  
-            ],
-          },
         },
         {
           test: /\.jsx$/,
@@ -47,9 +42,6 @@ module.exports = (env, argv) => {
             loader: "babel-loader",
             options: {
               presets: ["@babel/env", "@babel/react"], 
-              plugins: [
-                ['import', { libraryName: 'antd', style: 'css' }]  
-              ],
             },
           },
         },
@@ -68,7 +60,7 @@ module.exports = (env, argv) => {
           ],
         },
         {
-          test: /\.(png|jpg|gif)$/,
+          test: /\.(png|jpg|gif|svg)$/,
           use: [
             {
               loader: "url-loader",
@@ -85,7 +77,20 @@ module.exports = (env, argv) => {
     node: {
       fs: 'empty',
       'child_process': 'empty'
-    }
+    },
+    optimization: {
+      splitChunks: {
+        chunks: "all",
+        minSize: 4194300,  
+        cacheGroups: {
+          default: {
+            name: 'common',
+            chunks: 'initial',
+            minChunks: 2,  
+          },
+        }
+      }
+    },
   };
   if (isDev) {
     config.devtool = 'cheap-module-source-map';

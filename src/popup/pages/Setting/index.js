@@ -5,6 +5,7 @@ import language from "../../../assets/images/language.png";
 import networks from "../../../assets/images/networks.png";
 import security from "../../../assets/images/security.png";
 import txArrow from "../../../assets/images/txArrow.png";
+import userAgreement from "../../../assets/images/userAgreement.png";
 import { getLanguage } from "../../../i18n";
 import "./index.scss";
 class Setting extends React.Component {
@@ -27,6 +28,16 @@ class Setting extends React.Component {
             route: "/language_management_page"
         }
         ]
+        this.aboutList = [{
+            name: getLanguage("about"),
+            icon: aboutUs,
+            route: "/about_us"
+        },{
+            name: getLanguage("userAgree"),
+            icon: userAgreement,
+            route: "/protocol_page",
+            isHideBtn:true
+        }]
     }
     onClickItem = (e) => {
         this.props.params.history.push({
@@ -56,14 +67,11 @@ class Setting extends React.Component {
         </div>)
     }
     renderAbout = () => {
-        let abount = {
-            name: getLanguage("about"),
-            icon: aboutUs,
-            route: "/about_us"
-        }
         return (
             <div className={"setting-config-container setting-config-about"}>
-                {this.renderCommonConfig(abount)}
+                {this.aboutList.map((item, index) => {
+                return this.renderCommonConfig(item, index)
+            })}
             </div>
         )
     }

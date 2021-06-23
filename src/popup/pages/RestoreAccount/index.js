@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { validateMnemonic } from "../../../background/accountService";
-import { MINA_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -33,7 +33,6 @@ class RestoreAccount extends React.Component {
     }
   }
   goToCreate = () => {
-    // 如果长度不够，则提示，长度不符合
     let mnemonic = this.state.mnemonic
     mnemonic = trimSpace(mnemonic)
     let mneList = mnemonic.split(" ")
@@ -47,14 +46,13 @@ class RestoreAccount extends React.Component {
       return
     } 
     sendMsg({
-      action: MINA_NEW_HD_ACCOUNT,
+      action: WALLET_NEW_HD_ACCOUNT,
       payload: {
         pwd: this.state.password,
         mne: mnemonic
       }
     },
       async (currentAccount) => {
-        // 如果有账户
         this.props.updateCurrentAccount(currentAccount)
         this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE)
         this.props.history.push({

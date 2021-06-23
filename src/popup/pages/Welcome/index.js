@@ -5,8 +5,9 @@ import purpleArrow from "../../../assets/images/rightPurpleArrow.png";
 import whiteArrow from "../../../assets/images/rightWhiteArrow.png";
 import logo from "../../../assets/images/transparentLogo.png";
 import welcomeBg from "../../../assets/images/welcomeBg.png";
-import { generateMne } from "../../../background/accountService";
+import { getLocal } from "../../../background/localStorage";
 import { get } from "../../../background/storageService";
+import { USER_AGREEMENT } from "../../../constant/storageKey";
 import {
   changeLanguage,
   default_language,
@@ -14,9 +15,8 @@ import {
   getLanguage,
   languageOption
 } from "../../../i18n";
-import { updateMne } from "../../../reducers/accountReducer";
 import { setLanguage } from "../../../reducers/appReducer";
-import { setWelcomeNextRoute } from "../../../reducers/cache";
+import { setWelcomeNextRoute, updateProtocolFrom } from "../../../reducers/cache";
 import Button, { BUTTON_TYPE_HOME_BUTTON } from "../../component/Button";
 import Select from "../../component/Select";
 import "./index.scss";
@@ -24,7 +24,8 @@ class Welcome extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      newAccount: false
+      newAccount: false,
+      isGotoProtocol:true
     }
     this.isUnMounted = false;
   }
@@ -46,9 +47,14 @@ class Welcome extends React.Component {
   }
 
   initLocal = () => {
-    //初始化
+    // 先去获取本地的隐私协议是否同意
+    let agreeStatus = getLocal(USER_AGREEMENT)
+    if(agreeStatus){
+      this.callSetState({
+        isGotoProtocol:false
+      })
+    }
     get(null).then(dataObj => {
-      //如果没有数据，则在这里申请创建新的助记词
       if (dataObj && !dataObj.keyringData) {
         this.callSetState({
           newAccount: true
@@ -74,45 +80,46 @@ class Welcome extends React.Component {
     )
   }
   goToPage = (nextRoute) => {
-    this.props.setWelcomeNextRoute(nextRoute)
-    this.props.history.push({
-      pathname: "/createpassword",
+    // 有协议，先进入协议，然后输入密码。进入主要操作界面
+    // 没有协议，进入输入面膜，然后进入主要操作界面
+    if(this.state.isGotoProtocol){
+      this.props.updateProtocolFrom("/createpassword")
+      this.props.setWelcomeNextRoute(nextRoute)
+      this.props.history.push({
+        pathname: "protocol_page"
+      })
+    }else{
+      this.props.setWelcomeNextRoute(nextRoute)
+      this.props.history.push({
+        pathname: "/createpassword",
+      })
     }
-    )
+    // 更新下一步的路由
   };
-  //创建
-  goToCreate = () => {
-    if (this.state.newAccount) {
-      let mne = generateMne()
-      this.props.updateMne(mne)
+  goToCreate = (nextRoute) => {
+    if(this.state.isGotoProtocol){
+      this.props.updateProtocolFrom("/createpassword")
+      this.props.setWelcomeNextRoute(nextRoute)
+      this.props.history.push({
+        pathname: "protocol_page",
+      })
+    }else{
+      this.props.setWelcomeNextRoute(nextRoute)
+      this.props.history.push({
+        pathname: "/createpassword",
+      })
     }
-    let nextRoute = "backup_tips"
-    this.props.setWelcomeNextRoute(nextRoute)
-    this.props.history.push({
-      pathname: "/createpassword",
-    }
-    )
   };
 
   render() {
     return (
       <div className="welcome_container">
         <img className={"welcome-left-bg"} src={welcomeBg}></img>
-        <img style={{
-          position: "absolute",
-          left: "30px",
-          top: "40px",
-          width: "54px",
-          height: "49px"
-        }} src={logo}></img>
-        <div className={'language-container'}>
-          {this.renderLanMenu()}
+        <div className={'welcome-top-container'}>
+          <img className={'welcome-left-logo'} src={logo}></img>
+            {this.renderLanMenu()}
         </div>
-        <div style={{
-          marginTop: "40px",
-          width: "100%",
-          textAlign: "center",
-        }}>
+        <div className={'welcome-button-container'}>
           <Button
             buttonType={BUTTON_TYPE_HOME_BUTTON}
             propsClass={'welcome-create-button'}
@@ -131,6 +138,7 @@ class Welcome extends React.Component {
             <img className={"welcome-arrow"} src={purpleArrow}></img>
           </Button>
         </div>
+        <p className="bottomTipLedger" >{getLanguage("ledgerUserTip")}</p>
         <p className="bottomTip" >Powered by Bit Cat</p>
       </div>)
   }
@@ -145,12 +153,13 @@ function mapDispatchToProps(dispatch) {
     setLanguage: (lan) => {
       dispatch(setLanguage(lan));
     },
-    updateMne: (mne) => {
-      dispatch(updateMne(mne))
-    },
     setWelcomeNextRoute: (nextRoute) => {
       dispatch(setWelcomeNextRoute(nextRoute))
-    }
+    },
+    
+    updateProtocolFrom: (nextRoute) => {
+      dispatch(updateProtocolFrom(nextRoute))
+    },
   };
 }
 

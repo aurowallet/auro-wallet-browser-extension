@@ -24,6 +24,13 @@ const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
  */
  const UPDATE_ACCOUNT_TYPE_FROM = "UPDATE_ACCOUNT_TYPE_FROM"
 
+
+
+/**
+ * 更新隐私协议页面来源
+ */
+ const UPDATE_PROTOCOL_FROM = "UPDATE_PROTOCOL_FROM"
+
 /**
  * 更改钱包名称
  */
@@ -63,12 +70,20 @@ export function updateAccoutType(fromType) {
         fromType
     };
 }
+
+export function updateProtocolFrom(protocolFromRoute) {
+    return {
+        type: UPDATE_PROTOCOL_FROM,
+        protocolFromRoute
+    };
+}
 const initState = {
     fromType: '',
     accountCount: "",
     accountInfo: {},
     welcomeNextRoute: "",
-    homeBottomType:"BOTTOM_TYPE_NONE",
+    homeBottomType:"BOTTOM_TYPE_LOADING",
+    protocolFromRoute:""
 };
 
 const cacheReducer = (state = initState, action) => {
@@ -101,6 +116,11 @@ const cacheReducer = (state = initState, action) => {
             return{
                 ...state,
                 fromType: action.fromType,
+            }
+        case UPDATE_PROTOCOL_FROM:
+            return{
+                ...state,
+                protocolFromRoute: action.protocolFromRoute,
             }
         default:
             return state;

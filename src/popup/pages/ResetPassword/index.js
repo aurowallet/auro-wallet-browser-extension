@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_CHANGE_SEC_PASSWORD } from "../../../constant/types";
+import { WALLET_CHANGE_SEC_PASSWORD } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
 import { matchList, pwdValidate } from "../../../utils/validator";
@@ -151,7 +151,7 @@ class Reset extends React.Component {
     }
     resetPwd = () => {
         sendMsg({
-            action: MINA_CHANGE_SEC_PASSWORD,
+            action: WALLET_CHANGE_SEC_PASSWORD,
             payload: {
                 oldPassword: this.state.oldPassword,
                 password: this.state.newPassword
@@ -178,10 +178,10 @@ class Reset extends React.Component {
             </div>
         )
     }
-    render() {
+    render() { 
         return (
             <CustomView
-                title={getLanguage('securityPassword')}
+                title={getLanguage('changeSecPassword')}
                 history={this.props.history}>
                 <form onSubmit={this.onSubmit}>
                     <div className="reset-container">

@@ -4,17 +4,21 @@ import { connect } from "react-redux";
 import modalClose from "../../../assets/images/modalClose.png";
 import txArrow from "../../../assets/images/txArrow.png";
 import { SEC_DELETE_ACCOUNT, SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
-import { MINA_CHANGE_ACCOUNT_NAME } from "../../../constant/types";
+import { WALLET_CHANGE_ACCOUNT_NAME } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
-import { copyText, nameLengthCheck } from "../../../utils/utils";
+import {amountDecimals, copyText, nameLengthCheck} from "../../../utils/utils";
 import Button, { BUTTON_TYPE_CANCEL } from "../../component/Button";
 import CustomInput from "../../component/CustomInput";
 import CustomView from "../../component/CustomView";
 import TestModal from "../../component/TestModal";
 import Toast from "../../component/Toast";
 import "./index.scss";
+import {getTransactionList} from "../../../background/api";
+import {JSonToCSV} from "../../../utils/JsonToCSV";
+import {cointypes} from "../../../../config";
+import Loading from "../../component/Loading";
 
 class AccountInfo extends React.Component {
   constructor(props) {
@@ -107,7 +111,7 @@ class AccountInfo extends React.Component {
       return
     }
     sendMsg({
-      action: MINA_CHANGE_ACCOUNT_NAME,
+      action: WALLET_CHANGE_ACCOUNT_NAME,
       payload: {
         address: this.state.account.address,
         accountName: this.state.inputAccountName
@@ -174,7 +178,7 @@ class AccountInfo extends React.Component {
           errorTipShow={this.state.errorTipShow}
           showTip={getLanguage("accountNameLimit")}
         />
-        <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />
+        {/* <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} /> */}
       </div>)
   }
   renderChangeModal = () => {
@@ -191,8 +195,40 @@ class AccountInfo extends React.Component {
       Toast.info(getLanguage('copySuccess'))
     })
   }
+
+  exportCsvTransactions = async () => {
+    Loading.show()
+    const {txList, address} = await getTransactionList(this.state.account.address, null)
+    Loading.hide()
+    const csvList = txList.map((tx)=>{
+      return {
+        date: tx.time.replace(/T/, ' ').replace(/Z/, ' UTC'),
+        amount: amountDecimals(tx.amount, cointypes.decimals),
+        sender: tx.sender,
+        receiver: tx.receiver,
+        memo: tx.memo ? tx.memo : '',
+        fee: amountDecimals(tx.fee, cointypes.decimals),
+        nonce: tx.nonce,
+        type: tx.type,
+        hash: tx.hash,
+        status: tx.status,
+      }
+    })
+    JSonToCSV.setDataConver({
+      data: csvList,
+      fileName: this.state.account.address,
+      columns: {
+        title: ['Date', 'Amount', 'Sender', 'Receiver', 'Memo', 'Fee', 'Nonce', 'Type', 'TxHash', 'Status'],
+        key: ['date', 'amount', 'sender', 'receiver', 'memo', 'fee', 'nonce', 'type', 'hash', 'status']
+      }
+    });
+  }
+
   render() {
     let hideDelete = this.state.account.type === ACCOUNT_TYPE.WALLET_INSIDE
+    let isLedger = this.state.account.type === ACCOUNT_TYPE.WALLET_LEDGER
+    let hideExport = this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH 
+      ||  isLedger
     let showAddress = this.state.account.address
     return (
       <CustomView
@@ -200,9 +236,11 @@ class AccountInfo extends React.Component {
         history={this.props.history}>
         <div className="account-info-container">
           {this.renderInfo(getLanguage('accountAddress'), showAddress, this.copyAddress, true)}
+          {isLedger ? this.renderInfo(getLanguage('hdDerivedPath'), `m / 44' / 12586' / ${this.state.account.hdPath} ' / 0 / 0`, null, true) : null}
           {this.renderInfo(getLanguage('accountName'), this.state.account.accountName, this.changeAccountName)}
-          {this.renderInfo(getLanguage('exportPrivateKey'), "", this.showPrivateKey)}
-          {!hideDelete ? this.renderInfo(getLanguage("accountDelete"), "", this.deleteAccount) : <></>}
+          {!hideExport ?this.renderInfo(getLanguage('exportPrivateKey'), "", this.showPrivateKey) : null}
+          {this.renderInfo(getLanguage('exportCSV'), "", this.exportCsvTransactions)}
+          {!hideDelete ? this.renderInfo(getLanguage("accountDelete"), "", this.deleteAccount) : null}
         </div>
         <form onSubmit={this.onSubmit}>
           {this.renderChangeModal()}

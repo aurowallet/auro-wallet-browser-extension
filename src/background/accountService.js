@@ -1,4 +1,4 @@
-import * as RawSDK from '@o1labs/client-sdk/src/client_sdk.bc';
+import * as CodaSDK from '@o1labs/client-sdk';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
 import { generateMnemonic } from "bip39";
@@ -45,12 +45,12 @@ export async function importWalletByMnemonic(mnemonic, index = 0) {
     const child0 = masterNode.derivePath(hdPath)
     child0.privateKey[0] &= 0x3f;
     const childPrivateKey = reverse(child0.privateKey)
-    const minaPrivateKeyHex = `5a01${childPrivateKey.toString('hex')}`
-    const minaPrivateKey = bs58check.encode(Buffer.from(minaPrivateKeyHex, 'hex'))
-    const minaPublicKey = RawSDK.codaSDK.publicKeyOfPrivateKey(minaPrivateKey)
+    const privateKeyHex = `5a01${childPrivateKey.toString('hex')}`
+    const privateKey = bs58check.encode(Buffer.from(privateKeyHex, 'hex'))
+    const publicKey = CodaSDK.derivePublicKey(privateKey)
     return {
-        priKey: minaPrivateKey,
-        pubKey: minaPublicKey,
+        priKey: privateKey,
+        pubKey: publicKey,
         hdIndex: index
     }
 }
@@ -75,11 +75,11 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
         const nonce = bs58check.decode(keyfile.nonce).slice(1)
         const privateKeyHex = '5a' + sodium.crypto_secretbox_open_easy(ciphertext, nonce, key, 'hex')
         const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
-        const minaPrivateKey = bs58check.encode(privateKeyBuffer)
-        const minaPublicKey = RawSDK.codaSDK.publicKeyOfPrivateKey(minaPrivateKey)
+        const privateKey = bs58check.encode(privateKeyBuffer)
+        const publicKey = CodaSDK.derivePublicKey(privateKey)
         return {
-            priKey: minaPrivateKey,
-            pubKey: minaPublicKey,
+            priKey: privateKey,
+            pubKey: publicKey,
         }
     }
     catch (e) {
@@ -87,10 +87,10 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
     }
 }
 export function importWalletByPrivateKey(privateKey) {
-    const minaPublicKey = RawSDK.codaSDK.publicKeyOfPrivateKey(privateKey)
+    const publicKey = CodaSDK.derivePublicKey(privateKey)
     return {
         priKey: privateKey,
-        pubKey: minaPublicKey,
+        pubKey: publicKey,
     }
 }
 

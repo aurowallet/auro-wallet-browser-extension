@@ -13,6 +13,7 @@ import {LEDGER_CONNECTED_SUCCESSFULLY} from "../../../constant/types";
 import "./index.scss";
 import {closePopupWindow} from "../../../utils/popup";
 import {LedgerConnected} from "../../component/LedgerConnected";
+import {Helmet} from "react-helmet";
 class LedgerConnect extends React.Component {
   constructor(props) {
     super(props);
@@ -92,9 +93,9 @@ class LedgerConnect extends React.Component {
         {/* 左右 */}
         <div>
           <div className={"account-item-top"}>
-            <p className={"account-item-name ledger-step-title"}>{item.title}</p>
+            <p className={"ledger-step-title"}>{item.title}</p>
           </div>
-          <p className={"account-item-address ledger-step-content"}>{item.content}</p>
+          <p className={"ledger-step-content"}>{item.content}</p>
         </div>
         <div className={"ledger-item-right"}>
           {item.bool && <img src={select_account_ok} className={"account-item-select click-cursor"} />}
@@ -138,6 +139,11 @@ class LedgerConnect extends React.Component {
   render() {
     return (
       <div>
+         <Helmet>
+                <meta charSet="utf-8" />
+                <title>{getLanguage("ledgerConnect")}</title>
+                <link rel="canonical" href="./popup.html#/ledger_connect" />
+            </Helmet>
         <div className="ledger-connect-container">
           {
             this.state.connectCompleted ?

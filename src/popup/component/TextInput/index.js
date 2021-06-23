@@ -6,6 +6,7 @@ import pwd_error from "../../../assets/images/pwd_error.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import { getLanguage } from "../../../i18n";
 import "./index.scss";
+import PropTypes from 'prop-types'
 
 
 export default class TextInput extends Component {

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { NET_WORK_CONFIG } from "../constant/storageKey";
+import { trimSpace } from "../utils/utils";
 import "./api/axios";
 import { getLocal } from "./localStorage";
 
@@ -37,12 +38,21 @@ async function fetchGraphQL(operationsDoc, operationName, variables, url, retryC
       })
   })
 }
+function getQueryName(gqlparams){
+  let startCode = "query"
+  let queryIndex = gqlparams.indexOf(startCode)
+  let bigIndex =  gqlparams.indexOf("{")
+  let name = gqlparams.substring(queryIndex+startCode.length,bigIndex)
+  name = trimSpace(name)
+  return name
+}
 
-export async function startFetchMyQuery(gqlparams, url) {
+export async function startFetchMyQuery(gqlparams, url,queryName) {
+  let operationName = getQueryName(gqlparams)
   let result = await fetchGraphQL(
     gqlparams,
-    "MyQuery",
-    {},
+    operationName,
+    {requestType:queryName},
     url
   ).catch(errors => errors);
   let { errors, data } = result
@@ -50,7 +60,9 @@ export async function startFetchMyQuery(gqlparams, url) {
     let errMessage = ""
     if (Array.isArray(errors) && errors[0] && errors[0].message) {
       errMessage = errors[0].message
-    } else {
+    } else if(errors&&errors.message){
+      errMessage = errors.message
+    }else {
       errMessage = JSON.stringify(errors)
     }
     return { error: errMessage }

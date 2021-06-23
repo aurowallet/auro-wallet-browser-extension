@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import pwd_error from "../../../assets/images/pwd_error.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import "./index.scss";
+import PropTypes from 'prop-types'
 export default class CustomInput extends Component {
     constructor(props) {
         super(props);

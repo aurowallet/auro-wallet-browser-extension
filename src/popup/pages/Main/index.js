@@ -8,7 +8,7 @@ import staking_active from "../../../assets/images/staking_active.png";
 import staking_common from "../../../assets/images/staking_common.png";
 import { getLocal, saveLocal } from "../../../background/localStorage";
 import { NET_WORK_CONFIG } from "../../../constant/storageKey";
-import { MINA_GET_CURRENT_ACCOUNT } from "../../../constant/types";
+import { WALLET_GET_CURRENT_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { updateCurrentNetwork, updateNetConfig } from "../../../reducers/network";
@@ -30,43 +30,6 @@ class HomePage extends React.Component {
   }
 
   componentDidMount() {
-    // 更新网络类型
-    this.fetchLocalNetConfig()
-  }
-  getLocalNetConfig = () => {
-    let localNetConfig = getLocal(NET_WORK_CONFIG)
-    let config
-    if (!localNetConfig) {
-      let netList = network_config.map((item) => {
-        item.type = NET_CONFIG_DEFAULT
-        return item
-      })
-      config = {
-        currentUrl: netList[0].url,
-        netList: netList
-      }
-      saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
-    } else {
-      config = JSON.parse(localNetConfig)
-    }
-    this.props.updateNetConfig(config)
-    return config
-    // 更新reducer
-  }
-  fetchLocalNetConfig = () => {
-    let config = this.getLocalNetConfig()
-    let list = config.netList
-    let currentConfig = {}
-    for (let index = 0; index < list.length; index++) {
-      const netconfig = list[index];
-      if(config.currentUrl === netconfig.url){
-        currentConfig = netconfig
-        break
-      }
-    }
-    if(currentConfig.url){
-      this.props.updateCurrentNetwork(currentConfig.url, currentConfig.type)
-    }
   }
   onChangeRouteIndex = (index) => {
     this.props.updateHomeIndex(index)

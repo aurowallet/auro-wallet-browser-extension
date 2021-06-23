@@ -2,6 +2,8 @@ import cx from "classnames";
 import React, { Component } from "react";
 import downArrow from "../../../assets/images/downArrow.png";
 import "./index.scss";
+import PropTypes from 'prop-types'
+
 export default class Select extends Component {
   constructor(props) {
     super(props);
@@ -40,7 +42,7 @@ export default class Select extends Component {
   };
   render() {
     const { isOpen, value } = this.state;
-    const { label, options, placeholder, defaultValue } = this.props;
+    const { label, options, defaultValue } = this.props;
     return (
       <div className="select-box">
         {label && <label className="label">{label}:</label>}

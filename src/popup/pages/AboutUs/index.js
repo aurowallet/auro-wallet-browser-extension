@@ -25,7 +25,8 @@ class AboutUs extends React.Component {
     super(props);
     this.state = {
       changelog: "",
-      followus: []
+      followus: [],
+      gitReponame:""
     };
     this.isUnMounted = false;
   }
@@ -51,6 +52,7 @@ class AboutUs extends React.Component {
       return
     }
     let changelog = aboutInfo.changelog ? aboutInfo.changelog : ""
+    let gitReponame = aboutInfo.gitReponame ? aboutInfo.gitReponame : ""
     let followus = aboutInfo.followus && aboutInfo.followus.length > 0 ? aboutInfo.followus : []
     followus = followus.map((item, index) => {
       item.source = followSource[item.name]
@@ -58,34 +60,36 @@ class AboutUs extends React.Component {
     })
     this.callSetState({
       changelog,
-      followus
+      followus,
+      gitReponame
     })
   }
   renderTopInfo = () => {
     return (<div className={'about-top-container'}>
       <img src={home_logo} className={"about-home-logo"} />
-      <p className={"about-wallet-name"}>{getLanguage('minaWallet')}</p>
+      <p className={"about-wallet-name"}>{getLanguage('walletName')}</p>
       <p className={"about-wallet-version"}>{VERSION_CONFIG}</p>
     </div>)
   }
-  renderTopMinaDesc = () => {
-    return (<p className="about-tip-description">{getLanguage('minaAbout')}</p>)
+  renderTopDesc = () => {
+    return (<p className="about-tip-description">{getLanguage('walletAbout')}</p>)
   }
-  renderTopMinaGit = () => {
+  rendergitInfo = () => {
     if (!this.state.changelog) {
       return <></>
     }
+    let showLog = this.state.gitReponame
     return (
       <div className={"about-item-container"}>
         <p className={"about-item-title"}>{getLanguage('versionInfo')}</p>
-        <p onClick={() => this.onClick(this.state.changelog)} className={"about-item-content click-cursor"}>{this.state.changelog}</p>
+        <p onClick={() => this.onClick(this.state.changelog)} className={"about-item-content click-cursor"}>{showLog}</p>
       </div>
     )
   }
   onClick = (url) => {
     openTab(url)
   }
-  renderTopMinaFollow = () => {
+  renderWalletFollow = () => {
     if (this.state.followus.length <= 0) {
       return <></>
     }
@@ -112,9 +116,9 @@ class AboutUs extends React.Component {
         history={this.props.history}>
         <div className="about-container">
           {this.renderTopInfo()}
-          {this.renderTopMinaDesc()}
-          {this.renderTopMinaGit()}
-          {this.renderTopMinaFollow()}
+          {this.renderTopDesc()}
+          {this.rendergitInfo()}
+          {this.renderWalletFollow()}
         </div>
       </CustomView>)
   }

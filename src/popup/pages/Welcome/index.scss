@@ -37,11 +37,7 @@
   color: #b9b9b9;
 }
 
-.language-container {
-  position: absolute;
-  right: 30px;
-  top: 50px;
-}
+
 .welcome-arrow {
   width: 13px;
   height: 8px;
@@ -49,4 +45,32 @@
 .welcome-left-bg{
   width: 375px;
   height: 262px;
+}
+.welcome-left-logo{
+  height: 30px;
+}
+.welcome-button-container{
+  margin-top: 40px;
+  width: 100%;
+  text-align: center;
+}
+.welcome-top-container{
+  position: absolute;
+  top: 40px;
+  height: 60px;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 30px;
+}
+.bottomTipLedger{
+  position: absolute;
+  bottom: 100px;
+  margin: auto;
+  left: 0;
+  right: 0;
+  font-size: $font-size-content;
+  color: #CCCCCC;
+  padding: 0px 30px;
 }

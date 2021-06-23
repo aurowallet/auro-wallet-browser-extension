@@ -39,9 +39,15 @@
 .ledger-step-title{
     color: #666;
     font-size: $font-size-title-small;
+    margin: 0;
+    letter-spacing: 1px;
+    margin-top: 4px;
 }
 .ledger-step-content{
     color: #333;
     font-size: $font-size-title-small;
-    line-height: $font-size-desc-small;
+    margin: 0;
+    letter-spacing: 1px;
+    margin-top: 2px;
+    hyphens: auto; 
 }

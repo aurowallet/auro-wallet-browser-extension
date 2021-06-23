@@ -159,7 +159,6 @@ class NetworkPage extends React.Component {
         return false
     }
     onAddNetConfig = () => {
-        // 查看是否符合规则
         if (!urlValid(this.state.netUrl)) {
             Toast.info(getLanguage("urlError_1"))
             return
@@ -168,7 +167,6 @@ class NetworkPage extends React.Component {
             Toast.info(getLanguage('urlError_2'))
             return
         }
-        // 查看是否已存在
         setTimeout(() => {
             this.onCloseModal()
             let addItem = {
@@ -216,7 +214,7 @@ class NetworkPage extends React.Component {
                     value={this.state.netUrl}
                     onTextInput={this.onTextInput}
                 />
-                <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />
+                {/* <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} /> */}
             </div>)
     }
     onAdd = (e) => {

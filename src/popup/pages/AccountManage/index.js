@@ -10,7 +10,7 @@ import select_account_no from "../../../assets/images/select_account_no.png";
 import select_account_ok from "../../../assets/images/select_account_ok.png";
 import { getBalanceBatch } from "../../../background/api";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
-import { MINA_CHANGE_CURRENT_ACCOUNT, MINA_GET_ALL_ACCOUNT, MINA_SET_UNLOCKED_STATUS } from "../../../constant/types";
+import { WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
@@ -20,7 +20,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice, amountDecimals } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import "./index.scss";
-
+import Toast from "../../component/Toast";
 
 class AccountManagePage extends React.Component {
   constructor(props) {
@@ -36,7 +36,7 @@ class AccountManagePage extends React.Component {
 
   componentDidMount() {
     sendMsg({
-      action: MINA_GET_ALL_ACCOUNT,
+      action: WALLET_GET_ALL_ACCOUNT,
     }, (account) => {
       this.callSetState({
         accountList: this.setListFilter(account.accounts),
@@ -63,10 +63,13 @@ class AccountManagePage extends React.Component {
     }
   }
   setBalance2Account=(accountList,balanceList)=>{
+    if(balanceList && balanceList.length == 0){
+      return accountList
+    }
     for (let index = 0; index < accountList.length; index++) {
       const account = accountList[index];
       let accountBalance = balanceList[account.address]
-      if(accountBalance.length>0){
+      if(accountBalance && accountBalance.length>0){
         let balance = accountBalance[0].balance.total
         balance = amountDecimals(balance, cointypes.decimals)
         accountList[index].balance = balance
@@ -93,7 +96,10 @@ class AccountManagePage extends React.Component {
     let ledgerList = newList.filter((item, index) => {
       return item.type === ACCOUNT_TYPE.WALLET_LEDGER
     })
-    return [...createList, ...importList,...ledgerList]
+    let watchList = newList.filter((item, index) => {
+      return item.type === ACCOUNT_TYPE.WALLET_WATCH
+    })
+    return [...createList, ...importList,...ledgerList, ...watchList]
   }
   getAccountTypeIndex = (list) => {
     if (list.length === 0) {
@@ -117,8 +123,6 @@ class AccountManagePage extends React.Component {
     });
   }
   goImport = () => {
-    //在这里处理
-    // 传递 账户数量就可以
     let accountTypeList = this.state.accountList.filter((item, index) => {
       return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE
     })
@@ -131,8 +135,13 @@ class AccountManagePage extends React.Component {
     });
   }
   goAddLedger=()=>{
+    const isLedgerCapable = (!window || window&&!window.USB)
+    if(isLedgerCapable){
+      Toast.info(getLanguage("ledgerNotSupport"))
+      return 
+    }
     let accountTypeList = this.state.accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE
+      return item.type === ACCOUNT_TYPE.WALLET_LEDGER
     })
     let accountCount = this.getAccountTypeIndex(accountTypeList)
     this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.LEDGER)
@@ -147,7 +156,7 @@ class AccountManagePage extends React.Component {
   onClickAccount = (item) => {
     if (item.address !== this.state.currentAddress) {
       sendMsg({
-        action: MINA_CHANGE_CURRENT_ACCOUNT,
+        action: WALLET_CHANGE_CURRENT_ACCOUNT,
         payload: item.address
       }, (account) => {
         if (account.accountList && account.accountList.length > 0) {
@@ -179,6 +188,9 @@ class AccountManagePage extends React.Component {
       case ACCOUNT_TYPE.WALLET_LEDGER:
         typeText = "Ledger"
           break;
+      case ACCOUNT_TYPE.WALLET_WATCH:
+        typeText = getLanguage('watchLabel')
+        break;
       default:
         break;
     }
@@ -200,7 +212,8 @@ class AccountManagePage extends React.Component {
             <p className={cx({
               "account-item-type": showImport,
               "account-item-type-none": !showImport,
-              "account-ledger-tip" : item.type === ACCOUNT_TYPE.WALLET_LEDGER
+              "account-ledger-tip" : item.type === ACCOUNT_TYPE.WALLET_LEDGER,
+              "account-watch-tip" : item.type === ACCOUNT_TYPE.WALLET_WATCH,
             })}>{showImport}</p>
           </div>
           <p className={"account-item-address"}>{addressSlice(item.address)}</p>
@@ -247,13 +260,9 @@ class AccountManagePage extends React.Component {
   }
   onClickLock = () => {
     sendMsg({
-      action: MINA_SET_UNLOCKED_STATUS,
+      action: WALLET_SET_UNLOCKED_STATUS,
       payload: false
     }, (res) => { })
-    this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE)
-    this.props.history.push({
-      pathname: "/",
-    });
   }
   renderLockBtn = () => {
     return (

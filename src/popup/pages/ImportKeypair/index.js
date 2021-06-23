@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { validateMnemonic } from "../../../background/accountService";
-import { MINA_IMPORT_KEY_STORE, MINA_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_IMPORT_KEY_STORE, WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -42,7 +42,7 @@ class ImportKeypair extends React.Component {
     e.stopPropagation()
     Loading.show()
     sendMsg({
-      action: MINA_IMPORT_KEY_STORE,
+      action: WALLET_IMPORT_KEY_STORE,
       payload: {
         keypair: this.state.keypair,
         password: this.state.pwd,
@@ -51,7 +51,7 @@ class ImportKeypair extends React.Component {
     },
       async (account) => {
         Loading.hide()
-        if (account.error) {//如果是数组，且 则返回正确
+        if (account.error) {
           if(account.type === "local"){
             Toast.info(getLanguage(account.error))
           }else{
@@ -61,7 +61,7 @@ class ImportKeypair extends React.Component {
         } else {
           this.props.updateCurrentAccount(account)
           setTimeout(() => {
-            this.props.history.replace({ // todo  返回的路由有问题
+            this.props.history.replace({ 
               pathname: "/account_manage",
             })
           }, 300);

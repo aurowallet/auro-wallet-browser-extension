@@ -12,14 +12,19 @@ import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import "./index.scss";
 import { openTab, sendMsg } from '../../../utils/commonMsg';
-import { FROM_BACK_TO_RECORD, MINA_CHECK_TX_STATUS, TX_SUCCESS } from '../../../constant/types';
+import { FROM_BACK_TO_RECORD, WALLET_CHECK_TX_STATUS, TX_SUCCESS } from '../../../constant/types';
 import cx from "classnames";
+import extension from 'extensionizer'
+
 const DECIMALS = cointypes.decimals
 
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
   TX_STATUS_SUCCESS: "applied",
-  TX_STATUS_FAILED: "failed"
+  TX_STATUS_INCLUDED: "INCLUDED",
+
+  TX_STATUS_FAILED: "failed",
+  TX_STATUS_UNKNOWN: "UNKNOWN"
 }
 
 class Record extends React.Component {
@@ -48,7 +53,7 @@ class Record extends React.Component {
     }
   }
   startListener = () => {
-    chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    extension.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       const { type, action } = message;
       if (type === FROM_BACK_TO_RECORD && action === TX_SUCCESS) {
         this.callSetState({
@@ -111,11 +116,13 @@ class Record extends React.Component {
     }
     switch (this.state.txStatus) {
       case STATUS.TX_STATUS_SUCCESS:
+      case STATUS.TX_STATUS_INCLUDED:
         status.source = success,
           status.text = getLanguage('backup_success_title')
         status.className = "tx-success-title"
         break;
       case STATUS.TX_STATUS_FAILED:
+      case STATUS.TX_STATUS_UNKNOWN:
         status.source = txFailed,
           status.text = getLanguage('txFailed')
         status.className = "tx-failed-title"

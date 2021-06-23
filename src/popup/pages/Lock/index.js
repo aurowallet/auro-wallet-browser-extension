@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import home_logo from "../../../assets/images/home_logo.png";
-import { MINA_APP_SUBMIT_PWD } from "../../../constant/types";
+import { WALLET_APP_SUBMIT_PWD } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -33,7 +33,7 @@ class LockPage extends React.Component {
       }
     goToConfirm = async () => {
         sendMsg({
-            action: MINA_APP_SUBMIT_PWD,
+            action: WALLET_APP_SUBMIT_PWD,
             payload: this.state.password
         },
             (account) => {
@@ -106,7 +106,7 @@ class LockPage extends React.Component {
     render() {
         return (
             <CustomView
-                title={getLanguage('minaWallet')}
+                title={getLanguage('walletName')}
                 noBack={true}
                 isReceive={true}
                 history={this.props.history}>

@@ -1,6 +1,7 @@
 import cx from "classnames";
 import React, { Component } from "react";
 import "./index.scss";
+import PropTypes from 'prop-types'
 export default class TestModal extends Component {
     constructor(props) {
         super(props);

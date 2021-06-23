@@ -2,7 +2,7 @@ import { cointypes, TX_LIST_LENGTH } from "../../config";
 import { amountDecimals } from "../utils/utils";
 
 const CHANGE_ACCOUNT_TX_HISTORY = "CHANGE_ACCOUNT_TX_HISTORY"
-const UPDATE_MNE = "UPDATE_MNE"
+
 const UPDATE_CURRENT_ACCOUNT = "UPDATE_CURRENT_ACCOUNT"
 
 const UPDATE_NET_ACCOUNT = "UPDATE_NET_ACCOUNT"
@@ -15,13 +15,6 @@ export function updateAccountTx(txList,txPendingList) {
         type: CHANGE_ACCOUNT_TX_HISTORY,
         txList,
         txPendingList
-    };
-}
-
-export function updateMne(mnemonic) {
-    return {
-        type: UPDATE_MNE,
-        mnemonic
     };
 }
 
@@ -47,7 +40,6 @@ export function updateShouldRequest(shouldRefresh) {
 }
 const initState = {
     txList: [],
-    mnemonic: "",
     currentAccount: {},
     netAccount: {},
     balance: "0.0000",
@@ -100,23 +92,21 @@ const accountInfo = (state = initState, action) => {
             }
             txPendingList = txPendingList.reverse()
             txPendingList = pendingTx(txPendingList)
-            // txList = resultTx(txList)
             return {
                 ...state,
                 txList:[...txPendingList,...txList]
-            };
-        case UPDATE_MNE:
-            let mnemonic = action.mnemonic
-            return {
-                ...state,
-                mnemonic
             };
         case UPDATE_CURRENT_ACCOUNT:
             let account = action.account
             return {
                 ...state,
                 currentAccount: account,
-                shouldRefresh:true
+                balance: "0.0000",
+                txList: [],
+                netAccount: {},
+                nonce: "",
+                shouldRefresh:true,
+                
             }
         case UPDATE_NET_ACCOUNT:
             let netAccount = action.account

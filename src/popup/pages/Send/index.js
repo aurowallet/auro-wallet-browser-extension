@@ -7,14 +7,14 @@ import downArrow from "../../../assets/images/downArrow.png";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import modalClose from "../../../assets/images/modalClose.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
-import {getBalance, getFeeRecom, sendTx} from "../../../background/api";
-import { MINA_CHECK_TX_STATUS, MINA_SEND_TRANSTRACTION } from "../../../constant/types";
+import { getBalance, getFeeRecom, sendTx } from "../../../background/api";
+import { WALLET_CHECK_TX_STATUS, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect, requestSignPayment } from "../../../utils/ledger";
-import { getDisplayAmount, isNumber } from "../../../utils/utils";
+import { getDisplayAmount, isNumber,trimSpace ,isTrueNumber} from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import Button from "../../component/Button";
 import CustomInput from "../../component/CustomInput";
@@ -96,8 +96,8 @@ class SendPage extends React.Component {
         fee: feeRecom[1].value
       })
     }
-    // 请求余额
-    let account = await getBalance(address)
+    let accountData = await getBalance(address)
+    let account = accountData.account
     if (account.account) {
       this.props.updateNetAccount(account.account)
     }
@@ -280,16 +280,31 @@ class SendPage extends React.Component {
     )
   }
   onConfirm = async () => {
-    if (!addressValid(this.state.toAddress)) {
+    let { balance} = this.props
+    let toAddress = trimSpace(this.state.toAddress)
+    if (!addressValid(toAddress)) {
       Toast.info(getLanguage('sendAddressError'))
       return
     }
-    if (!isNumber(this.state.amount) || !new BigNumber(this.state.amount).gt(0)) {
+    let amount = trimSpace(this.state.amount)
+    if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
       Toast.info(getLanguage('amountError'))
       return
     }
-    if (new BigNumber(this.state.amount).gt(this.props.balance)) {
+    let inputFee = trimSpace(this.state.inputFee)
+    if (inputFee.length > 0 && !isNumber(inputFee)) {
+      Toast.info(getLanguage('inputFeeError'))
+      return
+    }
+    let fee = trimSpace(this.state.inputFee) || this.state.fee
+    let maxAmount = new BigNumber(amount).plus(fee).toString()
+    if (new BigNumber(maxAmount).gt(balance)) {
       Toast.info(getLanguage('balanceNotEnough'))
+      return
+    }
+    let nonce = trimSpace(this.state.nonce)
+    if (nonce.length > 0 && !isTrueNumber(nonce)) {
+      Toast.info(getLanguage('inputNonceError'))
       return
     }
     this.modal.current.setModalVisable(true)
@@ -305,7 +320,9 @@ class SendPage extends React.Component {
         confirmModalLoading: true
       })
       this.modal.current.setModalVisable(true)
-      const { signature, payload, error } = await requestSignPayment(ledgerApp, params)
+      let currentAccount = this.props.currentAccount
+      console.log('currentAccount', currentAccount, typeof currentAccount.hdPath)
+      const { signature, payload, error } = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
       this.modal.current.setModalVisable(false)
       this.callSetState({
         confirmModalLoading: false
@@ -322,11 +339,11 @@ class SendPage extends React.Component {
     let currentAccount = this.props.currentAccount
     let netAccount = this.props.netAccount
     let fromAddress = currentAccount.address
-    let toAddress = this.state.toAddress
+    let toAddress = trimSpace(this.state.toAddress)
     let amount = new BigNumber(this.state.amount).toNumber()
-    let nonce = this.state.nonce || netAccount.inferredNonce
+    let nonce = trimSpace(this.state.nonce)|| netAccount.inferredNonce
     let memo = this.state.memo || ""
-    let fee = this.state.inputFee || this.state.fee
+    let fee = trimSpace(this.state.inputFee) || this.state.fee
     let payload = {
       fromAddress, toAddress, amount, fee, nonce, memo
     }
@@ -336,7 +353,7 @@ class SendPage extends React.Component {
     Loading.show()
     this.modal.current.setModalVisable(false)
     sendMsg({
-      action: MINA_SEND_TRANSTRACTION,
+      action: WALLET_SEND_TRANSTRACTION,
       payload
     }, (data) => {
       Loading.hide()
@@ -360,7 +377,7 @@ class SendPage extends React.Component {
     let detail = data.sendPayment && data.sendPayment.payment || {}
     this.props.updateShouldRequest(true)
     sendMsg({
-      action: MINA_CHECK_TX_STATUS,
+      action: WALLET_CHECK_TX_STATUS,
       payload: {
         paymentId: detail.id,
         hash: detail.hash,
@@ -374,9 +391,12 @@ class SendPage extends React.Component {
     })
   }
   renderConfirmButton = () => {
+    let currentAccount = this.props.currentAccount
+    let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
     return (
       <div className={"send-confirm-container"}>
         <Button
+          disabled={disabled}
           content={getLanguage('confirm')}
           onClick={this.clickNextStep}
         />
@@ -422,7 +442,7 @@ class SendPage extends React.Component {
   onClickFee = (item, index) => {
     this.callSetState({
       feeSelect: index,
-      fee: item.fee//获取网络的fee
+      fee: item.fee
     })
   }
   renderButtonFee = () => {

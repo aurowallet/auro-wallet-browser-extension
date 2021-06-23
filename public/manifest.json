@@ -3,7 +3,7 @@
   "short_name": "__MSG_appName__",
   "description": "__MSG_appDescription__",
   "manifest_version": 2,
-  "version": "1.0.0",
+  "version": "1.0.5",
   "default_locale": "en",
   "icons": {
     "16": "img/16.png",
@@ -24,18 +24,16 @@
       "128": "img/128.png",
       "512": "img/512.png"
 		},
-    "default_title": "Mina Wallet",
+    "default_title": "Auro Wallet",
     "default_popup": "popup.html"
   },
   "permissions": [
-    "storage", "activeTab",
-    "tabs", "history",
-    "unlimitedStorage",
+    "storage", 
     "notifications"
   ],
   "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["background.js","common.js"],
     "persistent": true
   }
 }

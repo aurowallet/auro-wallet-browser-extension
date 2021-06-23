@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { MINA_IMPORT_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_IMPORT_HD_ACCOUNT } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -47,16 +47,15 @@ class ImportAccount extends React.Component {
     }
 
   };
-  goToCreate = () => {//去创建
-    // 去一个界面，输入私钥，然后判断私钥是否有效，有效则导入成功，返回上层界面
+  goToCreate = () => {
     sendMsg({
-      action: MINA_IMPORT_HD_ACCOUNT,
+      action: WALLET_IMPORT_HD_ACCOUNT,
       payload: {
         privateKey: this.state.privateKey.replace(/[\r\n]/g, ""),
         accountName: this.state.accountName
       }
     }, (account) => {
-      if (account.error) {//如果是数组，且 则返回正确
+      if (account.error) {
         if(account.type === "local"){
           Toast.info(getLanguage(account.error))
         }else{
@@ -66,7 +65,7 @@ class ImportAccount extends React.Component {
       } else {
         this.props.updateCurrentAccount(account)
         setTimeout(() => {
-          this.props.history.replace({ // todo  返回的路由有问题
+          this.props.history.replace({ 
             pathname: "/account_manage",
           })
         }, 300);

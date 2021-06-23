@@ -34,7 +34,9 @@ class ShowPrivateKeyPage extends React.Component {
   }
   onCopy = () => {
     let title = getLanguage('prompt')
-    let content = getLanguage('copyTipContent')
+    let content = [getLanguage('copyTipContent'),
+    getLanguage('confirmEnv'),
+  ]
     let confirmText = getLanguage('copyCancel')
     let cancelText = getLanguage('copyConfirm')
     ConfirmModal.show({
@@ -70,7 +72,7 @@ class ShowPrivateKeyPage extends React.Component {
         title={getLanguage('showPrivateKey')}
         history={this.props.history}>
         <div className="mne-show-container">
-          {this.renderTip()}
+          {/* {this.renderTip()} */}
           {this.renderAddress()}
           {this.renderKey()}
           {this.renderCopy()}

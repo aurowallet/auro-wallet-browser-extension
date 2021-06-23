@@ -1,6 +1,8 @@
 import qrCode from 'qrcode-generator';
 import React from "react";
 import { connect } from "react-redux";
+import { cointypes } from '../../../../config';
+import home_logo from "../../../assets/images/home_logo.png";
 import minaLogo from "../../../assets/images/minaLogo.png";
 import { getLanguage } from "../../../i18n";
 import { copyText } from '../../../utils/utils';
@@ -19,15 +21,21 @@ class ReceivePage extends React.Component {
   renderQrView = () => {
     let { address } = this.props.currentAccount
     const qrImage = qrCode(4, 'M')
-    qrImage.addData(address)
+    let qrData = address
+    qrImage.addData(qrData)
     qrImage.make()
     return (
-      <div
-        className="qr-image"
-        dangerouslySetInnerHTML={{
-          __html: qrImage.createTableTag(4),
-        }}
-      />
+      <div className={"receive-scan-container"}>
+        <div className={"receive-home-logo-container"}>
+          <img src={home_logo} className={"receive-wallet-logo"} />
+        </div>
+        <div
+          className="qr-image"
+          dangerouslySetInnerHTML={{
+            __html: qrImage.createTableTag(4),
+          }}
+        />
+      </div>
     )
   }
   onCopy = () => {
@@ -72,6 +80,7 @@ class ReceivePage extends React.Component {
             {this.renderAddress()}
             {this.rednerCopyButton()}
           </div>
+          <p className="bottomTip" >Powered by Bit Cat</p>
         </div>
       </CustomView>
     )

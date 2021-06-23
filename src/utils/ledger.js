@@ -7,6 +7,7 @@ import BigNumber from "bignumber.js";
 import {cointypes} from "../../config";
 import Toast from "../popup/component/Toast";
 import {getLanguage} from "../i18n";
+import extension from 'extensionizer'
 const status = {
   rejected: 'CONDITIONS_OF_USE_NOT_SATISFIED',
 }
@@ -16,13 +17,13 @@ function initLedgerWindowListener () {
       const { action } = message
       switch (action) {
         case LEDGER_CONNECTED_SUCCESSFULLY:
-          chrome.runtime.onMessage.removeListener(onMessage)
+          extension.runtime.onMessage.removeListener(onMessage)
           resolve()
           sendResponse && sendResponse()
           break
       }
     }
-    chrome.runtime.onMessage.addListener(onMessage)
+    extension.runtime.onMessage.addListener(onMessage)
   })
 }
 async function openLedgerWindow () {
@@ -95,8 +96,8 @@ export async function checkLedgerConnect() {
   return {ledgerApp: app}
 }
 
-export async function requestAccount(app) {
-  const {publicKey, returnCode, statusText, ...others} = await app.getAddress(0)
+export async function requestAccount(app, accountIndex) {
+  const {publicKey, returnCode, statusText, ...others} = await app.getAddress(accountIndex)
   if (statusText === status.rejected) {
     return {rejected: true, publicKey: null}
   }
@@ -107,23 +108,22 @@ export async function requestAccount(app) {
   }
 }
 
-export async function requestSignDelegation (app, body) {
-  return requestSign(app, body, TxType.DELEGATION)
+export async function requestSignDelegation (app, body, ledgerAccountIndex) {
+  return requestSign(app, body, TxType.DELEGATION, ledgerAccountIndex)
 }
 
-export async function requestSignPayment (app, body) {
-  return requestSign(app, body, TxType.PAYMENT)
+export async function requestSignPayment (app, body, ledgerAccountIndex) {
+  return requestSign(app, body, TxType.PAYMENT, ledgerAccountIndex)
 }
 
-async function requestSign(app, body, type) {
-  // fromAddress, toAddress, fee, nonce, memo
+async function requestSign(app, body, type, ledgerAccountIndex) {
   let amount = body.amount || 0
   let decimal = new BigNumber(10).pow(cointypes.decimals)
   let sendFee = new BigNumber(body.fee).multipliedBy(decimal).toNumber()
   let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber()
   let payload = {
     txType: type,
-    senderAccount: 0,
+    senderAccount: ledgerAccountIndex,
     senderAddress: body.fromAddress,
     receiverAddress: body.toAddress,
     amount: sendAmount,

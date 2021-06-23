@@ -1,3 +1,5 @@
+import extension from 'extensionizer'
+
 const PopupSize = {
   width: 360,
   height: 580,
@@ -24,7 +26,7 @@ export async function openPopupWindow(
 
   if (lastWindowIds[channel] !== undefined) {
     try {
-      const window = await chrome.windows.get(
+      const window = await extension.windows.get(
         lastWindowIds[channel],
         {
           populate: true,
@@ -33,7 +35,7 @@ export async function openPopupWindow(
       if (window?.tabs?.length) {
         const tab = window.tabs[0];
         if (tab?.id) {
-          await chrome.tabs.update(tab.id, { active: true, url });
+          await extension.tabs.update(tab.id, { active: true, url });
         } else {
           throw new Error("Null window or tabs");
         }
@@ -42,7 +44,7 @@ export async function openPopupWindow(
       }
     } catch {
       const createdWindow = await new Promise(resolve => {
-        chrome.windows.create(option, function (windowData) {
+        extension.windows.create(option, function (windowData) {
           resolve(windowData)
         })
       })
@@ -50,7 +52,7 @@ export async function openPopupWindow(
     }
   } else {
     const createdWindow = await new Promise(resolve => {
-      chrome.windows.create(option, function (windowData) {
+      extension.windows.create(option, function (windowData) {
         resolve(windowData)
       })
     })
@@ -59,7 +61,7 @@ export async function openPopupWindow(
 
   if (lastWindowIds[channel]) {
     try {
-      await chrome.windows.update(lastWindowIds[channel], {
+      await extension.windows.update(lastWindowIds[channel], {
         focused: true,
       });
     } catch (e) {
@@ -74,13 +76,13 @@ export function closePopupWindow(channel) {
   (async () => {
     const windowId = lastWindowIds[channel];
     if (windowId) {
-      await chrome.windows.remove(windowId);
+      await extension.windows.remove(windowId);
     }
   })();
 }
 
 /**
- * window.open() has many options for sizing, but they require different ways to do this per web chrome.
+ * window.open() has many options for sizing, but they require different ways to do this per web .
  * So, to avoid this problem, just manually set sizing if new window popup is opened.
  */
 export function fitPopupWindow() {
@@ -90,10 +92,10 @@ export function fitPopupWindow() {
     height: window.outerHeight - window.innerHeight,
   };
 
-  if (chrome.windows) {
-    chrome.windows.getCurrent().then((window) => {
+  if (extension.windows) {
+    extension.windows.getCurrent().then((window) => {
       if (window?.id != null) {
-        chrome.windows.update(window.id, {
+        extension.windows.update(window.id, {
           width: PopupSize.width + gap.width,
           height: PopupSize.height + gap.height,
         });

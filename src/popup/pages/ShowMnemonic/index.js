@@ -1,34 +1,41 @@
 import React from "react";
 import { connect } from "react-redux";
+import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
+import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import "./index.scss";
 class ShowMnemonic extends React.Component {
   constructor(props) {
     super(props);
-    const pwd = props.location.params?.password ?? ""
     this.state = {
       mnemonic: "",
-      password: pwd
     };
     this.isUnMounted = false;
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.isUnMounted = true;
   }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
+  callSetState = (data, callback) => {
+    if (!this.isUnMounted) {
       this.setState({
         ...data
-      },()=>{
-        callback&&callback()
+      }, () => {
+        callback && callback()
       })
     }
   }
   componentDidMount() {
-    this.callSetState({
-      mnemonic: this.props.mnemonic
+    sendMsg({
+      action: WALLET_GET_CREATE_MNEMONIC,
+      payload:{
+        isNewMne:true
+      }
+    }, (mnemonic) => { 
+      this.callSetState({
+        mnemonic: mnemonic
+      })
     })
   }
 
@@ -44,10 +51,6 @@ class ShowMnemonic extends React.Component {
   goToNext = () => {
     this.props.history.push({
       pathname: "/backupmnemonic",
-      params: {
-        "password": this.state.password,
-        "mnemonic": this.state.mnemonic
-      },
     })
   };
   renderBottonBtn = () => {
@@ -76,7 +79,6 @@ class ShowMnemonic extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  mnemonic: state.accountInfo.mnemonic,
 });
 
 function mapDispatchToProps(dispatch) {

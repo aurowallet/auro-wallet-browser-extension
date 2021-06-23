@@ -7,14 +7,29 @@ import { updateNetConfig } from '../../reducers/network';
 import LockPage from './Lock';
 import HomePage from './Main';
 import Welcome from './Welcome';
-
+import extension from 'extensionizer'
+import { FROM_BACK_TO_RECORD, SET_LOCK } from '../../constant/types';
 class MainRouter extends React.Component {
 
   async componentDidMount() {
     let lan = languageInit()
     this.props.setLanguage(lan)
+    this.startListener()
   }
-  render() {
+  startListener = () => {
+    extension.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+      const { type, action } = message;
+      if (type === FROM_BACK_TO_RECORD && action === SET_LOCK) {
+        this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE)
+        this.props.history.push({
+          pathname: "/",
+        });
+      }
+      sendResponse();
+      return true;
+    });
+  }
+  render() { 
     switch (this.props.entryWitchRoute) {
       case ENTRY_WITCH_ROUTE.WELCOME:
         return <Welcome history={this.props.history} />;
@@ -43,6 +58,9 @@ function mapDispatchToProps(dispatch) {
     setLanguage: (lan) => {
       dispatch(setLanguage(lan));
     },
+    updateEntryWitchRoute: (page) => {
+      dispatch(updateEntryWitchRoute(page))
+    }
   }
 }
 

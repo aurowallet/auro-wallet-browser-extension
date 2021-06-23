@@ -5,9 +5,9 @@ import { withRouter } from "react-router-dom";
 import downArrow from "../../../assets/images/downArrow.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import arrow from '../../../assets/images/txArrow.png';
-import {getBalance, getFeeRecom, sendStackTx} from '../../../background/api';
+import {getBalance, getFeeRecom, sendStakeTx} from '../../../background/api';
 import { cointypes } from "../../../../config";
-import { MINA_SEND_STACK_TRANSTRACTION } from "../../../constant/types";
+import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
 import { getLanguage } from '../../../i18n';
 import { updateNetAccount, updateShouldRequest } from '../../../reducers/accountReducer';
 import { sendMsg } from "../../../utils/commonMsg";
@@ -19,11 +19,11 @@ import TestModal from '../../component/TestModal';
 import Toast from '../../component/Toast';
 import './index.scss';
 import {addressValid} from "../../../utils/validator";
-import {addressSlice} from "../../../utils/utils";
+import {addressSlice, trimSpace,isTrueNumber,isNumber} from "../../../utils/utils";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import {ACCOUNT_TYPE} from "../../../constant/walletType";
 import {checkLedgerConnect, requestSignDelegation} from "../../../utils/ledger";
-
+import modalClose from "../../../assets/images/modalClose.png";
 const FEE_RECOMMED_DEFAULT = 1
 const FEE_RECOMMED_CUSTOM = -1
 
@@ -93,8 +93,8 @@ class StakingTransfer extends React.Component {
         fee: feeRecom[1].value
       })
     }
-    // 请求余额
-    let account = await getBalance(address)
+    let accountData = await getBalance(address)
+    let account = accountData.account
     if (account.account) {
       this.props.dispatch(updateNetAccount(account.account))
     }
@@ -117,7 +117,8 @@ class StakingTransfer extends React.Component {
         confirmModalLoading: true
       })
       this.modal.current.setModalVisable(true)
-      const {signature,payload, error} = await requestSignDelegation(ledgerApp, params)
+      let currentAccount = this.props.currentAccount
+      const {signature,payload, error} = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
       this.modal.current.setModalVisable(false)
       this.callSetState({
         confirmModalLoading: false
@@ -126,7 +127,7 @@ class StakingTransfer extends React.Component {
         Toast.info(error.message)
         return
       }
-      let postRes = await sendStackTx(payload, {rawSignature: signature}).catch(error => error)
+      let postRes = await sendStakeTx(payload, {rawSignature: signature}).catch(error => error)
       this.onSubmitSuccess(postRes)
     }
   }
@@ -135,9 +136,9 @@ class StakingTransfer extends React.Component {
     let netAccount = this.props.netAccount
     let fromAddress = currentAccount.address
     let toAddress = this.state.nodeAddress
-    let nonce = this.state.nonce || netAccount.inferredNonce
+    let nonce = trimSpace(this.state.nonce) || netAccount.inferredNonce
     let memo = this.state.memo || ""
-    let fee = this.state.inputFee || this.state.fee
+    let fee = trimSpace(this.state.inputFee) || this.state.fee
     const payload = {
       fromAddress, toAddress, fee, nonce, memo
     }
@@ -147,7 +148,7 @@ class StakingTransfer extends React.Component {
     this.modal.current.setModalVisable(false)
     Loading.show()
     sendMsg({
-      action: MINA_SEND_STACK_TRANSTRACTION,
+      action: WALLET_SEND_STAKE_TRANSTRACTION,
       payload
     }, (data) => {
       Loading.hide()
@@ -170,6 +171,13 @@ class StakingTransfer extends React.Component {
     Toast.info(getLanguage('postSuccess'))
     this.props.dispatch(updateShouldRequest(true))
     let detail = data.sendDelegation && data.sendDelegation.delegation || {}
+    sendMsg({
+      action: WALLET_CHECK_TX_STATUS,
+      payload: {
+        paymentId: detail.id,
+        hash: detail.hash,
+      }
+    }, () => { })
     this.props.history.replace({
       pathname: "/record_page",
       params: {
@@ -193,6 +201,16 @@ class StakingTransfer extends React.Component {
       Toast.info(getLanguage('balanceNotEnough'));
       return;
     }
+    let inputFee = trimSpace(this.state.inputFee)
+    if (inputFee.length > 0 && !isNumber(inputFee)) {
+      Toast.info(getLanguage('inputFeeError'))
+      return
+    }
+    let nonce = trimSpace(this.state.nonce)
+    if (nonce.length > 0 && !isTrueNumber(nonce)) {
+      Toast.info(getLanguage('inputNonceError'))
+      return
+    }
     this.modal.current.setModalVisable(true)
   }
   onMemoChange = (e) => {
@@ -206,7 +224,7 @@ class StakingTransfer extends React.Component {
   onClickFee = (item, index) => {
     this.callSetState({
       feeSelect: index,
-      fee: item.fee//获取网络的fee
+      fee: item.fee
     })
   }
   onFeeInput = (e) => {
@@ -221,7 +239,6 @@ class StakingTransfer extends React.Component {
     })
   }
   setBtnStatus = () => {
-    // 检查余额
   }
   onNonceInput = (e) => {
     let nonce = e.target.value
@@ -242,10 +259,10 @@ class StakingTransfer extends React.Component {
   }
   onChooseNode = () => {
     this.props.history.replace({
-      pathname: "/stacking_list",
+      pathname: "/staking_list",
       params: {
         nodeAddress: this.state.nodeAddress,
-        fromPage: 'stackingTransfer'
+        fromPage: 'stakingTransfer'
       }
     });
   }
@@ -271,6 +288,9 @@ class StakingTransfer extends React.Component {
         <img className={"confirm-loading-img"} src={loadingCommon} />
       </div>)
   }
+  onCloseModal = () => {
+    this.modal.current.setModalVisable(false)
+  }
   renderConfirmModal = () => {
     let title = this.state.confirmModalLoading ? "waitLedgerConfirm":"sendDetail"
     return (<TestModal
@@ -279,6 +299,7 @@ class StakingTransfer extends React.Component {
       title={getLanguage(title)}
     >
       {this.state.confirmModalLoading ? this.renderLoadingView(): this.renderConfirmView()}
+      {this.state.confirmModalLoading ? <></> : <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />}
     </TestModal>)
   }
   renderConfirmView = () => {
@@ -287,7 +308,7 @@ class StakingTransfer extends React.Component {
     let memo = this.state.memo;
     return (
       <div className={"confirm-modal-container"}>
-        {this.state.nodeName ? this.renderConfirmItem(getLanguage('stackProvider'), this.state.nodeName, true) : null }
+        {this.state.nodeName ? this.renderConfirmItem(getLanguage('stakeProvider'), this.state.nodeName, true) : null }
         {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.props.currentAccount.address)}
         {nonce && this.renderConfirmItem("Nonce", nonce)}
@@ -298,8 +319,11 @@ class StakingTransfer extends React.Component {
     )
   }
   renderConfirmButton = () => {
+    let currentAccount = this.props.currentAccount
+    let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
     return (
       <Button
+        disabled={disabled}
         content={getLanguage('confirm')}
         onClick={this.doTransfer}
       />
@@ -308,11 +332,12 @@ class StakingTransfer extends React.Component {
   renderNodeProvider = () => {
     if (this.state.menuAdd) {
       return <CustomInput
-        label={getLanguage('stackingProviderName')}
+        value={this.state.nodeAddress}
+        label={getLanguage('stakingProviderName')}
         onTextInput={this.onProviderChange} />
     } else {
       return <div className={'select-node-con'}>
-        <label className={'provider-title'}>{getLanguage('stackingProviderName')}</label>
+        <label className={'provider-title'}>{getLanguage('stakingProviderName')}</label>
         <div className={'selected-value click-cursor'} onClick={this.onChooseNode}>
           <div className={'selected-value-text'}>{this.state.nodeName ?? addressSlice(this.state.nodeAddress)}</div>
           <div className={'arrow-con'}>
@@ -408,6 +433,7 @@ class StakingTransfer extends React.Component {
             }
             <div className={'memo-con'}>
               <CustomInput
+                value={this.state.memo}
                 label={getLanguage('memo')}
                 onTextInput={this.onMemoChange} />
             </div>

@@ -67,10 +67,19 @@ const network = (state = initState, action) => {
         case UPDATE_NET_CONFIG:
             let netList = action.data.netList
             let currentUrl = action.data.currentUrl
+            let netType = state.netType
+            for (let index = 0; index < netList.length; index++) {
+                const netConfig = netList[index];
+                if(currentUrl === netConfig.url){
+                    netType = netConfig.type
+                    break
+                }
+            }
             return {
                 ...state,
                 netList,
                 currentUrl,
+                netType
             }
         default:
             return state;

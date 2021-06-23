@@ -32,6 +32,7 @@ import LedgerImport from '../pages/LedgerImport';
 import ImportPage from '../pages/ImportPage';
 import ImportKeypair from '../pages/ImportKeypair';
 
+import ProtocolPage from '../pages/Protocol';
 
 export function getAllRouter() {
   return (
@@ -66,13 +67,14 @@ export function getAllRouter() {
         <Route path="/reset_password" component={ResetPassword} />
         <Route path="/backup_tips" component={BackupTips} />
 
-        <Route path="/stacking_list" component={StakingList} />
-        <Route path="/stacking_transfer" component={StakingTransfer} />
+        <Route path="/staking_list" component={StakingList} />
+        <Route path="/staking_transfer" component={StakingTransfer} />
         <Route path="/ledger_connect" component={LedgerConnect} />
         <Route path="/ledger_import" component={LedgerImport} />
 
         <Route path="/import_page" component={ImportPage} />
         <Route path="/import_keypair" component={ImportKeypair} />
+        <Route path="/protocol_page" component={ProtocolPage} />
         
       </Switch>
     </HashRouter>
