@@ -52,7 +52,7 @@ export function getTxStatusBody(paymentId) {
 
 
 
-export function getStackTxSend(isRawSignature) {
+export function getStakeTxSend(isRawSignature) {
   return (`
 mutation MyMutation($fee:String!, $amount:String!, 
 $to: String!, $from: String!, $nonce:String!, $memo: String!,

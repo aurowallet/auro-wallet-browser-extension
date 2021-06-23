@@ -70,7 +70,7 @@ export async function sendTx(payload,signature){
  */
 export async function sendStackTx(payload,signature){
   const variables = _getGQLVariables(payload, signature, false)
-  let txBody =  getStackTxSend(!!variables.rawSignature)
+  let txBody =  getStakeTxSend(!!variables.rawSignature)
   let res = await startFetchMyMutation(txBody, GQL_URL, variables);
   return res
 }
