@@ -9,7 +9,7 @@ import extension from 'extensionizer'
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
-const encryptUtils = require('browser-passworder')
+const encryptUtils = require('../utils/encryptUtils').default
 
 const STATUS = {
     TX_STATUS_PENDING: "PENDING",
@@ -59,11 +59,14 @@ class APIService {
     async submitPassword(password) {
         let encryptedVault = await get("keyringData")
         try {
-            const vault = await encryptUtils.decrypt(password, encryptedVault.keyringData)
+            let vault = await encryptUtils.decrypt(password, encryptedVault.keyringData)
+            await this.migrateDate(password, vault)
             let currentAddress = vault[0].currentAddress
             let currentAccount = this.filterCurrentAccount(vault[0].accounts, currentAddress)
             this.memStore.updateState({
-                data: vault, isUnlocked: true, password,
+                data: vault,
+                isUnlocked: true,
+                password,
                 currentAccount
             })
             return this.getAccountWithoutPrivate(currentAccount)
@@ -71,6 +74,38 @@ class APIService {
             return { error: 'passwordError', type: "local" }
         }
     };
+    async migrateDate(password, vault) {
+        let didMigrated = false
+
+        const migrateCheck = (dataStr) => {
+            try {
+                return dataStr && JSON.parse(dataStr).version !== 2
+            } catch (e) {
+                return false
+            }
+        }
+
+        const migrate = async (data, key) => {
+            if (migrateCheck(data[key])) {
+                data[key] = await encryptUtils.encrypt(password, await encryptUtils.decrypt(password, data[key]))
+                didMigrated = true
+            }
+        }
+
+        for(let i = 0; i < vault.length; i++) {
+            let wallet = vault[0];
+            await migrate(wallet, 'mnemonic')
+            for(let j = 0; j < wallet.accounts.length; j++) {
+                let account = wallet.accounts[j]
+                await migrate(account, 'privateKey')
+            }
+        }
+        if (didMigrated) {
+            let encryptData = await encryptUtils.encrypt(password, vault)
+            await removeValue("keyringData")
+            await save({ keyringData: encryptData })
+        }
+    }
     checkPassword(password) {
         return this.getStore().password === password
     }
