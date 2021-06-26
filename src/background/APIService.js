@@ -79,6 +79,7 @@ class APIService {
 
         const migrateCheck = (dataStr) => {
             try {
+                console.log('JSON.parse(dataStr).version',JSON.parse(dataStr))
                 return dataStr && JSON.parse(dataStr).version !== 2
             } catch (e) {
                 return false

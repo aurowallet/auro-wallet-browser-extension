@@ -92,8 +92,8 @@ async function keyFromPasswordV2 (password, salt) {
     32,
     password,
     saltBuffer,
-    sodium.crypto_pwhash_OPSLIMIT_MODERATE,
-    sodium.crypto_pwhash_MEMLIMIT_MODERATE,
+    sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+    sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
     sodium.crypto_pwhash_ALG_ARGON2ID13
   )
 
@@ -108,7 +108,6 @@ async function keyFromPasswordV2 (password, salt) {
 
 }
 function keyFromPassword (password, salt) {
-  return keyFromPasswordV2(password, salt)
   var passBuffer = Unibabel.utf8ToBuffer(password)
   var saltBuffer = Unibabel.base64ToBuffer(salt)
 
