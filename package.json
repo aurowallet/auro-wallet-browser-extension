@@ -21,7 +21,6 @@
     "bip32": "2.0.6",
     "bip39": "3.0.2",
     "bitcore-mnemonic": "8.25.7",
-    "browser-passworder": "2.0.3",
     "bs58check": "2.1.2",
     "classnames": "2.2.6",
     "copy-webpack-plugin": "6.3.2",
@@ -48,7 +47,8 @@
     "safe-buffer": "5.2.1",
     "valid-url": "1.0.9",
     "webpack": "4.44.2",
-    "react-idle-timer": "4.2.5"
+    "react-idle-timer": "4.2.5",
+    "browserify-unibabel": "^3.0.0"
   },
   "scripts": {
     "build": "webpack --mode production",
