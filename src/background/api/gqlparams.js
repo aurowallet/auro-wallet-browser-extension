@@ -52,32 +52,26 @@ export function getTxStatusBody(paymentId) {
 
 
 
-export function getStakeTxSend(input, signature) {
-  let fee = input.fee
-  let to = input.to
-  let from = input.from
-  let nonce = input.nonce
-  let memo = input.memo || ""
-  let validUntil = input.validUntil
-  let field = signature.field || ""
-  let rawSignature = signature.rawSignature || ""
-  let scalar = signature.scalar || ""
+export function getStakeTxSend(isRawSignature) {
   return (`
-mutation MyMutation {
+mutation MyMutation($fee:String!, $amount:String!, 
+$to: String!, $from: String!, $nonce:String!, $memo: String!,
+$validUntil: String!,
+${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!`}) {
   sendDelegation(
     input: {
-      fee: "${fee}",
-      to: "${to}",
-      from: "${from}",
-      memo: "${memo}",
-      nonce: "${nonce}",
-      validUntil: "${validUntil}"
+      fee: $fee,
+      to: $to,
+      from: $from,
+      memo: $memo,
+      nonce: $nonce,
+      validUntil: $validUntil
     }, 
     signature: {
       `+
-    (field ? `field: "${field}",
-      scalar: "${scalar}",` : "")
-    + (rawSignature ? `rawSignature: "${rawSignature}",` : "")+
+    (!isRawSignature ? `field: $field, scalar: $scalar,` : "")
+    + (isRawSignature ? `rawSignature: $rawSignature,` : "")
+    +
     `
     }) {
     delegation {
@@ -100,39 +94,31 @@ mutation MyMutation {
 
 /**
  *
- * @param {*} from
- * @param {*} limit
- * @param {*} sortBy
+ * @param {*} isRawSignature
  */
-export function getTxSend(input, signature) {
-  let fee = input.fee
-  let amount = input.amount
-  let to = input.to
-  let from = input.from
-  let nonce = input.nonce
-  let memo = input.memo || ""
-  let validUntil = input.validUntil
-
-  let field = signature.field || ""
-  let rawSignature = signature.rawSignature || ""
-  let scalar = signature.scalar || ""
+export function getTxSend(isRawSignature) {
   return (`
-mutation MyMutation {
+mutation MyMutation($fee:String!, $amount:String!,
+$to: String!, $from: String!, $nonce:String!, $memo: String!,
+$validUntil: String!,
+${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!`}
+) {
   sendPayment(
     input: {
-      fee: "${fee}",
-      amount: "${amount}",
-      to: "${to}",
-      from: "${from}",
-      memo: "${memo}",
-      nonce: "${nonce}",
-      validUntil: "${validUntil}"
+      fee: $fee,
+      amount: $amount,
+      to: $to,
+      from: $from,
+      memo: $memo,
+      nonce: $nonce,
+      validUntil: $validUntil
     }, 
     signature: {
       `+
-      (field ? `field: "${field}",
-        scalar: "${scalar}",` : "")
-      + (rawSignature ? `rawSignature: "${rawSignature}",` : "")+
+    (!isRawSignature ? `field: $field, scalar: $scalar,` : "")
+    +
+    (isRawSignature ? `rawSignature: $rawSignature,` : "")
+    +
       `
     }) {
     payment {

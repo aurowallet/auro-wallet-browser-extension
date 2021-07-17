@@ -25,19 +25,53 @@ export async function getTxStatus(paymentId) {
 }
 
 /**
+ * 获取交易记录
+ */
+export async function getTxHistory(address) {
+  let txBody = getTxHistoryBody(address)
+  let res = await startFetchMyQuery(txBody, GQL_URL)
+  return res
+}
+function _getGQLVariables(payload, signature, includeAmount = true) {
+  let isRawSignature = !!signature.rawSignature;
+  let variables = {
+    fee: payload.fee,
+    to: payload.to,
+    from: payload.from,
+    nonce: payload.nonce,
+    memo: payload.memo || "",
+    validUntil: payload.validUntil,
+  }
+  if (includeAmount) {
+    variables.amount = payload.amount
+  }
+  if (isRawSignature) {
+    variables.rawSignature = signature.rawSignature
+  } else {
+    variables.field = signature.field
+    variables.scalar = signature.scalar
+  }
+  for (let pro in variables) {
+    variables[pro] = String(variables[pro] || "")
+  }
+  return variables
+}
+/**
  * 转账
  */
 export async function sendTx(payload,signature){
-  let txBody =  getTxSend(payload,signature)
-  let res = await startFetchMyMutation(txBody, GQL_URL);
+  const variables = _getGQLVariables(payload, signature, true)
+  let txBody =  getTxSend(!!variables.rawSignature)
+  let res = await startFetchMyMutation(txBody, GQL_URL, variables)
   return res
 }
 /**
  * 质押
  */
-export async function sendStakeTx(payload,signature){
-  let txBody =  getStakeTxSend(payload,signature)
-  let res = await startFetchMyMutation(txBody, GQL_URL);
+export async function sendStackTx(payload,signature){
+  const variables = _getGQLVariables(payload, signature, false)
+  let txBody =  getStakeTxSend(!!variables.rawSignature)
+  let res = await startFetchMyMutation(txBody, GQL_URL, variables);
   return res
 }
 
@@ -73,11 +107,6 @@ export async function fetchStakingList() {
   return data;
 }
 
-export async function sendPayment(payload, signature) {
-  const mutation = getTxSend(payload, signature)
-  let res = await startFetchMyMutation(mutation, GQL_URL)
-  return res;
-}
 /**
  * 获取手续费推荐
  */

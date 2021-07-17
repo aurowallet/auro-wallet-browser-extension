@@ -7,7 +7,7 @@ import downArrow from "../../../assets/images/downArrow.png";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import modalClose from "../../../assets/images/modalClose.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
-import { getBalance, getFeeRecom, sendPayment } from "../../../background/api";
+import { getBalance, getFeeRecom, sendTx } from "../../../background/api";
 import { WALLET_CHECK_TX_STATUS, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
@@ -331,7 +331,7 @@ class SendPage extends React.Component {
         Toast.info(error.message)
         return
       }
-      let postRes = await sendPayment(payload, { rawSignature: signature }).catch(error => error)
+      let postRes = await sendTx(payload, { rawSignature: signature }).catch(error => error)
       this.onSubmitSuccess(postRes)
     }
   }

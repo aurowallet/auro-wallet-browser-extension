@@ -70,11 +70,11 @@ export async function startFetchMyQuery(gqlparams, url,queryName) {
   return data
 
 }
-export async function startFetchMyMutation(gqlparams, url) {
+export async function startFetchMyMutation(gqlparams, url, variables = {}) {
   let result = await fetchGraphQL(
     gqlparams,
     "MyMutation",
-    {},
+    variables,
     url
   ).catch(errors => errors);
   let { errors, data } = result
