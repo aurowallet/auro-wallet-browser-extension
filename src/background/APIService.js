@@ -63,7 +63,9 @@ class APIService {
             let currentAddress = vault[0].currentAddress
             let currentAccount = this.filterCurrentAccount(vault[0].accounts, currentAddress)
             this.memStore.updateState({
-                data: vault, isUnlocked: true, password,
+                data: vault, 
+                isUnlocked: true, 
+                password,
                 currentAccount
             })
             return this.getAccountWithoutPrivate(currentAccount)
@@ -93,10 +95,10 @@ class APIService {
 
     }
     setUnlockedStatus(status) {
-        let account = this.memStore.getState().currentAccount
         if (!status) {
             this.memStore.updateState({
-                currentAccount: { ...account },
+                data: '',
+                currentAccount: {},
                 password: ""
             })
             extension.runtime.sendMessage({
