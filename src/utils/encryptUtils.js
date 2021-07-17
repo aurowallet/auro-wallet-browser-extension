@@ -92,7 +92,7 @@ async function keyFromPasswordV2 (password, salt) {
     32,
     password,
     saltBuffer,
-    sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+    1,
     sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
     sodium.crypto_pwhash_ALG_ARGON2ID13
   )
