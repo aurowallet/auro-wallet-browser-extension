@@ -47,8 +47,7 @@
     "safe-buffer": "5.2.1",
     "valid-url": "1.0.9",
     "webpack": "4.44.2",
-    "react-idle-timer": "4.2.5",
-    "browserify-unibabel": "^3.0.0"
+    "react-idle-timer": "4.2.5"
   },
   "scripts": {
     "build": "webpack --mode production",
