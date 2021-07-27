@@ -93,7 +93,7 @@ class APIService {
         }
 
         for(let i = 0; i < vault.length; i++) {
-            let wallet = vault[0];
+            let wallet = vault[i];
             await migrate(wallet, 'mnemonic')
             for(let j = 0; j < wallet.accounts.length; j++) {
                 let account = wallet.accounts[j]

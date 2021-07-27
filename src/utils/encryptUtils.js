@@ -1,8 +1,6 @@
-import bs58check from "bs58check";
-
-import Unibabel from 'browserify-unibabel'
-import Buffer from 'safe-buffer'
 import sodium from 'libsodium-wrappers'
+import { Buffer } from 'safe-buffer';
+
 
 export default {
 
@@ -39,15 +37,15 @@ function encrypt (password, dataObj) {
 
 function encryptWithKey (key, dataObj) {
   var data = JSON.stringify(dataObj)
-  var dataBuffer = Unibabel.utf8ToBuffer(data)
+  var dataBuffer = Buffer.from(data, 'utf8');
   var vector = global.crypto.getRandomValues(new Uint8Array(16))
   return global.crypto.subtle.encrypt({
     name: 'AES-GCM',
     iv: vector,
   }, key, dataBuffer).then(function (buf) {
     var buffer = new Uint8Array(buf)
-    var vectorStr = Unibabel.bufferToBase64(vector)
-    var vaultStr = Unibabel.bufferToBase64(buffer)
+    var vectorStr = Buffer.from(vector).toString('base64')
+    var vaultStr =  Buffer.from(buffer).toString('base64')
     return {
       data: vaultStr,
       iv: vectorStr,
@@ -72,12 +70,12 @@ function decrypt (password, text) {
 }
 
 function decryptWithKey (key, payload) {
-  const encryptedData = Unibabel.base64ToBuffer(payload.data)
-  const vector = Unibabel.base64ToBuffer(payload.iv)
+  const encryptedData = Buffer.from(payload.data, 'base64')
+  const vector = Buffer.from(payload.iv, 'base64')
   return crypto.subtle.decrypt({name: 'AES-GCM', iv: vector}, key, encryptedData)
     .then(function (result) {
       const decryptedData = new Uint8Array(result)
-      const decryptedStr = Unibabel.bufferToUtf8(decryptedData)
+      const decryptedStr = new Buffer(decryptedData).toString('uft8')
       const decryptedObj = JSON.parse(decryptedStr)
       return decryptedObj
     })
@@ -86,13 +84,13 @@ function decryptWithKey (key, payload) {
     })
 }
 async function keyFromPasswordV2 (password, salt) {
-  var saltBuffer = Unibabel.base64ToBuffer(salt)
+  var saltBuffer = Buffer.from(salt, 'base64')
   await sodium.ready
   let keyBuffer = await sodium.crypto_pwhash(
     32,
     password,
     saltBuffer,
-    1,
+    3,
     sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
     sodium.crypto_pwhash_ALG_ARGON2ID13
   )
@@ -108,8 +106,8 @@ async function keyFromPasswordV2 (password, salt) {
 
 }
 function keyFromPassword (password, salt) {
-  var passBuffer = Unibabel.utf8ToBuffer(password)
-  var saltBuffer = Unibabel.base64ToBuffer(salt)
+  var passBuffer = Buffer.from(password, 'uft8')
+  var saltBuffer = Buffer.from(salt, 'base64')
 
   return global.crypto.subtle.importKey(
     'raw',
