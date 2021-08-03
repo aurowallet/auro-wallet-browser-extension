@@ -10,8 +10,15 @@ import { getBalanceBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatu
  * 获取余额
  */
 export async function getBalance(address) {
-  let txBody = getBalanceBody(address)
-  let result = await startFetchMyQuery(txBody, GQL_URL,"extensionAccountInfo").catch((err)=>err)
+  let txBody = getBalanceBody()
+  let result = await startFetchMyQuery(
+      txBody,
+      GQL_URL,
+      {
+        requestType: "extensionAccountInfo",
+        publicKey: address
+      }
+  ).catch((err)=>err)
   return {address,account:result}
 }
 /**
@@ -19,8 +26,8 @@ export async function getBalance(address) {
  * @param {*} paymentId
  */
 export async function getTxStatus(paymentId) {
-  let txBody = getTxStatusBody(paymentId)
-  let result = await startFetchMyQuery(txBody, GQL_URL)
+  let txBody = getTxStatusBody()
+  let result = await startFetchMyQuery(txBody, GQL_URL,{ paymentId })
   return result
 }
 
@@ -28,8 +35,15 @@ export async function getTxStatus(paymentId) {
  * 获取交易记录
  */
 export async function getTxHistory(address) {
-  let txBody = getTxHistoryBody(address)
-  let res = await startFetchMyQuery(txBody, GQL_URL)
+  let txBody = getTxHistoryBody()
+  let res = await startFetchMyQuery(
+      txBody,
+      GQL_URL,
+      {
+        from: address,
+        limit: 20,
+        sortBy: 'DATETIME_DESC'
+      })
   return res
 }
 function _getGQLVariables(payload, signature, includeAmount = true) {
@@ -62,16 +76,16 @@ function _getGQLVariables(payload, signature, includeAmount = true) {
 export async function sendTx(payload,signature){
   const variables = _getGQLVariables(payload, signature, true)
   let txBody =  getTxSend(!!variables.rawSignature)
-  let res = await startFetchMyMutation(txBody, GQL_URL, variables)
+  let res = await startFetchMyMutation('sendTx', txBody, GQL_URL, variables)
   return res
 }
 /**
  * 质押
  */
-export async function sendStackTx(payload,signature){
+export async function sendStakeTx(payload,signature){
   const variables = _getGQLVariables(payload, signature, false)
   let txBody =  getStakeTxSend(!!variables.rawSignature)
-  let res = await startFetchMyMutation(txBody, GQL_URL, variables);
+  let res = await startFetchMyMutation('stakeTx', txBody, GQL_URL, variables);
   return res
 }
 
@@ -87,14 +101,14 @@ export async function fetchDaemonStatus() {
 }
 
 export async function fetchBlockInfo(stateHash) {
-  const query = getBlockInfoBody(stateHash)
-  let res = await startFetchMyQuery(query, GQL_URL);
+  const query = getBlockInfoBody()
+  let res = await startFetchMyQuery(query, GQL_URL, {stateHash});
   return res;
 }
 
 export async function fetchDelegationInfo(publicKey) {
-  const query = getDelegationInfoBody(publicKey)
-  let res = await startFetchMyQuery(query, GQL_URL,"extensionAccountInfo");
+  const query = getDelegationInfoBody()
+  let res = await startFetchMyQuery(query, GQL_URL,{ requestType: "extensionAccountInfo", publicKey });
   return res;
 }
 
@@ -152,8 +166,14 @@ export async function getTransactionList(address, limit = TX_LIST_LENGTH){
  * @returns
  */
 export async function getPendingTxList(address){
-  let txBody = getPendingTxBody(address)
-  let result = await startFetchMyQuery(txBody, GQL_URL,"extensionAccountInfo").catch(()=>[])
+  let txBody = getPendingTxBody()
+  let result = await startFetchMyQuery(
+      txBody,
+      GQL_URL,
+      {
+        requestType: "extensionAccountInfo",
+        publicKey: address
+      }).catch(()=>[])
   let list =  result.pooledUserCommands ||[]
   return {txList:list,address}
 }
@@ -162,8 +182,24 @@ export async function getPendingTxList(address){
  * 获取余额
  */
  export async function getBalanceBatch(addressList) {
-  let txBody = getBalanceBatchBody(addressList)
-  let result = await startFetchMyQuery(txBody, GQL_URL).catch(()=>{})
-  return result
+  let realList = []
+  if(!Array.isArray(addressList)){
+    realList.push(addressList)
+  }else{
+    realList = addressList
+  }
+  const variables = {}
+  realList.forEach((address, i)=>{
+    variables[`account${i}`] = address
+  })
+  let txBody = getBalanceBatchBody(realList.length)
+  let result = await startFetchMyQuery(txBody, GQL_URL, variables).catch(()=>{})
+  let addressBalances = {}
+  if (result && result.length > 0) {
+    realList.forEach((address, i)=>{
+      addressBalances[address] = result[`account${i}`]
+    })
+  }
+  return addressBalances
 }
 

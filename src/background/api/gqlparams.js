@@ -1,10 +1,9 @@
 /**
  * 返回地址余额
  */
-export function getBalanceBody(publicKey) {
-  return `
-  query accountBalance {
-    account(publicKey: "${publicKey}") {
+export function getBalanceBody() {
+  return `query accountBalance($publicKey: String!) {
+    account(publicKey: $publicKey) {
       balance {
         total
       },
@@ -13,18 +12,16 @@ export function getBalanceBody(publicKey) {
       delegate
     }
   }
+  
   `
 }
 /**
  * 获取交易记录
- * @param {*} from
- * @param {*} limit
- * @param {*} sortBy
  */
-export function getTxHistoryBody(from = "B62qqVN4og5PTPL1vgn5t9LH2oXooy3VqSRzXC6BUQmBWM2pZU6xABE", limit = 20, sortBy = "DATETIME_DESC") {
+export function getTxHistoryBody() {
   return `
-  query txHistory {
-    transactions(limit: ${limit}, sortBy: ${sortBy}, query: {from: "${from}"}) {
+  query txHistory($limit: Int!, $sortBy: String!, $from: String!) {
+    transactions(limit: $limit, sortBy: $sortBy, query: {from: $from}) {
       fee
       canonical
       from
@@ -42,22 +39,52 @@ export function getTxHistoryBody(from = "B62qqVN4og5PTPL1vgn5t9LH2oXooy3VqSRzXC6
 }
 
 
-export function getTxStatusBody(paymentId) {
+export function getTxStatusBody() {
   return `
-  query txStatus {
-    transactionStatus(payment: "${paymentId}")
+  query txStatus($paymentId:String! ) {
+    transactionStatus(payment: $paymentId)
   }
   `
 }
 
-
-
-export function getStakeTxSend(isRawSignature) {
+function getStakeTxSendWithRawSignature() {
   return (`
-mutation MyMutation($fee:String!, $amount:String!, 
+mutation stakeTx($fee:String!, $amount:String!, 
 $to: String!, $from: String!, $nonce:String!, $memo: String!,
-$validUntil: String!,
-${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!`}) {
+$validUntil: String!,$rawSignature: String) {
+  sendDelegation(
+    input: {
+      fee: $fee,
+      to: $to,
+      from: $from,
+      memo: $memo,
+      nonce: $nonce,
+      validUntil: $validUntil
+    }, 
+    signature: {rawSignature: $rawSignature}) {
+    delegation {
+      amount
+      fee
+      feeToken
+      from
+      hash
+      id
+      isDelegation
+      memo
+      nonce
+      kind
+      to
+    }
+  }
+}
+`)
+}
+
+function getStakeTxSendWithScalarField() {
+  return (`
+mutation stakeTx($fee:String!, $amount:String!, 
+$to: String!, $from: String!, $nonce:String!, $memo: String!,
+$validUntil: String!, $scalar: String, $field: String) {
   sendDelegation(
     input: {
       fee: $fee,
@@ -68,11 +95,7 @@ ${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!
       validUntil: $validUntil
     }, 
     signature: {
-      `+
-    (!isRawSignature ? `field: $field, scalar: $scalar,` : "")
-    + (isRawSignature ? `rawSignature: $rawSignature,` : "")
-    +
-    `
+    field: $field, scalar: $scalar
     }) {
     delegation {
       amount
@@ -92,16 +115,19 @@ ${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!
 `)
 }
 
-/**
- *
- * @param {*} isRawSignature
- */
-export function getTxSend(isRawSignature) {
+export function getStakeTxSend(isRawSignature) {
+  if (isRawSignature) {
+    return getStakeTxSendWithRawSignature()
+  } else {
+    return getStakeTxSendWithScalarField()
+  }
+}
+
+function getTxSendWithRawSignature() {
   return (`
-mutation MyMutation($fee:String!, $amount:String!,
+mutation sendTx($fee:String!, $amount:String!,
 $to: String!, $from: String!, $nonce:String!, $memo: String!,
-$validUntil: String!,
-${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!`}
+$validUntil: String!,$rawSignature: String!
 ) {
   sendPayment(
     input: {
@@ -114,12 +140,7 @@ ${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!
       validUntil: $validUntil
     }, 
     signature: {
-      `+
-    (!isRawSignature ? `field: $field, scalar: $scalar,` : "")
-    +
-    (isRawSignature ? `rawSignature: $rawSignature,` : "")
-    +
-      `
+      rawSignature: $rawSignature
     }) {
     payment {
       amount
@@ -136,16 +157,61 @@ ${isRawSignature ? `$rawSignature: String!` : `$scalar: String!, $field: String!
     }
   }
 }
-
-
 `)
+}
+function getTxSendWithScalarField() {
+  return (`
+mutation sendTx($fee:String!, $amount:String!,
+$to: String!, $from: String!, $nonce:String!, $memo: String!,
+$validUntil: String!,$scalar: String!, $field: String!
+) {
+  sendPayment(
+    input: {
+      fee: $fee,
+      amount: $amount,
+      to: $to,
+      from: $from,
+      memo: $memo,
+      nonce: $nonce,
+      validUntil: $validUntil
+    }, 
+    signature: {
+      field: $field, scalar: $scalar
+    }) {
+    payment {
+      amount
+      fee
+      feeToken
+      from
+      hash
+      id
+      isDelegation
+      memo
+      nonce
+      kind
+      to
+    }
+  }
+}
+`)
+}
+/**
+ *
+ * @param {*} isRawSignature
+ */
+export function getTxSend(isRawSignature) {
+  if (isRawSignature) {
+    return getTxSendWithRawSignature()
+  } else {
+    return getTxSendWithScalarField()
+  }
 }
 
 
-export function getPendingTxBody(publicKey) {
+export function getPendingTxBody() {
   return `
-  query pengdingTx {
-    pooledUserCommands(publicKey: "${publicKey}") {
+  query pengdingTx($publicKey: String!) {
+    pooledUserCommands(publicKey: $publicKey) {
       id
       nonce
       memo
@@ -159,13 +225,12 @@ export function getPendingTxBody(publicKey) {
       to
     }
   }
-  
   `
 }
 
-function balanceBodyBase(address){
+function balanceBodyBase(index){
   return `
-  ${address}: accounts (publicKey: "${address}") {
+  account${index}: accounts (publicKey: $account${index}) {
     balance {
       total
     }
@@ -173,17 +238,12 @@ function balanceBodyBase(address){
   `
 }
 
-export function getBalanceBatchBody(addressList){
-  let realList = []
-  if(!Array.isArray(addressList)){
-    realList.push(addressList)
-  }else{
-    realList = addressList
-  }
-  let realBody = realList.map((address)=>balanceBodyBase(address))
+export function getBalanceBatchBody(addressArrayLength){
+  const variablesDeclare = new Array(addressArrayLength).map((_, i)=>`$account${i}`).join(',')
+  let addressesQueryContent = new Array(addressArrayLength).map((address, index)=>balanceBodyBase(index))
   return`
-  query batchBalance {
-    ${realBody}
+  query batchBalance(${variablesDeclare}) {
+    ${addressesQueryContent}
   }
   `
 }
@@ -204,10 +264,10 @@ export function getDaemonStatusBody(){
   }
   `
 }
-export function  getBlockInfoBody(stateHash){
+export function  getBlockInfoBody(){
   return `
-  query blockInfo {
-    block(stateHash: "${stateHash}") {
+  query blockInfo($stateHash: String!) {
+    block(stateHash: $stateHash) {
       protocolState {
         consensusState {
           epoch
@@ -219,10 +279,10 @@ export function  getBlockInfoBody(stateHash){
   `
 }
 
-export function getDelegationInfoBody(publicKey){
+export function getDelegationInfoBody(){
   return `
-  query delegationInfo {
-    account(publicKey: "${publicKey}") {
+  query delegationInfo($publicKey: String!) {
+    account(publicKey: $publicKey) {
         delegate
       }
     }
