@@ -39,20 +39,20 @@ async function fetchGraphQL(operationsDoc, operationName, variables, url, retryC
   })
 }
 function getQueryName(gqlparams){
-  let startCode = "query"
-  let queryIndex = gqlparams.indexOf(startCode)
-  let bigIndex =  gqlparams.indexOf("{")
-  let name = gqlparams.substring(queryIndex+startCode.length,bigIndex)
-  name = trimSpace(name)
-  return name
+  let queryMatch = gqlparams.match(/query (\w+)(?=[(\s{])/)
+  if (queryMatch && queryMatch[1]) {
+    return queryMatch[1]
+  } else {
+    throw new Error('gql not valid')
+  }
 }
 
-export async function startFetchMyQuery(gqlparams, url,queryName) {
+export async function startFetchMyQuery(gqlparams, url, variables= {}) {
   let operationName = getQueryName(gqlparams)
   let result = await fetchGraphQL(
     gqlparams,
     operationName,
-    {requestType:queryName},
+    variables,
     url
   ).catch(errors => errors);
   let { errors, data } = result
@@ -70,10 +70,10 @@ export async function startFetchMyQuery(gqlparams, url,queryName) {
   return data
 
 }
-export async function startFetchMyMutation(gqlparams, url, variables = {}) {
+export async function startFetchMyMutation(operationName, gqlparams, url, variables = {}) {
   let result = await fetchGraphQL(
     gqlparams,
-    "MyMutation",
+    operationName,
     variables,
     url
   ).catch(errors => errors);
