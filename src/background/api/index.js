@@ -195,9 +195,11 @@ export async function getPendingTxList(address){
   let txBody = getBalanceBatchBody(realList.length)
   let result = await startFetchMyQuery(txBody, GQL_URL, variables).catch(()=>{})
   let addressBalances = {}
-  if (result && result.length > 0) {
+  if (result) {
     realList.forEach((address, i)=>{
-      addressBalances[address] = result[`account${i}`]
+      if (result[`account${i}`]) {
+        addressBalances[address] = result[`account${i}`]
+      }
     })
   }
   return addressBalances

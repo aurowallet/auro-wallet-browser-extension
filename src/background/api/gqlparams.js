@@ -230,7 +230,7 @@ export function getPendingTxBody() {
 
 function balanceBodyBase(index){
   return `
-  account${index}: accounts (publicKey: $account${index}) {
+  account${index}: account (publicKey: $account${index}) {
     balance {
       total
     }
@@ -239,8 +239,8 @@ function balanceBodyBase(index){
 }
 
 export function getBalanceBatchBody(addressArrayLength){
-  const variablesDeclare = new Array(addressArrayLength).map((_, i)=>`$account${i}`).join(',')
-  let addressesQueryContent = new Array(addressArrayLength).map((address, index)=>balanceBodyBase(index))
+  const variablesDeclare = new Array(addressArrayLength).fill(null).map((_, i)=>`$account${i}:String!`).join(',')
+  const addressesQueryContent = new Array(addressArrayLength).fill(null).map((address, index)=>balanceBodyBase(index))
   return`
   query batchBalance(${variablesDeclare}) {
     ${addressesQueryContent}
