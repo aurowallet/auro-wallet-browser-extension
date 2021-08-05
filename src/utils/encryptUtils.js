@@ -75,7 +75,7 @@ function decryptWithKey (key, payload) {
   return crypto.subtle.decrypt({name: 'AES-GCM', iv: vector}, key, encryptedData)
     .then(function (result) {
       const decryptedData = new Uint8Array(result)
-      const decryptedStr = new Buffer(decryptedData).toString('uft8')
+      const decryptedStr = new Buffer(decryptedData).toString('utf8')
       const decryptedObj = JSON.parse(decryptedStr)
       return decryptedObj
     })
@@ -106,7 +106,7 @@ async function keyFromPasswordV2 (password, salt) {
 
 }
 function keyFromPassword (password, salt) {
-  var passBuffer = Buffer.from(password, 'uft8')
+  var passBuffer = Buffer.from(password, 'utf8')
   var saltBuffer = Buffer.from(salt, 'base64')
 
   return global.crypto.subtle.importKey(
