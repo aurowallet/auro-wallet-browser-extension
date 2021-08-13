@@ -140,7 +140,7 @@
     "stakingProviderAddress": "Provider Address",
     "goStake": "Go to staking",
     "epochEndTime": "Current epoch end in",
-    "selectNode": "Please node provider",
+    "selectNode": "Please select node provider",
     "totalStake": "Total stake",
     "searchPlaceholder": "Search Block Producer name or address\n",
     "blockCreated": "Block Created",
