@@ -8,7 +8,7 @@
   flex-direction: column;
   .staking-content {
     padding: 20px;
-    padding-bottom: 70px;
+    padding-bottom: 50px;
     overflow: scroll;
     flex: 1;
   }
@@ -35,6 +35,19 @@
     overflow: hidden;
     min-height: 100px;
   }
+  .delegation-help{
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    padding: 4px;
+  }
+  .delegation-help-text{
+    margin: 0px;
+    padding: 0px;
+    font-size: $font-size-desc;
+    font-weight: 400;
+    color: #7055FF;
+  }
   .panel label {
     color: #333333;
     letter-spacing: 0;
@@ -44,7 +57,7 @@
   .panel label span {
     font-size: $font-size-content;
   }
-  .panel span {
+  .bold-text{
     font-size: $font-size-content; 
   }
   .panel .value{
@@ -53,6 +66,9 @@
   .panel .item {
     display: flex;
     margin-top: 12px;
+    &.itemFirst{
+      margin-top: 0px;
+    }
     &.multi {
       flex-direction: column;
       .value {
@@ -107,6 +123,12 @@
     font-size: $font-size-content;
     color: #333;
     margin-top: 5px;
+    &.nodeName {
+      margin-right: 70px;
+      line-height: $font-size-title-small;
+      word-wrap:break-word; 
+      word-break:break-all;
+    }
   }
   .change-btn {
     background: #6b5dfb;

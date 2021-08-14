@@ -10,14 +10,14 @@ import pointNormal from "../../../assets/images/pointNormal.png";
 
 import reminder from "../../../assets/images/reminder.png";
 import txArrow from "../../../assets/images/txArrow.png";
-import { fetchDaemonStatus, getBalance, getPendingTxList, getTransactionList } from "../../../background/api";
+import { fetchDaemonStatus, getBalance, getCurrencyPrice, getPendingTxList, getTransactionList } from "../../../background/api";
 import { cointypes, EXPLORER_URL } from '../../../../config';
 import { getLanguage } from "../../../i18n";
 import { updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
-import { setAccountInfo, setBottomType } from "../../../reducers/cache";
+import { setAccountInfo, setBottomType, updateCurrentPrice } from "../../../reducers/cache";
 import { NET_CONFIG_DEFAULT } from "../../../reducers/network";
 import { openTab } from '../../../utils/commonMsg';
-import { addressSlice, amountDecimals, copyText, getDisplayAmount } from "../../../utils/utils";
+import { addressSlice, amountDecimals, copyText, getDisplayAmount, isNumber } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Toast from "../../component/Toast";
 import "./index.scss";
@@ -29,6 +29,7 @@ import txCommonType from "../../../assets/images/txCommonType.png";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import refreshIcon from "../../../assets/images/refresh.svg";
 import { ERROR_TYPE } from '../../../constant/errType';
+import Clock from '../../component/Clock';
 
 
 const BOTTOM_TYPE = {
@@ -105,6 +106,17 @@ class Wallet extends React.Component {
   setHomeBottomType = () => {
     this.props.setBottomType(this.state.bottomTipType)
   }
+  fetchPrice=async (currency)=>{
+    const {currentCurrency} = this.props
+    let lastCurrency = currentCurrency
+    if(currency){
+      lastCurrency = currency
+    }
+    let price = await getCurrencyPrice(lastCurrency.key)
+    if(isNumber(price)){
+      this.props.updateCurrentPrice(price)
+    }
+  }
   fetchData = async (address, silent = false) => {
     let { currentAccount, shouldRefresh } = this.props
     let currentAddress = currentAccount.address
@@ -123,6 +135,7 @@ class Wallet extends React.Component {
         this.props.updateNetAccount(account.account)
       }
     })
+    this.fetchPrice()
     if (this.state.bottomTipType !== BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT) {
       if (!silent) {
         this.callSetState({
@@ -176,10 +189,15 @@ class Wallet extends React.Component {
     })
   }
   renderAccount = () => {
-    let { currentAccount, balance, netAccount } = this.props
+    let { currentAccount, balance, netAccount,currentCurrency,cache } = this.props
     let DelegateState = !!netAccount.delegate && netAccount.delegate !== currentAccount.address
     let deleText = DelegateState ? getLanguage("stakingStatus_1") : getLanguage("stakingStatus_2")
     let amount = getDisplayAmount(balance)
+    let unitBalance = "--"
+    if(cache.currentPrice){
+      unitBalance = new BigNumber(cache.currentPrice).multipliedBy(balance).toString()
+      unitBalance = currentCurrency.symbol + getDisplayAmount(unitBalance,2)
+    }
     return (
       <div className="account-container">
         <div className="account-address-container">
@@ -195,6 +213,9 @@ class Wallet extends React.Component {
         <div className={'wallet-balance-container'}>
           <p className="account-balance">{amount}</p>
           <p className="account-symbol">{cointypes.symbol}</p>
+        </div>
+        <div className={'wallet-currency-container'}>
+          <p className="current-balance">{unitBalance}</p>
         </div>
       </div>)
   }
@@ -397,6 +418,7 @@ class Wallet extends React.Component {
           {this.renderWalletInfo()}
         </div>
         {this.getBottomRender()}
+        <Clock schemeEvent={() => { this.fetchData(this.props.currentAccount.address,true) }} />
       </div>)
   }
 }
@@ -409,7 +431,8 @@ const mapStateToProps = (state) => ({
   accountInfo: state.accountInfo,
   netConfig: state.network,
   shouldRefresh: state.accountInfo.shouldRefresh,
-  cache: state.cache
+  cache: state.cache,
+  currentCurrency: state.currencyConfig.currentCurrency,
 });
 
 function mapDispatchToProps(dispatch) {
@@ -429,7 +452,9 @@ function mapDispatchToProps(dispatch) {
     setBottomType: (type) => {
       dispatch(setBottomType(type))
     },
-
+    updateCurrentPrice: (price) => {
+      dispatch(updateCurrentPrice(price))
+    },
   };
 }
 

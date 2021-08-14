@@ -195,3 +195,39 @@ export function copyText(text){
     return navigator.clipboard.writeText(text)
       .catch((error) => { alert(`Copy failed! ${error}`) })
 }
+
+/**
+ * 分割特殊文本
+ * @returns 
+ */
+export function specialSplit(str) {
+    let startStr = '[['
+    let endStr = "]]"
+    let list = []
+    var index = str.indexOf(startStr); 
+    let lastIndex = -endStr.length
+    let specialIndex = -1
+    while (index !== -1) {
+        list.push({
+            type:"common",
+            showStr : str.slice(lastIndex+endStr.length,index)
+        })
+        lastIndex = str.indexOf(endStr,index);
+        list.push({
+            type:"special",
+            showStr : str.slice(index+startStr.length,lastIndex),
+            specialIndex:++specialIndex
+        })
+        index = str.indexOf(startStr, index + 1);
+        if(index === -1){
+            let showStr = str.slice(lastIndex+endStr.length)
+            if(!!showStr){
+                list.push({
+                    type:"common",
+                    showStr : showStr
+                })
+            }
+        }
+    }
+    return list
+}

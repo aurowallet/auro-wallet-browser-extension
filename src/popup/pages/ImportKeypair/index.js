@@ -38,9 +38,9 @@ class ImportKeypair extends React.Component {
     }
   }
   goToCreate = (e) => {
+    Loading.show()
     e.preventDefault()
     e.stopPropagation()
-    Loading.show()
     sendMsg({
       action: WALLET_IMPORT_KEY_STORE,
       payload: {

@@ -80,7 +80,7 @@ p {
 }
 .confirm-item-content {
   margin: 0;
-  font-size: $font-size-desc;
+  font-size: $font-size-content;
   color: #333333;
   word-break: break-all;
   text-align: left;
@@ -88,7 +88,6 @@ p {
   align-items: center;
 }
 .confirm-item-content-purple {
-  font-size: $font-size-content;
   color: #6d5ffe;
 }
 .confirm-modal-container {
@@ -151,4 +150,28 @@ p {
   font-size: $font-size-content;
   color: #333333;
   margin-bottom: 20px;
+}
+.fee-too-high-container{
+  padding: 2px 30px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.fee-too-high-content{
+  color: #FFC633;
+  font-size: $font-size-desc;
+  margin-left: 4px;
+}
+.fee-reminder {
+  width: 14px;
+}
+.send-address-book-container {
+  height: 24px;
+  width: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.send-address-book {
+  width: 16px;
 }

@@ -12,6 +12,7 @@ export default class ConfirmModalContainer extends Component {
         this.content = ""
         this.cancelText = ""
         this.confirmText = ""
+        this.elementContent = ""
 
         this.onCancel = () => { }
         this.onConfirm = () => { }
@@ -19,7 +20,7 @@ export default class ConfirmModalContainer extends Component {
     }
 
     show = (params) => {
-        let { title, content, onCancel, onConfirm, cancelText, confirmText, touchToClose } = params
+        let { title, content, onCancel, onConfirm, cancelText, confirmText, touchToClose,elementContent } = params
         this.title = title
         this.content = content
         this.cancelText = cancelText
@@ -28,6 +29,8 @@ export default class ConfirmModalContainer extends Component {
         this.onCancel = onCancel
         this.onConfirm = onConfirm
         this.touchToClose = touchToClose
+
+        this.elementContent = elementContent
         this.setState({ showModal: true })
     }
     hide = () => {
@@ -59,6 +62,17 @@ export default class ConfirmModalContainer extends Component {
             />
         )
     }
+    renderModalContent=()=>{
+        if(this.elementContent){
+            return this.elementContent()
+        }else{
+            return <>{Array.isArray(this.content) ?
+                this.content.map((item, index) => {
+                    return <p key={index + ""} className={'confirm-content'}>{item}</p>
+                }) : <p className={'confirm-content'}>{this.content}</p>}</>
+        }
+       
+    }
     render() {
         return (
             <div className={
@@ -69,10 +83,7 @@ export default class ConfirmModalContainer extends Component {
             }>
                 <div className={"confirm-content-container"}>
                     <p className={"confirm-title"}>{this.title}</p>
-                    {Array.isArray(this.content) ?
-                        this.content.map((item, index) => {
-                            return <p key={index + ""} className={'confirm-content'}>{item}</p>
-                        }) : <p className={'confirm-content'}>{this.content}</p>}
+                    {this.renderModalContent()}
                     <div className={
                         cx({
                             "confirm-button-container": this.cancelText,

@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 import { getLocal, saveLocal } from "./background/localStorage";
 import * as storage from "./background/storageService";
 import { LOCK_TIME, network_config } from "../config";
-import { NET_WORK_CONFIG } from "./constant/storageKey";
+import { CURRENCY_UNIT_CONFIG, NET_WORK_CONFIG } from "./constant/storageKey";
 import { WALLET_APP_CONNECT, WALLET_GET_CURRENT_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "./constant/types";
 import "./i18n";
 import App from "./popup/App";
@@ -15,6 +15,8 @@ import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteR
 import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
 import { sendMsg } from "./utils/commonMsg";
 import extension from 'extensionizer'
+import { CURRENCY_UNIT } from "./constant/pageType";
+import { updateCurrencyConfig } from "./reducers/currency";
 
 function getLocalNetConfig(store) {
   let localNetConfig = getLocal(NET_WORK_CONFIG)
@@ -34,6 +36,19 @@ function getLocalNetConfig(store) {
     store.dispatch(updateNetConfig(JSON.parse(localNetConfig)))
   }
 }
+
+function getLocalCurrencyConfig(store) {
+  let localCurrencyConfig = getLocal(CURRENCY_UNIT_CONFIG)
+  if (!localCurrencyConfig) {
+    let currencyList = CURRENCY_UNIT
+    currencyList[0].isSelect = true
+    store.dispatch(updateCurrencyConfig(currencyList))
+    saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList))
+  }else{
+    store.dispatch(updateCurrencyConfig(JSON.parse(localCurrencyConfig)))
+  }
+}
+
 async function getLocalStatus(store) {
   sendMsg({
     action: WALLET_GET_CURRENT_ACCOUNT,
@@ -64,6 +79,7 @@ export const applicationEntry = {
     extension.runtime.connect({ name: WALLET_APP_CONNECT });
     await getLocalStatus(store)
     getLocalNetConfig(store)
+    getLocalCurrencyConfig(store)
   },
   createReduxStore() {
     this.reduxStore = configureStore({

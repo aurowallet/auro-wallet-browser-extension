@@ -2,9 +2,9 @@
  * 所有的网络请求在这里进行
  */
 
-import { BASE_INFO_URL, GQL_URL, TRANSACTION_URL, TX_LIST_LENGTH } from "../../../config";
+import { BASE_INFO_URL, TRANSACTION_URL, TX_LIST_LENGTH } from "../../../config";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody ,getPendingTxBody, getBalanceBatchBody, getDaemonStatusBody, getBlockInfoBody, getDelegationInfoBody} from './gqlparams';
+import { getBalanceBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody ,getPendingTxBody, getBalanceBatchBody, getDaemonStatusBody, getBlockInfoBody, getDelegationInfoBody, getNodeVersionBody} from './gqlparams';
 
 /**
  * 获取余额
@@ -13,7 +13,6 @@ export async function getBalance(address) {
   let txBody = getBalanceBody()
   let result = await startFetchMyQuery(
       txBody,
-      GQL_URL,
       {
         requestType: "extensionAccountInfo",
         publicKey: address
@@ -27,7 +26,7 @@ export async function getBalance(address) {
  */
 export async function getTxStatus(paymentId) {
   let txBody = getTxStatusBody()
-  let result = await startFetchMyQuery(txBody, GQL_URL,{ paymentId })
+  let result = await startFetchMyQuery(txBody,{ paymentId })
   return result
 }
 
@@ -38,7 +37,6 @@ export async function getTxHistory(address) {
   let txBody = getTxHistoryBody()
   let res = await startFetchMyQuery(
       txBody,
-      GQL_URL,
       {
         from: address,
         limit: 20,
@@ -76,7 +74,7 @@ function _getGQLVariables(payload, signature, includeAmount = true) {
 export async function sendTx(payload,signature){
   const variables = _getGQLVariables(payload, signature, true)
   let txBody =  getTxSend(!!variables.rawSignature)
-  let res = await startFetchMyMutation('sendTx', txBody, GQL_URL, variables)
+  let res = await startFetchMyMutation('sendTx', txBody, variables)
   return res
 }
 /**
@@ -85,7 +83,7 @@ export async function sendTx(payload,signature){
 export async function sendStakeTx(payload,signature){
   const variables = _getGQLVariables(payload, signature, false)
   let txBody =  getStakeTxSend(!!variables.rawSignature)
-  let res = await startFetchMyMutation('stakeTx', txBody, GQL_URL, variables);
+  let res = await startFetchMyMutation('stakeTx', txBody, variables);
   return res
 }
 
@@ -96,19 +94,19 @@ export async function sendStakeTx(payload,signature){
  */
 export async function fetchDaemonStatus() {
   const query = getDaemonStatusBody()
-  let res = await startFetchMyQuery(query, GQL_URL);
+  let res = await startFetchMyQuery(query, {});
   return res;
 }
 
 export async function fetchBlockInfo(stateHash) {
   const query = getBlockInfoBody()
-  let res = await startFetchMyQuery(query, GQL_URL, {stateHash});
+  let res = await startFetchMyQuery(query, {stateHash});
   return res;
 }
 
 export async function fetchDelegationInfo(publicKey) {
   const query = getDelegationInfoBody()
-  let res = await startFetchMyQuery(query, GQL_URL,{ requestType: "extensionAccountInfo", publicKey });
+  let res = await startFetchMyQuery(query, { requestType: "extensionAccountInfo", publicKey });
   return res;
 }
 
@@ -134,7 +132,7 @@ export async function getFeeRecom(){
 /**
  * 获取关于页面信息
  */
-export async function getAboutInfo(){
+export async function getBaseInfo(){
   let feeUrl = BASE_INFO_URL+"about_us.json"
   let result = await commonFetch(feeUrl).catch(error=>{
    return error
@@ -157,7 +155,6 @@ export async function getTransactionList(address, limit = TX_LIST_LENGTH){
   }
   let txList = await commonFetch(txUrl).catch(()=>[])
    return {txList,address}
-
 }
 
 /**
@@ -169,7 +166,6 @@ export async function getPendingTxList(address){
   let txBody = getPendingTxBody()
   let result = await startFetchMyQuery(
       txBody,
-      GQL_URL,
       {
         requestType: "extensionAccountInfo",
         publicKey: address
@@ -193,7 +189,7 @@ export async function getPendingTxList(address){
     variables[`account${i}`] = address
   })
   let txBody = getBalanceBatchBody(realList.length)
-  let result = await startFetchMyQuery(txBody, GQL_URL, variables).catch(()=>{})
+  let result = await startFetchMyQuery(txBody, variables).catch(()=>{})
   let addressBalances = {}
   if (result) {
     realList.forEach((address, i)=>{
@@ -205,3 +201,28 @@ export async function getPendingTxList(address){
   return addressBalances
 }
 
+/**
+ * 获取 node version
+ * @param {*} gqlUrl 
+ * @returns 
+ */
+ export async function getNodeVersion(gqlUrl) {
+  let txBody = getNodeVersionBody()
+  let result = await startFetchMyQuery(
+      txBody,
+      {},
+      gqlUrl,
+  ).catch((err)=>err)
+  return result
+}
+
+/**
+ * 获取当前价格
+ * @param {*} currency 
+ * @returns 
+ */
+ export async function getCurrencyPrice(currency){
+  let priceUrl = TRANSACTION_URL+ "/prices?currency="+currency
+  let price = await commonFetch(priceUrl).catch(()=>{})
+  return price?.data
+}

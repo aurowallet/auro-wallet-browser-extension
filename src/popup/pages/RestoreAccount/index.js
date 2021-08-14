@@ -9,6 +9,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { trimSpace } from "../../../utils/utils";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
+import Loading from "../../component/Loading";
 import Toast from "../../component/Toast";
 import "./index.scss";
 class RestoreAccount extends React.Component {
@@ -45,6 +46,7 @@ class RestoreAccount extends React.Component {
       Toast.info(getLanguage('inputVaildSeed'))
       return
     } 
+    Loading.show()
     sendMsg({
       action: WALLET_NEW_HD_ACCOUNT,
       payload: {
@@ -53,6 +55,7 @@ class RestoreAccount extends React.Component {
       }
     },
       async (currentAccount) => {
+        Loading.hide()
         this.props.updateCurrentAccount(currentAccount)
         this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE)
         this.props.history.push({

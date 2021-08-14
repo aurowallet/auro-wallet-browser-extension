@@ -10,6 +10,7 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import "./index.scss";
+import Loading from "../../component/Loading";
 class BackupMnemonics extends React.Component {
   constructor(props) {
     super(props);
@@ -65,6 +66,7 @@ class BackupMnemonics extends React.Component {
     const { list } = this.state;
     let bool = this.compareList();
     if (bool) {
+      Loading.show()
       sendMsg({
         action: WALLET_NEW_HD_ACCOUNT,
         payload: {
@@ -72,6 +74,7 @@ class BackupMnemonics extends React.Component {
         }
       },
         async (currentAccount) => {
+          Loading.hide()
           this.props.updateCurrentAccount(currentAccount)
           this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE)
           this.props.history.push({
@@ -167,7 +170,7 @@ class BackupMnemonics extends React.Component {
         title={getLanguage('backTips_title')}
         history={this.props.history}>
         <div className="mne-show-container">
-          <p className={"mne-description"}>{getLanguage('show_seed_content')}</p>
+          <p className={"mne-description"}>{getLanguage('confirmMneTip')}</p>
           {this.renderSelectedMne()}
           {this.renderMneList()}
         </div>

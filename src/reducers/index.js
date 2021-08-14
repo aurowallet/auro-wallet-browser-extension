@@ -6,6 +6,8 @@ import entryRouteReducer from './entryRouteReducer';
 import network from './network';
 import staking from "./stakingReducer";
 import tabRouteConfig from './tabRouteReducer';
+import currencyConfig from './currency';
+
 
 const rootReducer = combineReducers({
   entryRouteReducer: entryRouteReducer,
@@ -14,7 +16,8 @@ const rootReducer = combineReducers({
   network,
   accountInfo,
   cache: cacheReducer,
-  staking
+  staking,
+  currencyConfig
 });
 
 export default rootReducer;

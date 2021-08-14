@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import modalClose from "../../../assets/images/modalClose.png";
 import txArrow from "../../../assets/images/txArrow.png";
 import { SEC_DELETE_ACCOUNT, SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
-import { WALLET_CHANGE_ACCOUNT_NAME } from "../../../constant/types";
+import { WALLET_CHANGE_ACCOUNT_NAME, WALLET_DELETE_WATCH_ACCOUNT } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -19,6 +19,7 @@ import {getTransactionList} from "../../../background/api";
 import {JSonToCSV} from "../../../utils/JsonToCSV";
 import {cointypes} from "../../../../config";
 import Loading from "../../component/Loading";
+import { updateCurrentAccount } from "../../../reducers/accountReducer";
 
 class AccountInfo extends React.Component {
   constructor(props) {
@@ -54,21 +55,23 @@ class AccountInfo extends React.Component {
         "account-info-item": true,
       })}
         onClick={() => callback && callback()}>
-        <div className="account-info-item-inner click-cursor">
-          <p className="account-info-title">{title}</p>
-          {content && <p className={
+        <div className={"account-info-con  click-cursor"}>
+          <div className="account-info-item-inner">
+            <p className="account-info-title">{title}</p>
+            {content && <p className={
+              cx({
+                "account-info-content": true,
+              })
+            }>{content}</p>}
+          </div>
+          <img className={
             cx({
-              "account-info-content": true,
+              "account-info-arrow": true,
+              "account-info-arrow-hide": hideArrow
             })
-          }>{content}</p>}
-        </div>
-        <img className={
-          cx({
-            "account-info-arrow": true,
-            "account-info-arrow-hide": hideArrow
-          })
 
-        } src={txArrow} />
+          } src={txArrow} />
+        </div>
       </div>
     )
   }
@@ -91,19 +94,45 @@ class AccountInfo extends React.Component {
     )
   }
   deleteAccount = () => {
-    this.props.history.push({
-      pathname: "/security_pwd_page",
-      params: {
-        action: SEC_DELETE_ACCOUNT,
-        nextRoute: "/account_manage",
-        address: this.state.account.address,
-        nextParams: {
-          title: getLanguage('backup_success_title'),
-          content: getLanguage('deleteAccountSuccess')
+    if(this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH){
+      Loading.show()
+      sendMsg({
+        action: WALLET_DELETE_WATCH_ACCOUNT,
+        payload: {
+          address: this.state.account.address,
         }
-      }
+      },
+        async (currentAccount) => {
+          Loading.hide()
+          if (currentAccount.error) {
+            if(currentAccount.type === "local"){
+              Toast.info(getLanguage(currentAccount.error))
+            }else{
+                Toast.info(currentAccount.error)
+            }
+          } else {
+            Toast.info(getLanguage("deleteSuccess"))
+            this.props.updateCurrentAccount(currentAccount)
+
+            setTimeout(() => {
+              this.props.history.goBack()
+            }, 300);
+          }
+        })
+    }else{
+      this.props.history.push({
+        pathname: "/security_pwd_page",
+        params: {
+          action: SEC_DELETE_ACCOUNT,
+          nextRoute: "/account_manage",
+          address: this.state.account.address,
+          nextParams: {
+            title: getLanguage('backup_success_title'),
+            content: getLanguage('deleteAccountSuccess')
+          }
+        }
+      })
     }
-    )
   }
   onChangeAccountName = () => {
     if (this.state.inputAccountName.length <= 0) {
@@ -255,6 +284,9 @@ const mapStateToProps = (state) => ({
 
 function mapDispatchToProps(dispatch) {
   return {
+    updateCurrentAccount: (account) => {
+      dispatch(updateCurrentAccount(account))
+    }
   };
 }
 

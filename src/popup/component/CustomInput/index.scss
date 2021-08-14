@@ -53,9 +53,34 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  margin-right: 50px;
 }
 .pwd-lable-desc-1 {
   margin: 0;
   font-size: $font-size-desc-small;
   color: #666666;
+}
+
+.create-input-readOnly {
+  background: rgba(191, 199, 223, 0.1);
+  color: #bfc7df;
+}
+.lable-left-container{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.pwd-lable-little{
+  margin: 0;
+  font-size: $font-size-content;
+  letter-spacing: 0;
+  line-height: 16px;
+  color: #333333;
+  
+  margin-left: 4px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow:ellipsis;
+  white-space: nowrap;
 }

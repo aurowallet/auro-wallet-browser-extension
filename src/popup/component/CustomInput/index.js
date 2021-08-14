@@ -3,7 +3,6 @@ import React, { Component } from "react";
 import pwd_error from "../../../assets/images/pwd_error.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
 import "./index.scss";
-import PropTypes from 'prop-types'
 export default class CustomInput extends Component {
     constructor(props) {
         super(props);
@@ -39,29 +38,40 @@ export default class CustomInput extends Component {
         )
     }
     render() {
+        let { propsClass, wrapPropClass,littleLabel } = this.props
+        let params = {}
+        if(this.props.readOnly){
+            params.readOnly = "readonly"
+        }
         return (
             <div className={
                 cx({
                     'input-wrapper-1': true,
+                    [wrapPropClass]: !!wrapPropClass
                 })
             }>
                 <div className={"lable-container"}>
-                    <p className="pwd-lable-1">{this.props.label}</p>
+                    <div className={"lable-left-container"}>
+                        <p className="pwd-lable-1">{this.props.label}</p>
+                        {littleLabel && <p className="pwd-lable-little">{littleLabel}</p>}
+                    </div>
                     <p className="pwd-lable-desc-1">{this.props.descLabel}</p>
+                    {this.props.rightComponent}
                 </div>
-                <div className={
-                    cx({
-                        "input-wrapper-row-1": true,
-                    })
-                }>
+                <div className={"input-wrapper-row-1"}>
                     <input
-                        className="create-input-1"
+                        className={
+                            cx("create-input-1", {
+                                [propsClass]: !!propsClass,
+                                "create-input-readOnly": this.props.readOnly
+                            })}
                         onChange={this.props.onTextInput}
                         placeholder={this.props.placeholder}
                         value={"" || this.props.value}
                         spellCheck={false}
                         onFocus={this.onFocus}
                         onBlur={this.onBlur}
+                        {...params}
                     />
                 </div>
                 {this.renderErrorTip()}

@@ -14,9 +14,8 @@ function getNowUrl() {
   return url
 }
 
-async function fetchGraphQL(operationsDoc, operationName, variables, url, retryCount = 0) {
-  let real = getNowUrl()
-  let fetchUrl = real
+async function fetchGraphQL(operationsDoc, operationName, variables, url) {
+  let fetchUrl = url || getNowUrl()
   return new Promise((resolve, reject) => {
     axios.post(
       fetchUrl,
@@ -47,7 +46,7 @@ function getQueryName(gqlparams){
   }
 }
 
-export async function startFetchMyQuery(gqlparams, url, variables= {}) {
+export async function startFetchMyQuery(gqlparams, variables= {},url) {
   let operationName = getQueryName(gqlparams)
   let result = await fetchGraphQL(
     gqlparams,
@@ -70,7 +69,7 @@ export async function startFetchMyQuery(gqlparams, url, variables= {}) {
   return data
 
 }
-export async function startFetchMyMutation(operationName, gqlparams, url, variables = {}) {
+export async function startFetchMyMutation(operationName, gqlparams, variables = {}, url) {
   let result = await fetchGraphQL(
     gqlparams,
     operationName,

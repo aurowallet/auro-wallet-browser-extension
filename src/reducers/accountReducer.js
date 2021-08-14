@@ -55,7 +55,7 @@ function pendingTx(txList){
             "id":detail.id,
             "hash":detail.hash,
             "type":detail.kind,
-            "time":"Nonce: "+ detail.nonce,
+            "time":detail.time,
             "sender":detail.from,
             "receiver":detail.to,
             "amount":detail.amount,

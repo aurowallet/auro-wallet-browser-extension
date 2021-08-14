@@ -1,20 +1,20 @@
+import cx from "classnames";
+import extension from 'extensionizer';
 import React from "react";
 import { connect } from "react-redux";
-import goNext from "../../../assets/images/goNext.png";
-import success from "../../../assets/images/success.png";
-import pending from "../../../assets/images/pending.png";
-import txFailed from "../../../assets/images/txFailed.png";
-import { getTxStatus } from '../../../background/api';
 import { cointypes, EXPLORER_URL } from '../../../../config';
+import goNext from "../../../assets/images/goNext.png";
+import pending from "../../../assets/images/pending.png";
+import success from "../../../assets/images/success.png";
+import txFailed from "../../../assets/images/txFailed.png";
+import { FROM_BACK_TO_RECORD, TX_SUCCESS } from '../../../constant/types';
 import { getLanguage } from "../../../i18n";
+import { updateShouldRequest } from "../../../reducers/accountReducer";
+import { openTab } from '../../../utils/commonMsg';
 import { copyText, getAmountDisplay } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import "./index.scss";
-import { openTab, sendMsg } from '../../../utils/commonMsg';
-import { FROM_BACK_TO_RECORD, WALLET_CHECK_TX_STATUS, TX_SUCCESS } from '../../../constant/types';
-import cx from "classnames";
-import extension from 'extensionizer'
 
 const DECIMALS = cointypes.decimals
 
@@ -59,8 +59,9 @@ class Record extends React.Component {
         this.callSetState({
           txStatus: STATUS.TX_STATUS_INCLUDED
         })
+        this.props.updateShouldRequest(true)
+        sendResponse();
       }
-      sendResponse();
       return true;
     });
   }
@@ -81,12 +82,16 @@ class Record extends React.Component {
   renderDetail = () => {
     let receive = this.state.txDetail.to ||String(this.state.txDetail.receiver)
     let toAddress =this.state.txDetail.from || String(this.state.txDetail.sender)
+    let memo = this.state.txDetail.memo
+    let time = this.state.txDetail.time
     return (
       <div className="record-detail-container">
         {this.renderDetailItem(getLanguage('amount'), getAmountDisplay(this.state.txDetail.amount, DECIMALS) + " " + cointypes.symbol)}
         {this.renderDetailItem(getLanguage('toAddress'), receive)}
         {this.renderDetailItem(getLanguage('fromAddress'), toAddress)}
+        {memo && this.renderDetailItem("Memo", memo)}
         {this.renderDetailItem(getLanguage('fee'), getAmountDisplay(this.state.txDetail.fee, DECIMALS) + " " + cointypes.symbol)}
+        {time && this.renderDetailItem(getLanguage('txTime'), time)}
         {this.renderDetailItem("Nonce", String(this.state.txDetail.nonce))}
         {this.renderDetailItem(getLanguage('txHash'), this.state.txDetail.hash)}
       </div>
@@ -118,7 +123,7 @@ class Record extends React.Component {
       case STATUS.TX_STATUS_SUCCESS:
       case STATUS.TX_STATUS_INCLUDED:
         status.source = success,
-          status.text = getLanguage('backup_success_title')
+          status.text = getLanguage('txSuccess')
         status.className = "tx-success-title"
         break;
       case STATUS.TX_STATUS_FAILED:
@@ -146,7 +151,7 @@ class Record extends React.Component {
         history={this.props.history}>
         <div className="backup-success-container">
           <div className="backup-top-container">
-            <img className={"backup-success-img"} src={imgSource}></img>
+            <img className={"record-head-img"} src={imgSource}></img>
             <p className={
               cx({
                 "tx-common-title": true,
@@ -166,7 +171,11 @@ class Record extends React.Component {
 const mapStateToProps = (state) => ({});
 
 function mapDispatchToProps(dispatch) {
-  return {};
+  return {
+    updateShouldRequest: (shouldRefresh) => {
+      dispatch(updateShouldRequest(shouldRefresh))
+    },
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Record);

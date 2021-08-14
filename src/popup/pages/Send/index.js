@@ -24,6 +24,10 @@ import { FeeSlider } from "../../component/Slider";
 import TestModal from "../../component/TestModal";
 import Toast from "../../component/Toast";
 import "./index.scss";
+import reminder from "../../../assets/images/reminder.png";
+import addressBook from "../../../assets/images/addressBook.svg";
+import { updateAddressBookFrom } from "../../../reducers/cache";
+
 const FEE_RECOMMED_CHEAPER = 0
 const FEE_RECOMMED_DEFAULT = 1
 const FEE_RECOMMED_HIGH = 2
@@ -32,8 +36,10 @@ const FEE_RECOMMED_CUSTOM = -1
 class SendPage extends React.Component {
   constructor(props) {
     super(props);
+    let addressDetail = props.addressDetail ?? {};
     this.state = {
-      toAddress: "",
+      toAddress: addressDetail.address||"",
+      toAddressName:addressDetail.name||"",
       amount: "",
       fee: 0.1,
       addressErr: "",
@@ -121,15 +127,32 @@ class SendPage extends React.Component {
   onToAddressInput = (e) => {
     let address = e.target.value;
     this.callSetState({
-      toAddress: address
+      toAddress: address,
+      toAddressName:""
     }, () => {
       this.setBtnStatus()
     })
   }
+  onGotoAddressBook=()=>{
+    this.props.updateAddressBookFrom("send")
+    this.props.history.push({
+      pathname: "/address_book",
+    })
+  }
+  renderAddressBook = () => {
+    return (
+      <div className={"send-address-book-container click-cursor"} onClick={this.onGotoAddressBook}>
+        <img src={addressBook} className={"send-address-book"} />
+      </div>
+    )
+  }
   renderToAddress = () => {
+    let labelName = this.state.toAddressName ?  "("+this.state.toAddressName+")" :""
     return (<CustomInput
       value={this.state.toAddress}
       label={getLanguage('toAddress')}
+      littleLabel={labelName}
+      rightComponent={this.renderAddressBook()}
       onTextInput={this.onToAddressInput}
     />)
   }
@@ -217,6 +240,7 @@ class SendPage extends React.Component {
   renderAdvanceOption = () => {
     let netAccount = this.props.netAccount
     let nonceHolder = netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
+    let showFeeHigh = BigNumber(this.state.inputFee).gt(10) 
     return (
       <div className={
         cx({
@@ -229,6 +253,10 @@ class SendPage extends React.Component {
           placeholder={getLanguage('feePlaceHolder')}
           onTextInput={this.onFeeInput}
         />
+        {showFeeHigh && <div className={"fee-too-high-container"}>
+          <img src={reminder} className={"fee-reminder"} />
+          <p className={"fee-too-high-content"}>{getLanguage('feeTooHigh')}</p>
+        </div>}
         <CustomInput
           value={this.state.nonce}
           placeholder={nonceHolder}
@@ -321,7 +349,6 @@ class SendPage extends React.Component {
       })
       this.modal.current.setModalVisable(true)
       let currentAccount = this.props.currentAccount
-      console.log('currentAccount', currentAccount, typeof currentAccount.hdPath)
       const { signature, payload, error } = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
       this.modal.current.setModalVisable(false)
       this.callSetState({
@@ -393,11 +420,13 @@ class SendPage extends React.Component {
   renderConfirmButton = () => {
     let currentAccount = this.props.currentAccount
     let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
+    let isWatchModde = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
+    let buttonText = isWatchModde ? getLanguage("watchMode"):getLanguage('confirm')
     return (
       <div className={"send-confirm-container"}>
         <Button
           disabled={disabled}
-          content={getLanguage('confirm')}
+          content={buttonText}
           onClick={this.clickNextStep}
         />
       </div>
@@ -406,12 +435,14 @@ class SendPage extends React.Component {
   renderConfirmView = () => {
     let lastFee = this.state.inputFee ? this.state.inputFee : this.state.fee
     let nonce = this.state.nonce ? this.state.nonce : ""
+    let memo = this.state.memo ? this.state.memo : ""
     return (
       <div className={"confirm-modal-container"}>
         {this.renderConfirmItem(getLanguage('amount'), this.state.amount + " " + cointypes.symbol, true)}
-        {this.renderConfirmItem(getLanguage('toAddress'), this.state.toAddress)}
+        {this.renderConfirmItem(getLanguage('toAddress'), this.state.toAddress,true)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.state.fromAddress)}
-        {nonce && this.renderConfirmItem("Nonce", nonce)}
+        {memo && this.renderConfirmItem("Memo", memo,true)}
+        {nonce && this.renderConfirmItem("Nonce", nonce,true)}
         {this.renderConfirmItem(getLanguage('fee'), lastFee + " " + cointypes.symbol, true)}
         {this.renderConfirmButton()}
       </div>
@@ -442,7 +473,8 @@ class SendPage extends React.Component {
   onClickFee = (item, index) => {
     this.callSetState({
       feeSelect: index,
-      fee: item.fee
+      fee: item.fee,
+      inputFee:""
     })
   }
   renderButtonFee = () => {
@@ -450,7 +482,7 @@ class SendPage extends React.Component {
       <div className={"button-fee-container"}>
         <div className={"lable-container fee-style"}>
           <p className="pwd-lable-1">{getLanguage('fee')}</p>
-          <p className="pwd-lable-desc-1">{this.state.fee}</p>
+          <p className="pwd-lable-desc-1">{this.state.inputFee||this.state.fee}</p>
         </div>
         <div className={"fee-item-container"}>
           {this.feeList.map((item, index) => {
@@ -508,6 +540,7 @@ const mapStateToProps = (state) => ({
   balance: state.accountInfo.balance,
   currentAccount: state.accountInfo.currentAccount,
   netAccount: state.accountInfo.netAccount,
+  addressDetail: state.cache.addressDetail,
 });
 
 function mapDispatchToProps(dispatch) {
@@ -517,6 +550,9 @@ function mapDispatchToProps(dispatch) {
     },
     updateShouldRequest: (shouldRefresh) => {
       dispatch(updateShouldRequest(shouldRefresh))
+    },
+    updateAddressBookFrom: (from) => {
+      dispatch(updateAddressBookFrom(from))
     },
   };
 }

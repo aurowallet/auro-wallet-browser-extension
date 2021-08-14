@@ -32,7 +32,9 @@ import LedgerImport from '../pages/LedgerImport';
 import ImportPage from '../pages/ImportPage';
 import ImportKeypair from '../pages/ImportKeypair';
 
-import ProtocolPage from '../pages/Protocol';
+import AddressBook from '../pages/AddressBook';
+import CurrencyUnit from '../pages/CurrencyUnit';
+
 
 export function getAllRouter() {
   return (
@@ -74,7 +76,10 @@ export function getAllRouter() {
 
         <Route path="/import_page" component={ImportPage} />
         <Route path="/import_keypair" component={ImportKeypair} />
-        <Route path="/protocol_page" component={ProtocolPage} />
+
+        <Route path="/address_book" component={AddressBook} />
+        <Route path="/currency_unit" component={CurrencyUnit} />
+        
         
       </Switch>
     </HashRouter>

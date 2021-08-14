@@ -3,17 +3,16 @@
     background: #ffffff;
     box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
     border-radius: 10px;
-    margin: 20px 30px;
+    margin: 20px 30px 0px;
 }
 .setting-config-item {
     display: flex; 
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 14px 18px 20px;
+    padding: 12px 14px 12px 20px;
 }
 .config-icon {
-    width: 28px;
     height: 28px;
 }
 .config-name {
@@ -45,4 +44,8 @@
 .config-arrow {
     width: 7.7px;
     height: 13.1px;
+}
+.setting-outter-container{
+    overflow-y: scroll;
+    height: 500px;
 }

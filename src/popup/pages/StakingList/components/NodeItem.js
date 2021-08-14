@@ -11,12 +11,16 @@ class NodeItem extends React.Component {
   }
   render() {
     let imgSource = this.props.checked ? select_account_ok : select_account_no
+    let nodeAddress = this.props.node.nodeAddress
     return (
       <div className={'node-container  click-cursor'} onClick={this.props.onClick}>
         <div className={'node-info'}>
-          <div className={'node-name'}>{this.props.node.nodeName ?? 'Block Producer'}</div>
-          <div className={'pubkey'}>{addressSlice(this.props.node.nodeAddress, 10)}</div>
-          <div className={'stake'}>{getLanguage('totalStake')}:<span>{this.props.node.totalStake} {cointypes.symbol}</span></div>
+          <div className={'node-name'}>{this.props.node.nodeName ?? addressSlice(nodeAddress,8)}</div>
+          <div className={'pubkey'}>{addressSlice(nodeAddress, 10)}</div>
+          <div className={"stake-list-bottom-con"}>
+            <div className={'stake'}>{getLanguage('totalStake')}: <span>{this.props.node.totalStake}</span></div>
+            <div className={'stake'}>{getLanguage('userCount')}: <span>{this.props.node.delegations}</span></div>
+          </div>
         </div>
         <div className={"option-img-container"}>
           <img className={"option-img"} src={imgSource} />

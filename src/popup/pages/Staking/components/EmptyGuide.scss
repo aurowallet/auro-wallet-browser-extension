@@ -12,20 +12,23 @@
     justify-content: flex-start;
     flex-direction: row;
   }
-  p.empty-desc {
-    font-family: HelveticaNeue;
-    font-size: $font-size-desc-small;
-    color: #333333;
+  .empty-desc {
     letter-spacing: 0;
     text-align: justify;
-    line-height: 14px;
+    line-height: 16px;
     margin-top: 1em;
     margin-bottom: 0;
     hyphens: auto; 
+    font-size: $font-size-desc;
+    color: #666666;
   }
   .empty-reminder-img {
     width: 20px;
     height: 20px;
     margin-right: 5px;
+  }
+  .tips-spical{
+    color: #7055FF;
+    cursor: pointer;
   }
 }

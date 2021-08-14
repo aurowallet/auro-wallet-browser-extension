@@ -21,6 +21,7 @@ export function getStakingList() {
         nodeAddress: node.public_key,
         nodeName: node.identity_name,
         totalStake: getAmountForUI(node.stake),
+        delegations: node.delegations,
       };
     })
     dispatch(updateStakingList({ stakingList }));

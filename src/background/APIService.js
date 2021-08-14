@@ -419,10 +419,22 @@ class APIService {
         return { account: newAccount }
     }
     deleteAccount = async (address, password) => {
-        let isCorrect = this.checkPassword(password)
-        if (isCorrect) {
-            let data = this.getStore().data
-            let accounts = data[0].accounts
+        let data = this.getStore().data
+        let accounts = data[0].accounts
+        let deleteAccount = accounts.filter((item, index) => {
+            return item.address === address
+        })
+        deleteAccount = deleteAccount.length>0 ?deleteAccount[0]:{}
+        let canDelete = false
+        if(deleteAccount && deleteAccount.type === ACCOUNT_TYPE.WALLET_WATCH){
+            canDelete = true
+        }else{
+            let isCorrect = this.checkPassword(password)
+            if(isCorrect){
+                canDelete = true
+            }
+        }
+        if(canDelete){
             accounts = accounts.filter((item, index) => {
                 return item.address !== address
             })
@@ -436,7 +448,7 @@ class APIService {
             this.memStore.updateState({ data: data, currentAccount })
             save({ keyringData: encryptData })
             return this.getAccountWithoutPrivate(currentAccount)
-        } else {
+        }else{
             return { error: 'passwordError', type: "local" }
         }
     }

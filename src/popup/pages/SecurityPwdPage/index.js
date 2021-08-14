@@ -8,6 +8,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
 import ConfirmModal from "../../component/ConfirmModal";
 import CustomView from "../../component/CustomView";
+import Loading from "../../component/Loading";
 import TextInput from "../../component/TextInput";
 import Toast from "../../component/Toast";
 class SecurityPwdPage extends React.Component {
@@ -99,6 +100,7 @@ class SecurityPwdPage extends React.Component {
     let jumpTime = 50
     switch (action) {
       case SEC_DELETE_ACCOUNT:
+        Loading.show()
         sendMsg({
           action: WALLET_CHANGE_DELETE_ACCOUNT,
           payload: {
@@ -107,6 +109,7 @@ class SecurityPwdPage extends React.Component {
           }
         },
           async (currentAccount) => {
+            Loading.hide()
             if (currentAccount.error) {
               if(currentAccount.type === "local"){
                 Toast.info(getLanguage(currentAccount.error))

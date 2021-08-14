@@ -3,7 +3,7 @@
   background: #FFFFFF;
   box-shadow: 0 12px 30px 0 rgba(37,34,117,0.08);
   border-radius: 10px;
-  padding: 10px 20px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: row;
   margin-top: 10px;
@@ -33,12 +33,18 @@
     font-size: $font-size-desc;
   }
   .pubkey,.stake {
-    color: #999999;
+    color: #666;
     span {
       color: #333;
     }
   }
   .node-name{
     font-size: $font-size-content;
+  }
+  .stake-list-bottom-con{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content:space-between;
   }
 }

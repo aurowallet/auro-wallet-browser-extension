@@ -1,20 +1,19 @@
 import React from "react";
-import { CircularProgressbar,buildStyles } from 'react-circular-progressbar';
+import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
-import doubleArrow from "../../../assets/images/double_arrow.png";
-import {fetchValidatorDetail, fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo} from "../../../background/api";
-import { getLanguage } from '../../../i18n';
-import {  getStakingList, updateBlockInfo, updateDaemonStatus,updateDelegationInfo ,updateValidatorDetail} from "../../../reducers/stakingReducer";
-import {addressSlice, getAmountDisplay, getAmountForUI} from '../../../utils/utils';
-import EmptyGuide from "./components/EmptyGuide";
-import reminder from "../../../assets/images/reminder.png";
-import "./index.scss";
 import goNext from '../../../assets/images/goNext.png';
-import Toast from "../../component/Toast";
-import {cointypes} from "../../../../config";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
+import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
+import { getCurrentLang, getLanguage } from '../../../i18n';
+import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateValidatorDetail } from "../../../reducers/stakingReducer";
+import { openTab } from "../../../utils/commonMsg";
+import { addressSlice, getAmountForUI } from '../../../utils/utils';
+import Clock from "../../component/Clock";
+import Toast from "../../component/Toast";
+import EmptyGuide from "./components/EmptyGuide";
+import "./index.scss";
 
 class Staking extends React.Component {
   constructor(props) {
@@ -42,53 +41,64 @@ class Staking extends React.Component {
    componentDidMount() {
     let { shouldRefresh } = this.props
     if (shouldRefresh) {
-      this.callSetState({
-        loading: true
-      },async ()=>{
-          Promise.all([
-            fetchDaemonStatus(),
-            fetchDelegationInfo(this.props.currentAccount.address),
-          ]).then(async (data)=>{
-            let daemonStatus = data[0].daemonStatus || {}
-            let account = data[1].account || {}
-            this.props.dispatch(updateDaemonStatus(daemonStatus));
-            this.props.dispatch(updateDelegationInfo(account));
-
-            if(daemonStatus.stateHash){
-              fetchBlockInfo(daemonStatus.stateHash).then((blockInfo)=>{
-                let block = blockInfo.block
-                if(block){
-                  this.props.dispatch(updateBlockInfo(block));
-                  this.fetchEpochData(daemonStatus,block)
-                }
-              });
-            }
-
-            let isSelf = this.props.currentAccount.address === account.delegate;
-            let validatorDetail = null;
-            if (!isSelf && account.delegate) {
-              await fetchValidatorDetail(account.delegate).then((validatorDetailResp)=>{
-                validatorDetail = validatorDetailResp?.validator;
-                this.props.dispatch(updateValidatorDetail(validatorDetail));
-                this.setDelegationInfo(account,validatorDetail)
-              }).catch(()=>{
-                this.setDelegationInfo(account, null)
-              })
-            }
-            this.callSetState({
-              loading: false
-            })
-          }).catch((err)=>{
-            Toast.info(getLanguage('nodeError'))
-            this.callSetState({
-              loading: false
-            });
-          })
-          this.props.dispatch(getStakingList());
-      });
+      this.fetchLoadingData()
     }else{
       this.fetchEpochData(this.props.daemonStatus,this.props.block)
       this.setDelegationInfo(this.props.account,this.props.validatorDetail)
+    }
+  }
+  fetchData=()=>{
+    Promise.all([
+      fetchDaemonStatus(),
+      fetchDelegationInfo(this.props.currentAccount.address),
+    ]).then(async (data)=>{
+      let daemonStatus = data[0].daemonStatus || {}
+      let account = data[1].account || {}
+      this.props.dispatch(updateDaemonStatus(daemonStatus));
+      this.props.dispatch(updateDelegationInfo(account));
+
+      if(daemonStatus.stateHash){
+        fetchBlockInfo(daemonStatus.stateHash).then((blockInfo)=>{
+          let block = blockInfo.block
+          if(block){
+            this.props.dispatch(updateBlockInfo(block));
+            this.fetchEpochData(daemonStatus,block)
+          }
+        });
+      }
+
+      let isSelf = this.props.currentAccount.address === account.delegate;
+      let validatorDetail = null;
+      if (!isSelf && account.delegate) {
+        await fetchValidatorDetail(account.delegate).then((validatorDetailResp)=>{
+          validatorDetail = validatorDetailResp?.validator;
+          this.props.dispatch(updateValidatorDetail(validatorDetail));
+          this.setDelegationInfo(account,validatorDetail)
+        }).catch(()=>{
+          this.setDelegationInfo(account, null)
+        })
+      }
+      this.callSetState({
+        loading: false
+      })
+    }).catch((err)=>{
+      Toast.info(getLanguage('nodeError'))
+      this.callSetState({
+        loading: false
+      });
+    })
+    this.props.dispatch(getStakingList());
+  }
+
+  fetchLoadingData=async(silent=false)=>{
+    if(silent){
+      this.fetchData()
+    }else{
+      this.callSetState({
+        loading: true
+      },()=>{
+        this.fetchData()
+      });
     }
   }
 
@@ -138,27 +148,40 @@ class Staking extends React.Component {
       </div>
     )
   }
+  onClickGuide=()=>{
+    const { staking_guide, staking_guide_cn } = this.props.cache
+    let lan = getCurrentLang()
+    let url = ""
+    if(lan === "en"){
+        url = staking_guide
+    }else if(lan === "zh_CN"){
+        url = staking_guide_cn
+    }
+    if(url){
+        openTab(url)
+    }
+}
   renderContent() {
     const { stakingList } = this.props;
     const { validatorDetail, delegatePublicKey } = this.state;
-    let nodeName = 'Block Producer';
+    let nodeName = '';
     if (delegatePublicKey) {
       let delegateNode = stakingList.find(({ nodeAddress }) => nodeAddress === delegatePublicKey);
-      if (delegateNode && delegateNode.nodeName) {
-        nodeName = delegateNode.nodeName;
+      if (delegateNode && delegateNode.nodeAddress) {
+        nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress);
       }
     }
     return (<div className={'staking-content'}>
       <div className={'module epoch-module'}>
         <div className={'title'}>{getLanguage('epochInfo')}</div>
         <div className={'panel'}>
-          <div className={'item'}>
+          <div className={'item itemFirst'}>
             <label>Epoch</label>
-            <span className={'value-highlight'}>{this.state.epoch}</span>
+            <span className={'value-highlight bold-text'}>{this.state.epoch}</span>
           </div>
           <div className={'item'}>
             <label>Slot</label>
-            <span className={'value'}><span className={'highlight'}>{this.state.slot}</span> / {this.state.slotsPerEpoch}</span>
+            <span className={'value'}><span className={'highlight bold-text'}>{this.state.slot}</span> / {this.state.slotsPerEpoch}</span>
           </div>
           <div className={'item multi'}>
             <label>{getLanguage('epochEndTime')}</label>
@@ -194,19 +217,26 @@ class Staking extends React.Component {
                       {
                         nodeName && <>
                           <div className={'delegation-label first'}>{getLanguage('blockProducerName')}</div>
-                          <div className={'delegation-value'}>{nodeName}</div>
+                          <div className={'delegation-value nodeName'}>{nodeName}</div>
                         </>
                       }
                       <div className={'delegation-label'}>{getLanguage('blockProducerAddress')}</div>
-                      <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
+                      <div className={'delegation-value'}>{addressSlice(delegatePublicKey,8)}</div>
                       {
                         validatorDetail && <>
                           <div className={'delegation-label'}>{getLanguage('producerTotalStake')}</div>
                           <div className={'delegation-value'}>{getAmountForUI(validatorDetail.stake)}</div>
+
+                          <div className={'delegation-label'}>{getLanguage('producerTotalAccount')}</div>
+                          <div className={'delegation-value'}>{validatorDetail.delegations}</div>
+
                           <div className={'delegation-label'}>{getLanguage('blocksProduced')}</div>
                           <div className={'delegation-value'}>{validatorDetail.blocks_created}</div>
                         </>
                       }
+                      <div className={"delegation-help click-cursor"} onClick={this.onClickGuide}>
+                        <p className={"delegation-help-text"}>{getLanguage('delegationHelp')}</p>
+                      </div>
                     </>
                 }
               </> : null
@@ -238,6 +268,7 @@ class Staking extends React.Component {
         {
           this.state.loading ? this.renderLoading() : this.renderContent()
         }
+        <Clock schemeEvent={() => { this.fetchLoadingData(true) }} />
       </div>
     );
   }
@@ -252,6 +283,7 @@ const mapStateToProps = (state) => ({
   block: state.staking.block,
   validatorDetail: state.staking.validatorDetail,
   account: state.staking.account,
+  cache: state.cache,
 });
 
 export default withRouter(

@@ -22,7 +22,8 @@ import {
   WALLET_IMPORT_LEDGER,
   WALLET_IMPORT_KEY_STORE,
   WALLET_GET_CREATE_MNEMONIC, WALLET_IMPORT_WATCH_MODE,
-  WALLET_RESET_LAST_ACTIVE_TIME
+  WALLET_RESET_LAST_ACTIVE_TIME,
+  WALLET_DELETE_WATCH_ACCOUNT
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -83,6 +84,11 @@ function internalMessageListener(message, sender, sendResponse) {
       break;
     case WALLET_CHANGE_DELETE_ACCOUNT:
       apiService.deleteAccount(payload.address, payload.password).then((account) => {
+        sendResponse(account);
+      })
+      break;
+    case WALLET_DELETE_WATCH_ACCOUNT:
+      apiService.deleteAccount(payload.address).then((account) => {
         sendResponse(account);
       })
       break;

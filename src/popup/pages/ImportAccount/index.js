@@ -9,6 +9,7 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import "./index.scss";
+import Loading from "../../component/Loading";
 class ImportAccount extends React.Component {
   constructor(props) {
     super(props);
@@ -48,6 +49,7 @@ class ImportAccount extends React.Component {
 
   };
   goToCreate = () => {
+    Loading.show()
     sendMsg({
       action: WALLET_IMPORT_HD_ACCOUNT,
       payload: {
@@ -55,6 +57,7 @@ class ImportAccount extends React.Component {
         accountName: this.state.accountName
       }
     }, (account) => {
+      Loading.hide()
       if (account.error) {
         if(account.type === "local"){
           Toast.info(getLanguage(account.error))

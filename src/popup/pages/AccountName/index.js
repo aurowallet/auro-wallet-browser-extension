@@ -4,7 +4,7 @@ import {WALLET_CREATE_HD_ACCOUNT, WALLET_IMPORT_LEDGER, WALLET_IMPORT_WATCH_MODE
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { nameLengthCheck } from "../../../utils/utils";
+import { nameLengthCheck, trimSpace } from "../../../utils/utils";
 import Button from "../../component/Button";
 import CustomInput from "../../component/CustomInput";
 import CustomView from "../../component/CustomView";
@@ -17,6 +17,7 @@ import cx from "classnames";
 import downArrow from "../../../assets/images/downArrow.png";
 import Toast from "../../component/Toast";
 import {addressValid} from "../../../utils/validator";
+import Loading from "../../component/Loading";
 
 class AccountName extends React.Component {
   constructor(props) {
@@ -80,18 +81,20 @@ class AccountName extends React.Component {
       })
   }
   onImportWatchModeAccount(accountName) {
-    if (!addressValid(this.state.watchModeAddress)) {
+    let address = trimSpace(this.state.watchModeAddress)
+    if (!addressValid(address)) {
       Toast.info(getLanguage('sendAddressError'))
       return
     }
+    Loading.show()
     sendMsg({
       payload: {
-        address: this.state.watchModeAddress,
+        address: address,
         accountName: accountName
       },
       action: WALLET_IMPORT_WATCH_MODE
     },(account)=>{
-      console.log('account', account)
+      Loading.hide()
       if (account.error) {
         if(account.type === "local"){
           Toast.info(getLanguage(account.error))
@@ -145,10 +148,12 @@ class AccountName extends React.Component {
     } else if (fromType === ACCOUNT_NAME_FROM_TYPE.WATCHMODE){
       this.onImportWatchModeAccount(accountText)
     }else {
+      Loading.show()
       sendMsg({
         action: WALLET_CREATE_HD_ACCOUNT,
         payload: { accountName: accountText }
       }, (account) => {
+        Loading.hide()
         this.props.updateCurrentAccount(account)
         this.props.history.replace({
           pathname: "/account_manage",

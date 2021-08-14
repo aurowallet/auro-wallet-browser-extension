@@ -24,6 +24,8 @@ import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import {ACCOUNT_TYPE} from "../../../constant/walletType";
 import {checkLedgerConnect, requestSignDelegation} from "../../../utils/ledger";
 import modalClose from "../../../assets/images/modalClose.png";
+import reminder from "../../../assets/images/reminder.png";
+import BigNumber from "bignumber.js";
 const FEE_RECOMMED_DEFAULT = 1
 const FEE_RECOMMED_CUSTOM = -1
 
@@ -224,7 +226,8 @@ class StakingTransfer extends React.Component {
   onClickFee = (item, index) => {
     this.callSetState({
       feeSelect: index,
-      fee: item.fee
+      fee: item.fee,
+      inputFee:""
     })
   }
   onFeeInput = (e) => {
@@ -292,7 +295,7 @@ class StakingTransfer extends React.Component {
     this.modal.current.setModalVisable(false)
   }
   renderConfirmModal = () => {
-    let title = this.state.confirmModalLoading ? "waitLedgerConfirm":"sendDetail"
+    let title = this.state.confirmModalLoading ? "waitLedgerConfirm":"stakeDetail"
     return (<TestModal
       ref={this.modal}
       touchToClose={true}
@@ -306,13 +309,14 @@ class StakingTransfer extends React.Component {
     let lastFee = this.state.inputFee ? this.state.inputFee : this.state.fee;
     let nonce = this.state.nonce;
     let memo = this.state.memo;
+    let nodeName =this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress,8)
     return (
       <div className={"confirm-modal-container"}>
-        {this.state.nodeName ? this.renderConfirmItem(getLanguage('stakeProvider'), this.state.nodeName, true) : null }
-        {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress)}
+        {this.renderConfirmItem(getLanguage('stakeProvider'), nodeName, true)}
+        {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress,true)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.props.currentAccount.address)}
-        {nonce && this.renderConfirmItem("Nonce", nonce)}
-        {memo && this.renderConfirmItem("Memo", memo)}
+        {memo && this.renderConfirmItem("Memo", memo,true)}
+        {nonce && this.renderConfirmItem("Nonce", nonce,true)}
         {this.renderConfirmItem(getLanguage('fee'), lastFee + " "+cointypes.symbol, true)}
         {this.renderConfirmButton()}
       </div>
@@ -321,10 +325,13 @@ class StakingTransfer extends React.Component {
   renderConfirmButton = () => {
     let currentAccount = this.props.currentAccount
     let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
+
+    let isWatchModde = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
+    let buttonText = isWatchModde ? getLanguage("watchMode"):getLanguage('confirm')
     return (
       <Button
         disabled={disabled}
-        content={getLanguage('confirm')}
+        content={buttonText}
         onClick={this.doTransfer}
       />
     )
@@ -336,10 +343,11 @@ class StakingTransfer extends React.Component {
         label={getLanguage('stakingProviderName')}
         onTextInput={this.onProviderChange} />
     } else {
+      let nodeName =this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress,8)
       return <div className={'select-node-con'}>
         <label className={'provider-title'}>{getLanguage('stakingProviderName')}</label>
         <div className={'selected-value click-cursor'} onClick={this.onChooseNode}>
-          <div className={'selected-value-text'}>{this.state.nodeName ?? addressSlice(this.state.nodeAddress)}</div>
+          <div className={'selected-value-text'}>{nodeName}</div>
           <div className={'arrow-con'}>
             <img src={arrow} />
           </div>
@@ -352,7 +360,7 @@ class StakingTransfer extends React.Component {
       <div className={"button-fee-container"}>
         <div className={"lable-container fee-style"}>
           <p className="pwd-lable-1">{getLanguage('fee')}</p>
-          <p className="pwd-lable-desc-1">{this.state.fee}</p>
+          <p className="pwd-lable-desc-1">{this.state.inputFee||this.state.fee}</p>
         </div>
         <div className={"fee-item-container"}>
           {this.state.feeList.map((item, index) => {
@@ -400,6 +408,7 @@ class StakingTransfer extends React.Component {
   renderAdvanceOption = () => {
     let netAccount = this.props.netAccount
     let nonceHolder = netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
+    let showFeeHigh = BigNumber(this.state.inputFee).gt(10) 
     return (
       <div className={
         cx({
@@ -412,6 +421,10 @@ class StakingTransfer extends React.Component {
           placeholder={getLanguage('feePlaceHolder')}
           onTextInput={this.onFeeInput}
         />
+        {showFeeHigh && <div className={"fee-too-high-container"}>
+          <img src={reminder} className={"fee-reminder"} />
+          <p className={"fee-too-high-content"}>{getLanguage('feeTooHigh')}</p>
+        </div>}
         <CustomInput
           value={this.state.nonce}
           placeholder={nonceHolder}

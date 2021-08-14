@@ -1,20 +1,21 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import modalClose from "../../../assets/images/modalClose.png";
 import networkDeleteHover from "../../../assets/images/networkDeleteHover.png";
 import select_account_no from "../../../assets/images/select_account_no.png";
 import select_account_ok from "../../../assets/images/select_account_ok.png";
+import { getNodeVersion } from "../../../background/api";
 import { saveLocal } from "../../../background/localStorage";
 import { NET_WORK_CONFIG } from "../../../constant/storageKey";
 import { getLanguage } from "../../../i18n";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, NET_CONFIG_DEFAULT, updateCurrentNetwork, updateNetConfig } from "../../../reducers/network";
-import { urlValid } from "../../../utils/utils";
+import { trimSpace, urlValid } from "../../../utils/utils";
 import Button, { BUTTON_TYPE_CANCEL } from "../../component/Button";
 import ConfirmModal from "../../component/ConfirmModal";
 import CustomInput from "../../component/CustomInput";
 import CustomView from "../../component/CustomView";
+import Loading from "../../component/Loading";
 import TestModal from "../../component/TestModal";
 import Toast from "../../component/Toast";
 import "./index.scss";
@@ -158,19 +159,34 @@ class NetworkPage extends React.Component {
         }
         return false
     }
-    onAddNetConfig = () => {
-        if (!urlValid(this.state.netUrl)) {
+    checkGqlHealth= async(url)=>{
+        let version = await getNodeVersion(url)
+        if(!version.error){
+            return true
+        }
+        return false
+    }
+    onAddNetConfig = async () => {
+        let urlInput = trimSpace(this.state.netUrl)
+        if (!urlValid(urlInput)) {
             Toast.info(getLanguage("urlError_1"))
             return
         }
-        if (this.isExist(this.state.netUrl)) {
+        if (this.isExist(urlInput)) {
             Toast.info(getLanguage('urlError_2'))
+            return
+        }
+        Loading.show()
+        let health = await this.checkGqlHealth(urlInput)
+        Loading.hide()
+        if(!health){
+            Toast.info(getLanguage('urlError_1'))
             return
         }
         setTimeout(() => {
             this.onCloseModal()
             let addItem = {
-                url: this.state.netUrl,
+                url: urlInput,
                 type: NET_CONFIG_ADD
             }
             let list = [...this.state.netConfigList];

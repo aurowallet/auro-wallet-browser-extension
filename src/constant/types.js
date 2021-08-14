@@ -147,3 +147,9 @@ export const SET_LOCK = "SET_LOCK"
  * @type {string}
  */
 export const LEDGER_CONNECTED_SUCCESSFULLY = 'LEDGER_CONNECTED_SUCCESSFULLY';
+
+
+/**
+ * 删除观察账户
+ */
+ export const WALLET_DELETE_WATCH_ACCOUNT = "WALLET_DELETE_WATCH_ACCOUNT";

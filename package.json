@@ -1,6 +1,6 @@
 {
   "name": "auro-wallet",
-  "version": "1.0.5",
+  "version": "1.0.8",
   "private": true,
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "7.12.1",

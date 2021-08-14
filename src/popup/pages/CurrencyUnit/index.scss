@@ -1,0 +1,33 @@
+@import "../../common.scss";
+
+.lang-option-container {
+    padding: 0 30px;
+}
+
+.lang-option-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    background: #ffffff;
+    box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
+    border-radius: 10px;
+    height: 80px;
+    padding: 0px 20px;
+    margin-bottom: 10px;
+    justify-content: space-between;
+}
+.lang-option-title {
+    margin: 0;
+    font-size: $font-size-content;
+    color: #01000d;
+    line-height: 20px;
+}
+.lang-option-img {
+    width: 16px;
+    height: 16px;
+}
+
+.lang-option-img-container {
+    padding: 10px;
+}

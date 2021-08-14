@@ -9,12 +9,21 @@ import HomePage from './Main';
 import Welcome from './Welcome';
 import extension from 'extensionizer'
 import { FROM_BACK_TO_RECORD, SET_LOCK } from '../../constant/types';
+import { getBaseInfo } from '../../background/api';
+import { updateExtensionBaseInfo } from '../../reducers/cache';
 class MainRouter extends React.Component {
 
   async componentDidMount() {
     let lan = languageInit()
     this.props.setLanguage(lan)
-    this.startListener()
+    this.startListener() 
+    this.initBaseInfo()
+  }
+  initBaseInfo=async ()=>{
+    let baseInfo = await getBaseInfo().catch(err => err)
+    if(baseInfo.changelog){
+      this.props.updateExtensionBaseInfo(baseInfo)
+    }
   }
   startListener = () => {
     extension.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -25,7 +34,6 @@ class MainRouter extends React.Component {
           pathname: "/",
         });
       }
-      sendResponse();
       return true;
     });
   }
@@ -60,7 +68,10 @@ function mapDispatchToProps(dispatch) {
     },
     updateEntryWitchRoute: (page) => {
       dispatch(updateEntryWitchRoute(page))
-    }
+    },
+    updateExtensionBaseInfo: (data) => {
+      dispatch(updateExtensionBaseInfo(data))
+    },
   }
 }
 

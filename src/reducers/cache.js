@@ -27,9 +27,49 @@ const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
 
 
 /**
- * 更新隐私协议页面来源
+ * 更新一些插件的基础信息
  */
- const UPDATE_PROTOCOL_FROM = "UPDATE_PROTOCOL_FROM"
+ const UPDATE_EXTENSION_BASE_INFO = "UPDATE_EXTENSION_BASE_INFO"
+
+
+ const UPDATE_ADDRESS_DETAIL = "UPDATE_ADDRESS_DETAIL"
+
+ const UPDATE_ADDRESS_BOOK_FROM = "UPDATE_ADDRESS_BOOK_FROM"
+
+
+ const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE"
+
+ export function updateCurrentPrice(price) {
+    return {
+        type: UPDATE_CURRENT_PRICE,
+        price
+    };
+}
+
+
+ export function updateAddressDetail(addressDetail) {
+    return {
+        type: UPDATE_ADDRESS_DETAIL,
+        addressDetail
+    };
+}
+
+export function updateAddressBookFrom(from) {
+    return {
+        type: UPDATE_ADDRESS_BOOK_FROM,
+        from
+    }
+}
+/**
+ * 更改钱包名称
+ */
+ export function updateExtensionBaseInfo(data) {
+    return {
+        type: UPDATE_EXTENSION_BASE_INFO,
+        data
+    };
+}
+
 
 /**
  * 更改钱包名称
@@ -71,19 +111,28 @@ export function updateAccoutType(fromType) {
     };
 }
 
-export function updateProtocolFrom(protocolFromRoute) {
-    return {
-        type: UPDATE_PROTOCOL_FROM,
-        protocolFromRoute
-    };
-}
 const initState = {
     fromType: '',
     accountCount: "",
     accountInfo: {},
     welcomeNextRoute: "",
     homeBottomType:"BOTTOM_TYPE_LOADING",
-    protocolFromRoute:""
+
+    changelog: "",
+    changelog_app: "",
+    followus: [],
+    gitReponame: "",
+    gitReponame_app: "",
+    privacy_policy: "",
+    privacy_policy_cn: "",
+    staking_guide: "",
+    staking_guide_cn: "",
+    terms_and_contions: "",
+    terms_and_contions_cn: "",
+    
+    addressDetail: {},
+    addressBookFrom: "",
+    currentPrice:""
 };
 
 const cacheReducer = (state = initState, action) => {
@@ -117,11 +166,38 @@ const cacheReducer = (state = initState, action) => {
                 ...state,
                 fromType: action.fromType,
             }
-        case UPDATE_PROTOCOL_FROM:
-            return{
+        case UPDATE_EXTENSION_BASE_INFO:
+            return {
                 ...state,
-                protocolFromRoute: action.protocolFromRoute,
+                
+                changelog: action.data.changelog,
+                changelog_app: action.data.changelog_app,
+                followus: action.data.followus,
+                gitReponame: action.data.gitReponame,
+                gitReponame_app: action.data.gitReponame_app,
+                privacy_policy: action.data.privacy_policy,
+                privacy_policy_cn: action.data.privacy_policy_cn,
+                staking_guide: action.data.staking_guide,
+                staking_guide_cn: action.data.staking_guide_cn,
+                terms_and_contions: action.data.terms_and_contions,
+                terms_and_contions_cn: action.data.terms_and_contions_cn,
             }
+        case UPDATE_ADDRESS_DETAIL:
+            return {
+                ...state,
+                addressDetail: action.addressDetail
+            };
+        case UPDATE_ADDRESS_BOOK_FROM:
+                return {
+                    ...state,
+                    addressBookFrom: action.from
+                };
+                
+        case UPDATE_CURRENT_PRICE:
+            return {
+                ...state,
+                currentPrice: action.price
+            };
         default:
             return state;
     }

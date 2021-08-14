@@ -5,13 +5,14 @@ import telegram from "../../../assets/images/telegram.png";
 import twitter from "../../../assets/images/twitter.png";
 import website from "../../../assets/images/website.png";
 import wechat from "../../../assets/images/wechat.png";
-import { getAboutInfo } from "../../../background/api";
+import { getBaseInfo } from "../../../background/api";
 import { VERSION_CONFIG } from "../../../../config";
 import { getLanguage } from "../../../i18n";
 import { openTab } from "../../../utils/commonMsg";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import "./index.scss";
+import { updateExtensionBaseInfo } from "../../../reducers/cache";
 
 
 const followSource = {
@@ -31,7 +32,7 @@ class AboutUs extends React.Component {
     this.isUnMounted = false;
   }
   componentDidMount() {
-    this.fetchAboutInfo()
+    this.fetchBaseInfo()
   }
   componentWillUnmount(){
     this.isUnMounted = true;
@@ -45,15 +46,16 @@ class AboutUs extends React.Component {
       })
     }
   }
-  fetchAboutInfo = async () => {
-    let aboutInfo = await getAboutInfo().catch(err => err)
-    if (aboutInfo.error) {
-      Toast.info(aboutInfo.error)
+  fetchBaseInfo = async () => {
+    let baseInfo = await getBaseInfo().catch(err => err)
+    if (baseInfo.error) {
+      Toast.info(baseInfo.error)
       return
     }
-    let changelog = aboutInfo.changelog ? aboutInfo.changelog : ""
-    let gitReponame = aboutInfo.gitReponame ? aboutInfo.gitReponame : ""
-    let followus = aboutInfo.followus && aboutInfo.followus.length > 0 ? aboutInfo.followus : []
+    this.props.updateExtensionBaseInfo(baseInfo)
+    let changelog = baseInfo.changelog ? baseInfo.changelog : ""
+    let gitReponame = baseInfo.gitReponame ? baseInfo.gitReponame : ""
+    let followus = baseInfo.followus && baseInfo.followus.length > 0 ? baseInfo.followus : []
     followus = followus.map((item, index) => {
       item.source = followSource[item.name]
       return item
@@ -127,7 +129,11 @@ class AboutUs extends React.Component {
 const mapStateToProps = (state) => ({});
 
 function mapDispatchToProps(dispatch) {
-  return {};
+  return {
+    updateExtensionBaseInfo: (data) => {
+      dispatch(updateExtensionBaseInfo(data))
+    },
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AboutUs);

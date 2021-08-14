@@ -6,4 +6,8 @@ export const ACCOUNT_NAME_FROM_TYPE = {
     WATCHMODE:"WATCHMODE"
 }
 
-
+export const CURRENCY_UNIT = [
+    { key: 'usd', value: 'USD',symbol:"$" },
+    { key: 'cny', value: 'CNY',symbol:"￥" },
+    { key: 'rub', value: 'RUB' ,symbol:"₽"},
+]

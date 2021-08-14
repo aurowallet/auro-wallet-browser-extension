@@ -21,6 +21,7 @@ import { addressSlice, amountDecimals } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import "./index.scss";
 import Toast from "../../component/Toast";
+import Loading from "../../component/Loading";
 
 class AccountManagePage extends React.Component {
   constructor(props) {
@@ -155,10 +156,12 @@ class AccountManagePage extends React.Component {
   }
   onClickAccount = (item) => {
     if (item.address !== this.state.currentAddress) {
+      Loading.show()
       sendMsg({
         action: WALLET_CHANGE_CURRENT_ACCOUNT,
         payload: item.address
       }, (account) => {
+        Loading.hide()
         if (account.accountList && account.accountList.length > 0) {
           this.props.updateCurrentAccount(account.currentAccount)
           let list = this.setListFilter(account.accountList)

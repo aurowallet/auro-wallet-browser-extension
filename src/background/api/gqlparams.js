@@ -288,3 +288,14 @@ export function getDelegationInfoBody(){
     }
   `
 }
+
+/**
+ * 返回节点版本
+ */
+ export function getNodeVersionBody() {
+  return `
+  query nodeVersion {
+    version
+  }
+  `
+}
