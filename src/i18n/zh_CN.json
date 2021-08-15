@@ -202,7 +202,7 @@
   "watchLabel": "观察",
   "importEntry": "导入",
   "exportCSV": "导出交易记录",
-  "ledgerUserTip":"提示: 如果想要连接Ledger，需要先[创建钱包]或[恢复钱包]。",
+  "ledgerUserTip":"提示: 若要导入私钥/Keystore或连接Ledger，需先[创建钱包]或者[恢复钱包]",
   
   "txSuccess": "完成",
   "watchMode":"观察模式",

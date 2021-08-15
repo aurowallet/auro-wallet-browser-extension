@@ -168,7 +168,7 @@ class Staking extends React.Component {
     if (delegatePublicKey) {
       let delegateNode = stakingList.find(({ nodeAddress }) => nodeAddress === delegatePublicKey);
       if (delegateNode && delegateNode.nodeAddress) {
-        nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress);
+        nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress,8);
       }
     }
     return (<div className={'staking-content'}>
@@ -221,7 +221,7 @@ class Staking extends React.Component {
                         </>
                       }
                       <div className={'delegation-label'}>{getLanguage('blockProducerAddress')}</div>
-                      <div className={'delegation-value'}>{addressSlice(delegatePublicKey,8)}</div>
+                      <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
                       {
                         validatorDetail && <>
                           <div className={'delegation-label'}>{getLanguage('producerTotalStake')}</div>

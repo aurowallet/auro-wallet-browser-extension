@@ -201,7 +201,7 @@
     "watchLabel": "Watch",
     "importEntry": "Import",
     "exportCSV": "Export Transaction History",
-    "ledgerUserTip":"Tips: If you want to connect Ledger, you need to [Create Wallet] or [Restore Wallet] first.",
+    "ledgerUserTip":"Tips: If you want to import private key/keystore or connect Ledger, need to [Create Wallet] or [Restore Wallet] first",
     
     "txSuccess": "APPLIED",
     "watchMode":"Watch Mode",
