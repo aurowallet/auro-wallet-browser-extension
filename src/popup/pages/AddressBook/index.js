@@ -153,7 +153,6 @@ class AddressBook extends React.Component {
                 <Button
                     content={getLanguage("onAdd")}
                     onClick={this.goToAdd}
-                    propsClass={"address-common-btn"}
                 />
             </div>)
     }
