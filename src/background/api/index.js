@@ -64,7 +64,7 @@ function _getGQLVariables(payload, signature, includeAmount = true) {
     variables.scalar = signature.scalar
   }
   for (let pro in variables) {
-    variables[pro] = String(variables[pro] || "")
+    variables[pro] = String(typeof variables[pro] === "undefined" ?  "" : variables[pro])
   }
   return variables
 }
