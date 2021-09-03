@@ -9,7 +9,7 @@ import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorD
 import { getCurrentLang, getLanguage } from '../../../i18n';
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, getAmountForUI } from '../../../utils/utils';
+import { addressSlice, copyText, getAmountForUI } from '../../../utils/utils';
 import Clock from "../../component/Clock";
 import Toast from "../../component/Toast";
 import EmptyGuide from "./components/EmptyGuide";
@@ -161,6 +161,11 @@ class Staking extends React.Component {
         openTab(url)
     }
 }
+  onCopy=(delegatePublicKey)=>{
+    copyText(delegatePublicKey).then(() => {
+      Toast.info(getLanguage('copySuccess'))
+    })
+  }
   renderContent() {
     const { stakingList } = this.props;
     const { validatorDetail, delegatePublicKey } = this.state;
@@ -220,8 +225,10 @@ class Staking extends React.Component {
                           <div className={'delegation-value nodeName'}>{nodeName}</div>
                         </>
                       }
-                      <div className={'delegation-label'}>{getLanguage('blockProducerAddress')}</div>
-                      <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
+                      <div className={"deletaion-AddressContainer"} onClick={()=>this.onCopy(delegatePublicKey)}>
+                        <div className={'delegation-label'}>{getLanguage('blockProducerAddress')}</div>
+                        <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
+                      </div>
                       {
                         validatorDetail && <>
                           <div className={'delegation-label'}>{getLanguage('producerTotalStake')}</div>
