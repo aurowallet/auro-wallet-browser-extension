@@ -308,6 +308,7 @@ class Wallet extends React.Component {
     let statusText = getLanguage(status && status.toUpperCase())
     let imgSource = this.getTxSource(item)
     let statusColor = this.getStatusColor(item)
+    let timeText = status === STATUS.TX_STATUS_PENDING ? "Nonce "+item.nonce : item.time
     return (
       <div key={index + ""} className={"tx-item-container click-cursor"} onClick={() => { this.onClickItem(item) }}>
         <div className={"tx-item-left"}>
@@ -322,7 +323,7 @@ class Wallet extends React.Component {
             })}>{amount}</p>
           </div>
           <div className={'tx-bottom-container'}>
-            <p className="tx-item-time">{item.time}</p>
+            <p className="tx-item-time">{timeText}</p>
             <p className={cx({
               "tx-item-status": true,
               [statusColor]: true
