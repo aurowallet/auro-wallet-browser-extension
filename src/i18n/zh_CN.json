@@ -138,7 +138,6 @@
   "emptyDelegateDesc2": "委托生效时间和奖励机制请访问: [[委托教程]]",
   "changeNode": "更改",
   "stakingProviderName": "出块节点",
-  "stakingProviderAddress": "出块节点地址",
   "goStake": "前往委托",
   "epochEndTime": "当前 Epoch 剩余时间",
   "selectNode": "请选择委托节点",
