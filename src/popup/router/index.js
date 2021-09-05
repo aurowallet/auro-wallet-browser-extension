@@ -35,6 +35,8 @@ import ImportKeypair from '../pages/ImportKeypair';
 import AddressBook from '../pages/AddressBook';
 import CurrencyUnit from '../pages/CurrencyUnit';
 
+import Welcome from '../pages/Welcome';
+
 
 export function getAllRouter() {
   return (
@@ -79,6 +81,7 @@ export function getAllRouter() {
 
         <Route path="/address_book" component={AddressBook} />
         <Route path="/currency_unit" component={CurrencyUnit} />
+        <Route path="/welcome_page" component={Welcome} />
         
         
       </Switch>

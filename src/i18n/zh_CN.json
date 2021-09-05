@@ -230,5 +230,13 @@
   "repeatTip":"请勿重复添加地址",
   "addSuccess":"添加成功",
   "addressName":"名称",
-  "address":"地址"
+  "address":"地址",
+  "reset_tip_1": "确定要重置钱包吗？",
+  "reset_tip_2": "重置后现有钱包的数据将会全部丢失，只能使用助记词恢复，请确保你已经备份好助记词后再重置钱包。",
+  "confirmReset":"确认重置",
+  "cancelReset":"取消重置",
+  "confirm_reset_tip":"请输入\"删除\"确定重置钱包",
+
+  "deleteTag":"删除",
+  "resetWallet":"重置钱包"
 }

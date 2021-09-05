@@ -6,7 +6,7 @@ import { withRouter } from "react-router-dom";
 import goNext from '../../../assets/images/goNext.png';
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
-import { getCurrentLang, getLanguage } from '../../../i18n';
+import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from '../../../i18n';
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
 import { addressSlice, copyText, getAmountForUI } from '../../../utils/utils';
@@ -152,9 +152,9 @@ class Staking extends React.Component {
     const { staking_guide, staking_guide_cn } = this.props.cache
     let lan = getCurrentLang()
     let url = ""
-    if(lan === "en"){
+    if(lan === LANG_SUPPORT_LIST.EN){
         url = staking_guide
-    }else if(lan === "zh_CN"){
+    }else if(lan === LANG_SUPPORT_LIST.ZH_CN){
         url = staking_guide_cn
     }
     if(url){

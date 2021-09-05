@@ -6,6 +6,12 @@ import { LANGUAGE_CONFIG } from "../constant/storageKey";
 import en from "./en.json";
 import zh from "./zh_CN.json";
 
+
+export const LANG_SUPPORT_LIST = {
+  "ZH_CN":"zh_CN",
+  "EN":"en"
+}
+
 const resources = {
   en: {
     translation: {
@@ -28,8 +34,8 @@ export function getCurrentLang() {
   return i18n.language
 }
 export const languageOption = [
-  { key: 'en', value: 'English' },
-  { key: 'zh_CN', value: '中文' },
+  { key: LANG_SUPPORT_LIST.EN, value: 'English' },
+  { key: LANG_SUPPORT_LIST.ZH_CN, value: '中文' },
 ]
 export var default_language = DEFAULT_LANGUAGE
 
@@ -51,7 +57,7 @@ export function languageInit() {
     default_language = res
   } else {
     const language = navigator.language || navigator.userLanguage;
-    res = language == 'zh_CN' ? 'zh_CN' : 'en';
+    res = language == LANG_SUPPORT_LIST.ZH_CN ? LANG_SUPPORT_LIST.ZH_CN : LANG_SUPPORT_LIST.EN;
     changeLanguage(res)
     default_language = res
     saveLocal(LANGUAGE_CONFIG, res)

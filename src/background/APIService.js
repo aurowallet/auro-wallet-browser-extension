@@ -21,17 +21,24 @@ const STATUS = {
 const default_account_name = "Account 1"
 class APIService {
     constructor() {
-        this.memStore = new ObservableStore({
-            isUnlocked: false,
-            data: '',
-            password: '',
-            currentAccount: {},
-            mne: ""
-        })
+        this.memStore = new ObservableStore(this.initLockedState())
     }
+    initLockedState=()=>{
+        return {
+          isUnlocked: false,
+          data: '',
+          password: '',
+          currentAccount: {},
+          mne: ""
+        };
+      }
     getStore = () => {
         return this.memStore.getState()
     };
+    resetWallet=()=>{
+        this.memStore.putState(this.initLockedState())
+        return
+      }
     getCreateMnemonic = (isNewMne) => {
         if (isNewMne) {
             let mnemonic = generateMne()
@@ -129,11 +136,7 @@ class APIService {
     }
     setUnlockedStatus(status) {
         if (!status) {
-            this.memStore.updateState({
-                data: '',
-                currentAccount: {},
-                password: ""
-            })
+            this.memStore.updateState(this.initLockedState())
             extension.runtime.sendMessage({
                 type: FROM_BACK_TO_RECORD,
                 action: SET_LOCK,

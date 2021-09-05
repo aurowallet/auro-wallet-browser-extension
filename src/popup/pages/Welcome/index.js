@@ -13,7 +13,8 @@ import {
   default_language,
   getCurrentLang,
   getLanguage,
-  languageOption
+  languageOption,
+  LANG_SUPPORT_LIST
 } from "../../../i18n";
 import { setLanguage } from "../../../reducers/appReducer";
 import { setWelcomeNextRoute } from "../../../reducers/cache";
@@ -86,9 +87,9 @@ class Welcome extends React.Component {
     const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = this.props.cache
     let lan = getCurrentLang()
     let url = ""
-    if (lan === "en") {
+    if (lan === LANG_SUPPORT_LIST.EN) {
       url = item.specialIndex == 0 ? terms_and_contions : privacy_policy
-    } else if (lan === "zh_CN") {
+    } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
       url = item.specialIndex == 0 ? terms_and_contions_cn : privacy_policy_cn
     }
     if (url) {

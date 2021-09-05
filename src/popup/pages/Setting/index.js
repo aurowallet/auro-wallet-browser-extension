@@ -10,7 +10,7 @@ import userPrivacy from "../../../assets/images/userPrivacy.svg";
 import currency from "../../../assets/images/currency.svg";
 import addressBook from "../../../assets/images/addressBook.svg";
 
-import { getCurrentLang, getLanguage } from "../../../i18n";
+import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from "../../../i18n";
 import "./index.scss";
 import { openTab } from "../../../utils/commonMsg";
 import { updateAddressBookFrom } from "../../../reducers/cache";
@@ -70,9 +70,9 @@ class Setting extends React.Component {
         const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = this.props.cache
         let lan = getCurrentLang()
         let url = ""
-        if (lan === "en") {
+        if (lan === LANG_SUPPORT_LIST.EN) {
           url = type == "terms" ? terms_and_contions : privacy_policy
-        } else if (lan === "zh_CN") {
+        } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
           url = type == "terms" ? terms_and_contions_cn : privacy_policy_cn
         }
         if (url) {

@@ -23,7 +23,8 @@ import {
   WALLET_IMPORT_KEY_STORE,
   WALLET_GET_CREATE_MNEMONIC, WALLET_IMPORT_WATCH_MODE,
   WALLET_RESET_LAST_ACTIVE_TIME,
-  WALLET_DELETE_WATCH_ACCOUNT
+  WALLET_DELETE_WATCH_ACCOUNT,
+  RESET_WALLET
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -149,6 +150,9 @@ function internalMessageListener(message, sender, sendResponse) {
     case WALLET_RESET_LAST_ACTIVE_TIME:
       sendResponse(apiService.setLastActiveTime())
       break
+    case RESET_WALLET:
+        sendResponse(apiService.resetWallet())
+        break
     default:
       break;
   }

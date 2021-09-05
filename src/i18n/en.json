@@ -230,5 +230,14 @@
     "repeatTip":"Do not add the address repeatedly",
     "addSuccess":"Successful",
     "addressName":"Name",
-    "address":"Address"
+    "address":"Address",
+    "reset_tip_1": "Are you sure you want to reset your wallet?",
+    "reset_tip_2": "After reset, all the data of the existing wallet will be lost, You can only use the mnemonic to restore. Please make sure that you have backed up the mnemonic before reset the wallet.",
+    "confirm_reset_tip":"Please enter 'delete' to confirm reset the wallet",
+
+    "confirmReset":"Confirm Reset",
+    "cancelReset":"Cancel Reset",
+
+    "deleteTag":"delete",
+    "resetWallet":"Reset Wallet"
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import select_account_no from "../../../assets/images/select_account_no.png";
 import select_account_ok from "../../../assets/images/select_account_ok.png";
-import { changeLanguage, getLanguage, languageOption } from "../../../i18n";
+import { changeLanguage, getLanguage, languageOption, LANG_SUPPORT_LIST } from "../../../i18n";
 import { setLanguage } from "../../../reducers/appReducer";
 import CustomView from "../../component/CustomView";
 import "./index.scss"; 
@@ -11,7 +11,7 @@ class LanguageManagementPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: "zh_CN"
+      value: LANG_SUPPORT_LIST.ZH_CN
     };
     this.language = languageOption
   }

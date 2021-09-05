@@ -1,5 +1,5 @@
 import React from "react";
-import { getCurrentLang, getLanguage } from '../../../../i18n';
+import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from '../../../../i18n';
 import "./EmptyGuide.scss";
 import reminder from "../../../../assets/images/reminder.png";
 import { specialSplit } from "../../../../utils/utils";
@@ -14,9 +14,9 @@ class EmptyGuide extends React.Component {
         const { staking_guide, staking_guide_cn } = this.props.cache
         let lan = getCurrentLang()
         let url = ""
-        if(lan === "en"){
+        if(lan === LANG_SUPPORT_LIST.EN){
             url = staking_guide
-        }else if(lan === "zh_CN"){
+        }else if(lan === LANG_SUPPORT_LIST.ZH_CN){
             url = staking_guide_cn
         }
         if(url){

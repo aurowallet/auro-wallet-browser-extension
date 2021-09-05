@@ -17,10 +17,11 @@ export default class ConfirmModalContainer extends Component {
         this.onCancel = () => { }
         this.onConfirm = () => { }
         this.touchToClose = false
+        this.tipImgSrc = ""
     }
 
     show = (params) => {
-        let { title, content, onCancel, onConfirm, cancelText, confirmText, touchToClose,elementContent } = params
+        let { title, content, onCancel, onConfirm, cancelText, confirmText, touchToClose, elementContent,tipImgSrc } = params
         this.title = title
         this.content = content
         this.cancelText = cancelText
@@ -29,7 +30,7 @@ export default class ConfirmModalContainer extends Component {
         this.onCancel = onCancel
         this.onConfirm = onConfirm
         this.touchToClose = touchToClose
-
+        this.tipImgSrc = tipImgSrc
         this.elementContent = elementContent
         this.setState({ showModal: true })
     }
@@ -82,6 +83,9 @@ export default class ConfirmModalContainer extends Component {
                 })
             }>
                 <div className={"confirm-content-container"}>
+                {this.tipImgSrc&& <div className={"confirm-img-container"}>
+                    <img className={"confirm-img"} src={this.tipImgSrc} />
+                </div>}
                     <p className={"confirm-title"}>{this.title}</p>
                     {this.renderModalContent()}
                     <div className={
