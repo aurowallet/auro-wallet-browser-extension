@@ -36,16 +36,55 @@ function getLocalNetConfig(store) {
     store.dispatch(updateNetConfig(JSON.parse(localNetConfig)))
   }
 }
+/**
+ * 
+ * @param {*} selectKey 旧版本存储为 array ， 新版本改为string
+ * @param {*} newConfigList 
+ * @returns 
+ */
+function compareConfig(oldConfig,newConfigList){
+  let isNewListSelect = false
+  let selectKey = ""
+  if(Array.isArray(oldConfig)){
+    for (let index = 0; index < oldConfig.length; index++) {
+      const config = oldConfig[index];
+      if(config.isSelect){
+        selectKey = config.key
+        break
+      }
+    }
+  }else{
+    selectKey = oldConfig
+  }
 
-function getLocalCurrencyConfig(store) {
+  if(selectKey){
+    for (let index = 0; index < newConfigList.length; index++) {
+      let newConfig = newConfigList[index];
+      if(newConfig.key === selectKey){
+        newConfig.isSelect = true
+        isNewListSelect = true
+        saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(newConfig.key))
+        break
+      }
+    }
+  }
+  if(!isNewListSelect){
+    newConfigList[0].isSelect = true
+    saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(newConfigList[0].key))
+  }
+  return newConfigList
+}
+function getLocalCurrencyConfig(store) { 
   let localCurrencyConfig = getLocal(CURRENCY_UNIT_CONFIG)
   if (!localCurrencyConfig) {
     let currencyList = CURRENCY_UNIT
     currencyList[0].isSelect = true
     store.dispatch(updateCurrencyConfig(currencyList))
-    saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList))
+    saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList[0].key))
   }else{
-    store.dispatch(updateCurrencyConfig(JSON.parse(localCurrencyConfig)))
+    let oldConfigKey= JSON.parse(localCurrencyConfig)
+    let list = compareConfig(oldConfigKey,CURRENCY_UNIT)
+    store.dispatch(updateCurrencyConfig(list))
   }
 }
 

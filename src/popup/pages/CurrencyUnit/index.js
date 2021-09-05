@@ -31,7 +31,7 @@ class CurrencyUnit extends React.Component {
       })
       this.props.updateCurrencyConfig(list);
       this.props.updateShouldRequest(true);
-      saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(list))
+      saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(clickItem.key))
     }
   }
   renderOptionItem = (item, index) => {
