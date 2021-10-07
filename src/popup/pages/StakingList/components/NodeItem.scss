@@ -29,7 +29,10 @@
     font-size: $font-size-desc;
     margin: 4px 0px;
   }
-  .stake {
+  .stake-left {
+    font-size: $font-size-desc;
+  }
+  .stake-right {
     font-size: $font-size-desc;
   }
   .pubkey,.stake {
@@ -46,5 +49,6 @@
     flex-direction: row;
     align-items: center;
     justify-content:space-between;
+    width: 100%;
   }
 }

@@ -439,7 +439,7 @@ class SendPage extends React.Component {
     return (
       <div className={"confirm-modal-container"}>
         {this.renderConfirmItem(getLanguage('amount'), this.state.amount + " " + cointypes.symbol, true)}
-        {this.renderConfirmItem(getLanguage('toAddress'), this.state.toAddress,true)}
+        {this.renderConfirmItem(getLanguage('toAddress'), this.state.toAddress)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.state.fromAddress)}
         {memo && this.renderConfirmItem("Memo", memo,true)}
         {nonce && this.renderConfirmItem("Nonce", nonce,true)}

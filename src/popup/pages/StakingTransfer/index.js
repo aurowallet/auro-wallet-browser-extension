@@ -313,7 +313,7 @@ class StakingTransfer extends React.Component {
     return (
       <div className={"confirm-modal-container"}>
         {this.renderConfirmItem(getLanguage('stakeProvider'), nodeName, true)}
-        {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress,true)}
+        {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.props.currentAccount.address)}
         {memo && this.renderConfirmItem("Memo", memo,true)}
         {nonce && this.renderConfirmItem("Nonce", nonce,true)}

@@ -18,8 +18,8 @@ class NodeItem extends React.Component {
           <div className={'node-name'}>{this.props.node.nodeName ?? addressSlice(nodeAddress,8)}</div>
           <div className={'pubkey'}>{addressSlice(nodeAddress, 10)}</div>
           <div className={"stake-list-bottom-con"}>
-            <div className={'stake'}>{getLanguage('totalStake')}: <span>{this.props.node.totalStake}</span></div>
-            <div className={'stake'}>{getLanguage('userCount')}: <span>{this.props.node.delegations}</span></div>
+            <div className={'stake-left'}>{getLanguage('totalStake')}: <span>{this.props.node.totalStake}</span></div>
+            <div className={'stake-right'}>{getLanguage('userCount')}: <span>{this.props.node.delegations}</span></div>
           </div>
         </div>
         <div className={"option-img-container"}>
