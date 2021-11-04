@@ -88,7 +88,7 @@
   "privateKeyTip_3": "Auro钱包不承担因用户遗失，损毁或者其它原因导致备份的私钥丢失页造成的资产损失",
   "over": "完成",
   "security": "安全",
-  "network": "节点",
+  "network": "网络",
   "language": "语言",
   "about": "关于我们",
   "restoreSeed": "备份助记词",
@@ -97,7 +97,7 @@
   "inputNewPwd": "请输入新密码",
   "inputNewPwdRepeat": "请重复输入新密码",
   "pwdChangeSuccess": "密码修改成功",
-  "networkConfig": "节点设置",
+  "networkConfig": "网络",
   "defaultNetwork": "默认节点",
   "customNetwork": "自定义节点",
   "addNetWork": "添加节点",
@@ -238,5 +238,7 @@
   "confirm_reset_tip":"请输入\"删除\"确定重置钱包",
 
   "deleteTag":"删除",
-  "resetWallet":"重置钱包"
+  "resetWallet":"重置钱包",
+  "watchTip":"为了提供更加良好的Dapp体验，Auro 钱包在之后的版本中将不提供【观察钱包】功能，请前往对<a>账户管理</a>页面将已添加的【观察钱包】删除。",
+  "noSupportAccount":"不再支持的账户"
 }

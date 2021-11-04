@@ -12,12 +12,6 @@
 p {
   margin: 0;
 }
-.account-address-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 2px;
-}
 .account-name {
   margin: 0;
   font-size: $font-size-content;
@@ -43,14 +37,6 @@ p {
 }
 .stake-status-undelete {
   background: rgba(177, 179, 189, 1);
-}
-.account-address {
-  font-size: $font-size-desc-small;
-  color: #b1b3bd;
-  letter-spacing: 1px;
-  line-height: $font-size-desc-small;
-  margin-top: 10px;
-  margin: 0;
 }
 .account-manager {
   position: absolute;

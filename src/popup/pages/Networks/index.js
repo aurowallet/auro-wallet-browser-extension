@@ -5,8 +5,8 @@ import networkDeleteHover from "../../../assets/images/networkDeleteHover.png";
 import select_account_no from "../../../assets/images/select_account_no.png";
 import select_account_ok from "../../../assets/images/select_account_ok.png";
 import { getNodeVersion } from "../../../background/api";
-import { saveLocal } from "../../../background/localStorage";
-import { NET_WORK_CONFIG } from "../../../constant/storageKey";
+import { removeLocal, saveLocal } from "../../../background/localStorage";
+import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../constant/storageKey";
 import { getLanguage } from "../../../i18n";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, NET_CONFIG_DEFAULT, updateCurrentNetwork, updateNetConfig } from "../../../reducers/network";
@@ -65,10 +65,19 @@ class NetworkPage extends React.Component {
             currentUrl: this.state.currentUrl
         }
         saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+        //切换网络后，删除本地所有记录缓存
+        this.clearLocalCache()
         this.props.updateNetConfig(config)
         this.props.updateShouldRequest(true)
     }
-
+    clearLocalCache=()=>{
+        let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS)
+        for (let index = 0; index < localCacheKeys.length; index++) {
+            const keys = localCacheKeys[index];
+            let localKey = LOCAL_CACHE_KEYS[keys]
+            removeLocal(localKey)
+        }
+    }
     onConfirmDelete = (netItem) => {
         let nowUrl = this.state.currentUrl
         let list = this.state.netConfigList

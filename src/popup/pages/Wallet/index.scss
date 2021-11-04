@@ -139,3 +139,27 @@
     margin: 0px;
     padding: 0px;
   }
+  .walletWatchTipContainer{
+    font-size: 14px;
+    font-family: PingFangSC-Regular, PingFang SC;
+    color: #666666;
+    line-height: 24px;
+    margin-top: 14px;
+  }
+  .walletWatchLink{
+      color:#7055ff;
+  }
+  .account-address-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 2px;
+  }
+  .account-address {
+    font-size: $font-size-desc-small;
+    color: #b1b3bd;
+    letter-spacing: 1px;
+    line-height: $font-size-desc-small;
+    margin-top: 10px;
+    margin: 0;
+  }

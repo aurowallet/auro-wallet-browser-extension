@@ -3,6 +3,9 @@
  */
 
 import { BASE_INFO_URL, TRANSACTION_URL, TX_LIST_LENGTH } from "../../../config";
+import { LOCAL_CACHE_KEYS } from "../../constant/storageKey";
+import { parseStakingList } from "../../utils/utils";
+import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
 import { getBalanceBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody ,getPendingTxBody, getBalanceBatchBody, getDaemonStatusBody, getBlockInfoBody, getDelegationInfoBody, getNodeVersionBody} from './gqlparams';
 
@@ -18,6 +21,8 @@ export async function getBalance(address) {
         publicKey: address
       }
   ).catch((err)=>err)
+  let localAccount = result.account
+  saveLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE,JSON.stringify({[address]:localAccount}))
   return {address,account:result}
 }
 /**
@@ -95,28 +100,47 @@ export async function sendStakeTx(payload,signature){
 export async function fetchDaemonStatus() {
   const query = getDaemonStatusBody()
   let res = await startFetchMyQuery(query, {});
+  let daemonStatus = res.daemonStatus || {}
+  saveLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS,JSON.stringify(daemonStatus))
   return res;
 }
-
+/**
+ * 当前块的信息
+ * @param {*} stateHash 
+ * @returns 
+ */
 export async function fetchBlockInfo(stateHash) {
   const query = getBlockInfoBody()
   let res = await startFetchMyQuery(query, {stateHash});
+  let block = res.block
+  saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO,JSON.stringify(block))
   return res;
 }
 
+/**
+ * 当前质押的节点地址
+ * @param {*} publicKey 
+ * @returns 
+ */
 export async function fetchDelegationInfo(publicKey) {
   const query = getDelegationInfoBody()
   let res = await startFetchMyQuery(query, { requestType: "extensionAccountInfo", publicKey });
+  let account = res.account || {}
+  saveLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO,JSON.stringify({[publicKey]:account}))
   return res;
 }
 
 export async function fetchValidatorDetail(id) {
   const data = await commonFetch( `${TRANSACTION_URL}/validators/${id}`)
+  let validatorDetail = data?.validator||"";
+  saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL,JSON.stringify(validatorDetail))
   return data;
 }
 export async function fetchStakingList() {
-  const data = await commonFetch(TRANSACTION_URL+'/validators')
-  return data;
+  const data = await commonFetch(TRANSACTION_URL+'/validators').catch(()=>[])
+  const stakingList = parseStakingList(data)
+  saveLocal(LOCAL_CACHE_KEYS.STAKING_LIST,JSON.stringify(stakingList))
+  return stakingList;
 }
 
 /**
@@ -154,6 +178,7 @@ export async function getTransactionList(address, limit = TX_LIST_LENGTH){
     txUrl += "&limit=" + limit
   }
   let txList = await commonFetch(txUrl).catch(()=>[])
+  saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY,JSON.stringify({[address]:txList}))
    return {txList,address}
 }
 
@@ -223,6 +248,8 @@ export async function getPendingTxList(address){
  */
  export async function getCurrencyPrice(currency){
   let priceUrl = TRANSACTION_URL+ "/prices?currency="+currency
-  let price = await commonFetch(priceUrl).catch(()=>{})
-  return price?.data
+  let data = await commonFetch(priceUrl).catch(()=>{})
+  let price = data?.data || 0 
+  saveLocal(LOCAL_CACHE_KEYS.COIN_PRICE,JSON.stringify({price}))
+  return price
 }

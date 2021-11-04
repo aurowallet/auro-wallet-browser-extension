@@ -100,15 +100,10 @@
     color: #090909;
 }
 
-.modal-common-btn {
-    margin: 0px 0px;
-    background: #6d5ffe;
-    border-radius: 28px;
-
-    font-size: 18px;
-    color: #ffffff;
-}
 .modal-common-btn-cancel {
+    margin: 0px 0px;
+    border-radius: 28px;
+    font-size: 18px;
     color: #6d5ffe;
     border: 1px solid #6d5ffe;
     background-color: white;
@@ -125,6 +120,9 @@
     flex-direction: row-reverse;
     justify-content: space-between;
     margin-top: 38px;
+}
+.addressModalBtn{
+    margin: 0 0;
 }
 .address-input-con {
     margin-top: 10px;

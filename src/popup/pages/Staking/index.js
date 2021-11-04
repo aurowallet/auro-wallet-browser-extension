@@ -39,12 +39,19 @@ class Staking extends React.Component {
     }
   }
    componentDidMount() {
-    let { shouldRefresh } = this.props
+    let { shouldRefresh,account,daemonStatus,block,validatorDetail } = this.props
     if (shouldRefresh) {
-      this.fetchLoadingData()
+      if(daemonStatus.stateHash && block.protocolState){
+        this.fetchEpochData(daemonStatus,block)
+        this.setDelegationInfo(account,validatorDetail)
+
+        this.fetchLoadingData(true)
+      }else{
+        this.fetchLoadingData()
+      }
     }else{
-      this.fetchEpochData(this.props.daemonStatus,this.props.block)
-      this.setDelegationInfo(this.props.account,this.props.validatorDetail)
+      this.fetchEpochData(daemonStatus,block)
+      this.setDelegationInfo(account,validatorDetail)
     }
   }
   fetchData=()=>{

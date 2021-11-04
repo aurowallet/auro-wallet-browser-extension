@@ -88,7 +88,7 @@
     "privateKeyTip_3": "Auro Wallet is not responsible for asset loss caused by users lost their backed up private keys due to any reasons. ",
     "over": "Done",
     "security": "Security",
-    "network": "Endpoint",
+    "network": "Network",
     "language": "Language",
     "about": "About",
     "restoreSeed": "Backup Mnemonic Phrase",
@@ -97,7 +97,7 @@
     "inputNewPwd": "Please enter the new password",
     "inputNewPwdRepeat": "Please re-enter the new password",
     "pwdChangeSuccess": "Password changed successfully",
-    "networkConfig": "Node Settings",
+    "networkConfig": "Network",
     "defaultNetwork": "Default node",
     "customNetwork": "Custom node",
     "addNetWork": "Add Node",
@@ -239,5 +239,7 @@
     "cancelReset":"Cancel Reset",
 
     "deleteTag":"delete",
-    "resetWallet":"Reset Wallet"
+    "resetWallet":"Reset Wallet",
+    "watchTip":"In order to provide a better Dapp experience, Auro Wallet will not provide the [Watch Account] function in future versions. Please go to the <a>Account management</a> to delete all [Watch Wallet].",
+    "noSupportAccount":"No longer supported account"
 }

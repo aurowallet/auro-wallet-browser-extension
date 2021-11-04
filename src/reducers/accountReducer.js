@@ -5,10 +5,24 @@ const CHANGE_ACCOUNT_TX_HISTORY = "CHANGE_ACCOUNT_TX_HISTORY"
 
 const UPDATE_CURRENT_ACCOUNT = "UPDATE_CURRENT_ACCOUNT"
 
+const INIT_CURRENT_ACCOUNT = "INIT_CURRENT_ACCOUNT"
+
 const UPDATE_NET_ACCOUNT = "UPDATE_NET_ACCOUNT"
 
 
 const UPDATE_NET_HOME_REFRESH = "UPDATE_NET_HOME_REFRESH"
+
+/**
+ *  首页底部的type
+ */
+ const SET_HOME_BOTTOM_TYPE = "SET_HOME_BOTTOM_TYPE"
+
+ export function setBottomType(bottomType) {
+    return {
+        type: SET_HOME_BOTTOM_TYPE,
+        bottomType
+    };
+}
 
 export function updateAccountTx(txList,txPendingList) {
     return {
@@ -25,6 +39,12 @@ export function updateCurrentAccount(account) {
     };
 }
 
+export function initCurrentAccount(account) {
+    return {
+        type: INIT_CURRENT_ACCOUNT,
+        account
+    };
+}
 export function updateNetAccount(account) {
     return {
         type: UPDATE_NET_ACCOUNT,
@@ -44,7 +64,8 @@ const initState = {
     netAccount: {},
     balance: "0.0000",
     nonce: "",
-    shouldRefresh:true
+    shouldRefresh:true,
+    homeBottomType:""
 };
 
 function pendingTx(txList){
@@ -92,9 +113,10 @@ const accountInfo = (state = initState, action) => {
             }
             txPendingList = txPendingList.reverse()
             txPendingList = pendingTx(txPendingList)
+            let newList = [...txPendingList,...txList]
             return {
                 ...state,
-                txList:[...txPendingList,...txList]
+                txList:newList
             };
         case UPDATE_CURRENT_ACCOUNT:
             let account = action.account
@@ -106,7 +128,12 @@ const accountInfo = (state = initState, action) => {
                 netAccount: {},
                 nonce: "",
                 shouldRefresh:true,
-                
+                homeBottomType:"BOTTOM_TYPE_LOADING"
+            }
+        case INIT_CURRENT_ACCOUNT:
+            return {
+                ...state,
+                currentAccount: action.account,
             }
         case UPDATE_NET_ACCOUNT:
             let netAccount = action.account
@@ -134,6 +161,12 @@ const accountInfo = (state = initState, action) => {
                 ...state,
                 shouldRefresh:action.shouldRefresh,
                ...newState
+            }
+        case SET_HOME_BOTTOM_TYPE:
+            let bottomType = action.bottomType
+            return {
+                ...state,
+                homeBottomType: bottomType
             }
         default:
             return state;
