@@ -231,3 +231,16 @@ export function specialSplit(str) {
     }
     return list
 }
+/**
+ * 处理 staking list 的数据
+ */
+export function parseStakingList(stakingListFromServer){
+    return stakingListFromServer.map(node => {
+        return {
+          nodeAddress: node.public_key,
+          nodeName: node.identity_name,
+          totalStake: getAmountForUI(node.stake),
+          delegations: node.delegations,
+        };
+      })
+}

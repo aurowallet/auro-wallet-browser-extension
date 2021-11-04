@@ -53,18 +53,6 @@ class ImportPage extends React.Component {
       pathname: "/account_name",
     });
   }
-  importWacthMode = () => {
-    let accountTypeList = this.accountList.filter((item) => item.type === ACCOUNT_TYPE.WALLET_WATCH)
-    let accountCount = this.getAccountTypeIndex(accountTypeList)
-    this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.WATCHMODE)
-    this.props.setChangeAccountName({
-      fromType: ACCOUNT_NAME_FROM_TYPE.WATCHMODE,
-      accountCount
-    })
-    this.props.history.replace({
-      pathname: "/account_name",
-    })
-  }
   importKepair = () => {
     this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR)
     this.props.history.push({
@@ -76,7 +64,6 @@ class ImportPage extends React.Component {
       <div className={'account-info-import'}>
         {this.renderInfo(getLanguage('privateKey'), this.importPrivateKey)}
         {this.renderInfo("Keystore", this.importKepair)}
-        {this.renderInfo(getLanguage('watchAccount'), this.importWacthMode)}
       </div>
     )
   }

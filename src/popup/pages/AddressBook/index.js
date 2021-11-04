@@ -25,7 +25,8 @@ class AddressBook extends React.Component {
             address: "",
             addressName: "",
             currentClickIndex: -1,
-            focusAddress: -1
+            focusAddress: -1,
+            btnClick:false
         };
         this.modal = React.createRef();
         this.isUnMounted = false;
@@ -231,15 +232,27 @@ class AddressBook extends React.Component {
                 <Button
                     content={getLanguage('confirm')}
                     onClick={this.onConfirm}
-                    propsClass={"modal-common-btn"}
+                    propsClass={"addressModalBtn"}
+                    disabled={!this.state.btnClick}
                 />
                 <Button
                     content={getLanguage('cancel')}
-                    propsClass={"modal-common-btn modal-common-btn-cancel"}
+                    propsClass={"modal-common-btn-cancel"}
                     onClick={this.onCloseModal}
                 />
             </div>
         )
+    }
+    setBtnStatus=()=>{
+        if(this.state.address.length>0 && !this.state.errorTipShow){
+            this.callSetState({
+                btnClick:true
+            })
+        }else{
+            this.callSetState({
+                btnClick:false
+            })
+        }
     }
     onTextInput = (e) => {
         if (!this.isUnMounted) {
@@ -250,21 +263,25 @@ class AddressBook extends React.Component {
                 if (checkResult) {
                     this.callSetState({
                         errorTipShow: false
+                    },()=>{
+                        this.setBtnStatus()
                     })
                 } else {
                     this.callSetState({
                         errorTipShow: true
+                    },()=>{
+                        this.setBtnStatus()
                     })
                 }
             })
         }
     }
     onAddressInput = (e) => {
-        if (!this.isUnMounted) {
-            this.callSetState({
-                address: e.target.value,
-            })
-        }
+        this.callSetState({
+            address: e.target.value,
+        },()=>{
+            this.setBtnStatus()
+        })
     }
     renderInput = () => {
         return (

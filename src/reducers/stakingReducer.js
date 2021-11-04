@@ -1,10 +1,6 @@
-import { fetchStakingList, fetchDaemonStatus,fetchBlockInfo } from "../background/api";
-import { getAmountDisplay, getAmountForUI, getDisplayAmount } from '../utils/utils';
-import { cointypes } from "../../config";
+import { fetchStakingList } from "../background/api";
 
 const UPDATE_STAKING_LIST = 'UPDATE_STAKING_LIST';
-const FETCH_STAKING_LIST = 'FETCH_STAKING_LIST';
-
 
 const UPDATE_DAEMON_STATUS = 'UPDATE_DAEMON_STATUS';
 const UPDATE_BLOCK_INFO = 'UPDATE_BLOCK_INFO';
@@ -15,15 +11,7 @@ const UPDATE_VALIDATOR_DETAIL = 'UPDATE_VALIDATOR_DETAIL';
  */
 export function getStakingList() {
   return async (dispatch) => {
-    const stakingListFromServer = await fetchStakingList();
-    const stakingList = stakingListFromServer.map(node => {
-      return {
-        nodeAddress: node.public_key,
-        nodeName: node.identity_name,
-        totalStake: getAmountForUI(node.stake),
-        delegations: node.delegations,
-      };
-    })
+    const stakingList = await fetchStakingList();
     dispatch(updateStakingList({ stakingList }));
   }
 }

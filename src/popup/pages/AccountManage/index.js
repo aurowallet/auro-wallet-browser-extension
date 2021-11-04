@@ -8,6 +8,7 @@ import ledger_wallet from "../../../assets/images/ledger_wallet.png";
 import option from "../../../assets/images/option.png";
 import select_account_no from "../../../assets/images/select_account_no.png";
 import select_account_ok from "../../../assets/images/select_account_ok.png";
+import reminderRed from "../../../assets/images/reminderRed.svg";
 import { getBalanceBatch } from "../../../background/api";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
 import { WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
@@ -30,7 +31,9 @@ class AccountManagePage extends React.Component {
     this.state = {
       accountList: [{}, {}],
       currentAddress: address,
-      balanceList:[]
+      balanceList:[],
+      commonAccountList:[],
+      watchModeAccountList:[]
     };
     this.isUnMounted = false;
   }
@@ -39,8 +42,11 @@ class AccountManagePage extends React.Component {
     sendMsg({
       action: WALLET_GET_ALL_ACCOUNT,
     }, (account) => {
+      let listData = this.setListFilter(account.accounts)
       this.callSetState({
-        accountList: this.setListFilter(account.accounts),
+        accountList: listData.allList,
+        commonAccountList:listData.commonList,
+        watchModeAccountList:listData.watchList,
         currentAddress: account.currentAddress
       },()=>{
         let addressList = this.state.accountList.map((item)=>{
@@ -100,7 +106,8 @@ class AccountManagePage extends React.Component {
     let watchList = newList.filter((item, index) => {
       return item.type === ACCOUNT_TYPE.WALLET_WATCH
     })
-    return [...createList, ...importList,...ledgerList, ...watchList]
+    let commonList = [...createList, ...importList,...ledgerList]
+    return {allList:[...commonList,...watchList],commonList,watchList}
   }
   getAccountTypeIndex = (list) => {
     if (list.length === 0) {
@@ -155,6 +162,10 @@ class AccountManagePage extends React.Component {
     });
   }
   onClickAccount = (item) => {
+    if(item.type ===ACCOUNT_TYPE.WALLET_WATCH){
+      this.goToAccountInfo(item)
+      return
+    }
     if (item.address !== this.state.currentAddress) {
       Loading.show()
       sendMsg({
@@ -164,10 +175,12 @@ class AccountManagePage extends React.Component {
         Loading.hide()
         if (account.accountList && account.accountList.length > 0) {
           this.props.updateCurrentAccount(account.currentAccount)
-          let list = this.setListFilter(account.accountList)
-          list = this.setBalance2Account(list,this.state.balanceList)
+          let listData = this.setListFilter(account.accountList)
+          let list = this.setBalance2Account(listData.allList,this.state.balanceList)
           this.callSetState({
             accountList: list,
+            commonAccountList:listData.commonList,
+            watchModeAccountList:listData.watchList,
             currentAddress: item.address
           })
         }
@@ -199,9 +212,17 @@ class AccountManagePage extends React.Component {
     }
     return typeText
   }
+  getItemOption=(item)=>{
+    let imgSource
+    if(item.type ===ACCOUNT_TYPE.WALLET_WATCH){
+      imgSource = reminderRed
+    }else{
+      let showSelect = this.state.currentAddress === item.address
+      imgSource = showSelect ? select_account_ok : select_account_no
+    }
+    return imgSource
+  }
   renderAcountItem = (item, index) => {
-    let showSelect = this.state.currentAddress === item.address
-    let imgSource = showSelect ? select_account_ok : select_account_no
     let showImport = this.getAccountType(item)
     let showBalance = item.balance|| 0  
     showBalance = showBalance + " " + cointypes.symbol 
@@ -224,7 +245,7 @@ class AccountManagePage extends React.Component {
         </div>
         <div className={"account-item-right"}>
           <img
-            src={imgSource} className={"account-item-select click-cursor"} />
+            src={this.getItemOption(item)} className={"account-item-select click-cursor"} />
           <div onClick={(e) => {
             this.goToAccountInfo(item)
             e.stopPropagation();
@@ -239,7 +260,11 @@ class AccountManagePage extends React.Component {
   renderAccountList = () => {
     return (
       <div className={"account-list-container"}>
-        {this.state.accountList.map((item, index) => {
+        {this.state.commonAccountList.map((item, index) => {
+          return this.renderAcountItem(item, index)
+        })}
+        {this.state.watchModeAccountList.length>0 && <p className="notSupportAccount">{getLanguage('noSupportAccount')}</p>}
+        {this.state.watchModeAccountList.map((item, index) => {
           return this.renderAcountItem(item, index)
         })}
       </div>

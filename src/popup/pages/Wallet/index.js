@@ -13,10 +13,10 @@ import txArrow from "../../../assets/images/txArrow.png";
 import { fetchDaemonStatus, getBalance, getCurrencyPrice, getPendingTxList, getTransactionList } from "../../../background/api";
 import { cointypes, EXPLORER_URL } from '../../../../config';
 import { getLanguage } from "../../../i18n";
-import { updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
-import { setAccountInfo, setBottomType, updateCurrentPrice } from "../../../reducers/cache";
+import { setBottomType, updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
+import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { NET_CONFIG_DEFAULT } from "../../../reducers/network";
-import { openTab } from '../../../utils/commonMsg';
+import { openTab, sendMsg } from '../../../utils/commonMsg';
 import { addressSlice, amountDecimals, copyText, getDisplayAmount, isNumber } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Toast from "../../component/Toast";
@@ -30,6 +30,12 @@ import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import refreshIcon from "../../../assets/images/refresh.svg";
 import { ERROR_TYPE } from '../../../constant/errType';
 import Clock from '../../component/Clock';
+import { WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
+import ConfirmModal from '../../component/ConfirmModal';
+import { Trans } from 'react-i18next';
+import { getLocal, saveLocal } from '../../../background/localStorage';
+import { WATCH_MODE_TIP_SHOW } from '../../../constant/storageKey';
+import { ACCOUNT_TYPE } from '../../../constant/walletType';
 
 
 const BOTTOM_TYPE = {
@@ -51,13 +57,31 @@ class Wallet extends React.Component {
     this.state = {
       balance: "0.0000",
       txList: props.txList,
-      bottomTipType: props.cache.homeBottomType || BOTTOM_TYPE.BOTTOM_TYPE_LOADING,
+      bottomTipType: this.getInitBottomType(),
       refreshing: false
     }
     this.isUnMounted = false;
   }
   componentWillUnmount() {
     this.isUnMounted = true;
+  }
+  getInitBottomType=()=>{
+    const {accountInfo,netConfig,txList} = this.props
+    let bottomTipType = ""
+    if(accountInfo.homeBottomType){
+      bottomTipType = accountInfo.homeBottomType
+    }else{
+      if (netConfig.netType !== NET_CONFIG_DEFAULT) {
+        bottomTipType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT
+      }else{
+        if(txList.length > 0){
+          bottomTipType = BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX
+        }else{
+          bottomTipType = BOTTOM_TYPE.BOTTOM_TYPE_LOADING
+        }
+      }
+    }
+    return bottomTipType
   }
   callSetState = (data, callback) => { 
     if (!this.isUnMounted) {
@@ -71,37 +95,52 @@ class Wallet extends React.Component {
   async componentDidMount() {
     let { currentAccount } = this.props
     let address = currentAccount.address
-    this.setBottomTipType(() => this.fetchData(address))
+    if(this.state.bottomTipType !== BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT){
+      this.fetchData(address,true)
+    }else{
+      this.fetchData(address)
+    }
+    this.checkLocalWatchWallet()
   }
-  setBottomTipType = (callback) => {
-    let { shouldRefresh } = this.props
-    if (!shouldRefresh) {
-      return
-    }
+  onModalConfirm = () => {
+    ConfirmModal.hide()
+    saveLocal(WATCH_MODE_TIP_SHOW, "true")
+  }
 
-    let netConfig = this.props.netConfig
-    let lastType = this.state.bottomTipType
-    if (netConfig.netType !== NET_CONFIG_DEFAULT) {
-      lastType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT
-    }else{//如果是默认节点的话
-      // 查看本地是否有交易记录
-      let txList = this.props.txList
-      if (txList.length <= 0) {
-        lastType = BOTTOM_TYPE.BOTTOM_TYPE_LOADING  
-      }else{
-        lastType = BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX
-      }
-    }
-    if (lastType !== this.state.bottomTipType) {
-      this.callSetState({
-        bottomTipType: lastType
-      }, () => {
-        this.setHomeBottomType()
-        callback && callback()
+  renderTipContent=()=>{
+    return(
+    <div className={'walletWatchTipContainer'}><Trans
+      i18nKey={"watchTip"}
+      components={{a:<span onClick={()=>{
+        this.onModalConfirm()
+        this.goToPage("/account_manage")
+      }} className={"walletWatchLink click-cursor"}/>}}
+    /></div>)
+  }
+  showWatchModeTip=()=>{
+    let title = getLanguage('prompt')
+    let elementContent = this.renderTipContent
+    ConfirmModal.show({
+      title,
+      elementContent,
+      confirmText:getLanguage("isee"),
+      onConfirm: this.onModalConfirm,
+    })
+  }
+  checkLocalWatchWallet=()=>{
+    sendMsg({
+      action: WALLET_GET_ALL_ACCOUNT,
+    }, (account) => {
+      let watchList = account.accounts.filter((item, index) => {
+        return item.type === ACCOUNT_TYPE.WALLET_WATCH
       })
-    } else {
-      callback && callback()
-    }
+      if(watchList.length>0){
+        let showStatus = getLocal(WATCH_MODE_TIP_SHOW)
+        if(!showStatus){
+          this.showWatchModeTip()
+        }
+      }
+    })
   }
   setHomeBottomType = () => {
     this.props.setBottomType(this.state.bottomTipType)
@@ -209,7 +248,7 @@ class Wallet extends React.Component {
             })
           }>{deleText}</p>
         </div>
-        <p className="account-address click-cursor" onClick={this.onClickAddress}>{addressSlice(currentAccount.address)}</p>
+        <span className="account-address click-cursor" onClick={this.onClickAddress}>{addressSlice(currentAccount.address)}</span>
         <div className={'wallet-balance-container'}>
           <p className="account-balance">{amount}</p>
           <p className="account-symbol">{cointypes.symbol}</p>

@@ -15,11 +15,6 @@ const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
 
 
 /**
- *  首页底部的type
- */
- const SET_HOME_BOTTOM_TYPE = "SET_HOME_BOTTOM_TYPE"
-
-/**
  * 更新账户名称页面来源
  */
  const UPDATE_ACCOUNT_TYPE_FROM = "UPDATE_ACCOUNT_TYPE_FROM"
@@ -97,12 +92,6 @@ export function setWelcomeNextRoute(nextRoute) {
         nextRoute
     };
 }
-export function setBottomType(bottomType) {
-    return {
-        type: SET_HOME_BOTTOM_TYPE,
-        bottomType
-    };
-}
 
 export function updateAccoutType(fromType) {
     return {
@@ -116,7 +105,6 @@ const initState = {
     accountCount: "",
     accountInfo: {},
     welcomeNextRoute: "",
-    homeBottomType:"BOTTOM_TYPE_LOADING",
 
     changelog: "",
     changelog_app: "",
@@ -154,12 +142,6 @@ const cacheReducer = (state = initState, action) => {
             return {
                 ...state,
                 welcomeNextRoute: nextRoute
-            }
-        case SET_HOME_BOTTOM_TYPE:
-            let bottomType = action.bottomType
-            return {
-                ...state,
-                homeBottomType: bottomType
             }
         case UPDATE_ACCOUNT_TYPE_FROM:
             return{
