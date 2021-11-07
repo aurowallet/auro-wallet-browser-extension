@@ -112,7 +112,7 @@ export async function fetchDaemonStatus() {
 export async function fetchBlockInfo(stateHash) {
   const query = getBlockInfoBody()
   let res = await startFetchMyQuery(query, {stateHash});
-  let block = res.block
+  let block = res.block||{}
   saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO,JSON.stringify(block))
   return res;
 }
