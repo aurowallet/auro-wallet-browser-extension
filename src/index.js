@@ -19,6 +19,7 @@ import { CURRENCY_UNIT } from "./constant/pageType";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { updateCurrentPrice } from "./reducers/cache";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList, updateValidatorDetail } from "./reducers/stakingReducer";
+import { isNumber } from "./utils/utils";
 
 function getLocalNetConfig(store) {
   return new Promise((resolve)=>{
@@ -81,16 +82,23 @@ function compareConfig(oldConfig,newConfigList){
   }
   return newConfigList
 }
+function safeJsonParse(data){
+  try {
+    return JSON.parse(data)
+  } catch (error) {
+    return ""
+  }
+}
 /**
  * 获取本地缓存的数据
  */
-function getlocalCache(store,netType,currentAccount){
+function getlocalCache(store,netType,currentAccount){ 
   let address = currentAccount?.address || ""
   if(netType === NET_CONFIG_DEFAULT){
     let localHistory = getLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY)
     if(localHistory){
-      let localHistoryJson = JSON.parse(localHistory)
-        let txList = localHistoryJson[address]
+        let localHistoryJson = safeJsonParse(localHistory)
+        let txList = localHistoryJson ? localHistoryJson[address] :""
         if(txList){
           store.dispatch(updateAccountTx(txList, []))  
         }
@@ -98,28 +106,32 @@ function getlocalCache(store,netType,currentAccount){
   } 
   let localAccount = getLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE)
   if(localAccount){
-    let localAccountJson = JSON.parse(localAccount)
-    let netAccount = localAccountJson[address]
+    let localAccountJson = safeJsonParse(localAccount)
+    let netAccount = localAccountJson ? localAccountJson[address]:""
     if(netAccount){
       store.dispatch(updateNetAccount(netAccount))
     }
   }
   let localPrice = getLocal(LOCAL_CACHE_KEYS.COIN_PRICE)
   if(localPrice){
-    let localPriceJson = JSON.parse(localPrice)
-    store.dispatch(updateCurrentPrice(localPriceJson.price))
+    let localPriceJson = safeJsonParse(localPrice)
+    if(localPriceJson && isNumber(localPriceJson.price)){
+      store.dispatch(updateCurrentPrice(localPriceJson.price))
+    }
   }
 
   let localDaemonStatus = getLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS)
   if(localDaemonStatus){
-    let localDaemonStatusJson = JSON.parse(localDaemonStatus)
-    store.dispatch(updateDaemonStatus(localDaemonStatusJson))
+    let localDaemonStatusJson = safeJsonParse(localDaemonStatus)
+    if(localDaemonStatusJson){
+      store.dispatch(updateDaemonStatus(localDaemonStatusJson))
+    }
   }
 
   let localDelegationInfo = getLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO)
   if(localDelegationInfo){
-    let localDelegationInfoJson = JSON.parse(localDelegationInfo)
-    let delegationInfoJson = localDelegationInfoJson[address]
+    let localDelegationInfoJson = safeJsonParse(localDelegationInfo)
+    let delegationInfoJson = localDelegationInfoJson?localDelegationInfoJson[address]:""
     if(delegationInfoJson){
       store.dispatch(updateDelegationInfo(delegationInfoJson))
     }
@@ -127,21 +139,27 @@ function getlocalCache(store,netType,currentAccount){
 
   let localBlockInfo = getLocal(LOCAL_CACHE_KEYS.BLOCK_INFO)
   if(localBlockInfo){
-    let localBlockInfoJson = JSON.parse(localBlockInfo)
-    store.dispatch(updateBlockInfo(localBlockInfoJson))
+    let localBlockInfoJson = safeJsonParse(localBlockInfo)
+    if(localBlockInfoJson){
+      store.dispatch(updateBlockInfo(localBlockInfoJson))
+    }
   }
 
   let localValidatorDetail = getLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL)
   if(localValidatorDetail){
-    let localValidatorDetailJson = JSON.parse(localValidatorDetail)
-    store.dispatch(updateValidatorDetail(localValidatorDetailJson))
+    let localValidatorDetailJson = safeJsonParse(localValidatorDetail)
+    if(localValidatorDetailJson){
+      store.dispatch(updateValidatorDetail(localValidatorDetailJson))
+    }
   }
 
 
   let localStakingList = getLocal(LOCAL_CACHE_KEYS.STAKING_LIST)
   if(localStakingList){
-    let localStakingListJson = JSON.parse(localStakingList)
-    store.dispatch(updateStakingList({stakingList:localStakingListJson}))
+    let localStakingListJson = safeJsonParse(localStakingList)
+    if(localStakingListJson){
+      store.dispatch(updateStakingList({stakingList:localStakingListJson}))
+    }
   }
 }
 function getLocalCurrencyConfig(store) { 
@@ -152,7 +170,7 @@ function getLocalCurrencyConfig(store) {
     store.dispatch(updateCurrencyConfig(currencyList))
     saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList[0].key))
   }else{
-    let oldConfigKey= JSON.parse(localCurrencyConfig)
+    let oldConfigKey= safeJsonParse(localCurrencyConfig)
     let list = compareConfig(oldConfigKey,CURRENCY_UNIT)
     store.dispatch(updateCurrencyConfig(list))
   }
