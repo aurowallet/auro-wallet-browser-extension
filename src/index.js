@@ -96,13 +96,18 @@ function getlocalCache(store,netType,currentAccount){
   let address = currentAccount?.address || ""
   if(netType === NET_CONFIG_DEFAULT){
     let localHistory = getLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY)
+    let txList = []
+    let pendingTxList = []
     if(localHistory){
         let localHistoryJson = safeJsonParse(localHistory)
-        let txList = localHistoryJson ? localHistoryJson[address] :""
-        if(txList){
-          store.dispatch(updateAccountTx(txList, []))  
-        }
+        txList = localHistoryJson ? localHistoryJson[address] :[]
     }
+    let localPendingHistory = getLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY)
+    if(localPendingHistory){
+      let localPendingJson = safeJsonParse(localPendingHistory)
+      pendingTxList = localPendingJson ? localPendingJson[address] :[]
+    }
+    store.dispatch(updateAccountTx(txList, pendingTxList))  
   } 
   let localAccount = getLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE)
   if(localAccount){

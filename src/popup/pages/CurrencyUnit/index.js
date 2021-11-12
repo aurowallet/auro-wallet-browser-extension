@@ -30,7 +30,7 @@ class CurrencyUnit extends React.Component {
         }
       })
       this.props.updateCurrencyConfig(list);
-      this.props.updateShouldRequest(true);
+      this.props.updateShouldRequest(true,true);
       saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(clickItem.key))
     }
   }
@@ -75,8 +75,8 @@ function mapDispatchToProps(dispatch) {
     updateCurrencyConfig: (currencyList) => {
       dispatch(updateCurrencyConfig(currencyList));
     },
-    updateShouldRequest: (shouldRefresh) => {
-      dispatch(updateShouldRequest(shouldRefresh))
+    updateShouldRequest: (shouldRefresh,isSilent) => {
+      dispatch(updateShouldRequest(shouldRefresh,isSilent))
     },
   };
 }

@@ -171,7 +171,7 @@ class StakingTransfer extends React.Component {
       return
     }
     Toast.info(getLanguage('postSuccess'))
-    this.props.dispatch(updateShouldRequest(true))
+    this.props.dispatch(updateShouldRequest(true,true))
     let detail = data.sendDelegation && data.sendDelegation.delegation || {}
     sendMsg({
       action: WALLET_CHECK_TX_STATUS,

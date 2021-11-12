@@ -402,7 +402,7 @@ class SendPage extends React.Component {
     }
     Toast.info(getLanguage('postSuccess'))
     let detail = data.sendPayment && data.sendPayment.payment || {}
-    this.props.updateShouldRequest(true)
+    this.props.updateShouldRequest(true,true)
     sendMsg({
       action: WALLET_CHECK_TX_STATUS,
       payload: {
@@ -548,8 +548,8 @@ function mapDispatchToProps(dispatch) {
     updateNetAccount: (netAccount) => {
       dispatch(updateNetAccount(netAccount))
     },
-    updateShouldRequest: (shouldRefresh) => {
-      dispatch(updateShouldRequest(shouldRefresh))
+    updateShouldRequest: (shouldRefresh,isSilent) => {
+      dispatch(updateShouldRequest(shouldRefresh,isSilent))
     },
     updateAddressBookFrom: (from) => {
       dispatch(updateAddressBookFrom(from))

@@ -47,6 +47,10 @@ export const LOCAL_CACHE_KEYS = {
      */
     "TRANSACTION_HISTORY":"TRANSACTION_HISTORY",
     /**
+     * pending history
+     */
+    "PENDING_TRANSACTION_HISTORY":"PENDING_TRANSACTION_HISTORY",
+    /**
      * 余额 
      */
     "ACCOUNT_BALANCE":"ACCOUNT_BALANCE",

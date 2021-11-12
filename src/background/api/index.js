@@ -196,6 +196,7 @@ export async function getPendingTxList(address){
         publicKey: address
       }).catch(()=>[])
   let list =  result.pooledUserCommands ||[]
+  saveLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY,JSON.stringify({[address]:list}))
   return {txList:list,address}
 }
 

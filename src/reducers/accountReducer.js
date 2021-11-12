@@ -52,10 +52,11 @@ export function updateNetAccount(account) {
     };
 }
 
-export function updateShouldRequest(shouldRefresh) {
+export function updateShouldRequest(shouldRefresh,isSilent) {
     return {
         type: UPDATE_NET_HOME_REFRESH,
-        shouldRefresh
+        shouldRefresh,
+        isSilent
     };
 }
 const initState = {
@@ -84,18 +85,6 @@ function pendingTx(txList){
             "nonce":detail.nonce,
             "memo":detail.memo,
             "status":"PENDING",
-        })
-    }
-    return newList
-}
-
-function resultTx(txList){
-    let newList = []
-    for (let index = 0; index < txList.length; index++) {
-        const detail = txList[index];
-        newList.push({
-            ...detail,
-            "status":detail.status && detail.status.toUpperCase(),
         })
     }
     return newList
@@ -147,9 +136,17 @@ const accountInfo = (state = initState, action) => {
                 nonce,
                 inferredNonce,
             }
-        case UPDATE_NET_HOME_REFRESH:
+        case UPDATE_NET_HOME_REFRESH:// 分为静态刷新和非静态刷新
+            let isSilent = action.isSilent
+            let shouldRefresh = action.shouldRefresh
+            if(isSilent){
+                return {
+                    ...state,
+                    shouldRefresh:shouldRefresh,
+                }
+            }
             let newState={}
-            if(action.shouldRefresh){
+            if(shouldRefresh){
                 newState={
                     netAccount: {},
                     balance: "0.0000",
@@ -159,7 +156,7 @@ const accountInfo = (state = initState, action) => {
             }
             return {
                 ...state,
-                shouldRefresh:action.shouldRefresh,
+                shouldRefresh:shouldRefresh,
                ...newState
             }
         case SET_HOME_BOTTOM_TYPE:

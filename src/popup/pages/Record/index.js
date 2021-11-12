@@ -59,7 +59,7 @@ class Record extends React.Component {
         this.callSetState({
           txStatus: STATUS.TX_STATUS_INCLUDED
         })
-        this.props.updateShouldRequest(true)
+        this.props.updateShouldRequest(true,true)
         sendResponse();
       }
       return true;
@@ -172,8 +172,8 @@ const mapStateToProps = (state) => ({});
 
 function mapDispatchToProps(dispatch) {
   return {
-    updateShouldRequest: (shouldRefresh) => {
-      dispatch(updateShouldRequest(shouldRefresh))
+    updateShouldRequest: (shouldRefresh,isSilent) => {
+      dispatch(updateShouldRequest(shouldRefresh,isSilent))
     },
   };
 }
