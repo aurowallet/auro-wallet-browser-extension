@@ -45,10 +45,11 @@ export function initCurrentAccount(account) {
         account
     };
 }
-export function updateNetAccount(account) {
+export function updateNetAccount(account,isCache) {
     return {
         type: UPDATE_NET_ACCOUNT,
-        account
+        account,
+        isCache
     };
 }
 
@@ -66,7 +67,8 @@ const initState = {
     balance: "0.0000",
     nonce: "",
     shouldRefresh:true,
-    homeBottomType:""
+    homeBottomType:"",
+    isAccountCache:false
 };
 
 function pendingTx(txList){
@@ -129,12 +131,14 @@ const accountInfo = (state = initState, action) => {
             let balance = amountDecimals(netAccount.balance.total, cointypes.decimals)
             let nonce = netAccount.nonce
             let inferredNonce = netAccount.inferredNonce
+            let isAccountCache = !!action.isCache
             return {
                 ...state,
                 netAccount: netAccount,
                 balance,
                 nonce,
                 inferredNonce,
+                isAccountCache
             }
         case UPDATE_NET_HOME_REFRESH:// 分为静态刷新和非静态刷新
             let isSilent = action.isSilent

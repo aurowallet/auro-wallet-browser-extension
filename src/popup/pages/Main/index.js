@@ -71,7 +71,7 @@ class HomePage extends React.Component {
       let localAccountJson = this.safeJsonParse(localAccount)
       let netAccount = localAccountJson ? localAccountJson[address] : ""
       if (netAccount) {
-        this.props.dispatch(updateNetAccount(netAccount))
+        this.props.dispatch(updateNetAccount(netAccount,true))
       }
     }
   }

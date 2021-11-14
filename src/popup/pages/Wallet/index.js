@@ -228,7 +228,7 @@ class Wallet extends React.Component {
     })
   }
   renderAccount = () => {
-    let { currentAccount, balance, netAccount,currentCurrency,cache } = this.props
+    let { currentAccount, balance, netAccount,currentCurrency,cache,accountInfo } = this.props
     let DelegateState = !!netAccount.delegate && netAccount.delegate !== currentAccount.address
     let deleText = DelegateState ? getLanguage("stakingStatus_1") : getLanguage("stakingStatus_2")
     let amount = getDisplayAmount(balance)
@@ -237,6 +237,7 @@ class Wallet extends React.Component {
       unitBalance = new BigNumber(cache.currentPrice).multipliedBy(balance).toString()
       unitBalance = currentCurrency.symbol + getDisplayAmount(unitBalance,2)
     }
+    let isCache = accountInfo.isAccountCache
     return (
       <div className="account-container">
         <div className="account-address-container">
@@ -250,11 +251,18 @@ class Wallet extends React.Component {
         </div>
         <span className="account-address click-cursor" onClick={this.onClickAddress}>{addressSlice(currentAccount.address)}</span>
         <div className={'wallet-balance-container'}>
-          <p className="account-balance">{amount}</p>
-          <p className="account-symbol">{cointypes.symbol}</p>
+          <p className={cx("account-balance", {
+            "cache-balance": isCache
+          })}>{amount}</p>
+          <p className={cx("account-symbol",{
+            "cache-balance":isCache
+            })}>{cointypes.symbol}</p>
         </div>
         <div className={'wallet-currency-container'}>
-          <p className="current-balance">{unitBalance}</p>
+          <p className={cx("base-current-balance",{
+            "current-balance":!isCache,
+            "cache-balance":isCache,
+          })}>{unitBalance}</p>
         </div>
       </div>)
   }

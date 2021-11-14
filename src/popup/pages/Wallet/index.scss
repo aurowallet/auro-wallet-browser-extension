@@ -53,6 +53,9 @@
     letter-spacing: 0;
     line-height: $font-size-title-big;
 }
+.cache-balance{
+    color: #CCCCCC;
+}
 .home-bottom-tip {
     display: flex;
     flex-direction: row;
@@ -132,12 +135,13 @@
     margin-top: 10px;
     align-items: flex-end;
 }
-  .current-balance{
+.base-current-balance{
     font-size: $font-size-content;
-    color: #666666;
     letter-spacing: 1px;
     margin: 0px;
-    padding: 0px;
+}
+  .current-balance{
+    color: #666666;
   }
   .walletWatchTipContainer{
     font-size: 14px;
