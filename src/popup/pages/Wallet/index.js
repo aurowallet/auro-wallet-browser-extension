@@ -13,7 +13,7 @@ import txArrow from "../../../assets/images/txArrow.png";
 import { fetchDaemonStatus, getBalance, getCurrencyPrice, getPendingTxList, getTransactionList } from "../../../background/api";
 import { cointypes, EXPLORER_URL } from '../../../../config';
 import { getLanguage } from "../../../i18n";
-import { setBottomType, updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
+import { ACCOUNT_BALANCE_CACHE_STATE, setBottomType, updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { NET_CONFIG_DEFAULT } from "../../../reducers/network";
 import { openTab, sendMsg } from '../../../utils/commonMsg';
@@ -237,7 +237,7 @@ class Wallet extends React.Component {
       unitBalance = new BigNumber(cache.currentPrice).multipliedBy(balance).toString()
       unitBalance = currentCurrency.symbol + getDisplayAmount(unitBalance,2)
     }
-    let isCache = accountInfo.isAccountCache
+    let isCache = accountInfo.isAccountCache === ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE
     return (
       <div className="account-container">
         <div className="account-address-container">

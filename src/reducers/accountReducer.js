@@ -60,6 +60,13 @@ export function updateShouldRequest(shouldRefresh,isSilent) {
         isSilent
     };
 }
+
+export const ACCOUNT_BALANCE_CACHE_STATE = {
+    INIT_STATE :"INIT_STATE",
+    USING_CACHE:"USING_CACHE",
+    NEW_STATE:"NEW_STATE"
+}
+
 const initState = {
     txList: [],
     currentAccount: {},
@@ -68,7 +75,7 @@ const initState = {
     nonce: "",
     shouldRefresh:true,
     homeBottomType:"",
-    isAccountCache:false
+    isAccountCache:ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE
 };
 
 function pendingTx(txList){
@@ -131,7 +138,14 @@ const accountInfo = (state = initState, action) => {
             let balance = amountDecimals(netAccount.balance.total, cointypes.decimals)
             let nonce = netAccount.nonce
             let inferredNonce = netAccount.inferredNonce
-            let isAccountCache = !!action.isCache
+            
+            let isAccountCache
+            let cacheState = state.isAccountCache 
+            if(action.isCache && cacheState !== ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE ){
+                isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE
+            }else{
+                isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE
+            }
             return {
                 ...state,
                 netAccount: netAccount,
