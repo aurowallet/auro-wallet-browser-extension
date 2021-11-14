@@ -10,7 +10,7 @@ import { CURRENCY_UNIT_CONFIG, NET_WORK_CONFIG } from "../../../constant/storage
 import { RESET_WALLET, WALLET_APP_SUBMIT_PWD } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { resetWallet } from "../../../reducers";
-import { updateCurrentAccount } from "../../../reducers/accountReducer";
+import { initCurrentAccount } from "../../../reducers/accountReducer";
 import { updateCurrencyConfig } from "../../../reducers/currency";
 import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -60,7 +60,7 @@ class LockPage extends React.Component {
                         Toast.info(account.error)
                     }
                 } else {
-                    this.props.updateCurrentAccount(account)
+                    this.props.initCurrentAccount(account)
                     this.props.history.push({
                         pathname: "/homepage",
                     })
@@ -260,9 +260,6 @@ const mapStateToProps = (state) => ({
 
 function mapDispatchToProps(dispatch) {
     return {
-        updateCurrentAccount: (account) => {
-            dispatch(updateCurrentAccount(account))
-        },
         resetWallet: () => {
             dispatch(resetWallet())
         },
@@ -272,7 +269,9 @@ function mapDispatchToProps(dispatch) {
         updateCurrencyConfig: (config) => {
             dispatch(updateCurrencyConfig(config))
         },
-
+        initCurrentAccount: (account) => {
+            dispatch(initCurrentAccount(account))
+        },
 
     };
 }
