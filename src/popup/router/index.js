@@ -5,13 +5,20 @@ import AboutUs from '../pages/AboutUs';
 import AccountInfo from '../pages/AccountInfo';
 import AccountManagePage from '../pages/AccountManage';
 import AccountName from '../pages/AccountName';
+import AddressBook from '../pages/AddressBook';
+import ApprovePage from '../pages/ApprovePage';
 import BackupMnemonics from '../pages/BackupMnemonics';
 import BackupSuccess from '../pages/BackupSuccess';
 import BackupTips from '../pages/BackupTips';
 import CreatePassword from '../pages/CreatePassword';
+import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
+import ImportKeypair from '../pages/ImportKeypair';
+import ImportPage from '../pages/ImportPage';
 import InfoPage from '../pages/InfoPage';
 import LanguageManagement from '../pages/LanguageManage';
+import LedgerConnect from '../pages/LedgerConnect';
+import LedgerImport from '../pages/LedgerImport';
 import LockPage from '../pages/Lock';
 import HomePage from '../pages/Main';
 import NetworkPage from '../pages/Networks';
@@ -21,21 +28,15 @@ import ResetPassword from '../pages/ResetPassword';
 import RestoreAccount from '../pages/RestoreAccount';
 import RevealSeedPage from '../pages/RevealSeed';
 import SecurityPage from '../pages/Security';
-import SecurityPwdPage from '../pages/SecurityPwdPage';
 import SendPage from '../pages/Send';
 import ShowMnemonic from '../pages/ShowMnemonic';
 import ShowPrivateKeyPage from '../pages/ShowPrivateKey';
+import SignTransaction from "../pages/SignTransaction";
 import StakingList from '../pages/StakingList';
 import StakingTransfer from '../pages/StakingTransfer';
-import LedgerConnect from '../pages/LedgerConnect';
-import LedgerImport from '../pages/LedgerImport';
-import ImportPage from '../pages/ImportPage';
-import ImportKeypair from '../pages/ImportKeypair';
-
-import AddressBook from '../pages/AddressBook';
-import CurrencyUnit from '../pages/CurrencyUnit';
-
 import Welcome from '../pages/Welcome';
+
+
 
 
 export function getAllRouter() {
@@ -61,7 +62,6 @@ export function getAllRouter() {
         <Route path="/language_management_page" component={LanguageManagement} />
         <Route path="/reveal_seed_page" component={RevealSeedPage} />
         <Route path="/show_privatekey_page" component={ShowPrivateKeyPage} />
-        <Route path="/security_pwd_page" component={SecurityPwdPage} />
 
         <Route path="/lock_page" component={LockPage} />
         <Route path="/info_page" component={InfoPage} />
@@ -82,8 +82,9 @@ export function getAllRouter() {
         <Route path="/address_book" component={AddressBook} />
         <Route path="/currency_unit" component={CurrencyUnit} />
         <Route path="/welcome_page" component={Welcome} />
-        
-        
+
+        <Route path="/request_sign" component={SignTransaction} />
+        <Route path="/approve_page" component={ApprovePage} />
       </Switch>
     </HashRouter>
   );

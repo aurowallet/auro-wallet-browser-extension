@@ -18,10 +18,11 @@ export default class ConfirmModalContainer extends Component {
         this.onConfirm = () => { }
         this.touchToClose = false
         this.tipImgSrc = ""
+        this.widthAuto = false
     }
 
     show = (params) => {
-        let { title, content, onCancel, onConfirm, cancelText, confirmText, touchToClose, elementContent,tipImgSrc } = params
+        let { title, content, onCancel, onConfirm, cancelText, confirmText, touchToClose, elementContent,tipImgSrc,widthAuto } = params
         this.title = title
         this.content = content
         this.cancelText = cancelText
@@ -32,6 +33,8 @@ export default class ConfirmModalContainer extends Component {
         this.touchToClose = touchToClose
         this.tipImgSrc = tipImgSrc
         this.elementContent = elementContent
+
+        this.widthAuto = widthAuto
         this.setState({ showModal: true })
     }
     hide = () => {
@@ -42,7 +45,7 @@ export default class ConfirmModalContainer extends Component {
             <Button
                 buttonType={BUTTON_TYPE_CANCEL}
                 content={this.cancelText}
-                propsClass={'modal-button-width'}
+                propsClass={this.widthAuto ? "":'modal-button-width'}
                 onClick={() => {
                     this.hide()
                     this.onCancel && this.onCancel()
@@ -55,7 +58,7 @@ export default class ConfirmModalContainer extends Component {
         return (
             <Button
                 content={this.confirmText}
-                propsClass={'modal-button-width'}
+                propsClass={this.widthAuto ? "":'modal-button-width'}
                 onClick={() => {
                     this.hide()
                     this.onConfirm && this.onConfirm()

@@ -1,5 +1,4 @@
 import {
-  WALLET_APP_CONNECT,
   WALLET_APP_SUBMIT_PWD,
   WALLET_GET_CURRENT_ACCOUNT,
   WALLET_NEW_HD_ACCOUNT,
@@ -24,14 +23,21 @@ import {
   WALLET_GET_CREATE_MNEMONIC, WALLET_IMPORT_WATCH_MODE,
   WALLET_RESET_LAST_ACTIVE_TIME,
   WALLET_DELETE_WATCH_ACCOUNT,
-  RESET_WALLET
+  RESET_WALLET,
+  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, DAPP_GET_CURRENT_OPEN_WINDOW, GET_SIGN_PARAMS, WALLET_SEND_MESSAGE_TRANSTRACTION, DAPP_CHANGE_NETWORK
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
+import dappService from "./DappService";
 import extension from 'extensionizer'
+import { WALLET_CONNECT_TYPE } from "../constant/walletType";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
+  if (messageSource === 'messageFromDapp') {
+    dappService.handleMessage(message, sender, sendResponse)
+    return true
+  }
   if (messageSource) {
     return false;
   }
@@ -140,7 +146,7 @@ function internalMessageListener(message, sender, sendResponse) {
       })
       break;
     case WALLET_IMPORT_KEY_STORE:
-      apiService.addAccountByKeyStore(payload.keypair, payload.password,payload.accountName).then((account) => {
+      apiService.addAccountByKeyStore(payload.keypair, payload.password, payload.accountName).then((account) => {
         sendResponse(account);
       })
       break;
@@ -151,8 +157,37 @@ function internalMessageListener(message, sender, sendResponse) {
       sendResponse(apiService.setLastActiveTime())
       break
     case RESET_WALLET:
-        sendResponse(apiService.resetWallet())
-        break
+      sendResponse(apiService.resetWallet())
+      break
+    case GET_SIGN_PARAMS:
+      sendResponse(dappService.getSignParams(payload.openId))
+      break
+    case DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS:
+      sendResponse(dappService.getCurrentAccountConnectStatus(payload.siteUrl, payload.currentAddress))
+      break
+    case DAPP_GET_CONNECT_STATUS:
+      sendResponse(dappService.getConncetStatus(payload.siteUrl, payload.address))
+      break
+    case DAPP_DISCONNECT_SITE:
+      sendResponse(dappService.disconnectDapp(payload.siteUrl, payload.address))
+      break
+    case DAPP_DELETE_ACCOUNT_CONNECT_HIS:
+      sendResponse(dappService.deleteDAppConnect(payload.address, payload.oldCurrentAddress, payload.currentAddress))
+      break
+    case DAPP_CHANGE_CONNECTING_ADDRESS:
+      sendResponse(dappService.changeCurrentConnecting(payload.address, payload.currentAddress))
+      break
+    case DAPP_GET_CURRENT_OPEN_WINDOW:
+      sendResponse(dappService.getCurrentOpenWindow())
+      break
+    case DAPP_CHANGE_NETWORK:
+      sendResponse(dappService.notifyNetworkChange(payload.netConfig))
+      break
+    case WALLET_SEND_MESSAGE_TRANSTRACTION:
+      apiService.signMessage(payload).then((result) => {
+        sendResponse(result);
+      })
+      break;
     default:
       break;
   }
@@ -163,15 +198,20 @@ let time = ""
 function onConnectListener(externalPort) {
   const name = externalPort.name;
   externalPort.onDisconnect.addListener(async function () {
-    if (name === WALLET_APP_CONNECT) {
+    if (name === WALLET_CONNECT_TYPE.WALLET_APP_CONNECT) {
       time = Date.now()
       storage.save({
         AppState: { lastClosed: time },
       });
+    } else if (name === WALLET_CONNECT_TYPE.CONTENT_SCRIPT) {
+      dappService.portDisconnectListener(externalPort)
     }
-
   });
+  if (name === WALLET_CONNECT_TYPE.CONTENT_SCRIPT) {
+    dappService.setupProviderConnection(externalPort)
+  }
 }
+
 export function setupMessageListeners() {
   extension.runtime.onMessage.addListener(internalMessageListener);
   extension.runtime.onConnect.addListener(onConnectListener);

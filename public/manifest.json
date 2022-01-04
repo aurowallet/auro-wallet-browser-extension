@@ -3,7 +3,7 @@
   "short_name": "__MSG_appName__",
   "description": "__MSG_appDescription__",
   "manifest_version": 2,
-  "version": "1.0.12",
+  "version": "2.0.0",
   "default_locale": "en",
   "icons": {
     "16": "img/16.png",
@@ -29,11 +29,29 @@
   },
   "permissions": [
     "storage", 
-    "notifications"
+    "notifications",
+    "tabs"
   ],
   "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
   "background": {
-    "scripts": ["background.js","common.js"],
+    "scripts": ["background.js"],
     "persistent": true
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "file://*/*",
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "contentScript.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    "webhook.js"
+  ]
 }

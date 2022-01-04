@@ -17,24 +17,31 @@ const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
 /**
  * 更新账户名称页面来源
  */
- const UPDATE_ACCOUNT_TYPE_FROM = "UPDATE_ACCOUNT_TYPE_FROM"
+const UPDATE_ACCOUNT_TYPE_FROM = "UPDATE_ACCOUNT_TYPE_FROM"
 
 
 
 /**
  * 更新一些插件的基础信息
  */
- const UPDATE_EXTENSION_BASE_INFO = "UPDATE_EXTENSION_BASE_INFO"
+const UPDATE_EXTENSION_BASE_INFO = "UPDATE_EXTENSION_BASE_INFO"
 
 
- const UPDATE_ADDRESS_DETAIL = "UPDATE_ADDRESS_DETAIL"
+const UPDATE_ADDRESS_DETAIL = "UPDATE_ADDRESS_DETAIL"
 
- const UPDATE_ADDRESS_BOOK_FROM = "UPDATE_ADDRESS_BOOK_FROM"
+const UPDATE_ADDRESS_BOOK_FROM = "UPDATE_ADDRESS_BOOK_FROM"
 
 
- const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE"
+const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE"
 
- export function updateCurrentPrice(price) {
+const UPDATE_DAPP_ACCOUNT_LIST = "UPDATE_DAPP_ACCOUNT_LIST"
+
+
+const UPDATE_ACCOUNT_BALANCE_LIST = "UPDATE_ACCOUNT_BALANCE_LIST"
+
+export const UPDATE_DAPP_CURRENT_OPEN_WINDOW = "UPDATE_DAPP_CURRENT_OPEN_WINDOW"
+
+export function updateCurrentPrice(price) {
     return {
         type: UPDATE_CURRENT_PRICE,
         price
@@ -42,7 +49,7 @@ const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
 }
 
 
- export function updateAddressDetail(addressDetail) {
+export function updateAddressDetail(addressDetail) {
     return {
         type: UPDATE_ADDRESS_DETAIL,
         addressDetail
@@ -58,7 +65,7 @@ export function updateAddressBookFrom(from) {
 /**
  * 更改钱包名称
  */
- export function updateExtensionBaseInfo(data) {
+export function updateExtensionBaseInfo(data) {
     return {
         type: UPDATE_EXTENSION_BASE_INFO,
         data
@@ -100,6 +107,35 @@ export function updateAccoutType(fromType) {
     };
 }
 
+
+
+export function updateDappSelectList(selectList) {
+    return {
+        type: UPDATE_DAPP_ACCOUNT_LIST,
+        selectList
+    }
+}
+
+/**
+ * update dapp opened window
+ * @param {*} dappWindow
+ * @returns
+ */
+export function updateDAppOpenWindow(dappWindow) {
+    return {
+        type: UPDATE_DAPP_CURRENT_OPEN_WINDOW,
+        dappWindow
+    }
+}
+
+
+export function updateAccountBalanceList(accountDetail) {
+    return {
+        type: UPDATE_ACCOUNT_BALANCE_LIST,
+        accountDetail
+    }
+}
+
 const initState = {
     fromType: '',
     accountCount: "",
@@ -117,10 +153,15 @@ const initState = {
     staking_guide_cn: "",
     terms_and_contions: "",
     terms_and_contions_cn: "",
-    
+
     addressDetail: {},
     addressBookFrom: "",
-    currentPrice:""
+    currentPrice: "",
+    dappAccountList: [],
+
+
+    dappWindow: {},
+    accountBalanceList: {},
 };
 
 const cacheReducer = (state = initState, action) => {
@@ -144,14 +185,14 @@ const cacheReducer = (state = initState, action) => {
                 welcomeNextRoute: nextRoute
             }
         case UPDATE_ACCOUNT_TYPE_FROM:
-            return{
+            return {
                 ...state,
                 fromType: action.fromType,
             }
         case UPDATE_EXTENSION_BASE_INFO:
             return {
                 ...state,
-                
+
                 changelog: action.data.changelog,
                 changelog_app: action.data.changelog_app,
                 followus: action.data.followus,
@@ -170,16 +211,39 @@ const cacheReducer = (state = initState, action) => {
                 addressDetail: action.addressDetail
             };
         case UPDATE_ADDRESS_BOOK_FROM:
-                return {
-                    ...state,
-                    addressBookFrom: action.from
-                };
-                
+            return {
+                ...state,
+                addressBookFrom: action.from
+            };
+
         case UPDATE_CURRENT_PRICE:
             return {
                 ...state,
                 currentPrice: action.price
             };
+        case UPDATE_DAPP_ACCOUNT_LIST:
+            return {
+                ...state,
+                dappAccountList: action.selectList,
+            }
+        case UPDATE_DAPP_CURRENT_OPEN_WINDOW:
+            return {
+                ...state,
+                dappWindow: action.dappWindow,
+            }
+        case UPDATE_ACCOUNT_BALANCE_LIST:
+            let accountBalanceDetail = action.accountDetail
+            let accountList = { ...state.accountBalanceList }
+            let keys = Object.keys(accountBalanceDetail)
+            for (let index = 0; index < keys.length; index++) {
+                const key = keys[index];
+                const detail = accountBalanceDetail[key]
+                accountList[detail.publicKey] = detail
+            }
+            return {
+                ...state,
+                accountBalanceList: accountList
+            }
         default:
             return state;
     }

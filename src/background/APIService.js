@@ -1,11 +1,12 @@
-import { EXPLORER_URL, LOCK_TIME } from '../../config';
+import { LOCK_TIME } from '../../config';
 import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
 import { getLanguage } from '../i18n';
 import { getTxStatus, sendStakeTx, sendTx } from './api';
-import { signPayment, stakePayment } from './lib';
+import { signMessagePayment, signPayment, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
+import { getCurrentNetConfig } from '../utils/utils';
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -154,7 +155,12 @@ class APIService {
             }
         }
         currentAccount.isUnlocked = isUnlocked
-        return currentAccount
+        return this.getAccountWithoutPrivate(currentAccount)
+    };
+    
+    getCurrentAccountAddress = () => {
+        let currentAccount = this.getStore().currentAccount
+        return currentAccount.address 
     };
     createPwd = (password) => {
         this.memStore.updateState({ password })
@@ -194,16 +200,39 @@ class APIService {
     }
     getAllAccount = () => {
         let data = this.getStore().data
-        let accountList = data[0].accounts
-        accountList = accountList.map((item, index) => {
-            let newItem = this.getAccountWithoutPrivate(item)
-            return newItem
-        })
+        let accountList = this.accountSort(data[0].accounts)
+     
         let currentAccount = this.getStore().currentAccount
         return {
             accounts: accountList,
-            currentAddress: currentAccount.address
+            currentAddress: currentAccount.address 
         }
+    }
+    accountSort = (accountList) => {
+        let newList = accountList
+        let createList=[],importList=[],ledgerList=[],watchList = []
+        newList.filter((item, index) => {
+            let newItem = this.getAccountWithoutPrivate(item)
+            switch (newItem.type) {
+                case ACCOUNT_TYPE.WALLET_INSIDE:
+                    createList.push(newItem)
+                    break;
+                case ACCOUNT_TYPE.WALLET_OUTSIDE:
+                    importList.push(newItem)
+                    break;
+                case ACCOUNT_TYPE.WALLET_LEDGER:
+                    ledgerList.push(newItem)
+                    break;
+                case ACCOUNT_TYPE.WALLET_WATCH:
+                    watchList.push(newItem)
+                    break;
+                default:
+                    break;
+            }
+        })
+       
+        let commonList = [...createList, ...importList,...ledgerList]
+        return {allList:[...commonList,...watchList],commonList,watchList}
     }
     addHDNewAccount = async (accountName) => {
         let data = this.getStore().data
@@ -223,7 +252,27 @@ class APIService {
 
             let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
 
-            const account = {
+
+            let sameIndex = -1
+            let sameAccount = {}
+            for (let index = 0; index < accounts.length; index++) {
+                const tempAccount = accounts[index];
+                if (tempAccount.address === wallet.pubKey) {
+                    sameIndex = index
+                    sameAccount = tempAccount
+                }
+            }
+
+            if(sameIndex !== -1){
+                let backAccount = {
+                    accountName:sameAccount.accountName,
+                    address:sameAccount.address
+                }
+                let error = { "error": 'improtRepeat', type: "local",account:backAccount }
+                return error
+            }
+            
+            let account = {
                 address: wallet.pubKey,
                 privateKey: priKeyEncrypt,
                 type: ACCOUNT_TYPE.WALLET_INSIDE,
@@ -231,6 +280,7 @@ class APIService {
                 accountName,
                 typeIndex: typeIndex
             }
+
             data[0].currentAddress = account.address
             data[0].accounts.push(account)
             let encryptData = await encryptUtils.encrypt(this.getStore().password, data)
@@ -269,7 +319,7 @@ class APIService {
      */
     addImportAccount = async (privateKey, accountName) => {
         try {
-            let wallet = importWalletByPrivateKey(privateKey)
+            let wallet = await importWalletByPrivateKey(privateKey)
 
             let data = this.getStore().data
             let accounts = data[0].accounts
@@ -393,10 +443,7 @@ class APIService {
                 this.memStore.updateState({ currentAccount: account })
             }
         }
-        let accountList = data[0].accounts
-        accountList = accountList.map((item, index) => {
-            return this.getAccountWithoutPrivate(item)
-        })
+        let accountList = this.accountSort(data[0].accounts)
         return {
             accountList: accountList,
             currentAccount: this.getAccountWithoutPrivate(currentAccount),
@@ -477,12 +524,16 @@ class APIService {
                 let mnemonicEn = data[0].mnemonic
                 let mnemonic = await encryptUtils.decrypt(oldPwd, mnemonicEn)
                 mnemonic = await encryptUtils.encrypt(pwd, mnemonic)
+                let currentAccount = this.getStore().currentAccount
                 let newAccounts = []
                 for (let index = 0; index < accounts.length; index++) {
                     const account = accounts[index];
                     let privateKeyEn = account.privateKey
                     let privateKey = await encryptUtils.decrypt(oldPwd, privateKeyEn)
                     privateKey = await encryptUtils.encrypt(pwd, privateKey)
+                    if(currentAccount.address === account.address){
+                        currentAccount.privateKey = privateKey
+                    }
                     let newAccount = {
                         ...account,
                         privateKey,
@@ -493,7 +544,7 @@ class APIService {
                 data[0].mnemonic = mnemonic
 
                 let encryptData = await encryptUtils.encrypt(pwd, data)
-                this.memStore.updateState({ password: pwd })
+                this.memStore.updateState({ password: pwd,currentAccount })
                 await removeValue("keyringData")
                 await save({ keyringData: encryptData })
                 return { code: 0 }
@@ -540,12 +591,30 @@ class APIService {
             let nonce = params.nonce
             let memo = params.memo
             const privateKey = await this.getCurrentPrivateKey()
-            let signedTx = signPayment(privateKey, fromAddress, toAddress, amount, fee, nonce, memo)
+            let signedTx = await signPayment(privateKey, fromAddress, toAddress, amount, fee, nonce, memo)
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
-            let postRes = await sendTx(signedTx.payload, signedTx.signature).catch(error => { error })
+            let postRes = await sendTx(signedTx.data, signedTx.signature).catch(error => { error })
+            let payment = postRes.sendPayment && postRes.sendPayment.payment || {}
+            if (payment.hash && payment.id) {
+                this.checkTxStatus(payment.id,payment.hash)
+            }
             return { ...postRes }
+        } catch (err) {
+            return { error: err }
+        }
+    }
+    signMessage = async(params) => {
+        try {
+            let fromAddress = params.fromAddress
+            let message = params.memo
+            const privateKey = await this.getCurrentPrivateKey()
+            let signedTx = await signMessagePayment(privateKey, fromAddress,message)
+            if (signedTx.error) {
+                return { error: signedTx.error }
+            }
+            return signedTx
         } catch (err) {
             return { error: err }
         }
@@ -554,11 +623,15 @@ class APIService {
         try {
             let { fromAddress, toAddress, fee, nonce, memo } = params;
             const privateKey = await this.getCurrentPrivateKey()
-            let signedTx = stakePayment(privateKey, fromAddress, toAddress, fee, nonce, memo)
+            let signedTx = await stakePayment(privateKey, fromAddress, toAddress, fee, nonce, memo)
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
-            let postRes = await sendStakeTx(signedTx.payload, signedTx.signature).catch(error => { error })
+            let postRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error => { error })
+            let delegation = postRes.sendDelegation && postRes.sendDelegation.delegation || {}
+            if (delegation.hash && delegation.id) {
+                this.checkTxStatus(delegation.id,delegation.hash)
+            }
             return { ...postRes }
         } catch (err) {
             return { error: err }
@@ -566,19 +639,24 @@ class APIService {
     }
 
     notification = (hash) => {
-        let id = hash
+        let netConfig =  getCurrentNetConfig()
+        let myNotificationID
         extension.notifications &&
-            extension.notifications.onClicked.addListener(function (id) {
-                let url = EXPLORER_URL + id
-                extension.tabs.create({ url: url });
+            extension.notifications.onClicked.addListener(function (clickId) {
+                if(myNotificationID === clickId){
+                    let url = netConfig.explorer +"/transaction/"+ clickId
+                    extension.tabs.create({ url: url });
+                }
             });
         let title = getLanguage('notificationTitle')
         let message = getLanguage('notificationContent')
-        extension.notifications.create(id, {
+        extension.notifications.create(hash, {
             title: title,
             message: message,
             iconUrl: '/img/128.png',
             type: 'basic'
+        },(notificationItem)=>{
+            myNotificationID = notificationItem
         });
         return
     }
@@ -594,6 +672,7 @@ class APIService {
                 extension.runtime.sendMessage({
                     type: FROM_BACK_TO_RECORD,
                     action: TX_SUCCESS,
+                    hash:hash
                 });
                 this.notification(hash)
                 if (this.timer) {
@@ -610,6 +689,9 @@ class APIService {
                 this.fetchTransactionStatus(paymentId, hash);
             }, 5000);
         })
+    }
+    getLockStatus=()=>{
+        return this.getStore().isUnlocked
     }
 }
 

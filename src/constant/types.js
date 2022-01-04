@@ -9,9 +9,6 @@ export const WALLET_GET_CURRENT_ACCOUNT = "WALLET_GET_CURRENT_ACCOUNT";
 export const WALLET_SET_UNLOCKED_STATUS = "WALLET_SET_UNLOCKED_STATUS";
 
 
-export const WALLET_APP_CONNECT = "WALLET_APP_CONNECT";
-
-
 export const WALLET_APP_SUBMIT_PWD = "WALLET_APP_SUBMIT_PWD";
 
 /**
@@ -81,6 +78,11 @@ export const WALLET_GET_CURRENT_PRIVATE_KEY = "WALLET_GET_CURRENT_PRIVATE_KEY"
  * 发送交易
  */
 export const WALLET_SEND_TRANSTRACTION = "WALLET_SEND_TRANSTRACTION"
+
+/**
+ * send message transaction
+ */
+export const WALLET_SEND_MESSAGE_TRANSTRACTION = "WALLET_SEND_MESSAGE_TRANSTRACTION"
 
 /**
  * 发送质押交易
@@ -158,3 +160,75 @@ export const LEDGER_CONNECTED_SUCCESSFULLY = 'LEDGER_CONNECTED_SUCCESSFULLY';
  * 清除账户
  */
  export const RESET_WALLET = "RESET_WALLET"
+
+
+ /**
+ * get dapp sign params
+ */
+export const GET_SIGN_PARAMS = "GET_SIGN_PARAMS"
+
+
+/**
+ * get dapp approve account
+ */
+export const DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS = "DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS"
+
+
+/**
+ * dapp send transaction
+ */
+export const DAPP_ACTION_SEND_TRANSACTION = "DAPP_ACTION_SEND_TRANSACTION"
+
+
+export const DAPP_ACTION_SIGN_MESSAGE = "DAPP_ACTION_SIGN_MESSAGE"
+
+
+/**
+ * dapp get account 
+ */
+export const DAPP_ACTION_GET_ACCOUNT = "DAPP_ACTION_GET_ACCOUNT"
+
+/**
+ * dapp close window 
+ */
+export const DAPP_ACTION_CLOSE_WINDOW = "DAPP_ACTION_CLOSE_WINDOW"
+
+/**
+ * get current web connect status
+ */
+export const DAPP_GET_CONNECT_STATUS = "DAPP_GET_CONNECT_STATUS"
+
+/**
+ * disconnect web site
+ */
+export const DAPP_DISCONNECT_SITE = "DAPP_DISCONNECT_SITE"
+
+
+/**
+ * delect account all connect   / when delete account
+ */
+export const DAPP_DELETE_ACCOUNT_CONNECT_HIS = "DAPP_DELETE_ACCOUNT_CONNECT_HIS"
+
+
+/**
+ * when change current account  update dapp connecting account
+ */
+export const DAPP_CHANGE_CONNECTING_ADDRESS = "DAPP_CHANGE_CONNECTING_ADDRESS"
+
+
+/**
+ * get current open window
+ */
+export const DAPP_GET_CURRENT_OPEN_WINDOW = "DAPP_GET_CURRENT_OPEN_WINDOW"
+
+
+/**
+ * when dapp close window send message to fronted
+ */
+export const DAPP_CLOSE_POPUP_WINDOW = "DAPP_CLOSE_POPUP_WINDOW"
+
+
+/**
+ * when change current network  update dapp connecting status
+ */
+ export const DAPP_CHANGE_NETWORK = "DAPP_CHANGE_NETWORK"

@@ -56,20 +56,29 @@ export function languageInit() {
     changeLanguage(res)
     default_language = res
   } else {
-    const language = navigator.language || navigator.userLanguage;
-    res = language == LANG_SUPPORT_LIST.ZH_CN ? LANG_SUPPORT_LIST.ZH_CN : LANG_SUPPORT_LIST.EN;
+    const language = navigator.language || navigator.languages[0];
+    res = browserLangParse(language) == LANG_SUPPORT_LIST.ZH_CN ? LANG_SUPPORT_LIST.ZH_CN : LANG_SUPPORT_LIST.EN;
     changeLanguage(res)
     default_language = res
     saveLocal(LANGUAGE_CONFIG, res)
   }
-
   return res
 }
+/**
+ * parse browser lang  - to _
+ * @param {*} lang 
+ * @returns 
+ */
+function browserLangParse(lang){
+  if(lang){
+    return lang.replace("-","_")
+  }else{
+    return lang
+  }
+}
 
-
-
-export function getLanguage(key) {
-  return i18n.t(key)
+export function getLanguage(key,options) {
+  return i18n.t(key,options)
 }
 
 

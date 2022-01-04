@@ -15,16 +15,20 @@ const UPDATE_NET_HOME_REFRESH = "UPDATE_NET_HOME_REFRESH"
 /**
  *  首页底部的type
  */
- const SET_HOME_BOTTOM_TYPE = "SET_HOME_BOTTOM_TYPE"
+const SET_HOME_BOTTOM_TYPE = "SET_HOME_BOTTOM_TYPE"
 
- export function setBottomType(bottomType) {
+
+
+const UPDATE_STAKING_DATA = "UPDATE_STAKING_DATA"
+
+export function setBottomType(bottomType) {
     return {
         type: SET_HOME_BOTTOM_TYPE,
         bottomType
     };
 }
 
-export function updateAccountTx(txList,txPendingList) {
+export function updateAccountTx(txList, txPendingList) {
     return {
         type: CHANGE_ACCOUNT_TX_HISTORY,
         txList,
@@ -45,7 +49,7 @@ export function initCurrentAccount(account) {
         account
     };
 }
-export function updateNetAccount(account,isCache) {
+export function updateNetAccount(account, isCache) {
     return {
         type: UPDATE_NET_ACCOUNT,
         account,
@@ -53,7 +57,7 @@ export function updateNetAccount(account,isCache) {
     };
 }
 
-export function updateShouldRequest(shouldRefresh,isSilent) {
+export function updateShouldRequest(shouldRefresh, isSilent) {
     return {
         type: UPDATE_NET_HOME_REFRESH,
         shouldRefresh,
@@ -61,10 +65,18 @@ export function updateShouldRequest(shouldRefresh,isSilent) {
     };
 }
 
+
+export function updateStakingRefresh(shouldRefresh) {
+    return {
+        type: UPDATE_STAKING_DATA,
+        shouldRefresh,
+    };
+}
+
 export const ACCOUNT_BALANCE_CACHE_STATE = {
-    INIT_STATE :"INIT_STATE",
-    USING_CACHE:"USING_CACHE",
-    NEW_STATE:"NEW_STATE"
+    INIT_STATE: "INIT_STATE",
+    USING_CACHE: "USING_CACHE",
+    NEW_STATE: "NEW_STATE"
 }
 
 const initState = {
@@ -73,27 +85,28 @@ const initState = {
     netAccount: {},
     balance: "0.0000",
     nonce: "",
-    shouldRefresh:true,
-    homeBottomType:"",
-    isAccountCache:ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE
+    shouldRefresh: true,
+    homeBottomType: "",
+    isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
+    stakingLoadingRefresh: false
 };
 
-function pendingTx(txList){
+function pendingTx(txList) {
     let newList = []
     for (let index = 0; index < txList.length; index++) {
         const detail = txList[index];
         newList.push({
-            "id":detail.id,
-            "hash":detail.hash,
-            "type":detail.kind,
-            "time":detail.time,
-            "sender":detail.from,
-            "receiver":detail.to,
-            "amount":detail.amount,
-            "fee":detail.fee,
-            "nonce":detail.nonce,
-            "memo":detail.memo,
-            "status":"PENDING",
+            "id": detail.id,
+            "hash": detail.hash,
+            "type": detail.kind,
+            "time": detail.time,
+            "sender": detail.from,
+            "receiver": detail.to,
+            "amount": detail.amount,
+            "fee": detail.fee,
+            "nonce": detail.nonce,
+            "memo": detail.memo,
+            "status": "PENDING",
         })
     }
     return newList
@@ -103,18 +116,18 @@ const accountInfo = (state = initState, action) => {
     switch (action.type) {
         case CHANGE_ACCOUNT_TX_HISTORY:
             let txList = action.txList
-            let txPendingList = action.txPendingList||[]
-            if(txList.length>=TX_LIST_LENGTH){
+            let txPendingList = action.txPendingList || []
+            if (txList.length >= TX_LIST_LENGTH) {
                 txList.push({
-                    showExplorer:true
+                    showExplorer: true
                 })
             }
             txPendingList = txPendingList.reverse()
             txPendingList = pendingTx(txPendingList)
-            let newList = [...txPendingList,...txList]
+            let newList = [...txPendingList, ...txList]
             return {
                 ...state,
-                txList:newList
+                txList: newList
             };
         case UPDATE_CURRENT_ACCOUNT:
             let account = action.account
@@ -125,8 +138,8 @@ const accountInfo = (state = initState, action) => {
                 txList: [],
                 netAccount: {},
                 nonce: "",
-                shouldRefresh:true,
-                homeBottomType:"BOTTOM_TYPE_LOADING"
+                shouldRefresh: true,
+                homeBottomType: "BOTTOM_TYPE_LOADING"
             }
         case INIT_CURRENT_ACCOUNT:
             return {
@@ -138,12 +151,12 @@ const accountInfo = (state = initState, action) => {
             let balance = amountDecimals(netAccount.balance.total, cointypes.decimals)
             let nonce = netAccount.nonce
             let inferredNonce = netAccount.inferredNonce
-            
+
             let isAccountCache
-            let cacheState = state.isAccountCache 
-            if(action.isCache && cacheState !== ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE ){
+            let cacheState = state.isAccountCache
+            if (action.isCache && cacheState !== ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE) {
                 isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE
-            }else{
+            } else {
                 isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE
             }
             return {
@@ -152,36 +165,42 @@ const accountInfo = (state = initState, action) => {
                 balance,
                 nonce,
                 inferredNonce,
-                isAccountCache
+                isAccountCache,
             }
-        case UPDATE_NET_HOME_REFRESH:// 分为静态刷新和非静态刷新
+        case UPDATE_NET_HOME_REFRESH:
             let isSilent = action.isSilent
             let shouldRefresh = action.shouldRefresh
-            if(isSilent){
+            if (isSilent) {
                 return {
                     ...state,
-                    shouldRefresh:shouldRefresh,
+                    shouldRefresh: shouldRefresh,
                 }
             }
-            let newState={}
-            if(shouldRefresh){
-                newState={
+            let newState = {}
+            if (shouldRefresh) {
+                newState = {
                     netAccount: {},
                     balance: "0.0000",
                     nonce: "",
-                    txList:[]
+                    txList: [],
+                    homeBottomType: ""
                 }
             }
             return {
                 ...state,
-                shouldRefresh:shouldRefresh,
-               ...newState
+                shouldRefresh: shouldRefresh,
+                ...newState
             }
         case SET_HOME_BOTTOM_TYPE:
             let bottomType = action.bottomType
             return {
                 ...state,
                 homeBottomType: bottomType
+            }
+        case UPDATE_STAKING_DATA:
+            return {
+                ...state,
+                stakingLoadingRefresh: action.shouldRefresh
             }
         default:
             return state;

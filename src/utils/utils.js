@@ -1,13 +1,18 @@
 import BigNumber from "bignumber.js";
 import validUrl from 'valid-url';
-import {cointypes} from '../../config';
+import { cointypes } from '../../config';
+import { getLocal } from "../background/localStorage";
+import { NET_WORK_CONFIG } from "../constant/storageKey";
+import { DAPP_CHANGE_NETWORK } from "../constant/types";
+import { sendMsg } from "./commonMsg";
 /**
  * 地址截取
  * @param {*} address
  */
-export function addressSlice(address,sliceLength = 10) {
+export function addressSlice(address, sliceLength = 10,lastLength = "") {
     if (address) {
-        return `${address.slice(0, sliceLength)}...${address.slice(-sliceLength)}`
+        let realLastLength = lastLength ? lastLength :sliceLength
+        return `${address.slice(0, sliceLength)}...${address.slice(-realLastLength)}`
     }
     return address
 
@@ -17,65 +22,9 @@ export function addressSlice(address,sliceLength = 10) {
  * 去掉科学计数法
  * @param {*} num_str
  */
-function toNonExponential(num_str) {
-    num_str = num_str.toString();
-    if (num_str.indexOf("+") != -1) {
-        num_str = num_str.replace("+", "");
-    }
-    if (num_str.indexOf("E") != -1 || num_str.indexOf("e") != -1) {
-        var resValue = "",
-            power = "",
-            result = null,
-            dotIndex = 0,
-            resArr = [],
-            sym = "";
-        var numStr = num_str.toString();
-        if (numStr[0] == "-") {
-            numStr = numStr.substr(1);
-            sym = "-";
-        }
-        if (numStr.indexOf("E") != -1 || numStr.indexOf("e") != -1) {
-            var regExp = new RegExp(
-                "^(((\\d+.?\\d+)|(\\d+))[Ee]{1}((-(\\d+))|(\\d+)))$",
-                "ig"
-            );
-            result = regExp.exec(numStr);
-            if (result != null) {
-                resValue = result[2];
-                power = result[5];
-                result = null;
-            }
-            if (!resValue && !power) {
-                return false;
-            }
-            dotIndex = resValue.indexOf(".") == -1 ? 0 : resValue.indexOf(".");
-            resValue = resValue.replace(".", "");
-            resArr = resValue.split("");
-            if (Number(power) >= 0) {
-                var subres = resValue.substr(dotIndex);
-                power = Number(power);
-                for (var i = 0; i <= power - subres.length; i++) {
-                    resArr.push("0");
-                }
-                if (power - subres.length < 0) {
-                    resArr.splice(dotIndex + power, 0, ".");
-                }
-            } else {
-                power = power.replace("-", "");
-                power = Number(power);
-                for (var i = 0; i < power - dotIndex; i++) {
-                    resArr.unshift("0");
-                }
-                var n = power - dotIndex >= 0 ? 1 : -(power - dotIndex);
-                resArr.splice(n, 0, ".");
-            }
-        }
-        resValue = resArr.join("");
-
-        return sym + resValue;
-    } else {
-        return num_str;
-    }
+export function toNonExponential(ExpNumber) {
+    const num = new BigNumber(ExpNumber);
+    return num.toFixed();
 }
 /**
  * 精度换算
@@ -107,14 +56,14 @@ export function getAmountDisplay(amount, decimal = 0, fixed = 4) {
 }
 export function getAmountForUI(rawAmount, decimal = cointypes.decimals) {
     return new BigNumber(rawAmount)
-      .dividedBy(new BigNumber(10).pow(decimal))
-      .toFormat(2,
-        BigNumber.ROUND_DOWN,
-        {
-            groupSeparator: ',',
-            groupSize: 3,
-            decimalSeparator: '.',
-        });
+        .dividedBy(new BigNumber(10).pow(decimal))
+        .toFormat(2,
+            BigNumber.ROUND_DOWN,
+            {
+                groupSeparator: ',',
+                groupSize: 3,
+                decimalSeparator: '.',
+            });
 }
 
 
@@ -124,6 +73,9 @@ export function getAmountForUI(rawAmount, decimal = cointypes.decimals) {
  * @param {*} str
  */
 export function trimSpace(str) {
+    if (typeof str !== 'string') {
+        return str
+    }
     let res = str.replace(/(^\s*)|(\s*$)/g, "")
     res = res.replace(/[\r\n]/g, "")
     return res
@@ -147,7 +99,7 @@ export function urlValid(url) {
  * @param includeE 是否认为科学计数法也算作数字 默认不算
  */
 export function isNumber(n, includeE = false) {
-    let isNum = !!String(n).match(/^\d+\.?(?:\.\d+)?$/);
+    let isNum = !!String(n).match(/^\d+(?:\.\d*)?$/);
     if (!isNum && includeE) {
         return !!String(n).match(/^\d+e(-)?\d+$/);
     }
@@ -164,7 +116,7 @@ export function isTrueNumber(n) {
     let isNum = !!String(n).match(/^([1-9][0-9]*)$/);
     return isNum;
 }
-  
+
 /**
  * 校验用户名长度 默认16位
  * @param {*} name
@@ -191,56 +143,156 @@ export function nameLengthCheck(name, defaultLength = 16) {
 /**
  * 复制文本
  */
-export function copyText(text){
+export function copyText(text) {
     return navigator.clipboard.writeText(text)
-      .catch((error) => { alert(`Copy failed! ${error}`) })
+        .catch((error) => { alert(`Copy failed! ${error}`) })
 }
 
 /**
- * 分割特殊文本
+ * format connectAccount
+ * @param {*} account 
  * @returns 
  */
-export function specialSplit(str) {
-    let startStr = '[['
-    let endStr = "]]"
-    let list = []
-    var index = str.indexOf(startStr); 
-    let lastIndex = -endStr.length
-    let specialIndex = -1
-    while (index !== -1) {
-        list.push({
-            type:"common",
-            showStr : str.slice(lastIndex+endStr.length,index)
-        })
-        lastIndex = str.indexOf(endStr,index);
-        list.push({
-            type:"special",
-            showStr : str.slice(index+startStr.length,lastIndex),
-            specialIndex:++specialIndex
-        })
-        index = str.indexOf(startStr, index + 1);
-        if(index === -1){
-            let showStr = str.slice(lastIndex+endStr.length)
-            if(!!showStr){
-                list.push({
-                    type:"common",
-                    showStr : showStr
-                })
+export function connectAccountDataFilter(account) {
+    return {
+        address: account.address,
+        accountName: account.accountName,
+        type: account.type,
+        isConnected: account.isConnected,
+        isConnecting: account.isConnecting,
+    }
+}
+
+export function getOriginFromUrl(url) {
+    var origin = new URL(url).origin;
+    return origin
+}
+/**
+ * get params from input url
+ * @param {*} url
+ * @returns
+ */
+export function getQueryStringArgs(queryUrl = "") {
+    let paramSplit = queryUrl.split("?")
+    let paramUrl = ''
+    if (paramSplit.length > 1) {
+        paramUrl = paramSplit[1]
+    }
+    let params = new URLSearchParams(paramUrl);
+    let args = {};
+    for (const [key, value] of params) {
+        args[key] = value
+    }
+    return args;
+}
+
+export function getCurrentNetConfig() {
+    let localNetConfig = getLocal(NET_WORK_CONFIG)
+    if (localNetConfig) {
+        localNetConfig = JSON.parse(localNetConfig)
+        return localNetConfig.currentConfig
+    }
+    return {}
+}
+/**
+ * 处理转账等的返回错误
+ * @param {*} error 
+ * @returns 
+ */
+export function getRealErrorMsg(error) {
+    let errorMessage = ""
+    try {
+        if (error.message) {
+            errorMessage = error.message
+        }
+        if (Array.isArray(error) && error.length > 0) {
+            // postError
+            errorMessage = error[0].message
+            
+            // buildError
+            if(!errorMessage && error.length > 1){
+                errorMessage = error[1].c
             }
         }
+        if (typeof error === 'string') {
+            let lastErrorIndex = error.lastIndexOf("Error:")
+            if (lastErrorIndex !== -1) {
+                errorMessage = error.slice(lastErrorIndex)
+            }
+        }
+    } catch (error) {
     }
-    return list
+    return errorMessage
 }
+
 /**
  * 处理 staking list 的数据
  */
-export function parseStakingList(stakingListFromServer){
+export function parseStakingList(stakingListFromServer) {
     return stakingListFromServer.map(node => {
         return {
-          nodeAddress: node.public_key,
-          nodeName: node.identity_name,
-          totalStake: getAmountForUI(node.stake),
-          delegations: node.delegations,
+            nodeAddress: node.public_key,
+            nodeName: node.identity_name,
+            totalStake: getAmountForUI(node.stake),
+            delegations: node.delegations,
         };
-      })
+    })
+}
+
+
+/**
+ * send network change message 
+ * @param {*} netConfig 
+ */
+export function sendNetworkChangeMsg(netConfig) {
+    if (netConfig.netType) {
+        sendMsg({
+            action: DAPP_CHANGE_NETWORK,
+            payload: {
+                netConfig: netConfig
+            }
+        }, () => { })
+    }
+}
+
+/**
+ * get local time from utc time
+ * @param {*} time 
+ * @returns 
+ */
+export function getShowTime(time) {
+    try {
+        const lang = navigator.language || navigator.languages[0];
+        let date = new Date(time)
+        let timeDate = date.toLocaleString(lang, {
+            // timeZone: 'Europe/Moscow',
+            hourCycle: 'h23',
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+        return timeDate.replaceAll("/", "-")
+    } catch (error) {
+        return time
+    }
+}
+
+/**
+ * get different from deletedAccountApproved to newAccountApproved
+ * @param {*} deletedAccountApproved 
+ * @param {*} newAccountApproved 
+ * @returns 
+ */
+export function getArrayDiff(deletedAccountApproved,newAccountApproved){
+    let list = []
+    for (let index = 0; index < deletedAccountApproved.length; index++) {
+      const deletedConnetedUrl = deletedAccountApproved[index];
+      if(newAccountApproved.indexOf(deletedConnetedUrl) === -1){
+        list.push(deletedConnetedUrl)
+      }
+    }
+    return list
 }

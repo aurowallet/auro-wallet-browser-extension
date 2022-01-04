@@ -9,6 +9,8 @@ module.exports = (env, argv) => {
     entry: {
       background: "./src/background/index.js",
       popup: "./src/index.js",
+      contentScript: "./src/contentScript/index.js",
+      webhook: "./src/webHook/index.js"
     },
     output: {
       path: path.resolve(__dirname, "./dist"),
@@ -37,11 +39,11 @@ module.exports = (env, argv) => {
         },
         {
           test: /\.jsx$/,
-          exclude: /(node_modules)/, 
+          exclude: /(node_modules)/,
           use: {
             loader: "babel-loader",
             options: {
-              presets: ["@babel/env", "@babel/react"], 
+              presets: ["@babel/env", "@babel/react"],
             },
           },
         },
@@ -77,19 +79,6 @@ module.exports = (env, argv) => {
     node: {
       fs: 'empty',
       'child_process': 'empty'
-    },
-    optimization: {
-      splitChunks: {
-        chunks: "all",
-        minSize: 4194300,  
-        cacheGroups: {
-          default: {
-            name: 'common',
-            chunks: 'initial',
-            minChunks: 2,  
-          },
-        }
-      }
     },
   };
   if (isDev) {
