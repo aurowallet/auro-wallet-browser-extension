@@ -54,7 +54,6 @@ export function updateValidatorDetail(validatorDetail ) {
   };
 }
 
-
 const initState = {
   stakingList: [],
   daemonStatus: {},

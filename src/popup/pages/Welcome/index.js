@@ -1,4 +1,5 @@
 import React from "react";
+import { Trans } from "react-i18next";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
 import purpleArrow from "../../../assets/images/rightPurpleArrow.png";
@@ -19,17 +20,19 @@ import {
 import { setLanguage } from "../../../reducers/appReducer";
 import { setWelcomeNextRoute } from "../../../reducers/cache";
 import { openTab } from "../../../utils/commonMsg";
-import { specialSplit } from "../../../utils/utils";
 import Button, { BUTTON_TYPE_HOME_BUTTON } from "../../component/Button";
 import ConfirmModal from "../../component/ConfirmModal/";
 import Select from "../../component/Select";
 import "./index.scss";
+const type_conditions = "conditions"
+const type_policy = "policy"
 class Welcome extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       newAccount: false,
-      isGotoProtocol: true
+      isGotoProtocol: true,
+      currentLang:""
     }
     this.isUnMounted = false;
   }
@@ -51,7 +54,6 @@ class Welcome extends React.Component {
   }
 
   initLocal = () => {
-    // 先去获取本地的隐私协议是否同意
     let agreeStatus = getLocal(USER_AGREEMENT)
     if (agreeStatus) {
       this.callSetState({
@@ -69,6 +71,7 @@ class Welcome extends React.Component {
   handleChange = (item) => {
     let value = item.key
     this.props.setLanguage(value);
+    this.callSetState({currentLang:value})
     changeLanguage(value);
   };
   renderLanMenu = () => {
@@ -83,14 +86,14 @@ class Welcome extends React.Component {
       />
     )
   }
-  onClickGuide = (item) => {
+  onClickGuide = (type) => {
     const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = this.props.cache
     let lan = getCurrentLang()
     let url = ""
     if (lan === LANG_SUPPORT_LIST.EN) {
-      url = item.specialIndex == 0 ? terms_and_contions : privacy_policy
+      url = type === type_conditions ? terms_and_contions : privacy_policy
     } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
-      url = item.specialIndex == 0 ? terms_and_contions_cn : privacy_policy_cn
+      url = type === type_conditions ? terms_and_contions_cn : privacy_policy_cn
     }
     if (url) {
       openTab(url)
@@ -98,17 +101,16 @@ class Welcome extends React.Component {
   }
 
   renderClickElement = () => {
-    let list = specialSplit(getLanguage('termsAndPrivacy_1'))
     return (<div>
       <p className={'confirm-content'}>{getLanguage('termsAndPrivacy_0')}</p>
       <p className={'confirm-content'}>
-        {list.map((item, index) => {
-          if (item.type === "common") {
-            return (<span key={index + ""} >{item.showStr}</span>)
-          } else {
-            return (<span key={index + ""} className={"tips-spical"} onClick={() => this.onClickGuide(item)}>{item.showStr}</span>)
-          }
-        })}
+        <Trans
+          i18nKey={getLanguage('termsAndPrivacy_1')}
+          components={{
+            conditions: <span className={"tips-spical"} onClick={() => this.onClickGuide(type_conditions)} />,
+            policy: <span className={"tips-spical"} onClick={() => this.onClickGuide(type_policy)} />
+          }}
+        />
       </p>
     </div>)
   }
@@ -178,7 +180,6 @@ class Welcome extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  language: state.appReducer.language,
   cache: state.cache,
 });
 

@@ -1,16 +1,24 @@
+import BigNumber from "bignumber.js";
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
-import downArrow from "../../../assets/images/downArrow.png";
-import pwd_right from "../../../assets/images/pwd_right.png";
-import arrow from '../../../assets/images/txArrow.png';
-import {getBalance, getFeeRecom, sendStakeTx} from '../../../background/api';
 import { cointypes } from "../../../../config";
+import downArrow from "../../../assets/images/downArrow.png";
+import loadingCommon from "../../../assets/images/loadingCommon.gif";
+import modalClose from "../../../assets/images/modalClose.png";
+import pwd_right from "../../../assets/images/pwd_right.png";
+import reminder from "../../../assets/images/reminder.png";
+import arrow from '../../../assets/images/txArrow.png';
+import { getBalance, getFeeRecom, sendStakeTx } from '../../../background/api';
 import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
+import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from '../../../i18n';
 import { updateNetAccount, updateShouldRequest } from '../../../reducers/accountReducer';
 import { sendMsg } from "../../../utils/commonMsg";
+import { checkLedgerConnect, requestSignDelegation } from "../../../utils/ledger";
+import { addressSlice, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
+import { addressValid } from "../../../utils/validator";
 import Button from '../../component/Button';
 import CustomInput from '../../component/CustomInput';
 import CustomView from "../../component/CustomView";
@@ -18,14 +26,6 @@ import Loading from '../../component/Loading';
 import TestModal from '../../component/TestModal';
 import Toast from '../../component/Toast';
 import './index.scss';
-import {addressValid} from "../../../utils/validator";
-import {addressSlice, trimSpace,isTrueNumber,isNumber} from "../../../utils/utils";
-import loadingCommon from "../../../assets/images/loadingCommon.gif";
-import {ACCOUNT_TYPE} from "../../../constant/walletType";
-import {checkLedgerConnect, requestSignDelegation} from "../../../utils/ledger";
-import modalClose from "../../../assets/images/modalClose.png";
-import reminder from "../../../assets/images/reminder.png";
-import BigNumber from "bignumber.js";
 const FEE_RECOMMED_DEFAULT = 1
 const FEE_RECOMMED_CUSTOM = -1
 
@@ -59,7 +59,7 @@ class StakingTransfer extends React.Component {
         }
       ],
       feeSelect: FEE_RECOMMED_DEFAULT,
-      confirmModalLoading:false
+      confirmModalLoading: false
     }
     this.modal = React.createRef();
     this.isUnMounted = false;
@@ -67,15 +67,15 @@ class StakingTransfer extends React.Component {
   componentDidMount() {
     this.fetchData();
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.isUnMounted = true;
   }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
+  callSetState = (data, callback) => {
+    if (!this.isUnMounted) {
       this.setState({
         ...data
-      },()=>{
-        callback&&callback()
+      }, () => {
+        callback && callback()
       })
     }
   }
@@ -95,10 +95,9 @@ class StakingTransfer extends React.Component {
         fee: feeRecom[1].value
       })
     }
-    let accountData = await getBalance(address)
-    let account = accountData.account
-    if (account.account) {
-      this.props.dispatch(updateNetAccount(account.account))
+    let account = await getBalance(address)
+    if (account.publicKey) {
+      this.props.dispatch(updateNetAccount(account))
     }
   }
   renderBottomBtn = () => {
@@ -112,7 +111,7 @@ class StakingTransfer extends React.Component {
     )
   }
   ledgerTransfer = async (params) => {
-    const {ledgerApp} = await checkLedgerConnect()
+    const { ledgerApp } = await checkLedgerConnect()
     if (ledgerApp) {
       this.modal.current.setModalVisable(false)
       this.callSetState({
@@ -120,7 +119,7 @@ class StakingTransfer extends React.Component {
       })
       this.modal.current.setModalVisable(true)
       let currentAccount = this.props.currentAccount
-      const {signature,payload, error} = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
+      const { signature, payload, error } = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
       this.modal.current.setModalVisable(false)
       this.callSetState({
         confirmModalLoading: false
@@ -129,8 +128,8 @@ class StakingTransfer extends React.Component {
         Toast.info(error.message)
         return
       }
-      let postRes = await sendStakeTx(payload, {rawSignature: signature}).catch(error => error)
-      this.onSubmitSuccess(postRes)
+      let postRes = await sendStakeTx(payload, { rawSignature: signature }).catch(error => error)
+      this.onSubmitSuccess(postRes,"ledger")
     }
   }
   doTransfer = async () => {
@@ -157,29 +156,26 @@ class StakingTransfer extends React.Component {
       this.onSubmitSuccess(data)
     })
   }
-  onSubmitSuccess = (data) => {
+  onSubmitSuccess = (data,type) => {
     if (data.error) {
-      let err = data.error
       let errorMessage = getLanguage('postFailed')
-      if(data.error.message){
-        errorMessage = data.error.message
-      }
-      if (err.length > 0) {
-        errorMessage = err[0].message || getLanguage('postFailed')
-      }
-      Toast.info(errorMessage)
+      let realMsg = getRealErrorMsg(data.error)
+      errorMessage = realMsg ? realMsg : errorMessage
+      Toast.info(errorMessage, 5 * 1000)
       return
     }
     Toast.info(getLanguage('postSuccess'))
-    this.props.dispatch(updateShouldRequest(true,true))
+    this.props.dispatch(updateShouldRequest(true, true))
     let detail = data.sendDelegation && data.sendDelegation.delegation || {}
-    sendMsg({
-      action: WALLET_CHECK_TX_STATUS,
-      payload: {
-        paymentId: detail.id,
-        hash: detail.hash,
-      }
-    }, () => { })
+    if(type === "ledger"){
+      sendMsg({
+        action: WALLET_CHECK_TX_STATUS,
+        payload: {
+          paymentId: detail.id,
+          hash: detail.hash,
+        }
+      }, () => { })
+    }
     this.props.history.replace({
       pathname: "/record_page",
       params: {
@@ -227,7 +223,7 @@ class StakingTransfer extends React.Component {
     this.callSetState({
       feeSelect: index,
       fee: item.fee,
-      inputFee:""
+      inputFee: ""
     })
   }
   onFeeInput = (e) => {
@@ -284,7 +280,7 @@ class StakingTransfer extends React.Component {
       </div>
     )
   }
-  renderLoadingView=()=>{
+  renderLoadingView = () => {
     return (
       <div className={"confirm-loading"}>
         <p className={"confirm-loading-desc"}>{getLanguage('confirmInfoLedger')}</p>
@@ -295,13 +291,13 @@ class StakingTransfer extends React.Component {
     this.modal.current.setModalVisable(false)
   }
   renderConfirmModal = () => {
-    let title = this.state.confirmModalLoading ? "waitLedgerConfirm":"stakeDetail"
+    let title = this.state.confirmModalLoading ? "waitLedgerConfirm" : "stakeDetail"
     return (<TestModal
       ref={this.modal}
       touchToClose={true}
       title={getLanguage(title)}
     >
-      {this.state.confirmModalLoading ? this.renderLoadingView(): this.renderConfirmView()}
+      {this.state.confirmModalLoading ? this.renderLoadingView() : this.renderConfirmView()}
       {this.state.confirmModalLoading ? <></> : <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />}
     </TestModal>)
   }
@@ -309,15 +305,15 @@ class StakingTransfer extends React.Component {
     let lastFee = this.state.inputFee ? this.state.inputFee : this.state.fee;
     let nonce = this.state.nonce;
     let memo = this.state.memo;
-    let nodeName =this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress,8)
+    let nodeName = this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress, 8)
     return (
       <div className={"confirm-modal-container"}>
         {this.renderConfirmItem(getLanguage('stakeProvider'), nodeName, true)}
         {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.props.currentAccount.address)}
-        {memo && this.renderConfirmItem("Memo", memo,true)}
-        {nonce && this.renderConfirmItem("Nonce", nonce,true)}
-        {this.renderConfirmItem(getLanguage('fee'), lastFee + " "+cointypes.symbol, true)}
+        {memo && this.renderConfirmItem("Memo", memo, true)}
+        {nonce && this.renderConfirmItem("Nonce", nonce, true)}
+        {this.renderConfirmItem(getLanguage('fee'), lastFee + " " + cointypes.symbol, true)}
         {this.renderConfirmButton()}
       </div>
     )
@@ -327,7 +323,7 @@ class StakingTransfer extends React.Component {
     let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
 
     let isWatchModde = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
-    let buttonText = isWatchModde ? getLanguage("watchMode"):getLanguage('confirm')
+    let buttonText = isWatchModde ? getLanguage("watchMode") : getLanguage('confirm')
     return (
       <Button
         disabled={disabled}
@@ -343,7 +339,7 @@ class StakingTransfer extends React.Component {
         label={getLanguage('stakingProviderName')}
         onTextInput={this.onProviderChange} />
     } else {
-      let nodeName =this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress,8)
+      let nodeName = this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress, 8)
       return <div className={'select-node-con'}>
         <label className={'provider-title'}>{getLanguage('stakingProviderName')}</label>
         <div className={'selected-value click-cursor'} onClick={this.onChooseNode}>
@@ -360,7 +356,7 @@ class StakingTransfer extends React.Component {
       <div className={"button-fee-container"}>
         <div className={"lable-container fee-style"}>
           <p className="pwd-lable-1">{getLanguage('fee')}</p>
-          <p className="pwd-lable-desc-1">{this.state.inputFee||this.state.fee}</p>
+          <p className="pwd-lable-desc-1">{this.state.inputFee || this.state.fee}</p>
         </div>
         <div className={"fee-item-container"}>
           {this.state.feeList.map((item, index) => {
@@ -371,7 +367,7 @@ class StakingTransfer extends React.Component {
                   cx({
                     "fee-common": true,
                     "fee-select": selected,
-                    "click-cursor":true
+                    "click-cursor": true
                   })
                 }>
                 <img src={pwd_right} className={
@@ -408,7 +404,7 @@ class StakingTransfer extends React.Component {
   renderAdvanceOption = () => {
     let netAccount = this.props.netAccount
     let nonceHolder = netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
-    let showFeeHigh = BigNumber(this.state.inputFee).gt(10) 
+    let showFeeHigh = BigNumber(this.state.inputFee).gt(10)
     return (
       <div className={
         cx({

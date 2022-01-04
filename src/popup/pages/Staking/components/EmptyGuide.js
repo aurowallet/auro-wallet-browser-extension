@@ -1,40 +1,36 @@
 import React from "react";
-import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from '../../../../i18n';
-import "./EmptyGuide.scss";
-import reminder from "../../../../assets/images/reminder.png";
-import { specialSplit } from "../../../../utils/utils";
+import { Trans } from "react-i18next";
 import { connect } from "react-redux";
+import reminder from "../../../../assets/images/reminder.png";
+import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from '../../../../i18n';
 import { openTab } from "../../../../utils/commonMsg";
+import "./EmptyGuide.scss";
 class EmptyGuide extends React.Component {
     constructor(props) {
         super(props);
     }
 
-    onClickGuide=()=>{
+    onClickGuide = () => {
         const { staking_guide, staking_guide_cn } = this.props.cache
         let lan = getCurrentLang()
         let url = ""
-        if(lan === LANG_SUPPORT_LIST.EN){
+        if (lan === LANG_SUPPORT_LIST.EN) {
             url = staking_guide
-        }else if(lan === LANG_SUPPORT_LIST.ZH_CN){
+        } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
             url = staking_guide_cn
         }
-        if(url){
+        if (url) {
             openTab(url)
         }
     }
 
-    renderClickElement=(text)=>{
-        let list = specialSplit(text)
+    renderClickElement = (text) => {
         return (<div>
             <p className={"empty-desc"}>
-            {list.map((item,index)=>{
-                if(item.type === "common"){
-                    return(<span key={index+""}>{item.showStr}</span>)
-                }else{
-                    return(<span key={index+""} className={"tips-spical"} onClick={this.onClickGuide}>{item.showStr}</span>)
-                }
-            })}
+                <Trans
+                    i18nKey={text}
+                    components={{ click: <span className={"tips-spical"} onClick={this.onClickGuide} /> }}
+                />
             </p>
         </div>)
     }
@@ -42,7 +38,6 @@ class EmptyGuide extends React.Component {
     render() {
         return <div className={'empty-delegate'}>
             <div className={'empty-title'}>
-                <img src={reminder} className={"empty-reminder-img"} />
                 {getLanguage('emptyDelegateTitle')}
             </div>
             <p className={'empty-desc'}>
@@ -54,11 +49,11 @@ class EmptyGuide extends React.Component {
 }
 const mapStateToProps = (state) => ({
     cache: state.cache,
-  });
-  
-  function mapDispatchToProps(dispatch) {
+});
+
+function mapDispatchToProps(dispatch) {
     return {};
-  }
-  
-  export default connect(mapStateToProps, mapDispatchToProps)(EmptyGuide);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(EmptyGuide);
 

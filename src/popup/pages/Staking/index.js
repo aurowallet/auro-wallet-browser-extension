@@ -14,7 +14,9 @@ import Clock from "../../component/Clock";
 import Toast from "../../component/Toast";
 import EmptyGuide from "./components/EmptyGuide";
 import "./index.scss";
-
+import {  NET_CONFIG_TYPE } from '../../../constant/walletType';
+import { updateStakingRefresh } from "../../../reducers/accountReducer";
+import homeNoTx from "../../../assets/images/homeNoTx.png";
 class Staking extends React.Component {
   constructor(props) {
     super(props);
@@ -24,6 +26,7 @@ class Staking extends React.Component {
       loading: false,
       percentage: 0
     }
+    this.isRequest = false
     this.isUnMounted= false
   }
   componentWillUnmount() {
@@ -39,8 +42,24 @@ class Staking extends React.Component {
     }
   }
    componentDidMount() {
-    let { shouldRefresh,account,daemonStatus,block,validatorDetail } = this.props
-    if (shouldRefresh) {
+    this.fetchRequest()
+  }
+  componentWillReceiveProps(nextProps) {
+    let { stakingLoadingRefresh } = nextProps
+    if (stakingLoadingRefresh) {
+      this.props.dispatch(updateValidatorDetail({}));
+      this.callSetState({
+        delegatePublicKey:""
+    },()=>{
+        this.fetchLoadingData()
+      })
+    }
+  }
+  fetchRequest=()=>{
+    let { account,daemonStatus,block,validatorDetail,stakingLoadingRefresh } = this.props
+    if(stakingLoadingRefresh){
+      this.fetchLoadingData()
+    }else{
       if(daemonStatus.stateHash && block.protocolState){
         this.fetchEpochData(daemonStatus,block)
         this.setDelegationInfo(account,validatorDetail)
@@ -49,25 +68,27 @@ class Staking extends React.Component {
       }else{
         this.fetchLoadingData()
       }
-    }else{
-      this.fetchEpochData(daemonStatus,block)
-      this.setDelegationInfo(account,validatorDetail)
     }
   }
   fetchData=()=>{
+    this.props.dispatch(updateStakingRefresh(false));
+    if (this.isRequest) {
+      return
+    }
+    this.isRequest = true 
     Promise.all([
       fetchDaemonStatus(),
       fetchDelegationInfo(this.props.currentAccount.address),
     ]).then(async (data)=>{
-      let daemonStatus = data[0].daemonStatus || {}
-      let account = data[1].account || {}
+      this.isRequest = false
+      let daemonStatus = data[0]
+      let account = data[1]
       this.props.dispatch(updateDaemonStatus(daemonStatus));
       this.props.dispatch(updateDelegationInfo(account));
 
       if(daemonStatus.stateHash){
-        fetchBlockInfo(daemonStatus.stateHash).then((blockInfo)=>{
-          let block = blockInfo.block
-          if(block){
+        fetchBlockInfo(daemonStatus.stateHash).then((block)=>{
+          if(block.protocolState){
             this.props.dispatch(updateBlockInfo(block));
             this.fetchEpochData(daemonStatus,block)
           }
@@ -75,10 +96,8 @@ class Staking extends React.Component {
       }
 
       let isSelf = this.props.currentAccount.address === account.delegate;
-      let validatorDetail = null;
       if (!isSelf && account.delegate) {
-        await fetchValidatorDetail(account.delegate).then((validatorDetailResp)=>{
-          validatorDetail = validatorDetailResp?.validator;
+        await fetchValidatorDetail(account.delegate).then((validatorDetail)=>{
           this.props.dispatch(updateValidatorDetail(validatorDetail));
           this.setDelegationInfo(account,validatorDetail)
         }).catch(()=>{
@@ -89,6 +108,7 @@ class Staking extends React.Component {
         loading: false
       })
     }).catch((err)=>{
+      this.isRequest = false
       Toast.info(getLanguage('nodeError'))
       this.callSetState({
         loading: false
@@ -173,9 +193,25 @@ class Staking extends React.Component {
       Toast.info(getLanguage('copySuccess'))
     })
   }
+  renderUnknown = () => {
+    return(
+      <div className={'module'}>
+        <div className={'title'}>{getLanguage('delegationInfo')}</div>
+        <div className={"home-bottom-tip"}>
+          <img className={"history-img"} src={homeNoTx} />
+          <p className={"history-content-noTx"}>{getLanguage('unknownInfo')}</p>
+      </div>
+      </div>
+    )
+  }
   renderContent() {
-    const { stakingList } = this.props;
+    const { stakingList,netConfig } = this.props;
     const { validatorDetail, delegatePublicKey } = this.state;
+    const netType = netConfig.currentConfig?.netType
+    let showContent = true
+    if (netType === NET_CONFIG_TYPE.Unknown) {
+      showContent = false
+    }
     let nodeName = '';
     if (delegatePublicKey) {
       let delegateNode = stakingList.find(({ nodeAddress }) => nodeAddress === delegatePublicKey);
@@ -213,7 +249,7 @@ class Staking extends React.Component {
           </div>
         </div>
       </div>
-      <div className={'module'}>
+      {showContent ? <div className={'module'}>
         <div className={'title'}>{getLanguage('delegationInfo')}</div>
         {
 
@@ -257,9 +293,9 @@ class Staking extends React.Component {
             }
           </div>
         }
-      </div>
+      </div>:this.renderUnknown()}
       {
-        !this.state.delegatePublicKey && (<div className={'operate-con'}>
+        showContent && !this.state.delegatePublicKey && (<div className={'operate-con'}>
           <div className={'go-staking click-cursor'} onClick={this.goStaking}>
             {getLanguage('goStake')}
             <img className={'double-arrow'} src={goNext} />
@@ -289,7 +325,7 @@ class Staking extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  accountInfo: state.accountInfo,
+  stakingLoadingRefresh: state.accountInfo.stakingLoadingRefresh,
   currentAccount: state.accountInfo.currentAccount,
   stakingList: state.staking.stakingList,
   shouldRefresh: state.accountInfo.shouldRefresh,
@@ -298,6 +334,7 @@ const mapStateToProps = (state) => ({
   validatorDetail: state.staking.validatorDetail,
   account: state.staking.account,
   cache: state.cache,
+  netConfig: state.network,
 });
 
 export default withRouter(
