@@ -252,7 +252,7 @@
   "disconnectSuccess": "Disconnected",
   "currentAccount": "Current Account",
   "setConnect": "Connect",
-  "noAccountConnect": "Auro Wallet has not established a connection with this website. To connect to this website, please find the connect button in the website.",
+  "noAccountConnect": "Auro Wallet has not connected this website. To connect this website, please find the connect button in the website.",
   "importSameAccount_1": "The address of the account to be created is:",
   "importSameAccount_2": "An existing imported account [<b>{{accountName}}</b>] is a duplicate of this address. Auro Wallet does not support the creation of duplicate account addresses. Please go to the <click>Account Management</click> to delete the imported account.",
   "walletConnected": "Auro Wallet has connected this website.",

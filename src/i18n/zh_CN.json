@@ -255,7 +255,7 @@
   "noAccountConnect": "Auro Wallet 没有与此网站建立连接。若要连接到此网站请在网站中找到连接按钮。",
   "importSameAccount_1": "即将创建的账户地址为:",
   "importSameAccount_2": "已存在导入账户【<b>{{accountName}}</b>】与此地址重复，Auro 钱包不支持账户地址重复创建，请前往<click>账户管理页</click>将已导入的账户删除。",
-  "walletConnected": "Auro Wallet 已经与网站建立连接。",
+  "walletConnected": "Auro Wallet 已经与此网站建立连接。",
   "setDappDisconnet": "断开连接",
   "disconnectFailed": "断开连接失败",
   "agreeToConnect": "这个网站请求查看账户:",
