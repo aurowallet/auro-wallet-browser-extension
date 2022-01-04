@@ -53,8 +53,8 @@
     letter-spacing: 0;
     line-height: $font-size-title-big;
 }
-.cache-balance{
-    color: #CCCCCC;
+.cache-balance {
+    color: #cccccc;
 }
 .home-bottom-tip {
     display: flex;
@@ -82,7 +82,7 @@
     color: #7055ff;
     margin-right: 4px;
 }
-.history-content-noTx { 
+.history-content-noTx {
     margin: 0px;
     margin-left: 14px;
     font-size: $font-size-desc;
@@ -114,6 +114,14 @@
     justify-content: space-between;
     align-items: center;
 }
+.wallet-net-change {
+    display: flex;
+    align-items: center;
+}
+.wallet-select-con {
+    margin-right: 20px;
+}
+
 .wallet-top-background {
     background-image: url("../../../assets/images/home_background.png");
     height: 220px;
@@ -124,46 +132,124 @@
     box-shadow: 0 12px 30px 0 rgba(37, 34, 117, 0.08);
     border-radius: 20px;
     width: 319px;
-    height: 190px;
     margin: 0px 28px 0px 28px;
     padding: 16px 20px;
     position: relative;
-  }
+}
 
-  .wallet-currency-container {
+.wallet-currency-container {
     display: flex;
     margin-top: 10px;
     align-items: flex-end;
 }
-.base-current-balance{
+.base-current-balance {
     font-size: $font-size-content;
     letter-spacing: 1px;
     margin: 0px;
 }
-  .current-balance{
+.current-balance {
     color: #666666;
-  }
-  .walletWatchTipContainer{
+}
+.walletWatchTipContainer {
     font-size: 14px;
     font-family: PingFangSC-Regular, PingFang SC;
     color: #666666;
     line-height: 24px;
     margin-top: 14px;
-  }
-  .walletWatchLink{
-      color:#7055ff;
-  }
-  .account-address-container {
+}
+.walletWatchLink {
+    color: #f95051;
+}
+.account-address-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     padding: 2px;
-  }
-  .account-address {
+}
+.account-address {
     font-size: $font-size-desc-small;
     color: #b1b3bd;
     letter-spacing: 1px;
     line-height: $font-size-desc-small;
     margin-top: 10px;
     margin: 0;
-  }
+}
+.dapp-icon-inner-con {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    width: 23px;
+    height: 23px;
+    border-radius: 50%;
+    background-color: rgba(89, 196, 159, 1);
+    &:hover {
+        background-color: rgba(189, 232, 216, 1);
+    }
+}
+
+.dapp-icon-inner-con-dis {
+    background-color: rgba(186, 186, 186, 1);
+    &:hover {
+        background-color: rgba(212, 214, 219, 1);
+    }
+}
+.dapp-connect-icon {
+    width: 14px;
+}
+
+.baseTip {
+    visibility: hidden;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 5px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    min-width: 70px;
+}
+.dapp-icon-inner-con .tooltiptext {
+    margin-top: 60px;
+}
+.dapp-icon-inner-con:hover .tooltiptext {
+    visibility: visible;
+}
+.dappModalTitle {
+    font-size: $font-size-title-small;
+    font-weight: 500;
+    color: #333333;
+
+    word-break: break-all;
+    text-align: left;
+    margin-right: 20px;
+}
+
+.account-disconnect-button {
+    width: 14px;
+    height: 14px;
+}
+.wallet-connect-container {
+    min-height: 100px;
+    width: $modal-width;
+    background: #feffff;
+    border-radius: 10px;
+    padding: 20px 20px 30px;
+    width: 340px;
+}
+.wallet-connect-item-container {
+    max-height: 200px;
+    overflow-y: scroll;
+}
+.wallet-connect-disconnect {
+    margin-top: 20px;
+}
+.walletDisconnectContent {
+    font-size: $font-size-content;
+    color: #666666;
+    line-height: 20px;
+}
+
+.walletDisconnectBtn{
+    margin-top: 24px;
+}

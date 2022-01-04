@@ -1,48 +1,49 @@
 import BigNumber from 'bignumber.js';
 import cx from "classnames";
+import extensionizer from "extensionizer";
 import React from "react";
+import { Trans } from 'react-i18next';
 import { connect } from "react-redux";
+import { cointypes } from '../../../../config';
+import dappConnectIcon from "../../../assets/images/dapp_connect.svg";
+import dappDisconnectIcon from "../../../assets/images/dapp_disconnect.svg";
 import goNext from "../../../assets/images/goNext.png";
 import homeNoTx from "../../../assets/images/homeNoTx.png";
-import home_logo from "../../../assets/images/transparentLogo.png";
 import home_wallet from "../../../assets/images/home_wallet.png";
+import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import pointNormal from "../../../assets/images/pointNormal.png";
-
+import refreshIcon from "../../../assets/images/refresh.svg";
 import reminder from "../../../assets/images/reminder.png";
+import selectArrow from "../../../assets/images/selectArrow.svg";
+import home_logo from "../../../assets/images/transparentLogo.png";
 import txArrow from "../../../assets/images/txArrow.png";
-import { fetchDaemonStatus, getBalance, getCurrencyPrice, getPendingTxList, getTransactionList } from "../../../background/api";
-import { cointypes, EXPLORER_URL } from '../../../../config';
+import txCommonType from "../../../assets/images/txCommonType.png";
+import txReceive from "../../../assets/images/txReceive.png";
+import txSend from "../../../assets/images/txSend.png";
+import { getBalance, getCurrencyPrice, getPendingTxList, getTransactionList } from "../../../background/api";
+import { saveLocal } from '../../../background/localStorage';
+import { NET_WORK_CONFIG } from '../../../constant/storageKey';
+import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
+import { NET_CONFIG_TYPE } from '../../../constant/walletType';
 import { getLanguage } from "../../../i18n";
-import { ACCOUNT_BALANCE_CACHE_STATE, setBottomType, updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
+import { ACCOUNT_BALANCE_CACHE_STATE, setBottomType, updateAccountTx, updateCurrentAccount, updateNetAccount, updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
-import { NET_CONFIG_DEFAULT } from "../../../reducers/network";
+import { updateNetConfig } from "../../../reducers/network";
 import { openTab, sendMsg } from '../../../utils/commonMsg';
-import { addressSlice, amountDecimals, copyText, getDisplayAmount, isNumber } from "../../../utils/utils";
-import Button from "../../component/Button";
+import { addressSlice, amountDecimals, copyText, getCurrentNetConfig, getDisplayAmount, getOriginFromUrl, getShowTime, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
+import Button, { BUTTON_TYPE_CANCEL } from "../../component/Button";
+import Clock from '../../component/Clock';
+import ConfirmModal from '../../component/ConfirmModal';
+import DialogModal from '../../component/DialogModal';
+import Select from '../../component/Select';
 import Toast from "../../component/Toast";
 import "./index.scss";
 
 
-import txReceive from "../../../assets/images/txReceive.png";
-import txSend from "../../../assets/images/txSend.png";
-import txCommonType from "../../../assets/images/txCommonType.png";
-import loadingCommon from "../../../assets/images/loadingCommon.gif";
-import refreshIcon from "../../../assets/images/refresh.svg";
-import { ERROR_TYPE } from '../../../constant/errType';
-import Clock from '../../component/Clock';
-import { WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
-import ConfirmModal from '../../component/ConfirmModal';
-import { Trans } from 'react-i18next';
-import { getLocal, saveLocal } from '../../../background/localStorage';
-import { WATCH_MODE_TIP_SHOW } from '../../../constant/storageKey';
-import { ACCOUNT_TYPE } from '../../../constant/walletType';
-
-
 const BOTTOM_TYPE = {
-  BOTTOM_TYPE_NOT_DEFAULT: "BOTTOM_TYPE_NOT_DEFAULT", // 不是默认节点
-  BOTTOM_TYPE_SHOW_TX: "BOTTOM_TYPE_SHOW_TX",  // 展示交易记录
-  BOTTOM_TYPE_SHOW_REMINDER: "BOTTOM_TYPE_SHOW_REMINDER",  //展示没有交易记录，
-  BOTTOM_TYPE_LOADING: "BOTTOM_TYPE_LOADING",// 展示loading
+  BOTTOM_TYPE_NOT_DEFAULT: "BOTTOM_TYPE_NOT_DEFAULT",
+  BOTTOM_TYPE_SHOW_TX: "BOTTOM_TYPE_SHOW_TX",
+  BOTTOM_TYPE_LOADING: "BOTTOM_TYPE_LOADING",
 }
 
 const STATUS = {
@@ -58,32 +59,37 @@ class Wallet extends React.Component {
       balance: "0.0000",
       txList: props.txList,
       bottomTipType: this.getInitBottomType(),
-      refreshing: false
+      refreshing: false,
+      showConncetHover: false,
+      currentAccountConnectDAppStatus:false
     }
     this.isUnMounted = false;
+    this.siteUrl = ""
+    this.modal = React.createRef();
   }
   componentWillUnmount() {
     this.isUnMounted = true;
   }
-  getInitBottomType=()=>{
-    const {accountInfo,netConfig,txList} = this.props
+  getInitBottomType = () => {
+    const { accountInfo, netConfig, txList } = this.props
     let bottomTipType = ""
-    if(accountInfo.homeBottomType){
+    if (accountInfo.homeBottomType) {
       bottomTipType = accountInfo.homeBottomType
-    }else{
-      if (netConfig.netType !== NET_CONFIG_DEFAULT) {
+    } else {
+      const netType = netConfig.currentConfig?.netType
+      if (netType === NET_CONFIG_TYPE.Unknown) {
         bottomTipType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT
-      }else{
-        if(txList.length > 0){
+      } else {
+        if (txList.length > 0) {
           bottomTipType = BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX
-        }else{
+        } else {
           bottomTipType = BOTTOM_TYPE.BOTTOM_TYPE_LOADING
         }
       }
     }
     return bottomTipType
   }
-  callSetState = (data, callback) => { 
+  callSetState = (data, callback) => {
     if (!this.isUnMounted) {
       this.setState({
         ...data
@@ -95,65 +101,92 @@ class Wallet extends React.Component {
   async componentDidMount() {
     let { currentAccount } = this.props
     let address = currentAccount.address
-    if(this.state.bottomTipType !== BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT){
-      this.fetchData(address,true)
-    }else{
+    if (this.state.bottomTipType !== BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT) {
+      this.fetchData(address, true)
+    } else {
       this.fetchData(address)
     }
+    this.getDappConnect()
     this.checkLocalWatchWallet()
+  }
+  getDappConnect() {
+    let { currentAccount } = this.props
+    let address = currentAccount.address
+    let that = this
+    extensionizer.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      let url = tabs[0]?.url || ""
+      let origin = getOriginFromUrl(url)
+      that.siteUrl = origin
+      sendMsg({
+        action: DAPP_GET_CONNECT_STATUS,
+        payload: {
+          siteUrl: origin,
+          address
+        }
+      }, (isConnected) => {
+        that.callSetState({
+          currentAccountConnectDAppStatus:isConnected
+        })
+      })
+    });
+  }
+
+  dappAccountSort = (list, address) => {
+    list.map((item, index) => {
+      if (item.address === address) {
+        list.unshift(list.splice(index, 1)[0]);
+      }
+    })
+    return list
   }
   onModalConfirm = () => {
     ConfirmModal.hide()
-    saveLocal(WATCH_MODE_TIP_SHOW, "true")
+    this.goToPage("/account_manage")
   }
 
-  renderTipContent=()=>{
-    return(
-    <div className={'walletWatchTipContainer'}><Trans
-      i18nKey={"watchTip"}
-      components={{a:<span onClick={()=>{
-        this.onModalConfirm()
-        this.goToPage("/account_manage")
-      }} className={"walletWatchLink click-cursor"}/>}}
-    /></div>)
+  renderTipContent = () => {
+    return (
+      <div className={'walletWatchTipContainer'}><Trans
+        i18nKey={"watchModeDeleteTip"}
+        components={{ red: <span className={"walletWatchLink"} /> }}
+      /></div>)
   }
-  showWatchModeTip=()=>{
+  showWatchModeTip = () => {
     let title = getLanguage('prompt')
     let elementContent = this.renderTipContent
     ConfirmModal.show({
       title,
       elementContent,
-      confirmText:getLanguage("isee"),
+      widthAuto:true,
+      confirmText: getLanguage("watchModeDeleteBtn"),
       onConfirm: this.onModalConfirm,
     })
   }
-  checkLocalWatchWallet=()=>{
+  checkLocalWatchWallet = () => {
     sendMsg({
       action: WALLET_GET_ALL_ACCOUNT,
     }, (account) => {
-      let watchList = account.accounts.filter((item, index) => {
-        return item.type === ACCOUNT_TYPE.WALLET_WATCH
-      })
-      if(watchList.length>0){
-        let showStatus = getLocal(WATCH_MODE_TIP_SHOW)
-        if(!showStatus){
-          this.showWatchModeTip()
-        }
+      let watchList = account.accounts.watchList
+      if (watchList.length > 0) {
+        this.showWatchModeTip()
       }
     })
   }
   setHomeBottomType = () => {
     this.props.setBottomType(this.state.bottomTipType)
   }
-  fetchPrice=async (currency)=>{
-    const {currentCurrency} = this.props
-    let lastCurrency = currentCurrency
-    if(currency){
-      lastCurrency = currency
-    }
-    let price = await getCurrencyPrice(lastCurrency.key)
-    if(isNumber(price)){
-      this.props.updateCurrentPrice(price)
+  fetchPrice = async (currency) => {
+    const { currentConfig } = this.props.netConfig
+    if (currentConfig.netType == NET_CONFIG_TYPE.Mainnet) {
+      const { currentCurrency } = this.props
+      let lastCurrency = currentCurrency
+      if (currency) {
+        lastCurrency = currency
+      }
+      let price = await getCurrencyPrice(lastCurrency.key)
+      if (isNumber(price)) {
+        this.props.updateCurrentPrice(price)
+      }
     }
   }
   fetchData = async (address, silent = false) => {
@@ -163,15 +196,11 @@ class Wallet extends React.Component {
     //   return
     // }
     this.props.updateShouldRequest(false)
-    getBalance(address).then((accountData) => {
-      let account = accountData.account
-      let balanceAddress = accountData.address
-      if (account.error) {
-        if(account.error !== ERROR_TYPE.CanceRequest){
-          Toast.info(getLanguage('nodeError'))
-        }
-      } else if (account && account.account && balanceAddress === currentAddress) {
-        this.props.updateNetAccount(account.account)
+    getBalance(address).then((account) => {
+      if (account.publicKey) {
+        this.props.updateNetAccount(account)
+      } else {
+        Toast.info(getLanguage('nodeError'))
       }
     })
     this.fetchPrice()
@@ -187,7 +216,7 @@ class Wallet extends React.Component {
         let txData = data[0]
         let txAddress = txData.address
         let txList = txData.txList
-        
+
         let txPendingData = data[1]
         let txPendingList = txPendingData.txList
         let txPendingAddress = txPendingData.address
@@ -228,14 +257,17 @@ class Wallet extends React.Component {
     })
   }
   renderAccount = () => {
-    let { currentAccount, balance, netAccount,currentCurrency,cache,accountInfo } = this.props
+    let { currentAccount, balance, netAccount, currentCurrency, cache, accountInfo, netConfig } = this.props
+    const netType = netConfig.currentConfig?.netType
+    let showCurrency = netType == NET_CONFIG_TYPE.Mainnet ? true : false
+
     let DelegateState = !!netAccount.delegate && netAccount.delegate !== currentAccount.address
     let deleText = DelegateState ? getLanguage("stakingStatus_1") : getLanguage("stakingStatus_2")
     let amount = getDisplayAmount(balance)
     let unitBalance = "--"
-    if(cache.currentPrice){
+    if (cache.currentPrice) {
       unitBalance = new BigNumber(cache.currentPrice).multipliedBy(balance).toString()
-      unitBalance = currentCurrency.symbol + getDisplayAmount(unitBalance,2)
+      unitBalance = currentCurrency.symbol + getDisplayAmount(unitBalance, 2)
     }
     let isCache = accountInfo.isAccountCache === ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE
     return (
@@ -254,16 +286,16 @@ class Wallet extends React.Component {
           <p className={cx("account-balance", {
             "cache-balance": isCache
           })}>{amount}</p>
-          <p className={cx("account-symbol",{
-            "cache-balance":isCache
-            })}>{cointypes.symbol}</p>
+          <p className={cx("account-symbol", {
+            "cache-balance": isCache
+          })}>{cointypes.symbol}</p>
         </div>
-        <div className={'wallet-currency-container'}>
-          <p className={cx("base-current-balance",{
-            "current-balance":!isCache,
-            "cache-balance":isCache,
+        {showCurrency && <div className={'wallet-currency-container'}>
+          <p className={cx("base-current-balance", {
+            "current-balance": !isCache,
+            "cache-balance": isCache,
           })}>{unitBalance}</p>
-        </div>
+        </div>}
       </div>)
   }
 
@@ -286,16 +318,101 @@ class Wallet extends React.Component {
       />
     </div>)
   }
+  renderModalTitle = () => {
+    return (<div className={''}>
+      <p className={'dappModalTitle'}>
+        {this.siteUrl}
+      </p>
+    </div>)
+  }
+
+  onClickDisconnect = () => {
+      let { currentAccount } = this.props
+      let address = currentAccount.address
+      sendMsg({
+        action: DAPP_DISCONNECT_SITE,
+        payload: {
+          siteUrl: this.siteUrl,
+          address,
+        }
+      }, (status) => {
+        this.callSetState({
+          currentAccountConnectDAppStatus:!status
+        })
+        if(status){
+          this.onCloseModal()
+          Toast.info(getLanguage('disconnectSuccess'))
+        }else{
+          Toast.info(getLanguage('disconnectFailed'))
+        }
+      })
+  }
+
+  renderContent = () => { 
+    const { currentAccountConnectDAppStatus } = this.state
+    if (currentAccountConnectDAppStatus) {
+      return(<div className={"wallet-connect-disconnect"}>
+      <p className={"walletDisconnectContent"}>
+        {getLanguage('walletConnected')}
+      </p>
+      <div className='walletDisconnectBtn'>
+      <Button
+            buttonType={BUTTON_TYPE_CANCEL} 
+            content={getLanguage('setDappDisconnet')}
+            propsClass={'modal-button-width'}
+            onClick={() => {
+              this.onClickDisconnect()
+            }}
+        />
+      </div>
+    </div>)
+    } else {
+      return (<div className={"wallet-connect-disconnect"}>
+        <p className={"walletDisconnectContent"}>
+          {getLanguage('noAccountConnect')}
+        </p>
+      </div>)
+    }
+  }
+  renderChangeModal = () => {
+    return (<DialogModal
+      ref={this.modal}
+      showClose={true}
+      touchToClose={true}
+    >
+      <div className={'wallet-connect-container'}>
+        {this.renderModalTitle()}
+        {this.renderContent()}
+      </div>
+    </DialogModal>)
+  }
+  onClickDappConnect = (e) => {
+    this.modal.current.setModalVisible(true)
+  }
+  onCloseModal = () => {
+    this.modal.current.setModalVisible(false)
+  }
   renderWalletInfo = () => {
+    let currentConnected =  this.state.currentAccountConnectDAppStatus
+    let showTip = currentConnected ? getLanguage("dappConnect") : getLanguage("dappDisconnect")
+    let imgSrc = currentConnected ? dappConnectIcon : dappDisconnectIcon
     return (<div className="wallet-info">
       {this.renderAccount()}
-      <img className="account-manager click-cursor" src={pointNormal}
-        onClick={() => {
-          let { currentAccount } = this.props
-          this.props.setAccountInfo(currentAccount)
-          this.goToPage("/account_info")
-        }}
-      ></img>
+      <div className={"wallet-icon-con"}>
+        <div className={cx('dapp-icon-inner-con click-cursor', {
+          "dapp-icon-inner-con-dis": !currentConnected
+        })} onClick={this.onClickDappConnect}>
+          <span className="baseTip tooltiptext">{showTip}</span>
+          <img src={imgSrc} className={"dapp-connect-icon"} />
+        </div>
+        <img className="account-manager click-cursor" src={pointNormal}
+          onClick={() => {
+            let { currentAccount } = this.props
+            this.props.setAccountInfo(currentAccount)
+            this.goToPage("/account_info")
+          }}
+        ></img>
+      </div>
       {this.renderActionBtn()}
     </div>)
   }
@@ -329,7 +446,8 @@ class Wallet extends React.Component {
     return className
   }
   onClickGoExplorer = () => {
-    let url = EXPLORER_URL + "?account=" + this.props.currentAccount.address
+    let netConfig = getCurrentNetConfig()
+    let url = netConfig.explorer + "/wallet/" + this.props.currentAccount.address
     openTab(url)
   }
   renderListExplorer = (index) => {
@@ -355,7 +473,7 @@ class Wallet extends React.Component {
     let statusText = getLanguage(status && status.toUpperCase())
     let imgSource = this.getTxSource(item)
     let statusColor = this.getStatusColor(item)
-    let timeText = status === STATUS.TX_STATUS_PENDING ? "Nonce "+item.nonce : item.time
+    let timeText = status === STATUS.TX_STATUS_PENDING ? "Nonce " + item.nonce : getShowTime(item.time)
     return (
       <div key={index + ""} className={"tx-item-container click-cursor"} onClick={() => { this.onClickItem(item) }}>
         <div className={"tx-item-left"}>
@@ -384,18 +502,25 @@ class Wallet extends React.Component {
     )
   }
   renderHistory = () => {
-    let txList = this.props.txList
+    const { txList, netConfig } = this.props
     if (txList.length <= 0) {
       return this.getBottomRenderContainer(this.renderNoBalance())
     }
+    const { currentConfig } = netConfig
+    let showPrice = false
+    if (currentConfig.netType == NET_CONFIG_TYPE.Mainnet) {
+      showPrice = true
+    }
     return (
-      <div className={"tx-container"}>
+      <div className={cx("tx-container",
+        { "tx-container-more": showPrice }
+      )}>
         <div className="tx-title">
           {getLanguage('history')}
           <div
-            className={cx('refresh-icon-con', {'loading': this.state.refreshing})}
+            className={cx('refresh-icon-con', { 'loading': this.state.refreshing })}
             onClick={this.onRefresh}>
-            <img src={refreshIcon}/>
+            <img src={refreshIcon} />
           </div>
         </div>
         {txList.map((item, index) => {
@@ -406,10 +531,17 @@ class Wallet extends React.Component {
   }
 
   renderNoTx = () => {
-    return (<div className={"home-bottom-tip"}>
-      <img className={"history-img"} src={homeNoTx} />
-      <p className={"history-content-noTx"}>{getLanguage('homeNoTx')}</p>
-    </div>)
+    return (
+      <div className={"tx-container"}>
+        <div className="tx-title">
+          {getLanguage('history')}
+        </div>
+        <div className={"home-bottom-tip"}>
+          <img className={"history-img"} src={homeNoTx} />
+          <p className={"history-content-noTx"}>{getLanguage('unknownInfo')}</p>
+        </div>
+      </div>
+    )
   }
   renderNoBalance = () => {
     return (<>
@@ -445,13 +577,62 @@ class Wallet extends React.Component {
         child = this.renderLoading()
         return this.getBottomRenderContainer(child)
       case BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT:
-        child = this.renderNoTx()
-        return this.getBottomRenderContainer(child)
+        return this.renderNoTx()
       case BOTTOM_TYPE.BOTTOM_TYPE_SHOW_TX:
         return this.renderHistory()
       default:
         return <></>
     }
+  }
+  handleChange = (item) => {
+    const { currentConfig, currentNetConfig, netList } = this.props.netConfig
+    if (item.key !== currentConfig.url) {
+      let newConfig = {}
+      for (let index = 0; index < netList.length; index++) {
+        const config = netList[index];
+        if (config.url === item.key) {
+          newConfig = config
+          break
+        }
+      }
+      let nextBottomType = BOTTOM_TYPE.BOTTOM_TYPE_LOADING
+      if (newConfig.netType === NET_CONFIG_TYPE.Unknown) {
+        nextBottomType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT
+      }
+      this.callSetState({
+        bottomTipType: nextBottomType
+      }, () => {
+        let config = {
+          ...currentNetConfig,
+          currentConfig: newConfig
+        }
+        saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+        this.props.updateNetConfig(config)
+        this.props.updateShouldRequest(true)
+        this.props.updateStakingRefresh(true)
+
+        sendNetworkChangeMsg(newConfig)
+
+        setTimeout(() => {
+          this.onRefresh()
+        }, 0)
+      })
+
+    }
+  };
+  renderNetSelect = () => {
+    const { netSelectList, currentNetName } = this.props.netConfig
+    return (
+      <div className={"wallet-select-con"}>
+        <Select
+          options={netSelectList}
+          defaultValue={currentNetName}
+          onChange={this.handleChange}
+          arrowSrc={selectArrow}
+          selfInputProps={"wallet-self-select"}
+        />
+      </div>
+    )
   }
   render() {
     return (
@@ -459,14 +640,18 @@ class Wallet extends React.Component {
         <div className="wallet-top-background " >
           <div className="wallet-top-container">
             <img className={'wallet-home-logo'} src={home_logo} />
-            <img className="wallet-home-wallet click-cursor" src={home_wallet}
-              onClick={() => this.goToPage("/account_manage")}
-            />
+            <div className={"wallet-net-change"}>
+              {this.renderNetSelect()}
+              <img className="wallet-home-wallet click-cursor" src={home_wallet}
+                onClick={() => this.goToPage("/account_manage")}
+              />
+            </div>
           </div>
           {this.renderWalletInfo()}
         </div>
         {this.getBottomRender()}
-        <Clock schemeEvent={() => { this.fetchData(this.props.currentAccount.address,true) }} />
+        {this.renderChangeModal()}
+        <Clock schemeEvent={() => { this.fetchData(this.props.currentAccount.address, true) }} />
       </div>)
   }
 }
@@ -502,6 +687,15 @@ function mapDispatchToProps(dispatch) {
     },
     updateCurrentPrice: (price) => {
       dispatch(updateCurrentPrice(price))
+    },
+    updateCurrentAccount: (account) => {
+      dispatch(updateCurrentAccount(account))
+    },
+    updateNetConfig: (config) => {
+      dispatch(updateNetConfig(config))
+    },
+    updateStakingRefresh: (isRefresh) => {
+      dispatch(updateStakingRefresh(isRefresh))
     },
   };
 }
