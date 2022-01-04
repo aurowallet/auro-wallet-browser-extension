@@ -3,18 +3,21 @@ import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
 import { cointypes } from "../../../../config";
+import addressBook from "../../../assets/images/addressBook.svg";
 import downArrow from "../../../assets/images/downArrow.png";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import modalClose from "../../../assets/images/modalClose.png";
 import pwd_right from "../../../assets/images/pwd_right.png";
+import reminder from "../../../assets/images/reminder.png";
 import { getBalance, getFeeRecom, sendTx } from "../../../background/api";
 import { WALLET_CHECK_TX_STATUS, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
+import { updateAddressBookFrom } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect, requestSignPayment } from "../../../utils/ledger";
-import { getDisplayAmount, isNumber,trimSpace ,isTrueNumber} from "../../../utils/utils";
+import { getDisplayAmount, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import Button from "../../component/Button";
 import CustomInput from "../../component/CustomInput";
@@ -24,13 +27,9 @@ import { FeeSlider } from "../../component/Slider";
 import TestModal from "../../component/TestModal";
 import Toast from "../../component/Toast";
 import "./index.scss";
-import reminder from "../../../assets/images/reminder.png";
-import addressBook from "../../../assets/images/addressBook.svg";
-import { updateAddressBookFrom } from "../../../reducers/cache";
 
-const FEE_RECOMMED_CHEAPER = 0
+
 const FEE_RECOMMED_DEFAULT = 1
-const FEE_RECOMMED_HIGH = 2
 const FEE_RECOMMED_CUSTOM = -1
 
 class SendPage extends React.Component {
@@ -38,15 +37,14 @@ class SendPage extends React.Component {
     super(props);
     let addressDetail = props.addressDetail ?? {};
     this.state = {
-      toAddress: addressDetail.address||"",
-      toAddressName:addressDetail.name||"",
+      toAddress: addressDetail.address || "",
+      toAddressName: addressDetail.name || "",
       amount: "",
       fee: 0.1,
       addressErr: "",
       amountErr: "",
       feeErr: "",
       btnClick: true,
-      confirmModal: false,
       memo: "",
       isOpenAdvance: false,
       inputFee: "",
@@ -102,13 +100,10 @@ class SendPage extends React.Component {
         fee: feeRecom[1].value
       })
     }
-    let accountData = await getBalance(address)
-    let account = accountData.account
-    if (account.account) {
-      this.props.updateNetAccount(account.account)
+    let account = await getBalance(address)
+    if (account.publicKey) {
+      this.props.updateNetAccount(account)
     }
-
-
   }
   setBtnStatus = () => {
     if (this.state.toAddress.length > 0
@@ -128,12 +123,12 @@ class SendPage extends React.Component {
     let address = e.target.value;
     this.callSetState({
       toAddress: address,
-      toAddressName:""
+      toAddressName: ""
     }, () => {
       this.setBtnStatus()
     })
   }
-  onGotoAddressBook=()=>{
+  onGotoAddressBook = () => {
     this.props.updateAddressBookFrom("send")
     this.props.history.push({
       pathname: "/address_book",
@@ -147,7 +142,7 @@ class SendPage extends React.Component {
     )
   }
   renderToAddress = () => {
-    let labelName = this.state.toAddressName ?  "("+this.state.toAddressName+")" :""
+    let labelName = this.state.toAddressName ? "(" + this.state.toAddressName + ")" : ""
     return (<CustomInput
       value={this.state.toAddress}
       label={getLanguage('toAddress')}
@@ -164,13 +159,31 @@ class SendPage extends React.Component {
       this.setBtnStatus()
     })
   }
+  onClickAll = () => {
+    let { balance } = this.props
+   
+    this.callSetState({
+      amount: balance
+    },()=>{
+      this.setBtnStatus()
+    })
+  }
+  renderInputRightStable = () => {
+    return (
+      <p className={"inputRightLabel"} onClick={this.onClickAll}>
+        {getLanguage('all')}
+      </p>
+    )
+  }
   renderToAmount = () => {
     let { balance } = this.props
     return (<CustomInput
       value={this.state.amount}
       label={getLanguage('amount')}
-      descLabel={getLanguage('balance') + " " + getDisplayAmount(balance)}
+      descLabel={getLanguage('balance') + " " + getDisplayAmount(balance, cointypes.decimals)}
       onTextInput={this.onAmountInput}
+      propsClass={'stableInput'}
+      rightStableComponent={this.renderInputRightStable}
     />)
   }
   onMemoInput = (e) => {
@@ -240,7 +253,7 @@ class SendPage extends React.Component {
   renderAdvanceOption = () => {
     let netAccount = this.props.netAccount
     let nonceHolder = netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
-    let showFeeHigh = BigNumber(this.state.inputFee).gt(10) 
+    let showFeeHigh = BigNumber(this.state.inputFee).gt(10)
     return (
       <div className={
         cx({
@@ -307,8 +320,22 @@ class SendPage extends React.Component {
       </div>
     )
   }
+  isAllTransfer=()=>{
+    let { balance } = this.props
+    return new BigNumber(this.state.amount).isEqualTo(balance)
+  }
+  getRealTransferAmount=()=>{
+    let fee = trimSpace(this.state.inputFee) || this.state.fee
+    let amount = 0
+    if(this.isAllTransfer()){
+      amount = new BigNumber(this.state.amount).minus(fee).toNumber()
+    }else{
+      amount = new BigNumber(this.state.amount).toNumber()
+    }
+    return amount
+  }
   onConfirm = async () => {
-    let { balance} = this.props
+    let { balance } = this.props
     let toAddress = trimSpace(this.state.toAddress)
     if (!addressValid(toAddress)) {
       Toast.info(getLanguage('sendAddressError'))
@@ -325,11 +352,22 @@ class SendPage extends React.Component {
       return
     }
     let fee = trimSpace(this.state.inputFee) || this.state.fee
-    let maxAmount = new BigNumber(amount).plus(fee).toString()
-    if (new BigNumber(maxAmount).gt(balance)) {
-      Toast.info(getLanguage('balanceNotEnough'))
-      return
+    
+    
+    if(this.isAllTransfer()){
+      let maxAmount = this.getRealTransferAmount()
+      if (new BigNumber(maxAmount).lt(0)) {
+        Toast.info(getLanguage('balanceNotEnough'))
+        return
+      }
+    }else{
+      let maxAmount = new BigNumber(amount).plus(fee).toString()
+      if (new BigNumber(maxAmount).gt(balance)) {
+        Toast.info(getLanguage('balanceNotEnough'))
+        return
+      }
     }
+    
     let nonce = trimSpace(this.state.nonce)
     if (nonce.length > 0 && !isTrueNumber(nonce)) {
       Toast.info(getLanguage('inputNonceError'))
@@ -359,7 +397,7 @@ class SendPage extends React.Component {
         return
       }
       let postRes = await sendTx(payload, { rawSignature: signature }).catch(error => error)
-      this.onSubmitSuccess(postRes)
+      this.onSubmitSuccess(postRes,"ledger")
     }
   }
   clickNextStep = async () => {
@@ -367,8 +405,8 @@ class SendPage extends React.Component {
     let netAccount = this.props.netAccount
     let fromAddress = currentAccount.address
     let toAddress = trimSpace(this.state.toAddress)
-    let amount = new BigNumber(this.state.amount).toNumber()
-    let nonce = trimSpace(this.state.nonce)|| netAccount.inferredNonce
+    let amount = this.getRealTransferAmount()
+    let nonce = trimSpace(this.state.nonce) || netAccount.inferredNonce
     let memo = this.state.memo || ""
     let fee = trimSpace(this.state.inputFee) || this.state.fee
     let payload = {
@@ -387,29 +425,26 @@ class SendPage extends React.Component {
       this.onSubmitSuccess(data)
     })
   }
-  onSubmitSuccess = (data) => {
+  onSubmitSuccess = (data,type) => {
     if (data.error) {
-      let err = data.error
       let errorMessage = getLanguage('postFailed')
-      if (data.error.message) {
-        errorMessage = data.error.message
-      }
-      if (Array.isArray(err) && err.length > 0) {
-        errorMessage = err[0].message
-      }
-      Toast.info(errorMessage)
+      let realMsg = getRealErrorMsg(data.error)
+      errorMessage = realMsg ? realMsg : errorMessage
+      Toast.info(errorMessage, 5 * 1000)
       return
     }
     Toast.info(getLanguage('postSuccess'))
     let detail = data.sendPayment && data.sendPayment.payment || {}
-    this.props.updateShouldRequest(true,true)
-    sendMsg({
-      action: WALLET_CHECK_TX_STATUS,
-      payload: {
-        paymentId: detail.id,
-        hash: detail.hash,
-      }
-    }, () => { })
+    this.props.updateShouldRequest(true, true)
+    if(type === "ledger"){
+      sendMsg({
+        action: WALLET_CHECK_TX_STATUS,
+        payload: {
+          paymentId: detail.id,
+          hash: detail.hash,
+        }
+      }, () => { })
+    }
     this.props.history.replace({
       pathname: "/record_page",
       params: {
@@ -421,7 +456,7 @@ class SendPage extends React.Component {
     let currentAccount = this.props.currentAccount
     let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
     let isWatchModde = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
-    let buttonText = isWatchModde ? getLanguage("watchMode"):getLanguage('confirm')
+    let buttonText = isWatchModde ? getLanguage("watchMode") : getLanguage('confirm')
     return (
       <div className={"send-confirm-container"}>
         <Button
@@ -436,13 +471,14 @@ class SendPage extends React.Component {
     let lastFee = this.state.inputFee ? this.state.inputFee : this.state.fee
     let nonce = this.state.nonce ? this.state.nonce : ""
     let memo = this.state.memo ? this.state.memo : ""
+    let realAmount = this.getRealTransferAmount()
     return (
       <div className={"confirm-modal-container"}>
-        {this.renderConfirmItem(getLanguage('amount'), this.state.amount + " " + cointypes.symbol, true)}
+        {this.renderConfirmItem(getLanguage('amount'), realAmount + " " + cointypes.symbol, true)}
         {this.renderConfirmItem(getLanguage('toAddress'), this.state.toAddress)}
         {this.renderConfirmItem(getLanguage('fromAddress'), this.state.fromAddress)}
-        {memo && this.renderConfirmItem("Memo", memo,true)}
-        {nonce && this.renderConfirmItem("Nonce", nonce,true)}
+        {memo && this.renderConfirmItem("Memo", memo, true)}
+        {nonce && this.renderConfirmItem("Nonce", nonce, true)}
         {this.renderConfirmItem(getLanguage('fee'), lastFee + " " + cointypes.symbol, true)}
         {this.renderConfirmButton()}
       </div>
@@ -474,7 +510,7 @@ class SendPage extends React.Component {
     this.callSetState({
       feeSelect: index,
       fee: item.fee,
-      inputFee:""
+      inputFee: ""
     })
   }
   renderButtonFee = () => {
@@ -482,7 +518,7 @@ class SendPage extends React.Component {
       <div className={"button-fee-container"}>
         <div className={"lable-container fee-style"}>
           <p className="pwd-lable-1">{getLanguage('fee')}</p>
-          <p className="pwd-lable-desc-1">{this.state.inputFee||this.state.fee}</p>
+          <p className="pwd-lable-desc-1">{this.state.inputFee || this.state.fee}</p>
         </div>
         <div className={"fee-item-container"}>
           {this.feeList.map((item, index) => {
@@ -548,8 +584,8 @@ function mapDispatchToProps(dispatch) {
     updateNetAccount: (netAccount) => {
       dispatch(updateNetAccount(netAccount))
     },
-    updateShouldRequest: (shouldRefresh,isSilent) => {
-      dispatch(updateShouldRequest(shouldRefresh,isSilent))
+    updateShouldRequest: (shouldRefresh, isSilent) => {
+      dispatch(updateShouldRequest(shouldRefresh, isSilent))
     },
     updateAddressBookFrom: (from) => {
       dispatch(updateAddressBookFrom(from))
