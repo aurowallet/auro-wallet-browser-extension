@@ -1,3 +1,5 @@
+import { NET_CONFIG_TYPE } from "./src/constant/walletType"
+
 export const cointypes = {
   name: 'MINA',
   segwitAvailable: true,
@@ -7,20 +9,14 @@ export const cointypes = {
   decimals:9
 }
 /**
- * 锁定时间，默认24小时
+ * lock time default is 24 hours
  */
- export const LOCK_TIME = 24 * 60  
+export const LOCK_TIME = 24 * 60  
 
 /**
  * 系统版本
  */
-export const VERSION_CONFIG = ""
-
-/**
- * 默认的请求接口
- */
-export const GQL_URL = ""
-
+export const VERSION_CONFIG = "v2.0.0"
 
 /**
  * fee等配置信息接口
@@ -28,30 +24,53 @@ export const GQL_URL = ""
 export const BASE_INFO_URL = ""
 
 /**
- * 默认的浏览器接口 
- */
-export const EXPLORER_URL = ""
-
-
-/**
- * 交易记录接口
- */
-export const TRANSACTION_URL = ""
-/**
  * 默认的语言选项
  */
-export const DEFAULT_LANGUAGE = ""
+export const DEFAULT_LANGUAGE = "en"
 
 /**
  * 首页默认的请求条数
  */
 export const TX_LIST_LENGTH = 20
 
+const GQL_URL_MAINNET = ""
+const TRANSACTION_URL_MAINNET = ""
+const EXPLORER_URL_MAINNET = ""
+
+const GQL_URL_TESTNET = ""
+const TRANSACTION_URL_TESTNET = ""
+const EXPLORER_URL_TESTNET = ""
+
+export const MAIN_NET_BASE_CONFIG={
+    netType:NET_CONFIG_TYPE.Mainnet,
+    url:GQL_URL_MAINNET,
+    txUrl:TRANSACTION_URL_MAINNET,
+    explorer:EXPLORER_URL_MAINNET,
+}
+export const TEST_NET_BASE_CONFIG={
+  netType:NET_CONFIG_TYPE.Devnet,
+  url:GQL_URL_TESTNET,
+  txUrl:TRANSACTION_URL_TESTNET,
+  explorer:EXPLORER_URL_TESTNET,
+}
+export const UNKNOWN_NET_BASE_CONFIG={
+  netType:NET_CONFIG_TYPE.Unknown
+}
+
+/**
+ * current net config version if net change just add 1 
+ */
+export const NET_CONFIG_VERSION = 1017
+
 export const network_config=[
   {
       id: 1,
       name: "Mainnet",
-      url:GQL_URL,
-      explorer:EXPLORER_URL
+      ...MAIN_NET_BASE_CONFIG,
+    },
+    {
+      id: 2,
+      name: "Devnet",
+      ...TEST_NET_BASE_CONFIG
     },
 ]

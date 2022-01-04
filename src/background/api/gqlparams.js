@@ -10,31 +10,10 @@ export function getBalanceBody() {
       nonce
       inferredNonce
       delegate
+      publicKey
     }
   }
   
-  `
-}
-/**
- * 获取交易记录
- */
-export function getTxHistoryBody() {
-  return `
-  query txHistory($limit: Int!, $sortBy: String!, $from: String!) {
-    transactions(limit: $limit, sortBy: $sortBy, query: {from: $from}) {
-      fee
-      canonical
-      from
-      to
-      nonce
-      amount
-      memo
-      hash
-      kind
-      dateTime
-      blockHeight
-    }
-  }
   `
 }
 
@@ -234,6 +213,7 @@ function balanceBodyBase(index){
     balance {
       total
     }
+    publicKey
   }
   `
 }
@@ -290,12 +270,15 @@ export function getDelegationInfoBody(){
 }
 
 /**
- * 返回节点版本
+ * get chain ID body
+ * @returns 
  */
- export function getNodeVersionBody() {
+export function getChainIdBody() {
   return `
-  query nodeVersion {
-    version
+  query ChainId {
+    daemonStatus {
+      chainId
+    }
   }
   `
 }

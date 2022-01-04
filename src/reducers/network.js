@@ -1,34 +1,7 @@
-const CHANGE_CURRENT_NETWORK = "CHANGE_CURRENT_NETWORK"
-const UPDATE_NET_LIST = "UPDATE_NET_LIST"
 const UPDATE_NET_CONFIG = "UPDATE_NET_CONFIG"
 
 export const NET_CONFIG_DEFAULT = "DEFAULT"
 export const NET_CONFIG_ADD = "ADD"
-
-
-/**
- * 更改网络索引
- * @param {*} id 
- */
-export function updateCurrentNetwork(url, netType) {
-    return {
-        type: CHANGE_CURRENT_NETWORK,
-        url,
-        netType
-    };
-}
-
-/**
- * 增加网络配置
- * @param {*} data 
- */
-export function updateNetList(netList) {
-    return {
-        type: UPDATE_NET_LIST,
-        netList
-    };
-}
-
 
 /**
  * 更改网络配置
@@ -41,43 +14,48 @@ export function updateNetConfig(data) {
     };
 }
 
+function getNetConfigData(state, config) {
+    let netList = config.netList
+    let currentConfig = config.currentConfig
+    let selectList = []
+    let currentNetName = ""
 
+
+    currentNetName = currentConfig.name
+    for (let index = 0; index < netList.length; index++) {
+        const netConfig = netList[index];
+        selectList.push({
+            "key": netConfig.url,
+            "value": netConfig.name
+        })
+    }
+    return {
+        netList,
+        currentConfig,
+        selectList,
+        currentNetName
+    }
+}
 
 const initState = {
     netList: [],
-    currentUrl: "",
-    netType: NET_CONFIG_DEFAULT
+    currentConfig: {},
+    currentNetConfig: {},
+    netSelectList: [],
+    currentNetName: ""
 };
 
 const network = (state = initState, action) => {
     switch (action.type) {
-        case CHANGE_CURRENT_NETWORK:
-            return {
-                ...state,
-                currentUrl: action.url,
-                netType: action.netType,
-            };
-        case UPDATE_NET_LIST:
-            return {
-                ...state,
-                netList: action.netList,
-            }
         case UPDATE_NET_CONFIG:
-            let netList = action.data.netList
-            let currentUrl = action.data.currentUrl
-            let netType = state.netType
-            for (let index = 0; index < netList.length; index++) {
-                const netConfig = netList[index];
-                if(currentUrl === netConfig.url){
-                    netType = netConfig.type
-                    break
-                }
-            }
+            let data = getNetConfigData(state, action.data)
             return {
                 ...state,
-                netList,
-                currentUrl,
-                netType
+                netList: data.netList,
+                currentConfig: data.currentConfig,
+                netSelectList: data.selectList,
+                currentNetName: data.currentNetName,
+                currentNetConfig: action.data,
             }
         default:
             return state;

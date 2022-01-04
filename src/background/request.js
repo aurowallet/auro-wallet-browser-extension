@@ -9,7 +9,7 @@ function getNowUrl() {
   let url = ""
   if (localNetConfig) {
     localNetConfig = JSON.parse(localNetConfig)
-    url = localNetConfig.currentUrl
+    url = localNetConfig.currentConfig?.url||""
   }
   return url
 }

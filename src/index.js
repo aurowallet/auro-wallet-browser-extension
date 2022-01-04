@@ -3,19 +3,24 @@ import extension from 'extensionizer';
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import { network_config } from "../config";
+import { MAIN_NET_BASE_CONFIG, network_config, NET_CONFIG_VERSION } from "../config";
+import { windowId } from "./background/DappService";
 import { getLocal, saveLocal } from "./background/localStorage";
 import { CURRENCY_UNIT } from "./constant/pageType";
 import { CURRENCY_UNIT_CONFIG, NET_WORK_CONFIG } from "./constant/storageKey";
-import { WALLET_APP_CONNECT, WALLET_GET_CURRENT_ACCOUNT } from "./constant/types";
+import { DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/types";
+import { WALLET_CONNECT_TYPE } from "./constant/walletType";
 import "./i18n";
 import App from "./popup/App";
 import rootReducer from "./reducers";
 import { initCurrentAccount } from "./reducers/accountReducer";
+import { updateDAppOpenWindow } from "./reducers/cache";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
 import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
 import { sendMsg } from "./utils/commonMsg";
+import { sendNetworkChangeMsg } from "./utils/utils";
+
 
 function getLocalNetConfig(store) {
   return new Promise((resolve)=>{
@@ -27,18 +32,79 @@ function getLocalNetConfig(store) {
         return item
       })
       config = {
-        currentUrl: netList[0].url,
-        netList: netList
+        currentConfig: netList[0],
+        netList: netList,
+        netConfigVersion:NET_CONFIG_VERSION
       }
       store.dispatch(updateNetConfig(config))
       saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
       resolve(config)
     }else{
-      config = JSON.parse(localNetConfig)
-      store.dispatch(updateNetConfig(config))
-      resolve(config)
+      let newJson = updateNetLocalConfig(JSON.parse(localNetConfig))
+      store.dispatch(updateNetConfig(newJson))
+      resolve(newJson)
     }
   })
+}
+function updateNetLocalConfig(netConfig){
+  let localVersion = netConfig.netConfigVersion || 0 
+
+  if(localVersion >= NET_CONFIG_VERSION){
+    return netConfig
+  }
+  let localNetList = netConfig.netList
+  let currentUrl = netConfig.currentUrl || netConfig.currentConfig.url
+  let currentConfig = {}
+  let defaultList = []
+  let addList = []
+  let currentUrlType = ""
+  localNetList.map((item,index)=>{
+    if(item.url === currentUrl){
+      currentConfig = item
+      currentUrlType = item.type
+    }
+    if(item.type === NET_CONFIG_DEFAULT){
+      defaultList.push(item)
+    }else{
+      let id = item.url
+      addList.push({
+        ...MAIN_NET_BASE_CONFIG,
+        id,
+        ...item,
+      })
+    }
+  })
+  let config
+  if(addList.length === 0){
+    let netList = network_config.map((item) => {
+      item.type = NET_CONFIG_DEFAULT
+      return item
+    })
+    config = {
+      currentConfig: netList[0],
+      netList: netList,
+      netConfigVersion:NET_CONFIG_VERSION
+    }
+  }else{
+    let newNetList = network_config.map((item) => {
+      item.type = NET_CONFIG_DEFAULT
+      return item
+    }) 
+    newNetList.push(...addList)
+    let newCurrentConfig = {}
+    if(currentUrlType === NET_CONFIG_DEFAULT){
+      newCurrentConfig = newNetList[0]
+    }else{
+      newCurrentConfig = currentConfig
+    }
+    config = {
+      currentConfig:newCurrentConfig,
+      netList: newNetList,
+      netConfigVersion:NET_CONFIG_VERSION
+    }
+  }
+  saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+  return config
 }
 /**
  * 
@@ -99,6 +165,29 @@ function getLocalCurrencyConfig(store) {
   }
 }
 
+async function getDappStatus(store){
+  return new Promise((resolve)=>{
+    let nextRoute =""
+    sendMsg({
+      action: DAPP_GET_CURRENT_OPEN_WINDOW,
+    },
+      async (window) => {
+        if(window && window.channel){
+          store.dispatch(updateDAppOpenWindow(window))
+          if(window.channel === windowId.request_sign){
+            nextRoute = ENTRY_WITCH_ROUTE.DAPP_SIGN_PAGE
+          }else if(window.channel === windowId.approve_page){
+            nextRoute = ENTRY_WITCH_ROUTE.DAPP_APPROVE_PAGE
+          }
+        }else{
+          nextRoute = ENTRY_WITCH_ROUTE.HOME_PAGE
+        }
+        resolve(nextRoute)
+      })
+  })
+
+}
+
 async function getLocalStatus(store) {
   return new Promise((resolve)=>{
     sendMsg({
@@ -108,14 +197,14 @@ async function getLocalStatus(store) {
       if (currentAccount && currentAccount.localAccount && currentAccount.localAccount.keyringData) {
         if(currentAccount.isUnlocked){
           store.dispatch(initCurrentAccount(currentAccount))
-          nextRoute = ENTRY_WITCH_ROUTE.HOME_PAGE
+          nextRoute = await getDappStatus(store)
         }else{
           nextRoute = ENTRY_WITCH_ROUTE.LOCK_PAGE
         }
         resolve({currentAccount,nextRoute})
       }else{
         nextRoute = ENTRY_WITCH_ROUTE.WELCOME
-          resolve({nextRoute})
+        resolve({nextRoute})
       }
     })
   })
@@ -124,18 +213,21 @@ async function getLocalStatus(store) {
 export const applicationEntry = {
   async run() {
     this.createReduxStore();
-    this.appInit(this.reduxStore)
+    await this.appInit(this.reduxStore)
     this.render();
   },
 
   async appInit(store) {
-    extension.runtime.connect({ name: WALLET_APP_CONNECT });
-    // 初始化网络请求
-    await getLocalNetConfig(store)
-    // 初始化账户和路由
+    extension.runtime.connect({ name: WALLET_CONNECT_TYPE.WALLET_APP_CONNECT });
+
+    // init netRequest
+    let netConfig =  await getLocalNetConfig(store)
+    sendNetworkChangeMsg(netConfig.currentConfig)
+
+    // init nextRoute
     let accountData = await getLocalStatus(store)
     const {nextRoute} = accountData
-    // 初始化当前 发币类型
+    // init Currency
     getLocalCurrencyConfig(store)
     
     if(nextRoute){
