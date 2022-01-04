@@ -23,9 +23,9 @@ class CreatePassword extends React.Component {
     };
     this.isUnMounted = false;
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.isUnMounted = true;
-    let newMatchlist =this.state.matchList
+    let newMatchlist = this.state.matchList
     this.callSetState({
       matchList: newMatchlist.map(v => {
         v.bool = false;
@@ -33,12 +33,12 @@ class CreatePassword extends React.Component {
       })
     })
   }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
+  callSetState = (data, callback) => {
+    if (!this.isUnMounted) {
       this.setState({
         ...data
-      },()=>{
-        callback&&callback()
+      }, () => {
+        callback && callback()
       })
     }
   }
@@ -48,17 +48,31 @@ class CreatePassword extends React.Component {
         return v
       }
     })
-      if (errList.length <= 0 && this.state.confirmPwd.length > 0 && !this.state.errorTip) {
-        this.callSetState({
-          btnClick: true,
-        })
-      } else {
-        this.callSetState({
-          btnClick: false,
-        })
-        
-      }
+    if (errList.length <= 0 && this.state.confirmPwd.length > 0 && !this.state.errorTip) {
+      this.callSetState({
+        btnClick: true,
+      })
+    } else {
+      this.callSetState({
+        btnClick: false,
+      })
+    }
   };
+  checkConfirmStatus = () => {
+    if (this.state.confirmPwd.length > 0 && this.state.inputPwd !== this.state.confirmPwd) {
+      this.callSetState({
+        errorTip: getLanguage('passwordDifferent')
+      }, () => {
+        this.setBtnStatus()
+      })
+    } else {
+      this.callSetState({
+        errorTip: ""
+      }, () => {
+        this.setBtnStatus()
+      })
+    }
+  }
   goToCreate = () => {
     let { welcomeNextRoute } = this.props.cache
     sendMsg({
@@ -81,7 +95,7 @@ class CreatePassword extends React.Component {
     let { matchList } = this.state
     this.callSetState({
       inputPwd: value,
-    },()=>{
+    }, () => {
       this.callSetState({
         matchList: matchList.map(v => {
           if (v.expression.test(value)) {
@@ -91,30 +105,18 @@ class CreatePassword extends React.Component {
           }
           return v;
         })
-      },()=>{
-        this.setBtnStatus()
+      }, () => {
+        this.checkConfirmStatus()
       })
     })
   }
   onPwdConfirmInput = (e) => {
     const { value } = e.target;
-      this.callSetState({
-        confirmPwd: value,
-      },()=>{
-        if (this.state.confirmPwd.length > 0 && this.state.inputPwd !== this.state.confirmPwd) {
-          this.callSetState({
-            errorTip: getLanguage('passwordDifferent')
-          },() => {
-            this.setBtnStatus()
-          })
-        } else {
-          this.callSetState({
-            errorTip: ""
-          },()=>{
-            this.setBtnStatus()
-          })
-        }
-      })
+    this.callSetState({
+      confirmPwd: value,
+    }, () => {
+      this.checkConfirmStatus()
+    })
   }
   onSubmit = (event) => {
     event.preventDefault();

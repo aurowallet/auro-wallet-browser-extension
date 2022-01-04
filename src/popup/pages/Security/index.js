@@ -12,9 +12,7 @@ class Security extends React.Component {
     };
     this.settingList = [{
       name: getLanguage('restoreSeed'),
-      route: "/security_pwd_page",
-      nextRoute: "/reveal_seed_page",
-      action: SEC_SHOW_MNEMONIC
+      route: "/reveal_seed_page"
     },
     {
       name: getLanguage('changePassword'),

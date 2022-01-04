@@ -9,6 +9,7 @@ import CustomView from "../../component/CustomView";
 import TextInput from "../../component/TextInput";
 import Toast from "../../component/Toast";
 import "./index.scss";
+import Loading from "../../component/Loading";
 class Reset extends React.Component {
     constructor(props) {
         super(props);
@@ -55,6 +56,8 @@ class Reset extends React.Component {
                     }
                     return v;
                 })
+            },()=>{
+                this.checkConfirmStatus()
             })
         })
     }
@@ -77,26 +80,28 @@ class Reset extends React.Component {
             })
         }
     };
+    checkConfirmStatus = () => {
+        if (this.state.confirmPassword.length > 0 && this.state.newPassword !== this.state.confirmPassword) {
+          this.callSetState({
+            errorTip: getLanguage('passwordDifferent')
+          }, () => {
+            this.setBtnStatus()
+          })
+        } else {
+          this.callSetState({
+            errorTip: ""
+          }, () => {
+            this.setBtnStatus()
+          })
+        }
+      }
     onConfirmPasswordInput = (e) => {
         let pwd = e.target.value
         this.callSetState({
             confirmPassword: pwd
         },
             () => {
-                if ((this.state.newPassword.length > 0 && this.state.confirmPassword.length > 0) && this.state.confirmPassword !== this.state.newPassword) {
-                    this.callSetState({
-                        errorTip: getLanguage('passwordDifferent')
-                    }, () => {
-                        this.setBtnStatus()
-                    })
-                } else {
-                    this.callSetState({
-                        errorTip: ""
-                    }, () => {
-                        this.setBtnStatus()
-                    })
-                }
-
+                this.checkConfirmStatus()
             })
     }
     onSubmit = (event) => {
@@ -150,13 +155,15 @@ class Reset extends React.Component {
         this.resetPwd()
     }
     resetPwd = () => {
+        Loading.show()
         sendMsg({
             action: WALLET_CHANGE_SEC_PASSWORD,
             payload: {
                 oldPassword: this.state.oldPassword,
-                password: this.state.newPassword
+                password: this.state.newPassword.trim()
             }
         }, (res) => {
+            Loading.hide()
             if (res.code === 0) {
                 Toast.info(getLanguage('pwdChangeSuccess'))
                 setTimeout(() => {

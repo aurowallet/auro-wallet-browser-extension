@@ -6,15 +6,16 @@ import reminderRed from "../../../assets/images/reminderRed.svg";
 import { clearLocalExcept, getLocal, saveLocal } from "../../../background/localStorage";
 import { clearStorage } from "../../../background/storageService";
 import { CURRENCY_UNIT } from "../../../constant/pageType";
-import { CURRENCY_UNIT_CONFIG, NET_WORK_CONFIG } from "../../../constant/storageKey";
+import { CURRENCY_UNIT_CONFIG, LOCAL_BASE_INFO, NET_WORK_CONFIG } from "../../../constant/storageKey";
 import { RESET_WALLET, WALLET_APP_SUBMIT_PWD } from "../../../constant/types";
 import { getLanguage } from "../../../i18n";
 import { resetWallet } from "../../../reducers";
 import { initCurrentAccount } from "../../../reducers/accountReducer";
+import { updateExtensionBaseInfo } from "../../../reducers/cache";
 import { updateCurrencyConfig } from "../../../reducers/currency";
 import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from "../../../utils/commonMsg";
-import { trimSpace } from "../../../utils/utils";
+import { sendNetworkChangeMsg, trimSpace } from "../../../utils/utils";
 import Button from "../../component/Button";
 import ConfirmModal from "../../component/ConfirmModal";
 import CustomInput from "../../component/CustomInput";
@@ -48,6 +49,7 @@ class LockPage extends React.Component {
         }
     }
     goToConfirm = async () => {
+        const { onClickUnLock } = this.props
         sendMsg({
             action: WALLET_APP_SUBMIT_PWD,
             payload: this.state.password
@@ -61,9 +63,12 @@ class LockPage extends React.Component {
                     }
                 } else {
                     this.props.initCurrentAccount(account)
-                    this.props.history.push({
-                        pathname: "/homepage",
-                    })
+                    onClickUnLock && onClickUnLock()
+                    if (!this.props.onDappConfirm) {
+                        this.props.history.push({
+                            pathname: "/homepage",
+                        })
+                    }
                 }
             })
     }
@@ -183,12 +188,18 @@ class LockPage extends React.Component {
                 action: RESET_WALLET,
             }, () => {
                 clearStorage()
+                let baseInfo = getLocal(LOCAL_BASE_INFO)
                 clearLocalExcept(NET_WORK_CONFIG)
                 this.props.resetWallet()
                 let netConfig = getLocal(NET_WORK_CONFIG)
                 if (netConfig) {
                     netConfig = JSON.parse(netConfig)
                     this.props.updateNetConfig(netConfig)
+                    sendNetworkChangeMsg(netConfig.currentConfig)
+                }
+                if (baseInfo) {
+                    baseInfo = JSON.parse(baseInfo)
+                    this.props.updateExtensionBaseInfo(baseInfo)
                 }
 
                 let currencyList = CURRENCY_UNIT
@@ -196,7 +207,7 @@ class LockPage extends React.Component {
                 this.props.updateCurrencyConfig(currencyList)
                 saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList[0].key))
 
-                this.props.history.push("welcome_page"); // Reload
+                this.props.history.push("welcome_page");
             })
         }
     }
@@ -272,7 +283,9 @@ function mapDispatchToProps(dispatch) {
         initCurrentAccount: (account) => {
             dispatch(initCurrentAccount(account))
         },
-
+        updateExtensionBaseInfo: (data) => {
+            dispatch(updateExtensionBaseInfo(data))
+          },
     };
 }
 

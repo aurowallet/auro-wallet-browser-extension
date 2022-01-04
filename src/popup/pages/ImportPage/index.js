@@ -19,15 +19,9 @@ class ImportPage extends React.Component {
     this.state = {
       title,
       content,
-      accountList: null
     };
   }
   componentDidMount() {
-    sendMsg({
-      action: WALLET_GET_ALL_ACCOUNT,
-    }, (account) => {
-      this.accountList = account.accounts
-    })
   }
 
   renderInfo = (title, callback) => {
