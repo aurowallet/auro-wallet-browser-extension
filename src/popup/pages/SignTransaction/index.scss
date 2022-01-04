@@ -14,7 +14,8 @@ $selectWidth : 93px;
     overflow:hidden; 
     text-overflow:ellipsis; 
     white-space:nowrap; 
-    text-align: center;
+    display: flex;
+    align-items: center;
     .netSelectCon-name {
         color: #ffffff;
         font-size: 12px;
