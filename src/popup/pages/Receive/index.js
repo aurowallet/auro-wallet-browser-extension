@@ -29,12 +29,7 @@ class ReceivePage extends React.Component {
         <div className={"receive-home-logo-container"}>
           <img src={home_logo} className={"receive-wallet-logo"} />
         </div>
-        <div
-          className="qr-image"
-          dangerouslySetInnerHTML={{
-            __html: qrImage.createTableTag(4),
-          }}
-        />
+        <img src={qrImage.createDataURL(4)} alt="QR code"></img>
       </div>
     )
   }

@@ -9,12 +9,13 @@
     line-height: $font-size-content;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     flex-direction: row;
   }
   .empty-desc {
     letter-spacing: 0;
-    text-align: justify;
+    text-align: left;
+    
     line-height: 16px;
     margin-top: 1em;
     margin-bottom: 0;

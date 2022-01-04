@@ -15,7 +15,7 @@
   width: 100%;
   padding: 10px 30px 0px;
 }
-.input-wrapper-row { 
+.input-wrapper-row {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -37,13 +37,16 @@
 .create-input {
   flex: 1;
   height: 42px;
-  outline-color: rgba(109, 95, 254, 1);
+  outline: medium;
   border: 1px solid #cccccc;
   font-size: $font-size-content;
   color: #3a3a3a;
   caret-color: rgba(109, 95, 254, 1);
   border-radius: 6px;
   &:active {
+    border: 1px solid #6d5ffe;
+  }
+  &:focus {
     border: 1px solid #6d5ffe;
   }
 }

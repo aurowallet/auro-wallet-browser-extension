@@ -1,25 +1,25 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import modalClose from "../../../assets/images/modalClose.png";
 import txArrow from "../../../assets/images/txArrow.png";
-import { SEC_DELETE_ACCOUNT, SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
-import { WALLET_CHANGE_ACCOUNT_NAME, WALLET_DELETE_WATCH_ACCOUNT } from "../../../constant/types";
+import { SEC_DELETE_ACCOUNT } from "../../../constant/secTypes";
+import { DAPP_DELETE_ACCOUNT_CONNECT_HIS, WALLET_CHANGE_ACCOUNT_NAME, WALLET_CHANGE_DELETE_ACCOUNT, WALLET_DELETE_WATCH_ACCOUNT } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
-import {amountDecimals, copyText, nameLengthCheck} from "../../../utils/utils";
+import { amountDecimals, copyText, nameLengthCheck } from "../../../utils/utils";
 import Button, { BUTTON_TYPE_CANCEL } from "../../component/Button";
 import CustomInput from "../../component/CustomInput";
 import CustomView from "../../component/CustomView";
 import TestModal from "../../component/TestModal";
 import Toast from "../../component/Toast";
 import "./index.scss";
-import {getTransactionList} from "../../../background/api";
-import {JSonToCSV} from "../../../utils/JsonToCSV";
-import {cointypes} from "../../../../config";
+import { getTransactionList } from "../../../background/api";
+import { JSonToCSV } from "../../../utils/JsonToCSV";
+import { cointypes } from "../../../../config";
 import Loading from "../../component/Loading";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
+import SecurityPwd from "../../component/SecurityPwd";
 
 class AccountInfo extends React.Component {
   constructor(props) {
@@ -31,21 +31,22 @@ class AccountInfo extends React.Component {
       accountName: account.accountName,
       inputAccountName: "",
       errorTipShow: false,
-      btnClick: false
+      btnClick: false,
+      showSecurity: false
     };
     this.modal = React.createRef();
     this.isUnMounted = false;
   }
 
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.isUnMounted = true;
   }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
+  callSetState = (data, callback) => {
+    if (!this.isUnMounted) {
       this.setState({
         ...data
-      },()=>{
-        callback&&callback()
+      }, () => {
+        callback && callback()
       })
     }
   }
@@ -84,17 +85,47 @@ class AccountInfo extends React.Component {
   }
   showPrivateKey = () => {
     this.props.history.push({
-      pathname: "/security_pwd_page",
+      pathname: "/show_privatekey_page",
       params: {
-        nextRoute: "/show_privatekey_page",
-        action: SEC_SHOW_PRIVATE_KEY,
         address: this.state.account.address,
       }
     }
     )
   }
+  onClickCheck = (password) => {
+    let { currentAccount } = this.props
+    let address = currentAccount.address
+    sendMsg({
+      action: WALLET_CHANGE_DELETE_ACCOUNT,
+      payload: {
+        address: this.state.account.address,
+        password: password
+      }
+    },
+      async (currentAccount) => {
+        if (currentAccount.error) {
+          if (currentAccount.type === "local") {
+            Toast.info(getLanguage(currentAccount.error))
+          } else {
+            Toast.info(currentAccount.error)
+          }
+        } else {
+          sendMsg({
+            action: DAPP_DELETE_ACCOUNT_CONNECT_HIS,
+            payload: {
+              address: this.state.account.address,
+              oldCurrentAddress:address,
+              currentAddress: currentAccount.address,
+            }
+          }, (status) => { })
+          Toast.info(getLanguage("deleteSuccess"))
+          this.props.updateCurrentAccount(currentAccount)
+          this.props.history.goBack()
+        }
+      })
+  }
   deleteAccount = () => {
-    if(this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH){
+    if (this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH) {
       Loading.show()
       sendMsg({
         action: WALLET_DELETE_WATCH_ACCOUNT,
@@ -105,10 +136,10 @@ class AccountInfo extends React.Component {
         async (currentAccount) => {
           Loading.hide()
           if (currentAccount.error) {
-            if(currentAccount.type === "local"){
+            if (currentAccount.type === "local") {
               Toast.info(getLanguage(currentAccount.error))
-            }else{
-                Toast.info(currentAccount.error)
+            } else {
+              Toast.info(currentAccount.error)
             }
           } else {
             Toast.info(getLanguage("deleteSuccess"))
@@ -119,22 +150,14 @@ class AccountInfo extends React.Component {
             }, 300);
           }
         })
-    }else{
-      this.props.history.push({
-        pathname: "/security_pwd_page",
-        params: {
-          action: SEC_DELETE_ACCOUNT,
-          nextRoute: "/account_manage",
-          address: this.state.account.address,
-          nextParams: {
-            title: getLanguage('backup_success_title'),
-            content: getLanguage('deleteAccountSuccess')
-          }
-        }
+    } else {
+      this.callSetState({
+        showSecurity: true
       })
     }
   }
   onChangeAccountName = () => {
+    let { currentAccount } = this.props
     if (this.state.inputAccountName.length <= 0) {
       Toast.info(getLanguage('inputAccountName'))
       return
@@ -146,10 +169,14 @@ class AccountInfo extends React.Component {
         accountName: this.state.inputAccountName
       }
     }, (account) => {
-      if(!this.isUnMounted){
+      if (!this.isUnMounted) {
         this.callSetState({
           account: account.account
         })
+      }
+      let address = currentAccount.address
+      if (account.account?.address === address) {
+        this.props.updateCurrentAccount(account.account)
       }
       this.onCloseModal()
       Toast.info(getLanguage('changeSuccess'))
@@ -174,10 +201,10 @@ class AccountInfo extends React.Component {
     )
   }
   onTextInput = (e) => {
-    if(!this.isUnMounted){
+    if (!this.isUnMounted) {
       this.callSetState({
         inputAccountName: e.target.value,
-      },() => {
+      }, () => {
         let checkResult = nameLengthCheck(this.state.inputAccountName)
         if (checkResult) {
           this.callSetState({
@@ -207,7 +234,6 @@ class AccountInfo extends React.Component {
           errorTipShow={this.state.errorTipShow}
           showTip={getLanguage("accountNameLimit")}
         />
-        {/* <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} /> */}
       </div>)
   }
   renderChangeModal = () => {
@@ -227,9 +253,9 @@ class AccountInfo extends React.Component {
 
   exportCsvTransactions = async () => {
     Loading.show()
-    const {txList, address} = await getTransactionList(this.state.account.address, null)
+    const { txList } = await getTransactionList(this.state.account.address, null)
     Loading.hide()
-    const csvList = txList.map((tx)=>{
+    const csvList = txList.map((tx) => {
       return {
         date: tx.time.replace(/T/, ' ').replace(/Z/, ' UTC'),
         amount: amountDecimals(tx.amount, cointypes.decimals),
@@ -254,32 +280,38 @@ class AccountInfo extends React.Component {
   }
 
   render() {
+    const { showSecurity } = this.state
     let hideDelete = this.state.account.type === ACCOUNT_TYPE.WALLET_INSIDE
     let isLedger = this.state.account.type === ACCOUNT_TYPE.WALLET_LEDGER
-    let hideExport = this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH 
-      ||  isLedger
+    let hideExport = this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH || isLedger
     let showAddress = this.state.account.address
+    let title = showSecurity ? getLanguage('securityPassword') : getLanguage('accountInfo')
     return (
       <CustomView
-        title={getLanguage('accountInfo')}
+        title={title}
         history={this.props.history}>
-        <div className="account-info-container">
-          {this.renderInfo(getLanguage('accountAddress'), showAddress, this.copyAddress, true)}
-          {isLedger ? this.renderInfo(getLanguage('hdDerivedPath'), `m / 44' / 12586' / ${this.state.account.hdPath} ' / 0 / 0`, null, true) : null}
-          {this.renderInfo(getLanguage('accountName'), this.state.account.accountName, this.changeAccountName)}
-          {!hideExport ?this.renderInfo(getLanguage('exportPrivateKey'), "", this.showPrivateKey) : null}
-          {this.renderInfo(getLanguage('exportCSV'), "", this.exportCsvTransactions)}
-          {!hideDelete ? this.renderInfo(getLanguage("accountDelete"), "", this.deleteAccount) : null}
-        </div>
-        <form onSubmit={this.onSubmit}>
-          {this.renderChangeModal()}
-        </form>
+        {showSecurity ?
+          <SecurityPwd onClickCheck={this.onClickCheck} action={SEC_DELETE_ACCOUNT} /> :
+          <>
+            <div className="account-info-container">
+              {this.renderInfo(getLanguage('accountAddress'), showAddress, this.copyAddress, true)}
+              {isLedger ? this.renderInfo(getLanguage('hdDerivedPath'), `m / 44' / 12586' / ${this.state.account.hdPath} ' / 0 / 0`, null, true) : null}
+              {this.renderInfo(getLanguage('accountName'), this.state.account.accountName, this.changeAccountName)}
+              {!hideExport ? this.renderInfo(getLanguage('exportPrivateKey'), "", this.showPrivateKey) : null}
+              {this.renderInfo(getLanguage('exportCSV'), "", this.exportCsvTransactions)}
+              {!hideDelete ? this.renderInfo(getLanguage("accountDelete"), "", this.deleteAccount) : null}
+            </div>
+            <form onSubmit={this.onSubmit}>
+              {this.renderChangeModal()}
+            </form>
+          </>}
       </CustomView>)
   }
 }
 
 const mapStateToProps = (state) => ({
-  cache: state.cache
+  cache: state.cache,
+  currentAccount: state.accountInfo.currentAccount,
 });
 
 function mapDispatchToProps(dispatch) {

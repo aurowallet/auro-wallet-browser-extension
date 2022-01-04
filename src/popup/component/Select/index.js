@@ -2,7 +2,6 @@ import cx from "classnames";
 import React, { Component } from "react";
 import downArrow from "../../../assets/images/downArrow.png";
 import "./index.scss";
-import PropTypes from 'prop-types'
 
 export default class Select extends Component {
   constructor(props) {
@@ -42,7 +41,7 @@ export default class Select extends Component {
   };
   render() {
     const { isOpen, value } = this.state;
-    const { label, options, defaultValue } = this.props;
+    const { label, options, defaultValue,selfInputProps,arrowSrc } = this.props; 
     return (
       <div className="select-box">
         {label && <label className="label">{label}:</label>}
@@ -53,9 +52,10 @@ export default class Select extends Component {
             className={cx({
               "self-input": true,
               "input-hover": isOpen,
+              [selfInputProps]: !!selfInputProps,
               "click-cursor": true
             })}>
-            <p style={{
+            <p className="selfInputContent" style={{
               margin: 0,
             }}>
               {value || defaultValue}
@@ -65,7 +65,7 @@ export default class Select extends Component {
             "select-arrow": true,
             up: isOpen,
             down: !isOpen
-          })} src={downArrow}></img>
+          })} src={arrowSrc?arrowSrc:downArrow}></img>
           <div
             className="options"
             className={cx({

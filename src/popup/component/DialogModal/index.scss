@@ -1,0 +1,54 @@
+@import "../../common.scss";
+
+.test-modal-container {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 101;
+}
+.test-modal-container-none {
+    display: none;
+}
+.test-modal-modal-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.test-modal-modal {
+    background-color: transparent;
+    margin: 0px 20px;
+    position: relative;
+}
+
+.test-modal-title {
+    margin: 0;
+    font-size: $font-size-title;
+    color: #090909;
+    letter-spacing: 0;
+    text-align: center;
+    line-height: 20px;
+    padding-top: 20px;
+}
+
+.test-modal-close {
+    width: 14px;
+
+    position: absolute;
+    top: 24px;
+    right: 15px;
+}
+
+@keyframes openModal {
+    from {
+        bottom: -50%;
+    }
+    to {
+        bottom: 0;
+    }
+}

@@ -21,6 +21,8 @@
   flex-direction: row;
   align-items: center;
   margin: 10px 0 6px;
+
+  position: relative;
 }
 .pwd-show-status-1 {
   width: 18px;
@@ -37,13 +39,16 @@
   flex: 1;
   height: 42px;
   border: 1px solid #cccccc;
-  outline-color: rgba(109, 95, 254, 1);
+  outline: medium;
   border-radius: 6px;
   font-size: $font-size-content;
   caret-color: rgba(109, 95, 254, 1);
   color: #333333;
   padding: 0 10px;
   &:active {
+    border: 1px solid #6d5ffe;
+  }
+  &:focus {
     border: 1px solid #6d5ffe;
   }
 }
@@ -66,21 +71,21 @@
   background: rgba(191, 199, 223, 0.1);
   color: #bfc7df;
 }
-.lable-left-container{
+.lable-left-container {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
-.pwd-lable-little{
+.pwd-lable-little {
   margin: 0;
   font-size: $font-size-content;
   letter-spacing: 0;
   line-height: 16px;
   color: #333333;
-  
+
   margin-left: 4px;
   max-width: 220px;
   overflow: hidden;
-  text-overflow:ellipsis;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }

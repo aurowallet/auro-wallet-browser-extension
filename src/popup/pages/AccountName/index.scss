@@ -37,3 +37,26 @@
         }
     }
 }
+
+.walletRepeatTipContainer {
+    font-size: 14px;
+    color: #666666;
+    line-height: 24px;
+    margin-top: 14px;
+    word-break: break-all;
+    
+    .accountRepeatTitle{
+        margin: 0;
+    }
+    .accountRepeatAddress{
+        margin: 0;
+        color: #6D5FFE;
+        margin-bottom: 20px;
+    }
+    .accountRepeatName{
+        font-weight: bold;
+    }
+    .accountRepeatClick{
+        color: #6D5FFE;
+    }
+}

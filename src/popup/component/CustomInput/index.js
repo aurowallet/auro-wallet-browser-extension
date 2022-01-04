@@ -38,7 +38,7 @@ export default class CustomInput extends Component {
         )
     }
     render() {
-        let { propsClass, wrapPropClass,littleLabel } = this.props
+        let { propsClass, wrapPropClass,littleLabel,rightStableComponent } = this.props
         let params = {}
         if(this.props.readOnly){
             params.readOnly = "readonly"
@@ -73,6 +73,7 @@ export default class CustomInput extends Component {
                         onBlur={this.onBlur}
                         {...params}
                     />
+                    {rightStableComponent && rightStableComponent()}
                 </div>
                 {this.renderErrorTip()}
             </div>

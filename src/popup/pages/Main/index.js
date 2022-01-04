@@ -8,10 +8,10 @@ import staking_active from "../../../assets/images/staking_active.png";
 import staking_common from "../../../assets/images/staking_common.png";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS } from "../../../constant/storageKey";
+import { NET_CONFIG_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateAccountTx, updateNetAccount } from "../../../reducers/accountReducer";
 import { updateCurrentPrice } from "../../../reducers/cache";
-import { NET_CONFIG_DEFAULT } from "../../../reducers/network";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { updateHomeIndex } from "../../../reducers/tabRouteReducer";
 import { isNumber } from "../../../utils/utils";
@@ -48,7 +48,7 @@ class HomePage extends React.Component {
    * updateTxList
    * @param {*} address 
    */
-  shouldUpdateTxList=(address)=>{
+  shouldUpdateTxList = (address) => {
     let localHistory = getLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY)
     let txList = []
     let pendingTxList = []
@@ -65,17 +65,17 @@ class HomePage extends React.Component {
     let updatePendingTxList = pendingTxList && Array.isArray(pendingTxList) ? pendingTxList : []
     this.props.dispatch(updateAccountTx(updateTxList, updatePendingTxList))
   }
-  updateLocalAccount=(address)=>{
+  updateLocalAccount = (address) => {
     let localAccount = getLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE)
     if (localAccount) {
       let localAccountJson = this.safeJsonParse(localAccount)
       let netAccount = localAccountJson ? localAccountJson[address] : ""
-      if (netAccount) {
-        this.props.dispatch(updateNetAccount(netAccount,true))
+      if (netAccount && netAccount.publicKey) {
+        this.props.dispatch(updateNetAccount(netAccount, true))
       }
     }
   }
-  updateLocalPrice=()=>{
+  updateLocalPrice = () => {
     let localPrice = getLocal(LOCAL_CACHE_KEYS.COIN_PRICE)
     if (localPrice) {
       let localPriceJson = this.safeJsonParse(localPrice)
@@ -84,7 +84,7 @@ class HomePage extends React.Component {
       }
     }
   }
-  updateLocalDaemonStatus=()=>{
+  updateLocalDaemonStatus = () => {
     let localDaemonStatus = getLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS)
     if (localDaemonStatus) {
       let localDaemonStatusJson = this.safeJsonParse(localDaemonStatus)
@@ -93,7 +93,7 @@ class HomePage extends React.Component {
       }
     }
   }
-  updateLocalDelegation=(address)=>{
+  updateLocalDelegation = (address) => {
     let localDelegationInfo = getLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO)
     if (localDelegationInfo) {
       let localDelegationInfoJson = this.safeJsonParse(localDelegationInfo)
@@ -103,7 +103,7 @@ class HomePage extends React.Component {
       }
     }
   }
-  updateLocalBlock=()=>{
+  updateLocalBlock = () => {
     let localBlockInfo = getLocal(LOCAL_CACHE_KEYS.BLOCK_INFO)
     if (localBlockInfo) {
       let localBlockInfoJson = this.safeJsonParse(localBlockInfo)
@@ -112,7 +112,7 @@ class HomePage extends React.Component {
       }
     }
   }
-  updateLocalValidator=()=>{
+  updateLocalValidator = () => {
     let localValidatorDetail = getLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL)
     if (localValidatorDetail) {
       let localValidatorDetailJson = this.safeJsonParse(localValidatorDetail)
@@ -121,7 +121,7 @@ class HomePage extends React.Component {
       }
     }
   }
-  updateLocalStaking=()=>{
+  updateLocalStaking = () => {
     let localStakingList = getLocal(LOCAL_CACHE_KEYS.STAKING_LIST)
     if (localStakingList) {
       let localStakingListJson = this.safeJsonParse(localStakingList)
@@ -135,9 +135,9 @@ class HomePage extends React.Component {
   */
   getlocalCache = () => {
     const { netConfig, currentAccount } = this.props
-    let netType = netConfig.netType
+    const netType = netConfig.currentConfig?.netType
     let address = currentAccount?.address || ""
-    if (netType === NET_CONFIG_DEFAULT) {
+    if (netType !== NET_CONFIG_TYPE.Unknown) {
       this.shouldUpdateTxList(address)
     }
     this.updateLocalAccount(address)

@@ -38,10 +38,15 @@ p {
 .stake-status-undelete {
   background: rgba(177, 179, 189, 1);
 }
-.account-manager {
+.wallet-icon-con {
   position: absolute;
   right: 15px;
   top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.account-manager {
   width: 23px;
   height: 23px;
   &:hover {
@@ -129,8 +134,8 @@ p {
   height: 10.7px;
 }
 
-@keyframes  refreshAni {
-  0%{
+@keyframes refreshAni {
+  0% {
     transform: rotate(0);
   }
   100% {
@@ -143,11 +148,11 @@ p {
   color: #020028;
   letter-spacing: 0;
   margin: 0;
-  .refresh-icon-con{
+  .refresh-icon-con {
     float: right;
     cursor: pointer;
     &.loading {
-      animation: refreshAni .8s infinite linear;
+      animation: refreshAni 0.8s infinite linear;
       transform-origin: 10px 10px;
     }
     img {
@@ -157,30 +162,32 @@ p {
   }
 }
 .tx-container {
-  margin-top: 70px;
+  margin-top: 60px;
   padding: 0px 28px;
-
+}
+.tx-container-more {
+  margin-top: 90px;
 }
 
 ::-webkit-scrollbar {
   width: 0px;
 }
 
-.tx-top-container{
+.tx-top-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.tx-bottom-container{
+.tx-bottom-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
-.tx-detail-container{
+.tx-detail-container {
   display: flex;
   flex-direction: column;
-  flex:1;
+  flex: 1;
   margin-left: 10px;
   margin-right: 10px;
 }

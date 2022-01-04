@@ -11,7 +11,7 @@ import select_account_ok from "../../../assets/images/select_account_ok.png";
 import reminderRed from "../../../assets/images/reminderRed.svg";
 import { getBalanceBatch } from "../../../background/api";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
-import { WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
+import { DAPP_CHANGE_CONNECTING_ADDRESS, WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
@@ -42,7 +42,7 @@ class AccountManagePage extends React.Component {
     sendMsg({
       action: WALLET_GET_ALL_ACCOUNT,
     }, (account) => {
-      let listData = this.setListFilter(account.accounts)
+      let listData = account.accounts
       this.callSetState({
         accountList: listData.allList,
         commonAccountList:listData.commonList,
@@ -86,29 +86,15 @@ class AccountManagePage extends React.Component {
   }
   fetchBalance= async(addressList)=>{
     let balanceList = await getBalanceBatch(addressList)
-    let list = this.setBalance2Account(this.state.accountList, balanceList)
+    let commonAccountList = this.setBalance2Account(this.state.commonAccountList, balanceList)
+    let watchModeAccountList = this.setBalance2Account(this.state.watchModeAccountList, balanceList)
     this.callSetState({
-      accountList:list,
+      commonAccountList:commonAccountList,
+      watchModeAccountList:watchModeAccountList,
       balanceList
     })
   }
-  setListFilter = (accountList) => {
-    let newList = accountList
-    let createList = newList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_INSIDE
-    })
-    let importList = newList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE
-    })
-    let ledgerList = newList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_LEDGER
-    })
-    let watchList = newList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_WATCH
-    })
-    let commonList = [...createList, ...importList,...ledgerList]
-    return {allList:[...commonList,...watchList],commonList,watchList}
-  }
+  
   getAccountTypeIndex = (list) => {
     if (list.length === 0) {
       return 1
@@ -166,6 +152,7 @@ class AccountManagePage extends React.Component {
       this.goToAccountInfo(item)
       return
     }
+    let oldAddress = this.state.currentAddress
     if (item.address !== this.state.currentAddress) {
       Loading.show()
       sendMsg({
@@ -173,19 +160,31 @@ class AccountManagePage extends React.Component {
         payload: item.address
       }, (account) => {
         Loading.hide()
-        if (account.accountList && account.accountList.length > 0) {
+        let listData = account.accountList
+        if (listData.allList && listData.allList.length > 0) {
           this.props.updateCurrentAccount(account.currentAccount)
-          let listData = this.setListFilter(account.accountList)
-          let list = this.setBalance2Account(listData.allList,this.state.balanceList)
+          let commonList = this.setBalance2Account(listData.commonList,this.state.balanceList)
+          let watchList = this.setBalance2Account(listData.watchList,this.state.balanceList)
           this.callSetState({
-            accountList: list,
-            commonAccountList:listData.commonList,
-            watchModeAccountList:listData.watchList,
+            accountList: listData.allList,
+            commonAccountList:commonList,
+            watchModeAccountList:watchList,
             currentAddress: item.address
+          },()=>{
+            this.updateDAppConnect(oldAddress,this.state.currentAddress)
           })
         }
       })
     }
+  }
+  updateDAppConnect=(oldAddress,currentAddress)=>{
+    sendMsg({
+      action: DAPP_CHANGE_CONNECTING_ADDRESS,
+      payload: {
+        address: oldAddress,
+        currentAddress:currentAddress
+      }
+    }, (status) => {})
   }
 
   goToAccountInfo = (item) => {

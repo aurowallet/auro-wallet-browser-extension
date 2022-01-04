@@ -3,10 +3,10 @@ import "./ToastItem.scss";
 
 class ToastItem extends Component {
     componentDidMount() {
-        const { id, duration, onClose, isShowMask } = this.props;
+        const { duration, onClose } = this.props;
         this.timer = setTimeout(() => {
             if (onClose) {
-                onClose(id, isShowMask);
+                onClose();
             }
         }, duration)
     }

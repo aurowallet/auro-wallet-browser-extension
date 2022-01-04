@@ -12,7 +12,6 @@ import { openTab } from "../../../utils/commonMsg";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import "./index.scss";
-import { updateExtensionBaseInfo } from "../../../reducers/cache";
 
 
 const followSource = {
@@ -52,7 +51,6 @@ class AboutUs extends React.Component {
       Toast.info(baseInfo.error)
       return
     }
-    this.props.updateExtensionBaseInfo(baseInfo)
     let changelog = baseInfo.changelog ? baseInfo.changelog : ""
     let gitReponame = baseInfo.gitReponame ? baseInfo.gitReponame : ""
     let followus = baseInfo.followus && baseInfo.followus.length > 0 ? baseInfo.followus : []
@@ -130,9 +128,6 @@ const mapStateToProps = (state) => ({});
 
 function mapDispatchToProps(dispatch) {
   return {
-    updateExtensionBaseInfo: (data) => {
-      dispatch(updateExtensionBaseInfo(data))
-    },
   };
 }
 

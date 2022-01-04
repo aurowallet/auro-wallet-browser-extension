@@ -1,4 +1,7 @@
 @import "../../common.scss";
+
+$selectWidth : 93px;
+
 .select-box {
   display: flex;
   align-items: center;
@@ -11,16 +14,16 @@
     position: relative;
     .self-input {
       outline: none;
-      width: 93px;
+      width: $selectWidth;
       box-sizing: border-box;
       margin: 0;
       list-style: none;
-      height: 32px;
+      padding: 4px 0px;
       display: flex;
       align-items: center;
       padding-left: 14px;
       color: rgba(0, 0, 0, 0.65);
-      font-size: $font-size-desc;
+      font-size: $font-size-content;
       line-height: 1.5;
       background-color: #fff;
       background-image: none;
@@ -29,15 +32,23 @@
       transition: all 0.3s;
       overflow: visible;
     }
-    .input-hover {
+    .selfInputContent{
+      width: calc($selectWidth - 40px);
+      overflow:hidden; 
+      text-overflow:ellipsis; 
+      white-space:nowrap; 
+      text-align: center;
+    }
+    .wallet-self-select{
+      color: white;
+      background-color: transparent;
     }
     .select-arrow {
-      width: 7px;
-      height: 3.5px;
+      width: 10px;
       color: #dddddd;
       position: absolute;
       right: 10px;
-      top: 14px;
+      top: 13px;
     }
     .down {
       transform: rotate(0);
@@ -48,30 +59,44 @@
       transition: 0.35s;
     }
     .options {
-      width: 93px;
+      width: $selectWidth;
       box-sizing: border-box;
       position: absolute;
       top: 35px;
       right: 0;
-      color: rgba(0, 0, 0, 0.65);
-      font-size: $font-size-desc;
-      background-color: #fff;
+      color: #333333;
+      font-size: $font-size-content;
+      
       background-image: none;
       border: 1px solid #d9d9d9;
-      border-radius: 4px;
       cursor: pointer;
       transition: 0.35s;
       opacity: 1;
-      box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.3);
       z-index: 102;
+
+      background: #FFFFFF;
+      box-shadow: 0px 12px 30px 0px rgba(37, 34, 117, 0.08);
+      border-radius: 8px;
+      padding: 5px 0px;
+     
       .item {
+        overflow:hidden; 
+        text-overflow:ellipsis; 
+        white-space:nowrap; 
+
         line-height: 20px;
-        padding: 8px;
+        padding: 4px 8px;
+        text-align: center;
+
         &:hover {
-          background: rgba(0, 0, 0, 0.1);
+          color: #FFFFFF;
+          background: #BBBBBB;
+          border-radius: 4px;
         }
       }
+      
     }
+    
     .options-hidden {
       opacity: 0;
       visibility: hidden;

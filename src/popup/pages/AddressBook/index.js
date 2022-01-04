@@ -244,7 +244,9 @@ class AddressBook extends React.Component {
         )
     }
     setBtnStatus=()=>{
-        if(this.state.address.length>0 && !this.state.errorTipShow){
+        let address = trimSpace(this.state.address)
+        let addressName = trimSpace(this.state.addressName)
+        if(address.length>0 && addressName.length >0){
             this.callSetState({
                 btnClick:true
             })
@@ -259,20 +261,7 @@ class AddressBook extends React.Component {
             this.callSetState({
                 addressName: e.target.value,
             }, () => {
-                let checkResult = nameLengthCheck(this.state.addressName)
-                if (checkResult) {
-                    this.callSetState({
-                        errorTipShow: false
-                    },()=>{
-                        this.setBtnStatus()
-                    })
-                } else {
-                    this.callSetState({
-                        errorTipShow: true
-                    },()=>{
-                        this.setBtnStatus()
-                    })
-                }
+                this.setBtnStatus()
             })
         }
     }

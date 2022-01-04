@@ -18,6 +18,8 @@ import downArrow from "../../../assets/images/downArrow.png";
 import Toast from "../../component/Toast";
 import {addressValid} from "../../../utils/validator";
 import Loading from "../../component/Loading";
+import ConfirmModal from "../../component/ConfirmModal";
+import { Trans } from "react-i18next";
 
 class AccountName extends React.Component {
   constructor(props) {
@@ -154,13 +156,43 @@ class AccountName extends React.Component {
         payload: { accountName: accountText }
       }, (account) => {
         Loading.hide()
-        this.props.updateCurrentAccount(account)
-        this.props.history.replace({
-          pathname: "/account_manage",
-        })
+        if(account.error){
+          if(account.error === "improtRepeat"){
+              this.showSameAccountTip(account.account)
+          }
+        }else{
+          this.props.updateCurrentAccount(account)
+          this.props.history.replace({
+            pathname: "/account_manage",
+          })
+        }
+     
       })
     }
     this.isClicked = false
+  }
+  renderTipContent = (account) => {
+    return (
+      <div className={'walletRepeatTipContainer'}>
+        <p className="accountRepeatTitle">{getLanguage('importSameAccount_1')}</p>
+        <p className="accountRepeatAddress">{account.address}</p>
+        <Trans
+        i18nKey={"importSameAccount_2"}
+        values={{accountName:account.accountName}}
+        components={{ b: <span className={"accountRepeatName"} />,
+                      click:<span className={"accountRepeatClick"} /> }}
+      />
+      </div>)
+  }
+  showSameAccountTip=(account)=>{
+    let title = getLanguage('prompt')
+    let elementContent = ()=>this.renderTipContent(account)
+    ConfirmModal.show({
+      title,
+      elementContent,
+      confirmText: getLanguage("isee"),
+    })
+
   }
   onAccountIndexChange = (e)=> {
     var accountIndex = +e.target.value;
