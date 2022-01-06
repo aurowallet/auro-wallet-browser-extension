@@ -462,15 +462,14 @@ class DappService {
         action: "accountsChanged",
         result: account
       }
-      for (let index = 0; index < siteUrlList.length; index++) {
-        const siteUrl = siteUrlList[index];
-        for (let tabIndex = 0; tabIndex < tabs.length; tabIndex++) {
-          const tab = tabs[tabIndex];
-          let origin = getOriginFromUrl(tab.url)
-          if (origin === siteUrl) {
-            extension.tabs.sendMessage(tab.id, message, res => { })
-            break;
-          }
+      for (let tabIndex = 0; tabIndex < tabs.length; tabIndex++) {
+        const tab = tabs[tabIndex];
+        let origin = getOriginFromUrl(tab.url)
+
+        let tabConnectIndex = siteUrlList.indexOf(origin)
+        if(tabConnectIndex !== -1){
+          extension.tabs.sendMessage(tab.id, message, res => { })
+          continue;
         }
       }
     })
