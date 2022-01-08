@@ -127,56 +127,61 @@ class DappService {
           }
         }
         signRequests.push({ id, params, site })
-        async function onMessage(message, sender, sendResponse) {
+        function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
           switch (action) {
             case DAPP_ACTION_SEND_TRANSACTION:
               {
-                if (payload.resultOrigin !== site.origin) {
-                  reject({ message: "origin dismatch" })
-                  return
-                }
-                if (payload && payload.hash) {
-                  extension.runtime.onMessage.removeListener(onMessage)
-                  resolve({
-                    hash: payload.hash
-                  })
-                  await closePopupWindow(windowId.request_sign)
-                  that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
-                } else if (payload && payload.cancel) {
-                  extension.runtime.onMessage.removeListener(onMessage)
-                  reject({ message: "user reject", code: 4001 })
-                  await closePopupWindow(windowId.request_sign)
-                  that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
-                } else {
-                  let msg = payload.message || "transaction error"
-                  reject({ message: msg })
-                }
-                sendResponse()
+                ((async ()=>{
+                  if (payload.resultOrigin !== site.origin) {
+                    reject({ message: "origin dismatch" })
+                    return
+                  }
+                  if (payload && payload.hash) {
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    resolve({
+                      hash: payload.hash
+                    })
+                    await closePopupWindow(windowId.request_sign)
+                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                  } else if (payload && payload.cancel) {
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    reject({ message: "user reject", code: 4001 })
+                    await closePopupWindow(windowId.request_sign)
+                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                  } else {
+                    let msg = payload.message || "transaction error"
+                    reject({ message: msg })
+                  }
+                  sendResponse()
+                })())
+                return true
               }
-              break
             case DAPP_ACTION_SIGN_MESSAGE:
               {
-                if (payload.resultOrigin !== site.origin) {
-                  reject({ message: "origin dismatch" })
-                  return
-                }
-                if (payload && payload.signature) {
-                  extension.runtime.onMessage.removeListener(onMessage)
-                  delete payload.resultOrigin
-                  resolve(payload)
-                  await closePopupWindow(windowId.request_sign)
-                  that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
-                } else {
-                  extension.runtime.onMessage.removeListener(onMessage)
-                  reject({ message: "user reject", code: 4001 })
-                  await closePopupWindow(windowId.request_sign)
-                  that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
-                }
-                sendResponse()
+                ((async ()=>{
+                  if (payload.resultOrigin !== site.origin) {
+                    reject({ message: "origin dismatch" })
+                    return
+                  }
+                  if (payload && payload.signature) {
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    delete payload.resultOrigin
+                    resolve(payload)
+                    await closePopupWindow(windowId.request_sign)
+                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                  } else {
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    reject({ message: "user reject", code: 4001 })
+                    await closePopupWindow(windowId.request_sign)
+                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                  }
+                  sendResponse()
+                })())
+                return true
               }
-              break
           }
+          return false
         }
         extension.runtime.onMessage.addListener(onMessage)
         let isUnlocked = this.getAppLockStatus()
@@ -198,9 +203,9 @@ class DappService {
     let that = this
     let popupWindowId = await openPopupWindow(url, channel, windowType)
     this.setCurrentOpenWindow(url, channel)
-    let listener = extension.tabs.onRemoved.addListener(function (tabInfo, changeInfo) {
+    function removeListener (tabInfo, changeInfo) {
       if (popupWindowId === changeInfo.windowId) {
-        extension.tabs.onRemoved.removeListener(listener)
+        extension.tabs.onRemoved.removeListener(removeListener)
         extension.runtime.sendMessage({
           type: FROM_BACK_TO_RECORD,
           action: DAPP_CLOSE_POPUP_WINDOW,
@@ -211,7 +216,8 @@ class DappService {
         that.setBadgeContent(channel, BADGE_MINUS)
         that.clearCurrentOpenWindow()
       }
-    });
+    }
+    extension.tabs.onRemoved.addListener(removeListener);
     return popupWindowId
   }
   async checkLocalWallet() {
@@ -237,49 +243,53 @@ class DappService {
           resolve([currentAccount])
           return
         }
-        async function onMessage(message, sender, sendResponse) {
+        function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
           switch (action) {
             case DAPP_ACTION_GET_ACCOUNT:
-              if (payload.resultOrigin !== site.origin) {
-                reject({ message: "origin dismatch" })
-                return
-              }
-              extension.runtime.onMessage.removeListener(onMessage)
-              await closePopupWindow(windowId.approve_page)
-              that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
-              if (payload.selectAccount && payload.selectAccount.length > 0) {
-
-                let account = payload.selectAccount[0]
-                let accountApprovedUrlList = that.dappStore.getState().accountApprovedUrlList
-                let currentApprovedList = accountApprovedUrlList[account.address] || []
-                if (currentApprovedList.indexOf(site.origin) === -1) {
-                  currentApprovedList.push(site.origin)
+              ((async () => {
+                if (payload.resultOrigin !== site.origin) {
+                  reject({ message: "origin dismatch" })
+                  return
                 }
-                accountApprovedUrlList[account.address] = currentApprovedList
-                that.dappStore.updateState({
-                  accountApprovedUrlList
-                })
-                resolve([account.address])
-              } else {
-                reject({ message: 'user reject', code: 4001 })
-              }
-              sendResponse()
-              break;
+                extension.runtime.onMessage.removeListener(onMessage)
+                await closePopupWindow(windowId.approve_page)
+                that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
+                if (payload.selectAccount && payload.selectAccount.length > 0) {
+                  let account = payload.selectAccount[0]
+                  let accountApprovedUrlList = that.dappStore.getState().accountApprovedUrlList
+                  let currentApprovedList = accountApprovedUrlList[account.address] || []
+                  if (currentApprovedList.indexOf(site.origin) === -1) {
+                    currentApprovedList.push(site.origin)
+                  }
+                  accountApprovedUrlList[account.address] = currentApprovedList
+                  that.dappStore.updateState({
+                    accountApprovedUrlList
+                  })
+                  resolve([account.address])
+                } else {
+                  reject({ message: 'user reject', code: 4001 })
+                }
+                sendResponse()
+              })())
+              return true
             case DAPP_ACTION_CLOSE_WINDOW:
-              if (payload.resultOrigin !== site.origin) {
-                reject({ message: "origin dismatch" })
-                return
-              }
-              extension.runtime.onMessage.removeListener(onMessage)
-              resolve([payload.account])
-              await closePopupWindow(payload.page)
-              that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
-              sendResponse()
-              break
+              ((async ()=>{
+                if (payload.resultOrigin !== site.origin) {
+                  reject({ message: "origin dismatch" })
+                  return
+                }
+                extension.runtime.onMessage.removeListener(onMessage)
+                resolve([payload.account])
+                await closePopupWindow(payload.page)
+                that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
+                sendResponse()
+              })())
+                return true
             default:
               break;
           }
+          return false
         }
         extension.runtime.onMessage.addListener(onMessage)
         let isUnlocked = this.getAppLockStatus()
