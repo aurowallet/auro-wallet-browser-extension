@@ -16,7 +16,7 @@ export const LOCK_TIME = 24 * 60
 /**
  * 系统版本
  */
-export const VERSION_CONFIG = "v2.0.0"
+export const VERSION_CONFIG = "v2.0.1"
 
 /**
  * fee等配置信息接口
