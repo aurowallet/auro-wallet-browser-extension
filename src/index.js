@@ -59,20 +59,25 @@ function updateNetLocalConfig(netConfig){
   let addList = []
   let currentUrlType = ""
   localNetList.map((item,index)=>{
-    if(item.url === currentUrl){
-      currentConfig = item
-      currentUrlType = item.type
-    }
+   
+    let newItem = item
     if(item.type === NET_CONFIG_DEFAULT){
       defaultList.push(item)
     }else{
       let id = item.url
-      addList.push({
+      newItem =  {
         ...MAIN_NET_BASE_CONFIG,
+        name:item.name||"Unknown",
         id,
         ...item,
-      })
+      }
+      addList.push(newItem)
     }
+    if(newItem.url === currentUrl){
+      currentConfig = newItem
+      currentUrlType = newItem.type
+    }
+
   })
   let config
   if(addList.length === 0){
