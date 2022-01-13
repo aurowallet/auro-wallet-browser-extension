@@ -164,6 +164,9 @@ export function connectAccountDataFilter(account) {
 }
 
 export function getOriginFromUrl(url) {
+    if(!url){
+        return ""
+    }
     var origin = new URL(url).origin;
     return origin
 }
