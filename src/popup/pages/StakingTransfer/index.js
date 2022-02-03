@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import cx from "classnames";
 import React from "react";
+import { Trans } from "react-i18next";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
 import { cointypes } from "../../../../config";
@@ -283,7 +284,13 @@ class StakingTransfer extends React.Component {
   renderLoadingView = () => {
     return (
       <div className={"confirm-loading"}>
-        <p className={"confirm-loading-desc"}>{getLanguage('confirmInfoLedger')}</p>
+        <div className="confirmLoadingTip">
+          <p className="confirmLoadingDescTip">{getLanguage('ledgerSendWaitTip')}</p>
+          <Trans
+              i18nKey={"ledgerSendCloseTip"}
+              components={{ b: <strong /> }}
+          />
+        </div>
         <img className={"confirm-loading-img"} src={loadingCommon} />
       </div>)
   }

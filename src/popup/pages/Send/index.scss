@@ -145,6 +145,17 @@ p {
 .confirm-loading-img {
   height: 60px;
 }
+.confirmLoadingTip{
+  margin: 0px 30px 20px;
+  font-size: $font-size-content;
+  color: #333333;
+  p{
+    margin: 0;
+  }
+  .confirmLoadingDescTip{
+    margin-bottom: 20px;
+  }
+}
 .confirm-loading-desc {
   margin: 0px;
   font-size: $font-size-content;

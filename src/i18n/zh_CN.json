@@ -259,5 +259,7 @@
   "setDappDisconnet": "断开连接",
   "disconnectFailed": "断开连接失败",
   "agreeToConnect": "这个网站请求查看账户:",
-  "agreeToConnectTip": "请确保只与你信任的网站进行连接"
+  "agreeToConnectTip": "请确保只与你信任的网站进行连接",
+  "ledgerSendWaitTip":"请在Ledger硬件钱包中进行确认，签名可能会需要1-3分钟的时间。",
+  "ledgerSendCloseTip":"在此之前<b>请勿关闭</b>此窗口。"
 }

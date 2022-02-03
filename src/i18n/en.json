@@ -170,7 +170,7 @@
   "pleaseOpenInLedger": "Open the Mina app on your Ledger device",
   "back2extension": "Please continue the operation in the wallet app.",
   "dontclose": "And <b>do not close</b> this window.",
-  "confirmInfoLedger": "Please confirm on your Ledger wallet",
+  "confirmInfoLedger": "Please confirm in your Ledger wallet",
   "keystoreError": "Keystore format error or password incorrect",
   "pleaseInputKeyPair": "Please enter the contents of the Keystore file below",
   "pleaseInputKeyPairPwd": "Enter Keystore Password",
@@ -259,5 +259,7 @@
   "setDappDisconnet": "Disconnect",
   "disconnectFailed": "Disconnect failed",
   "agreeToConnect": "This website would like to view account:",
-  "agreeToConnectTip": "Make sure you only connect to trusted sites"
+  "agreeToConnectTip": "Make sure you only connect to trusted sites",
+  "ledgerSendWaitTip":"Please confirm in the Ledger wallet, the signature may take 1-3 minutes.",
+  "ledgerSendCloseTip":"<b>Do not close</b> this window until then."
 }
