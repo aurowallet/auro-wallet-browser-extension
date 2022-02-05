@@ -151,7 +151,7 @@ class NetworkPage extends React.Component {
                         <div className="baseIconContainer editIconContainer click-cursor" onClick={() => this.onEdit(netItem)} >
                             <img className={"networkEditContent"} src={editIcon} />
                         </div>
-                        <div className="baseIconContainer deleteIconContainer click-cursor" onClick={() => this.onEdit(netItem)} >
+                        <div className="baseIconContainer deleteIconContainer click-cursor" onClick={() => this.onDelete(netItem)} >
                             <img className={"networkEditContent"} src={deleteIcon} />
                         </div>
                     </> : <img onClick={() => this.onSelect(netItem)} className={"lang-option-img click-cursor"} src={imgUrl} />}
