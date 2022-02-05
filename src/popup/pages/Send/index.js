@@ -45,7 +45,7 @@ class SendPage extends React.Component {
       addressErr: "",
       amountErr: "",
       feeErr: "",
-      btnClick: true,
+      btnClick: false,
       memo: "",
       isOpenAdvance: false,
       inputFee: "",

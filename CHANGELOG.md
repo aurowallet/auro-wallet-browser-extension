@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - add old version network default-name [`Unknown`]
 - add ledger transaction tip when waiting sign in ledger
+- fix send default button status 
  
 
 ## [2.0.2]
