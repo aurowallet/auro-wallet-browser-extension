@@ -116,6 +116,20 @@ export async function requestSignPayment (app, body, ledgerAccountIndex) {
   return requestSign(app, body, TxType.PAYMENT, ledgerAccountIndex)
 }
 
+function reEncodeRawSignature(rawSignature) {
+  function shuffleBytes(hex) {
+    let bytes = hex.match(/.{2}/g);
+    bytes.reverse();
+    return bytes.join("");
+  }
+
+  if (rawSignature.length !== 128) {
+    throw 'Invalid raw signature input'
+  }
+  const field = rawSignature.substring(0,64);
+  const scalar = rawSignature.substring(64);
+  return shuffleBytes(field) + shuffleBytes(scalar)
+}
 async function requestSign(app, body, type, ledgerAccountIndex) {
   let amount = body.amount || 0
   let decimal = new BigNumber(10).pow(cointypes.decimals)
@@ -140,8 +154,9 @@ async function requestSign(app, body, type, ledgerAccountIndex) {
   if (returnCode !== '9000') {
     return {signature: null, error: {message: statusText}}
   }
+  let realSignature  = reEncodeRawSignature(signature)
   return {
-    signature,
+    signature:realSignature,
     payload: {
       fee: payload.fee,
       from: payload.senderAddress,
