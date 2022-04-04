@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+
+## [2.0.4]
+
 - Re-encode raw signature to fix ledger transation signature  (https://github.com/jspada/ledger-app-mina/pull/22)
+- fix no-balance account tip
 
 ## [2.0.3]
 
