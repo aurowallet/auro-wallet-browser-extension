@@ -199,7 +199,7 @@ class Wallet extends React.Component {
     getBalance(address).then((account) => {
       if (account.publicKey) {
         this.props.updateNetAccount(account)
-      } else {
+      } else if(account.error){
         Toast.info(getLanguage('nodeError'))
       }
     })

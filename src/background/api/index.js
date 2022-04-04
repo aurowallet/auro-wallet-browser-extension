@@ -16,9 +16,12 @@ export async function getBalance(address) {
       requestType: "extensionAccountInfo",
       publicKey: address
     }
-  ).catch((err) => err)
+  ).catch((error) => error)
   let account = result.account || {}
   saveLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE, JSON.stringify({ [address]: account }))
+  if(result.error){
+    account.error = result.error
+  }
   return account
 }
 /**
