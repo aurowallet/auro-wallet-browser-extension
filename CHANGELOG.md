@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+- fix DApp default icon
+- change DApp message request page title
+- fix address-book 
 
 ## [2.0.4]
 

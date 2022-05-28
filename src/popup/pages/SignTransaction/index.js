@@ -50,7 +50,6 @@ class SignTransaction extends React.Component {
       feeSelect: FEE_RECOMMED_DEFAULT,
     }
     this.isUnMounted = false;
-    this.webIconRef = React.createRef();
     this.modal = React.createRef();
     this.confirmModal = React.createRef();
     this.feeList = [
@@ -382,12 +381,9 @@ class SignTransaction extends React.Component {
     return (
       <div className={'sign-page-icon-con'}>
         <img
-          ref={this.webIconRef}
           className="sign-page-icon" src={webIcon}
-          onError={() => {
-            if (this.webIconRef.current) {
-              this.webIconRef.current.src = dapp_default_icon
-            }
+          onError={(event) => {
+            event.target.src = dapp_default_icon
           }}
         />
         <p className={'sign-page-url'}>{winParams.siteUrl}</p>
@@ -658,7 +654,7 @@ class SignTransaction extends React.Component {
     return (
       <>
         <div className={"tab-common-title"}>
-          {getLanguage('signRequest')}
+          {sendAction !== DAppActions.mina_signMessage ? getLanguage('signRequest'):getLanguage('messageSign')}
           <div className={"netSelectCon"}>
             <span className={"netSelectCon-name"}>{currentConfig.name}</span>
           </div>

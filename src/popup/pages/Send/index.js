@@ -15,7 +15,7 @@ import { WALLET_CHECK_TX_STATUS, WALLET_SEND_TRANSTRACTION } from "../../../cons
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
-import { updateAddressBookFrom } from "../../../reducers/cache";
+import { updateAddressBookFrom, updateAddressDetail } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect, requestSignPayment } from "../../../utils/ledger";
 import { getDisplayAmount, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
@@ -75,6 +75,7 @@ class SendPage extends React.Component {
   }
   componentWillUnmount() {
     this.isUnMounted = true;
+    this.props.updateAddressDetail({})
   }
   callSetState = (data, callback) => {
     if (!this.isUnMounted) {
@@ -597,6 +598,9 @@ function mapDispatchToProps(dispatch) {
     updateAddressBookFrom: (from) => {
       dispatch(updateAddressBookFrom(from))
     },
+    updateAddressDetail: (addressDetail) => {
+      dispatch(updateAddressDetail(addressDetail))
+  },
   };
 }
 

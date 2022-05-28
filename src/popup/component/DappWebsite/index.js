@@ -1,6 +1,7 @@
 import cx from "classnames";
 import React, { Component } from "react";
 import "./index.scss";
+import dapp_default_icon from "../../../assets/images/dapp_default_icon.svg";
 
 export default class DappWebsite extends Component {
   constructor(props) {
@@ -29,8 +30,10 @@ export default class DappWebsite extends Component {
             "approve-page-icon-row": showRowIcon,
             "approve-top-icon-column": !showRowIcon
           })}
-            ref={this.webIconRef}
             src={webIcon}
+            onError={(event) => {
+              event.target.src = dapp_default_icon
+            }}
           />
         </div>
         <div className={"approve-page-url-con"}>
