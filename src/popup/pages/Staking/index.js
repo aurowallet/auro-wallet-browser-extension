@@ -9,7 +9,7 @@ import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorD
 import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from '../../../i18n';
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, copyText, getAmountForUI } from '../../../utils/utils';
+import { addressSlice, copyText, getAmountForUI, getNetTypeNotSupportStaking } from '../../../utils/utils';
 import Clock from "../../component/Clock";
 import Toast from "../../component/Toast";
 import EmptyGuide from "./components/EmptyGuide";
@@ -209,7 +209,7 @@ class Staking extends React.Component {
     const { validatorDetail, delegatePublicKey } = this.state;
     const netType = netConfig.currentConfig?.netType
     let showContent = true
-    if (netType === NET_CONFIG_TYPE.Unknown) {
+    if (getNetTypeNotSupportStaking(netType)) {
       showContent = false
     }
     let nodeName = '';

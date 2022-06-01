@@ -1,7 +1,7 @@
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
-import { MAIN_NET_BASE_CONFIG, NET_CONFIG_VERSION, TEST_NET_BASE_CONFIG, UNKNOWN_NET_BASE_CONFIG } from "../../../../config";
+import { MAIN_NET_BASE_CONFIG, NET_CONFIG_VERSION, QA_NET_BASE_CONFIG, TEST_NET_BASE_CONFIG, UNKNOWN_NET_BASE_CONFIG } from "../../../../config";
 import select_account_no from "../../../assets/images/select_account_no.png";
 import select_account_ok from "../../../assets/images/select_account_ok.png";
 import { getNetworkList, getNodeChainId } from "../../../background/api";
@@ -50,6 +50,7 @@ class NetworkPage extends React.Component {
     }
     fetchData = async () => {
         let network = await getNetworkList()
+        console.log('checkGqlHealth==network=1',network);
         if (network.length <= 0) {
             let listJson = getLocal(NETWORK_ID_AND_TYPE)
             let list = JSON.parse(listJson)
@@ -95,7 +96,6 @@ class NetworkPage extends React.Component {
         this.props.updateNetConfig(config)
         this.props.updateShouldRequest(true)
         this.props.updateStakingRefresh(true)
-
         sendNetworkChangeMsg(config.currentConfig)
     }
     clearLocalCache = () => {
@@ -221,6 +221,9 @@ class NetworkPage extends React.Component {
             case "1":
                 config = TEST_NET_BASE_CONFIG
                 break;
+            case "11":
+                config = QA_NET_BASE_CONFIG
+                break;
             default:
                 config = UNKNOWN_NET_BASE_CONFIG
                 break;
@@ -284,6 +287,7 @@ class NetworkPage extends React.Component {
         if (currentEditItem.id === currentConfig.url) {
             currentConfig.url = urlInput
             currentConfig.name = nameInput
+            currentConfig.netType = config.netType
         }
         let editItem = {
             ...config,
@@ -300,7 +304,6 @@ class NetworkPage extends React.Component {
                 return item
             }
         })
-
         this.callSetState({
             netConfigList: newList,
             currentConfig: currentConfig,

@@ -30,7 +30,7 @@ import { ACCOUNT_BALANCE_CACHE_STATE, setBottomType, updateAccountTx, updateCurr
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { updateNetConfig } from "../../../reducers/network";
 import { openTab, sendMsg } from '../../../utils/commonMsg';
-import { addressSlice, amountDecimals, copyText, getCurrentNetConfig, getDisplayAmount, getOriginFromUrl, getShowTime, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
+import { addressSlice, amountDecimals, copyText, getCurrentNetConfig, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, getShowTime, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
 import Button, { BUTTON_TYPE_CANCEL } from "../../component/Button";
 import Clock from '../../component/Clock';
 import ConfirmModal from '../../component/ConfirmModal';
@@ -77,7 +77,7 @@ class Wallet extends React.Component {
       bottomTipType = accountInfo.homeBottomType
     } else {
       const netType = netConfig.currentConfig?.netType
-      if (netType === NET_CONFIG_TYPE.Unknown) {
+      if (getNetTypeNotSupportHistory(netType)) {
         bottomTipType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT
       } else {
         if (txList.length > 0) {
@@ -596,7 +596,7 @@ class Wallet extends React.Component {
         }
       }
       let nextBottomType = BOTTOM_TYPE.BOTTOM_TYPE_LOADING
-      if (newConfig.netType === NET_CONFIG_TYPE.Unknown) {
+      if (getNetTypeNotSupportHistory(newConfig.netType)) {
         nextBottomType = BOTTOM_TYPE.BOTTOM_TYPE_NOT_DEFAULT
       }
       this.callSetState({

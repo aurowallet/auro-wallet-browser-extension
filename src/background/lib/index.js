@@ -3,19 +3,25 @@ import { cointypes } from '../../../config';
 import { getLanguage } from '../../i18n';
 import { getCurrentNetConfig, getRealErrorMsg } from '../../utils/utils';
 import { NET_CONFIG_TYPE } from '../../constant/walletType';
+import { DAppActions } from "auro-web3-provider";
 
 async function getSignClient(){
     let netConfig = getCurrentNetConfig()
     let netType = ''
-    const { default: Client } = await import('mina-signer')
     if(netConfig.netType){
       netType = netConfig.netType
     }
     let client
-    if(netType === NET_CONFIG_TYPE.Devnet){
-        client = new Client({ network: "testnet" });
+    if(netType === NET_CONFIG_TYPE.QAnet){
+        const { default: QAClient } = await import('mina-signer-experimental')
+        client = new QAClient({ network: "testnet" });
     }else{
-        client = new Client({ network: "mainnet" });
+        const { default: Client } = await import('mina-signer')
+        if(netType === NET_CONFIG_TYPE.Mainnet){
+            client = new Client({ network: "mainnet" });
+        }else{
+            client = new Client({ network: "testnet" });
+        }
     }
     return client
 }
@@ -34,6 +40,7 @@ export async  function signPayment(privateKey, fromAddress, toAddress, amount, f
     let signedPayment
     try {
         let signClient = await getSignClient()
+
         let decimal = new BigNumber(10).pow(cointypes.decimals)
         let sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber()
         let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber()
@@ -116,4 +123,45 @@ export async function verifyMessage(publicKey, signature, payload) {
         verifyResult = { error: { message: "verify failed" } }
     }
     return verifyResult
+}
+
+
+/** QA net sign */
+export async function signTransaction(privateKey,params){
+    let signResult
+    try {
+        let signClient = await getSignClient()
+        let signBody = {}
+
+        if(params.sendAction === DAppActions.mina_signMessage){
+            signBody = {
+                message:params.message,
+                publicKey: params.fromAddress
+            }
+        }else{
+            let decimal = new BigNumber(10).pow(cointypes.decimals)
+            let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
+           
+            signBody = {
+                to: params.toAddress,
+                from: params.fromAddress,
+                fee: sendFee,
+                nonce: params.nonce,
+                memo:params.memo||""
+            }
+            if(params.sendAction === DAppActions.mina_sendPayment){
+                let sendAmount = new BigNumber(params.amount).multipliedBy(decimal).toNumber()
+                signBody.amount = sendAmount
+            }
+        }
+        signResult = signClient.signTransaction(signBody, privateKey)
+        if(params.sendAction === DAppActions.mina_signMessage){
+            signResult = signResult.signature
+        }
+
+    } catch (err) {
+        let errorMessage = getRealErrorMsg(err)||getLanguage("buildFailed")
+        signResult = { error: { message: errorMessage } }
+    }
+    return signResult
 }

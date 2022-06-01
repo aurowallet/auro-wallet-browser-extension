@@ -4,10 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+
+## [2.0.5]
+
 - fix DApp default icon
 - change DApp message request page title
 - fix address-book 
-
+- add berkeley-qa support (mina-signer-experimental)
 ## [2.0.4]
 
 - Re-encode raw signature to fix ledger transation signature  (https://github.com/jspada/ledger-app-mina/pull/22)

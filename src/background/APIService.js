@@ -2,11 +2,12 @@ import { LOCK_TIME } from '../../config';
 import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
 import { getLanguage } from '../i18n';
 import { getTxStatus, sendStakeTx, sendTx } from './api';
-import { signMessagePayment, signPayment, stakePayment } from './lib';
+import { signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
 import { getCurrentNetConfig } from '../utils/utils';
+import { DAppActions } from 'auro-web3-provider';
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -608,7 +609,7 @@ class APIService {
     signMessage = async(params) => {
         try {
             let fromAddress = params.fromAddress
-            let message = params.memo
+            let message = params.message
             const privateKey = await this.getCurrentPrivateKey()
             let signedTx = await signMessagePayment(privateKey, fromAddress,message)
             if (signedTx.error) {
@@ -636,6 +637,39 @@ class APIService {
         } catch (err) {
             return { error: err }
         }
+    }
+    sendQATransaction= async (params) => {
+        try {
+            const privateKey = await this.getCurrentPrivateKey()
+            let signedTx = await signTransaction(privateKey,params)
+            if (signedTx.error) {
+                return { error: signedTx.error }
+            }
+            switch (params.sendAction) {
+                case DAppActions.mina_sendStakeDelegation:
+                    let stakeRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error => { error })
+                    let delegation = stakeRes.sendDelegation && stakeRes.sendDelegation.delegation || {}
+                    if (delegation.hash && delegation.id) {
+                        this.checkTxStatus(delegation.id,delegation.hash)
+                    }
+
+                    return { ...stakeRes }
+                case DAppActions.mina_sendPayment:
+                    let sendRes = await sendTx(signedTx.data, signedTx.signature).catch(error => { error })
+                    let payment = sendRes.sendPayment && sendRes.sendPayment.payment || {}
+                    if (payment.hash && payment.id) {
+                        this.checkTxStatus(payment.id,payment.hash)
+                    }
+                    return { ...sendRes }
+                case DAppActions.mina_signMessage:
+                    return signedTx
+                default:
+                    return {error:"not support"}
+            }
+        } catch (err) {
+            return { error: err }
+        }
+
     }
 
     notification = (hash) => {

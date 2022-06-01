@@ -6,7 +6,7 @@ import { cointypes } from "../../../../config";
 import dapp_default_icon from "../../../assets/images/dapp_default_icon.svg";
 import loadingCommon from "../../../assets/images/loadingCommon.gif";
 import { getBalance, getFeeRecom, sendStakeTx, sendTx } from "../../../background/api";
-import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, GET_SIGN_PARAMS, WALLET_CHECK_TX_STATUS, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
+import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, GET_SIGN_PARAMS, QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateNetAccount } from "../../../reducers/accountReducer";
@@ -47,7 +47,7 @@ class SignTransaction extends React.Component {
       inputFee: "",
       inputNonce: "",
       winParams,
-      feeSelect: FEE_RECOMMED_DEFAULT,
+      feeSelect: FEE_RECOMMED_DEFAULT, 
     }
     this.isUnMounted = false;
     this.modal = React.createRef();
@@ -118,10 +118,14 @@ class SignTransaction extends React.Component {
       }
     }, (res) => {
       Loading.show()
+      let siteRecommendFee = isNumber(res.params.fee)? res.params.fee : ""
+      let feeSelect = siteRecommendFee?.length>0 ?FEE_RECOMMED_CUSTOM:FEE_RECOMMED_DEFAULT
       this.callSetState({
         site: res.site,
         params: res.params,
-        sendAction: res.params.action
+        sendAction: res.params.action,
+        inputFee:siteRecommendFee,
+        feeSelect:feeSelect
       }, () => {
         this.fetchData()
       })
@@ -236,13 +240,14 @@ class SignTransaction extends React.Component {
       let vaildFee = this.state.inputFee
       fee = trimSpace(vaildFee) || this.state.fee
       memo = params.memo || ""
-    } else {
-      memo = params.message
-    }
-
+    } 
+ 
     let fromAddress = currentAccount.address
     let payload = {
       fromAddress, toAddress, nonce, currentAccount, fee, memo
+    }
+    if(this.state.sendAction === DAppActions.mina_signMessage){
+      payload.message = params.message
     }
     if (this.state.sendAction === DAppActions.mina_sendPayment) {
       let amount = trimSpace(params.amount)
@@ -253,22 +258,9 @@ class SignTransaction extends React.Component {
       return this.ledgerTransfer(payload)
     }
     Loading.show()
-    let sendAction = ""
-    switch (this.state.sendAction) {
-      case DAppActions.mina_sendStakeDelegation:
-        sendAction = WALLET_SEND_STAKE_TRANSTRACTION
-        break;
-      case DAppActions.mina_sendPayment:
-        sendAction = WALLET_SEND_TRANSTRACTION
-        break;
-      case DAppActions.mina_signMessage:
-        sendAction = WALLET_SEND_MESSAGE_TRANSTRACTION
-        break;
-      default:
-        break;
-    }
+    payload.sendAction = this.state.sendAction
     sendMsg({
-      action: sendAction,
+      action: QA_SIGN_TRANSTRACTION,
       payload
     }, (data) => {
       Loading.hide()
@@ -284,7 +276,6 @@ class SignTransaction extends React.Component {
       Toast.info(errorMessage, 5 * 1000)
       return
     } else {
-      Toast.info(getLanguage('postSuccess'))
       let resultAction = ""
       let payload = {}
       let id = ""

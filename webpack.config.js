@@ -75,7 +75,7 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: getPlugins(),
-    performance: getPerformance(),
+    // performance: getPerformance(),
     node: {
       fs: 'empty',
       'child_process': 'empty'

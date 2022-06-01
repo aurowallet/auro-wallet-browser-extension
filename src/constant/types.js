@@ -232,3 +232,7 @@ export const DAPP_CLOSE_POPUP_WINDOW = "DAPP_CLOSE_POPUP_WINDOW"
  * when change current network  update dapp connecting status
  */
  export const DAPP_CHANGE_NETWORK = "DAPP_CHANGE_NETWORK"
+
+
+/** Berkeley qa net sign   */
+export const QA_SIGN_TRANSTRACTION = "QA_SIGN_TRANSTRACTION"

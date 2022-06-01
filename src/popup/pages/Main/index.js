@@ -8,13 +8,12 @@ import staking_active from "../../../assets/images/staking_active.png";
 import staking_common from "../../../assets/images/staking_common.png";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS } from "../../../constant/storageKey";
-import { NET_CONFIG_TYPE } from "../../../constant/walletType";
 import { getLanguage } from "../../../i18n";
 import { updateAccountTx, updateNetAccount } from "../../../reducers/accountReducer";
 import { updateCurrentPrice } from "../../../reducers/cache";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { updateHomeIndex } from "../../../reducers/tabRouteReducer";
-import { isNumber } from "../../../utils/utils";
+import { getNetTypeNotSupportHistory, isNumber } from "../../../utils/utils";
 import Tabs from "../../component/Tabs";
 import Setting from "../Setting";
 import Staking from "../Staking";
@@ -137,7 +136,8 @@ class HomePage extends React.Component {
     const { netConfig, currentAccount } = this.props
     const netType = netConfig.currentConfig?.netType
     let address = currentAccount?.address || ""
-    if (netType !== NET_CONFIG_TYPE.Unknown) {
+
+    if (!getNetTypeNotSupportHistory(netType)) {
       this.shouldUpdateTxList(address)
     }
     this.updateLocalAccount(address)
