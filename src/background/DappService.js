@@ -1,4 +1,4 @@
-import { DAppActions } from 'auro-web3-provider';
+import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/types';

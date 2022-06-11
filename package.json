@@ -5,7 +5,7 @@
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",
     "@reduxjs/toolkit": "1.4.0",
-    "auro-web3-provider": "0.0.8",
+    "@aurowallet/mina-provider": "0.0.10",
     "axios": "0.21.1",
     "bignumber.js": "9.0.1",
     "bip32": "2.0.6",
@@ -34,7 +34,7 @@
     "safe-buffer": "5.2.1",
     "uuid": "^8.3.2",
     "valid-url": "1.0.9",
-    "mina-signer-experimental":"1.0.1"
+    "mina-signer-experimental":"1.0.3"
   },
   "scripts": {
     "build": "webpack --mode production  && node pkgBuild.js",

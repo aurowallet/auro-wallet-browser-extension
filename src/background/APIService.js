@@ -7,7 +7,7 @@ import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
 import { getCurrentNetConfig } from '../utils/utils';
-import { DAppActions } from 'auro-web3-provider';
+import { DAppActions } from '@aurowallet/mina-provider';
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')

@@ -3,7 +3,7 @@ import { cointypes } from '../../../config';
 import { getLanguage } from '../../i18n';
 import { getCurrentNetConfig, getRealErrorMsg } from '../../utils/utils';
 import { NET_CONFIG_TYPE } from '../../constant/walletType';
-import { DAppActions } from "auro-web3-provider";
+import { DAppActions } from '@aurowallet/mina-provider';
 
 async function getSignClient(){
     let netConfig = getCurrentNetConfig()

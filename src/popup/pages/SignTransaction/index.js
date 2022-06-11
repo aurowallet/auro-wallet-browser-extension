@@ -1,4 +1,4 @@
-import { DAppActions } from "auro-web3-provider";
+import { DAppActions } from '@aurowallet/mina-provider';
 import BigNumber from "bignumber.js";
 import React from "react";
 import { connect } from "react-redux";

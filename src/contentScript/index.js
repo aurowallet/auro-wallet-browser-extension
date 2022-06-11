@@ -1,6 +1,6 @@
 import extensionizer from "extensionizer";
 import {sendMsg} from "../utils/commonMsg";
-import {MessageChannel} from 'auro-web3-provider'
+import { MessageChannel } from '@aurowallet/mina-provider';
 import { WALLET_CONNECT_TYPE } from "../constant/walletType";
 
 const CONTENT_SCRIPT = WALLET_CONNECT_TYPE.CONTENT_SCRIPT;

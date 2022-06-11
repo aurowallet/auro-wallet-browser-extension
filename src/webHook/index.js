@@ -1,2 +1,2 @@
-import AuroWeb3Provider from "auro-web3-provider";
-window.mina = new AuroWeb3Provider()
+import MinaProvider from '@aurowallet/mina-provider';
+window.mina = new MinaProvider()
