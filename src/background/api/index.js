@@ -3,7 +3,7 @@ import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../co
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getPendingTxBody, getStakeTxSend, getTxSend, getTxStatusBody } from './gqlparams';
+import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getPartyBody, getPendingTxBody, getQATxStatusBody, getStakeTxSend, getTxSend, getTxStatusBody } from './gqlparams';
 
 /**
 * get balance
@@ -31,6 +31,12 @@ export async function getBalance(address) {
 export async function getTxStatus(paymentId) {
   let txBody = getTxStatusBody()
   let result = await startFetchMyQuery(txBody, { paymentId })
+  return result
+}
+
+export async function getQATxStatus(zkappTransaction) { 
+  let txBody = getQATxStatusBody()
+  let result = await startFetchMyQuery(txBody, { zkappTransaction })
   return result
 }
 
@@ -77,6 +83,18 @@ export async function sendStakeTx(payload, signature) {
   return res
 }
 
+ 
+/**
+* send zk transaction 
+*/
+export async function sendParty(sendJson) {
+  let txBody = getPartyBody()
+  const variables = {
+    party:JSON.parse(sendJson)
+  }
+  let res = await startFetchMyMutation('sendZkapp',txBody,variables)
+  return res
+}
 
 /**
 * get daemon status

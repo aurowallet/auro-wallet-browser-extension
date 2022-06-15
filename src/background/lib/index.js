@@ -138,6 +138,18 @@ export async function signTransaction(privateKey,params){
                 message:params.message,
                 publicKey: params.fromAddress
             }
+        }else if (params.sendAction === DAppActions.mina_sendTransaction){
+            let decimal = new BigNumber(10).pow(cointypes.decimals)
+            let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
+            signBody={
+                parties: JSON.parse(params.transaction),
+                feePayer: {
+                    feePayer: params.fromAddress,
+                    fee: sendFee,
+                    nonce: params.nonce,
+                    memo:params.memo||""
+                },
+            }
         }else{
             let decimal = new BigNumber(10).pow(cointypes.decimals)
             let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()

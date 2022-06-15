@@ -221,6 +221,8 @@ export function getRealErrorMsg(error) {
             let lastErrorIndex = error.lastIndexOf("Error:")
             if (lastErrorIndex !== -1) {
                 errorMessage = error.slice(lastErrorIndex)
+            } else {
+                errorMessage = error
             }
         }
     } catch (error) {

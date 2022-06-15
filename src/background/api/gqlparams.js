@@ -2,7 +2,7 @@
  * 返回地址余额
  */
 export function getBalanceBody() {
-  return `query accountBalance($publicKey: String!) {
+  return `query accountBalance($publicKey: PublicKey!) {
     account(publicKey: $publicKey) {
       balance {
         total
@@ -279,6 +279,33 @@ export function getChainIdBody() {
     daemonStatus {
       chainId
     }
+  }
+  `
+}
+
+export function getPartyBody(){
+  return `
+  mutation sendZkapp($party:PartiesInput!){
+    sendZkapp(input: {
+      parties: $party
+    }) {
+      zkapp {
+        hash
+        id
+        parties {
+          memo
+        }
+      }
+    }
+  }
+  `
+}
+
+
+export function getQATxStatusBody() {
+  return `
+  query txStatus($zkappTransaction:ID) {
+    transactionStatus(zkappTransaction: $zkappTransaction)
   }
   `
 }

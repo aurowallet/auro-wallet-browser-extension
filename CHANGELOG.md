@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - fix address-book 
 - add berkeley-qa support (mina-signer-experimental)
 - update auro-web3-provider to @aurowallet/mina-provider
+- add berkeley-qa signParty
 ## [2.0.4]
 
 - Re-encode raw signature to fix ledger transation signature  (https://github.com/jspada/ledger-app-mina/pull/22)

@@ -5,7 +5,7 @@
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",
     "@reduxjs/toolkit": "1.4.0",
-    "@aurowallet/mina-provider": "0.0.10",
+    "@aurowallet/mina-provider": "0.1.4",
     "axios": "0.21.1",
     "bignumber.js": "9.0.1",
     "bip32": "2.0.6",

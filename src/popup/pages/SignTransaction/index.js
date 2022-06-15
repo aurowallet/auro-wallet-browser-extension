@@ -118,7 +118,8 @@ class SignTransaction extends React.Component {
       }
     }, (res) => {
       Loading.show()
-      let siteRecommendFee = isNumber(res.params.fee)? res.params.fee : ""
+      let siteFee = res.params?.fee || res.params?.feePayer?.fee || ""
+      let siteRecommendFee = isNumber(siteFee)? siteFee+"" : ""
       let feeSelect = siteRecommendFee?.length>0 ?FEE_RECOMMED_CUSTOM:FEE_RECOMMED_DEFAULT
       this.callSetState({
         site: res.site,
@@ -140,7 +141,7 @@ class SignTransaction extends React.Component {
       Toast.info(getLanguage('observeAccountTip'))
       return
     }
-    if (this.state.sendAction !== DAppActions.mina_signMessage) {
+    if (this.state.sendAction !== DAppActions.mina_signMessage && this.state.sendAction !== DAppActions.mina_sendTransaction) {
       let toAddress = trimSpace(params.to)
       if (!addressValid(toAddress)) {
         Toast.info(getLanguage('sendAddressError'))
@@ -254,6 +255,10 @@ class SignTransaction extends React.Component {
       amount = toNonExponential(new BigNumber(amount).toString())
       payload.amount = amount
     }
+    if(this.state.sendAction === DAppActions.mina_sendTransaction){
+      payload.transaction = params.transaction
+      memo = params.feePayer?.memo || ""
+    }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       return this.ledgerTransfer(payload)
     }
@@ -295,6 +300,10 @@ class SignTransaction extends React.Component {
           payload.signature = data.signature
           payload.data = data.data
           resultAction = DAPP_ACTION_SIGN_MESSAGE
+          break;
+        case DAppActions.mina_sendTransaction:
+          payload.hash = data.hash
+          resultAction = DAPP_ACTION_SEND_TRANSACTION
           break;
         default:
           break;
@@ -607,7 +616,8 @@ class SignTransaction extends React.Component {
   renderMessageBody = () => {
     const { sendAction , params } = this.state
     let isSignMessage =  sendAction === DAppActions.mina_signMessage
-    let showContent = isSignMessage ? params.message : params.memo
+    let realMemo = params.memo || params.feePayer?.memo || ""
+    let showContent = isSignMessage ? params.message : realMemo
     let contentTitle = isSignMessage ? getLanguage('signContent') : "Memo"
     let nextClass = isSignMessage?"":"sign-info-detail-content-mini"
     if(showContent){

@@ -1,7 +1,7 @@
 import { LOCK_TIME } from '../../config';
 import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
 import { getLanguage } from '../i18n';
-import { getTxStatus, sendStakeTx, sendTx } from './api';
+import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
 import { signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
@@ -21,6 +21,7 @@ const STATUS = {
 
 
 const default_account_name = "Account 1"
+const FETCH_TYPE_QA = "Berkeley-QA"
 class APIService {
     constructor() {
         this.memStore = new ObservableStore(this.initLockedState())
@@ -661,6 +662,17 @@ class APIService {
                         this.checkTxStatus(payment.id,payment.hash)
                     }
                     return { ...sendRes }
+                case DAppActions.mina_sendTransaction:
+                    let sendPartyRes = await sendParty(signedTx.data.parties, signedTx.signature).catch(error => { error })
+                    if(!sendPartyRes.error){
+                        let partyRes = sendPartyRes?.sendZkapp?.zkapp || {}
+                        if ( partyRes.id && partyRes.hash ) {
+                            this.checkTxStatus(partyRes.id,partyRes.hash,FETCH_TYPE_QA)
+                        }
+                        return { ...partyRes }
+                    }else{
+                        return sendPartyRes
+                    }
                 case DAppActions.mina_signMessage:
                     return signedTx
                 default:
@@ -694,11 +706,22 @@ class APIService {
         });
         return
     }
-    checkTxStatus = (paymentId, hash) => {
-        this.fetchTransactionStatus(paymentId, hash)
+    checkTxStatus = (paymentId, hash,type) => {
+        if(type === FETCH_TYPE_QA){
+            this.fetchQAnetTransactionStatus(paymentId, hash)
+        }else{
+            this.fetchTransactionStatus(paymentId, hash)
+        }
+        
+    }
+    fetchQAnetTransactionStatus = (paymentId, hash) => {
+        this.baseTransactionStatus(getQATxStatus,paymentId, hash)
     }
     fetchTransactionStatus = (paymentId, hash) => {
-        getTxStatus(paymentId).then((data) => {
+        this.baseTransactionStatus(getTxStatus,paymentId, hash)
+    }
+    baseTransactionStatus= (method,paymentId, hash) => {
+        method(paymentId).then((data) => {
             if (data && data.transactionStatus && (
                 (data.transactionStatus === STATUS.TX_STATUS_INCLUDED
                     || data.transactionStatus === STATUS.TX_STATUS_UNKNOWN)
@@ -715,12 +738,12 @@ class APIService {
                 }
             } else {
                 this.timer = setTimeout(() => {
-                    this.fetchTransactionStatus(paymentId, hash);
+                    this.baseTransactionStatus(method,paymentId, hash);
                 }, 5000);
             }
         }).catch((error) => {
             this.timer = setTimeout(() => {
-                this.fetchTransactionStatus(paymentId, hash);
+                this.baseTransactionStatus(method,paymentId, hash);
             }, 5000);
         })
     }
