@@ -50,7 +50,6 @@ class NetworkPage extends React.Component {
     }
     fetchData = async () => {
         let network = await getNetworkList()
-        console.log('checkGqlHealth==network=1',network);
         if (network.length <= 0) {
             let listJson = getLocal(NETWORK_ID_AND_TYPE)
             let list = JSON.parse(listJson)
