@@ -608,7 +608,7 @@ class APIService {
     signMessage = async(params) => {
         try {
             let fromAddress = params.fromAddress
-            let message = params.memo
+            let message = params.message
             const privateKey = await this.getCurrentPrivateKey()
             let signedTx = await signMessagePayment(privateKey, fromAddress,message)
             if (signedTx.error) {
