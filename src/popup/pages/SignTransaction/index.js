@@ -1,4 +1,4 @@
-import { DAppActions } from "auro-web3-provider";
+import { DAppActions } from '@aurowallet/mina-provider';
 import BigNumber from "bignumber.js";
 import React from "react";
 import { connect } from "react-redux";
@@ -118,10 +118,15 @@ class SignTransaction extends React.Component {
       }
     }, (res) => {
       Loading.show()
+      let siteFee = res.params?.fee || ""
+      let siteRecommendFee = isNumber(siteFee)? siteFee+"" : ""
+      let feeSelect = siteRecommendFee?.length>0 ?FEE_RECOMMED_CUSTOM:FEE_RECOMMED_DEFAULT
       this.callSetState({
         site: res.site,
         params: res.params,
-        sendAction: res.params.action
+        sendAction: res.params.action,
+        inputFee:siteRecommendFee,
+        feeSelect:feeSelect
       }, () => {
         this.fetchData()
       })
@@ -236,13 +241,14 @@ class SignTransaction extends React.Component {
       let vaildFee = this.state.inputFee
       fee = trimSpace(vaildFee) || this.state.fee
       memo = params.memo || ""
-    } else {
-      memo = params.message
     }
 
     let fromAddress = currentAccount.address
     let payload = {
       fromAddress, toAddress, nonce, currentAccount, fee, memo
+    }
+    if(this.state.sendAction === DAppActions.mina_signMessage){
+      payload.message = params.message
     }
     if (this.state.sendAction === DAppActions.mina_sendPayment) {
       let amount = trimSpace(params.amount)
@@ -267,6 +273,7 @@ class SignTransaction extends React.Component {
       default:
         break;
     }
+    payload.sendAction = this.state.sendAction
     sendMsg({
       action: sendAction,
       payload
@@ -284,7 +291,6 @@ class SignTransaction extends React.Component {
       Toast.info(errorMessage, 5 * 1000)
       return
     } else {
-      Toast.info(getLanguage('postSuccess'))
       let resultAction = ""
       let payload = {}
       let id = ""
@@ -616,7 +622,8 @@ class SignTransaction extends React.Component {
   renderMessageBody = () => {
     const { sendAction , params } = this.state
     let isSignMessage =  sendAction === DAppActions.mina_signMessage
-    let showContent = isSignMessage ? params.message : params.memo
+    let realMemo = params.memo || ""
+    let showContent = isSignMessage ? params.message : realMemo
     let contentTitle = isSignMessage ? getLanguage('signContent') : "Memo"
     let nextClass = isSignMessage?"":"sign-info-detail-content-mini"
     if(showContent){

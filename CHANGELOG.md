@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+
+## [2.0.5]
+
 - fix DApp default icon
 - change DApp message request page title
 - fix address-book 
+- update auro-web3-provider to @aurowallet/mina-provider
 
 ## [2.0.4]
 
