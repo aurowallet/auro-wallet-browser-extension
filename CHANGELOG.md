@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - update auro-web3-provider to @aurowallet/mina-provider
 - add gql params type
 - update build production scripts
+- update the page display logic of network control
 
 ## [2.0.4]
 

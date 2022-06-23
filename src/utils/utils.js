@@ -4,6 +4,7 @@ import { cointypes } from '../../config';
 import { getLocal } from "../background/localStorage";
 import { NET_WORK_CONFIG } from "../constant/storageKey";
 import { DAPP_CHANGE_NETWORK } from "../constant/types";
+import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } from "../constant/walletType";
 import { sendMsg } from "./commonMsg";
 /**
  * 地址截取
@@ -211,7 +212,6 @@ export function getRealErrorMsg(error) {
         if (Array.isArray(error) && error.length > 0) {
             // postError
             errorMessage = error[0].message
-            
             // buildError
             if(!errorMessage && error.length > 1){
                 errorMessage = error[1].c
@@ -221,6 +221,8 @@ export function getRealErrorMsg(error) {
             let lastErrorIndex = error.lastIndexOf("Error:")
             if (lastErrorIndex !== -1) {
                 errorMessage = error.slice(lastErrorIndex)
+            } else {
+                errorMessage = error
             }
         }
     } catch (error) {
@@ -298,4 +300,15 @@ export function getArrayDiff(deletedAccountApproved,newAccountApproved){
       }
     }
     return list
+}
+
+
+/** not support transaction history */
+export function getNetTypeNotSupportHistory(netType){
+    return NET_CONFIG_NOT_SUPPORT_TX_HISTORY.indexOf(netType) !== -1
+}
+
+/** not support stake   */
+export function getNetTypeNotSupportStaking(netType){
+    return NET_CONFIG_NOT_SUPPORT_STAKING.indexOf(netType) !== -1
 }

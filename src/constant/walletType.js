@@ -24,3 +24,14 @@ export const WALLET_CONNECT_TYPE = {
   WALLET_APP_CONNECT:"WALLET_APP_CONNECT",
   CONTENT_SCRIPT : 'mina-contentscript',
 }
+
+
+
+/** not support transaction history */
+export const NET_CONFIG_NOT_SUPPORT_TX_HISTORY =[
+  NET_CONFIG_TYPE.Unknown,
+]
+/** not support stake   */
+export const NET_CONFIG_NOT_SUPPORT_STAKING =[
+  NET_CONFIG_TYPE.Unknown,
+]
