@@ -221,10 +221,8 @@ class NetworkPage extends React.Component {
                 config = TEST_NET_BASE_CONFIG
                 break;
             case "11":
-                config = QA_NET_BASE_CONFIG
-                break;
             default:
-                config = UNKNOWN_NET_BASE_CONFIG
+                config = QA_NET_BASE_CONFIG
                 break;
         }
         return { chainId, config }
