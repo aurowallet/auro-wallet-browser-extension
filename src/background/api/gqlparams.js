@@ -2,7 +2,7 @@
  * 返回地址余额
  */
 export function getBalanceBody() {
-  return `query accountBalance($publicKey: String!) {
+  return `query accountBalance($publicKey: PublicKey!) {
     account(publicKey: $publicKey) {
       balance {
         total
@@ -20,7 +20,7 @@ export function getBalanceBody() {
 
 export function getTxStatusBody() {
   return `
-  query txStatus($paymentId:String! ) {
+  query txStatus($paymentId:ID! ) {
     transactionStatus(payment: $paymentId)
   }
   `
@@ -28,9 +28,9 @@ export function getTxStatusBody() {
 
 function getStakeTxSendWithRawSignature() {
   return (`
-mutation stakeTx($fee:String!, $amount:String!, 
-$to: String!, $from: String!, $nonce:String!, $memo: String!,
-$validUntil: String!,$rawSignature: String) {
+mutation stakeTx($fee:UInt64!, 
+$to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
+$validUntil: UInt32,$rawSignature: String) {
   sendDelegation(
     input: {
       fee: $fee,
@@ -61,9 +61,9 @@ $validUntil: String!,$rawSignature: String) {
 
 function getStakeTxSendWithScalarField() {
   return (`
-mutation stakeTx($fee:String!, $amount:String!, 
-$to: String!, $from: String!, $nonce:String!, $memo: String!,
-$validUntil: String!, $scalar: String, $field: String) {
+mutation stakeTx($fee:UInt64!,
+$to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
+$validUntil: UInt32, $scalar: String, $field: String) {
   sendDelegation(
     input: {
       fee: $fee,
@@ -104,9 +104,9 @@ export function getStakeTxSend(isRawSignature) {
 
 function getTxSendWithRawSignature() {
   return (`
-mutation sendTx($fee:String!, $amount:String!,
-$to: String!, $from: String!, $nonce:String!, $memo: String!,
-$validUntil: String!,$rawSignature: String!
+mutation sendTx($fee:UInt64!, $amount:UInt64!,
+$to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
+$validUntil: UInt32,$rawSignature: String!
 ) {
   sendPayment(
     input: {
@@ -140,9 +140,9 @@ $validUntil: String!,$rawSignature: String!
 }
 function getTxSendWithScalarField() {
   return (`
-mutation sendTx($fee:String!, $amount:String!,
-$to: String!, $from: String!, $nonce:String!, $memo: String!,
-$validUntil: String!,$scalar: String!, $field: String!
+mutation sendTx($fee:UInt64!, $amount:UInt64!,
+$to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
+$validUntil: UInt32,$scalar: String!, $field: String!
 ) {
   sendPayment(
     input: {
@@ -189,7 +189,7 @@ export function getTxSend(isRawSignature) {
 
 export function getPendingTxBody() {
   return `
-  query pengdingTx($publicKey: String!) {
+  query pengdingTx($publicKey: PublicKey) {
     pooledUserCommands(publicKey: $publicKey) {
       id
       nonce
@@ -246,7 +246,7 @@ export function getDaemonStatusBody(){
 }
 export function  getBlockInfoBody(){
   return `
-  query blockInfo($stateHash: String!) {
+  query blockInfo($stateHash: String) {
     block(stateHash: $stateHash) {
       protocolState {
         consensusState {
@@ -261,7 +261,7 @@ export function  getBlockInfoBody(){
 
 export function getDelegationInfoBody(){
   return `
-  query delegationInfo($publicKey: String!) {
+  query delegationInfo($publicKey: PublicKey!) {
     account(publicKey: $publicKey) {
         delegate
       }
