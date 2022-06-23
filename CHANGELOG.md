@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - update the page display logic of network control
 - update mina-signer init params to mainnet
 - update signMessage params name to message
+- fix update the current network url not timely problem 
 
 ## [2.0.4]
 

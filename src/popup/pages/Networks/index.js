@@ -284,6 +284,7 @@ class NetworkPage extends React.Component {
         if (currentEditItem.id === currentConfig.url) {
             currentConfig.url = urlInput
             currentConfig.name = nameInput
+            currentConfig.netType = config.netType
         }
         let editItem = {
             ...config,
