@@ -34,7 +34,7 @@
     "safe-buffer": "5.2.1",
     "uuid": "^8.3.2",
     "valid-url": "1.0.9",
-    "mina-signer-experimental":"1.0.3"
+    "mina-signer-experimental":"1.0.4"
   },
   "scripts": {
     "build": "webpack --mode production  && node pkgBuild.js",
