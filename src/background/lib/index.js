@@ -12,10 +12,10 @@ async function getSignClient(){
       netType = netConfig.netType
     }
     let client
-    if(netType === NET_CONFIG_TYPE.Devnet){
-        client = new Client({ network: "testnet" });
-    }else{
+    if(netType === NET_CONFIG_TYPE.Mainnet){
         client = new Client({ network: "mainnet" });
+    }else{
+        client = new Client({ network: "testnet" });
     }
     return client
 }
@@ -34,6 +34,7 @@ export async  function signPayment(privateKey, fromAddress, toAddress, amount, f
     let signedPayment
     try {
         let signClient = await getSignClient()
+
         let decimal = new BigNumber(10).pow(cointypes.decimals)
         let sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber()
         let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber()
