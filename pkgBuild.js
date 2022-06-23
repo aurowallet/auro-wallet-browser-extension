@@ -1,37 +1,44 @@
 var fs = require('fs');
 
-const FILE_NAME = "0.js"
+const FILE_NAME_LIST = ["0.js"]
 const EDIT_TYPE = {
     "DELETE": "DELETE",
     "ADD": "ADD"
 }
 
-let pathCommon = './dist/' + FILE_NAME;
+
 let pathManifest = './dist/manifest.json';
 let pathPopup = './dist/popup.html';
 
-
-fs.readFile(pathCommon, function (err, data) {
-    if (err) {
-        checkManifest(EDIT_TYPE.DELETE)
-        checkPopupHtml(EDIT_TYPE.DELETE)
-    } else {
-        checkManifest(EDIT_TYPE.ADD)
-        checkPopupHtml(EDIT_TYPE.ADD)
+function fileUpdate(){
+    let pathCommon
+    for (let index = 0; index < FILE_NAME_LIST.length; index++) {
+        const fileName = FILE_NAME_LIST[index];
+        pathCommon = './dist/' + fileName;
+        fs.readFile(pathCommon, function (err, data) {
+            if (err) {
+                checkManifest(EDIT_TYPE.DELETE,fileName)
+                checkPopupHtml(EDIT_TYPE.DELETE,fileName)
+            } else {
+                checkManifest(EDIT_TYPE.ADD,fileName)
+                checkPopupHtml(EDIT_TYPE.ADD,fileName)
+            }
+        })
     }
-})
+}
 
-function checkPopupHtml(editType) {
+
+function checkPopupHtml(editType,fileName) {
     fs.readFile(pathPopup, function (err, data) {
         if(err){
             throw new Error("read popup.html failed , please check")
         }else{
             let scriptStr = data.toString();
-            let fileIndex = scriptStr.indexOf(FILE_NAME)
+            let fileIndex = scriptStr.indexOf(fileName)
 
             const START_STR = "<script"
             const END_STR = "</script>"
-            const INSERT_STR = `<script src="./${FILE_NAME}"></script>\n`
+            const INSERT_STR = `<script src="./${fileName}"></script>\n`
             let scriptStartIndex = scriptStr.indexOf(START_STR)
             if (editType === EDIT_TYPE.ADD && fileIndex === -1) {
                 let newStr = scriptStr.slice(0, scriptStartIndex) + INSERT_STR + scriptStr.slice(scriptStartIndex);
@@ -45,7 +52,7 @@ function checkPopupHtml(editType) {
         }
     })
 }
-function checkManifest(editType) {
+function checkManifest(editType,fileName) {
     fs.readFile(pathManifest, function (err, data) {
         if (err) {
             throw new Error("read manifest.json failed , please check")
@@ -54,10 +61,10 @@ function checkManifest(editType) {
                 let scriptStr = data.toString();
                 let scriptJson = JSON.parse(scriptStr)
                 let scripts = scriptJson.background.scripts
-                let fileIndex = scripts.indexOf(FILE_NAME)
+                let fileIndex = scripts.indexOf(fileName)
 
                 if (editType === EDIT_TYPE.ADD && fileIndex === -1) { 
-                    scriptJson.background.scripts = [...scripts, FILE_NAME]
+                    scriptJson.background.scripts = [...scripts, fileName]
                     updateFile(pathManifest, JSON.stringify(scriptJson, "", "\t"))
                 } else if (editType === EDIT_TYPE.DELETE && fileIndex !== -1) {
                     scripts.splice(fileIndex, 1);
@@ -81,3 +88,5 @@ function updateFile(path, data) {
         }
     })
 }
+
+fileUpdate()

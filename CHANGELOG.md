@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - fix address-book 
 - update auro-web3-provider to @aurowallet/mina-provider
 - add gql params type
+- update build production scripts
 
 ## [2.0.4]
 
