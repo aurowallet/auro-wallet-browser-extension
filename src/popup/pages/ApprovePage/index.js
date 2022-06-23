@@ -134,7 +134,6 @@ class ApprovePage extends React.Component {
 
   renderAccountView = () => {
     const { dappAccountList } = this.props
-    console.log("dappAccountList=0", dappAccountList);
     return (
       <div className={"approve-page-item-container"}>
         {dappAccountList.map((item, index) => {
