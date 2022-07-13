@@ -2,11 +2,13 @@ import Transport from "@ledgerhq/hw-transport-webusb"
 import {MinaLedgerJS, Networks, TxType} from "mina-ledger-js"
 import {closePopupWindow, openPopupWindow} from "./popup"
 import {LEDGER_CONNECTED_SUCCESSFULLY} from "../constant/types"
+import { NET_CONFIG_TYPE } from '../constant/walletType';
 import Loading from "../popup/component/Loading";
 import BigNumber from "bignumber.js";
 import {cointypes} from "../../config";
 import Toast from "../popup/component/Toast";
 import {getLanguage} from "../i18n";
+import {getCurrentNetConfig} from './utils';
 import extension from 'extensionizer'
 const status = {
   rejected: 'CONDITIONS_OF_USE_NOT_SATISFIED',
@@ -130,6 +132,14 @@ function reEncodeRawSignature(rawSignature) {
   const scalar = rawSignature.substring(64);
   return shuffleBytes(field) + shuffleBytes(scalar)
 }
+function networkId() {
+  const netType = getCurrentNetConfig().netType
+  if(netType === NET_CONFIG_TYPE.Mainnet){
+    return Networks.MAINNET
+  } else {
+    return Networks.DEVNET
+  }
+}
 async function requestSign(app, body, type, ledgerAccountIndex) {
   let amount = body.amount || 0
   let decimal = new BigNumber(10).pow(cointypes.decimals)
@@ -144,7 +154,7 @@ async function requestSign(app, body, type, ledgerAccountIndex) {
     fee: sendFee,
     nonce: +body.nonce,
     memo: body.memo || "",
-    networkId: Networks.MAINNET,
+    networkId: networkId(),
     validUntil: 4294967295
   }
   const {signature, returnCode, statusText} = await app.signTransaction(payload)
