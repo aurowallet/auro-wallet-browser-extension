@@ -529,15 +529,20 @@ class APIService {
                 for (let index = 0; index < accounts.length; index++) {
                     const account = accounts[index];
                     let privateKeyEn = account.privateKey
-                    let privateKey = await encryptUtils.decrypt(oldPwd, privateKeyEn)
-                    privateKey = await encryptUtils.encrypt(pwd, privateKey)
-                    if(currentAccount.address === account.address){
-                        currentAccount.privateKey = privateKey
+                    let privateKey
+                    if(privateKeyEn){
+                        privateKey = await encryptUtils.decrypt(oldPwd, privateKeyEn)
+                        privateKey = await encryptUtils.encrypt(pwd, privateKey)
+                        if(currentAccount.address === account.address){
+                            currentAccount.privateKey = privateKey
+                        }
                     }
                     let newAccount = {
                         ...account,
-                        privateKey,
                     }
+                   if(privateKey){
+                    newAccount.privateKey = privateKey
+                   }
                     newAccounts.push(newAccount)
                 }
                 data[0].accounts = newAccounts

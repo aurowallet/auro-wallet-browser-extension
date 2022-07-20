@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Un-Released]
 
 
+## [2.0.6]
+- fix (ledger): signing not working on testnet
+- fix change password failed when have ledger account
+
 ## [2.0.5]
 
 - fix DApp default icon
