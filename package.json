@@ -1,6 +1,6 @@
 {
   "name": "auro-wallet",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",
@@ -34,7 +34,7 @@
     "safe-buffer": "5.2.1",
     "uuid": "^8.3.2",
     "valid-url": "1.0.9",
-    "mina-signer-experimental":"1.0.4"
+    "mina-signer-experimental":"1.2.1"
   },
   "scripts": {
     "build": "webpack --mode production  && node pkgBuild.js",

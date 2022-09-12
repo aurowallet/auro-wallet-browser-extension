@@ -5848,9 +5848,9 @@
     "lodash.uniq" "^4.5.0"
 
 "caniuse-lite@^1.0.0", "caniuse-lite@^1.0.30000981", "caniuse-lite@^1.0.30001109", "caniuse-lite@^1.0.30001125", "caniuse-lite@^1.0.30001157", "caniuse-lite@^1.0.30001214":
-  "integrity" "sha512-5yBd5nWCBS+jWKTcHOzXwo5xzcj4ePE/yjtkZyUV1BTUmrBaA9MRGC+e7mxnqXSA90CmCA8L3eKLaSUkt099IQ=="
-  "resolved" "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001230.tgz"
-  "version" "1.0.30001230"
+  "integrity" "sha512-swMpEoTp5vDoGBZsYZX7L7nXHe6dsHxi9o6/LKf/f0LukVtnrxly5GVb/fWdCDTqi/yw6Km6tiJ0pmBacm0gbg=="
+  "resolved" "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001383.tgz"
+  "version" "1.0.30001383"
 
 "capture-exit@^2.0.0":
   "integrity" "sha512-PiT/hQmTonHhl/HFGN+Lx3JJUznrVYJ3+AQsnthneZbvW7x+f08Tk7yLJTLEOUvBTbduLeeBkxEaYXUOUrRq6g=="
@@ -11343,10 +11343,10 @@
   dependencies:
     "buffer" "6.0.3"
 
-"mina-signer-experimental@1.0.4":
-  "integrity" "sha512-tPObP9jQSo/upcKxvWASnuu4W16L0htqJitNcGlKgL1WNs1xjTqJBOX7Y8a4YnwrJLuqNEhYGB6oyrR6wJyabw=="
-  "resolved" "https://registry.npmjs.org/mina-signer-experimental/-/mina-signer-experimental-1.0.4.tgz"
-  "version" "1.0.4"
+"mina-signer-experimental@1.2.1":
+  "integrity" "sha512-pErFnYcHUSPfKeFkXmC+Vp0xNW3j+c6pXUeU4bvlqawPPrBmLaaeU/pQLUAtzi+5IB5ToZ5E+/mhSam6sGnwQA=="
+  "resolved" "https://registry.npmjs.org/mina-signer-experimental/-/mina-signer-experimental-1.2.1.tgz"
+  "version" "1.2.1"
   dependencies:
     "@types/node" "^13.7.0"
 
