@@ -142,7 +142,7 @@ export async function signTransaction(privateKey,params){
             let decimal = new BigNumber(10).pow(cointypes.decimals)
             let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
             signBody={
-                parties: JSON.parse(params.transaction),
+                zkappCommand: JSON.parse(params.transaction),
                 feePayer: {
                     feePayer: params.fromAddress,
                     fee: sendFee,

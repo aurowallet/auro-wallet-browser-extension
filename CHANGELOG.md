@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.0.7]
+
+- upgrade mina-signer-experimental version to 1.3.0
+
 ## [2.0.6]
 
 - upgrade mina-signer-experimental version to 1.2.1

@@ -285,14 +285,14 @@ export function getChainIdBody() {
 
 export function getPartyBody(){
   return `
-  mutation sendZkapp($party:PartiesInput!){
+  mutation sendZkapp($zkappCommandInput:ZkappCommandInput!){
     sendZkapp(input: {
-      parties: $party
+      zkappCommand: $zkappCommandInput
     }) {
       zkapp {
         hash
         id
-        parties {
+        zkappCommand {
           memo
         }
       }

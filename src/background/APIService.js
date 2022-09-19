@@ -648,7 +648,7 @@ class APIService {
             }
             switch (params.sendAction) {
                 case DAppActions.mina_sendStakeDelegation:
-                    let stakeRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error => { error })
+                    let stakeRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error =>  error )
                     let delegation = stakeRes.sendDelegation && stakeRes.sendDelegation.delegation || {}
                     if (delegation.hash && delegation.id) {
                         this.checkTxStatus(delegation.id,delegation.hash)
@@ -656,14 +656,14 @@ class APIService {
 
                     return { ...stakeRes }
                 case DAppActions.mina_sendPayment:
-                    let sendRes = await sendTx(signedTx.data, signedTx.signature).catch(error => { error })
+                    let sendRes = await sendTx(signedTx.data, signedTx.signature).catch(error => error )
                     let payment = sendRes.sendPayment && sendRes.sendPayment.payment || {}
                     if (payment.hash && payment.id) {
                         this.checkTxStatus(payment.id,payment.hash)
                     }
                     return { ...sendRes }
                 case DAppActions.mina_sendTransaction:
-                    let sendPartyRes = await sendParty(signedTx.data.parties, signedTx.signature).catch(error => { error })
+                    let sendPartyRes = await sendParty(signedTx.data.zkappCommand, signedTx.signature).catch(error =>  error )
                     if(!sendPartyRes.error){
                         let partyRes = sendPartyRes?.sendZkapp?.zkapp || {}
                         if ( partyRes.id && partyRes.hash ) {
