@@ -1,0 +1,242 @@
+.contentClassName {
+  padding: 10px 20px 0px;
+}
+.customeTitleClass {
+  left: 46px;
+  transform: unset;
+}
+
+.rowTitleContainer {
+  display: flex;
+  align-items: center;
+  position: relative;
+  .rowIcon {
+    display: block;
+  }
+  .rowTitle {
+    font-size: 16px;
+    line-height: 19px;
+    text-align: center;
+    color: #000000;
+    margin: 0px 0px 0px 8.5px;
+  }
+}
+.commonContent {
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+.mgtM10 {
+  margin-top: 10px;
+}
+.epochContent {
+  @extend .commonContent;
+  margin-top: 10px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  .label {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 15px;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 2px 0 0;
+  }
+  .highlightContent {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 19px;
+    text-align: right;
+    color: #594af1;
+  }
+
+  .content {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 14px;
+    text-align: right;
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .timeValue {
+    display: flex;
+    align-items: baseline;
+
+    white-space: pre;
+    margin-top: 2px;
+    .time {
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 19px;
+      text-align: right;
+      color: #000000;
+      margin: 0;
+    }
+    .timeUnit {
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 14px;
+    }
+  }
+  .circleContainer {
+    position: relative;
+    display: flex;
+  }
+  .circleCon {
+    position: absolute;
+    right: 0px;
+    top: calc(50% - 50px);
+    width: 80px;
+    height: 80px;
+  }
+  .percentageContainer {
+    z-index: 1;
+    position: absolute;
+    right: 0px;
+    top: calc(50% - 40px);
+    left: 4px;
+    width: 100%;
+    height: 100%;
+    padding-top: 40px;
+    margin: 0px auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    .percentage {
+      font-weight: 500;
+      font-size: 24px;
+      line-height: 28px;
+      color: #000000;
+    }
+    .percentageUnit {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 16px;
+    }
+  }
+
+  :global {
+    .CircularProgressbar-path {
+      stroke: url(#circleGradient);
+    }
+    .CircularProgressbar-trail {
+      stroke: #d3e1ed;
+    }
+  }
+}
+
+.delegationContainer {
+  margin-top: 20px;
+  .delegationRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+  }
+  .rowHelp {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 14px;
+    color: #594af1;
+
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .delegationContent {
+    @extend .commonContent;
+    padding: 20px;
+    display: flex;
+  }
+}
+
+.rowItem {
+  .labelContent {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    text-align: right;
+    color: #000000;
+  }
+  .canCopy {
+    cursor: pointer;
+  }
+
+  .contentContainer {
+    display: flex;
+    align-items: center;
+    margin-top: 2px;
+  }
+  .copy {
+    width: 18px;
+    object-fit: scale-down;
+    margin-left: 4px;
+  }
+}
+.emptyContainer {
+  margin-top: 60px;
+  .emptyTitle {
+    font-size: 16px;
+    line-height: 19px;
+    color: #000000;
+    font-weight: 500;
+    margin: 0;
+    text-align: center;
+  }
+  .emptyContent {
+    font-size: 12px;
+    line-height: 17px;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 12px 0px 20px;
+  }
+  .emptyGuide {
+    color: #594af1;
+    cursor: pointer;
+  }
+  .btnContainer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.loadingContainer {
+  margin-top: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+@keyframes refreshAni {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.refreshLoading {
+  animation: refreshAni 0.8s infinite linear;
+  transform-origin: center center;
+}
+.loadingTip {
+  font-size: 12px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.3);
+  margin: 10px 0px 0px;
+}
+
+.unknowContainer {
+  @extend .loadingContainer;
+  margin-top: 20px;
+
+  .unknowTip {
+    font-size: 12px;
+    line-height: 17px;
+    color: rgba(0, 0, 0, 0.3);
+    margin: 10px 0px 0px;
+  }
+}

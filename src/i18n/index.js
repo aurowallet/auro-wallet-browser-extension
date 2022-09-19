@@ -35,9 +35,13 @@ export function getCurrentLang() {
 }
 export const languageOption = [
   { key: LANG_SUPPORT_LIST.EN, value: 'English' },
-  { key: LANG_SUPPORT_LIST.ZH_CN, value: '中文' },
+  {key:LANG_SUPPORT_LIST.ZH_CN,value:"中文"},
 ]
 export var default_language = DEFAULT_LANGUAGE
+
+function checkIsZh(language){
+  return browserLangParse(language) === LANG_SUPPORT_LIST.ZH_CN || browserLangParse(language) == "zh"
+}
 
 export function languageInit() {
   i18n
@@ -57,7 +61,7 @@ export function languageInit() {
     default_language = res
   } else {
     const language = navigator.language || navigator.languages[0];
-    res = browserLangParse(language) == LANG_SUPPORT_LIST.ZH_CN ? LANG_SUPPORT_LIST.ZH_CN : LANG_SUPPORT_LIST.EN;
+    res = checkIsZh(language) ? LANG_SUPPORT_LIST.ZH_CN : LANG_SUPPORT_LIST.EN;
     changeLanguage(res)
     default_language = res
     saveLocal(LANGUAGE_CONFIG, res)

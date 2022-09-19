@@ -24,7 +24,7 @@ import {
   WALLET_RESET_LAST_ACTIVE_TIME,
   WALLET_DELETE_WATCH_ACCOUNT,
   RESET_WALLET,
-  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, DAPP_GET_CURRENT_OPEN_WINDOW, GET_SIGN_PARAMS, WALLET_SEND_MESSAGE_TRANSTRACTION, DAPP_CHANGE_NETWORK, QA_SIGN_TRANSTRACTION
+  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, DAPP_GET_CURRENT_OPEN_WINDOW, GET_SIGN_PARAMS, WALLET_SEND_MESSAGE_TRANSTRACTION, DAPP_CHANGE_NETWORK, QA_SIGN_TRANSTRACTION,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST
 } from "../constant/types";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -156,6 +156,12 @@ function internalMessageListener(message, sender, sendResponse) {
     case WALLET_RESET_LAST_ACTIVE_TIME:
       sendResponse(apiService.setLastActiveTime())
       break
+    case WALLET_UPDATE_LOCK_TIME:
+      sendResponse(apiService.updateLockTime(payload))
+      break
+    case WALLET_GET_LOCK_TIME:
+      sendResponse(apiService.getCurrentAutoLockTime())
+      break
     case RESET_WALLET:
       sendResponse(apiService.resetWallet())
       break
@@ -193,6 +199,9 @@ function internalMessageListener(message, sender, sendResponse) {
         sendResponse(result);
       })
       break;
+    case DAPP_CONNECTION_LIST:
+      sendResponse(dappService.getAppConnectionList(payload.address))
+      break
     default:
       break;
   }

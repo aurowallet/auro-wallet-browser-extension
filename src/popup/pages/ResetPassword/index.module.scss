@@ -1,0 +1,26 @@
+.checkSpan {
+  
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 17px;
+  color: #d65a5a;
+}
+
+.checkSpanSuc{
+  display: none;
+}
+
+.inputContainer{
+  >:not(:last-child) {
+    margin-bottom: 20px;
+  }
+}
+
+.hold{
+  flex: 1;
+}
+
+.bottomCon{
+  padding: 12px 18px 30px;
+}

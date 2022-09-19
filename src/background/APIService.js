@@ -8,6 +8,7 @@ import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
 import { getCurrentNetConfig } from '../utils/utils';
 import { DAppActions } from '@aurowallet/mina-provider';
+import i18n from "i18next"
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -32,7 +33,8 @@ class APIService {
           data: '',
           password: '',
           currentAccount: {},
-          mne: ""
+          mne: "",
+          autoLockTime:LOCK_TIME
         };
       }
     getStore = () => {
@@ -120,12 +122,15 @@ class APIService {
         return this.getStore().password === password
     }
     setLastActiveTime() {
-        const timeoutMinutes = LOCK_TIME
+        const timeoutMinutes = this.getStore().autoLockTime
         let localData = this.getStore().data
         let isUnlocked = this.getStore().isUnlocked
         if (localData && isUnlocked) {
             if (this.activeTimer) {
                 clearTimeout(this.activeTimer)
+            }
+            if(timeoutMinutes === -1){
+                return
             }
             if (!timeoutMinutes) {
                 return
@@ -133,9 +138,15 @@ class APIService {
 
             this.activeTimer = setTimeout(() => {
                 this.setUnlockedStatus(false)
-            }, timeoutMinutes * 60 * 1000)
+            }, timeoutMinutes)
         }
 
+    }
+    updateLockTime(autoLockTime){
+        this.memStore.updateState({autoLockTime:autoLockTime})
+    }
+    getCurrentAutoLockTime(){
+        return this.getStore().autoLockTime
     }
     setUnlockedStatus(status) {
         if (!status) {
@@ -531,15 +542,20 @@ class APIService {
                 for (let index = 0; index < accounts.length; index++) {
                     const account = accounts[index];
                     let privateKeyEn = account.privateKey
-                    let privateKey = await encryptUtils.decrypt(oldPwd, privateKeyEn)
-                    privateKey = await encryptUtils.encrypt(pwd, privateKey)
-                    if(currentAccount.address === account.address){
-                        currentAccount.privateKey = privateKey
+                    let privateKey
+                    if(privateKeyEn){
+                        privateKey = await encryptUtils.decrypt(oldPwd, privateKeyEn)
+                        privateKey = await encryptUtils.encrypt(pwd, privateKey)
+                        if(currentAccount.address === account.address){
+                            currentAccount.privateKey = privateKey
+                        }
                     }
                     let newAccount = {
                         ...account,
-                        privateKey,
                     }
+                   if(privateKey){
+                    newAccount.privateKey = privateKey
+                   }
                     newAccounts.push(newAccount)
                 }
                 data[0].accounts = newAccounts
@@ -694,8 +710,8 @@ class APIService {
                     extension.tabs.create({ url: url });
                 }
             });
-        let title = getLanguage('notificationTitle')
-        let message = getLanguage('notificationContent')
+        let title = i18n.t('notificationTitle')
+        let message = i18n.t('notificationContent')
         extension.notifications.create(hash, {
             title: title,
             message: message,

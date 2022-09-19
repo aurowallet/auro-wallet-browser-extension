@@ -1,62 +1,32 @@
-import React from "react";
-import { connect } from "react-redux";
-import txArrow from "../../../assets/images/txArrow.png";
-import { SEC_SHOW_MNEMONIC } from "../../../constant/secTypes";
-import { getLanguage } from "../../../i18n";
+import i18n from "i18next";
+import { useCallback } from "react";
+import { useHistory } from 'react-router-dom';
 import CustomView from "../../component/CustomView";
-import "./index.scss";
-class Security extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-    };
-    this.settingList = [{
-      name: getLanguage('restoreSeed'),
-      route: "/reveal_seed_page"
-    },
-    {
-      name: getLanguage('changePassword'),
-      route: "/reset_password",
-    }
-    ]
-  }
-  onClickItem = (e) => {
-    this.props.history.push({
-      pathname: e.route,
-      params: {
-        ...e
-      }
-    })
-  }
+import styles from "./index.module.scss";
 
-  renderMainItem = () => {
-    return (
-      <div>
-        {this.settingList.map((item, index) => {
-          return (
-            <div key={index + ""}
-              onClick={() => this.onClickItem(item)}
-              className={'security-content-container click-cursor'}>
-              <p className={"security-content-title"}>{item.name}</p>
-              <img className={'sec-arrow'} src={txArrow} />
-            </div>)
-        })}
-      </div>
-    )
-  }
-  render() {
-    return (<CustomView
-      title={getLanguage('security')}
-      history={this.props.history}>
-      {this.renderMainItem()}
-    </CustomView>)
-  }
+
+const Security = ({ }) => {
+  const history = useHistory()
+  const onToSeedPage = useCallback(() => {
+    history.push('reveal_seed_page')
+  }, [])
+  const onResetPwd = useCallback(() => {
+    history.push('reset_password')
+  }, [])
+  return <CustomView title={i18n.t('security')} contentClassName={styles.container}>
+    <RowItem title={i18n.t('backupMnemonicPhrase')} onClickItem={onToSeedPage} />
+    <RowItem title={i18n.t('changeSecurityPassword')} onClickItem={onResetPwd} />
+  </CustomView>
 }
 
-const mapStateToProps = (state) => ({});
 
-function mapDispatchToProps(dispatch) {
-  return {};
+const RowItem = ({
+  title = "",
+  onClickItem = () => { }
+}) => {
+  return (<div className={styles.rowContainer} onClick={onClickItem}>
+    <p className={styles.rowTitle}>{title}</p>
+    <img src="/img/icon_arrow.svg" />
+  </div>)
 }
-
-export default connect(mapStateToProps, mapDispatchToProps)(Security);
+export default Security

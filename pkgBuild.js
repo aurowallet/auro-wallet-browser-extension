@@ -9,6 +9,7 @@ const EDIT_TYPE = {
 
 let pathManifest = './dist/manifest.json';
 let pathPopup = './dist/popup.html';
+let pathNotification = './dist/notification.html';
 
 function fileUpdate(){
     let pathCommon
@@ -26,7 +27,6 @@ function fileUpdate(){
         })
     }
 }
-
 
 function checkPopupHtml(editType,fileName) {
     fs.readFile(pathPopup, function (err, data) {
@@ -48,6 +48,29 @@ function checkPopupHtml(editType,fileName) {
                 let targetStr = scriptStr.slice(scriptStartIndex, scriptEndIndex+END_STR.length)
                 let newStr = scriptStr.replace(targetStr,"")
                 updateFile(pathPopup, newStr)
+            }
+        }
+    })
+
+    fs.readFile(pathNotification, function (err, data) {
+        if(err){
+            throw new Error("read notification.html failed , please check")
+        }else{
+            let scriptStr = data.toString();
+            let fileIndex = scriptStr.indexOf(fileName)
+
+            const START_STR = "<script"
+            const END_STR = "</script>"
+            const INSERT_STR = `<script src="./${fileName}"></script>\n`
+            let scriptStartIndex = scriptStr.indexOf(START_STR)
+            if (editType === EDIT_TYPE.ADD && fileIndex === -1) {
+                let newStr = scriptStr.slice(0, scriptStartIndex) + INSERT_STR + scriptStr.slice(scriptStartIndex);
+                updateFile(pathNotification, newStr)
+            } else if (editType === EDIT_TYPE.DELETE && fileIndex !== -1) {
+                let scriptEndIndex =  scriptStr.indexOf(END_STR,fileIndex) 
+                let targetStr = scriptStr.slice(scriptStartIndex, scriptEndIndex+END_STR.length)
+                let newStr = scriptStr.replace(targetStr,"")
+                updateFile(pathNotification, newStr)
             }
         }
     })

@@ -1,0 +1,33 @@
+.contentClassName{
+    padding: 10px 0px 0px;
+}
+.rowContainer {
+
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 54px;
+    cursor: pointer;
+    padding: 0px 20px;
+    span{
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 100%;
+        color: #000000;
+    }
+
+    &:hover{
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+   
+}
+
+
+.hold {
+    flex: 1;
+}
+
+.bottomContainer {
+    padding: 12px 38px 30px;
+}

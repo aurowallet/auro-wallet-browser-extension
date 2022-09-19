@@ -1,0 +1,172 @@
+$bottomBtnGroupHeight: 90px;
+
+.customContainerClass {
+    justify-content: space-between;
+    padding-right: 20px;
+}
+.contentClassName {
+    padding: 0px 0px;
+    margin-top: 10px;
+    margin-bottom: $bottomBtnGroupHeight;
+    overflow-y: auto;
+}
+.contentContainer {
+    padding: 0px 20px;
+}
+.rowCommomContainer {
+    background-color: #ffffff;
+    border-radius: 12px;
+
+    padding: 10px 6px 6px 16px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    .accountRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .accountRowLeft {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .accountName {
+        font-family: "SF Pro Text";
+        font-size: 16px;
+        line-height: 19px;
+
+        color: rgba(0, 0, 0, 1);
+
+        margin: 0;
+    }
+    .accountType {
+        font-weight: 600;
+        font-size: 12px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.85);
+
+        font-weight: 500;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        margin-left: 7px;
+        padding: 3px 5px;
+    }
+    .address {
+        font-size: 12px;
+        line-height: 17px;
+
+        color: rgba(0, 0, 0, 0.3);
+        margin: 0;
+    }
+    .accountBalanceRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 6px;
+    }
+    .accountBalance {
+        font-size: 12px;
+        line-height: 17px;
+        color: rgba(0, 0, 0, 1);
+        margin: 0;
+    }
+    .pointMenuContainer {
+        display: flex;
+        align-content: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        object-fit: scale-down;
+        border-radius: 100%;
+        cursor: pointer;
+        &:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+    }
+    .pointMenu {
+        width: 13px;
+    }
+    .iconContainer{
+        height: 30px;
+        width: 30px;
+        display: flex;
+    }
+}
+.rowCanSelect {
+    cursor: pointer;
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+}
+
+.rowSelected {
+    background: #594af1 !important;
+    border: none;
+}
+.accountNameSelected {
+    color: #ffffff !important;
+}
+.accountTypeSelected {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+.addressSelected {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+.accountBalanceSelected {
+    color: #ffffff !important;
+}
+
+.rowNotSupport {
+    background: rgba(214, 90, 90, 0.1);
+    border: 0.5px solid #d65a5a;
+}
+
+.notSupportContainer {
+    .notSupportTitle {
+        font-family: "SF Pro Text";
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 16px;
+        color: #000000;
+        margin: 10px 0px;
+    }
+}
+
+.lockBtn {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    text-align: center;
+    color: #594af1;
+    margin: 0;
+    cursor: pointer;
+}
+
+.btnGroup {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+
+    z-index: 1;
+    width: 100%;
+
+    position: fixed;
+    bottom: 0;
+    height: $bottomBtnGroupHeight;
+    padding: 12px 20px;
+    
+    background-color: #ffffff;
+
+    .btnContainer {
+        width: 100px;
+        height: 48px;
+    }
+    .whiteBtn {
+        background-color: #ffffff;
+        color: rgba(89, 74, 241, 1);
+        border: 1px solid rgba(0, 0, 0, 0.15);
+    }
+}

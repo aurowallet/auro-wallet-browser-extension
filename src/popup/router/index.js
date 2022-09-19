@@ -6,22 +6,25 @@ import AccountInfo from '../pages/AccountInfo';
 import AccountManagePage from '../pages/AccountManage';
 import AccountName from '../pages/AccountName';
 import AddressBook from '../pages/AddressBook';
+import AddressEditor from '../pages/AddressBook/AddressEditor';
+import AppConnection from '../pages/AppConnection';
 import ApprovePage from '../pages/ApprovePage';
-import BackupMnemonics from '../pages/BackupMnemonics';
-import BackupSuccess from '../pages/BackupSuccess';
-import BackupTips from '../pages/BackupTips';
+import AutoLock from '../pages/AutoLock';
+import {BackupMnemonics} from '../pages/BackupMnemonics';
+import {BackupSuccess} from '../pages/BackupSuccess';
+import {BackupTips} from '../pages/BackupTips';
 import CreatePassword from '../pages/CreatePassword';
 import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
 import ImportKeypair from '../pages/ImportKeypair';
 import ImportPage from '../pages/ImportPage';
-import InfoPage from '../pages/InfoPage';
 import LanguageManagement from '../pages/LanguageManage';
 import LedgerConnect from '../pages/LedgerConnect';
 import LedgerImport from '../pages/LedgerImport';
-import LockPage from '../pages/Lock';
+import {LockPage} from '../pages/Lock';
 import HomePage from '../pages/Main';
 import NetworkPage from '../pages/Networks';
+import NodeEditor from '../pages/Networks/NodeEditor';
 import ReceivePage from '../pages/Receive';
 import RecordPage from '../pages/Record';
 import ResetPassword from '../pages/ResetPassword';
@@ -29,9 +32,11 @@ import RestoreAccount from '../pages/RestoreAccount';
 import RevealSeedPage from '../pages/RevealSeed';
 import SecurityPage from '../pages/Security';
 import SendPage from '../pages/Send';
-import ShowMnemonic from '../pages/ShowMnemonic';
+import Setting from '../pages/Setting';
+import {ShowMnemonic} from '../pages/ShowMnemonic';
 import ShowPrivateKeyPage from '../pages/ShowPrivateKey';
 import SignTransaction from "../pages/SignTransaction";
+import Staking from '../pages/Staking';
 import StakingList from '../pages/StakingList';
 import StakingTransfer from '../pages/StakingTransfer';
 import Welcome from '../pages/Welcome';
@@ -64,13 +69,13 @@ export function getAllRouter() {
         <Route path="/show_privatekey_page" component={ShowPrivateKeyPage} />
 
         <Route path="/lock_page" component={LockPage} />
-        <Route path="/info_page" component={InfoPage} />
         <Route path="/about_us" component={AboutUs} />
         <Route path="/network_page" component={NetworkPage} />
         <Route path="/account_name" component={AccountName} />
         <Route path="/reset_password" component={ResetPassword} />
         <Route path="/backup_tips" component={BackupTips} />
 
+        <Route path="/staking" component={Staking} />
         <Route path="/staking_list" component={StakingList} />
         <Route path="/staking_transfer" component={StakingTransfer} />
         <Route path="/ledger_connect" component={LedgerConnect} />
@@ -79,12 +84,18 @@ export function getAllRouter() {
         <Route path="/import_page" component={ImportPage} />
         <Route path="/import_keypair" component={ImportKeypair} />
 
+        <Route path="/setting" component={Setting} />
         <Route path="/address_book" component={AddressBook} />
         <Route path="/currency_unit" component={CurrencyUnit} />
         <Route path="/welcome_page" component={Welcome} />
 
         <Route path="/request_sign" component={SignTransaction} />
         <Route path="/approve_page" component={ApprovePage} />
+        
+        <Route path={"/app_connection"} component={AppConnection}/>
+        <Route path={"/auto_lock"} component={AutoLock}/>
+        <Route path={"/address_editor"} component={AddressEditor}/>
+        <Route path={"/node_editor"} component={NodeEditor}/>
       </Switch>
     </HashRouter>
   );

@@ -1,5 +1,5 @@
 .App {
-  user-select: none;
+  // user-select: none;
   -webkit-user-drag: none;
   *,
   *::before,
@@ -16,14 +16,27 @@
 }
 body {
   margin: 0;
+
+  --mainBlue:#594AF1;
+  --mainBlack:rgba(0, 0, 0, 0.85);
+  --secondaryRed:#d65a5a;
+  --secondaryGreen:#0DB27C;
+  --secondaryYellow:#e4b200;
+
+  --white:rgba(255, 255, 255, 1);
+  --whiteLilac:rgba(249, 250, 252, 1);
+  --mediumGray:rgba(0, 0, 0, 0.1);
+  --nobelGray:rgba(0, 0, 0, 0.3);
+  --mediumBlack:rgba(0, 0, 0, 0.5);
+  --mineBlack:rgba(0, 0, 0, 0.85);
 }
 p {
   margin: 0;
   padding: 0;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -o-user-select: none;
-  -ms-user-select: none;
+  // -webkit-user-select: none;
+  // -moz-user-select: none;
+  // -o-user-select: none;
+  // -ms-user-select: none;
 }
 
 input,
@@ -31,8 +44,12 @@ button,
 select,
 optgroup,
 textarea {
-  margin: 0; 
+  margin: 0;
   font-size: inherit;
   font-family: inherit;
   line-height: inherit;
+}
+
+::-webkit-scrollbar-track {
+  display: none;
 }

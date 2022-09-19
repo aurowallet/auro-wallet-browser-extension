@@ -1,0 +1,23 @@
+.rowContainer {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 54px;
+
+    span{
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 100%;
+        color: #000000;
+
+        word-break: break-all;
+    }
+
+    img{
+        cursor: pointer;
+        &:hover{
+            opacity: 0.6;
+        }
+    }
+}

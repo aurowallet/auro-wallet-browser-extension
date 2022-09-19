@@ -1,0 +1,59 @@
+.container {
+  padding: 10px 0px 0px;
+  margin-bottom: 100px;
+}
+.contentContainer {
+  padding: 0px 20px;
+}
+.inputContainer {
+  > :not(:first-child) {
+    margin-top: 20px;
+  }
+  .addressBook {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 17px;
+    text-align: right;
+    color: #594af1;
+    cursor: pointer;
+  }
+  .balance {
+    font-size: 12px;
+    line-height: 17px;
+    text-align: right;
+    color: rgba(0, 0, 0, 0.5);
+    font-weight: 400 !important;
+  }
+  .max {
+    @extend .addressBook;
+    padding-right: 12px;
+  }
+}
+
+.feeContainer {
+  margin: 20px 0;
+}
+
+.dividedLine {
+  height: 0.5px;
+  background-color: rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin: 10px 0px;
+
+  .dividedContent {
+    margin: 0;
+    color: transparent;
+  }
+}
+
+.bottomContainer {
+  padding: 12px 38px 30px;
+  position: fixed;
+  bottom: 0;
+  width: calc(100%);
+  background-color: white;
+}
+
+.hold {
+  flex: 1;
+}

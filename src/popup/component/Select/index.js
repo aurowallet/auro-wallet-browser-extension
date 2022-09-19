@@ -1,93 +1,87 @@
-import cx from "classnames";
-import React, { Component } from "react";
-import downArrow from "../../../assets/images/downArrow.png";
-import "./index.scss";
+import cls from "classnames";
+import { useCallback, useEffect, useState } from "react";
+import { showNameSlice } from "../../../utils/utils";
+import styles from "./index.module.scss";
 
-export default class Select extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { isOpen: false, value: "" };
-    this.toggleContainer = React.createRef();
-  }
-  componentDidMount() {
-    window.addEventListener("click", this.onClickOutsideHandler);
-  }
+const Select = ({
+    value = "",
+    optionList = [],
+    onChange = () => { }
+}) => { 
 
-  componentWillUnmount() {
-    window.removeEventListener("click", this.onClickOutsideHandler);
-  }
+    const [currentValue, setCurrentValue] = useState(value)
 
-  onClickHandler = () => {
-    this.setState(currentState => ({
-      isOpen: !currentState.isOpen
-    }));
-  };
 
-  onClickOutsideHandler = event => {
-    if (
-      this.state.isOpen &&
-      !this.toggleContainer.current.contains(event.target)
-    ) {
-      this.setState({ isOpen: false });
-    }
-  };
+    const [optionStatus, setOptionStatus] = useState(false)
 
-  onChange = item => {
-    this.setState({
-      value: item.value,
-      isOpen: false
-    });
-    this.props.onChange(item);
-  };
-  render() {
-    const { isOpen, value } = this.state;
-    const { label, options, defaultValue,selfInputProps,arrowSrc } = this.props; 
-    return (
-      <div className="select-box">
-        {label && <label className="label">{label}:</label>}
+    const onClickEntry = useCallback(() => {
+        setOptionStatus(state => !state)
+    }, [])
 
-        <div className="select" ref={this.toggleContainer}>
-          <div
-            onClick={this.onClickHandler}
-            className={cx({
-              "self-input": true,
-              "input-hover": isOpen,
-              [selfInputProps]: !!selfInputProps,
-              "click-cursor": true
-            })}>
-            <p className="selfInputContent" style={{
-              margin: 0,
-            }}>
-              {value || defaultValue}
-            </p>
-          </div>
-          <img className={cx({
-            "select-arrow": true,
-            up: isOpen,
-            down: !isOpen
-          })} src={arrowSrc?arrowSrc:downArrow}></img>
-          <div
-            className="options"
-            className={cx({
-              options: true,
-              "options-hidden": !isOpen
-            })}
-          >
-            {options &&
-              options.map((item) => {
-                return (
-                  <div
-                    key={item.key}
-                    className="item click-cursor"
-                    onClick={this.onChange.bind(this, item)}
-                  >
-                    {item.value}
-                  </div>
-                );
-              })}
-          </div>
+    const getShowLabel = useCallback(() => {
+        let filterRes = optionList.filter((option) => {
+            return option.value === value
+        })
+        return filterRes[0]?.label
+    }, [optionList, value])
+
+    const [currentLabel, setCurrentLabel] = useState(() => {
+        return getShowLabel()
+    })
+
+    useEffect(() => {
+        setCurrentLabel(getShowLabel())
+    }, [value])
+
+    const onCloseOption = useCallback(() => {
+        setOptionStatus(false)
+    }, [])
+
+    const onClickOption = useCallback((option) => {
+        setOptionStatus(false)
+        onChange(option)
+    }, [onChange])
+    
+    return (<>
+        <div className={cls(styles.commonBg, {
+            [styles.modalBg]: optionStatus
+        })} onClick={onCloseOption} />
+        <div className={styles.container}>
+            <div className={styles.selectContainer}
+                onClick={onClickEntry}
+            >
+                <p className={styles.selectTitle}>
+                    {showNameSlice(currentLabel)}
+                </p>
+                <div className={styles.arrowtIcon}>
+                <img src="/img/icon_arrow_unfold.svg"  />
+                </div>
+            </div>
+
+            {optionStatus && <div className={styles.optionsOuter}>
+                <div className={styles.optionsContainer}>
+                    {
+                        optionList.map((option, index) => {
+                            let isSelect = value == option.value
+                            return <Option onClick={() => onClickOption(option)} isSelect={isSelect} key={index} label={option.label} value={option.value} />
+                        })
+                    }
+                </div>
+            </div>}
         </div>
-      </div>
-    );
-  }
+
+    </>)
 }
+
+const Option = ({ label, value, isSelect, onClick }) => {
+
+    return (<div
+        onClick={onClick}
+        className={cls(styles.optionContainer, {
+            [styles.selectedOption]: isSelect
+        })}>
+        {showNameSlice(label)}
+    </div>)
+}
+
+export default Select

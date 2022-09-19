@@ -124,6 +124,9 @@ export const WALLET_GET_CREATE_MNEMONIC = "WALLET_GET_CREATE_MNEMONIC"
 export const WALLET_RESET_LAST_ACTIVE_TIME = "WALLET_RESET_LAST_ACTIVE_TIME"
 
 
+export const WALLET_UPDATE_LOCK_TIME = "WALLET_UPDATE_LOCK_TIME"
+
+export const WALLET_GET_LOCK_TIME = "WALLET_GET_LOCK_TIME"
 
 
 // ====================================================================================bottom back to popup
@@ -236,3 +239,4 @@ export const DAPP_CLOSE_POPUP_WINDOW = "DAPP_CLOSE_POPUP_WINDOW"
 
 /** Berkeley qa net sign   */
 export const QA_SIGN_TRANSTRACTION = "QA_SIGN_TRANSTRACTION"
+ export const DAPP_CONNECTION_LIST = "DAPP_CONNECTION_LIST"

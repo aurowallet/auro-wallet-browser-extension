@@ -1,134 +1,151 @@
-import React from "react";
-import { connect } from "react-redux";
+import { wordlists } from "bip39";
+import i18n from "i18next";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useHistory } from 'react-router-dom';
 import { validateMnemonic } from "../../../background/accountService";
 import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
-import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { trimSpace } from "../../../utils/utils";
-import Button from "../../component/Button";
+import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
-import Loading from "../../component/Loading";
-import Toast from "../../component/Toast";
-import "./index.scss";
-class RestoreAccount extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      btnClick: false,
-      mnemonic: ""
-    };
-    this.isUnMounted = false;
-  }
-  componentWillUnmount(){
-    this.isUnMounted = true;
-  }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
-      this.setState({
-        ...data
-      },()=>{
-        callback&&callback()
-      })
+import TextArea from "../../component/TextArea";
+import styles from "./index.module.scss";
+
+const RestoreAccount = () => {
+  const [mneInput, setMneInput] = useState("")
+  const [similarWordList, setSimilarWordList] = useState([])
+  const [btnLoading, setBtnLoading] = useState(false)
+  const [bottomTipError, setBottomTipError] = useState("")
+
+  const childRef = useRef();
+
+
+  const dispatch = useDispatch()
+  const history = useHistory()
+
+  const getNeedMatchWord = useCallback((mneList) => {
+    let targetMne = mneList[mneList.length - 1]
+    return targetMne
+  }, [])
+
+  const getSimilarWord = useCallback(() => {
+    let lowMne = mneInput.toLowerCase()
+    let mneList = lowMne.split(" ")
+    let position = childRef.current.getCurrentCaretPosition()
+
+    if (mneList.length > 0) {
+      let targetMne = getNeedMatchWord(mneList)
+      if (lowMne.indexOf(targetMne) <= position) {
+        if (targetMne.length >= 1) {
+          let list = wordlists.english.filter((item) => {
+            return item.indexOf(targetMne) === 0;
+          });
+          list = list.slice(0, 10)
+          setSimilarWordList(list)
+        }
+      }
+    } else {
+      setSimilarWordList([])
     }
-  }
-  goToCreate = () => {
-    let mnemonic = this.state.mnemonic
+
+  }, [mneInput])
+
+  useEffect(() => {
+    getSimilarWord()
+  }, [mneInput])
+
+  const onInput = useCallback((e) => {
+    if (bottomTipError) {
+      setBottomTipError("")
+    }
+    setSimilarWordList([])
+    let mnemonic = e.target.value;
+    let _mnemonic = mnemonic.replace(/\s/g, ' ');
+    _mnemonic = _mnemonic.replace(/[\r\n]/g, "")
+    setMneInput(_mnemonic)
+  }, [bottomTipError])
+
+  const onClickSimilarWord = useCallback((similarWord) => {
+    let mneList = mneInput.split(" ")
+    mneList[mneList.length - 1] = similarWord
+    let newInput = mneList.join(" ")
+    newInput = newInput + " "
+    setMneInput(newInput)
+    setSimilarWordList([])
+
+    childRef.current.setFocus();
+
+  }, [mneInput])
+
+  const goToCreate = useCallback(() => {
+    let mnemonic = mneInput
+
     mnemonic = trimSpace(mnemonic)
-    let mneList = mnemonic.split(" ")
-    if (mneList.length !== 12) {
-      Toast.info(getLanguage('seedLengthError'))
-      return
-    }
+    mnemonic = mnemonic.toLocaleLowerCase()
+
+
     let mnemonicVaild = validateMnemonic(mnemonic)
     if (!mnemonicVaild) {
-      Toast.info(getLanguage('inputVaildSeed'))
+      setBottomTipError(i18n.t('inputVaildSeed'))
       return
-    } 
-    Loading.show()
+    }
+    setBtnLoading(true)
     sendMsg({
       action: WALLET_NEW_HD_ACCOUNT,
       payload: {
-        pwd: this.state.password,
         mne: mnemonic
       }
     },
       async (currentAccount) => {
-        Loading.hide()
-        this.props.updateCurrentAccount(currentAccount)
-        this.props.updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE)
-        this.props.history.push({
+        setBtnLoading(false)
+        dispatch(updateCurrentAccount(currentAccount))
+        dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
+        history.push({
           pathname: "/backupsuccess",
-          params:{type:"restore"}
+          params: { type: "restore" }
         })
       })
-  };
+  }, [mneInput, i18n])
 
-  onMneInput = (e) => {
-    let mnemonic = e.target.value;
-    let _mnemonic = mnemonic.replace(/\s/g, ' ');
-    _mnemonic = _mnemonic.replace(/[\r\n]/g, "")
-    this.callSetState({
-      mnemonic: _mnemonic
-    }, () => {
-      if (mnemonic.length > 0) {
-        this.callSetState({
-          btnClick: true
-        })
-      } else {
-        this.callSetState({
-          btnClick: false
-        })
-      }
-    })
-  }
-  renderInput = () => {
-    return (
-      <textarea
-        className={"text-area-input"}
-        value={this.state.privateKey}
-        onChange={this.onMneInput} />
-    )
-  }
-  renderBotton = () => {
-    return (
-      <div className="bottom-container">
-        <Button
-          disabled={!this.state.btnClick}
-          content={getLanguage('confirm')}
-          onClick={this.goToCreate}
+
+  return (
+    <CustomView title={i18n.t('restoreWallet')}>
+      <p className={styles.restoreTip}>
+        {i18n.t('inputSeed')}
+      </p>
+      <div className={styles.textAreaContainer}>
+        <TextArea
+          onChange={onInput}
+          value={mneInput}
+          childRef={childRef}
+          showBottomTip={true}
+          bottomErrorTip={bottomTipError}
         />
       </div>
-    )
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage("restoreWallet")}
-        history={this.props.history}>
-        <div className="import-container">
-          <p className={"import-title"}>{getLanguage("inputSeed")}</p>
-          {this.renderInput()}
+      <div className={styles.similarWordOuter}>
+        <div className={styles.similarWordContainer}>
+          {
+            similarWordList.map((similarWord, index) => {
+              return <div
+                onClick={() => onClickSimilarWord(similarWord)}
+                key={index}
+                className={styles.similarWordItem}
+              >
+                {similarWord}
+              </div>
+            })
+          }
         </div>
-        {this.renderBotton()}
-      </CustomView>
-    )
-  }
-
+      </div>
+      <BottomBtn
+        rightLoadingStatus={btnLoading}
+        onClick={goToCreate}
+        rightBtnContent={i18n.t('confirm')}
+      />
+    </CustomView>
+  )
 }
-
-const mapStateToProps = (state) => ({});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    updateEntryWitchRoute: (index) => {
-      dispatch(updateEntryWitchRoute(index));
-    },
-    updateCurrentAccount: (account) => {
-      dispatch(updateCurrentAccount(account))
-    },
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(RestoreAccount);
+export default RestoreAccount

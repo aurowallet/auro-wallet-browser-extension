@@ -1,0 +1,54 @@
+.backTitle {
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    color: rgba(0, 0, 0, 0.85);
+}
+
+.mne_container {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-row-gap: 10px;
+    grid-column-gap: 18px;
+}
+
+.hold {
+    flex: 1;
+}
+
+.bottomCon {
+    padding: 12px 18px 30px;
+}
+
+.mneReminderContainer {
+    background: rgba(214, 90, 90, 0.1);
+    border: 1px solid #d65a5a;
+    border-radius: 10px;
+    padding: 10px;
+
+    .mneReminderTop {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .mneReminderTitle {
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 14px;
+        display: flex;
+        align-items: center;
+        color: #d65a5a;
+        margin: 0px 0px 0px 10px;
+    }
+    .mneReminderContent {
+        font-size: 12px;
+        line-height: 17px;
+        display: flex;
+        align-items: center;
+
+        color: #d65a5a;
+        margin: 0;
+    }
+}

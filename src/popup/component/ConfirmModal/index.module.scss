@@ -1,0 +1,168 @@
+.outerContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: end;
+    flex-direction: column;
+}
+
+@keyframes openModal {
+    from {
+        bottom: -50%;
+    }
+    to {
+        bottom: 0;
+    }
+}
+
+.innerContent {
+    background: #ffffff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    width: 100%;
+
+    position: absolute;
+    bottom: 0;
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 8px 20px;
+
+    .rowTitle {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        color: #222222;
+    }
+    .rowClose {
+        display: block;
+        cursor: pointer;
+    }
+}
+
+.dividedLine {
+    width: 100%;
+    height: 0.5px;
+    background-color: #f2f2f2;
+}
+
+.bottomContent {
+    padding: 0px 20px 0px;
+    overflow-y: auto;
+    background: #ffffff;
+    max-height: 350px;
+    margin-bottom: 100px;
+
+    .highlightContainer {
+        margin-top: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    .highlightTitle {
+        font-size: 12px;
+        line-height: 17px;
+        color: rgba(0, 0, 0, 0.5);
+    }
+    .highlightCon {
+        display: flex;
+        align-items: baseline;
+        margin: 8px 0px 30px;
+    }
+    .highlightContent {
+        font-size: 24px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        color: #000000;
+        font-weight: 600;
+    }
+    .subHighlightContent {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 16px;
+        margin-left: 4px;
+    }
+}
+
+.bottomContainer {
+    padding: 12px 38px 30px;
+    position: fixed;
+    bottom: 0;
+    width: calc(100%);
+    background-color: white;
+
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+
+.contentItemContainer {
+    margin-bottom: 20px;
+    .contentTitle {
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 17px;
+        display: flex;
+        align-items: center;
+        color: rgba(0, 0, 0, 0.5);
+    }
+    .contentValue {
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        color: #000000;
+        margin: 4px 0px 0px;
+        word-break: break-all;
+    }
+}
+
+.ledgerContent {
+    padding: 48px 0 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    .waitingIcon {
+        width: 58px;
+    }
+    .waitingTitle {
+        font-family: "SF Pro Text";
+        font-size: 20px;
+        line-height: 16px;
+        color: #000000;
+        margin: 30px 0 10px;
+        font-weight: 700;
+    }
+    .waitingContent {
+        font-family: "SF Pro Text";
+        font-size: 14px;
+        line-height: 16px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.5);
+        margin: 0;
+        font-weight: 500;
+    }
+    .waitingTip{
+        @extend .waitingContent;
+        color: #E4B200;
+        margin: 20px 10px;
+    }
+}

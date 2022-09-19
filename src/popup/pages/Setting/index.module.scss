@@ -1,0 +1,60 @@
+.contentClassName{
+    padding: 10px 0px 0px;
+}
+.customeTitleClass {
+    left: 46px;
+    transform: unset;
+    cursor: pointer;
+}
+.rowContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 54px;
+    padding: 0px 20px;
+
+    cursor: pointer;
+    .rowLeft {
+        display: flex;
+        align-items: center;
+    }
+    .title {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 100%;
+        color: rgba(0, 0, 0, 1);
+        flex: none;
+        order: 1;
+        flex-grow: 0;
+        margin: 0;
+        padding-left: 10px;
+    }
+    .iconContainer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .rowContent {
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 100%;
+        color: rgba(0, 0, 0, 0.3);
+        margin: 0;
+        
+        overflow-x: hidden; 
+        white-space: nowrap; 
+        text-overflow: ellipsis;
+        max-width: 120px;
+        
+    }
+  
+}
+.rowContainer:hover{
+    background-color: rgba(0, 0, 0, 0.05);
+}
+.dividedLine{
+    background-color: rgba(0, 0, 0, 0.1);;
+    height: 0.5px;
+    width: calc(100% - 40px);
+    margin: 10px auto;
+}

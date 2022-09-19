@@ -1,0 +1,159 @@
+.conatiner {
+    .titleRow { 
+        display: flex;
+        align-items: center;
+        height: 48px;
+        margin-top: 10px;
+        padding: 0px 20px;
+        position: relative;
+        justify-content: space-between;
+    }
+    .title {
+        font-weight: 600;
+        font-size: 18px;
+        line-height: 21px;
+        color: #000000;
+        margin: 0;
+    }
+    .netContainer {
+        background: #f9fafc;
+        border-radius: 4px;
+        padding: 4px 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #594af1;
+            margin-right: 4px;
+            border-radius: 50%;
+        }
+        .netContent{
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 14px;
+            color: rgba(0, 0, 0, 0.5);
+            margin: 0;
+        }
+    }
+    .mg-t20 {
+        margin-top: 20px;
+    }
+    .content {
+        @extend .mg-t20;
+        padding: 0px 20px;
+        .accountTip {
+            font-size: 14px;
+            line-height: 20px;
+            color: rgba(0, 0, 0, 0.5);
+            margin: 20px 0px 0px;
+        }
+        .accountAddress {
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 17px;
+            color: #000000;
+            margin: 8px 0px 0px;
+            word-break: break-all;
+        }
+        .warningTip {
+            font-size: 14px;
+            line-height: 20px;
+            color: rgba(0, 0, 0, 0.3);
+            margin: 20px 0px 0px;
+        }
+        .accountRow {
+            @extend .mg-t20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rowTitle {
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 14px;
+            color: rgba(0, 0, 0, 0.5);
+            margin: 0;
+        }
+        .rowContent {
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 17px;
+            color: #000000;
+            margin: 0;
+        }
+        .rowDescContent {
+            font-size: 12px;
+        }
+        .copyCss{
+            cursor: pointer;
+        }
+        .rightTitle {
+            text-align: right;
+            white-space: pre;
+        }
+        .rowPurpleContent {
+            font-weight: 600;
+            font-size: 12px;
+            line-height: 14px;
+            text-align: center;
+            color: #594af1;
+            cursor: pointer;
+        }
+        .feeCon {
+            display: flex;
+            align-content: center;
+        }
+        .feeTypeBase {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 14px;
+            color: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+        }
+        .feeTypeDefault {
+            @extend .feeTypeBase;
+            background: rgba(0, 0, 0, 0.1);
+            color: rgba(0, 0, 0, 0.3);
+        }
+        .feeTypeSite {
+            @extend .feeTypeBase;
+            background: rgba(13, 178, 124, 0.1);
+            color: #0db27c;
+        }
+        .feeContent {
+            margin-right: 4px;
+        }
+    }
+    .btnGroup {
+        position: absolute;
+        bottom: 0;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        display: flex;
+
+        gap: 15px;
+        padding: 12px 0px 30px;
+    }
+}
+
+.tabContent {
+    font-size: 14px;
+    line-height: 17px;
+    color: rgba(0, 0, 0, 0.3);
+    margin: 0;
+
+    height: 120px;
+    overflow: auto;
+}
+
+.highFeeTip {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 17px;
+    color: #e4b200;
+}

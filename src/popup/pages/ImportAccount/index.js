@@ -1,157 +1,91 @@
-import React from "react";
-import { connect } from "react-redux";
+import i18n from "i18next";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useHistory } from 'react-router-dom';
 import { WALLET_IMPORT_HD_ACCOUNT } from "../../../constant/types";
-import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
-import { updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
+import TextArea from "../../component/TextArea";
 import Toast from "../../component/Toast";
-import "./index.scss";
-import Loading from "../../component/Loading";
-class ImportAccount extends React.Component {
-  constructor(props) {
-    super(props);
-    let accountName = props.location.params?.accountName || ""
-    this.state = {
-      btnClick: false,
-      privateKey: "",
-      accountName
-    };
-    this.isUnMounted = false;
-  }
-  componentWillUnmount(){
-    this.isUnMounted = true;
-  }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
-      this.setState({
-        ...data
-      },()=>{
-        callback&&callback()
-      })
-    }
-  }
-  onPriKeyInput = (e) => {
-    let privateKey = e.target.value;
-    if (privateKey.length >= 0) {
-      this.callSetState({
-        privateKey: privateKey.replace(/\s/g, ' '),
-        btnClick: true
-      })
-    } else {
-      this.callSetState({
-        privateKey: privateKey,
-        btnClick: false
-      })
-    }
+import styles from "./index.module.scss";
 
-  };
-  goToCreate = () => {
-    Loading.show()
+const ImportAccount = ({ }) => {
+
+  const [inputValue, setInputValue] = useState('')
+  const [btnStatus, setBtnStatus] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const history = useHistory()
+
+  const dispatch = useDispatch()
+  const [accountName, setAccountName] = useState(() => {
+    return history.location?.params?.accountName ?? "";
+  })
+
+  const onInput = useCallback((e) => {
+    let privateKey = e.target.value;
+    setInputValue(privateKey)
+  }, [])
+  useEffect(() => {
+    if (inputValue.length > 0) {
+      setBtnStatus(true)
+    } else {
+      setBtnStatus(false)
+    }
+  }, [inputValue])
+  const onConfirm = useCallback(() => {
+    setLoading(true)
+
     sendMsg({
       action: WALLET_IMPORT_HD_ACCOUNT,
       payload: {
-        privateKey: this.state.privateKey.replace(/[\r\n]/g, ""),
-        accountName: this.state.accountName
+        privateKey: inputValue.replace(/[\r\n]/g, ""),
+        accountName: accountName
       }
     }, (account) => {
-      Loading.hide()
+      setLoading(false)
       if (account.error) {
-        if(account.type === "local"){
-          Toast.info(getLanguage(account.error))
-        }else{
-            Toast.info(account.error)
+        if (account.type === "local") {
+          Toast.info(i18n.t(account.error))
+        } else {
+          Toast.info(account.error)
         }
         return
       } else {
-        this.props.updateCurrentAccount(account)
+        dispatch(updateCurrentAccount(account))
         setTimeout(() => {
-          this.props.history.replace({ 
-            pathname: "/account_manage",
-          })
-        }, 300);
+          history.replace("account_manage")
+        }, 50);
       }
     })
-  };
+  }, [inputValue, accountName])
+  return (<CustomView title={i18n.t('importPrivateKey')} >
 
-  handleTextareaChange = (e) => {
-    let value = e.target.value
-    this.callSetState({
-      privateKey: value
-    },() => {
-      if (this.state.privateKey.length > 0) {
-        this.callSetState({
-          btnClick: true
-        })
-      } else {
-        this.callSetState({
-          btnClick: false
-        })
-      }
-    })
-  }
-  renderInput = () => {
-    return (
-      <div className={"keypair-input-container"}>
-      <textarea
-        className={"text-area-input"}
-        value={this.state.privateKey}
-        onChange={this.handleTextareaChange} />
-        </div>
-    )
-  }
-  renderDescContainer=(content1,content2)=>{ 
-    return(<div className={"keypair-input-container-desc"}>
-        <p className={"import-title-keystore"}>{content1}</p>
-        <p className={"import-title-keystore"}>{content2}</p>
-    </div>)
-  }
-  renderBotton = () => {
-    return (
-      <div className="bottom-container">
-        <Button
-          disabled={!this.state.btnClick}
-          content={getLanguage('confirm_1')}
-          onClick={this.goToCreate}
-        />
-      </div>
-    )
-  }
-  renderContentContainer=(content)=>{
-    return(<div className={"keypair-input-container"}>
-        <p className={"import-title"}>{content}</p>
-    </div>)
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('importAccount')}
-        history={this.props.history}>
-        <div className="import-keypair-container">
-          {this.renderContentContainer(getLanguage("pleaseInputPriKey"))}
-          {this.renderInput()}
-          {this.renderDescContainer(getLanguage("importAccount_2"),getLanguage("importAccount_3"))}
-        </div>
-        {this.renderBotton()}
-      </CustomView>
-    )
-  }
+    <p className={styles.title}>{i18n.t('pleaseInputPriKey')}</p>
 
+    <div className={styles.textAreaContainer}>
+      <TextArea
+        onChange={onInput}
+        value={inputValue}
+      />
+
+    </div>
+
+    <span className={styles.desc}>{i18n.t('importAccount_2')}</span>
+    <span className={styles.desc}>{i18n.t('importAccount_3')}</span>
+
+    <div className={styles.hold} />
+    <div className={styles.bottomContainer}>
+      <Button
+        disable={!btnStatus}
+        loading={loading}
+        onClick={onConfirm}>
+        {i18n.t('confirm')}
+      </Button>
+    </div>
+  </CustomView>)
 }
 
-const mapStateToProps = (state) => ({});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    updateEntryWitchRoute: (index) => {
-      dispatch(updateEntryWitchRoute(index));
-    },
-    updateCurrentAccount: (account) => {
-      dispatch(updateCurrentAccount(account))
-    }
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(ImportAccount);
+export default ImportAccount 

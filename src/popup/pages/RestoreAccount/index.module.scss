@@ -1,0 +1,46 @@
+.restoreTip {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    color: rgba(0, 0, 0, 0.85);
+    margin: 10px 0 0;
+}
+.textAreaContainer{
+    margin-top: 20px;
+}
+.similarWordOuter{
+    flex: 1;
+}
+.similarWordContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+    overflow-y: auto;
+    max-height: 210px;
+}
+
+.similarWordItem {
+    padding: 5px 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #000000;
+
+    cursor: pointer;
+
+    &:hover {
+        color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(0, 0, 0, 0.05);
+    }
+}
+
+.bottomCon {
+    padding: 12px 18px 30px;
+}

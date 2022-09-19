@@ -4,13 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
-## [2.0.7]
-
+- New UI
 - upgrade mina-signer-experimental version to 1.3.0
 
 ## [2.0.6]
 
 - upgrade mina-signer-experimental version to 1.2.1
+- fix (ledger): signing not working on testnet
+- fix change password failed when have ledger account
 
 ## [2.0.5]
 
@@ -22,6 +23,14 @@ All notable changes to this project will be documented in this file.
 - add berkeley-qa signParty
 - add gql params type
 - set default net type to Berkeley-QA
+
+- [main]
+- update build production scripts
+- update the page display logic of network control
+- update mina-signer init params to mainnet
+- update signMessage params name to message
+- fix update the current network url not timely problem 
+
 ## [2.0.4]
 
 - Re-encode raw signature to fix ledger transation signature  (https://github.com/jspada/ledger-app-mina/pull/22)

@@ -1,0 +1,99 @@
+.outerContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+    
+    display: flex;
+    align-items: center;
+}
+
+.contentContainer {
+    background: #ffffff;
+    border-radius: 12px;
+    margin: 0 20px;
+    width: 100%;
+}
+.topContainer {
+    padding: 20px 20px 0;
+}
+.iconContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 10px;
+}
+
+.modalTitle {
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 21px;
+    text-align: center;
+    color: #000000;
+
+    margin: 0 0 20px;
+}
+.content {
+    margin: 0 0 30px;
+
+    font-size: 14px;
+    line-height: 17px;
+    color: rgba(0, 0, 0, 0.5);
+}
+.bottomContainer {
+    display: flex;
+    border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+    transform: rotate(0.18deg);
+    height: 48px;
+}
+
+.baseBtn {
+    font-style: normal;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 1;
+
+    text-align: center;
+    font-size: 16px;
+    line-height: 19px;
+    
+    font-weight: 500;
+}
+.leftBtn {
+    @extend .baseBtn;
+    color: #000000;
+    border-bottom-left-radius: 12px;
+
+    &:hover {
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(0, 0, 0, 0.05);
+    }
+}
+.rightBtn {
+    @extend .baseBtn;
+    color: #594af1;
+    border-bottom-right-radius: 12px;
+    &:hover {
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(0, 0, 0, 0.05);
+    }
+}
+
+.dividLine {
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.componentContentContainer {
+    margin-bottom: 30px;
+}
+.rightBtnDisable{
+    color: rgba(0, 0, 0, 0.3) !important;
+    &:hover {
+        background: transparent;
+    }
+}

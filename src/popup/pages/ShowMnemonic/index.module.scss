@@ -1,0 +1,62 @@
+.backTitle {
+  
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: var(--mineBlack);
+  margin: 10px 0 0;
+}
+
+.mne_container {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-row-gap: 10px;
+  grid-column-gap: 18px;
+}
+
+.colorStatus{
+  background: rgba(196, 196, 196, 0.2) !important;
+}
+.colorIndexStatus{
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.mneItemContainer {
+  background: var(--mainBlue);
+  border-radius: 20px;
+
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+  min-height: 30px;
+  min-width: 100px;
+
+}
+
+.mneIndex {
+  font-size: 14px;
+  line-height: 100%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  display: flex;
+  font-weight: 500;
+}
+
+.mneItem {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 100%;
+  text-align: center;
+  color: var(--white);
+}
+
+.smallStyle{
+  font-size: 12px !important;
+}
+
+.clickAble{
+  cursor: pointer;
+}

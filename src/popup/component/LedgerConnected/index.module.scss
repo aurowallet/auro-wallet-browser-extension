@@ -1,0 +1,38 @@
+.connectContainer {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.connectTip {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 22px;
+  color: #0db27c;
+  margin: 20px 0 25px;
+}
+.imgContainer {
+  background: rgba(13, 178, 124, 0.1);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tipsContainer{
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: center;
+  color: #333333;
+  margin: 0;
+
+  .boldTxt{
+    font-weight: 600;
+  }
+  .redTxt{
+    color: rgba(214, 90, 90, 1);
+    font-weight: 600;
+  }
+}

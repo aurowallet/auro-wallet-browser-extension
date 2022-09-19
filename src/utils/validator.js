@@ -2,13 +2,8 @@ import bs58check from "bs58check";
 
 export const matchList = [
   {
-    text: ('atLeastOneNumber'),
-    expression: /[0-9]+/,
-    bool: false
-  },
-  {
-    text: ('atLeastOneLowercaseLetter'),
-    expression: /[a-z]+/,
+    text: ('passwordRequires'),
+    expression: /.{8,32}/,
     bool: false
   },
   {
@@ -17,10 +12,15 @@ export const matchList = [
     bool: false
   },
   {
-    text: ('passwordRequires'),
-    expression: /.{8,32}/,
+    text: ('atLeastOneLowercaseLetter'),
+    expression: /[a-z]+/,
     bool: false
   },
+  {
+    text: ('atLeastOneNumber'),
+    expression: /[0-9]+/,
+    bool: false
+  }
 ]
 
 /**

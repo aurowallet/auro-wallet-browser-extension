@@ -1,0 +1,555 @@
+$toolbarHeight: 58px;
+
+.container {
+    background: #edeff2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.toolbarContainer {
+    position: fixed;
+    width: 100%;
+    z-index: 2;
+    background: #edeff2;
+}
+
+.baseIconHover {
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    padding: 3px;
+
+    &:hover {
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.05);
+    }
+}
+.toolBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: $toolbarHeight;
+
+    padding: 10px 20px 0px;
+
+    .menuIcon {
+        @extend .baseIconHover;
+    }
+    .walletIcon {
+        @extend .baseIconHover;
+    }
+    .arrowtIcon {
+        margin-left: 8px;
+    }
+}
+
+.walletContent {
+    margin-top: $toolbarHeight;
+    overflow: auto;
+}
+.walletInfoContainer {
+    box-sizing: border-box;
+    width: 335px;
+    height: 224px;
+    margin: 10px 20px 20px;
+    border: 0.5px solid #bccdf3;
+    border-radius: 20px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+
+    position: relative;
+}
+.walletBg {
+    position: absolute;
+    top: 0;
+    z-index: 0;
+}
+.walletInfoTopContainer {
+    display: flex;
+    justify-content: space-between;
+    z-index: 1;
+}
+.walletInfoTopLeftContainer {
+    margin: 14px 0px 0px 20px;
+}
+.walletInfoLeftTop {
+    display: flex;
+    align-items: center;
+    .accountName {
+        font-family: "Helvetica Neue";
+        font-size: 15px;
+        line-height: 18px;
+        color: #ffffff;
+    }
+    .accountStatus {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 29px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 3px 9px;
+        gap: 10px;
+
+        font-family: "PingFang SC";
+        font-style: normal;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 14px;
+        color: #ffffff;
+
+        flex: none;
+        order: 0;
+        flex-grow: 0;
+        margin: 0 8px;
+    }
+    .dappConnectIcon {
+        cursor: pointer;
+    }
+}
+.walletInfoLeftBottom {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    cursor: pointer;
+
+    .accountAddress {
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 17px;
+        color: rgba(255, 255, 255, 0.5);
+        margin: 0px;
+
+        &:hover {
+            color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), pink;
+        }
+    }
+    .copyConatiner {
+        margin-left: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+.dappConnectContainer {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+
+    margin: 10px 10px 0 0;
+
+    cursor: pointer;
+}
+.assetsContainer {
+    flex: 1;
+    position: relative;
+    margin-top: 2px;
+    margin: 22px 20px 20px;
+
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+
+    .assetsIcon {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    .amountNumberContainer {
+        display: flex;
+        align-items: baseline;
+    }
+    .amountNumber {
+        font-family: "Helvetica Neue";
+        font-size: 32px;
+        line-height: 39px;
+        color: #ffffff;
+        margin: 0;
+        margin-right: 4px;
+    }
+    .balanceSizeMine {
+        font-size: 28px;
+    }
+    .cacheBalance {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    .amountSymbol {
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 21px;
+        align-items: baseline;
+        color: #ffffff;
+    }
+    .amountValue {
+        font-family: "Helvetica Neue";
+        font-style: normal;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 19px;
+        color: #ffffff;
+        opacity: 0.6;
+        margin: 0;
+        margin-top: 6px;
+    }
+    .fontHolder{
+        color: transparent !important;
+    }
+}
+
+.btnGroup {
+    margin: 0px 20px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 10px;
+    z-index: 1;
+
+    .btn {
+        font-weight: 500;
+        font-size: 14px;
+        text-align: center;
+        color: #594af1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 11px 0px;
+        flex: 1;
+        cursor: pointer;
+    }
+    .hr {
+        border: 0.5px solid #f2f2f2;
+        height: 24px;
+    }
+    .sendBtn {
+        &:hover {
+            background: #f2f2f2;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+    }
+   
+    .receiveBtn {
+        &:hover {
+            background: #f2f2f2;
+        }
+    }
+    .stakingBtn {
+        &:hover {
+            background: #f2f2f2;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+    }
+}
+
+
+.walletDetail {
+    .noBalanceContainer {
+        background: #ffffff;
+        border-radius: 12px;
+        margin: 0 20px;
+        padding: 20px;
+        .noBalanceTopContainer {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .reminderIcon {
+            margin-right: 6px;
+        }
+        .reminderTitle {
+            font-family: "Helvetica Neue";
+            font-size: 16px;
+            line-height: 19px;
+            color: #000000;
+            margin: 0;
+        }
+        .reminderContent {
+            font-family: "SF Pro Text";
+            font-style: normal;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 17px;
+            color: rgba(0, 0, 0, 0.5);
+            margin: 0;
+        }
+    }
+    .historyContainer {
+        background: #ffffff;
+        height: 100%;
+        .historyHead {
+            width: 100%;
+            z-index: 2;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            position: sticky;
+            top: 0;
+            background: #ffffff;
+        }
+        .historyTitle {
+            font-size: 14px;
+            line-height: 16px;
+            text-align: center;
+            color: #000000;
+            text-transform: uppercase;
+        }
+        .emptyContainer {
+            padding-top: 45px;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            height: 255px;
+            overflow: hidden;
+        }
+        .emptyIcon {
+            margin-bottom: 10px;
+            width: 100px;
+            height: 100px;
+        }
+        .emptyContent {
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 17px;
+            color: rgba(0, 0, 0, 0.3);
+        }
+        .refreshLoading {
+            animation: spin 0.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    }
+    .emptyList {
+        overflow: hidden;
+    }
+    .loadingOuterContainer {
+        height: 300px;
+    }
+    .holderContainer {
+        min-height: 288px;
+    }
+    .loadingCon {
+        height: 100%;
+        margin-top: 80px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        .loadingContent {
+            font-size: 12px;
+            line-height: 17px;
+            margin: 10px 0px 0px;
+            color: rgba(0, 0, 0, 0.3);
+        }
+    }
+}
+
+.itemContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 20px;
+    border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+
+    cursor: pointer;
+    &:hover {
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), #f9fafc;
+    }
+
+    .itemLeftContainer {
+        display: flex;
+        align-items: center;
+        .itemAccount {
+            margin-left: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .itemAccountAddress {
+            font-size: 14px;
+            line-height: 20px;
+            text-align: center;
+            color: #000000;
+            margin: 0;
+        }
+        .itemAccountInfo {
+            font-size: 12px;
+            line-height: 14px;
+            text-align: center;
+            color: rgba(0, 0, 0, 0.5);
+
+            margin: 2px 0 0;
+        }
+    }
+    .itemRightContainer {
+        .itemAmount {
+            font-size: 16px;
+            line-height: 19px;
+            text-align: right;
+            color: #000000;
+            margin: 0;
+        }
+        .itemStatus {
+            margin-top: 6px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5px 5px;
+            border-radius: 4px;
+
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 14px;
+            text-align: center;
+            color: #e4b200;
+        }
+
+        .itemStatus_Success {
+            background: rgba(13, 178, 124, 0.1);
+            color: #0db27c;
+        }
+        .itemStatus_Failed {
+            background: rgba(214, 90, 90, 0.1);
+            color: #d65a5a;
+        }
+        .itemStatus_Pending {
+            background: rgba(228, 178, 0, 0.1);
+            color: #e4b200;
+        }
+    }
+}
+.pendingCls {
+    background-color: #f9fafc;
+}
+.explorerContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% + 40px);
+    transform: translateX(-20px);
+    border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+    padding: 20px 0px;
+
+    .explorerContent {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        cursor: pointer;
+    }
+    .explorerTitle {
+        font-size: 12px;
+        line-height: 14px;
+        text-align: right;
+        color: #594af1;
+        margin: 0px 6px 0;
+    }
+}
+
+.confirmContent {
+    font-size: 14px;
+    line-height: 22px;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 0;
+    .tipsSpical {
+        color: #d65a5a;
+    }
+}
+.watchModalRightBtn {
+    color: #d65a5a;
+}
+
+@keyframes refreshAni {
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.refreshContainer{
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+}
+
+.refreshIcon {
+    cursor: pointer;
+    width: 22px;
+    height: 22px;
+    padding: 4px;
+}
+.refresh {
+    transform-origin: 11px 11px;
+    animation: refreshAni 0.8s infinite linear;
+}
+
+.dappContainer {
+    position: relative;
+}
+.baseTipContainer{
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    min-width: 56px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    
+    .baseTip {
+        background: rgba(0, 0, 0, 0.8);
+        font-family: "Helvetica Neue";
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 14px;
+    
+        color: #ffffff;
+    
+        text-align: center;
+        padding: 6px 10px;
+        border-radius: 6px;
+    
+       
+        min-width: 56px;
+    }
+    .arrow {
+        width: 0;
+        height: 0;
+        border: 6px solid transparent;
+        border-bottom: 6px solid rgba(0, 0, 0, 0.8);;
+    }
+}
+.dappConnectIcon:hover + .baseTipContainer {
+    visibility: visible;
+}

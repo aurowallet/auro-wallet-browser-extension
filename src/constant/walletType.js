@@ -32,6 +32,7 @@ export const WALLET_CONNECT_TYPE = {
 export const NET_CONFIG_NOT_SUPPORT_TX_HISTORY =[
   NET_CONFIG_TYPE.QAnet,
   NET_CONFIG_TYPE.Unknown,
+  NET_CONFIG_TYPE.Devnet,
 ]
 /** not support stake   */
 export const NET_CONFIG_NOT_SUPPORT_STAKING =[

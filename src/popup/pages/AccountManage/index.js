@@ -1,159 +1,148 @@
-import cx from "classnames";
-import React from "react";
-import { connect } from "react-redux";
+import cls from "classnames";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useHistory } from "react-router-dom";
 import { cointypes } from "../../../../config";
-import create_wallet from "../../../assets/images/create_wallet.png";
-import import_wallet from "../../../assets/images/import_wallet.png";
-import ledger_wallet from "../../../assets/images/ledger_wallet.png";
-import option from "../../../assets/images/option.png";
-import select_account_no from "../../../assets/images/select_account_no.png";
-import select_account_ok from "../../../assets/images/select_account_ok.png";
-import reminderRed from "../../../assets/images/reminderRed.svg";
 import { getBalanceBatch } from "../../../background/api";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
 import { DAPP_CHANGE_CONNECTING_ADDRESS, WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
-import { getLanguage } from "../../../i18n";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { setAccountInfo, setChangeAccountName, updateAccoutType } from "../../../reducers/cache";
-import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { addressSlice, amountDecimals } from "../../../utils/utils";
+import { addressSlice, amountDecimals, isNumber } from "../../../utils/utils";
+import Button, { button_size } from "../../component/Button";
 import CustomView from "../../component/CustomView";
-import "./index.scss";
-import Toast from "../../component/Toast";
 import Loading from "../../component/Loading";
+import Toast from "../../component/Toast";
+import styles from "./index.module.scss";
 
-class AccountManagePage extends React.Component {
-  constructor(props) {
-    super(props);
-    let address = props.currentAccount.address
-    this.state = {
-      accountList: [{}, {}],
-      currentAddress: address,
-      balanceList:[],
-      commonAccountList:[],
-      watchModeAccountList:[]
-    };
-    this.isUnMounted = false;
-  }
+const AccountManagePage = ({ }) => {
+  const dispatch = useDispatch()
+  const history = useHistory()
+  const [accountList, setAccountList] = useState([])
+  const [commonAccountList, setCommonAccountList] = useState([])
+  const [watchModeAccountList, setWatchModeAccountList] = useState([])
+  const [balanceList, setBalanceList] = useState([])
 
-  componentDidMount() {
-    sendMsg({
-      action: WALLET_GET_ALL_ACCOUNT,
-    }, (account) => {
-      let listData = account.accounts
-      this.callSetState({
-        accountList: listData.allList,
-        commonAccountList:listData.commonList,
-        watchModeAccountList:listData.watchList,
-        currentAddress: account.currentAddress
-      },()=>{
-        let addressList = this.state.accountList.map((item)=>{
-          return item.address
-        })
-        this.fetchBalance(addressList)
-      })
-    })
-    
-  }
-  componentWillUnmount(){
-    this.isUnMounted = true;
-  }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
-      this.setState({
-        ...data
-      },()=>{
-        callback&&callback()
-      })
+  const [currentAddress, setCurrentAddress] = useState("")
+
+
+
+  const getAccountTypeIndex = useCallback((list) => {
+    if (list.length === 0) {
+      return 1
+    } else {
+      return parseInt(list[list.length - 1].typeIndex) + 1
     }
-  }
-  setBalance2Account=(accountList,balanceList)=>{
-    if(balanceList && Object.keys(balanceList).length === 0){
+  }, [])
+
+  const goAddLedger = useCallback(() => {
+    const isLedgerCapable = (!window || window && !window.USB)
+    if (isLedgerCapable) {
+      Toast.info(i18n.t("ledgerNotSupport"))
+      return
+    }
+    let accountTypeList = accountList.filter((item, index) => {
+      return item.type === ACCOUNT_TYPE.WALLET_LEDGER
+    })
+    let accountCount = getAccountTypeIndex(accountTypeList)
+    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.LEDGER))
+    dispatch(setChangeAccountName({
+      fromType: ACCOUNT_NAME_FROM_TYPE.LEDGER,
+      accountCount
+    }))
+    history.push({
+      pathname: "/account_name",
+    });
+  }, [i18n, accountList])
+
+  const goImport = useCallback(() => {
+    let accountTypeList = accountList.filter((item, index) => {
+      return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE
+    })
+    let accountCount = getAccountTypeIndex(accountTypeList)
+    dispatch(setChangeAccountName({
+      accountCount,
+    }))
+    history.push("import_page");
+
+  }, [accountList])
+
+  const goToCreate = useCallback(() => {
+    let accountTypeList = accountList.filter((item, index) => {
+      return item.type === ACCOUNT_TYPE.WALLET_INSIDE
+    })
+
+    let accountCount = getAccountTypeIndex(accountTypeList)
+    dispatch(setChangeAccountName({ accountCount }))
+    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.INSIDE))
+    history.push("/account_name");
+  }, [accountList])
+
+  const setBalance2Account = useCallback((accountList, balanceList) => {
+    if (balanceList && Object.keys(balanceList).length === 0) {
       return accountList
     }
     for (let index = 0; index < accountList.length; index++) {
       const account = accountList[index];
       let accountBalance = balanceList[account.address]
-      if(accountBalance){
+      if (accountBalance) {
         let balance = accountBalance.balance.total
         balance = amountDecimals(balance, cointypes.decimals)
         accountList[index].balance = balance
       }
     }
     return accountList
-  }
-  fetchBalance= async(addressList)=>{
-    let balanceList = await getBalanceBatch(addressList)
-    let commonAccountList = this.setBalance2Account(this.state.commonAccountList, balanceList)
-    let watchModeAccountList = this.setBalance2Account(this.state.watchModeAccountList, balanceList)
-    this.callSetState({
-      commonAccountList:commonAccountList,
-      watchModeAccountList:watchModeAccountList,
-      balanceList
-    })
-  }
-  
-  getAccountTypeIndex = (list) => {
-    if (list.length === 0) {
-      return 1
-    } else {
-      return parseInt(list[list.length - 1].typeIndex) + 1
-    }
-  }
-  goToCreate = () => {
-    let accountTypeList = this.state.accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_INSIDE
-    })
+  }, [])
 
-    let accountCount = this.getAccountTypeIndex(accountTypeList)
-    this.props.setChangeAccountName({
-      accountCount,
+  const fetchBalance = useCallback(async (addressList, commonAccountList, watchModeAccountList) => {
+    let tempBalanceList = await getBalanceBatch(addressList)
+    let tempCommonAccountList = setBalance2Account(commonAccountList, tempBalanceList)
+    let tempWatchModeAccountList = setBalance2Account(watchModeAccountList, tempBalanceList)
+    setCommonAccountList(tempCommonAccountList)
+    setWatchModeAccountList(tempWatchModeAccountList)
+    setBalanceList(tempBalanceList)
+  }, [])
+
+
+  useEffect(() => {
+    sendMsg({
+      action: WALLET_GET_ALL_ACCOUNT,
+    }, async (account) => {
+      let listData = account.accounts
+      setAccountList(listData.allList)
+      setCommonAccountList(listData.commonList)
+      setWatchModeAccountList(listData.watchList)
+      setCurrentAddress(account.currentAddress)
+
+      let addressList = listData.allList.map((item) => {
+        return item.address
+      })
+      fetchBalance(addressList, listData.commonList, listData.watchList)
     })
-    this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.INSIDE)
-    this.props.history.push({
-      pathname: "/account_name",
-    });
-  }
-  goImport = () => {
-    let accountTypeList = this.state.accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE
-    })
-    let accountCount = this.getAccountTypeIndex(accountTypeList)
-    this.props.setChangeAccountName({
-      accountCount,
-    })
-    this.props.history.push({
-      pathname: "/import_page",
-    });
-  }
-  goAddLedger=()=>{
-    const isLedgerCapable = (!window || window&&!window.USB)
-    if(isLedgerCapable){
-      Toast.info(getLanguage("ledgerNotSupport"))
-      return 
-    }
-    let accountTypeList = this.state.accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_LEDGER
-    })
-    let accountCount = this.getAccountTypeIndex(accountTypeList)
-    this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.LEDGER)
-    this.props.setChangeAccountName({
-      fromType: ACCOUNT_NAME_FROM_TYPE.LEDGER,
-      accountCount
-    })
-    this.props.history.push({
-      pathname: "/account_name",
-    });
-  }
-  onClickAccount = (item) => {
-    if(item.type ===ACCOUNT_TYPE.WALLET_WATCH){
-      this.goToAccountInfo(item)
+  }, [])
+
+  const onClickLock = useCallback(() => {
+    sendMsg({
+      action: WALLET_SET_UNLOCKED_STATUS,
+      payload: false
+    }, (res) => { })
+  }, [])
+
+  const goToAccountInfo = useCallback((item) => {
+    dispatch(setAccountInfo(item))
+    history.push("/account_info")
+  }, [])
+
+  const onClickAccount = useCallback((item) => {
+    if (item.type === ACCOUNT_TYPE.WALLET_WATCH) {
+      goToAccountInfo(item)
       return
     }
-    let oldAddress = this.state.currentAddress
-    if (item.address !== this.state.currentAddress) {
+    let oldAddress = currentAddress
+    if (item.address !== currentAddress) {
       Loading.show()
       sendMsg({
         action: WALLET_CHANGE_CURRENT_ACCOUNT,
@@ -162,178 +151,183 @@ class AccountManagePage extends React.Component {
         Loading.hide()
         let listData = account.accountList
         if (listData.allList && listData.allList.length > 0) {
-          this.props.updateCurrentAccount(account.currentAccount)
-          let commonList = this.setBalance2Account(listData.commonList,this.state.balanceList)
-          let watchList = this.setBalance2Account(listData.watchList,this.state.balanceList)
-          this.callSetState({
-            accountList: listData.allList,
-            commonAccountList:commonList,
-            watchModeAccountList:watchList,
-            currentAddress: item.address
-          },()=>{
-            this.updateDAppConnect(oldAddress,this.state.currentAddress)
-          })
+          dispatch(updateCurrentAccount(account.currentAccount))
+          let commonList = setBalance2Account(listData.commonList, balanceList)
+          let watchList = setBalance2Account(listData.watchList, balanceList)
+
+
+
+          setAccountList(listData.allList)
+          setCommonAccountList(commonList)
+          setWatchModeAccountList(watchList)
+          setCurrentAddress(account.currentAddress)
+          sendMsg({
+            action: DAPP_CHANGE_CONNECTING_ADDRESS,
+            payload: {
+              address: oldAddress,
+              currentAddress: item.address
+            }
+          }, (status) => { })
         }
       })
     }
-  }
-  updateDAppConnect=(oldAddress,currentAddress)=>{
-    sendMsg({
-      action: DAPP_CHANGE_CONNECTING_ADDRESS,
-      payload: {
-        address: oldAddress,
-        currentAddress:currentAddress
-      }
-    }, (status) => {})
-  }
+  }, [currentAddress, balanceList])
 
-  goToAccountInfo = (item) => {
-    this.props.setAccountInfo(item)
-    this.props.history.push({
-      pathname: "/account_info",
-    })
 
-  }
-  getAccountType=(item)=>{
+  return (<CustomView
+    title={i18n.t('accountManage')}
+    customContainerClass={styles.customContainerClass}
+    contentClassName={styles.contentClassName}
+    rightComponent={<p className={styles.lockBtn} onClick={onClickLock}>{i18n.t('lock')}</p>}
+  >
+    <div className={styles.contentContainer}>
+      {commonAccountList.map((item, index) => {
+        let isSelect = item.address === currentAddress
+        return <CommonAccountRow onClickAccount={onClickAccount} isSelect={isSelect} key={index} account={item} />
+      })}
+      {watchModeAccountList.length > 0 && <div className={styles.notSupportContainer}>
+        <p className={styles.notSupportTitle}>
+          {i18n.t('noSupported')}
+        </p>
+        {watchModeAccountList.map((item, index) => {
+          return <CommonAccountRow onClickAccount={onClickAccount} key={index} notSupport={true} isSelect={false} account={item} />
+        })}
+      </div>}
+    </div>
+    <div className={styles.btnGroup}>
+      <AccountBtn
+        onClick={goToCreate}
+        leftIcon={"/img/import.svg"}
+        title={i18n.t('create')} />
+      <AccountBtn
+        onClick={goImport}
+        className={styles.whiteBtn}
+        leftIcon={"/img/create.svg"}
+        title={i18n.t('import')} />
+      <AccountBtn
+        onClick={goAddLedger}
+        className={styles.whiteBtn}
+        leftIcon={"/img/ledger.svg"}
+        title={"Ledger"} />
+    </div>
+  </CustomView>)
+}
+
+const AccountBtn = ({
+  leftIcon,
+  title,
+  onClick = () => { },
+  className = ""
+}) => {
+  return <Button
+    size={button_size.middle}
+    className={cls(styles.btnContainer, className)}
+    leftIcon={leftIcon}
+    onClick={onClick}>
+    {title}
+  </Button>
+}
+
+const CommonAccountRow = ({
+  isSelect = false,
+  notSupport = false,
+  onClickAccount = () => { },
+  account = {},
+}) => {
+
+  const dispatch = useDispatch()
+  const history = useHistory()
+
+  const getAccountType = useCallback((item) => {
     let typeText = ""
     switch (item.type) {
       case ACCOUNT_TYPE.WALLET_OUTSIDE:
-        typeText = getLanguage('accountImport')
+        typeText = i18n.t('imported')
         break;
       case ACCOUNT_TYPE.WALLET_LEDGER:
         typeText = "Ledger"
-          break;
+        break;
       case ACCOUNT_TYPE.WALLET_WATCH:
-        typeText = getLanguage('watchLabel')
+        typeText = i18n.t('watch')
         break;
       default:
         break;
     }
     return typeText
-  }
-  getItemOption=(item)=>{
-    let imgSource
-    if(item.type ===ACCOUNT_TYPE.WALLET_WATCH){
-      imgSource = reminderRed
-    }else{
-      let showSelect = this.state.currentAddress === item.address
-      imgSource = showSelect ? select_account_ok : select_account_no
+  }, [i18n])
+
+  const {
+    menuIcon, accountRightIcon, showBalance, typeText
+  } = useMemo(() => {
+    let menuIcon = isSelect ? "/img/pointMenu.svg" : "/img/pointMenu_dark.svg"
+    let accountRightIcon = ""
+    if (notSupport) {
+      accountRightIcon = "/img/icon_warning.svg"
+    } else {
+      if (isSelect) {
+        accountRightIcon = "/img/icon_checked_white.svg"
+      }
     }
-    return imgSource
-  }
-  renderAcountItem = (item, index) => {
-    let showImport = this.getAccountType(item)
-    let showBalance = item.balance|| 0  
-    showBalance = showBalance + " " + cointypes.symbol 
-    return (
-      <div onClick={() => this.onClickAccount(item)}
-        key={index + ""} className={"account-item-container click-cursor"}>
-        {/* 左右 */}
-        <div >
-          <div className={"account-item-top"}>
-            <p className={"account-item-name"}>{item.accountName}</p>
-            <p className={cx({
-              "account-item-type": showImport,
-              "account-item-type-none": !showImport,
-              "account-ledger-tip" : item.type === ACCOUNT_TYPE.WALLET_LEDGER,
-              "account-watch-tip" : item.type === ACCOUNT_TYPE.WALLET_WATCH,
-            })}>{showImport}</p>
-          </div>
-          <p className={"account-item-address"}>{addressSlice(item.address)}</p>
-          <p className={"account-item-address account-item-balance"}>{showBalance}</p>
-        </div>
-        <div className={"account-item-right"}>
-          <img
-            src={this.getItemOption(item)} className={"account-item-select click-cursor"} />
-          <div onClick={(e) => {
-            this.goToAccountInfo(item)
-            e.stopPropagation();
-          }} className={"account-item-option-container click-cursor"}>
-            <img
-              src={option} className={"account-item-option"} />
-          </div>
-        </div>
+    let showBalance = isNumber(account.balance) ? account.balance : 0
+    showBalance = showBalance + " " + cointypes.symbol
+    let typeText = getAccountType(account)
+    return {
+      menuIcon, accountRightIcon, showBalance, typeText
+    }
+  }, [isSelect, notSupport, account, account.balance])
+
+  const onClickItem = useCallback(() => {
+    onClickAccount(account)
+  }, [account, onClickAccount])
+
+  const goToAccountInfo = useCallback(() => {
+    dispatch(setAccountInfo(account))
+    history.push("/account_info")
+  }, [account])
+
+  const onClickMenu = useCallback((e) => {
+    goToAccountInfo()
+    e.stopPropagation();
+  }, [])
+  return (<div onClick={onClickItem}
+    className={cls(styles.rowCommomContainer, {
+      [styles.rowSelected]: isSelect,
+      [styles.rowNotSupport]: notSupport,
+      [styles.rowCanSelect]: !notSupport && !isSelect
+    })}>
+    <div className={styles.accountRow}>
+      <div className={styles.accountRowLeft}>
+        <p className={cls(styles.accountName, {
+          [styles.accountNameSelected]: isSelect
+        })}>{account.accountName}</p>
+        {typeText && <div className={cls(styles.accountType, {
+          [styles.accountTypeSelected]: isSelect
+        })}>
+          {getAccountType(account)}
+        </div>}
       </div>
-    )
-  }
-  renderAccountList = () => {
-    return (
-      <div className={"account-list-container"}>
-        {this.state.commonAccountList.map((item, index) => {
-          return this.renderAcountItem(item, index)
-        })}
-        {this.state.watchModeAccountList.length>0 && <p className="notSupportAccount">{getLanguage('noSupportAccount')}</p>}
-        {this.state.watchModeAccountList.map((item, index) => {
-          return this.renderAcountItem(item, index)
-        })}
-      </div>
-    )
-  }
-  renderImgBtn = (title, imgSource, callback) => {  
-    return (<div onClick={() => callback && callback()}
-      className={"account-btn-item click-cursor"}>
-      <img className={"account-btn-img"} src={imgSource} />
-      <p className={"account-btn-title"}>{title}</p>
-    </div>)
-  }
-  renderButtomButton = () => {
-    return (
-      <div className={"account-btn-container"}>
-        {this.renderImgBtn(getLanguage('createAccount'), create_wallet, this.goToCreate)}
-        {this.renderImgBtn(getLanguage('importAccont'), import_wallet, this.goImport)}
-        {this.renderImgBtn("Ledger", ledger_wallet, this.goAddLedger)}
-      </div>
-    )
-  }
-  onClickLock = () => {
-    sendMsg({
-      action: WALLET_SET_UNLOCKED_STATUS,
-      payload: false
-    }, (res) => { })
-  }
-  renderLockBtn = () => {
-    return (
-      <div onClick={this.onClickLock} className={"account-lock-container click-cursor"}>
-        <p className={"account-lock"}>{getLanguage("lockTitle")}</p>
-      </div>)
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('accountManage')}
-        backRoute={"/homepage"}
-        history={this.props.history}
-        rightComponent={this.renderLockBtn()}>
-        <div className={"account-manage-container"}>
-          {this.renderAccountList()}
+      
+        <div className={styles.iconContainer}>
+        {accountRightIcon &&<img src={accountRightIcon} />}
         </div>
-        {this.renderButtomButton()}
-      </CustomView>)
-  }
+    </div>
+    <p className={cls(styles.address, {
+      [styles.addressSelected]: isSelect
+    })}>
+      {addressSlice(account.address)}
+    </p>
+    <div className={styles.accountBalanceRow}>
+      <p className={cls(styles.accountBalance, {
+        [styles.accountBalanceSelected]: isSelect
+      })}>
+        {showBalance}
+      </p>
+      <div onClick={onClickMenu} className={styles.pointMenuContainer}>
+        <img src={menuIcon} className={styles.pointMenu} />
+      </div>
+    </div>
+  </div>)
 }
 
-const mapStateToProps = (state) => ({
-  currentAccount: state.accountInfo.currentAccount,
-});
 
-function mapDispatchToProps(dispatch) {
-  return {
-    updateCurrentAccount: (account) => {
-      dispatch(updateCurrentAccount(account))
-    },
-    setChangeAccountName: (info) => {
-      dispatch(setChangeAccountName(info))
-    },
-    setAccountInfo: (account) => {
-      dispatch(setAccountInfo(account))
-    },
-    updateEntryWitchRoute: (index) => {
-      dispatch(updateEntryWitchRoute(index));
-    },
-    updateAccoutType:(type)=>{
-      dispatch(updateAccoutType(type));
-    }
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(AccountManagePage);
+export default AccountManagePage

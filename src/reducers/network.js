@@ -25,8 +25,8 @@ function getNetConfigData(state, config) {
     for (let index = 0; index < netList.length; index++) {
         const netConfig = netList[index];
         selectList.push({
-            "key": netConfig.url,
-            "value": netConfig.name
+            "value": netConfig.url,
+            "label": netConfig.name
         })
     }
     return {

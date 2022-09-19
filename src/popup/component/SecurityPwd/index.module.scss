@@ -1,0 +1,13 @@
+.container{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.bottomContainer {
+    padding: 12px 18px 30px;
+}
+
+.hold {
+    flex: 1;
+}

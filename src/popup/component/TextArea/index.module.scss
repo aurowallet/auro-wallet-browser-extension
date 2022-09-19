@@ -1,0 +1,56 @@
+.textArea {
+  margin: 0;
+  width: 100%;
+  resize: none;
+  font-size: 16px;
+  color: #333333;
+  min-height: 150px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 14px 12px;
+  outline: none;
+  caret-color: #594af1;
+
+  &:active,
+  &:hover,
+  &:focus {
+    border: 0.5px solid #594af1;
+  }
+}
+textArea::-webkit-input-placeholder {
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.3);
+}
+.label {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 17px;
+
+  display: flex;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.85);
+
+  margin-bottom: 4px;
+}
+
+.bottomTipCon {
+  margin-top: 4px;
+
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 17px;
+  color: #d65a5a;
+
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.errorTip {
+  border: 0.5px solid #d65a5a;
+  &:active,
+  &:hover,
+  &:focus {
+    border: 0.5px solid #d65a5a;
+  }
+}

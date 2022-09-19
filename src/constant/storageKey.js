@@ -48,7 +48,6 @@ export const NETWORK_ID_AND_TYPE = "NETWORK_ID_AND_TYPE"
  */
 export const LOCAL_BASE_INFO = "LOCAL_BASE_INFO"
 
-// todo 
 /**
  * 本地缓存的基本数据
  */

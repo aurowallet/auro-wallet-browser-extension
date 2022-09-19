@@ -1,0 +1,113 @@
+.aboutContainer {
+    a {
+        text-decoration: none;
+        color: inherit;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        -webkit-appearance: none;
+        -webkit-text-size-adjust: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-touch-callout: none;
+        border-bottom: none;
+        display: block;
+        text-align: left;
+    }
+}
+.icon {
+    width: 72px;
+    object-fit: scale-down;
+    margin: 20px auto;
+}
+
+.walletName {
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 22px;
+    text-align: center;
+    letter-spacing: -0.3px;
+    color: #000000;
+    margin: 0px 0px 4px;
+}
+
+.walletVersion {
+    font-size: 14px;
+    line-height: 17px;
+    text-align: center;
+    letter-spacing: -0.3px;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 0;
+}
+
+.walletTip {
+    font-size: 14px;
+    line-height: 17px;
+    text-align: center;
+    color: #000000;
+    margin: 10px 7px 40px;
+}
+
+.linkContaienr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    .linkContent {
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 17px;
+        text-align: center;
+        color: #594af1;
+        margin: 0px;
+
+        cursor: pointer;
+        &:hover {
+            color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), #594af1;
+        }
+    }
+}
+
+.followTitle {
+    font-size: 12px;
+    line-height: 17px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 30px 0px 20px;
+}
+
+.followListContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+.followItemContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+
+    &:hover .iconContainer {
+        background: rgba(196, 196, 196, 0.2);
+        border: 0.5px solid rgba(0, 0, 0, 0.2);
+    }
+    .iconContainer {
+        width: 44px;
+        height: 44px;
+        background: rgba(196, 196, 196, 0.1);
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .followItemTitle {
+        font-size: 12px;
+        line-height: 14px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.5);
+        margin: 4px 0px 0px;
+    }
+}

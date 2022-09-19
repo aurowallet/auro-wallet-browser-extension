@@ -193,12 +193,10 @@ class DappService {
           return false
         }
         extension.runtime.onMessage.addListener(onMessage)
-        let isUnlocked = this.getAppLockStatus()
-        isUnlocked = isUnlocked ? 1 : 0
         let siteUrl = site.origin
         let openId = id
 
-        let openParams = new URLSearchParams({ isUnlocked, siteUrl, siteIcon: site.webIcon, openId }).toString()
+        let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon, openId }).toString()
         this.popupId = await this.dappOpenPopWindow('./popup.html#/request_sign?' + openParams, windowId.request_sign, "dapp")
         this.setBadgeContent(windowId.request_sign, BADGE_ADD)
       } catch (error) {
@@ -247,7 +245,7 @@ class DappService {
           return
         }
         let currentAccount = this.getCurrentAccountAddress()
-        let connectStatus = this.getCurrentAccountConnectStatus(site.origin, currentAccount)//只返回当前账户
+        let connectStatus = this.getCurrentAccountConnectStatus(site.origin, currentAccount)
         if (connectStatus) {
           resolve([currentAccount])
           return
@@ -301,10 +299,8 @@ class DappService {
           return false
         }
         extension.runtime.onMessage.addListener(onMessage)
-        let isUnlocked = this.getAppLockStatus()
-        isUnlocked = isUnlocked ? 1 : 0
         let siteUrl = site.origin
-        let openParams = new URLSearchParams({ isUnlocked, siteUrl, siteIcon: site.webIcon }).toString()
+        let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon }).toString()
         this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page?' + openParams,
           windowId.approve_page, "dapp")
         this.setBadgeContent(windowId.approve_page, BADGE_ADD)
@@ -401,6 +397,12 @@ class DappService {
       if (urlIndex !== -1) {
         currentAccountApproved.splice(urlIndex, 1);
         this.notifyAccountChange([siteUrl])
+
+        accountApprovedUrlList[address] = currentAccountApproved
+        this.dappStore.updateState({
+          accountApprovedUrlList
+        })
+
       }
       return true
     } catch (error) {
@@ -553,6 +555,11 @@ class DappService {
       }
       resolve(netType)
     })
+  }
+  getAppConnectionList(address){
+    let accountApprovedUrlList = this.dappStore.getState().accountApprovedUrlList
+    let currentAccountApproved = accountApprovedUrlList[address] || []
+    return currentAccountApproved
   }
 }
 const dappService = new DappService()

@@ -1,0 +1,109 @@
+.outerContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+
+    display: none;
+    justify-content: end;
+    flex-direction: column;
+}
+.outerContainerShow{
+    display: flex;
+}
+
+@keyframes openModal {
+    from {
+        bottom: -50%;
+    }
+    to {
+        bottom: 0;
+    }
+}
+
+@keyframes closeModal {
+    from {
+        bottom: 0;
+    }
+    to {
+        bottom: -100%;
+    }
+}
+
+.innerContent {
+    background: #ffffff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    width: 100%;
+
+    position: absolute;
+    animation: closeModal 0.35s;
+    animation-fill-mode: forwards;
+}
+.innerContentShow{
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards ;
+}
+
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 8px 20px;
+
+    .rowTitle {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        color: #222222;
+    }
+    .rowClose {
+        display: block;
+        cursor: pointer;
+    }
+}
+
+.dividedLine {
+    width: 100%;
+    height: 0.5px;
+    background-color: #f2f2f2;
+}
+
+.bottomContent {
+    padding: 20px 20px 0px;
+    overflow-y: auto;
+    background: #ffffff;
+    max-height: 350px;
+    margin-bottom: 100px;
+
+    > :not(:first-child) {
+        margin-top: 20px;
+    }
+}
+
+.bottomContainer {
+    padding: 12px 38px 30px;
+    position: fixed;
+    bottom: 0;
+    width: calc(100%);
+    background-color: white;
+
+    animation: closeModal 0.35s;
+    animation-fill-mode: forwards;
+}
+
+
+.bottomContainerShow{
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+.waringTip {
+    color: rgba(228, 178, 0, 1);
+  }

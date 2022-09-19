@@ -12,21 +12,8 @@ const UPDATE_NET_ACCOUNT = "UPDATE_NET_ACCOUNT"
 
 const UPDATE_NET_HOME_REFRESH = "UPDATE_NET_HOME_REFRESH"
 
-/**
- *  首页底部的type
- */
-const SET_HOME_BOTTOM_TYPE = "SET_HOME_BOTTOM_TYPE"
-
-
 
 const UPDATE_STAKING_DATA = "UPDATE_STAKING_DATA"
-
-export function setBottomType(bottomType) {
-    return {
-        type: SET_HOME_BOTTOM_TYPE,
-        bottomType
-    };
-}
 
 export function updateAccountTx(txList, txPendingList) {
     return {
@@ -85,7 +72,7 @@ const initState = {
     netAccount: {},
     balance: "0.0000",
     nonce: "",
-    shouldRefresh: true,
+    shouldRefresh: false,
     homeBottomType: "",
     isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
     stakingLoadingRefresh: false
@@ -139,7 +126,6 @@ const accountInfo = (state = initState, action) => {
                 netAccount: {},
                 nonce: "",
                 shouldRefresh: true,
-                homeBottomType: "BOTTOM_TYPE_LOADING"
             }
         case INIT_CURRENT_ACCOUNT:
             return {
@@ -183,19 +169,12 @@ const accountInfo = (state = initState, action) => {
                     balance: "0.0000",
                     nonce: "",
                     txList: [],
-                    homeBottomType: ""
                 }
             }
             return {
                 ...state,
                 shouldRefresh: shouldRefresh,
                 ...newState
-            }
-        case SET_HOME_BOTTOM_TYPE:
-            let bottomType = action.bottomType
-            return {
-                ...state,
-                homeBottomType: bottomType
             }
         case UPDATE_STAKING_DATA:
             return {

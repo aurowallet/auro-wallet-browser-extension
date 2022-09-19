@@ -1,0 +1,92 @@
+.container {
+    padding: 20px 20px 0px;
+    position: relative;
+}
+.bgImg {
+    position: absolute;
+    top: 20px;
+    z-index: 0;
+}
+.content {
+    height: 450px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    .title {
+        font-weight: 600;
+        font-size: 18px;
+        line-height: 21px;
+        text-align: center;
+        color: #000000;
+        margin: 24px 0px;
+    }
+    .dividedLine {
+        border: 1px dashed rgba(0, 0, 0, 0.1);
+        width: calc(100% - 18px);
+        margin: 0 auto;
+    }
+    .receiveTip {
+        margin: 36px auto 22px;
+        font-size: 14px;
+        line-height: 17px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.5);
+    }
+    .qrCodeContainer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .address {
+        font-size: 14px;
+        line-height: 17px;
+        text-align: center;
+        color: #000000;
+        margin: 22px auto 40px;
+        padding: 0 48px;
+        word-break: break-all;
+    }
+    .dividedLine2 {
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+    }
+    .copyOuterContainer{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+
+        cursor: pointer;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        &:hover{
+            background-color: #F2F2F2;;
+        }
+    }
+    .copyContainer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        width: fit-content;
+    }
+    .copyTxt {
+        margin: 0px 0px 0px 10px;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 19px;
+        color: #000000;
+    }
+}
+
+.bottomTip {
+    position: absolute;
+    bottom: 20px;
+    z-index: 0;
+    width: calc(100% - 40px);
+    text-align: center;
+
+    font-size: 12px;
+    line-height: 14px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+}

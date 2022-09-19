@@ -1,0 +1,95 @@
+.modalBg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 375px;
+  height: 600px;
+  display: initial !important;
+}
+.commonBg {
+  display: none;
+}
+.container {
+  position: relative;
+  width: 120px;
+}
+.selectContainer {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 43px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 30px;
+  padding-left: 14px;
+  z-index: 12;
+  cursor: pointer;
+
+  &:hover{
+    background: rgba(0, 0, 0, 0.05);
+  }
+}
+.arrowtIcon{
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+}
+.selectTitle {
+  font-family: "SF Pro Text";
+  font-size: 14px;
+  line-height: 100%;
+  font-weight: 600;
+  text-align: center;
+  color: #000000;
+  order: 0;
+  flex-grow: 0;
+  margin: 0;
+  width: 100%;
+  
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.optionsOuter {
+  position: absolute;
+  padding-top: 10px;
+  width: 100%;
+}
+.optionsContainer {
+  width: 100%;
+  padding: 10px 0px;
+  background: #ffffff;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+
+  .optionContainer {
+    padding: 10px 10px;
+
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 100%;
+    text-align: center;
+    color: #000000;
+    margin: 0;
+    cursor: pointer;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  .selectedOption {
+    color: #594af1;
+  }
+}

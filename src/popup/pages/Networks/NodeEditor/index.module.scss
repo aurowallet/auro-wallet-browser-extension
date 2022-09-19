@@ -1,0 +1,66 @@
+
+.contentClassName {
+    padding: 0px 0px;
+}
+
+.addTipContainer {
+    padding: 10px 20px;
+    background: rgba(214, 90, 90, 0.1);
+    .addTip {
+        font-size: 14px;
+        line-height: 20px;
+        color: #d65a5a;
+    }
+}
+
+.inputContainer {
+    margin-top: 20px;
+    padding: 0px 20px;
+    > :first-child {
+        margin-bottom: 20px;
+    }
+
+    .nameInput {
+        font-weight: 400;
+    }
+    .addressInput {
+        min-height: 56px;
+    }
+}
+
+.hold {
+    flex: 1;
+}
+
+.bottomContainer {
+    padding: 12px 38px 30px;
+}
+
+.deleteBtn {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    text-align: center;
+    color: #d65a5a;
+    margin: 0;
+    cursor: pointer;
+}
+
+.modalDelete {
+    color: #d65a5a;
+}
+
+.waringTip{
+    color: rgba(214, 90, 90, 1);
+    font-weight: 500;
+}
+
+.deleteBtn {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    text-align: center;
+    color: #d65a5a;
+    margin: 0 10px 0px 0px;
+    cursor: pointer;
+}

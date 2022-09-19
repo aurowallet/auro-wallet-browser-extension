@@ -1,171 +1,137 @@
-import React from "react";
-import { connect } from "react-redux";
+import cls from "classnames";
+import i18n from "i18next";
+import { useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
 import { WALLET_CREATE_PWD } from "../../../constant/types";
-import { getLanguage } from "../../../i18n";
-import { setLanguage } from "../../../reducers/appReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { matchList } from "../../../utils/validator";
-import Button from "../../component/Button";
+import { matchList as matchRuleList } from "../../../utils/validator";
+import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
-import TextInput from "../../component/TextInput";
-import "./index.scss";
+import Input from "../../component/Input";
+import { ReminderTip } from "../../component/ReminderTip";
+import styles from "./index.module.scss";
 
-class CreatePassword extends React.Component {
-  constructor(props) {
-    super(props);
+const CreatePassword = () => {
 
-    this.state = {
-      inputPwd: "",
-      confirmPwd: "",
-      errorTip: "",
-      btnClick: false,
-      matchList: matchList
-    };
-    this.isUnMounted = false;
-  }
-  componentWillUnmount() {
-    this.isUnMounted = true;
-    let newMatchlist = this.state.matchList
-    this.callSetState({
-      matchList: newMatchlist.map(v => {
-        v.bool = false;
-        return v;
-      })
-    })
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
+  const history = useHistory()
+  const welcomeNextRoute = useSelector(state => state.cache.welcomeNextRoute)
+
+  const [inputPwd, setInputPwd] = useState("")
+  const [confirmPwd, setConfirmPwd] = useState("")
+  const [errorTip, setErrorTip] = useState(false)
+  const [btnClick, setBtnClick] = useState(false)
+  const [matchList, setMatchList] = useState(matchRuleList)
+  const [matchRenderList, setMatchRenderList] = useState([])
+
+  useEffect(() => {
+    let currentErrorStatus = errorTip
+    if (confirmPwd.length > 0 && inputPwd !== confirmPwd) {
+      setErrorTip(true)
+      currentErrorStatus = true
+    } else {
+      setErrorTip(false)
+      currentErrorStatus = false
     }
-  }
-  setBtnStatus = () => {
-    let errList = this.state.matchList.filter(v => {
+
+
+    let errList = matchList.filter(v => {
       if (!v.bool) {
         return v
       }
     })
-    if (errList.length <= 0 && this.state.confirmPwd.length > 0 && !this.state.errorTip) {
-      this.callSetState({
-        btnClick: true,
-      })
+    if (errList.length <= 0 && confirmPwd.length > 0 && !currentErrorStatus) {
+      setBtnClick(true)
     } else {
-      this.callSetState({
-        btnClick: false,
-      })
+      setBtnClick(false)
     }
-  };
-  checkConfirmStatus = () => {
-    if (this.state.confirmPwd.length > 0 && this.state.inputPwd !== this.state.confirmPwd) {
-      this.callSetState({
-        errorTip: getLanguage('passwordDifferent')
-      }, () => {
-        this.setBtnStatus()
-      })
-    } else {
-      this.callSetState({
-        errorTip: ""
-      }, () => {
-        this.setBtnStatus()
-      })
-    }
-  }
-  goToCreate = () => {
-    let { welcomeNextRoute } = this.props.cache
+  }, [inputPwd, errorTip, matchList, confirmPwd])
+
+
+
+  useEffect(() => {
+    let renderList = []
+    let newMatchList = matchList.map(v => {
+      if (v.expression.test(inputPwd)) {
+        v.bool = true;
+      } else {
+        v.bool = false;
+        renderList.push(v)
+      }
+      return v;
+    })
+
+    setMatchList(newMatchList)
+    setMatchRenderList(renderList)
+  }, [inputPwd])
+
+  const onPwdInput = useCallback((e) => {
+    setInputPwd(e.target.value)
+  }, [])
+
+  const goToCreate = useCallback(() => {
     sendMsg({
       action: WALLET_CREATE_PWD,
       payload: {
-        pwd: this.state.confirmPwd,
+        pwd: confirmPwd,
       }
     }, (res) => { })
     let nextRoute = welcomeNextRoute
-    this.props.history.push({
+
+    history.push({
       pathname: nextRoute,
       params: {
-        "pwd": this.state.confirmPwd,
+        "pwd": confirmPwd,
       },
     })
+  }, [welcomeNextRoute, confirmPwd])
 
-  };
-  onPwdInput = (e) => {
-    const { value } = e.target;
-    let { matchList } = this.state
-    this.callSetState({
-      inputPwd: value,
-    }, () => {
-      this.callSetState({
-        matchList: matchList.map(v => {
-          if (v.expression.test(value)) {
-            v.bool = true;
-          } else {
-            v.bool = false;
-          }
-          return v;
-        })
-      }, () => {
-        this.checkConfirmStatus()
-      })
-    })
-  }
-  onPwdConfirmInput = (e) => {
-    const { value } = e.target;
-    this.callSetState({
-      confirmPwd: value,
-    }, () => {
-      this.checkConfirmStatus()
-    })
-  }
-  onSubmit = (event) => {
-    event.preventDefault();
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('createPassword')}
-        history={this.props.history}>
-        <form onSubmit={this.onSubmit}>
-          <div className="create_container">
-            <TextInput
-              value={this.state.inputPwd}
-              label={getLanguage('inputPassword')}
-              onTextInput={this.onPwdInput}
-              showErrorTag={true}
-              matchList={this.state.matchList}
-            />
-            <TextInput
-              value={this.state.confirmPwd}
-              label={getLanguage('confirmPassword')}
-              onTextInput={this.onPwdConfirmInput}
-              errorTip={this.state.errorTip}
-            />
-            <p className={"create-desc"}>{getLanguage('createPasswordTip')}</p>
-          </div>
-          <div className="bottom-container">
-            <Button
-              disabled={!this.state.btnClick}
-              content={getLanguage('next')}
-              onClick={this.goToCreate}
-            />
-          </div>
-        </form>
-      </CustomView>
-    )
-  }
+  const onPwdConfirmInput = useCallback((e) => {
+    setConfirmPwd(e.target.value)
+  }, [])
+
+  return (
+    <CustomView title={i18n.t('createPassword')}>
+      <ReminderTip
+        content={i18n.t('createPasswordTip')} />
+      <div className={cls(styles.inputContainer)}>
+        <Input
+          label={i18n.t('inputPassword')}
+          onChange={onPwdInput}
+          value={inputPwd}
+          inputType={'password'}
+          showBottomTip={inputPwd.length > 0}
+          bottomTip={<div >
+            {matchRenderList.map((item, index) => {
+              let extraStr = ""
+              if (index !== matchRenderList.length - 1) {
+                extraStr = " / "
+              }
+              return <span className={cls(styles.checkSpan, {
+                [styles.checkSpanSuc]: item.bool
+              })} key={index}>{i18n.t(item.text) + extraStr}</span>
+            })}
+          </div>}
+        />
+
+        <Input
+          label={i18n.t('confirmPassword')}
+          onChange={onPwdConfirmInput}
+          value={confirmPwd}
+          inputType={'password'}
+          showBottomTip={errorTip}
+          bottomTip={<>
+            <span className={cls(styles.checkSpan, {
+              [styles.checkSpanSuc]: !errorTip
+            })} >{i18n.t("passwordDifferent")}</span>
+          </>}
+        />
+      </div>
+      <BottomBtn
+        disable={!btnClick}
+        onClick={goToCreate}
+        rightBtnContent={i18n.t('next')} />
+    </CustomView>
+  )
 }
-
-const mapStateToProps = (state) => ({
-  cache: state.cache
-});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    setLanguage: (lan) => {
-      dispatch(setLanguage(lan));
-    },
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(CreatePassword);
+export default CreatePassword
