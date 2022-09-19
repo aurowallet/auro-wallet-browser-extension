@@ -1,13 +1,9 @@
-import { default as cls, default as cx } from "classnames";
+import { default as cls } from "classnames";
 import React, { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { MAIN_NET_BASE_CONFIG, NET_CONFIG_VERSION, QA_NET_BASE_CONFIG, TEST_NET_BASE_CONFIG } from "../../../../config";
-import select_account_no from "../../../assets/images/select_account_no.png";
-import select_account_ok from "../../../assets/images/select_account_ok.png";
-import { getNodeChainId } from "../../../background/api";
+import { NET_CONFIG_VERSION } from "../../../../config";
 import { removeLocal, saveLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../constant/storageKey";
-import { getLanguage } from "../../../i18n";
 import { updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, NET_CONFIG_DEFAULT, updateNetConfig } from "../../../reducers/network";
 import { sendNetworkChangeMsg } from "../../../utils/utils";

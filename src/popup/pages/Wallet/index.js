@@ -10,7 +10,7 @@ import { cointypes } from '../../../../config';
 import { getBalance, getCurrencyPrice, getPendingTxList, getTransactionList } from "../../../background/api";
 import { saveLocal } from '../../../background/localStorage';
 import { NET_WORK_CONFIG } from '../../../constant/storageKey';
-import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS } from '../../../constant/types';
+import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
 import { NET_CONFIG_TYPE } from '../../../constant/walletType';
 import { ACCOUNT_BALANCE_CACHE_STATE, updateAccountTx, updateNetAccount, updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";

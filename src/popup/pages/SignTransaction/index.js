@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { cointypes } from "../../../../config";
 import { getBalance, getFeeRecom, sendStakeTx, sendTx } from "../../../background/api";
-import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
+import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS, QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { updateNetAccount } from "../../../reducers/accountReducer";
 import { updateDAppOpenWindow } from "../../../reducers/cache";
@@ -122,6 +122,10 @@ const SignTransaction = () => {
           payload.data = data.data
           resultAction = DAPP_ACTION_SIGN_MESSAGE
           break;
+        case DAppActions.mina_sendTransaction:
+            payload.hash = data.hash
+            resultAction = DAPP_ACTION_SEND_TRANSACTION
+            break;
         default:
           break;
       }
@@ -216,7 +220,7 @@ const SignTransaction = () => {
       amount = toNonExponential(new BigNumber(amount).toString())
       payload.amount = amount
     }
-    if(this.state.sendAction === DAppActions.mina_sendTransaction){
+    if(signParams.sendAction === DAppActions.mina_sendTransaction){
       payload.transaction = params.transaction
       memo = params.feePayer?.memo || ""
     }
@@ -251,7 +255,7 @@ const SignTransaction = () => {
 
   const onConfirm = useCallback(() => {
     let params = signParams.params
-    if (signParams.sendAction !== DAppActions.mina_signMessage) {
+    if (signParams.sendAction !== DAppActions.mina_signMessage  && signParams.sendAction !== DAppActions.mina_sendTransaction) {
       let toAddress = trimSpace(params.to)
       if (!addressValid(toAddress)) {
         Toast.info(i18n.t('sendAddressError'))
