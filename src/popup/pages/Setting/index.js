@@ -1,155 +1,225 @@
-import React from "react";
-import { connect } from "react-redux";
-import aboutUs from "../../../assets/images/aboutUs.png";
-import language from "../../../assets/images/language.png";
-import networks from "../../../assets/images/networks.png";
-import security from "../../../assets/images/security.png";
-import txArrow from "../../../assets/images/txArrow.png";
-import userTerms from "../../../assets/images/userTerms.svg";
-import userPrivacy from "../../../assets/images/userPrivacy.svg";
-import currency from "../../../assets/images/currency.svg";
-import addressBook from "../../../assets/images/addressBook.svg";
-
-import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from "../../../i18n";
-import "./index.scss";
-import { openTab } from "../../../utils/commonMsg";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from 'react-router-dom';
+import { getLocal } from "../../../background/localStorage";
+import { AUTO_LOCK_TIME_LIST } from "../../../constant";
+import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
+import { DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/types";
+import { languageOption } from "../../../i18n";
 import { updateAddressBookFrom } from "../../../reducers/cache";
-class Setting extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {}
-        this.settingList = [{
-            name: getLanguage("security"),
-            icon: security,
-            route: "/security_page",
-        },
-        {
-            name: getLanguage("network"),
-            icon: networks,
-            route: "/network_page",
-        },
-        {
-            name: getLanguage("language"),
-            icon: language,
-            route: "/language_management_page"
-        },
-        {
-            name: getLanguage("currency"),
-            icon: currency,
-            route: "/currency_unit"
-        },
-        {
-            name: getLanguage("addressBook"),
-            action: this.addressBookAction,
-            icon: addressBook,
-            route: "/address_book"
-        },
+import { sendMsg } from "../../../utils/commonMsg";
+import { fitPopupWindow, openPopupWindow } from "../../../utils/popup";
+import CustomView from "../../component/CustomView";
+import styles from './index.module.scss';
+
+const Setting = ({ }) => {
+
+    const currentConfig = useSelector(state => state.network.currentConfig)
+    const currency = useSelector(state => state.currencyConfig.currentCurrency)
+    const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
+
+    const dispatch = useDispatch()
+    const history = useHistory()
+    const [connectCount, setConnectCount] = useState(0)
+    
+    const [currentLockTime, setCurrentLockTime] = useState("")
 
 
-        ]
-        this.aboutList = [{
-            name: getLanguage("about"),
-            icon: aboutUs,
-            route: "/about_us"
-        },
-        {
-            name: getLanguage("settingTerms"),
-            icon: userTerms,
-            onClick:()=>this.onTermsClick("terms"),
-            isHideBtn:true
-        },
-        {
-            name: getLanguage("settingPrivacy"),
-            icon: userPrivacy,
-            onClick:()=>this.onTermsClick("privacy"),
-            isHideBtn:true
-        }
-    ]
-    }
-    onTermsClick=(type)=>{
-        const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = this.props.cache
-        let lan = getCurrentLang()
-        let url = ""
-        if (lan === LANG_SUPPORT_LIST.EN) {
-          url = type == "terms" ? terms_and_contions : privacy_policy
-        } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
-          url = type == "terms" ? terms_and_contions_cn : privacy_policy_cn
-        }
-        if (url) {
-          openTab(url)
-        }
+    useEffect(() => {
+        sendMsg({
+            action: DAPP_CONNECTION_LIST,
+            payload: {
+                address:currentAddress
+              }
+        }, (list) => {
+            let connectTabId = Object.keys(list)
+            setConnectCount(connectTabId.length)
+        })
 
-    }
-    onClickItem = (e) => {
-        if(e.onClick){
-            e.onClick()
-        }else{
-            if (e.action) {
-                e.action && e.action()
-            }
-            this.props.params.history.push({
-                pathname: e.route,
-                params: {
-                    ...e
-                }
+        sendMsg({
+            action: WALLET_GET_LOCK_TIME,
+        }, (time) => {
+            setCurrentLockTime(time)
+        })
+    }, [])
+
+    const {
+        routeList, rowAbout
+    } = useMemo(() => {
+        
+
+        const getAutoLockTime = () => {
+            let autoLockTime = ""
+            let lockTime = AUTO_LOCK_TIME_LIST.filter((time,) => {
+                return time.value === currentLockTime
             })
+            if (lockTime.length > 0) {
+                lockTime = lockTime[0]
+                autoLockTime = lockTime.label
+            }
+            return autoLockTime
+        }
+        const getNetwork = () => {
+            return currentConfig.name
+        }
+        const getLanguage = () => {
+            let currentLangeuage = languageOption.filter((language) => {
+                return language.key === i18n.language
+            })
+            let show = currentLangeuage.length > 0 ? currentLangeuage[0].value : ""
+            return show
+        }
+        const getCurrency = () => {
+            return currency.value
+        }
+        const getAddressbook = () => {
+            let list = getLocal(ADDRESS_BOOK_CONFIG)
+
+            if (list) {
+                list = JSON.parse(list)
+            } else {
+                list = []
+            }
+            return list.length
         }
 
-    }
-    addressBookAction = () => {
-        this.props.updateAddressBookFrom("")
-    }
-    renderCommonConfig = (item, index) => {
-        return (
-            <div key={index + ""} onClick={() => this.onClickItem(item)}
-                className={"setting-config-item click-cursor"}>
-                <div className={"setting-config-item-left"}>
-                    <img className="config-icon" src={item.icon} />
-                    <p className={"config-name"}>{item.name}</p>
-                </div>
-                <img className={"config-arrow"} src={txArrow} />
-            </div>)
-    }
-    renderSettingConfig = () => {
-        return (<div className={"setting-config-container"}>
-            {this.settingList.map((item, index) => {
-                return this.renderCommonConfig(item, index)
-            })}
-        </div>)
-    }
-    renderAbout = () => {
-        return (
-            <div className={"setting-config-container setting-config-about"}>
-                {this.aboutList.map((item, index) => {
-                return this.renderCommonConfig(item, index)
-            })}
-            </div>
-        )
-    }
 
-    render() {
-        return (
-            <div >
-                <p className={"tab-common-title"}>{getLanguage('setting')}</p>
-                <div className="setting-outter-container">
-                {this.renderSettingConfig()}
-                {this.renderAbout()}
-                </div>
-            </div>
-        )
-    }
+
+        const addressBookAction = () => {
+            dispatch(updateAddressBookFrom(""))
+        }
+        let routeList = [
+            {
+                icon: '/img/icon_security.svg',
+                title: i18n.t('security'),
+                targetRoute: "security_page",
+            },
+            {
+                icon: '/img/icon_connect.svg',
+                title: i18n.t('appConnection'),
+                targetRoute: "app_connection",
+                rightContent: connectCount
+            },
+            {
+                icon: '/img/icon_autoLock.svg',
+                title: i18n.t('autoLock'),
+                targetRoute: "auto_lock",
+                rightContent: getAutoLockTime()
+            },
+            {
+                icon: '/img/icon_network.svg',
+                title: i18n.t('network'),
+                targetRoute: "network_page",
+                rightContent: getNetwork()
+            },
+            {
+                icon: '/img/icon_language.svg',
+                title: i18n.t('language'),
+                targetRoute: "language_management_page",
+                rightContent: getLanguage()
+            },
+            {
+                icon: '/img/icon_currency.svg',
+                title: i18n.t('currency'),
+                targetRoute: "currency_unit",
+                rightContent: getCurrency()
+            },
+            {
+                icon: '/img/icon_addressBook.svg',
+                title: i18n.t('addressBook'),
+                targetRoute: "address_book",
+                rightContent: getAddressbook(),
+                action: addressBookAction
+            }
+        ]
+        const rowAbout = {
+            icon: '/img/icon_about.svg',
+            title: i18n.t('about'),
+            targetRoute: "about_us"
+        }
+        return {
+            routeList,
+            rowAbout
+        }
+    }, [i18n, currentConfig, currency, dispatch, connectCount, currentLockTime])
+
+    const [showOpenTabStatus,setShowOpenTabStatus] = useState(true)
+    useEffect(()=>{
+      const url = new URL(window.location.href); 
+      if (url.pathname.indexOf('popup.html') !==-1) {
+          setShowOpenTabStatus(true)
+      }else{
+          setShowOpenTabStatus(false)
+      }
+    },[window.location.href])
+
+    const onClickRightIcon = useCallback( async() => {
+        if(!showOpenTabStatus){
+            return 
+        }
+        const url = new URL(window.location.href); 
+        let targetUrl = './notification.html#/'
+        if (!url.searchParams.has('aurowalletPopup')) {
+            url.searchParams.set('aurowalletPopup', '1');
+            await openPopupWindow(targetUrl, 'aurowalletPopup', undefined, {
+                left: window.screenLeft,
+                top: window.screenTop,
+            })
+            window.close();
+        }else{
+            fitPopupWindow()
+        }
+    }, [showOpenTabStatus])
+    
+
+   
+
+    const onClickTitle = useCallback(()=>{
+        history.goBack()
+    },[])
+
+    return (<CustomView
+        title={i18n.t('setting')}
+        customeTitleClass={styles.customeTitleClass}
+        onClickTitle={onClickTitle}
+        rightIcon={showOpenTabStatus ? "/img/icon_share.svg":""}
+        onClickRightIcon={onClickRightIcon}
+        contentClassName={styles.contentClassName}
+    >
+        {routeList.map((routeItem, index) => {
+            return <RowItem key={index} action={routeItem.action} icon={routeItem.icon} title={routeItem.title} targetRoute={routeItem.targetRoute} rightContent={routeItem.rightContent} />
+        })}
+        <div className={styles.dividedLine} />
+        <RowItem icon={rowAbout.icon} title={rowAbout.title} targetRoute={rowAbout.targetRoute} />
+    </CustomView>)
 }
 
-const mapStateToProps = (state) => ({
-    cache: state.cache,
-});
 
-function mapDispatchToProps(dispatch) {
-    return {
-        updateAddressBookFrom: (from) => {
-            dispatch(updateAddressBookFrom(from))
-        },
-    };
+const RowItem = ({
+    icon = "",
+    title = "",
+    targetRoute = "",
+    rightContent = "",
+    action
+}) => {
+    const history = useHistory()
+    const onClick = useCallback(() => {
+        if (action) {
+            action()
+        }
+        history.push(targetRoute)
+    }, [action, targetRoute])
+    return (<div className={styles.rowContainer} onClick={onClick}>
+        <div className={styles.rowLeft}>
+            <div className={styles.iconContainer}><img src={icon} /></div>
+            <p className={styles.title}>{title}</p>
+        </div>
+        <div className={styles.rowLeft}>
+            <p className={styles.rowContent}>{rightContent}</p>
+            <img src="/img/icon_arrow.svg" />
+        </div>
+    </div>)
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Setting);
+export default Setting

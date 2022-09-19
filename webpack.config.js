@@ -5,6 +5,12 @@ module.exports = (env, argv) => {
   console.log('argv.mode', argv.mode)
   const mode = argv.mode;
   const isDev = mode === 'development';
+
+  const cssRegex = /\.css$/;
+  const cssModuleRegex = /\.module\.css$/;
+  const sassRegex = /\.(scss|sass)$/;
+  const sassModuleRegex = /\.module\.(scss|sass)$/;
+
   const config = {
     entry: {
       background: "./src/background/index.js",
@@ -20,7 +26,8 @@ module.exports = (env, argv) => {
       //加载器配置
       rules: [
         {
-          test: /\.css$/,
+          test: cssRegex,
+          exclude: cssModuleRegex,
           use: [
             {
               loader: "style-loader",
@@ -33,6 +40,17 @@ module.exports = (env, argv) => {
               },
             },
           ],
+        },
+        {
+          test: cssModuleRegex,
+          use: [
+            {
+              loader: "css-loader",
+              options: {
+                modules: true,
+              },
+            },
+          ]
         },
         {
           test: /\.js$/, exclude: /node_modules/, loader: "babel-loader",
@@ -48,7 +66,8 @@ module.exports = (env, argv) => {
           },
         },
         {
-          test: /\.scss$/,
+          test: sassRegex,
+          exclude: sassModuleRegex,
           use: [
             {
               loader: "style-loader",
@@ -58,6 +77,30 @@ module.exports = (env, argv) => {
             },
             {
               loader: "sass-loader",
+              options: {
+                sassOptions: {
+                  modules: true,
+                }
+              },
+            },
+          ],
+        },
+        {
+          test: sassModuleRegex,
+          use: [
+            {
+              loader: "style-loader",
+            },
+            {
+              loader: "css-loader",
+            },
+            {
+              loader: "sass-loader",
+              options: {
+                sassOptions: {
+                  modules: true,
+                }
+              },
             },
           ],
         },
@@ -104,6 +147,7 @@ function getPlugins() {
     new CopyWebpackPlugin({
       patterns: [
         { from: "./public/static", to: "./" },
+        { from: "./public/img", to: "./img" },
         { from: "./public/manifest.json", to: "./" },
         { from: "./src/_locales", to: "./_locales" },
       ],

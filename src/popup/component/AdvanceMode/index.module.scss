@@ -1,0 +1,36 @@
+.advanceContainer {
+    img {
+      display: block;
+    }
+    .advanceEntry {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      width: fit-content;
+    }
+    .advanceTitle {
+      font-size: 12px;
+      line-height: 14px;
+      color: #594af1;
+      margin: 0 5px 0px 0px;
+      font-weight: 500;
+    }
+  
+    .openAdvance {
+      transform: rotate(180deg);
+      transition: 0.35s;
+    }
+    .closeAdvance {
+      transform: rotate(0);
+      transition: 0.35s;
+    }
+    .advanceInput {
+      margin-top: 20px;
+      > :not(:first-child) {
+        margin-top: 20px;
+      }
+    }
+    .waringTip {
+      color: rgba(228, 178, 0, 1);
+    }
+  }

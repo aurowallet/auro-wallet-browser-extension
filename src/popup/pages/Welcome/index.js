@@ -1,93 +1,35 @@
-import React from "react";
+import i18n from "i18next";
+import { useCallback, useEffect, useState } from "react";
 import { Trans } from "react-i18next";
-import { connect } from "react-redux";
-import { withRouter } from "react-router-dom";
-import purpleArrow from "../../../assets/images/rightPurpleArrow.png";
-import whiteArrow from "../../../assets/images/rightWhiteArrow.png";
-import logo from "../../../assets/images/transparentLogo.png";
-import welcomeBg from "../../../assets/images/welcomeBg.png";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from 'react-router-dom';
 import { getLocal, saveLocal } from "../../../background/localStorage";
-import { get } from "../../../background/storageService";
+import { POWER_BY } from "../../../constant";
 import { USER_AGREEMENT } from "../../../constant/storageKey";
-import {
-  changeLanguage,
-  default_language,
-  getCurrentLang,
-  getLanguage,
-  languageOption,
-  LANG_SUPPORT_LIST
-} from "../../../i18n";
-import { setLanguage } from "../../../reducers/appReducer";
+import { getCurrentLang, LANG_SUPPORT_LIST } from "../../../i18n";
 import { setWelcomeNextRoute } from "../../../reducers/cache";
 import { openTab } from "../../../utils/commonMsg";
-import Button, { BUTTON_TYPE_HOME_BUTTON } from "../../component/Button";
-import ConfirmModal from "../../component/ConfirmModal/";
-import Select from "../../component/Select";
-import "./index.scss";
+import Button, { button_theme } from "../../component/Button";
+import { PopupModal } from "../../component/PopupModal";
+import styles from "./index.module.scss";
+
 const type_conditions = "conditions"
 const type_policy = "policy"
-class Welcome extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      newAccount: false,
-      isGotoProtocol: true,
-      currentLang:""
-    }
-    this.isUnMounted = false;
-  }
 
-  componentDidMount() {
-    this.initLocal()
-  }
-  componentWillUnmount() {
-    this.isUnMounted = true;
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
-    }
-  }
+const Welcome = () => {
 
-  initLocal = () => {
-    let agreeStatus = getLocal(USER_AGREEMENT)
-    if (agreeStatus) {
-      this.callSetState({
-        isGotoProtocol: false
-      })
-    }
-    get(null).then(dataObj => {
-      if (dataObj && !dataObj.keyringData) {
-        this.callSetState({
-          newAccount: true
-        })
-      }
-    })
-  }
-  handleChange = (item) => {
-    let value = item.key
-    this.props.setLanguage(value);
-    this.callSetState({currentLang:value})
-    changeLanguage(value);
-  };
-  renderLanMenu = () => {
-    let defaultValue = languageOption.filter((item, index) => {
-      return item.key === default_language
-    })
-    return (
-      <Select
-        options={languageOption}
-        defaultValue={defaultValue[0].value}
-        onChange={this.handleChange}
-      />
-    )
-  }
-  onClickGuide = (type) => {
-    const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = this.props.cache
+  const cache = useSelector(state => state.cache)
+  const dispatch = useDispatch()
+  const history = useHistory()
+
+  const [isGotoProtocol, setIsGotoProtocol] = useState(true)
+  const [popupModalStatus, setPopupModalStatus] = useState(false)
+
+  const [nextRoute, setNextRoute] = useState('')
+
+
+  const onClickGuide = useCallback(() => {
+    const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = cache
     let lan = getCurrentLang()
     let url = ""
     if (lan === LANG_SUPPORT_LIST.EN) {
@@ -98,102 +40,97 @@ class Welcome extends React.Component {
     if (url) {
       openTab(url)
     }
-  }
+  }, [cache])
 
-  renderClickElement = () => {
-    return (<div>
-      <p className={'confirm-content'}>{getLanguage('termsAndPrivacy_0')}</p>
-      <p className={'confirm-content'}>
-        <Trans
-          i18nKey={getLanguage('termsAndPrivacy_1')}
-          components={{
-            conditions: <span className={"tips-spical"} onClick={() => this.onClickGuide(type_conditions)} />,
-            policy: <span className={"tips-spical"} onClick={() => this.onClickGuide(type_policy)} />
-          }}
-        />
-      </p>
-    </div>)
-  }
 
-  onConfirmProtocol = (nextRoute) => {
-    let title = getLanguage('termsAndPrivacy')
-    let confirmText = getLanguage('agree')
-    let cancelText = getLanguage('refuse')
-    let elementContent = this.renderClickElement
-    ConfirmModal.show({
-      title,
-      cancelText,
-      confirmText,
-      elementContent,
-      onConfirm: () => this.goPage(nextRoute, "saveProtocol"),
-    })
-  }
+  const onConfirmProtocol = useCallback((route) => {
+    setPopupModalStatus(true)
+    setNextRoute(route)
+  }, [])
 
-  goPage = (nextRoute, type) => {
+  const goPage = useCallback((route, type) => {
     if (type === "saveProtocol") {
       saveLocal(USER_AGREEMENT, "true")
     }
-    this.props.setWelcomeNextRoute(nextRoute)
-    this.props.history.push({
-      pathname: "/createpassword",
-    })
-  }
+    dispatch(setWelcomeNextRoute(route))
+    history.push("/createpassword")
+  }, [])
 
-  goNextRoute = (nextRoute) => {
-    if (this.state.isGotoProtocol) {
-      this.onConfirmProtocol(nextRoute)
+  const goNextRoute = useCallback((route) => {
+    if (isGotoProtocol) {
+      onConfirmProtocol(route)
     } else {
-      this.goPage(nextRoute)
+      goPage(route)
     }
-  }
-  render() {
-    return (
-      <div className="welcome_container">
-        <img className={"welcome-left-bg"} src={welcomeBg}></img>
-        <div className={'welcome-top-container'}>
-          <img className={'welcome-left-logo'} src={logo}></img>
-          {this.renderLanMenu()}
+  }, [isGotoProtocol, nextRoute])
+
+  const onCloseModal = useCallback(() => {
+    setPopupModalStatus(false)
+  }, [])
+
+  const initLocal = useCallback(() => {
+    let agreeStatus = getLocal(USER_AGREEMENT)
+    if (agreeStatus) {
+      setIsGotoProtocol(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    initLocal()
+  }, [])
+
+
+
+  return (<div className={styles.container}>
+    <div className={styles.logoContainer}>
+      <img src="/img/colorful_logo.svg" className={styles.logo} />
+    </div>
+
+    <div className={styles.btnContainer}>
+      <Button
+        leftIcon={"/img/icon_add.svg"}
+        onClick={() => { goNextRoute("/backup_tips") }}
+      >
+        {i18n.t('createWallet')}
+      </Button>
+
+      <Button
+        theme={button_theme.BUTTON_THEME_LIGHT}
+        leftIcon={"/img/icon_download.svg"}
+        onClick={() => { goNextRoute("/restore_account") }}
+      >
+        {i18n.t('importAccount')}
+      </Button>
+    </div>
+
+    <p className={styles.bottomTipLedger}>{i18n.t("ledgerUserTip")}</p>
+    <p className={styles.bottomUrl}>{POWER_BY}</p>
+
+    <PopupModal
+      title={i18n.t('termsAndPrivacy')}
+      leftBtnContent={i18n.t('refuse')}
+      rightBtnContent={i18n.t("agree")}
+      onLeftBtnClick={onCloseModal}
+      onRightBtnClick={() => {
+        onCloseModal()
+        goPage(nextRoute, "saveProtocol")
+      }}
+      componentContent={
+        <div>
+          <p className={styles.confirmContent_1}>{i18n.t('termsAndPrivacy_0')}</p>
+          <p className={styles.confirmContent_2}>
+            <Trans
+              i18nKey={i18n.t('termsAndPrivacy_1')}
+              components={{
+                conditions: <span className={styles.tipsSpical} onClick={() => onClickGuide(type_conditions)} />,
+                policy: <span className={styles.tipsSpical} onClick={() => onClickGuide(type_policy)} />
+              }}
+            />
+          </p>
         </div>
-        <div className={'welcome-button-container'}>
-          <Button
-            buttonType={BUTTON_TYPE_HOME_BUTTON}
-            propsClass={'welcome-create-button'}
-            content={getLanguage('createWallet')}
-            onClick={() => { this.goNextRoute("/backup_tips") }}
-          >
-            <img className={"welcome-arrow"} src={whiteArrow}></img>
-          </Button>
-
-          <Button
-            buttonType={BUTTON_TYPE_HOME_BUTTON}
-            propsClass={'welcome-restore-button'}
-            content={getLanguage('restoreWallet')}
-            onClick={() => { this.goNextRoute("/restore_account") }}
-          >
-            <img className={"welcome-arrow"} src={purpleArrow}></img>
-          </Button>
-        </div>
-        <p className="bottomTipLedger" >{getLanguage("ledgerUserTip")}</p>
-        <p className="bottomTip" >Powered by Bit Cat</p>
-      </div>)
-  }
+      }
+      modalVisable={popupModalStatus}
+      onCloseModal={onCloseModal} />
+  </div>)
 }
-
-const mapStateToProps = (state) => ({
-  cache: state.cache,
-});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    setLanguage: (lan) => {
-      dispatch(setLanguage(lan));
-    },
-    setWelcomeNextRoute: (nextRoute) => {
-      dispatch(setWelcomeNextRoute(nextRoute))
-    },
-  };
-}
-
-export default withRouter(
-  connect(mapStateToProps, mapDispatchToProps)(Welcome)
-);
+export default Welcome

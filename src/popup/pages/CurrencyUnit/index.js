@@ -1,27 +1,38 @@
-import React from "react";
-import { connect } from "react-redux";
-import select_account_no from "../../../assets/images/select_account_no.png";
-import select_account_ok from "../../../assets/images/select_account_ok.png";
+import i18n from "i18next";
+import { useCallback, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { saveLocal } from "../../../background/localStorage";
 import { CURRENCY_UNIT_CONFIG } from "../../../constant/storageKey";
-import { getLanguage } from "../../../i18n";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateCurrencyConfig } from "../../../reducers/currency";
 import CustomView from "../../component/CustomView";
-import "./index.scss";
+import styles from "./index.module.scss";
 
-class CurrencyUnit extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
 
-  changeCurrencyOption = (clickItem) => {
-    const { currencyList } = this.props
-    if (!clickItem.isSelect) {
+const CurrencyUnit = ({ }) => {
+
+  const currencyList = useSelector(state => state.currencyConfig.currencyList)
+  const [oldCurrency, setOldCurrency] = useState(() => {
+    let list = currencyList.filter((item) => {
+      return item.isSelect
+    })
+    return list[0]
+  })
+  const [currentCurrency, setCurrentCurrency] = useState(() => {
+    let list = currencyList.filter((item) => {
+      return item.isSelect
+    })
+    return list[0]
+  })
+
+  const dispatch = useDispatch()
+
+  const onSelect = useCallback((item) => {
+    setCurrentCurrency(item)
+    if (item !== oldCurrency) {
       let list = currencyList.map((item, index) => {
         let newItem = { ...item }
-        if (newItem.key === clickItem.key) {
+        if (newItem.key === item.key) {
           newItem.isSelect = true
           return newItem
         } else {
@@ -29,56 +40,26 @@ class CurrencyUnit extends React.Component {
           return newItem
         }
       })
-      this.props.updateCurrencyConfig(list);
-      this.props.updateShouldRequest(true,true);
-      saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(clickItem.key))
+      dispatch(updateCurrencyConfig(list));
+      dispatch(updateShouldRequest(true, true));
+      saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(item.key))
     }
-  }
-  renderOptionItem = (item, index) => {
-    let imgSource = item.isSelect ? select_account_ok : select_account_no
-    return (
-      <div onClick={() => this.changeCurrencyOption(item)} className={"lang-option-item click-cursor"} key={item.key + ""}>
-        <p className={"lang-option-title"}>{item.value}</p>
-        <div className={"lang-option-img-container"} >
-          <img className={"lang-option-img"} src={imgSource} />
-        </div>
-      </div>
-    )
-  }
-  renderLangOption = () => {
-    const { currencyList } = this.props
-    return (
-      <div className={"lang-option-container"}>
-        {currencyList.map((item, index) => {
-          return this.renderOptionItem(item)
-        })}
-      </div>
-    )
-  }
 
-  render() {
-    return (
-      <CustomView
-        title={getLanguage("currency")}
-        history={this.props.history}>
-        {this.renderLangOption()}
-      </CustomView>)
-  }
+  }, [i18n,oldCurrency])
+
+
+  return (
+    <CustomView title={i18n.t('currency')} contentClassName={styles.contentClassName}>
+      {
+        currencyList.map((item, index) => {
+          let isChecked = currentCurrency.key === item.key
+          return <div className={styles.rowContainer} key={index} onClick={() => onSelect(item)} >
+            <span>{item.value}</span>
+            {isChecked && <img src="/img/icon_checked.svg" />}
+          </div>
+        })
+      }
+    </CustomView>
+  )
 }
-
-const mapStateToProps = (state) => ({
-  currencyList: state.currencyConfig.currencyList,
-});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    updateCurrencyConfig: (currencyList) => {
-      dispatch(updateCurrencyConfig(currencyList));
-    },
-    updateShouldRequest: (shouldRefresh,isSilent) => {
-      dispatch(updateShouldRequest(shouldRefresh,isSilent))
-    },
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(CurrencyUnit);
+export default CurrencyUnit

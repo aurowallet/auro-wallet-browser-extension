@@ -1,171 +1,102 @@
-import React from "react";
-import { connect } from "react-redux";
-import { validateMnemonic } from "../../../background/accountService";
-import { WALLET_IMPORT_KEY_STORE, WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
-import { getLanguage } from "../../../i18n";
+import i18n from "i18next";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useHistory } from 'react-router-dom';
+import { WALLET_IMPORT_KEY_STORE } from "../../../constant/types";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
-import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { trimSpace } from "../../../utils/utils";
+import Toast from "../../component/Toast";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
-import Loading from "../../component/Loading";
-import TextInput from "../../component/TextInput";
-import Toast from "../../component/Toast";
-import "./index.scss";
-class ImportKeypair extends React.Component {
-  constructor(props) {
-    super(props);
-    let accountName =  props.location.params?.accountName ?? "";
-    this.state = {
-      btnClick: false,
-      keypair: "",
-      pwd:"",
-      accountName
-    };
-    this.isUnMounted = false;
-  }
-  componentWillUnmount(){
-    this.isUnMounted = true;
-  }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
-      this.setState({
-        ...data
-      },()=>{
-        callback&&callback()
-      })
+import Input from "../../component/Input";
+import TextArea from "../../component/TextArea";
+import styles from "./index.module.scss";
+
+const ImportKeypair = ({ }) => {
+  const [keystoreValue, setKeystoreValue] = useState("")
+  const [pwdValue, setPwdValue] = useState('')
+  const [btnStatus, setBtnStatus] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+
+  const history = useHistory()
+  const dispatch = useDispatch()
+
+  const [accountName, setAccountName] = useState(() => {
+    return history.location?.params?.accountName ?? "";
+  })
+
+  useEffect(() => {
+    if (keystoreValue.length > 0 && pwdValue.length > 0) {
+      setBtnStatus(true)
+    } else {
+      setBtnStatus(false)
     }
-  }
-  goToCreate = (e) => {
-    Loading.show()
-    e.preventDefault()
-    e.stopPropagation()
+  }, [pwdValue, keystoreValue])
+
+  const onInpuKeystore = useCallback((e) => {
+    setKeystoreValue(e.target.value)
+  }, [])
+
+  const onInpuPwd = useCallback((e) => {
+    setPwdValue(e.target.value)
+  }, [])
+
+  const onConfirm = useCallback((e) => {
+    setLoading(true)
     sendMsg({
       action: WALLET_IMPORT_KEY_STORE,
       payload: {
-        keypair: this.state.keypair,
-        password: this.state.pwd,
-        accountName:this.state.accountName
+        keypair: keystoreValue,
+        password: pwdValue,
+        accountName: accountName
       }
-    },
+    }, 
       async (account) => {
-        Loading.hide()
+        setLoading(false)
         if (account.error) {
-          if(account.type === "local"){
-            Toast.info(getLanguage(account.error))
-          }else{
-              Toast.info(account.error)
+          if (account.type === "local") {
+            Toast.info(i18n.t(account.error))
+          } else {
+            Toast.info(account.error)
           }
           return
         } else {
-          this.props.updateCurrentAccount(account)
+          dispatch(updateCurrentAccount(account))
           setTimeout(() => {
-            this.props.history.replace({ 
-              pathname: "/account_manage",
-            })
+            history.replace("account_manage")
           }, 300);
         }
       })
-  };
-
-  onKeypairInput = (e) => {
-    let keypair = e.target.value;
-    this.callSetState({
-      keypair:trimSpace(keypair)
-    }, () => {
-      this.setBtnStatus()
-    })
-  }
-  renderInput = () => {
-    return (
-      <div className={"keypair-input-container"}>
-      <textarea
-        className={"text-area-input"}
-        value={this.state.privateKey}
-        onChange={this.onKeypairInput} />
-        </div>
-    )
-  }
-  renderBotton = () => {
-    return (
-      <div className="bottom-container">
-        <Button
-          disabled={!this.state.btnClick}
-          content={getLanguage('confirm')}
-          onClick={this.goToCreate}
-        />
-      </div>
-    )
-  }
-  setBtnStatus=()=>{
-    if(this.state.keypair.length>0 && this.state.pwd.length>0){
-      this.callSetState({
-        btnClick:true
-      })
-    }else{
-      this.callSetState({
-        btnClick:false
-      })
-    }
-  }
-  onPwdInput=(e)=>{
-    let pwd = e.target.value;
-    this.callSetState({
-      pwd:trimSpace(pwd)
-    }, () => {
-      this.setBtnStatus()
-    })
-  }
-  renderPwdInput = () => {
-    return (
-      <TextInput
-        value={this.state.pwd}
-        label={getLanguage('pleaseInputKeyPairPwd')}
-        onTextInput={this.onPwdInput}
+  }, [keystoreValue, pwdValue, accountName])
+  return (<CustomView title={i18n.t('importKeystone')} >
+    <p className={styles.title}>{i18n.t('pleaseInputKeyPair')}</p>
+    <div className={styles.textAreaContainer}>
+      <TextArea
+        onChange={onInpuKeystore}
+        value={keystoreValue}
       />
-    )
-  }
-  renderDescContainer=(content1,content2)=>{
-    return(<div className={"keypair-input-container-desc"}>
-        <p className={"import-title-keystore"}>{content1}</p>
-        <p className={"import-title-keystore"}>{content2}</p>
-    </div>)
-  }
-  renderContentContainer=(content)=>{
-    return(<div className={"keypair-input-container"}>
-        <p className={"import-title"}>{content}</p>
-    </div>)
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('importKeyStore')}
-        history={this.props.history}>
-        <form className="import-keypair-container" onSubmit={this.goToCreate}>
-          {this.renderContentContainer(getLanguage("pleaseInputKeyPair"))}
-          {this.renderInput()}
-          {this.renderPwdInput()}
-          {this.renderDescContainer(getLanguage("importAccount_2"),getLanguage("importAccount_3"))}
-        </form>
-        {this.renderBotton()}
-      </CustomView>
-    )
-  }
+    </div>
+    <Input
+      label={i18n.t('keystorePassword')}
+      onChange={onInpuPwd}
+      value={pwdValue}
+      inputType={'password'}
+    />
+    <div className={styles.descContainer}>
+      <p className={styles.desc}>{i18n.t('importAccount_2')}</p>
+      <p className={styles.desc}>{i18n.t('importAccount_3')}</p>
+    </div>
+    <div className={styles.hold} />
+    <div className={styles.bottomContainer}>
+      <Button
+        disable={!btnStatus}
+        loading={loading}
+        onClick={onConfirm}>
+        {i18n.t('confirm')}
+      </Button>
+    </div>
+  </CustomView>)
 
 }
-
-const mapStateToProps = (state) => ({});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    updateEntryWitchRoute: (index) => {
-      dispatch(updateEntryWitchRoute(index));
-    },
-    updateCurrentAccount: (account) => {
-      dispatch(updateCurrentAccount(account))
-    },
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(ImportKeypair);
+export default ImportKeypair

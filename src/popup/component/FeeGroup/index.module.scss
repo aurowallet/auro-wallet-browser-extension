@@ -1,0 +1,53 @@
+.feeContainer {
+    .topContainer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+        .feeTitle {
+            font-weight: 600;
+            font-size: 12px;
+            line-height: 17px;
+            color: rgba(0, 0, 0, 0.85);
+            margin: 0;
+        }
+        .feeAmount {
+            font-size: 12px;
+            line-height: 17px;
+            color: rgba(0, 0, 0, 0.5);
+            margin: 0;
+        }
+    }
+    .btnGroup {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+
+        .btn {
+            background: #f9fafc;
+            border-radius: 6px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 17px;
+            &:hover {
+                color: #594af1;
+                border: 0.5px solid #594af1;
+            }
+        }
+        .common {
+            color: #000000;
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+        .checked {
+            color: #594af1;
+            border: 0.5px solid #594af1;
+        }
+    }
+}

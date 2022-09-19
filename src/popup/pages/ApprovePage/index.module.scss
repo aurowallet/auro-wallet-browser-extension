@@ -1,0 +1,54 @@
+.conatiner {
+    .titleRow {
+        display: flex;
+        align-items: center;
+        height: 48px;
+        margin-top: 10px;
+        padding: 0px 20px;
+        position: relative;
+        justify-content: space-between;
+    }
+    .title {
+        font-weight: 600;
+        font-size: 18px;
+        line-height: 21px;
+        color: #000000;
+        margin: 0;
+    }
+    .content {
+        margin-top: 20px;
+        padding: 0px 20px;
+        .accountTip {
+            font-size: 14px;
+            line-height: 20px;
+            color: rgba(0, 0, 0, 0.5);
+            margin: 20px 0px 0px;
+        }
+        .accountAddress {
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 17px;
+            color: #000000;
+            margin: 8px 0px 0px;
+            word-break: break-all;
+        }
+        .warningTip {
+            font-size: 14px;
+            line-height: 20px;
+            color: rgba(0, 0, 0, 0.3);
+            margin: 20px 0px 0px;
+        }
+        
+    }
+    .btnGroup {
+        position: absolute;
+        bottom: 0;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        display: flex;
+
+        gap: 15px;
+        padding: 12px 0px 30px;
+    }
+}

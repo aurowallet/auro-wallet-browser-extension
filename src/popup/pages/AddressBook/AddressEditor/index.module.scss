@@ -1,0 +1,34 @@
+.inputContainer {
+    > :first-child {
+        margin-bottom: 20px;
+    }
+
+    .nameInput {
+        font-weight: 400;
+    }
+    .addressInput {
+        min-height: 56px;
+    }
+}
+
+.hold {
+    flex: 1;
+}
+
+.bottomContainer {
+    padding: 12px 18px 30px;
+}
+
+.deleteBtn {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    text-align: center;
+    color: #d65a5a;
+    margin: 0;
+    cursor: pointer;
+}
+
+.modalDelete {
+    color: #d65a5a;
+}

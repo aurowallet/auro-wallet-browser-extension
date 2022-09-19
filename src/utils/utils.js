@@ -7,7 +7,7 @@ import { DAPP_CHANGE_NETWORK } from "../constant/types";
 import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } from "../constant/walletType";
 import { sendMsg } from "./commonMsg";
 /**
- * 地址截取
+ * address slice
  * @param {*} address
  */
 export function addressSlice(address, sliceLength = 10,lastLength = "") {
@@ -16,7 +16,17 @@ export function addressSlice(address, sliceLength = 10,lastLength = "") {
         return `${address.slice(0, sliceLength)}...${address.slice(-realLastLength)}`
     }
     return address
+}
 
+/**
+ * name slice
+ * @param {*} name
+ */
+ export function showNameSlice(name, sliceLength = 8) {
+    if (name && (name.length > sliceLength)) {
+        return `${name.slice(0, sliceLength)}...`
+    }
+    return name
 }
 
 /**

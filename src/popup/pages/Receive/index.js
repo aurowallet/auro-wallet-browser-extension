@@ -1,93 +1,69 @@
-import qrCode from 'qrcode-generator';
-import React from "react";
-import { connect } from "react-redux";
-import { cointypes } from '../../../../config';
-import home_logo from "../../../assets/images/home_logo.png";
-import minaLogo from "../../../assets/images/minaLogo.png";
-import { getLanguage } from "../../../i18n";
+import i18n from "i18next";
+import QRCode from 'qrcode.react';
+import { useCallback, useState } from "react";
+import { useSelector } from 'react-redux';
+import { POWER_BY } from "../../../constant";
 import { copyText } from '../../../utils/utils';
-import Button from "../../component/Button";
-import CustomView from "../../component/CustomView";
+import CustomView from '../../component/CustomView';
 import Toast from "../../component/Toast";
-import "./index.scss";
-class ReceivePage extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
+import styles from "./index.module.scss";
 
-    };
-  }
+const ReceivePage = ({ }) => {
 
-  renderQrView = () => {
-    let { address } = this.props.currentAccount
-    const qrImage = qrCode(4, 'M')
-    let qrData = address
-    qrImage.addData(qrData)
-    qrImage.make()
-    return (
-      <div className={"receive-scan-container"}>
-        <div className={"receive-home-logo-container"}>
-          <img src={home_logo} className={"receive-wallet-logo"} />
-        </div>
-        <img src={qrImage.createDataURL(4)} alt="QR code"></img>
-      </div>
-    )
-  }
-  onCopy = () => {
-    let { address } = this.props.currentAccount
-    copyText(address).then(()=>{
-      Toast.info(getLanguage('copySuccess'))
+  const accountInfo = useSelector(state => state.accountInfo)
+  const [currentAccount, setCurrentAccount] = useState(accountInfo.currentAccount)
+
+  const onCopy = useCallback(() => {
+    copyText(currentAccount.address).then(() => {
+      Toast.info(i18n.t('copySuccess'))
     })
 
-  }
+  }, [i18n, currentAccount])
 
-  renderAddress = () => {
-    let { address } = this.props.currentAccount
-    return (<div className="receive-address-container">
-      <p className={"receive-address-detail"}>{address}</p>
-    </div>)
-  }
+  return (<CustomView
+    isReceive={true}
+    title={i18n.t('receive')}
+    contentClassName={styles.container}>
 
-  rednerCopyButton = () => {
-    return (
-      <div className="receive-bottom-container">
-        <Button
-          content={getLanguage('copyAddress')}
-          onClick={this.onCopy}
+    <img src={'/img/receiveBg.svg'} className={styles.bgImg} />
+    <div className={styles.content}>
+      <p className={styles.title}>{i18n.t('scanPay')}</p>
+      <div className={styles.dividedLine} />
+      <p className={styles.receiveTip}>
+        {i18n.t('addressQrTip')}
+      </p>
+      <div className={styles.qrCodeContainer}>
+        <QRCode
+          value={currentAccount.address}
+          size={150}
+          level={"H"}
+          fgColor="#000000"
+          imageSettings={{
+            src: "/img/home_logo.png",
+            height: 30,
+            width: 30,
+            excavate: true
+          }}
         />
       </div>
-    )
-  }
-  renderScanTip = () => {
-    return (<p className={"receive-scan-tip"}>{getLanguage('addressQrTip')}</p>)
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('receiveTitle')}
-        isReceive={true}
-        history={this.props.history}>
-        <div className={"receive-container"}>
-          <img className={'receive-home-logo'} src={minaLogo} />
-          <div className={"receive-content-container"}>
-            {this.renderScanTip()}
-            {this.renderQrView()}
-            {this.renderAddress()}
-            {this.rednerCopyButton()}
-          </div>
-          <p className="bottomTip" >Powered by Bit Cat</p>
+      <p className={styles.address}>
+        {currentAccount.address}
+      </p>
+      <div className={styles.dividedLine2} />
+      <div className={styles.copyOuterContainer} onClick={onCopy}>
+        <div className={styles.copyContainer}>
+          <img src='/img/icon_copy.svg' className={styles.copyIcon} />
+          <p className={styles.copyTxt}>
+            {i18n.t('copy')}
+          </p>
         </div>
-      </CustomView>
-    )
-  }
+      </div>
+    </div>
+    <p className={styles.bottomTip}>
+      {POWER_BY}
+    </p>
+  </CustomView>)
 }
 
-const mapStateToProps = (state) => ({
-  currentAccount: state.accountInfo.currentAccount,
-});
+export default ReceivePage
 
-function mapDispatchToProps(dispatch) {
-  return {};
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(ReceivePage);

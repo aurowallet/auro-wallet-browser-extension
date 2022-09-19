@@ -1,325 +1,342 @@
-import cx from "classnames";
-import React from "react";
-import { connect } from "react-redux";
-import txArrow from "../../../assets/images/txArrow.png";
-import { SEC_DELETE_ACCOUNT } from "../../../constant/secTypes";
-import { DAPP_DELETE_ACCOUNT_CONNECT_HIS, WALLET_CHANGE_ACCOUNT_NAME, WALLET_CHANGE_DELETE_ACCOUNT, WALLET_DELETE_WATCH_ACCOUNT } from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
-import { getLanguage } from "../../../i18n";
-import { sendMsg } from "../../../utils/commonMsg";
-import { amountDecimals, copyText, nameLengthCheck } from "../../../utils/utils";
-import Button, { BUTTON_TYPE_CANCEL } from "../../component/Button";
-import CustomInput from "../../component/CustomInput";
-import CustomView from "../../component/CustomView";
-import TestModal from "../../component/TestModal";
-import Toast from "../../component/Toast";
-import "./index.scss";
-import { getTransactionList } from "../../../background/api";
-import { JSonToCSV } from "../../../utils/JsonToCSV";
+import cls from "classnames";
+import i18n from "i18next";
+import { useCallback, useMemo, useState } from "react";
 import { cointypes } from "../../../../config";
-import Loading from "../../component/Loading";
+import { getTransactionList } from "../../../background/api";
+import { SEC_DELETE_ACCOUNT } from "../../../constant/secTypes";
+import {
+  DAPP_DELETE_ACCOUNT_CONNECT_HIS,
+  WALLET_CHANGE_ACCOUNT_NAME,
+  WALLET_CHANGE_DELETE_ACCOUNT,
+  WALLET_DELETE_WATCH_ACCOUNT,
+} from "../../../constant/types";
+import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
+import { sendMsg } from "../../../utils/commonMsg";
+import { JSonToCSV } from "../../../utils/JsonToCSV";
+import {
+  amountDecimals,
+  copyText,
+  nameLengthCheck,
+} from "../../../utils/utils";
+import Loading from "../../component/Loading";
 import SecurityPwd from "../../component/SecurityPwd";
+import Toast from "../../component/Toast";
 
-class AccountInfo extends React.Component {
-  constructor(props) {
-    super(props);
-    let account = props.cache.accountInfo
-    this.state = {
-      confirmModal: false,
-      account,
-      accountName: account.accountName,
-      inputAccountName: "",
-      errorTipShow: false,
-      btnClick: false,
-      showSecurity: false
-    };
-    this.modal = React.createRef();
-    this.isUnMounted = false;
-  }
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
+import CustomView from "../../component/CustomView";
+import { PopupModal, PopupModal_type } from "../../component/PopupModal";
+import styles from "./index.module.scss";
 
-  componentWillUnmount() {
-    this.isUnMounted = true;
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
-    }
-  }
-  renderInfo = (title, content, callback, hideArrow) => {
-    return (
-      <div className={cx({
-        "account-info-item": true,
-      })}
-        onClick={() => callback && callback()}>
-        <div className={"account-info-con  click-cursor"}>
-          <div className="account-info-item-inner">
-            <p className="account-info-title">{title}</p>
-            {content && <p className={
-              cx({
-                "account-info-content": true,
-              })
-            }>{content}</p>}
-          </div>
-          <img className={
-            cx({
-              "account-info-arrow": true,
-              "account-info-arrow-hide": hideArrow
-            })
+const AccountInfo = ({}) => {
+  const cache = useSelector((state) => state.cache);
+  const currentAccount = useSelector(
+    (state) => state.accountInfo.currentAccount
+  );
 
-          } src={txArrow} />
-        </div>
-      </div>
-    )
-  }
+  const dispatch = useDispatch();
+  const history = useHistory();
+  const [account, setAccount] = useState(cache.accountInfo);
+  const [popupModalStatus, setPopupModalStatus] = useState(false);
 
-  changeAccountName = (e) => {
-    this.modal.current.setModalVisable(true)
-  }
-  onCloseModal = () => {
-    this.modal.current.setModalVisable(false)
-  }
-  showPrivateKey = () => {
-    this.props.history.push({
-      pathname: "/show_privatekey_page",
-      params: {
-        address: this.state.account.address,
-      }
-    }
-    )
-  }
-  onClickCheck = (password) => {
-    let { currentAccount } = this.props
-    let address = currentAccount.address
-    sendMsg({
-      action: WALLET_CHANGE_DELETE_ACCOUNT,
-      payload: {
-        address: this.state.account.address,
-        password: password
+  const [currentModal, setCurrentModal] = useState({});
+  const [showSecurity, setShowSecurity] = useState(false);
+
+  const onCloseModal = useCallback(() => {
+    setPopupModalStatus(false);
+  }, []);
+
+  const onConfirmChange = useCallback(
+    (data) => {
+      let checkResult = nameLengthCheck(data.inputValue);
+      if (checkResult) {
+        sendMsg(
+          {
+            action: WALLET_CHANGE_ACCOUNT_NAME,
+            payload: {
+              address: account.address,
+              accountName: data.inputValue.trim(),
+            },
+          },
+          (account) => {
+            setAccount(account.account);
+
+            let address = currentAccount.address;
+            if (account.account?.address === address) {
+              dispatch(updateCurrentAccount(account.account));
+            }
+            setPopupModalStatus(false);
+          }
+        );
+      } else {
       }
     },
-      async (currentAccount) => {
-        if (currentAccount.error) {
-          if (currentAccount.type === "local") {
-            Toast.info(getLanguage(currentAccount.error))
-          } else {
-            Toast.info(currentAccount.error)
-          }
-        } else {
-          sendMsg({
-            action: DAPP_DELETE_ACCOUNT_CONNECT_HIS,
-            payload: {
-              address: this.state.account.address,
-              oldCurrentAddress:address,
-              currentAddress: currentAccount.address,
-            }
-          }, (status) => { })
-          Toast.info(getLanguage("deleteSuccess"))
-          this.props.updateCurrentAccount(currentAccount)
-          this.props.history.goBack()
-        }
-      })
-  }
-  deleteAccount = () => {
-    if (this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH) {
-      Loading.show()
-      sendMsg({
-        action: WALLET_DELETE_WATCH_ACCOUNT,
-        payload: {
-          address: this.state.account.address,
-        }
-      },
-        async (currentAccount) => {
-          Loading.hide()
-          if (currentAccount.error) {
-            if (currentAccount.type === "local") {
-              Toast.info(getLanguage(currentAccount.error))
-            } else {
-              Toast.info(currentAccount.error)
-            }
-          } else {
-            Toast.info(getLanguage("deleteSuccess"))
-            this.props.updateCurrentAccount(currentAccount)
+    [account, currentAccount, i18n]
+  );
 
-            setTimeout(() => {
-              this.props.history.goBack()
-            }, 300);
-          }
-        })
-    } else {
-      this.callSetState({
-        showSecurity: true
-      })
-    }
-  }
-  onChangeAccountName = () => {
-    let { currentAccount } = this.props
-    if (this.state.inputAccountName.length <= 0) {
-      Toast.info(getLanguage('inputAccountName'))
-      return
-    }
-    sendMsg({
-      action: WALLET_CHANGE_ACCOUNT_NAME,
-      payload: {
-        address: this.state.account.address,
-        accountName: this.state.inputAccountName
-      }
-    }, (account) => {
-      if (!this.isUnMounted) {
-        this.callSetState({
-          account: account.account
-        })
-      }
-      let address = currentAccount.address
-      if (account.account?.address === address) {
-        this.props.updateCurrentAccount(account.account)
-      }
-      this.onCloseModal()
-      Toast.info(getLanguage('changeSuccess'))
-    })
-  }
-  renderActionBtn = () => {
-    return (
-      <div className={"account-info-btn-container"}>
-        <Button
-          content={getLanguage('confirm')}
-          onClick={this.onChangeAccountName}
-          propsClass={'modal-button-width'}
-          disabled={!this.state.btnClick}
-        />
-        <Button
-          buttonType={BUTTON_TYPE_CANCEL}
-          content={getLanguage('cancel')}
-          onClick={this.onCloseModal}
-          propsClass={'modal-button-width'}
-        />
-      </div>
-    )
-  }
-  onTextInput = (e) => {
-    if (!this.isUnMounted) {
-      this.callSetState({
-        inputAccountName: e.target.value,
-      }, () => {
-        let checkResult = nameLengthCheck(this.state.inputAccountName)
-        if (checkResult) {
-          this.callSetState({
-            btnClick: true,
-            errorTipShow: false
-          })
-        } else {
-          this.callSetState({
-            btnClick: false,
-            errorTipShow: true
-          })
-        }
-      })
-    }
-  }
-  onSubmit = (event) => {
-    event.preventDefault();
-  }
-  renderInput = () => {
-    return (
+  const onClickAccountName = useCallback(() => {
+    setCurrentModal({
+      title: i18n.t("changeAccountName"),
+      leftBtnContent: i18n.t("cancel"),
+      rightBtnContent: i18n.t("confirm"),
+      type: PopupModal_type.input,
+      onLeftBtnClick: onCloseModal,
+      onRightBtnClick: onConfirmChange,
+      content: "",
+      inputPlaceholder: i18n.t("accountNameLimit"),
+      maxInputLength: 16,
+    });
+    setPopupModalStatus(true);
+  }, [i18n]);
 
-      <div className="change-input-wrapper">
-        <CustomInput
-          placeholder={this.state.account.accountName}
-          value={this.state.inputAccountName}
-          onTextInput={this.onTextInput}
-          errorTipShow={this.state.errorTipShow}
-          showTip={getLanguage("accountNameLimit")}
-        />
-      </div>)
-  }
-  renderChangeModal = () => {
-    return (<TestModal
-      ref={this.modal}
-      title={getLanguage('renameAccountName')}
-    >
-      {this.renderInput()}
-      {this.renderActionBtn()}
-    </TestModal>)
-  }
-  copyAddress = () => {
-    copyText(this.state.account.address).then(() => {
-      Toast.info(getLanguage('copySuccess'))
-    })
-  }
+  const showPrivateKey = useCallback(() => {
+    history.push({
+      pathname: "show_privatekey_page",
+      params: { address: account.address },
+    });
+  }, []);
 
-  exportCsvTransactions = async () => {
-    Loading.show()
-    const { txList } = await getTransactionList(this.state.account.address, null)
-    Loading.hide()
+  const exportCsvTransactions = useCallback(async () => {
+    Loading.show();
+    const { txList } = await getTransactionList(account.address, null);
+    Loading.hide();
     const csvList = txList.map((tx) => {
       return {
-        date: tx.time.replace(/T/, ' ').replace(/Z/, ' UTC'),
+        date: tx.time.replace(/T/, " ").replace(/Z/, " UTC"),
         amount: amountDecimals(tx.amount, cointypes.decimals),
         sender: tx.sender,
         receiver: tx.receiver,
-        memo: tx.memo ? tx.memo : '',
+        memo: tx.memo ? tx.memo : "",
         fee: amountDecimals(tx.fee, cointypes.decimals),
         nonce: tx.nonce,
         type: tx.type,
         hash: tx.hash,
         status: tx.status,
-      }
-    })
+      };
+    });
     JSonToCSV.setDataConver({
       data: csvList,
-      fileName: this.state.account.address,
+      fileName: account.address,
       columns: {
-        title: ['Date', 'Amount', 'Sender', 'Receiver', 'Memo', 'Fee', 'Nonce', 'Type', 'TxHash', 'Status'],
-        key: ['date', 'amount', 'sender', 'receiver', 'memo', 'fee', 'nonce', 'type', 'hash', 'status']
-      }
+        title: [
+          "Date",
+          "Amount",
+          "Sender",
+          "Receiver",
+          "Memo",
+          "Fee",
+          "Nonce",
+          "Type",
+          "TxHash",
+          "Status",
+        ],
+        key: [
+          "date",
+          "amount",
+          "sender",
+          "receiver",
+          "memo",
+          "fee",
+          "nonce",
+          "type",
+          "hash",
+          "status",
+        ],
+      },
     });
-  }
+  }, [account]);
 
-  render() {
-    const { showSecurity } = this.state
-    let hideDelete = this.state.account.type === ACCOUNT_TYPE.WALLET_INSIDE
-    let isLedger = this.state.account.type === ACCOUNT_TYPE.WALLET_LEDGER
-    let hideExport = this.state.account.type === ACCOUNT_TYPE.WALLET_WATCH || isLedger
-    let showAddress = this.state.account.address
-    let title = showSecurity ? getLanguage('securityPassword') : getLanguage('accountInfo')
-    return (
-      <CustomView
-        title={title}
-        history={this.props.history}>
-        {showSecurity ?
-          <SecurityPwd onClickCheck={this.onClickCheck} action={SEC_DELETE_ACCOUNT} /> :
-          <>
-            <div className="account-info-container">
-              {this.renderInfo(getLanguage('accountAddress'), showAddress, this.copyAddress, true)}
-              {isLedger ? this.renderInfo(getLanguage('hdDerivedPath'), `m / 44' / 12586' / ${this.state.account.hdPath} ' / 0 / 0`, null, true) : null}
-              {this.renderInfo(getLanguage('accountName'), this.state.account.accountName, this.changeAccountName)}
-              {!hideExport ? this.renderInfo(getLanguage('exportPrivateKey'), "", this.showPrivateKey) : null}
-              {this.renderInfo(getLanguage('exportCSV'), "", this.exportCsvTransactions)}
-              {!hideDelete ? this.renderInfo(getLanguage("accountDelete"), "", this.deleteAccount) : null}
-            </div>
-            <form onSubmit={this.onSubmit}>
-              {this.renderChangeModal()}
-            </form>
-          </>}
-      </CustomView>)
-  }
-}
+  const deleteAccount = useCallback(() => {
+    if (account.type === ACCOUNT_TYPE.WALLET_WATCH) {
+      Loading.show();
+      sendMsg(
+        {
+          action: WALLET_DELETE_WATCH_ACCOUNT,
+          payload: {
+            address: account.address,
+          },
+        },
+        async (currentAccount) => {
+          Loading.hide();
+          if (currentAccount.error) {
+            if (currentAccount.type === "local") {
+              Toast.info(i18n.t(currentAccount.error));
+            } else {
+              Toast.info(currentAccount.error);
+            }
+          } else {
+            dispatch(updateCurrentAccount(currentAccount));
 
-const mapStateToProps = (state) => ({
-  cache: state.cache,
-  currentAccount: state.accountInfo.currentAccount,
-});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    updateCurrentAccount: (account) => {
-      dispatch(updateCurrentAccount(account))
+            setTimeout(() => {
+              history.goBack();
+            }, 300);
+          }
+        }
+      );
+    } else {
+      setShowSecurity(true);
     }
-  };
-}
+  }, [account]);
 
-export default connect(mapStateToProps, mapDispatchToProps)(AccountInfo);
+  const { hideDelete, isLedger, hideExport, hdPath } = useMemo(() => {
+    const hideDelete = account.type === ACCOUNT_TYPE.WALLET_INSIDE;
+    let isLedger = account.type === ACCOUNT_TYPE.WALLET_LEDGER;
+    let hdPath = isLedger
+      ? `m / 44' / 12586' / ${account.hdPath} ' / 0 / 0`
+      : "";
+    let hideExport = account.type === ACCOUNT_TYPE.WALLET_WATCH || isLedger;
+
+    return {
+      hideDelete,
+      isLedger,
+      hideExport,
+      hdPath,
+    };
+  }, [account]);
+
+  const onCopyAddress = useCallback(() => {
+    copyText(account.address).then(() => {
+      Toast.info(i18n.t("copySuccess"));
+    });
+  }, [account]);
+
+  const onClickCheck = useCallback(
+    (password) => {
+      let address = currentAccount.address;
+      sendMsg(
+        {
+          action: WALLET_CHANGE_DELETE_ACCOUNT,
+          payload: {
+            address: account.address,
+            password: password,
+          },
+        },
+        async (currentAccount) => {
+          if (currentAccount.error) {
+            if (currentAccount.type === "local") {
+              if (currentAccount.error === "passwordError") {
+                Toast.info(i18n.t("incorrectSecurityPassword"));
+              } else {
+                Toast.info(i18n.t(currentAccount.error));
+              }
+            } else {
+              Toast.info(currentAccount.error);
+            }
+          } else {
+            sendMsg(
+              {
+                action: DAPP_DELETE_ACCOUNT_CONNECT_HIS,
+                payload: {
+                  address: account.address,
+                  oldCurrentAddress: address,
+                  currentAddress: currentAccount.address,
+                },
+              },
+              (status) => {}
+            );
+            dispatch(updateCurrentAccount(currentAccount));
+            history.goBack();
+          }
+        }
+      );
+    },
+    [currentAccount, account, i18n]
+  );
+
+  if (showSecurity) {
+    return (
+      <SecurityPwd onClickCheck={onClickCheck} action={SEC_DELETE_ACCOUNT} />
+    );
+  }
+  return (
+    <CustomView
+      title={i18n.t("accountDetails")}
+      contentClassName={styles.container}
+    >
+      <div className={styles.contentContainer}>
+        <div className={styles.rowAddress} onClick={onCopyAddress}>
+          <p className={styles.rowAddressTitle}>{i18n.t("accountAddress")}</p>
+          <span className={styles.rowAddressContent}>{account.address}</span>
+        </div>
+        <div className={styles.rowInfoContainer}>
+          {isLedger && (
+            <AccountInfoRow
+              title={i18n.t("hdDerivedPath")}
+              desc={hdPath}
+              noArrow={true}
+            />
+          )}
+          <AccountInfoRow
+            title={i18n.t("accountName")}
+            desc={account.accountName}
+            onClick={onClickAccountName}
+          />
+          {!hideExport && (
+            <AccountInfoRow
+              title={i18n.t("exportPrivateKey")}
+              onClick={showPrivateKey}
+            />
+          )}
+        </div>
+        {!hideDelete && (
+          <>
+            <div className={styles.dividedLine} />
+            <div className={styles.deleteRow}>
+              <p
+                className={cls(styles.rowTitle, styles.deleteTitle)}
+                onClick={deleteAccount}
+              >
+                {i18n.t("delete")}
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+
+      <PopupModal
+        title={currentModal.title}
+        leftBtnContent={currentModal.leftBtnContent}
+        rightBtnContent={currentModal.rightBtnContent}
+        rightBtnStyle={currentModal.rightBtnStyle || ""}
+        type={currentModal.type}
+        onLeftBtnClick={currentModal.onLeftBtnClick}
+        onRightBtnClick={currentModal.onRightBtnClick}
+        content={currentModal.content}
+        modalVisable={popupModalStatus}
+        onCloseModal={onCloseModal}
+        inputPlaceholder={currentModal?.inputPlaceholder}
+        bottomTipClass={styles.waringTip}
+        onInputChange={currentModal?.onInputChange}
+        maxInputLength={currentModal?.maxInputLength}
+      />
+    </CustomView>
+  );
+};
+
+const AccountInfoRow = ({
+  title = "",
+  desc = "",
+  onClick = () => {},
+  noArrow = false,
+}) => {
+  return (
+    <div
+      className={cls(styles.rowContainer, {
+        [styles.clickRow]: !noArrow,
+      })}
+      onClick={onClick}
+    >
+      <div>
+        <p className={styles.rowTitle}>{title}</p>
+        {desc && <p className={styles.rowDesc}>{desc}</p>}
+      </div>
+      {!noArrow && (
+        <div>
+          <img src="/img/icon_arrow.svg" />
+        </div>
+      )}
+    </div>
+  );
+};
+export default AccountInfo;

@@ -7,6 +7,7 @@ import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
 import { getCurrentNetConfig } from '../utils/utils';
+import i18n from "i18next"
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -30,7 +31,8 @@ class APIService {
           data: '',
           password: '',
           currentAccount: {},
-          mne: ""
+          mne: "",
+          autoLockTime:LOCK_TIME
         };
       }
     getStore = () => {
@@ -118,12 +120,15 @@ class APIService {
         return this.getStore().password === password
     }
     setLastActiveTime() {
-        const timeoutMinutes = LOCK_TIME
+        const timeoutMinutes = this.getStore().autoLockTime
         let localData = this.getStore().data
         let isUnlocked = this.getStore().isUnlocked
         if (localData && isUnlocked) {
             if (this.activeTimer) {
                 clearTimeout(this.activeTimer)
+            }
+            if(timeoutMinutes === -1){
+                return
             }
             if (!timeoutMinutes) {
                 return
@@ -131,9 +136,15 @@ class APIService {
 
             this.activeTimer = setTimeout(() => {
                 this.setUnlockedStatus(false)
-            }, timeoutMinutes * 60 * 1000)
+            }, timeoutMinutes)
         }
 
+    }
+    updateLockTime(autoLockTime){
+        this.memStore.updateState({autoLockTime:autoLockTime})
+    }
+    getCurrentAutoLockTime(){
+        return this.getStore().autoLockTime
     }
     setUnlockedStatus(status) {
         if (!status) {
@@ -653,8 +664,8 @@ class APIService {
                     extension.tabs.create({ url: url });
                 }
             });
-        let title = getLanguage('notificationTitle')
-        let message = getLanguage('notificationContent')
+        let title = i18n.t('notificationTitle')
+        let message = i18n.t('notificationContent')
         extension.notifications.create(hash, {
             title: title,
             message: message,

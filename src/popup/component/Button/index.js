@@ -1,60 +1,57 @@
-import React, { Component } from "react";
-import "./index.scss";
-import cx from "classnames";
-import PropTypes from 'prop-types'
+import cls from "classnames";
+import { useEffect, useState } from "react";
+import styles from "./index.module.scss";
 
-export const BUTTON_TYPE_CANCEL = "BUTTON_TYPE_CANCEL"
-export const BUTTON_TYPE_CONFIRM = "BUTTON_TYPE_CONFIRM"
-export const BUTTON_TYPE_HOME_BUTTON = "BUTTON_TYPE_HOME_BUTTON"
-export const BUTTON_TYPE_COMMON_BUTTON = "BUTTON_TYPE_COMMON_BUTTON"
-
-export default class Button extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-        };
-    }
-
-    render() {
-        let { content, onClick, disabled, propsClass, buttonType } = this.props
-        let currentClassName = ""
-        switch (buttonType) {
-            case BUTTON_TYPE_CANCEL:
-                currentClassName = cx({
-                    "common-button": true,
-                    "common-cancel-btn": true,
-                    [propsClass]: true,
-                    "click-cursor": true,
-                })
-                break;
-            case BUTTON_TYPE_HOME_BUTTON:
-                currentClassName = cx({
-                    "common-button": true,
-                    [propsClass]: true,
-                    "click-cursor": !disabled,
-                    "click-cursor-disable": disabled,
-                })
-                break;
-            case BUTTON_TYPE_COMMON_BUTTON:
-            default:
-                currentClassName = cx({
-                    "common-button": true,
-                    "common-btn-disable": disabled,
-                    "common-btn-usable": !disabled,
-                    [propsClass]: true,
-                    "click-cursor": !disabled,
-                    "click-cursor-disable": disabled,
-                })
-                break;
-        }
-        return (
-            <button
-                disabled={disabled}
-                className={currentClassName}
-                onClick={onClick}>
-                {content}
-                {this.props.children}
-            </button>
-        );
-    }
+export const button_theme = {
+    BUTTON_THEME_COLOR: "BUTTON_THEME_COLOR",
+    BUTTON_THEME_LIGHT: "BUTTON_THEME_LIGHT"
 }
+
+export const button_size = {
+    large: "button_size_large",
+    sub: "button_size_sub",
+    middle: "button_size_middle",
+    small: "button_size_small",
+}
+ 
+const Button = ({ 
+    disable = false,
+    leftIcon = "",
+    theme = button_theme.BUTTON_THEME_COLOR,
+    size = button_size.large,
+    onClick = () => { },
+    loading = false,
+    children,
+    className = "",
+}) => {
+    const [btnDisable, setBtnDisable] = useState(disable)
+    useEffect(() => {
+        setBtnDisable(loading)
+    }, [loading])
+
+
+    const onRealClick = () => {
+        if (!loading && !disable) {
+            onClick()
+        }
+    }
+
+    return (<button className={cls(styles.button, className, {
+        [styles.noLeftIcon]: !leftIcon,
+        [styles.loadingBtn]: loading,
+        [styles.buttonDisable]: disable,
+        [styles.button_light]: theme === button_theme.BUTTON_THEME_LIGHT,
+        [styles.btn_large]: size === button_size.large || size === button_size.sub,
+        [styles.btn_middle]: size === button_size.middle,
+        [styles.btn_small]: size === button_size.small,
+    })} disabled={btnDisable} onClick={onRealClick}>
+        {leftIcon && !loading && <div className={styles.iconContainer}>
+            <img src={leftIcon} className={styles.btnIcon} />
+        </div>}
+        {
+            loading ? <img className={styles.refreshLoading} src="/img/loading_light.svg" /> : children
+        }
+    </button>)
+}
+
+export default Button

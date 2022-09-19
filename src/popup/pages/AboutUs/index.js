@@ -1,134 +1,147 @@
-import React from "react";
-import { connect } from "react-redux";
-import home_logo from "../../../assets/images/home_logo.png";
-import telegram from "../../../assets/images/telegram.png";
-import twitter from "../../../assets/images/twitter.png";
-import website from "../../../assets/images/website.png";
-import wechat from "../../../assets/images/wechat.png";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import pkg from "../../../../package.json";
 import { getBaseInfo } from "../../../background/api";
-import { VERSION_CONFIG } from "../../../../config";
-import { getLanguage } from "../../../i18n";
-import { openTab } from "../../../utils/commonMsg";
+import { LANG_SUPPORT_LIST } from "../../../i18n";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
-import "./index.scss";
+import styles from "./index.module.scss";
 
-
-const followSource = {
-  "website": website,
-  "twitter": twitter,
-  "telegram": telegram,
-  "wechat": wechat,
-}
-class AboutUs extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      changelog: "",
-      followus: [],
-      gitReponame:""
-    };
-    this.isUnMounted = false;
-  }
-  componentDidMount() {
-    this.fetchBaseInfo()
-  }
-  componentWillUnmount(){
-    this.isUnMounted = true;
-  }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
-      this.setState({
-        ...data
-      },()=>{
-        callback&&callback()
-      })
-    }
-  }
-  fetchBaseInfo = async () => {
-    let baseInfo = await getBaseInfo().catch(err => err)
+const AboutUs = ({}) => {
+  const [baseAboutInfo, setBaseAboutInfo] = useState({
+    terms_and_contions: "",
+    terms_and_contions_cn: "",
+    privacy_policy: "",
+    privacy_policy_cn: "",
+    changelog: "",
+    followus: [],
+  });
+  const fecthBaseInfo = useCallback(async () => {
+    let baseInfo = await getBaseInfo().catch((err) => err);
     if (baseInfo.error) {
-      Toast.info(baseInfo.error)
-      return
+      Toast.info(baseInfo.error);
+      return;
     }
-    let changelog = baseInfo.changelog ? baseInfo.changelog : ""
-    let gitReponame = baseInfo.gitReponame ? baseInfo.gitReponame : ""
-    let followus = baseInfo.followus && baseInfo.followus.length > 0 ? baseInfo.followus : []
-    followus = followus.map((item, index) => {
-      item.source = followSource[item.name]
-      return item
-    })
-    this.callSetState({
-      changelog,
-      followus,
-      gitReponame
-    })
-  }
-  renderTopInfo = () => {
-    return (<div className={'about-top-container'}>
-      <img src={home_logo} className={"about-home-logo"} />
-      <p className={"about-wallet-name"}>{getLanguage('walletName')}</p>
-      <p className={"about-wallet-version"}>{VERSION_CONFIG}</p>
-    </div>)
-  }
-  renderTopDesc = () => {
-    return (<p className="about-tip-description">{getLanguage('walletAbout')}</p>)
-  }
-  rendergitInfo = () => {
-    if (!this.state.changelog) {
-      return <></>
-    }
-    let showLog = this.state.gitReponame
-    return (
-      <div className={"about-item-container"}>
-        <p className={"about-item-title"}>{getLanguage('versionInfo')}</p>
-        <p onClick={() => this.onClick(this.state.changelog)} className={"about-item-content click-cursor"}>{showLog}</p>
+
+    setBaseAboutInfo({
+      terms_and_contions: baseInfo.terms_and_contions,
+      terms_and_contions_cn: baseInfo.terms_and_contions_cn,
+      privacy_policy: baseInfo.privacy_policy,
+      privacy_policy_cn: baseInfo.privacy_policy_cn,
+      changelog: baseInfo.changelog,
+      followus: baseInfo.followus,
+    });
+  }, []);
+
+  useEffect(() => {
+    fecthBaseInfo();
+  }, []);
+
+  const { followList, linkInfoList } = useMemo(() => {
+    const getFollowListLink = (type) => {
+      let followItem = baseAboutInfo.followus.filter((item) => {
+        return type === item.name;
+      });
+      return followItem[0]?.website || "";
+    };
+
+    const followList = [
+      {
+        title: "Website",
+        icon: "/img/icon_website.svg",
+        link: getFollowListLink("website"),
+      },
+      {
+        title: "Twitter",
+        icon: "/img/icon_twitter.svg",
+        link: getFollowListLink("twitter"),
+      },
+      {
+        title: "Telegram",
+        icon: "/img/icon_telegram.svg",
+        link: getFollowListLink("telegram"),
+      },
+    ];
+
+    const getCurrentUrl = (type) => {
+      let lan = i18n.language;
+      let url = "";
+      if (lan === LANG_SUPPORT_LIST.EN) {
+        url =
+          type == "terms"
+            ? baseAboutInfo.terms_and_contions
+            : baseAboutInfo.privacy_policy;
+      } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
+        url =
+          type == "terms"
+            ? baseAboutInfo.terms_and_contions_cn
+            : baseAboutInfo.privacy_policy_cn;
+      }
+      return url;
+    };
+
+    const linkInfoList = [
+      {
+        title: i18n.t("termsAndConditions"),
+        link: getCurrentUrl("terms"),
+      },
+      {
+        title: i18n.t("privacyPolicy"),
+        link: getCurrentUrl("pricacy"),
+      },
+      {
+        title: i18n.t("checkOnGithub"),
+        link: baseAboutInfo.changelog,
+      },
+    ];
+    return { followList, linkInfoList };
+  }, [i18n, baseAboutInfo]);
+
+  return (
+    <CustomView
+      title={i18n.t("about")}
+      contentClassName={styles.aboutContainer}
+    >
+      <img src="/img/icon_logo.svg" className={styles.icon} />
+      <p className={styles.walletName}>{i18n.t("walletName")}</p>
+      <p className={styles.walletVersion}>{"V" + pkg.version}</p>
+      <p className={styles.walletTip}>{i18n.t("walletAbout")}</p>
+      <div className={styles.linkContaienr}>
+        {linkInfoList.map((info, index) => {
+          return (
+            <LinkContent title={info.title} key={index} link={info.link} />
+          );
+        })}
       </div>
-    )
-  }
-  onClick = (url) => {
-    openTab(url)
-  }
-  renderWalletFollow = () => {
-    if (this.state.followus.length <= 0) {
-      return <></>
-    }
-    return (
-      <div className={"about-item-container"}>
-        <p className={"about-item-title"}>{getLanguage('followUs')}</p>
-        <div className={"about-follow-container"}>
-          {this.state.followus.map((item) => {
-            return <img
-              key={item.name}
-              src={item.source}
-              onClick={() => this.onClick(item.website)}
-              className={"about-follow-icon click-cursor"} />
-          })}
-
-        </div>
+      <p className={styles.followTitle}>{i18n.t("followUs")}</p>
+      <div className={styles.followListContainer}>
+        {followList.map((follow, index) => {
+          return (
+            <a
+              className={styles.followItemContainer}
+              href={follow.link}
+              target="_blank"
+              key={index}
+            >
+              <div className={styles.iconContainer}>
+                <img src={follow.icon} />
+              </div>
+              <p className={styles.followItemTitle}>{follow.title}</p>
+            </a>
+          );
+        })}
       </div>
-    )
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('about')}
-        history={this.props.history}>
-        <div className="about-container">
-          {this.renderTopInfo()}
-          {this.renderTopDesc()}
-          {this.rendergitInfo()}
-          {this.renderWalletFollow()}
-        </div>
-      </CustomView>)
-  }
-}
+    </CustomView>
+  );
+};
 
-const mapStateToProps = (state) => ({});
-
-function mapDispatchToProps(dispatch) {
-  return {
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(AboutUs);
+const LinkContent = ({ title, link }) => {
+  return (
+    <div>
+      <a href={link} target="_blank" className={styles.linkContent}>
+        {title}
+      </a>
+    </div>
+  );
+};
+export default AboutUs;

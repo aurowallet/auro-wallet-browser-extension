@@ -1,174 +1,110 @@
 import BigNumber from "bignumber.js";
-import cx from "classnames";
-import React from "react";
-import { Trans } from "react-i18next";
-import { connect } from "react-redux";
-import { withRouter } from "react-router-dom";
-import { cointypes } from "../../../../config";
-import downArrow from "../../../assets/images/downArrow.png";
-import loadingCommon from "../../../assets/images/loadingCommon.gif";
-import modalClose from "../../../assets/images/modalClose.png";
-import pwd_right from "../../../assets/images/pwd_right.png";
-import reminder from "../../../assets/images/reminder.png";
-import arrow from '../../../assets/images/txArrow.png';
-import { getBalance, getFeeRecom, sendStakeTx } from '../../../background/api';
-import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
-import { getLanguage } from '../../../i18n';
-import { updateNetAccount, updateShouldRequest } from '../../../reducers/accountReducer';
-import { sendMsg } from "../../../utils/commonMsg";
-import { checkLedgerConnect, requestSignDelegation } from "../../../utils/ledger";
+import cls from "classnames";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getBalance, getFeeRecom, sendStakeTx } from "../../../background/api";
+import i18n from "i18next";
+import { useHistory } from 'react-router-dom';
+import AdvanceMode from "../../component/AdvanceMode";
+import Button from "../../component/Button";
+import { ConfirmModal } from "../../component/ConfirmModal";
+import CustomView from "../../component/CustomView";
+import FeeGroup from "../../component/FeeGroup";
+import Input from "../../component/Input";
+import styles from "./index.module.scss";
+import { updateNetAccount } from '../../../reducers/accountReducer';
 import { addressSlice, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
-import Button from '../../component/Button';
-import CustomInput from '../../component/CustomInput';
-import CustomView from "../../component/CustomView";
-import Loading from '../../component/Loading';
-import TestModal from '../../component/TestModal';
-import Toast from '../../component/Toast';
-import './index.scss';
-const FEE_RECOMMED_DEFAULT = 1
-const FEE_RECOMMED_CUSTOM = -1
 
-class StakingTransfer extends React.Component {
-  constructor(props) {
-    super(props);
-    let params = props.location?.params || {};
-    this.state = {
-      fee: 0.01,
-      menuAdd: !!params.menuAdd,
-      nodeName: params.nodeName,
-      nodeAddress: params.nodeAddress,
-      memo: "",
-      isOpenAdvance: false,
-      inputFee: "",
-      nonce: "",
-      feeList: [
-        {
-          text: getLanguage("fee_slow"),
-          select: false,
-          fee: " "
-        }, {
-          text: getLanguage("fee_default"),
-          select: false,
-          fee: " "
-        },
-        {
-          text: getLanguage("fee_fast"),
-          select: false,
-          fee: " "
-        }
-      ],
-      feeSelect: FEE_RECOMMED_DEFAULT,
-      confirmModalLoading: false
+import { cointypes } from "../../../../config";
+import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
+import { sendMsg } from "../../../utils/commonMsg";
+import Toast from "../../component/Toast";
+import { checkLedgerConnect, requestSignDelegation } from "../../../utils/ledger";
+import { ACCOUNT_TYPE } from "../../../constant/walletType";
+
+const StakingTransfer = () => { 
+  const dispatch = useDispatch()
+  const history = useHistory()
+
+  const balance = useSelector(state => state.accountInfo.balance)
+  const currentAccount = useSelector(state => state.accountInfo.currentAccount)
+  const netAccount = useSelector(state => state.accountInfo.netAccount)
+
+  const {
+    menuAdd, nodeName, nodeAddress, showNodeName
+  } = useMemo(() => {
+    let params = history.location?.params
+
+    let menuAdd = !!params.menuAdd
+    let nodeName = params.nodeName
+    let nodeAddress = params.nodeAddress
+
+    let showNodeName = nodeName || addressSlice(nodeAddress, 8)
+    return {
+      menuAdd, nodeName, nodeAddress, showNodeName
     }
-    this.modal = React.createRef();
-    this.isUnMounted = false;
-  }
-  componentDidMount() {
-    this.fetchData();
-  }
-  componentWillUnmount() {
-    this.isUnMounted = true;
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
+  }, [history])
+
+
+  const [blockAddress, setBlockAddress] = useState("")
+
+  const [memo, setMemo] = useState('')
+  const [feeAmount, setFeeAmount] = useState(0.1)
+  const [inputNonce, setInputNonce] = useState("")
+  const [feeErrorTip, setFeeErrorTip] = useState("")
+  const [netFeeList, setNetFeeList] = useState([])
+  const [isOpenAdvance, setIsOpenAdvance] = useState(false)
+  const [confrimModalStatus, setConfrimModalStatus] = useState(false)
+  const [confrimBtnStatus, setConfrimBtnStatus] = useState(false)
+  const [contentList, setContentList] = useState([])
+
+  const [waintLedgerStatus, setWaintLedgerStatus] = useState(false)
+
+
+
+
+  const onBlockAddressInput = useCallback((e) => {
+    setBlockAddress(e.target.value)
+  }, [])
+
+  const onMemoInput = useCallback((e) => {
+    setMemo(e.target.value)
+  }, [])
+  const onClickFeeGroup = useCallback((item) => {
+    setFeeAmount(item.fee)
+  }, [])
+
+  const onClickAdvance = useCallback(() => {
+    setIsOpenAdvance(state => !state)
+  }, [])
+
+  const onFeeInput = useCallback((e) => {
+    setFeeAmount(e.target.value)
+
+    if (BigNumber(e.target.value).gt(10)) {
+      setFeeErrorTip(i18n.t('feeTooHigh'))
+    } else {
+      setFeeErrorTip("")
     }
-  }
-  fetchData = async () => {
-    let { currentAccount } = this.props;
-    let address = currentAccount.address
-    let feeRecom = await getFeeRecom()
-    if (feeRecom.length > 0) {
-      const feeList = this.state.feeList.map((item, index) => {
-        return {
-          ...item,
-          fee: feeRecom[index].value,
-        }
-      })
-      this.callSetState({
-        feeList,
-        fee: feeRecom[1].value
-      })
-    }
-    let account = await getBalance(address)
-    if (account.publicKey) {
-      this.props.dispatch(updateNetAccount(account))
-    }
-  }
-  renderBottomBtn = () => {
-    return (
-      <div className={'reset-bottom-container'}>
-        <Button
-          content={getLanguage('next')}
-          onClick={this.onConfirm}>
-        </Button>
-      </div>
-    )
-  }
-  ledgerTransfer = async (params) => {
-    const { ledgerApp } = await checkLedgerConnect()
-    if (ledgerApp) {
-      this.modal.current.setModalVisable(false)
-      this.callSetState({
-        confirmModalLoading: true
-      })
-      this.modal.current.setModalVisable(true)
-      let currentAccount = this.props.currentAccount
-      const { signature, payload, error } = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
-      this.modal.current.setModalVisable(false)
-      this.callSetState({
-        confirmModalLoading: false
-      })
-      if (error) {
-        Toast.info(error.message)
-        return
-      }
-      let postRes = await sendStakeTx(payload, { rawSignature: signature }).catch(error => error)
-      this.onSubmitSuccess(postRes,"ledger")
-    }
-  }
-  doTransfer = async () => {
-    let currentAccount = this.props.currentAccount
-    let netAccount = this.props.netAccount
-    let fromAddress = currentAccount.address
-    let toAddress = this.state.nodeAddress
-    let nonce = trimSpace(this.state.nonce) || netAccount.inferredNonce
-    let memo = this.state.memo || ""
-    let fee = trimSpace(this.state.inputFee) || this.state.fee
-    const payload = {
-      fromAddress, toAddress, fee, nonce, memo
-    }
-    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      return this.ledgerTransfer(payload)
-    }
-    this.modal.current.setModalVisable(false)
-    Loading.show()
-    sendMsg({
-      action: WALLET_SEND_STAKE_TRANSTRACTION,
-      payload
-    }, (data) => {
-      Loading.hide()
-      this.onSubmitSuccess(data)
-    })
-  }
-  onSubmitSuccess = (data,type) => {
+  }, [])
+  const onNonceInput = useCallback((e) => {
+    setInputNonce(e.target.value)
+  }, [])
+  const onClickClose = useCallback(() => {
+    setConfrimModalStatus(false)
+  }, [])
+
+  const onSubmitSuccess = useCallback((data, type) => {
     if (data.error) {
-      let errorMessage = getLanguage('postFailed')
+      let errorMessage = i18n.t('postFailed')
       let realMsg = getRealErrorMsg(data.error)
       errorMessage = realMsg ? realMsg : errorMessage
       Toast.info(errorMessage, 5 * 1000)
       return
     }
-    Toast.info(getLanguage('postSuccess'))
-    this.props.dispatch(updateShouldRequest(true, true))
     let detail = data.sendDelegation && data.sendDelegation.delegation || {}
-    if(type === "ledger"){
+    if (type === "ledger") {
       sendMsg({
         action: WALLET_CHECK_TX_STATUS,
         payload: {
@@ -177,304 +113,216 @@ class StakingTransfer extends React.Component {
         }
       }, () => { })
     }
-    this.props.history.replace({
-      pathname: "/record_page",
-      params: {
-        txDetail: detail
+    history.go(-3)
+  }, [])
+
+
+  useEffect(()=>{
+    if(!confrimModalStatus){
+      setWaintLedgerStatus(false)
+    }
+  },[confrimModalStatus])
+
+  const ledgerTransfer = useCallback(async(params)=>{
+    const { ledgerApp } = await checkLedgerConnect()
+    if (ledgerApp) {
+      setWaintLedgerStatus(true)
+      const { signature, payload, error,rejected } = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
+      if(rejected){
+        setConfrimModalStatus(false)
       }
-    })
-  }
-  onCancel = () => {
-    if (this.state.menuAdd && !this.state.nodeAddress) {
-      Toast.info(getLanguage('inputNodeAddress'));
-      return;
+      if (error) {
+        Toast.info(error.message)
+        return
+      }
+      let postRes = await sendStakeTx(payload, { rawSignature: signature }).catch(error => error)
+      onSubmitSuccess(postRes,"ledger")
     }
-    this.modal.current.setModalVisable(false)
-  }
-  onConfirm = () => {
-    if (!addressValid(this.state.nodeAddress)) {
-      Toast.info(getLanguage('sendAddressError'))
+  },[currentAccount,onSubmitSuccess])
+
+  const clickNextStep = useCallback(() => {
+    let fromAddress = currentAccount.address
+    let toAddress = nodeAddress || trimSpace(blockAddress)
+    let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
+    let memo = memo || ""
+    let fee = trimSpace(feeAmount)
+    const payload = {
+      fromAddress, toAddress, fee, nonce, memo
+    }
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      return ledgerTransfer(payload)
+    }
+    setConfrimBtnStatus(true)
+    sendMsg({
+      action: WALLET_SEND_STAKE_TRANSTRACTION,
+      payload
+    }, (data) => {
+      setConfrimBtnStatus(false)
+      onSubmitSuccess(data)
+    })
+  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer])
+
+
+  const onConfirm = useCallback(() => {
+    let realBlockAddress = nodeAddress || blockAddress
+    if (!addressValid(realBlockAddress)) {
+      Toast.info(i18n.t('sendAddressError'))
       return
     }
-    if (this.state.fee > this.props.balance) {
-      Toast.info(getLanguage('balanceNotEnough'));
-      return;
-    }
-    let inputFee = trimSpace(this.state.inputFee)
+    let inputFee = trimSpace(feeAmount)
     if (inputFee.length > 0 && !isNumber(inputFee)) {
-      Toast.info(getLanguage('inputFeeError'))
+      Toast.info(i18n.t('inputFeeError'))
       return
     }
-    let nonce = trimSpace(this.state.nonce)
+
+    if (new BigNumber(inputFee).gt(balance)) {
+      Toast.info(i18n.t('balanceNotEnough'));
+      return;
+    }
+    let nonce = trimSpace(inputNonce)
     if (nonce.length > 0 && !isTrueNumber(nonce)) {
-      Toast.info(getLanguage('inputNonceError'))
+      Toast.info(i18n.t('inputNonceError'))
       return
     }
-    this.modal.current.setModalVisable(true)
-  }
-  onMemoChange = (e) => {
-    let memo = e.target.value;
-    this.callSetState({
-      memo: memo
-    }, () => {
-      this.setBtnStatus()
-    })
-  }
-  onClickFee = (item, index) => {
-    this.callSetState({
-      feeSelect: index,
-      fee: item.fee,
-      inputFee: ""
-    })
-  }
-  onFeeInput = (e) => {
-    let fee = e.target.value
-    this.callSetState({
-      inputFee: fee
-    }, () => {
-      this.setBtnStatus()
-      this.callSetState({
-        feeSelect: FEE_RECOMMED_CUSTOM
+
+    let list = [
+      {
+        label: i18n.t('blockProducerAddress'),
+        value: nodeAddress || blockAddress,
+      },
+      {
+        label: i18n.t('from'),
+        value: currentAccount.address,
+      },
+      {
+        label: i18n.t('fee'),
+        value: inputFee + cointypes.symbol,
+      }
+    ]
+    if (isTrueNumber(nonce)) {
+      list.push({
+        label: "Nonce",
+        value: nonce,
       })
-    })
-  }
-  setBtnStatus = () => {
-  }
-  onNonceInput = (e) => {
-    let nonce = e.target.value
-    this.callSetState({
-      nonce: nonce
-    })
-  }
-  onOpenAdvance = () => {
-    this.callSetState({
-      isOpenAdvance: !this.state.isOpenAdvance
-    })
-  }
-  onProviderChange = (e) => {
-    let providerAddress = e.target.value;
-    this.callSetState({
-      nodeAddress: providerAddress
-    });
-  }
-  onChooseNode = () => {
-    this.props.history.replace({
+    }
+    if (memo) {
+      list.push({
+        label: "Memo",
+        value: memo,
+      })
+    }
+    setContentList(list)
+    setConfrimModalStatus(true)
+  }, [nodeAddress, balance, feeAmount, inputNonce,
+    clickNextStep, nodeName, nodeAddress, blockAddress, currentAccount, memo])
+
+
+  const onClickBlockProducer = useCallback(() => {
+    history.replace({
       pathname: "/staking_list",
       params: {
-        nodeAddress: this.state.nodeAddress,
+        nodeAddress: nodeAddress,
         fromPage: 'stakingTransfer'
       }
     });
-  }
-  renderConfirmItem = (title, content, isHighlight) => {
-    return (
-      <div className={"confirm-item-container"}>
-        <div>
-          <p className={"confirm-item-title"}>{title}</p>
-        </div>
-        <p className={
-          cx({
-            "confirm-item-content": true,
-            "confirm-item-content-purple": isHighlight
-          })
-        }>{content}</p>
-      </div>
-    )
-  }
-  renderLoadingView = () => {
-    return (
-      <div className={"confirm-loading"}>
-        <div className="confirmLoadingTip">
-          <p className="confirmLoadingDescTip">{getLanguage('ledgerSendWaitTip')}</p>
-          <Trans
-              i18nKey={"ledgerSendCloseTip"}
-              components={{ b: <strong /> }}
-          />
-        </div>
-        <img className={"confirm-loading-img"} src={loadingCommon} />
-      </div>)
-  }
-  onCloseModal = () => {
-    this.modal.current.setModalVisable(false)
-  }
-  renderConfirmModal = () => {
-    let title = this.state.confirmModalLoading ? "waitLedgerConfirm" : "stakeDetail"
-    return (<TestModal
-      ref={this.modal}
-      touchToClose={true}
-      title={getLanguage(title)}
-    >
-      {this.state.confirmModalLoading ? this.renderLoadingView() : this.renderConfirmView()}
-      {this.state.confirmModalLoading ? <></> : <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />}
-    </TestModal>)
-  }
-  renderConfirmView = () => {
-    let lastFee = this.state.inputFee ? this.state.inputFee : this.state.fee;
-    let nonce = this.state.nonce;
-    let memo = this.state.memo;
-    let nodeName = this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress, 8)
-    return (
-      <div className={"confirm-modal-container"}>
-        {this.renderConfirmItem(getLanguage('stakeProvider'), nodeName, true)}
-        {this.renderConfirmItem(getLanguage('providerAddress'), this.state.nodeAddress)}
-        {this.renderConfirmItem(getLanguage('fromAddress'), this.props.currentAccount.address)}
-        {memo && this.renderConfirmItem("Memo", memo, true)}
-        {nonce && this.renderConfirmItem("Nonce", nonce, true)}
-        {this.renderConfirmItem(getLanguage('fee'), lastFee + " " + cointypes.symbol, true)}
-        {this.renderConfirmButton()}
-      </div>
-    )
-  }
-  renderConfirmButton = () => {
-    let currentAccount = this.props.currentAccount
-    let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
+  }, [nodeAddress])
 
-    let isWatchModde = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
-    let buttonText = isWatchModde ? getLanguage("watchMode") : getLanguage('confirm')
-    return (
-      <Button
-        disabled={disabled}
-        content={buttonText}
-        onClick={this.doTransfer}
-      />
-    )
-  }
-  renderNodeProvider = () => {
-    if (this.state.menuAdd) {
-      return <CustomInput
-        value={this.state.nodeAddress}
-        label={getLanguage('stakingProviderName')}
-        onTextInput={this.onProviderChange} />
-    } else {
-      let nodeName = this.state.nodeName ? this.state.nodeName : addressSlice(this.state.nodeAddress, 8)
-      return <div className={'select-node-con'}>
-        <label className={'provider-title'}>{getLanguage('stakingProviderName')}</label>
-        <div className={'selected-value click-cursor'} onClick={this.onChooseNode}>
-          <div className={'selected-value-text'}>{nodeName}</div>
-          <div className={'arrow-con'}>
-            <img src={arrow} />
-          </div>
-        </div>
-      </div>
+  const fetchFeeData = useCallback(async () => {
+    let feeRecom = await getFeeRecom()
+    if (feeRecom.length > 0) {
+      setNetFeeList(feeRecom)
+      setFeeAmount(feeRecom[1].value)
     }
-  }
-  renderButtonFee = () => {
-    return (
-      <div className={"button-fee-container"}>
-        <div className={"lable-container fee-style"}>
-          <p className="pwd-lable-1">{getLanguage('fee')}</p>
-          <p className="pwd-lable-desc-1">{this.state.inputFee || this.state.fee}</p>
-        </div>
-        <div className={"fee-item-container"}>
-          {this.state.feeList.map((item, index) => {
-            let selected = index === this.state.feeSelect
-            return (
-              <div key={index + ""} onClick={() => this.onClickFee(item, index)}
-                className={
-                  cx({
-                    "fee-common": true,
-                    "fee-select": selected,
-                    "click-cursor": true
-                  })
-                }>
-                <img src={pwd_right} className={
-                  cx({
-                    "fee-select-img": selected,
-                    "fee-select-img-none": !selected,
-                  })
-                } />
-                <p className={"fee-text"}>{item.text}</p>
-              </div>
-            )
+  }, [])
 
-          })}
-        </div>
-      </div>
-    )
-  }
-  renderAdvance = () => {
-    const { isOpenAdvance } = this.state;
-    return (
-      <div className="advancer-outer-container">
-        <div
-          onClick={this.onOpenAdvance}
-          className="advancer-container click-cursor">
-          <p className="advance-content">{getLanguage('advanceMode')}</p>
-          <img className={cx({
-            "down-normal": true,
-            "up-advance": isOpenAdvance,
-            "down-advance": !isOpenAdvance
-          })} src={downArrow}></img>
-        </div>
-      </div>)
-  }
-  renderAdvanceOption = () => {
-    let netAccount = this.props.netAccount
-    let nonceHolder = netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
-    let showFeeHigh = BigNumber(this.state.inputFee).gt(10)
-    return (
-      <div className={
-        cx({
-          "advance-option-show": this.state.isOpenAdvance,
-          "advance-option-hide": !this.state.isOpenAdvance,
-        })
-      }>
-        <CustomInput
-          value={this.state.inputFee}
-          placeholder={getLanguage('feePlaceHolder')}
-          onTextInput={this.onFeeInput}
-        />
-        {showFeeHigh && <div className={"fee-too-high-container"}>
-          <img src={reminder} className={"fee-reminder"} />
-          <p className={"fee-too-high-content"}>{getLanguage('feeTooHigh')}</p>
-        </div>}
-        <CustomInput
-          value={this.state.nonce}
-          placeholder={nonceHolder}
-          onTextInput={this.onNonceInput}
+  const fetchAccountData = useCallback(async () => {
+    let account = await getBalance(currentAccount.address)
+    if (account.publicKey) {
+      dispatch(updateNetAccount(account))
+    }
+  }, [currentAccount])
+
+
+  useEffect(() => {
+    fetchFeeData()
+    fetchAccountData()
+  }, [])
+
+  return (<CustomView title={i18n.t('staking')} contentClassName={styles.container}>
+    <div className={styles.contentContainer}>
+      <div className={styles.inputContainer}>
+        {menuAdd ? <Input
+          label={i18n.t('blockProducer')}
+          onChange={onBlockAddressInput}
+          value={blockAddress}
+          inputType={'text'}
+        /> : <BlockProducer
+          label={i18n.t('blockProducer')}
+          showNodeName={showNodeName}
+          onClickBlockProducer={onClickBlockProducer}
+        />}
+        <Input
+          label={i18n.t('memo')}
+          onChange={onMemoInput}
+          value={memo}
+          inputType={'text'}
         />
       </div>
-    )
-  }
-
-  render() {
-    return <CustomView
-      title={getLanguage('staking')}
-      history={this.props.history}>
-      <div className={'page-content'}>
-        <div className={'staking-transfer-root'}>
-          <div className={'transfer-form-con'}>
-            {
-              this.renderNodeProvider()
-            }
-            <div className={'memo-con'}>
-              <CustomInput
-                value={this.state.memo}
-                label={getLanguage('memo')}
-                onTextInput={this.onMemoChange} />
-            </div>
-            <div className={'slider-container'}>
-              {
-                this.renderButtonFee()
-              }
-            </div>
-            {this.renderAdvance()}
-            {this.renderAdvanceOption()}
-          </div>
-          {
-            this.renderBottomBtn()
-          }
-        </div>
+      <div className={styles.feeContainer}>
+        <FeeGroup onClickFee={onClickFeeGroup} currentFee={feeAmount} netFeeList={netFeeList} />
       </div>
-      {this.renderConfirmModal()}
-    </CustomView>
-  }
+
+      <div className={styles.dividedLine}>
+        <p className={styles.dividedContent}>-</p>
+      </div>
+
+      <div>
+        <AdvanceMode
+          onClickAdvance={onClickAdvance}
+          isOpenAdvance={isOpenAdvance}
+          feeValue={feeAmount}
+          onFeeInput={onFeeInput}
+          feeErrorTip={feeErrorTip}
+
+          nonceValue={inputNonce}
+          onNonceInput={onNonceInput}
+        />
+      </div>
+      <div className={styles.hold} />
+    </div>
+    <div className={cls(styles.bottomContainer)}>
+      <Button
+        onClick={onConfirm}>
+        {i18n.t('next')}
+      </Button>
+    </div>
+
+    <ConfirmModal
+      modalVisable={confrimModalStatus}
+      title={i18n.t('transactionDetails')}
+      highlightTitle={i18n.t(('blockProducerName'))}
+      highlightContent={showNodeName || addressSlice(blockAddress, 8)}
+      onConfirm={clickNextStep}
+      loadingStatus={confrimBtnStatus}
+      onClickClose={onClickClose}
+      contentList={contentList}
+      waitingLedger={waintLedgerStatus}
+    />
+  </CustomView>)
 }
-const mapStateToProps = (state) => ({
-  balance: state.accountInfo.balance,
-  currentAccount: state.accountInfo.currentAccount,
-  netAccount: state.accountInfo.netAccount,
-});
-export default withRouter(
-  connect(mapStateToProps)(StakingTransfer)
-);
+
+
+const BlockProducer = ({ label, showNodeName, onClickBlockProducer }) => {
+  return (<div className={styles.nodeNameContainer} >
+    <div className={styles.label}>
+      <div className={styles.labelContainer}>
+        <span>{label}</span>
+      </div>
+    </div>
+    <div className={styles.rowContainer} onClick={onClickBlockProducer}>
+      <p className={styles.nodeName}>{showNodeName}</p>
+      <img className={styles.arrow} src={'/img/icon_arrow_unfold.svg'} />
+    </div>
+  </div>)
+}
+export default StakingTransfer

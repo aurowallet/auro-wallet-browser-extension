@@ -1,133 +1,99 @@
-import React from "react";
-import { connect } from "react-redux";
-import copyImg from "../../../assets/images/copy.png";
+import i18n from "i18next";
+import { useCallback, useState } from "react";
+import { useHistory } from 'react-router-dom';
 import { SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
 import { WALLET_GET_PRIVATE_KEY } from "../../../constant/types";
-import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
 import { copyText } from '../../../utils/utils';
-import ConfirmModal from '../../component/ConfirmModal';
-import CustomView from "../../component/CustomView";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
-import "./index.scss";
-class ShowPrivateKeyPage extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      priKey: "",
-      showSecurity: true
-    };
-    this.address = props.location.params?.address ?? ""
-    this.isUnMounted = false;
-  }
+import Button from "../../component/Button";
+import CustomView from "../../component/CustomView";
+import { PopupModal } from "../../component/PopupModal";
+import styles from "./index.module.scss";
 
-  componentWillUnmount() {
-    this.isUnMounted = true;
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
-    }
-  }
-  renderTip = () => {
-    return (
-      <p className="wallet-tip-description">{getLanguage('privateKeyTip_2')}</p>
-    )
-  }
-  renderAddress = () => {
-    return (<div>
-      <p className="wallet-show-title">{getLanguage('walletAddress')}</p>
-      <p className="wallet-show-address">{this.address}</p>
-    </div>)
-  }
-  renderKey = () => {
-    return (<p className="wallet-show-prikey">{this.state.priKey}</p>)
-  }
-  onCopy = () => {
-    let title = getLanguage('prompt')
-    let content = [getLanguage('copyTipContent'),
-    getLanguage('confirmEnv')]
-    let confirmText = getLanguage('copyCancel')
-    let cancelText = getLanguage('copyConfirm')
-    ConfirmModal.show({
-      title, content,
-      confirmText, cancelText,
-      showClose: true,
-      onConfirm: this.onClickRight,
-      onCancel: this.onClickLeft
-    })
-  }
-  onClickRight = () => {
-  }
-  onClickLeft = () => {
-    copyText(this.state.priKey).then(() => {
-      Toast.info(getLanguage('copySuccess'))
-    })
-  }
-  renderCopy = () => {
-    return (
-      <div className="copy-to-clip click-cursor"
-        onClick={this.onCopy}>
-        <img className="copy-to-icon" src={copyImg} />
-        <p className="copy-to-desc">{getLanguage('copyToClipboard')}</p>
-      </div>
-    )
-  }
+const ShowPrivateKeyPage = ({ }) => {
+  const history = useHistory()
+  const [address, setAddress] = useState(history.location.params?.address || "")
 
-  onClickCheck = (password) => {
+  const [showSecurity, setShowSecurity] = useState(true)
+  const [priKey, setPriKey] = useState('')
+  const [confirmModalStatus, setConfirmModalStatus] = useState(false)
+
+
+  const onClickCheck = useCallback((password) => {
     sendMsg({
       action: WALLET_GET_PRIVATE_KEY,
       payload: {
         password: password,
-        address: this.address
+        address: address
       }
     },
       async (privateKey) => {
         if (privateKey.error) {
           if (privateKey.type === "local") {
-            Toast.info(getLanguage(privateKey.error))
+            if(privateKey.error === "passwordError"){
+              Toast.info(i18n.t("incorrectSecurityPassword"))
+            }else{
+              Toast.info(i18n.t(privateKey.error))
+            }
           } else {
             Toast.info(privateKey.error)
           }
         } else {
-          this.callSetState({
-            priKey: privateKey,
-            showSecurity: false
-          }, () => {
-            Toast.info(getLanguage("securitySuccess"))
-          })
+          setPriKey(privateKey)
+          setShowSecurity(false)
         }
       })
+  }, [i18n])
+  const onConfirm = useCallback(() => {
+    history.goBack()
+  }, [])
+  const onClickCopy = useCallback(() => {
+    setConfirmModalStatus(true)
+  }, [])
+
+  const onConfirmCopy = useCallback(() => {
+    setConfirmModalStatus(false)
+    copyText(priKey).then(() => {
+      Toast.info(i18n.t('copySuccess'))
+    })
+  }, [priKey,i18n])
+  const onCloseModal = useCallback(() => {
+    setConfirmModalStatus(false)
+  }, [])
+  if (showSecurity) {
+    return <SecurityPwd pageTitle={i18n.t('privateKey')} onClickCheck={onClickCheck} action={SEC_SHOW_PRIVATE_KEY} />
   }
-  render() {
-    const { showSecurity } = this.state
-    let title = showSecurity ? getLanguage('securityPassword') : getLanguage('showPrivateKey')
-    return (
-      <CustomView
-        title={title}
-        history={this.props.history}>
-        {showSecurity ?
-          <SecurityPwd onClickCheck={this.onClickCheck} action={SEC_SHOW_PRIVATE_KEY} /> :
-          <div className="mne-show-container">
-            {this.renderAddress()}
-            {this.renderKey()}
-            {this.renderCopy()}
-          </div>}
-      </CustomView>)
-  }
+  return (<CustomView title={i18n.t('privateKey')}>
+    <div className={styles.addressContainer}>
+      <p className={styles.addressTitle}>{i18n.t('walletAddress')}</p>
+      <p className={styles.addressContent}>{address}</p>
+    </div>
+    <div className={styles.priContainer}>
+      <p className={styles.privateKey}>{priKey}</p>
+      <div className={styles.copyContainer} onClick={onClickCopy}>
+        <img src="/img/icon_copy_purple.svg" />
+        <p className={styles.copyDesc}>{i18n.t('copyToClipboard')}</p>
+      </div>
+    </div>
+    <div className={styles.hold} />
+    <div className={styles.bottomContainer}>
+      <Button
+        onClick={onConfirm}>
+        {i18n.t('done')}
+      </Button>
+    </div>
+    <PopupModal
+      title={i18n.t('tips')}
+      leftBtnContent={i18n.t('copyAnyway')}
+      rightBtnContent={i18n.t("stopCopying")}
+      onLeftBtnClick={onConfirmCopy}
+      onRightBtnClick={onCloseModal}
+      contentList={[i18n.t('copyTipContent'), i18n.t('confirmEnv')]}
+      modalVisable={confirmModalStatus} />
+  </CustomView>
+  )
 }
 
-const mapStateToProps = (state) => ({
-  currentAccount: state.accountInfo.currentAccount,
-});
-
-function mapDispatchToProps(dispatch) {
-  return {};
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(ShowPrivateKeyPage);
+export default ShowPrivateKeyPage

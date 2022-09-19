@@ -1,38 +1,29 @@
-import cx from "classnames";
-import React, { Component } from "react";
-import "./index.scss";
-
-import loadingCommon from "../../../assets/images/loadingCommon.gif";
+import cls from "classnames";
+import { Component } from "react";
+import styles from "./index.module.scss";
+import i18n from "i18next";
 
 export default class Loading extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            loading: false
+            loadingStatus: false
         };
     }
     show = () => {
-        this.setState({ loading: true })
+        this.setState({ loadingStatus: true })
     }
     hide = () => {
-        this.setState({ loading: false })
+        this.setState({ loadingStatus: false })
     }
-    render() { 
-        return (
-            <div className={
-                cx({
-                    "loading-container": this.state.loading
-                })
-            }>
-                <figure className={
-                    cx({
-                        "figure-show": this.state.loading,
-                        "figure-hide": !this.state.loading
-                    })
-                }>
-                    <img src={loadingCommon} className={"common-loading"}/>
-                </figure>
+    render() {
+        return (<div className={cls(styles.outerContainer,
+            { [styles.show]: this.state.loadingStatus }
+        )}>
+            <div className={styles.innerContainer}>
+                <img src="/img/loading_purple.svg" className={styles.refreshLoading} />
+                <p className={styles.loadingContent}>{i18n.t('loading')+"..."}</p>
             </div>
-        )
+        </div>)
     }
 }

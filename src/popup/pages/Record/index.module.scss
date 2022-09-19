@@ -1,0 +1,73 @@
+.container {
+    padding: 10px 20px 0px;
+    overflow-y: auto;
+}
+.statusContainer {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.detailTitle {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 22px;
+    margin: 10px 0 0;
+}
+
+.txSuccess {
+    color: rgba(13, 178, 124, 1);
+}
+.txFailed {
+    color: #d65a5a;
+}
+.txPending {
+    color: rgba(228, 178, 0, 1);
+}
+
+.dividedLine {
+    border: 0.5px solid #f2f2f2;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.rowContainer {
+    margin-top: 10px;
+    padding-bottom: 5px;
+    cursor: pointer;
+    .rowTitle {
+        font-size: 12px;
+        line-height: 14px;
+        color: rgba(0, 0, 0, 0.5);
+        margin: 0;
+    }
+    .rowContent {
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 14px;
+        color: #000000;
+        margin: 0;
+
+        word-wrap: break-word;
+    }
+}
+
+.explorerContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    cursor: pointer;
+    width: fit-content;
+    .explorerTitle {
+        font-family: "PingFang SC";
+        font-style: normal;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        text-align: center;
+        color: #594AF1;
+        margin: 0px 6px 0px 0px;
+    }
+}

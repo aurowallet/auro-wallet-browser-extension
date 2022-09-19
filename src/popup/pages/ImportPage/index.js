@@ -1,87 +1,37 @@
-import React from "react";
-import { connect } from "react-redux";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
+import i18n from "i18next";
+import { useCallback } from "react";
+import { useDispatch } from "react-redux";
+import { useHistory } from "react-router-dom";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
-import { getLanguage } from "../../../i18n";
+import { updateAccoutType } from "../../../reducers/cache";
 import CustomView from "../../component/CustomView";
-import "./index.scss";
-import cx from "classnames"
-import txArrow from "../../../assets/images/txArrow.png";
-import {setChangeAccountName, updateAccoutType} from "../../../reducers/cache";
-import {sendMsg} from "../../../utils/commonMsg";
-import {WALLET_GET_ALL_ACCOUNT} from "../../../constant/types";
+import styles from "./index.module.scss";
 
-class ImportPage extends React.Component {
-  constructor(props) {
-    super(props);
-    const title = props.location.params?.title ?? ""
-    const content = props.location.params?.content ?? ""
-    this.state = {
-      title,
-      content,
-    };
-  }
-  componentDidMount() {
-  }
-
-  renderInfo = (title, callback) => {
-    return (
-      <div
-        onClick={() => { callback && callback() }}
-        className={'security-content-import click-cursor'}>
-        <p className={"security-content-title"}>{title}</p>
-        <img className={'sec-arrow'} src={txArrow} />
-      </div>
-    )
-  }
-  getAccountTypeIndex = (list) => {
-    if (list.length === 0) {
-      return 1
-    } else {
-      return parseInt(list[list.length - 1].typeIndex) + 1
-    }
-  }
-  importPrivateKey = () => {
-    this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.OUTSIDE)
-    this.props.history.push({
-      pathname: "/account_name",
-    });
-  }
-  importKepair = () => {
-    this.props.updateAccoutType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR)
-    this.props.history.push({
-      pathname: "/account_name",
-    });
-  }
-  renderImportOption = () => {
-    return (
-      <div className={'account-info-import'}>
-        {this.renderInfo(getLanguage('privateKey'), this.importPrivateKey)}
-        {this.renderInfo("Keystore", this.importKepair)}
-      </div>
-    )
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('importEntry')}
-        history={this.props.history}>
-        {this.renderImportOption()}
-      </CustomView>)
-  }
+const ImportPage = ({ }) => {
+  const dispatch = useDispatch()
+  const history = useHistory()
+  const onPrivateKey = useCallback(() => {
+    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.OUTSIDE))
+    history.push('account_name')
+  }, [])
+  const onKeystore = useCallback(() => {
+    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR))
+    history.push('account_name')
+  }, [])
+  return (<CustomView title={i18n.t('importAccount')} contentClassName={styles.container}>
+    <ImportRow title={i18n.t('privateKey')} onClick={onPrivateKey} />
+    <ImportRow title={"Keystore"} onClick={onKeystore} />
+  </CustomView>)
 }
 
-const mapStateToProps = (state) => ({});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    updateAccoutType: (type) => {
-      dispatch(updateAccoutType(type));
-    },
-    setChangeAccountName: (info) => {
-      dispatch(setChangeAccountName(info))
-    },
-  };
+const ImportRow = ({ title, onClick = () => { } }) => {
+  return (<div className={styles.rowContainer} onClick={onClick}>
+    <span className={styles.rowTitle}>
+      {title}
+    </span>
+    <img src="/img/icon_arrow.svg" />
+  </div>)
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ImportPage);
+
+export default ImportPage

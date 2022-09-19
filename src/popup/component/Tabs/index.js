@@ -1,62 +1,98 @@
-import React from "react";
-import "./index.scss";
-import PropTypes from 'prop-types'
-export default class Tabs extends React.Component {
-  constructor(props) {
-    super(props);
-    let index = props.currentActiveIndex || 0
-    this.state = {
-      currentIndex: index,
-    };
-  }
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.currentActiveIndex !== this.props.currentActiveIndex) {
-      this.setState({
-        currentIndex: nextProps.currentActiveIndex
-      })
-    }
-  }
-  detailClickHandler(index) {
-    let { onChangeIndex } = this.props
-    onChangeIndex(index)
-  }
-  check_title_index = (index) => {
-    return this.state.currentIndex === index ? "tab_title home-active click-cursor" : "tab_title home-unactive click-cursor";
-  };
-  check_item_index = (index) => {
-    return this.state.currentIndex === index ? "show" : "hide";
-  };
-  render() {
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import styles from "./index.module.scss"
+import cls from "classnames"
+
+const Tabs = (props) => {
+    const { selected, onSelect, children, initedId, } = props;
+
+
+    const tabButtonsRef = useRef();
+    const tabIndicatorRef = useRef();
+
+    const onSelectTab = useCallback((index, id) => {
+        onSelect(index)
+
+        updateTabIndicator(
+            tabButtonsRef.current,
+            tabIndicatorRef.current,
+            id
+        );
+
+    }, [tabButtonsRef, tabIndicatorRef])
+
+
+    useEffect(() => {
+        updateTabIndicator(
+            tabButtonsRef.current,
+            tabIndicatorRef.current,
+            initedId
+        );
+    }, [initedId])
+    const buttons = React.Children.map(children, (child, index) => {
+        const { id } = child.props;
+        const isSelected = selected === index;
+        const handleClick = () => onSelectTab(index, id);
+
+        return (
+            <TabButton id={id} selected={isSelected} onClick={handleClick}>
+                {child.props.label}
+            </TabButton>
+        );
+    });
+
+    const panels = React.Children.map(children, (child, index) => {
+        const id = child.props.id;
+        const isSelected = selected === index;
+        return (
+            <TabPanel id={id} selected={isSelected}>
+                {child.props.children}
+            </TabPanel>
+        );
+    });
+    return (<div className={styles.tabContainer} >
+        <div className={styles.tabBtnContainer} ref={tabButtonsRef}>
+            {buttons}
+            <span ref={tabIndicatorRef}
+                className={styles.tabIndicator} />
+        </div>
+        <div className={styles.tabsPanels}>
+            <div className={styles.tabTracker}>
+                {panels}
+            </div>
+        </div>
+    </div>)
+}
+
+export default Tabs
+
+const TabButton = (props) => {
+    const { id, selected, onClick, children } = props;
     return (
-      <div className="tab_container">
-        <ul className="tab_content_wrap">
-          {React.Children.map(this.props.children, (ele, index) => {
-            let key = ele.props.lable
-            return (
-              <li key={key} className={this.check_item_index(index)}>
-                {ele.props.children}
-              </li>
-            );
-          })}
-        </ul>
-        <ul className="tab_title_wrap">
-          {React.Children.map(this.props.children, (ele, index) => {
-            let commonSource = ele.props.commonSource
-            let activeSource = ele.props.activeSource
-            let imgSource = this.state.currentIndex === index ? activeSource : commonSource
-            return (
-              <li
-                key={index + ""}
-                className={this.check_title_index(index)}
-                onClick={this.detailClickHandler.bind(this, index)}
-              >
-                <img className="home-tab-img" src={imgSource}></img>
-                {ele.props.lable}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+        <button data-id={id} className={cls(styles.tabBtn, {
+            [styles.tabBtnActive]: selected
+        })} onClick={onClick} >
+            {children}
+        </button>
     );
-  }
+}
+
+const TabPanel = (props) => {
+    const { id, selected, children } = props;
+    return (
+        <div data-id={id} className={cls(styles.tabPanel, {
+            [styles.tabPanelActive]: selected
+        })} >
+            {children}
+        </div>
+    );
+}
+
+const updateTabIndicator = (tabButtons, tabIndicator, selected) => {
+    const tabButton = tabButtons.querySelector(`[data-id="${selected}"]`);
+    const tabButtonsPos = tabButtons.getBoundingClientRect();
+    const tabButtonPos = tabButton.getBoundingClientRect();
+    const left = tabButtonPos.left - tabButtonsPos.left;
+    const width = tabButton.clientWidth;
+    tabIndicator.style.width = `${width}px`;
+    tabIndicator.style.left = `${left}px`;
 }

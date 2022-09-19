@@ -1,0 +1,102 @@
+.container {
+  padding: 10px 0px 0px;
+  margin-bottom: 100px;
+}
+.contentContainer {
+  padding: 0px 20px;
+}
+.inputContainer {
+  > :not(:first-child) {
+    margin-top: 20px;
+  }
+  .addressBook {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 17px;
+    text-align: right;
+    color: #594af1;
+    cursor: pointer;
+  }
+  .balance {
+    font-size: 12px;
+    line-height: 17px;
+    text-align: right;
+    color: rgba(0, 0, 0, 0.5);
+  }
+  .max {
+    @extend .addressBook;
+    padding-right: 12px;
+  }
+}
+
+.feeContainer {
+  margin: 20px 0 10px;
+}
+
+.dividedLine {
+  height: 0.5px;
+  background-color: rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin: 10px 0px;
+
+  .dividedContent {
+    margin: 0;
+    color: transparent;
+  }
+}
+
+.bottomContainer {
+  padding: 12px 38px 30px;
+  position: fixed;
+  bottom: 0;
+  width: calc(100%);
+  background-color: white;
+}
+
+.hold {
+  flex: 1;
+}
+
+.nodeNameContainer {
+  .label {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 17px;
+    display: flex;
+    align-items: center;
+    color: rgba(0, 0, 0, 0.85);
+    margin-bottom: 4px;
+    justify-content: space-between;
+  }
+  .labelContainer {
+    display: flex;
+    align-items: center;
+  }
+  .rowContainer {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    justify-content: space-between;
+
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 0 10px;
+
+    cursor: pointer;
+  }
+  .nodeName {
+    font-size: 16px;
+    line-height: 24px;
+    color: rgba(0, 0, 0, 0.85);
+    max-width: 280px;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .arrow {
+    transform: rotate(270deg);
+    width: 30px;
+    object-fit: scale-down;
+  }
+}

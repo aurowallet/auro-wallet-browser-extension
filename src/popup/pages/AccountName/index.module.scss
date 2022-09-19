@@ -1,0 +1,122 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.bottomContainer {
+    padding: 12px 18px 30px;
+}
+
+.hold {
+    flex: 1;
+}
+
+.tipContainer {
+    font-size: 14px;
+    line-height: 18px;
+    color: rgba(0, 0, 0, 0.5);
+    .tip {
+        margin: 0;
+    }
+    .address {
+        @extend .tip;
+        color: rgba(89, 74, 241, 1);
+        word-break: break-all;
+        margin-bottom: 20px;
+    }
+    .accountRepeatName {
+        @extend .tip;
+    }
+    .accountRepeatClick {
+        @extend .address;
+        margin-bottom: 0px;
+    }
+}
+
+.ledgerContainer {
+    margin-top: 20px;
+    .ledgerTitle {
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 17px;
+        display: flex;
+        align-items: center;
+        color: rgba(0, 0, 0, 0.85);
+        margin: 0;
+    }
+    .ledgerPath {
+        font-weight: 400;
+        font-size: 16px;
+        color: #666666;
+        margin: 4px 0 0;
+        display: flex;
+        align-items: center;
+    }
+}
+.inputNumberContainer {
+    width: fit-content;
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    position: relative;
+
+    height: 44px;
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+
+    margin: 0 20px;
+    &:hover {
+        border: 0.5px solid #594af1;
+    }
+
+    .customeInput {
+        display: inline-block;
+        outline: none;
+        background: #ffffff;
+        border: none;
+
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 24px;
+        color: #00142a;
+        flex: 1;
+        caret-color: #594af1;
+        width: 72px;
+        text-align: center;
+        display: inline-block;
+        padding-right: 26px;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .imgContainer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding-right: 12px;
+        justify-content: center;
+        .topArrow {
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            &:hover {
+                background: rgba(0, 0, 0, 0.15);
+            }
+        }
+        .bottomArrow {
+            width: 15px;
+            height: 15px;
+            transform: rotate(180deg);
+            cursor: pointer;
+            &:hover {
+                background: rgba(0, 0, 0, 0.15);
+            }
+        }
+    }
+}

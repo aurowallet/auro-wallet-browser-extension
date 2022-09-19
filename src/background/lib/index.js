@@ -1,8 +1,8 @@
 import BigNumber from "bignumber.js";
 import { cointypes } from '../../../config';
-import { getLanguage } from '../../i18n';
 import { getCurrentNetConfig, getRealErrorMsg } from '../../utils/utils';
 import { NET_CONFIG_TYPE } from '../../constant/walletType';
+import i18n from "i18next"
 
 async function getSignClient(){
     let netConfig = getCurrentNetConfig()
@@ -47,7 +47,7 @@ export async  function signPayment(privateKey, fromAddress, toAddress, amount, f
             memo
         }, privateKey)
     } catch (err) {
-        let errorMessage = getRealErrorMsg(err)||getLanguage("buildFailed")
+        let errorMessage = getRealErrorMsg(err)||i18n.t("buildFailed")
         signedPayment = { error: { message: errorMessage } }
     }
     return signedPayment
@@ -67,7 +67,7 @@ export async function stakePayment(privateKey, fromAddress, toAddress, fee, nonc
             memo,
         }, privateKey);
     } catch (error) {
-        signedStakingPayment = { error: { message: getLanguage("buildFailed") } }
+        signedStakingPayment = { error: { message: i18n.t("buildFailed") } }
     }
     return signedStakingPayment
 }
@@ -91,7 +91,7 @@ export async function signMessagePayment(privateKey, fromAddress, message) {
         signedResult = signClient.signMessage(message, keys)
         signedResult = signedResult.signature
     } catch (error) {
-        signedResult = { error: { message: getLanguage("buildFailed") } }
+        signedResult = { error: { message: i18n.t("buildFailed") } }
     }
     return signedResult
 }

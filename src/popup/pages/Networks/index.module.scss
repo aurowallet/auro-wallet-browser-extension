@@ -1,0 +1,130 @@
+.contentClassName {
+    padding: 0px 0px 100px;
+}
+.editBtn {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    text-align: center;
+    color: rgba(89, 74, 241, 1);
+    margin: 0 10px 0px 0px;
+    cursor: pointer;
+}
+
+.innerContent{
+    flex: 1;
+    padding: 0px 20px;
+}
+
+.bottomContainer {
+    position: absolute;
+    padding: 12px 38px 30px;
+    width: 100%;
+    bottom: 0;
+    background-color: white;
+}
+
+.nodeListTitle {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 17px;
+    color: #000000;
+    margin: 20px 0px 0px;
+}
+.rowContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+.nodeItemContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: #f9fafc;
+    border: 0.5px solid rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    min-height: 80px;
+    padding: 16px;
+    flex: 1;
+    cursor: pointer;
+    &:hover {
+        border: 0.5px solid #594af1;
+    }
+
+    .checkedIcon {
+        display: block;
+    }
+    .editIcon {
+        display: block;
+        cursor: pointer;
+        &:hover {
+            background-color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(249, 250, 252, 1);
+        }
+    }
+    .rowRight {
+        width: 30px;
+    }
+    .rowTopContainer {
+        display: flex;
+        align-items: center;
+
+        .nodeName {
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 19px;
+            color: #000000;
+
+            max-width: 200px;
+            word-break: break-all;
+        }
+        .nodeTypeContainer {
+            margin-left: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            padding: 1.5px 5px;
+
+            .nodeType {
+                font-weight: 500;
+                font-size: 12px;
+                line-height: 14px;
+                text-align: center;
+                color: rgba(0, 0, 0, 0.3);
+            }
+        }
+    }
+    .nodeUrl {
+        font-size: 12px;
+        line-height: 100%;
+        color: rgba(0, 0, 0, 0.5);
+        margin: 5px 0px 0px;
+
+        width: 216px;
+        word-break: break-all;
+    }
+}
+
+.editMode {
+    width: 296px;
+    cursor: initial;
+    &:hover {
+        border: 0.5px solid rgba(249, 250, 252, 1);
+    }
+}
+
+.deleteIconContainer {
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    .deleteIcon {
+        display: block;
+    }
+}
+
+
+.modalDelete {
+    color: #d65a5a;
+}

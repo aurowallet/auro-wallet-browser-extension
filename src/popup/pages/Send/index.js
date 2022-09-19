@@ -1,444 +1,169 @@
 import BigNumber from "bignumber.js";
-import cx from "classnames";
-import React from "react";
-import { Trans } from "react-i18next";
-import { connect } from "react-redux";
+import cls from "classnames";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from 'react-router-dom';
 import { cointypes } from "../../../../config";
-import addressBook from "../../../assets/images/addressBook.svg";
-import downArrow from "../../../assets/images/downArrow.png";
-import loadingCommon from "../../../assets/images/loadingCommon.gif";
-import modalClose from "../../../assets/images/modalClose.png";
-import pwd_right from "../../../assets/images/pwd_right.png";
-import reminder from "../../../assets/images/reminder.png";
 import { getBalance, getFeeRecom, sendTx } from "../../../background/api";
 import { WALLET_CHECK_TX_STATUS, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
-import { getLanguage } from "../../../i18n";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateAddressBookFrom, updateAddressDetail } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect, requestSignPayment } from "../../../utils/ledger";
 import { getDisplayAmount, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
+import AdvanceMode from "../../component/AdvanceMode";
 import Button from "../../component/Button";
-import CustomInput from "../../component/CustomInput";
+import { ConfirmModal } from "../../component/ConfirmModal";
 import CustomView from "../../component/CustomView";
-import Loading from "../../component/Loading";
-import { FeeSlider } from "../../component/Slider";
-import TestModal from "../../component/TestModal";
+import FeeGroup from "../../component/FeeGroup";
+import Input from "../../component/Input";
 import Toast from "../../component/Toast";
-import "./index.scss";
+import styles from "./index.module.scss";
 
 
-const FEE_RECOMMED_DEFAULT = 1
-const FEE_RECOMMED_CUSTOM = -1
+const SendPage = ({ }) => {
 
-class SendPage extends React.Component {
-  constructor(props) {
-    super(props);
-    let addressDetail = props.addressDetail ?? {};
-    this.state = {
-      toAddress: addressDetail.address || "",
-      toAddressName: addressDetail.name || "",
-      amount: "",
-      fee: 0.1,
-      addressErr: "",
-      amountErr: "",
-      feeErr: "",
-      btnClick: false,
-      memo: "",
-      isOpenAdvance: false,
-      inputFee: "",
-      nonce: "",
-      fromAddress: props.currentAccount.address,
-      feeSelect: FEE_RECOMMED_DEFAULT,
-      confirmModalLoading: false
-    };
-    this.modal = React.createRef();
-    this.isUnMounted = false;
-    this.feeList = [
-      {
-        text: getLanguage("fee_slow"),
-        select: false,
-        fee: " "
-      }, {
-        text: getLanguage("fee_default"),
-        select: false,
-        fee: " "
-      },
-      {
-        text: getLanguage("fee_fast"),
-        select: false,
-        fee: " "
-      }
-    ]
-  }
-  componentWillUnmount() {
-    this.isUnMounted = true;
-    this.props.updateAddressDetail({})
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
+  const dispatch = useDispatch()
+  const history = useHistory()
+
+  const localCache = useSelector(state => state.cache)
+  const balance = useSelector(state => state.accountInfo.balance)
+  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const currentAccount = useSelector(state => state.accountInfo.currentAccount)
+  const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
+
+  const {
+    addressDetail
+  } = useMemo(() => {
+    let addressDetail = localCache.addressDetail
+    return {
+      addressDetail
     }
-  }
-  async componentDidMount() {
-    this.fetchData()
-  }
+  }, [localCache])
 
-  fetchData = async () => {
-    let { currentAccount } = this.props
-    let address = currentAccount.address
+
+
+  useEffect(() => {
+    dispatch(updateAddressDetail(""))
+  }, [history]);
+
+  const [toAddress, setToAddress] = useState(addressDetail.address || "")
+  const [toAddressName, setToAddressName] = useState(addressDetail.name || "")
+
+  const [amount, setAmount] = useState('')
+  const [memo, setMemo] = useState('')
+  const [feeAmount, setFeeAmount] = useState(0.1)
+  const [inputNonce, setInputNonce] = useState("")
+  const [feeErrorTip, setFeeErrorTip] = useState("")
+
+
+  const [netFeeList, setNetFeeList] = useState([])
+  const [isOpenAdvance, setIsOpenAdvance] = useState(false)
+  const [confrimModalStatus, setConfrimModalStatus] = useState(false)
+  const [confrimBtnStatus, setConfrimBtnStatus] = useState(false)
+  const [realTransferAmount, setRealTransferAmount] = useState("")
+  const [waintLedgerStatus, setWaintLedgerStatus] = useState(false)
+
+  const [contentList, setContentList] = useState([])
+
+
+
+  const onToAddressInput = useCallback((e) => {
+    setToAddress(e.target.value)
+  }, [])
+  const onAmountInput = useCallback((e) => {
+    setAmount(e.target.value)
+  }, [])
+  const onMemoInput = useCallback((e) => {
+    setMemo(e.target.value)
+  }, [])
+
+
+  const onClickAddressBook = useCallback(() => {
+    dispatch(updateAddressBookFrom("send"))
+    history.push("/address_book")
+  }, [])
+
+  const onClickAll = useCallback(() => {
+    setAmount(balance)
+  }, [balance])
+
+  const onClickFeeGroup = useCallback((item) => {
+    setFeeAmount(item.fee)
+  }, [])
+
+
+  const fetchFeeData = useCallback(async () => {
     let feeRecom = await getFeeRecom()
     if (feeRecom.length > 0) {
-      this.feeList.map((item, index) => {
-        return item.fee = feeRecom[index].value
-      })
-      this.callSetState({
-        fee: feeRecom[1].value
-      })
+      setNetFeeList(feeRecom)
+      setFeeAmount(feeRecom[1].value)
     }
-    let account = await getBalance(address)
+  }, [])
+
+  const fetchAccountInfo = useCallback(async () => {
+    let account = await getBalance(currentAddress)
     if (account.publicKey) {
-      this.props.updateNetAccount(account)
+      dispatch(updateNetAccount(account))
     }
-  }
-  setBtnStatus = () => {
-    if (this.state.toAddress.length > 0
-      && this.state.amount.length > 0) {
-      this.callSetState({
-        btnClick: true
-      })
+  }, [dispatch, currentAddress])
+
+  useEffect(() => {
+    fetchAccountInfo()
+    fetchFeeData()
+  }, [])
+
+  const onClickAdvance = useCallback(() => {
+    setIsOpenAdvance(state => !state)
+  }, [])
+
+  const onFeeInput = useCallback((e) => {
+    setFeeAmount(e.target.value)
+
+    if (BigNumber(e.target.value).gt(10)) {
+      setFeeErrorTip(i18n.t('feeTooHigh'))
     } else {
-      this.callSetState({
-        btnClick: false
-      })
+      setFeeErrorTip("")
     }
-  }
+  }, [i18n])
+  const onNonceInput = useCallback((e) => {
+    setInputNonce(e.target.value)
+  }, [])
+
+  const isAllTransfer = useCallback(() => {
+    return new BigNumber(amount).isEqualTo(balance)
+  }, [amount, balance])
+
+  const getRealTransferAmount = useCallback(() => {
+    let fee = trimSpace(feeAmount)
+    let realAmount = 0
+    if (isAllTransfer()) {
+      realAmount = new BigNumber(amount).minus(fee).toNumber()
+    } else {
+      realAmount = new BigNumber(amount).toNumber()
+    }
+    return realAmount
+  }, [feeAmount, amount])
+
+  useEffect(() => {
+    setRealTransferAmount(getRealTransferAmount())
+  }, [feeAmount, amount, getRealTransferAmount])
 
 
-  onToAddressInput = (e) => {
-    let address = e.target.value;
-    this.callSetState({
-      toAddress: address,
-      toAddressName: ""
-    }, () => {
-      this.setBtnStatus()
-    })
-  }
-  onGotoAddressBook = () => {
-    this.props.updateAddressBookFrom("send")
-    this.props.history.push({
-      pathname: "/address_book",
-    })
-  }
-  renderAddressBook = () => {
-    return (
-      <div className={"send-address-book-container click-cursor"} onClick={this.onGotoAddressBook}>
-        <img src={addressBook} className={"send-address-book"} />
-      </div>
-    )
-  }
-  renderToAddress = () => {
-    let labelName = this.state.toAddressName ? "(" + this.state.toAddressName + ")" : ""
-    return (<CustomInput
-      value={this.state.toAddress}
-      label={getLanguage('toAddress')}
-      littleLabel={labelName}
-      rightComponent={this.renderAddressBook()}
-      onTextInput={this.onToAddressInput}
-    />)
-  }
-  onAmountInput = (e) => {
-    let amount = e.target.value;
-    this.callSetState({
-      amount: amount
-    }, () => {
-      this.setBtnStatus()
-    })
-  }
-  onClickAll = () => {
-    let { balance } = this.props
-   
-    this.callSetState({
-      amount: balance
-    },()=>{
-      this.setBtnStatus()
-    })
-  }
-  renderInputRightStable = () => {
-    return (
-      <p className={"inputRightLabel"} onClick={this.onClickAll}>
-        {getLanguage('all')}
-      </p>
-    )
-  }
-  renderToAmount = () => {
-    let { balance } = this.props
-    return (<CustomInput
-      value={this.state.amount}
-      label={getLanguage('amount')}
-      descLabel={getLanguage('balance') + " " + getDisplayAmount(balance, cointypes.decimals)}
-      onTextInput={this.onAmountInput}
-      propsClass={'stableInput'}
-      rightStableComponent={this.renderInputRightStable}
-    />)
-  }
-  onMemoInput = (e) => {
-    let memo = e.target.value;
-    this.callSetState({
-      memo: memo
-    }, () => {
-      this.setBtnStatus()
-    })
-  }
-  renderMemo = () => {
-    return (<CustomInput
-      value={this.state.memo}
-      label={getLanguage('memo')}
-      onTextInput={this.onMemoInput}
-    />)
-  }
-  onSliderChange = (fee) => {
-    this.callSetState({
-      fee
-    })
-  }
-  renderFee = () => {
-    return (
-      <div className={"slider-container"}>
-        <div className={"lable-container fee-style"}>
-          <p className="pwd-lable-1">{getLanguage('fee')}</p>
-          <p className="pwd-lable-desc-1">{this.state.fee}</p>
-        </div>
-        <FeeSlider
-          domain={[0, 1]}
-          decimals={4}
-          defaultValues={[this.state.fee]}
-          onSliderChange={this.onSliderChange}
-        />
-        <div className={"lable-container fee-style"}>
-          <p className="fee-speed">{getLanguage('fee_slow')}</p>
-          <p className="fee-speed">{getLanguage('fee_default')}</p>
-          <p className="fee-speed">{getLanguage('fee_fast')}</p>
-        </div>
-      </div>
-    )
-  }
-  onOpenAdvance = () => {
-    this.callSetState({
-      isOpenAdvance: !this.state.isOpenAdvance
-    })
-  }
-
-  onFeeInput = (e) => {
-    let fee = e.target.value
-    this.callSetState({
-      inputFee: fee
-    }, () => {
-      this.setBtnStatus()
-      this.callSetState({
-        feeSelect: FEE_RECOMMED_CUSTOM
-      })
-    })
-  }
-  onNonceInput = (e) => {
-    let nonce = e.target.value
-    this.callSetState({
-      nonce: nonce
-    })
-  }
-  renderAdvanceOption = () => {
-    let netAccount = this.props.netAccount
-    let nonceHolder = netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
-    let showFeeHigh = BigNumber(this.state.inputFee).gt(10)
-    return (
-      <div className={
-        cx({
-          "advance-option-show": this.state.isOpenAdvance,
-          "advance-option-hide": !this.state.isOpenAdvance,
-        })
-      }>
-        <CustomInput
-          value={this.state.inputFee}
-          placeholder={getLanguage('feePlaceHolder')}
-          onTextInput={this.onFeeInput}
-        />
-        {showFeeHigh && <div className={"fee-too-high-container"}>
-          <img src={reminder} className={"fee-reminder"} />
-          <p className={"fee-too-high-content"}>{getLanguage('feeTooHigh')}</p>
-        </div>}
-        <CustomInput
-          value={this.state.nonce}
-          placeholder={nonceHolder}
-          onTextInput={this.onNonceInput}
-        />
-      </div>
-    )
-  }
-  renderAdvance = () => {
-    const { isOpenAdvance } = this.state;
-    return (
-      <div className="advancer-outer-container">
-        <div
-          onClick={this.onOpenAdvance}
-          className="advancer-container click-cursor">
-          <p className="advance-content">{getLanguage('advanceMode')}</p>
-          <img className={cx({
-            "down-normal": true,
-            "up-advance": isOpenAdvance,
-            "down-advance": !isOpenAdvance
-          })} src={downArrow}></img>
-        </div>
-      </div>)
-  }
-
-  renderConfirm = () => {
-    return (
-      <div className="bottom-container">
-        <Button
-          disabled={!this.state.btnClick}
-          content={getLanguage('next')}
-          onClick={this.onConfirm}
-        />
-      </div>)
-  }
-  renderConfirmItem = (title, content, isAmount) => {
-    return (
-      <div className={"confirm-item-container"}>
-        <div>
-          <p className={"confirm-item-title"}>{title}</p>
-        </div>
-        <p className={
-          cx({
-            "confirm-item-content": true,
-            "confirm-item-content-purple": isAmount
-          })
-        }>{content}</p>
-      </div>
-    )
-  }
-  isAllTransfer=()=>{
-    let { balance } = this.props
-    return new BigNumber(this.state.amount).isEqualTo(balance)
-  }
-  getRealTransferAmount=()=>{
-    let fee = trimSpace(this.state.inputFee) || this.state.fee
-    let amount = 0
-    if(this.isAllTransfer()){
-      amount = new BigNumber(this.state.amount).minus(fee).toNumber()
-    }else{
-      amount = new BigNumber(this.state.amount).toNumber()
-    }
-    return amount
-  }
-  onConfirm = async () => {
-    let { balance } = this.props
-    let toAddress = trimSpace(this.state.toAddress)
-    if (!addressValid(toAddress)) {
-      Toast.info(getLanguage('sendAddressError'))
-      return
-    }
-    let amount = trimSpace(this.state.amount)
-    if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
-      Toast.info(getLanguage('amountError'))
-      return
-    }
-    let inputFee = trimSpace(this.state.inputFee)
-    if (inputFee.length > 0 && !isNumber(inputFee)) {
-      Toast.info(getLanguage('inputFeeError'))
-      return
-    }
-    let fee = trimSpace(this.state.inputFee) || this.state.fee
-    
-    
-    if(this.isAllTransfer()){
-      let maxAmount = this.getRealTransferAmount()
-      if (new BigNumber(maxAmount).lt(0)) {
-        Toast.info(getLanguage('balanceNotEnough'))
-        return
-      }
-    }else{
-      let maxAmount = new BigNumber(amount).plus(fee).toString()
-      if (new BigNumber(maxAmount).gt(balance)) {
-        Toast.info(getLanguage('balanceNotEnough'))
-        return
-      }
-    }
-    
-    let nonce = trimSpace(this.state.nonce)
-    if (nonce.length > 0 && !isTrueNumber(nonce)) {
-      Toast.info(getLanguage('inputNonceError'))
-      return
-    }
-    this.modal.current.setModalVisable(true)
-  }
-  onCancel = () => {
-    this.modal.current.setModalVisable(false)
-  }
-  ledgerTransfer = async (params) => {
-    const { ledgerApp } = await checkLedgerConnect()
-    if (ledgerApp) {
-      this.modal.current.setModalVisable(false)
-      this.callSetState({
-        confirmModalLoading: true
-      })
-      this.modal.current.setModalVisable(true)
-      let currentAccount = this.props.currentAccount
-      const { signature, payload, error } = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
-      this.modal.current.setModalVisable(false)
-      this.callSetState({
-        confirmModalLoading: false
-      })
-      if (error) {
-        Toast.info(error.message)
-        return
-      }
-      let postRes = await sendTx(payload, { rawSignature: signature }).catch(error => error)
-      this.onSubmitSuccess(postRes,"ledger")
-    }
-  }
-  clickNextStep = async () => {
-    let currentAccount = this.props.currentAccount
-    let netAccount = this.props.netAccount
-    let fromAddress = currentAccount.address
-    let toAddress = trimSpace(this.state.toAddress)
-    let amount = this.getRealTransferAmount()
-    let nonce = trimSpace(this.state.nonce) || netAccount.inferredNonce
-    let memo = this.state.memo || ""
-    let fee = trimSpace(this.state.inputFee) || this.state.fee
-    let payload = {
-      fromAddress, toAddress, amount, fee, nonce, memo
-    }
-    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      return this.ledgerTransfer(payload)
-    }
-    Loading.show()
-    this.modal.current.setModalVisable(false)
-    sendMsg({
-      action: WALLET_SEND_TRANSTRACTION,
-      payload
-    }, (data) => {
-      Loading.hide()
-      this.onSubmitSuccess(data)
-    })
-  }
-  onSubmitSuccess = (data,type) => {
+  const onSubmitTx = useCallback((data, type) => {
     if (data.error) {
-      let errorMessage = getLanguage('postFailed')
+      let errorMessage = i18n.t('postFailed')
       let realMsg = getRealErrorMsg(data.error)
       errorMessage = realMsg ? realMsg : errorMessage
       Toast.info(errorMessage, 5 * 1000)
       return
     }
-    Toast.info(getLanguage('postSuccess'))
     let detail = data.sendPayment && data.sendPayment.payment || {}
-    this.props.updateShouldRequest(true, true)
-    if(type === "ledger"){
+    dispatch(updateShouldRequest(true, true))
+    if (type === "ledger") {
       sendMsg({
         action: WALLET_CHECK_TX_STATUS,
         payload: {
@@ -447,161 +172,207 @@ class SendPage extends React.Component {
         }
       }, () => { })
     }
-    this.props.history.replace({
-      pathname: "/record_page",
-      params: {
-        txDetail: detail
+
+    setConfrimModalStatus(false)
+    history.goBack()
+
+  }, [i18n])
+
+  useEffect(() => {
+    if (!confrimModalStatus) {
+      setWaintLedgerStatus(false)
+    }
+  }, [confrimModalStatus])
+  const ledgerTransfer = useCallback(async (params) => {
+    const { ledgerApp } = await checkLedgerConnect()
+    if (ledgerApp) {
+      setWaintLedgerStatus(true)
+      const { signature, payload, error, rejected } = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
+      if (rejected) {
+        setConfrimModalStatus(false)
       }
+      if (error) {
+        Toast.info(error.message)
+        return
+      }
+      let postRes = await sendTx(payload, { rawSignature: signature }).catch(error => error)
+      setConfrimModalStatus(false)
+
+      onSubmitTx(postRes, "ledger")
+    }
+  }, [currentAccount, onSubmitTx])
+
+  const clickNextStep = useCallback(() => {
+    let fromAddress = currentAddress
+    let toAddressValue = trimSpace(toAddress)
+    let amount = getRealTransferAmount()
+    let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
+    let realMemo = memo || ""
+    let fee = trimSpace(feeAmount)
+    let payload = {
+      fromAddress, toAddress: toAddressValue, amount, fee, nonce, memo: realMemo
+    }
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      return ledgerTransfer(payload)
+    }
+
+    setConfrimBtnStatus(true)
+    sendMsg({
+      action: WALLET_SEND_TRANSTRACTION,
+      payload
+    }, (data) => {
+      setConfrimBtnStatus(false)
+      onSubmitTx(data)
     })
-  }
-  renderConfirmButton = () => {
-    let currentAccount = this.props.currentAccount
-    let disabled = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
-    let isWatchModde = currentAccount.type === ACCOUNT_TYPE.WALLET_WATCH
-    let buttonText = isWatchModde ? getLanguage("watchMode") : getLanguage('confirm')
-    return (
-      <div className={"send-confirm-container"}>
-        <Button
-          disabled={disabled}
-          content={buttonText}
-          onClick={this.clickNextStep}
+
+  }, [getRealTransferAmount, onSubmitTx, ledgerTransfer,
+    currentAccount, currentAddress, netAccount, toAddress, inputNonce, memo, feeAmount])
+
+  const onClickClose = useCallback(() => {
+    setConfrimModalStatus(false)
+  }, [])
+
+
+  const onConfirm = useCallback(() => {
+    let toAddressValue = trimSpace(toAddress)
+    if (!addressValid(toAddressValue)) {
+      Toast.info(i18n.t('sendAddressError'))
+      return
+    }
+    let amountValue = trimSpace(amount)
+    if (!isNumber(amountValue) || !new BigNumber(amountValue).gt(0)) {
+      Toast.info(i18n.t('amountError'))
+      return
+    }
+    let inputFee = trimSpace(feeAmount)
+    if (inputFee.length > 0 && !isNumber(inputFee)) {
+      Toast.info(i18n.t('inputFeeError'))
+      return
+    }
+
+    if (isAllTransfer()) {
+      let maxAmount = getRealTransferAmount()
+      if (new BigNumber(maxAmount).lt(0)) {
+        Toast.info(i18n.t('balanceNotEnough'))
+        return
+      }
+    } else {
+      let maxAmount = new BigNumber(amount).plus(inputFee).toString()
+      if (new BigNumber(maxAmount).gt(balance)) {
+        Toast.info(i18n.t('balanceNotEnough'))
+        return
+      }
+    }
+    let nonce = trimSpace(inputNonce)
+    if (nonce.length > 0 && !isTrueNumber(nonce)) {
+      Toast.info(i18n.t('inputNonceError'))
+      return
+    }
+
+    let list = [
+      {
+        label: i18n.t('from'),
+        value: toAddress,
+      },
+      {
+        label: i18n.t('to'),
+        value: currentAddress,
+      },
+      {
+        label: i18n.t('fee'),
+        value: inputFee + cointypes.symbol,
+      }
+    ]
+    if (isTrueNumber(nonce)) {
+      list.push({
+        label: "Nonce",
+        value: nonce,
+      })
+    }
+    if (memo) {
+      list.push({
+        label: "Memo",
+        value: memo,
+      })
+    }
+
+    setContentList(list)
+    setConfrimModalStatus(true)
+
+  }, [i18n, toAddress, amount, feeAmount, balance, inputNonce, currentAddress, memo, isAllTransfer, getRealTransferAmount, clickNextStep])
+
+ 
+  return (<CustomView title={i18n.t('send')} contentClassName={styles.container}>
+    <div className={styles.contentContainer}>
+      <div className={styles.inputContainer}>
+        <Input
+          label={i18n.t('to')}
+          onChange={onToAddressInput}
+          value={toAddress}
+          inputType={'text'}
+          subLabel={toAddressName}
+          rightComponent={<div onClick={onClickAddressBook} className={styles.addressBook}>{i18n.t('addressBook')}</div>}
+        />
+        <Input
+          label={i18n.t('amount')}
+          onChange={onAmountInput}
+          value={amount}
+          inputType={'text'}
+          rightComponent={<div className={styles.balance}>
+            {i18n.t('balance') + ": " + getDisplayAmount(balance, cointypes.decimals)}
+          </div>}
+          rightStableComponent={
+            <div onClick={onClickAll} className={styles.max}>{i18n.t('max')}</div>
+          }
+        />
+        <Input
+          label={i18n.t('memo')}
+          onChange={onMemoInput}
+          value={memo}
+          inputType={'text'}
         />
       </div>
-    )
-  }
-  renderConfirmView = () => {
-    let lastFee = this.state.inputFee ? this.state.inputFee : this.state.fee
-    let nonce = this.state.nonce ? this.state.nonce : ""
-    let memo = this.state.memo ? this.state.memo : ""
-    let realAmount = this.getRealTransferAmount()
-    return (
-      <div className={"confirm-modal-container"}>
-        {this.renderConfirmItem(getLanguage('amount'), realAmount + " " + cointypes.symbol, true)}
-        {this.renderConfirmItem(getLanguage('toAddress'), this.state.toAddress)}
-        {this.renderConfirmItem(getLanguage('fromAddress'), this.state.fromAddress)}
-        {memo && this.renderConfirmItem("Memo", memo, true)}
-        {nonce && this.renderConfirmItem("Nonce", nonce, true)}
-        {this.renderConfirmItem(getLanguage('fee'), lastFee + " " + cointypes.symbol, true)}
-        {this.renderConfirmButton()}
+      <div className={styles.feeContainer}>
+        <FeeGroup onClickFee={onClickFeeGroup} currentFee={feeAmount} netFeeList={netFeeList} />
       </div>
-    )
-  }
 
-  renderLoadingView = () => {
-    return (
-      <div className={"confirm-loading"}>
-        <div className="confirmLoadingTip">
-          <p className="confirmLoadingDescTip">{getLanguage('ledgerSendWaitTip')}</p>
-          <Trans
-              i18nKey={"ledgerSendCloseTip"}
-              components={{ b: <strong /> }}
-          />
-        </div>
-        <img className={"confirm-loading-img"} src={loadingCommon} />
-      </div>)
-  }
-  onCloseModal = () => {
-    this.modal.current.setModalVisable(false)
-  }
-  renderConfirmModal = () => {
-    let title = this.state.confirmModalLoading ? "waitLedgerConfirm" : "sendDetail"
-    return (<TestModal
-      ref={this.modal}
-      touchToClose={true}
-      title={getLanguage(title)}
-    >
-      {this.state.confirmModalLoading ? this.renderLoadingView() : this.renderConfirmView()}
-      {this.state.confirmModalLoading ? <></> : <img onClick={this.onCloseModal} className="modal-close click-cursor" src={modalClose} />}
-    </TestModal>)
-  }
-  onClickFee = (item, index) => {
-    this.callSetState({
-      feeSelect: index,
-      fee: item.fee,
-      inputFee: ""
-    })
-  }
-  renderButtonFee = () => {
-    return (
-      <div className={"button-fee-container"}>
-        <div className={"lable-container fee-style"}>
-          <p className="pwd-lable-1">{getLanguage('fee')}</p>
-          <p className="pwd-lable-desc-1">{this.state.inputFee || this.state.fee}</p>
-        </div>
-        <div className={"fee-item-container"}>
-          {this.feeList.map((item, index) => {
-            let selected = index == this.state.feeSelect
-            return (
-              <div key={index + ""} onClick={() => this.onClickFee(item, index)}
-                className={
-                  cx({
-                    "fee-common": true,
-                    "click-cursor": true,
-                    "fee-select": selected
-                  })
-                }>
-                <img src={pwd_right} className={
-                  cx({
-                    "fee-select-img": selected,
-                    "fee-select-img-none": !selected,
-                  })
-                } />
-                <p className={"fee-text"}>{item.text}</p>
-              </div>
-            )
-
-          })}
-        </div>
+      <div className={styles.dividedLine}>
+        <p className={styles.dividedContent}>-</p>
       </div>
-    )
-  }
-  onSubmit = (event) => {
-    event.preventDefault();
-  }
-  render() {
-    return (<CustomView
-      title={getLanguage('send')}
-      history={this.props.history}>
-      <form onSubmit={this.onSubmit}>
-        <div className="send-container">
-          {this.renderToAddress()}
-          {this.renderToAmount()}
-          {this.renderMemo()}
-          {/* {this.renderFee()} */}
-          {this.renderButtonFee()}
-          {this.renderAdvance()}
-          {this.renderAdvanceOption()}
 
-        </div>
-      </form>
-      {this.renderConfirm()}
-      {this.renderConfirmModal()}
-    </CustomView>)
-  }
+      <div>
+        <AdvanceMode
+          onClickAdvance={onClickAdvance}
+          isOpenAdvance={isOpenAdvance}
+          feeValue={feeAmount}
+          onFeeInput={onFeeInput}
+          feeErrorTip={feeErrorTip}
+
+          nonceValue={inputNonce}
+          onNonceInput={onNonceInput}
+        />
+      </div>
+      <div className={styles.hold} />
+    </div>
+    <div className={cls(styles.bottomContainer)}>
+      <Button
+        onClick={onConfirm}>
+        {i18n.t('next')}
+      </Button>
+    </div>
+
+    <ConfirmModal
+      modalVisable={confrimModalStatus}
+      title={i18n.t('transactionDetails')}
+      highlightTitle={i18n.t(('amount'))}
+      highlightContent={realTransferAmount}
+      subHighlightContent={cointypes.symbol}
+      onConfirm={clickNextStep}
+      loadingStatus={confrimBtnStatus}
+      onClickClose={onClickClose}
+      waitingLedger={waintLedgerStatus}
+      contentList={contentList}/>
+  </CustomView>)
 }
 
-const mapStateToProps = (state) => ({
-  balance: state.accountInfo.balance,
-  currentAccount: state.accountInfo.currentAccount,
-  netAccount: state.accountInfo.netAccount,
-  addressDetail: state.cache.addressDetail,
-});
-
-function mapDispatchToProps(dispatch) {
-  return {
-    updateNetAccount: (netAccount) => {
-      dispatch(updateNetAccount(netAccount))
-    },
-    updateShouldRequest: (shouldRefresh, isSilent) => {
-      dispatch(updateShouldRequest(shouldRefresh, isSilent))
-    },
-    updateAddressBookFrom: (from) => {
-      dispatch(updateAddressBookFrom(from))
-    },
-    updateAddressDetail: (addressDetail) => {
-      dispatch(updateAddressDetail(addressDetail))
-  },
-  };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(SendPage);
+export default SendPage

@@ -1,88 +1,70 @@
-import React from "react";
-import { connect } from "react-redux";
+import cls from "classnames";
+import i18n from "i18next";
+import { useCallback, useEffect, useState } from "react";
+import { useHistory } from 'react-router-dom';
 import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/types";
-import { getLanguage } from "../../../i18n";
 import { sendMsg } from "../../../utils/commonMsg";
-import Button from "../../component/Button";
+import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
-import "./index.scss";
-class ShowMnemonic extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      mnemonic: "",
-    };
-    this.isUnMounted = false;
-  }
-  componentWillUnmount() {
-    this.isUnMounted = true;
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
-    }
-  }
-  componentDidMount() {
+import styles from "./index.module.scss";
+
+export const ShowMnemonic = () => {
+  
+  const [mneList, setMneList] = useState([])
+
+  useEffect(() => {
     sendMsg({
       action: WALLET_GET_CREATE_MNEMONIC,
-      payload:{
-        isNewMne:true
+      payload: {
+        isNewMne: true
       }
-    }, (mnemonic) => { 
-      this.callSetState({
-        mnemonic: mnemonic
-      })
+    }, (mnemonic) => {
+      let list = mnemonic.split(" ")
+      setMneList(list)
     })
-  }
+  }, [])
 
-  showMne = () => {
-    return (
-      <div className={"mne-container"}>
-        {this.state.mnemonic.split(" ").map((item, index) => {
-          return <p key={index + ""} className="mne-item mne-item-common">{index + 1 + ". " + item}</p>;
+  let history = useHistory();
+  const goToNext = useCallback(() => {
+    history.push("/backupmnemonic")
+  }, [])
+
+  return (
+    <CustomView title={i18n.t('backTips_title')}>
+      <p className={styles.backTitle}>
+        {i18n.t('backup_mne_title')}
+      </p>
+      <div className={styles.mne_container}>
+        {mneList.map((mne, index) => {
+          return <MneItem key={index} mne={mne} index={index} />
         })}
       </div>
-    );
-  };
-  goToNext = () => {
-    this.props.history.push({
-      pathname: "/backupmnemonic",
-    })
-  };
-  renderBottonBtn = () => {
-    return (
-      <div className="bottom-container">
-        <Button
-          content={getLanguage('show_seed_button')}
-          onClick={this.goToNext}
-        />
-      </div>
-    )
-  }
-  render() {
-    return (
-      <CustomView
-        title={getLanguage('backTips_title')}
-        history={this.props.history}>
-        <div className="mne-show-container">
-          <p className={"mne-description"}>{getLanguage("show_seed_content")}</p>
-          {this.showMne()}
-        </div>
-        {this.renderBottonBtn()}
-      </CustomView>
-    )
-  }
+      <BottomBtn
+        onClick={goToNext}
+        rightBtnContent={i18n.t('show_seed_button')}
+      />
+    </CustomView>
+  )
 }
 
-const mapStateToProps = (state) => ({
-});
-
-function mapDispatchToProps(dispatch) {
-  return {};
+export const MneItem = ({ mne, index, canClick = false, onClick = () => { }, contentColorStatus = false}) => {
+  const [showSmallMne, setShowSmallMne] = useState(mne.length >= 8)
+  return (<div
+    className={cls(styles.mneItemContainer, {
+      [styles.clickAble]: canClick,
+      [styles.colorStatus]:contentColorStatus
+    })}
+    onClick={onClick}>
+    <p className={cls(styles.mneIndex, {
+      [styles.smallStyle]: showSmallMne,
+      [styles.colorIndexStatus]:contentColorStatus
+    })}>
+      {(index + 1) + "."}
+    </p>
+    <span className={cls(styles.mneItem, {
+      [styles.smallStyle]: showSmallMne
+    })}>
+      {mne}
+    </span>
+  </div>)
 }
-
-export default connect(mapStateToProps, mapDispatchToProps)(ShowMnemonic);

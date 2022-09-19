@@ -1,0 +1,61 @@
+.tabContainer {
+    width: 100%;
+    .tabBtnContainer {
+        margin: 10px 0px;
+        position: relative;
+        z-index: 1;
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+        width: 100%;
+    }
+    .tabIndicator {
+        position: absolute;
+        z-index: 1;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        transition: all 0.3s;
+        background: #000000;
+    }
+    .tabBtn {
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 14px;
+        color: rgba(0, 0, 0, 0.5);
+
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 0;
+        background: transparent;
+        outline: 0;
+        padding: 10px 0px 8px;
+        margin-right: 16px;
+
+        &:hover {
+            color: #000000;
+        }
+    }
+    .tabBtnActive {
+        color: rgba(0, 0, 0, 0.85);
+        &:hover {
+            color: rgba(0, 0, 0, 0.85);
+        }
+    }
+    .tabPanel {
+        width: 100%;
+        display: none;
+    }
+    .tabPanelActive {
+        display: flex;
+    }
+    .tabsPanels {
+        overflow: hidden;
+        width: 100%;
+        background: white;
+        min-height: 50px;
+    }
+    .tabTracker {
+        display: flex;
+        transition: transform 0.3s;
+    }
+}

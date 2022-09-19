@@ -7,9 +7,10 @@ import Loading from "../popup/component/Loading";
 import BigNumber from "bignumber.js";
 import {cointypes} from "../../config";
 import Toast from "../popup/component/Toast";
-import {getLanguage} from "../i18n";
 import {getCurrentNetConfig} from './utils';
 import extension from 'extensionizer'
+import i18n from "i18next"
+
 const status = {
   rejected: 'CONDITIONS_OF_USE_NOT_SATISFIED',
 }
@@ -31,7 +32,7 @@ function initLedgerWindowListener () {
 async function openLedgerWindow () {
   openPopupWindow('./popup.html#/ledger_connect', 'ledger')
   await initLedgerWindowListener()
-  Toast.info(getLanguage('ledgerConnectSuccess'))
+  Toast.info(i18n.t('ledgerConnectSuccess'))
   return {connected: true}
 }
 async function getPort() {
@@ -159,7 +160,7 @@ async function requestSign(app, body, type, ledgerAccountIndex) {
   }
   const {signature, returnCode, statusText} = await app.signTransaction(payload)
   if (statusText === status.rejected) {
-    return {rejected: true, publicKey: null, error: {message: getLanguage('ledgerRejected')}}
+    return {rejected: true, publicKey: null, error: {message: i18n.t('ledgerRejected')}}
   }
   if (returnCode !== '9000') {
     return {signature: null, error: {message: statusText}}

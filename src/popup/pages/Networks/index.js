@@ -1,526 +1,237 @@
-import cx from "classnames";
-import React from "react";
-import { connect } from "react-redux";
-import { MAIN_NET_BASE_CONFIG, NET_CONFIG_VERSION, TEST_NET_BASE_CONFIG, UNKNOWN_NET_BASE_CONFIG } from "../../../../config";
-import select_account_no from "../../../assets/images/select_account_no.png";
-import select_account_ok from "../../../assets/images/select_account_ok.png";
-import { getNetworkList, getNodeChainId } from "../../../background/api";
-import { getLocal, removeLocal, saveLocal } from "../../../background/localStorage";
-import { LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, NET_WORK_CONFIG } from "../../../constant/storageKey";
-import { getLanguage } from "../../../i18n";
+import cls from "classnames";
+import { useCallback, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { NET_CONFIG_VERSION } from "../../../../config";
+import { removeLocal, saveLocal } from "../../../background/localStorage";
+import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../constant/storageKey";
 import { updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, NET_CONFIG_DEFAULT, updateNetConfig } from "../../../reducers/network";
-import { sendNetworkChangeMsg, trimSpace, urlValid } from "../../../utils/utils";
-import Button, { BUTTON_TYPE_CANCEL } from "../../component/Button";
-import ConfirmModal from "../../component/ConfirmModal";
-import CustomInput from "../../component/CustomInput";
+import { sendNetworkChangeMsg } from "../../../utils/utils";
+
+import i18n from "i18next";
+import { useHistory } from 'react-router-dom';
+import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
-import Loading from "../../component/Loading";
-import TestModal from "../../component/TestModal";
-import Toast from "../../component/Toast";
-import "./index.scss";
+import styles from "./index.module.scss";
 
 
-import deleteIcon from "../../../assets/images/deleteIcon.svg";
-import editIcon from "../../../assets/images/editIcon.svg";
+import { PopupModal } from "../../component/PopupModal";
+import { NodeEditorType } from "./NodeEditor";
 
-const MODAL_TYPE = { 
-    "ADD": "ADD",
-    "UPDATE": "UPDATE"
-}
-class NetworkPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            netConfigList: props.netConfig.netList,
-            currentConfig: props.netConfig.currentConfig,
-            netUrl: "",
-            nodeName: "",
-            editMode: false,
-            testModalType: MODAL_TYPE.ADD,
-            editItem: {},
-            btnClick: false,
-            networkList: []
-        };
-        this.modal = React.createRef();
-        this.isUnMounted = false;
-    }
-    componentDidMount() {
-        this.fetchData()
-    }
-    fetchData = async () => {
-        let network = await getNetworkList()
-        if (network.length <= 0) {
-            let listJson = getLocal(NETWORK_ID_AND_TYPE)
-            let list = JSON.parse(listJson)
-            if (list.length > 0) {
-                network = list
+
+const NetworkPage = ({ }) => {
+
+    const netConfigList = useSelector(state => state.network.netList)
+    const currentConfig = useSelector(state => state.network.currentConfig)
+
+    const [reminderModalStatus, setReminderModalStatus] = useState(false)
+    const [editMode, setEditMode] = useState(false)
+
+    const dispatch = useDispatch()
+    const history = useHistory()
+
+    const { nodeList, } = useMemo(() => {
+
+        let defaultList = []
+        let customList = []
+        netConfigList.map((item) => {
+            if (item.type === NET_CONFIG_DEFAULT) {
+                defaultList.push(item)
+            } else {
+                customList.push(item)
             }
-        }
-        this.callSetState({
-            networkList: network
         })
-    }
-    componentWillUnmount() {
-        this.isUnMounted = true;
-    }
-    callSetState = (data, callback) => {
-        if (!this.isUnMounted) {
-            this.setState({
-                ...data
-            }, () => {
-                callback && callback()
-            })
+
+
+        let nodeList = [
+            {
+                title: i18n.t('defaultNode'),
+                type: NET_CONFIG_DEFAULT,
+                list: defaultList
+            },
+            {
+                title: i18n.t('costomNode'),
+                type: NET_CONFIG_ADD,
+                list: customList
+            }
+        ]
+
+
+        return {
+            nodeList,
         }
-    }
-    onSelect = (netItem) => {
-        if (this.state.editMode) {
-            return
+    }, [netConfigList, i18n])
+
+    const {
+        rightBtcContent
+    } = useMemo(() => {
+        let rightBtcContent = editMode ? i18n.t('done') : i18n.t('edit')
+        return {
+            rightBtcContent
         }
-        this.callSetState({
-            currentConfig: netItem
-        }, () => {
-            this.updateLocalConfig()
+    }, [i18n, editMode])
+
+
+    const onClickEdit = useCallback(() => {
+        setEditMode(state => !state)
+    }, [editMode])
+
+    const onAddNode = useCallback(() => {
+        history.push({
+            pathname: "node_editor",
+            params: { editorType: NodeEditorType.add }
         })
-    }
-    updateLocalConfig = () => {
-        let config = {
-            netList: this.state.netConfigList,
-            currentConfig: this.state.currentConfig,
-            netConfigVersion: NET_CONFIG_VERSION
-        }
-        saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
-
-        this.clearLocalCache()
-        this.props.updateNetConfig(config)
-        this.props.updateShouldRequest(true)
-        this.props.updateStakingRefresh(true)
-
-        sendNetworkChangeMsg(config.currentConfig)
-    }
-    clearLocalCache = () => {
+    }, [])
+    const clearLocalCache = useCallback(() => {
         let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS)
         for (let index = 0; index < localCacheKeys.length; index++) {
             const keys = localCacheKeys[index];
             let localKey = LOCAL_CACHE_KEYS[keys]
             removeLocal(localKey)
         }
-    }
-    onConfirmDelete = (netItem) => {
-        let currentConfig = this.state.currentConfig
-        let list = this.state.netConfigList
-        if (netItem.url === currentConfig.url) {
-            currentConfig = list[0]
+    }, [])
+
+    const onClickRow = useCallback((nodeItem) => {
+        if (editMode) {
+            return
+        }
+        let config = {
+            netList: netConfigList,
+            currentConfig: nodeItem,
+            netConfigVersion: NET_CONFIG_VERSION
+        }
+        saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+        clearLocalCache()
+
+        dispatch(updateNetConfig(config))
+        dispatch(updateShouldRequest(true))
+        dispatch(updateStakingRefresh(true))
+
+        sendNetworkChangeMsg(config.currentConfig)
+
+    }, [netConfigList, editMode])
+
+
+    const [deleteItemTemp, setDeleteItemTemp] = useState({})
+    const onDeleteNode = useCallback((nodeItem) => {
+        setDeleteItemTemp(nodeItem)
+        setReminderModalStatus(true)
+    }, [netConfigList])
+
+    const onEditItem = useCallback((nodeItem) => {
+        history.push({
+            pathname: "node_editor",
+            params: {
+                editorType: NodeEditorType.edit,
+                editItem: nodeItem
+            }
+        })
+    }, [netConfigList])
+
+    const onConfirmDelete = useCallback(() => {
+
+        let currentConfigTemp = currentConfig
+        let list = netConfigList
+        if (deleteItemTemp.url === currentConfigTemp.url) {
+            currentConfigTemp = list[0]
         }
         list = list.filter((item, index) => {
-            return item.url !== netItem.url
+            return item.url !== deleteItemTemp.url
         })
-        ConfirmModal.hide()
-        this.callSetState({
-            netConfigList: list,
-            currentConfig: currentConfig
-        }, () => {
-            this.updateLocalConfig()
-            Toast.info(getLanguage('deleteSuccess'))
-        })
-    }
 
-    onDelete = (netItem, index) => {
-        let title = getLanguage('prompt')
-        let content = getLanguage("confirmDeleteNode")
-        let cancelText = getLanguage('cancel')
-        let confirmText = getLanguage('confirm')
-        ConfirmModal.show({
-            title, content, cancelText, confirmText,
-            onConfirm: () => {
-                this.onConfirmDelete(netItem)
-            },
-        })
-    }
-    renderItemRight = (netItem, imgUrl) => {
-        let { type } = netItem
-        let isDefault = type === NET_CONFIG_DEFAULT
-        if (isDefault) {
-            return (<div className={"network-item-img-container"}>
-                {this.state.editMode ? <></> : <img onClick={() => this.onSelect(netItem)} className={"lang-option-img click-cursor"} src={imgUrl} />}
-            </div>)
-        } else {
-            return (
-                <div className={"network-item-img-container"}>
-                    {this.state.editMode ? <>
-                        <div className="baseIconContainer editIconContainer click-cursor" onClick={() => this.onEdit(netItem)} >
-                            <img className={"networkEditContent"} src={editIcon} />
-                        </div>
-                        <div className="baseIconContainer deleteIconContainer click-cursor" onClick={() => this.onDelete(netItem)} >
-                            <img className={"networkEditContent"} src={deleteIcon} />
-                        </div>
-                    </> : <img onClick={() => this.onSelect(netItem)} className={"lang-option-img click-cursor"} src={imgUrl} />}
-                </div>)
+        let newConfig = {
+            netList: list,
+            currentConfig: currentConfigTemp,
+            netConfigVersion: NET_CONFIG_VERSION
         }
-    }
-    renderItem = (netItem, index, showNetType) => {
-        let { url, name, netType } = netItem
-        let imgUrl = this.state.currentConfig.url === url ? select_account_ok : select_account_no
-        return (
-            <div onClick={() => this.onSelect(netItem, true)} key={index + ""}
-                className={cx("network-item-container",{
-                    "click-cursor":!this.state.editMode
-                })}>
-                <div className={"networkItemLeftCon"}>
-                    <p className={"networkItemTitle"}>{name}
-                        {showNetType && <span className={"networkItemType"}>{netType}</span>}
-                    </p>
-                    <p className={"network-item-content"}>{url}</p>
-                </div>
-                {this.renderItemRight(netItem, imgUrl)}
-            </div>
-        )
-    }
-    renderBottonBtn = () => {
-        if (this.state.editMode) {
-            return <></>
-        }
-        return (
-            <div className="bottom-container">
-                <Button
-                    content={getLanguage('addNetWork')}
-                    onClick={this.onAdd}
-                />
-            </div>
-        )
-    }
-    isExist = (url) => {
-        let list = this.state.netConfigList
-        let sameIndex = -1
-        for (let index = 0; index < list.length; index++) {
-            const net = list[index];
-            if (net.url === url) {
-                sameIndex = index
-                break
-            }
-        }
-        return sameIndex
-    }
-    checkGqlHealth = async (url) => {
-        const { networkList } = this.state
-        let chainData = await getNodeChainId(url)
-        let chainId = chainData?.daemonStatus?.chainId || ""
-        let networkConfig = {}
-        for (let index = 0; index < networkList.length; index++) {
-            const network = networkList[index];
-            if (network.chain_id === chainId) {
-                networkConfig = network
-                break
-            }
-        }
-        let config = {}
-        switch (networkConfig.type) {
-            case "0":
-                config = MAIN_NET_BASE_CONFIG
-                break;
-            case "1":
-                config = TEST_NET_BASE_CONFIG
-                break;
-            default:
-                config = UNKNOWN_NET_BASE_CONFIG
-                break;
-        }
-        return { chainId, config }
-    }
-    baseConfigCheck = async () => {
-        let urlInput = trimSpace(this.state.netUrl)
-        let nameInput = trimSpace(this.state.nodeName)
-        if (!urlValid(urlInput)) {
-            Toast.info(getLanguage("urlError_1"))
-            return false
-        }
-        if (nameInput.length === 0) {
-            Toast.info(getLanguage('noNetworkNameTip'))
-            return
-        }
-        let existIndex = this.isExist(urlInput)
 
-        if (existIndex !== -1) {
-            if (this.state.testModalType === MODAL_TYPE.UPDATE) {
-                let existConfig = this.state.netConfigList[existIndex]
-                if (existConfig.id !== this.state.editItem.id) {
-                    Toast.info(getLanguage('urlError_2'))
-                    return false
+
+        saveLocal(NET_WORK_CONFIG, JSON.stringify(newConfig))
+
+        clearLocalCache()
+
+        dispatch(updateNetConfig(newConfig))
+        dispatch(updateShouldRequest(true))
+        dispatch(updateStakingRefresh(true))
+        sendNetworkChangeMsg(newConfig.currentConfig)
+        setReminderModalStatus(false)
+
+    }, [deleteItemTemp, currentConfig, netConfigList, deleteItemTemp])
+
+    const onCancel = useCallback(() => {
+        setReminderModalStatus(false)
+    }, [])
+
+    return (
+        <CustomView
+            title={i18n.t('network')}
+            contentClassName={styles.contentClassName}
+            rightComponent={
+                <p className={styles.editBtn}
+                    onClick={onClickEdit}>
+                    {rightBtcContent}
+                </p>
+            }>
+            <div className={styles.innerContent}>
+                {
+                    nodeList.map((netNode, index) => {
+                        if (netNode.list.length == 0) {
+                            return <div key={index} />
+                        }
+                        let showNetType = netNode.type !== NET_CONFIG_DEFAULT
+                        return (<div key={index}>
+                            <p className={styles.nodeListTitle}>{netNode.title}</p>
+                            {
+                                netNode.list.map((nodeItem, j) => {
+                                    let select = currentConfig.url === nodeItem.url
+                                    return <div key={j} className={styles.rowContainer}>
+                                        <div className={cls(styles.nodeItemContainer, {
+                                            [styles.editMode]: editMode
+                                        })} onClick={() => onClickRow(nodeItem)}>
+                                            <div className={styles.rowleft}>
+                                                <div className={styles.rowTopContainer}>
+                                                    <p className={styles.nodeName}>{nodeItem.name}</p>
+                                                    {showNetType && <div className={styles.nodeTypeContainer}>
+                                                        <span className={styles.nodeType}>{nodeItem.netType}</span>
+                                                    </div>}
+                                                </div>
+                                                <p className={styles.nodeUrl}>{nodeItem.url}</p>
+                                            </div>
+                                            {!editMode && <div className={styles.rowRight}>
+                                                {select && <img src="/img/icon_checked.svg" className={styles.checkedIcon} />}
+                                            </div>}
+                                            {editMode && showNetType && <div className={styles.rowRight} onClick={() => onEditItem(nodeItem)}>
+                                                <img src="/img/icon_edit.svg" className={styles.editIcon} />
+                                            </div>}
+                                        </div>
+                                        {editMode && showNetType && <div className={styles.deleteIconContainer} onClick={() => onDeleteNode(nodeItem)}>
+                                            <img src="/img/icon_delete.svg" className={styles.deleteIcon} />
+                                        </div>}
+                                    </div>
+                                })
+                            }
+                        </div>)
+                    })
                 }
-            } else {
-                Toast.info(getLanguage('urlError_2'))
-                return false
-            }
-        }
-        Loading.show()
-        let chainConfig = await this.checkGqlHealth(urlInput)
-        Loading.hide()
-        if (!chainConfig.chainId) {
-            Toast.info(getLanguage('urlError_1'))
-            return false
-        }
-        return { urlInput, nameInput, config: chainConfig.config }
-    }
-
-    onEdit = (netItem) => {
-        this.callSetState({
-            netUrl: netItem.url,
-            nodeName: netItem.name,
-            editItem: netItem,
-            testModalType: MODAL_TYPE.UPDATE
-        }, () => {
-            this.modal.current.setModalVisable(true)
-        })
-    }
-    onEditConfirm = async () => {
-        let baseCheck = await this.baseConfigCheck()
-        if (!baseCheck) {
-            return
-        }
-        const { urlInput, nameInput, config } = baseCheck
-        this.onCloseModal()
-        let currentEditItem = this.state.editItem
-        let currentConfig = { ...this.state.currentConfig }
-        if (currentEditItem.id === currentConfig.url) {
-            currentConfig.url = urlInput
-            currentConfig.name = nameInput
-            currentConfig.netType = config.netType
-        }
-        let editItem = {
-            ...config,
-            name: nameInput,
-            url: urlInput,
-            id: urlInput,
-            type: NET_CONFIG_ADD,
-        }
-        let list = [...this.state.netConfigList];
-        let newList = list.map((item) => {
-            if (item.id === currentEditItem.id) {
-                return editItem
-            } else {
-                return item
-            }
-        })
-
-        this.callSetState({
-            netConfigList: newList,
-            currentConfig: currentConfig,
-            netUrl: "",
-            nodeName: ""
-        }, () => {
-            Toast.info(getLanguage('updateSuccess'))
-            this.updateLocalConfig()
-        })
-    }
-    onAddNetConfig = async () => {
-        let baseCheck = await this.baseConfigCheck()
-        if (!baseCheck) {
-            return
-        }
-        const { urlInput, nameInput, config } = baseCheck
-        setTimeout(() => {
-            this.onCloseModal()
-            Toast.info(getLanguage('addSuccess'))
-            let addItem = {
-                ...config,
-                name: nameInput,
-                url: urlInput,
-                id: urlInput,
-                type: NET_CONFIG_ADD,
-            }
-            let list = [...this.state.netConfigList];
-            list.push(addItem)
-            this.callSetState({
-                netConfigList: list,
-                currentConfig: addItem,
-                netUrl: "",
-                nodeName: ""
-            }, () => {
-                this.updateLocalConfig()
-            })
-        }, 350);
-    }
-    onModalClick = () => {
-        if (this.state.testModalType === MODAL_TYPE.ADD) {
-            this.onAddNetConfig()
-        } else if (this.state.testModalType === MODAL_TYPE.UPDATE) {
-            this.onEditConfirm()
-        }
-    }
-    setBtnStatus = () => {
-        let nodeName = this.state.nodeName
-        nodeName = trimSpace(nodeName)
-
-        let netUrl = this.state.netUrl
-        netUrl = trimSpace(netUrl)
-        let canClick = false
-        if (nodeName.length > 0 && netUrl.length > 0) {
-            canClick = true
-        }
-        this.callSetState({
-            btnClick: canClick
-        })
-    }
-    renderActionBtn = () => {
-        let confirmContent = getLanguage('confirm_1')
-        return (
-            <div className={"networkBtnContainer"}>
-                <Button
-                    content={confirmContent}
-                    onClick={this.onModalClick}
-                    propsClass={'modal-button-width'}
-                    type={"submit"}
-                    disabled={!this.state.btnClick}
-                />
-                <Button
-                    buttonType={BUTTON_TYPE_CANCEL}
-                    content={getLanguage('cancel')}
-                    onClick={this.onCloseModal}
-                    propsClass={'modal-button-width'}
-                />
-            </div>)
-    }
-    onUrltInput = (e) => {
-        this.callSetState({
-            netUrl: e.target.value
-        }, () => {
-            this.setBtnStatus()
-        })
-    }
-    onNameInput = (e) => {
-        this.callSetState({
-            nodeName: e.target.value
-        }, () => {
-            this.setBtnStatus()
-        })
-    }
-    renderInput = () => {
-        return (
-            <div className="networkInputWrapper">
-                <p className={"addNetworkTip"}>{getLanguage('addNetworkTip')}</p>
-                <CustomInput
-                    value={this.state.nodeName}
-                    placeholder={getLanguage('addressName')}
-                    onTextInput={this.onNameInput}
-                />
-                <div className={'networkTextArea'}>
-                    <textarea
-                        className={"networkAreaInput"}
-                        placeholder={getLanguage('address')}
-                        value={this.state.netUrl}
-                        onChange={this.onUrltInput} />
-                </div>
-            </div>)
-    }
-    onAdd = (e) => {
-        this.callSetState({
-            editMode: false,
-            testModalType: MODAL_TYPE.ADD
-        }, () => {
-            this.modal.current.setModalVisable(true)
-        })
-    }
-    onCloseModal = () => {
-        if (this.state.testModalType === MODAL_TYPE.ADD) {
-            this.modal.current.setModalVisable(false)
-        } else {
-            this.callSetState({
-                netUrl: "",
-                nodeName: "",
-            }, () => {
-                this.modal.current.setModalVisable(false)
-            })
-        }
-    }
-    renderChangeModal = () => {
-        return (<TestModal
-            ref={this.modal}
-            touchToClose={true}
-            title={getLanguage('addNetWork')}
-        >
-            {this.renderInput()}
-            {this.renderActionBtn()}
-        </TestModal>)
-    }
-    renderDefaultNet = () => {
-        let list = this.state.netConfigList.filter((item) => item.type === NET_CONFIG_DEFAULT)
-
-        if (list.length <= 0) {
-            return <div />
-        }
-        return (
-            <div>
-                <p className={"network-title"}>{getLanguage("defaultNetwork")}</p>
-                {list.map((item, index) => {
-                    return this.renderItem(item, index)
-                })}
             </div>
-        )
-    }
-    renderCustomtNet = () => {
-        let list = this.state.netConfigList.filter((item) => item.type !== NET_CONFIG_DEFAULT)
-        if (list.length <= 0) {
-            return <div />
-        }
-        return (
-            <div className={"network-item-diff"}>
-                <p className={"network-title"}>{getLanguage('customNetwork')}</p>
-                {list.map((item, index) => {
-                    return this.renderItem(item, index, true)
-                })}
+
+            <div className={styles.bottomContainer}>
+                <Button
+                    onClick={onAddNode}>
+                    {i18n.t('addNode')}
+                </Button>
             </div>
-        )
-    }
-    onSubmit = (event) => {
-        event.preventDefault();
-    }
-    onClickEdit = () => {
-        this.callSetState({
-            editMode: !this.state.editMode
-        })
-    }
-    renderEditBtn = () => {
-        let content = this.state.editMode ? getLanguage('over') : getLanguage('edit')
-        return (
-            <div onClick={this.onClickEdit} className={"networkEditcontainer click-cursor"}>
-                <p className={cx("networkEdit", this.state.editMode ? "networkEditing" : "networkEditCommon")}>{content}</p>
-            </div>)
-    }
-    render() {
-        return (
-            <CustomView
-                title={getLanguage('networkConfig')}
-                history={this.props.history}
-                rightComponent={this.renderEditBtn()}>
-                <div className={"network-container"}>
-                    {this.renderDefaultNet()}
-                    {this.renderCustomtNet()}
-                </div>
-                {this.renderBottonBtn()}
-                <form onSubmit={this.onSubmit}
-                >
-                    {this.renderChangeModal()}
-                </form>
-            </CustomView>)
-    }
+
+            <PopupModal
+                title={i18n.t('deleteNode')}
+                leftBtnContent={i18n.t('cancel')}
+                onLeftBtnClick={onCancel}
+                rightBtnContent={i18n.t('delete')}
+                onRightBtnClick={onConfirmDelete}
+                rightBtnStyle={styles.modalDelete}
+                modalVisable={reminderModalStatus} />
+        </CustomView >
+    )
 }
 
-const mapStateToProps = (state) => ({
-    netConfig: state.network,
-});
-
-function mapDispatchToProps(dispatch) {
-    return {
-        updateNetConfig: (config) => {
-            dispatch(updateNetConfig(config))
-        },
-        updateShouldRequest: (shouldRefresh) => {
-            dispatch(updateShouldRequest(shouldRefresh))
-        },
-        updateStakingRefresh: (shouldRefresh) => {
-            dispatch(updateStakingRefresh(shouldRefresh))
-        },
-    };
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(NetworkPage);
+export default NetworkPage

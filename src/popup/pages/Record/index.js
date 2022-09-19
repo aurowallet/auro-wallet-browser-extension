@@ -1,182 +1,185 @@
-import cx from "classnames";
+import cls from "classnames";
 import extension from 'extensionizer';
-import React from "react";
-import { connect } from "react-redux";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from 'react-router-dom';
 import { cointypes } from '../../../../config';
-import goNext from "../../../assets/images/goNext.png";
-import pending from "../../../assets/images/pending.png";
-import success from "../../../assets/images/success.png";
-import txFailed from "../../../assets/images/txFailed.png";
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from '../../../constant/types';
-import { getLanguage } from "../../../i18n";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { openTab } from '../../../utils/commonMsg';
-import { copyText, getAmountDisplay, getCurrentNetConfig, getShowTime } from "../../../utils/utils";
+import { copyText, getAmountDisplay, getShowTime } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
-import "./index.scss";
-
-const DECIMALS = cointypes.decimals
+import styles from "./index.module.scss";
 
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
-  TX_STATUS_SUCCESS: "applied",
   TX_STATUS_INCLUDED: "INCLUDED",
+  TX_STATUS_UNKNOWN: "UNKNOWN",
 
+  TX_STATUS_SUCCESS: "applied",
   TX_STATUS_FAILED: "failed",
-  TX_STATUS_UNKNOWN: "UNKNOWN"
 }
 
-class Record extends React.Component {
-  constructor(props) {
-    super(props);
-    let txDetail = props.location.params?.txDetail;
-    this.state = {
-      txStatus: txDetail.status || STATUS.TX_STATUS_PENDING,
-      txDetail
-    };
-    this.isUnMounted = false;
-  }
-  componentDidMount() {
-    this.startListener()
-  }
-  componentWillUnmount() {
-    this.isUnMounted = true;
-  }
-  callSetState = (data, callback) => {
-    if (!this.isUnMounted) {
-      this.setState({
-        ...data
-      }, () => {
-        callback && callback()
-      })
-    }
-  }
-  startListener = () => {
-    extension.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-      const { type, action,hash } = message;
-      if (type === FROM_BACK_TO_RECORD && action === TX_SUCCESS && hash ===  this.state.txDetail.hash) { 
-        this.callSetState({
-          txStatus: STATUS.TX_STATUS_INCLUDED
-        })
-        this.props.updateShouldRequest(true, true)
-        sendResponse();
-      }
-      return true;
-    });
-  }
+const Record = ({ }) => {
 
-  onCopy = (title, content) => {
-    copyText(content).then(() => {
-      Toast.info(title + " " + getLanguage('copySuccess'))
-    })
-  }
-  renderDetailItem = (title, content) => {
-    return (
-      <div onClick={() => this.onCopy(title, content)} className="record-detail-item">
-        <p className="record-detail-title">{title}</p>
-        <p className="record-detail-content  click-cursor">{content}</p>
-      </div>
-    )
-  }
-  renderDetail = () => {
-    let receive = this.state.txDetail.to || String(this.state.txDetail.receiver)
-    let toAddress = this.state.txDetail.from || String(this.state.txDetail.sender)
-    let memo = this.state.txDetail.memo
-    let time = this.state.txDetail.time ? getShowTime(this.state.txDetail.time) : ""
-    return (
-      <div className="record-detail-container">
-        {this.renderDetailItem(getLanguage('amount'), getAmountDisplay(this.state.txDetail.amount, DECIMALS, DECIMALS) + " " + cointypes.symbol)}
-        {this.renderDetailItem(getLanguage('toAddress'), receive)}
-        {this.renderDetailItem(getLanguage('fromAddress'), toAddress)}
-        {memo && this.renderDetailItem("Memo", memo)}
-        {this.renderDetailItem(getLanguage('fee'), getAmountDisplay(this.state.txDetail.fee, DECIMALS, DECIMALS) + " " + cointypes.symbol)}
-        {time && this.renderDetailItem(getLanguage('txTime'), time)}
-        {this.renderDetailItem("Nonce", String(this.state.txDetail.nonce))}
-        {this.renderDetailItem(getLanguage('txHash'), this.state.txDetail.hash)}
-      </div>
-    )
-  }
-  goToExplorer = () => {
-    let netConfig = getCurrentNetConfig()
-    let url = netConfig.explorer +"/transaction/"+ this.state.txDetail.hash
-    openTab(url)
-  }
-  renderDetailExplorer = () => {
-    return (
-      <div className={"record-bottom"} onClick={this.goToExplorer} >
-        <p className="backup-success-dividedline"></p>
-        <div className={"record-explorer-inner-container  click-cursor"}>
-          <p className={"record-explorer-title"}>{getLanguage('goToExplrer')}</p>
-          <img className={"record-arrow"} src={goNext} />
-        </div>
-      </div>
-    )
-  }
+  const netConfig = useSelector(state => state.network)
+  const dispatch = useDispatch()
 
-  getStatusSource = () => {
-    let status = {
-      source: pending,
-      text: getLanguage('txPending'),
-      className: "tx-pending-title"
-    }
-    switch (this.state.txStatus) {
+
+  const history = useHistory()
+  const [txDetail, setTxDetail] = useState(history.location.params?.txDetail || {})
+
+  const [txStatus, setTxStatus] = useState(history.location.params?.txDetail?.status || STATUS.TX_STATUS_PENDING)
+  const {
+    statusIcon, statusTitle, statusClass,
+    contentList
+  } = useMemo(() => {
+    let statusIcon, statusTitle, statusClass = ''
+    switch (txStatus) {
       case STATUS.TX_STATUS_SUCCESS:
       case STATUS.TX_STATUS_INCLUDED:
-        status.source = success,
-          status.text = getLanguage('txSuccess')
-        status.className = "tx-success-title"
+        statusIcon = "/img/detail_success.svg"
+        statusTitle = i18n.t('success')
+        statusClass = styles.txSuccess
         break;
       case STATUS.TX_STATUS_FAILED:
       case STATUS.TX_STATUS_UNKNOWN:
-        status.source = txFailed,
-          status.text = getLanguage('txFailed')
-        status.className = "tx-failed-title"
+        statusIcon = "/img/detail_failed.svg"
+        statusTitle = i18n.t('failed')
+        statusClass = styles.txFailed
         break;
-
+      case STATUS.TX_STATUS_PENDING:
       default:
+        statusIcon = "/img/detail_pending.svg"
+        statusTitle = i18n.t('wait')
+        statusClass = styles.txPending
         break;
     }
-    return status
-  }
 
-  render() { 
-    let status = this.getStatusSource()
-    let imgSource = status.source
-    let txStatusTitle = status.text
-    const onBack = this.props.location.params?.onGoBack;
-    return (
-      <CustomView
-        title={getLanguage('details')}
-        onGoBack={onBack ?? null}
-        history={this.props.history}>
-        <div className="backup-success-container">
-          <div className="backup-top-container">
-            <img className={"record-head-img"} src={imgSource}></img>
-            <p className={
-              cx({
-                "tx-common-title": true,
-                [status.className]: true,
-              })
-            }>{txStatusTitle}</p>
-            <p className="backup-success-dividedline"></p>
-          </div>
-          {this.renderDetail()}
-        </div>
-        {this.renderDetailExplorer()}
-      </CustomView>
-    )
-  }
+    let amount = getAmountDisplay(txDetail.amount, cointypes.decimals, cointypes.decimals) + " " + cointypes.symbol
+    let receiveAddress = txDetail.to || String(txDetail.receiver)
+    let sendAddress = txDetail.from || String(txDetail.sender)
+    let memo = txDetail.memo || ""
+    let fee = getAmountDisplay(txDetail.fee, cointypes.decimals, cointypes.decimals) + " " + cointypes.symbol
+    let txTime = txDetail.time ? getShowTime(txDetail.time) : ""
+    let nonce = String(txDetail.nonce)
+    let txHash = txDetail.hash
+
+
+    let contentList = [
+      {
+        title: i18n.t('amount'),
+        content: amount
+      },
+      {
+        title: i18n.t('to'),
+        content: receiveAddress
+      },
+      {
+        title: i18n.t('from'),
+        content: sendAddress
+      }
+    ]
+    if (memo) {
+      contentList.push({
+        title: 'Memo',
+        content: memo
+      })
+    }
+    contentList.push({
+      title: i18n.t('fee'),
+      content: fee
+    })
+
+    if (txTime) {
+      contentList.push({
+        title: i18n.t('time'),
+        content: txTime
+      })
+    }
+    contentList.push({
+      title: "Nonce",
+      content: nonce
+    }, {
+      title: i18n.t('transationHash'),
+      content: txHash
+    })
+    return {
+      statusIcon, statusTitle, statusClass,
+      contentList,
+    }
+  }, [i18n, txStatus, txDetail])
+
+  const getExplorerUrl = useCallback(() => {
+    let currentConfig = netConfig.currentConfig
+    return currentConfig.explorer
+  }, [netConfig])
+
+  const [showExplorer, setShowExplorer] = useState(() => {
+    return !!getExplorerUrl()
+  })
+
+  useEffect(() => {
+    setShowExplorer(!!getExplorerUrl())
+  }, [netConfig.currentConfig])
+
+  const onGoExplorer = useCallback(() => {
+    let url = getExplorerUrl() + "/transaction/" + txDetail.hash
+    openTab(url)
+  }, [netConfig, txDetail])
+
+
+  useEffect(() => {
+    let onMessageListening = (message, sender, sendResponse) => {
+      const { type, action, hash } = message;
+      if (type === FROM_BACK_TO_RECORD && action === TX_SUCCESS && hash === txDetail.hash) {
+        setTxStatus(STATUS.TX_STATUS_INCLUDED)
+        dispatch(updateShouldRequest(true, true))
+        sendResponse();
+      }
+      return true;
+    }
+    extension.runtime.onMessage.addListener(onMessageListening);
+    return () => {
+      extension.runtime.onMessage.removeListener(onMessageListening);
+    };
+  }, []);
+
+
+  return (<CustomView title={i18n.t('details')} contentClassName={styles.container}>
+    <div className={styles.statusContainer}>
+      <img src={statusIcon} />
+      <p className={cls(styles.detailTitle, statusClass)}>
+        {statusTitle}
+      </p>
+    </div>
+    <div className={styles.dividedLine} />
+    {contentList.map((item, index) => {
+      return <DetailRow key={index} title={item.title} content={item.content} />
+    }, [])}
+    {showExplorer && <div className={styles.explorerContainer} onClick={onGoExplorer}>
+      <p className={styles.explorerTitle}>
+        {i18n.t('queryDetails')}
+      </p>
+      <img src="/img/icon_link.svg" className={styles.iconLink} />
+    </div>}
+  </CustomView>)
 }
 
-const mapStateToProps = (state) => ({});
+const DetailRow = ({ title, content }) => {
+  const onCopy = useCallback(() => {
+    copyText(content).then(() => {
+      Toast.info(i18n.t('copySuccess'))
+    })
+  }, [title, content])
 
-function mapDispatchToProps(dispatch) {
-  return {
-    updateShouldRequest: (shouldRefresh, isSilent) => {
-      dispatch(updateShouldRequest(shouldRefresh, isSilent))
-    },
-  };
+  return (<div className={styles.rowContainer} onClick={onCopy}>
+    <p className={styles.rowTitle}>{title}</p>
+    <p className={styles.rowContent}>{content}</p>
+  </div>)
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Record);
+
+export default Record

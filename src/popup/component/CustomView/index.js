@@ -1,66 +1,70 @@
-import cx from "classnames";
-import React from "react";
-import { connect } from "react-redux";
-import back_arrow from "../../../assets/images/back_arrow.png";
-import back_arrow_white from "../../../assets/images/back_arrow_white.png";
-import "./index.scss";
-import PropTypes from 'prop-types'
-class CustomView extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
+import cls from "classnames";
+import { useCallback, useMemo } from "react";
+import { useHistory } from 'react-router-dom';
+import styles from "./index.module.scss";
 
-        };
-    }
-    goBack = () => {
-        const { backRoute, onGoBack } = this.props
+
+const CustomView = ({
+    children,
+    title = "",
+    backRoute = "",
+    onGoBack,
+    contentClassName = "",
+    isReceive = false,
+    rightComponent = "",
+    customContainerClass = "",
+    noBack = false,
+    customeTitleClass = '',
+    onClickTitle=()=>{},
+    rightIcon = '',
+    onClickRightIcon = () => { }
+}) => {
+ 
+    let history = useHistory();
+    const goBack = useCallback(() => {
         if (onGoBack && onGoBack()) {
             return;
         }
         if (backRoute) {
-            this.props.history.push({
-                pathname: backRoute,
-            })
+            history.push(backRoute)
         } else {
-            this.props.history.goBack()
+            history.goBack()
         }
+    }, [backRoute, onGoBack])
 
-    }
-    render() {
-        const { title, backRoute, noi18n, noBack, isReceive, className } = this.props
-        let realTitle = title
-        let backImage = isReceive ? back_arrow_white : back_arrow
-        return (
-            <div className={cx({
-                "custom-container": true,
-                "custom-container-image": isReceive
-            }, className)}>
-                <div className="top-bar-container">
-                    <p className={cx({
-                        "custom-header-title": true,
-                        "custom-header-title-bg": isReceive
-                    })
-                    }>{realTitle}</p>
-                    <div onClick={this.goBack} className={"back-img-container click-cursor"}>
-                        <img
-                            className={cx({
-                                "back-img": true,
-                                "back-img-hide": noBack
-                            })}
-                            src={backImage} />
-                    </div>
-                    <div className={
-                        cx({
-                            "custom-right-container": this.props.rightComponent,
-                            "custom-right-container-none": !this.props.rightComponent,
-                        })
-                    }>
-                        {this.props.rightComponent}
-                    </div>
-                </div>
-                {this.props.children}
+    const { backIcon } = useMemo(() => {
+        const backIcon = isReceive ? "/img/icon_back_white.svg" : "/img/icon_back.svg"
+        return {
+            backIcon
+        }
+    }, [isReceive])
+
+    return (
+        <>
+            <div className={cls(styles.rowContainer, customContainerClass, {
+                [styles.receiveClass]: isReceive,
+                [styles.rightIconClass]: rightIcon
+            })}>
+                {isReceive && <img src={'/img/receivePageBg.svg'} className={styles.fullPageImg} />}
+                {!noBack && <div className={styles.backImgCon} onClick={goBack}>
+                    <img src={backIcon} />
+                </div>}
+                <p onClick={onClickTitle} className={cls(styles.title, customeTitleClass, {
+                    [styles.receiveTitle]: isReceive
+                })}>
+                    {title}
+                </p>
+                {rightComponent}
+                {rightIcon && <div className={styles.rightIconContainer}>
+                    <img
+                        src={rightIcon}
+                        className={styles.rightIcon} onClick={onClickRightIcon} />
+                </div>}
             </div>
-        );
-    }
+            <div className={cls(styles.contentContainer, contentClassName)}>
+                {children}
+            </div>
+        </>
+    )
 }
 export default CustomView

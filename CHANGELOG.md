@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+- New UI
 
 ## [2.0.6]
 - fix (ledger): signing not working on testnet

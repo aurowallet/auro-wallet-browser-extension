@@ -1,0 +1,132 @@
+.contentClassName {
+  padding: 10px 0px 100px;
+}
+
+.inputCon {
+
+  position: fixed;
+  width: 100%;
+  background-color: white;
+  padding: 0 20px 10px;
+  .customInputContainer {
+    background: rgba(0, 0, 0, 0.05);
+    border: 0.5px solid transparent;
+  }
+
+  .customInput {
+    background-color: transparent;
+    padding: 0 8px;
+    border: none;
+  }
+  .customInput::-webkit-input-placeholder {
+    font-size: 14px;
+    line-height: 17px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+.listContainer {
+  margin-top: 58px;
+  padding: 0 20px;
+  overflow: auto;
+}
+.rowContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nodeItemContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  min-height: 80px;
+  padding: 16px;
+  margin-top: 10px;
+
+  flex: 1;
+  cursor: pointer;
+  &:hover {
+    border: 0.5px solid #594af1;
+  }
+
+  .checkedIcon {
+    display: block;
+  }
+  .editIcon {
+    display: block;
+    cursor: pointer;
+    &:hover {
+      background-color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(249, 250, 252, 1);
+    }
+  }
+  .rowRight {
+    width: 30px;
+  }
+  .rowTopContainer {
+    display: flex;
+    align-items: center;
+
+    .nodeName {
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 19px;
+      color: #000000;
+
+      max-width: 200px;
+      word-break: break-all;
+    }
+  }
+  .nodeAddress {
+    font-size: 12px;
+    line-height: 100%;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 5px 0px 0px;
+
+    width: 216px;
+    word-break: break-all;
+  }
+  .stakeRow {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+
+    .numberTitle {
+      font-size: 12px;
+      line-height: 17px;
+      color: rgba(0, 0, 0, 0.5);
+    }
+    .numberContent {
+      color: rgba(0, 0, 0, 1);
+    }
+
+    > :first-child {
+      margin-right: 12px;
+    }
+  }
+}
+
+.manualAddContainer{
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  
+  .manualAddContent{
+    text-align: center;
+    width: fit-content;
+    padding: 4px 0;
+    color: #594af1;;
+    cursor: pointer;
+  }
+}
+.bottomContainer {
+  padding: 12px 38px 30px;
+  position: fixed;
+  bottom: 0;
+  width: calc(100%);
+  background-color: white;
+}

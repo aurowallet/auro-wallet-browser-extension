@@ -1,165 +1,127 @@
-import React from "react";
-import { connect } from "react-redux";
-import ledgerWallet from "../../../assets/images/ledgerWallet.png";
-import select_account_ok from "../../../assets/images/select_account_ok.png";
-import { getLanguage } from "../../../i18n";
+import { useCallback, useMemo, useState } from "react";
+import Transport from "@ledgerhq/hw-transport-webusb";
+import { MinaLedgerJS } from "mina-ledger-js";
+import { LEDGER_CONNECTED_SUCCESSFULLY } from "../../../constant/types";
+import { sendMsg } from "../../../utils/commonMsg";
+
+import styles from "./index.module.scss";
+import cls from "classnames";
+import { Helmet } from "react-helmet";
+
+import i18n from "i18next";
+import LedgerConnected from "../../component/LedgerConnected";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
-import Transport from "@ledgerhq/hw-transport-webusb";
-import {MinaLedgerJS} from "mina-ledger-js";
-import {sendMsg} from "../../../utils/commonMsg";
-import {LEDGER_CONNECTED_SUCCESSFULLY} from "../../../constant/types";
 
-import "./index.scss";
-import {closePopupWindow} from "../../../utils/popup";
-import {LedgerConnected} from "../../component/LedgerConnected";
-import {Helmet} from "react-helmet";
-class LedgerConnect extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      connected: false,
-      opened: false,
-      connectCompleted: false
+const LedgerConnect = ({ }) => {
+
+  const [connectCompleted, setConnectCompleted] = useState(false)
+  const [connected, setConnected] = useState(false)
+  const [opened, setOpened] = useState(false)
+
+
+  const { steps } = useMemo(() => {
+    const steps = [
+      {
+        title: i18n.t('firstStep'),
+        content: i18n.t('pleaseConnectLedger'),
+        bool: connected
+      },
+      {
+        title: i18n.t('secondStep'),
+        content: i18n.t('pleaseOpenInLedger'),
+        bool: opened
+      }
+    ]
+    return {
+      steps
     }
-    this.isUnMounted = false;
-  }
-  componentWillUnmount(){
-    this.isUnMounted = true;
-  }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
-      this.setState({
-        ...data
-      },()=>{
-        callback&&callback()
-      })
-    }
-  }
-  onDisconnected = () => {
-    this.callSetState({
-      connected: false
-    })
-  }
-  goToNext = async (e) =>{
-    let connected = this.state.connected
-    let opened = this.state.opened
+  }, [connected, opened, i18n])
+
+  const onDisconnected = useCallback(() => {
+    setConnected(false)
+  }, [])
+
+  const goToNext = useCallback(async () => {
+    let tempConnected = connected
+    let tempOpened = opened
+    var transport
     try {
-      if (this.transport) {
-        this.transport.off('disconnect', this.onDisconnected)
+      if (transport) {
+        transport.off('disconnect', onDisconnected)
         try {
-          await this.transport.close()
+          await transport.close()
         } catch (e) {
 
         }
       }
-      this.transport = await Transport.create()
-      connected = true
-      this.transport.on('disconnect', this.onDisconnected)
-    } catch (e) {
-      connected = false
-    }
+      transport = await Transport.create()
+      tempConnected = true
+      transport.on('disconnect', onDisconnected)
 
+    } catch (e) {
+      tempConnected = false
+    }
     try {
-      this.app = new MinaLedgerJS(this.transport)
-      const result = await this.app.getAppName()
+      var app = new MinaLedgerJS(transport)
+      const result = await app.getAppName()
       if (result.name === 'Mina') {
-        opened = true
+        tempOpened = true
       } else {
-        opened = false
+        tempOpened = false
       }
     } catch (e) {
-      opened = false
+      tempOpened = false
     }
-    this.callSetState({
-      opened,
-      connected
-    })
-    if (opened && connected) {
+    setConnected(tempConnected)
+    setOpened(tempOpened) 
+
+    if (tempConnected && tempOpened) {
       sendMsg({
         action: LEDGER_CONNECTED_SUCCESSFULLY,
-      },()=>{
-        this.transport.close()
-        this.transport = null
-        this.callSetState({
-          connectCompleted: true
-        })
+      }, () => {
+        transport.close()
+        transport = null
+        setConnectCompleted(true)
       });
     }
-  }
-  renderCommonStep = (item, index) => {
-    return (
-      <div key={index + ""} className={"ledger-item-container"}>
-        {/* 左右 */}
-        <div>
-          <div className={"account-item-top"}>
-            <p className={"ledger-step-title"}>{item.title}</p>
-          </div>
-          <p className={"ledger-step-content"}>{item.content}</p>
-        </div>
-        <div className={"ledger-item-right"}>
-          {item.bool && <img src={select_account_ok} className={"account-item-select click-cursor"} />}
-        </div>
+
+  }, [connected, opened])
+
+  return (<CustomView title={i18n.t('connectLedger')} noBack>
+    <Helmet>
+      <meta charSet="utf-8" />
+      <link rel="canonical" href="./popup.html#/ledger_connect" />
+    </Helmet>
+    <div className={styles.stepsContainer}>
+      <div className={styles.ledgerIconContainer}>
+        <img src='/img/ledger_logo.svg' />
       </div>
-    )
-  }
-  renderSteps = () => {
-    const steps = [
       {
-        title: getLanguage('firstStep'),
-        content: getLanguage('pleaseConnectLedger'),
-        bool: this.state.connected
-      },
-      {
-        title: getLanguage('secondStep'),
-        content: getLanguage('pleaseOpenInLedger'),
-        bool: this.state.opened
+        connectCompleted ? <LedgerConnected tips={['back2extension', 'dontclose']} /> :
+          steps.map((step, index) => {
+            return <div key={index} className={cls(styles.stepContainer, {
+              [styles.checked]: step.bool
+            })}>
+              <div className={styles.contentContainer}>
+                <p className={styles.title}>{step.title}</p>
+                <p className={styles.content}>{step.content}</p>
+              </div>
+              {step.bool && <div className={styles.checkContainer}>
+                <img src="/img/icon_green_checked.svg" />
+              </div>}
+            </div>
+          })
       }
-    ]
-    return (
-      <>
-        <div className={"ledger-steps-logo-container"}>
-          <img src={ledgerWallet} className={"ledger-wallet-logo"} />
-        </div>
-        <div className={"ledger-step-container"}>{steps.map((step, index) => {
-          return this.renderCommonStep(step, index)
-        })}</div>
-      </>
-    )
-  }
-  renderBottonBtn = () => {
-    return (
-      <div className="bottom-container">
-        <Button
-          content={getLanguage('next')}
-          onClick={this.goToNext}
-        />
-      </div>)
-  }
-  render() {
-    return (
-      <div>
-         <Helmet>
-                <meta charSet="utf-8" />
-                <title>{getLanguage("ledgerConnect")}</title>
-                <link rel="canonical" href="./popup.html#/ledger_connect" />
-            </Helmet>
-        <div className="ledger-connect-container">
-          {
-            this.state.connectCompleted ?
-            <LedgerConnected tips={['back2extension', 'dontclose']}/> :
-            this.renderSteps()
-          }
-        </div>
-        {!this.state.connectCompleted && this.renderBottonBtn()}
-      </div>)
-  }
+    </div>
+    <div className={styles.hold} />
+    {!connectCompleted && <div className={styles.bottomContainer}>
+      <Button
+        onClick={goToNext}>
+        {i18n.t('next')}
+      </Button>
+    </div>}
+  </CustomView>)
 }
 
-const mapStateToProps = (state) => ({});
-
-function mapDispatchToProps(dispatch) {
-  return {};
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(LedgerConnect);
+export default LedgerConnect

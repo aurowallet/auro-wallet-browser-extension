@@ -1,0 +1,92 @@
+.baseButton {
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    outline: none;
+  
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  
+  .bigTxt {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 20px;
+  }
+  
+  .middleTxt {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 18px;
+  }
+  .button {
+    @extend .baseButton;
+    gap: 14px;
+    background: var(--mainBlue);
+  
+    color: var(--white);
+  
+    &:hover {
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), #594af1;
+    }
+  }
+  .buttonDisable {
+    background: var(--mediumGray);
+    cursor: default;
+  
+    &:hover {
+      background: var(--mediumGray);
+    }
+  }
+  
+  .button_light {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: var(--white);
+    color: var(--mainBlue);
+    &:hover {
+      background-color: var(--white);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+    }
+  }
+  
+  .iconContainer {
+    width: 30px;
+    height: 30px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    .btnIcon {
+      width: 22.5px;
+    }
+  }
+  
+  .btn_large {
+    width: 100%;
+    height: 48px;
+    padding: 9px 18px;
+  
+    @extend .bigTxt;
+  }
+  
+  .btn_middle {
+    width: 160px;
+    height: 48px;
+    padding: 9px 12px;
+    @extend .middleTxt;
+  }
+  
+  .btn_small {
+    min-width: 90px;
+    min-height: 32px;
+    padding: 9px 12px;
+    @extend .middleTxt;
+  }
+  
+  .noLeftIcon {
+    justify-content: center;
+  }

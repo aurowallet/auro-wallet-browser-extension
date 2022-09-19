@@ -1,361 +1,415 @@
-import React from "react";
-import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
-import { connect } from "react-redux";
-import { withRouter } from "react-router-dom";
-import goNext from '../../../assets/images/goNext.png';
-import loadingCommon from "../../../assets/images/loadingCommon.gif";
-import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
-import { getCurrentLang, getLanguage, LANG_SUPPORT_LIST } from '../../../i18n';
-import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateValidatorDetail } from "../../../reducers/stakingReducer";
-import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, copyText, getAmountForUI, getNetTypeNotSupportStaking } from '../../../utils/utils';
-import Clock from "../../component/Clock";
-import Toast from "../../component/Toast";
-import EmptyGuide from "./components/EmptyGuide";
-import "./index.scss";
-import {  NET_CONFIG_TYPE } from '../../../constant/walletType';
-import { updateStakingRefresh } from "../../../reducers/accountReducer";
-import homeNoTx from "../../../assets/images/homeNoTx.png";
-class Staking extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      epoch: 0,
-      delegatePublicKey: '',
-      loading: false,
-      percentage: 0
-    }
-    this.isRequest = false
-    this.isUnMounted= false
-  }
-  componentWillUnmount() {
-    this.isUnMounted = true;
-  }
-  callSetState=(data,callback)=>{
-    if(!this.isUnMounted){
-      this.setState({
-        ...data
-      },()=>{
-        callback&&callback()
-      })
-    }
-  }
-   componentDidMount() {
-    this.fetchRequest()
-  }
-  componentWillReceiveProps(nextProps) {
-    let { stakingLoadingRefresh } = nextProps
-    if (stakingLoadingRefresh) {
-      this.props.dispatch(updateValidatorDetail({}));
-      this.callSetState({
-        delegatePublicKey:""
-    },()=>{
-        this.fetchLoadingData()
-      })
-    }
-  }
-  fetchRequest=()=>{
-    let { account,daemonStatus,block,validatorDetail,stakingLoadingRefresh } = this.props
-    if(stakingLoadingRefresh){
-      this.fetchLoadingData()
-    }else{
-      if(daemonStatus.stateHash && block.protocolState){
-        this.fetchEpochData(daemonStatus,block)
-        this.setDelegationInfo(account,validatorDetail)
 
-        this.fetchLoadingData(true)
-      }else{
-        this.fetchLoadingData()
-      }
-    }
-  }
-  fetchData=()=>{
-    this.props.dispatch(updateStakingRefresh(false));
-    if (this.isRequest) {
+import BigNumber from "bignumber.js";
+import cls from "classnames";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import { Trans } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from 'react-router-dom';
+import { cointypes } from "../../../../config";
+import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
+import { LANG_SUPPORT_LIST } from "../../../i18n";
+import { getStakingList, updateBlockInfo, updateDaemonStatus, updateValidatorDetail } from "../../../reducers/stakingReducer";
+import { openTab } from "../../../utils/commonMsg";
+import { addressSlice, copyText, getAmountForUI, getNetTypeNotSupportStaking, isNumber } from "../../../utils/utils";
+import Button, { button_size } from "../../component/Button";
+import Clock from "../../component/Clock";
+import CustomView from "../../component/CustomView";
+import Toast from "../../component/Toast";
+import styles from './index.module.scss';
+
+const Staking = ({ }) => {
+
+  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
+  const netType = useSelector(state => state.network.currentConfig.netType)
+  const dispatch = useDispatch()
+
+  const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === netAccount.delegate ? "" : netAccount.delegate)
+  const [loading, setLoading] = useState(false)
+  const [isUnknow, setIsUnknow] = useState(getNetTypeNotSupportStaking(netType))
+
+  const fetchData = useCallback((isSlient = false) => {
+    if (isUnknow) {
       return
     }
-    this.isRequest = true 
-    Promise.all([
-      fetchDaemonStatus(),
-      fetchDelegationInfo(this.props.currentAccount.address),
-    ]).then(async (data)=>{
-      this.isRequest = false
-      let daemonStatus = data[0]
-      let account = data[1]
-      this.props.dispatch(updateDaemonStatus(daemonStatus));
-      this.props.dispatch(updateDelegationInfo(account));
-
-      if(daemonStatus.stateHash){
-        fetchBlockInfo(daemonStatus.stateHash).then((block)=>{
-          if(block.protocolState){
-            this.props.dispatch(updateBlockInfo(block));
-            this.fetchEpochData(daemonStatus,block)
+    if (!isSlient) {
+      setLoading(true)
+    }
+    fetchDelegationInfo(currentAddress).then((account) => {
+      let delegateKey = currentAddress === account.delegate ? "" : account.delegate;
+      setDelegatePublicKey(delegateKey)
+      if (delegateKey) {
+        fetchValidatorDetail(delegateKey).then((validatorDetail) => {
+          if(validatorDetail.delegate){
+            dispatch(updateValidatorDetail(validatorDetail));
           }
-        });
-      }
-
-      let isSelf = this.props.currentAccount.address === account.delegate;
-      if (!isSelf && account.delegate) {
-        await fetchValidatorDetail(account.delegate).then((validatorDetail)=>{
-          this.props.dispatch(updateValidatorDetail(validatorDetail));
-          this.setDelegationInfo(account,validatorDetail)
-        }).catch(()=>{
-          this.setDelegationInfo(account, null)
+        }).finally(() => {
+          setLoading(false)
         })
+      } else {
+        setLoading(false)
       }
-      this.callSetState({
-        loading: false
-      })
-    }).catch((err)=>{
-      this.isRequest = false
-      Toast.info(getLanguage('nodeError'))
-      this.callSetState({
-        loading: false
-      });
+    }).catch(() => {
+      setLoading(false)
     })
-    this.props.dispatch(getStakingList());
-  }
+  }, [currentAddress, isUnknow])
 
-  fetchLoadingData=async(silent=false)=>{
-    if(silent){
-      this.fetchData()
-    }else{
-      this.callSetState({
-        loading: true
-      },()=>{
-        this.fetchData()
-      });
-    }
-  }
 
-  async fetchEpochData(daemonStatus,block) {
-    if((daemonStatus&& daemonStatus.consensusConfiguration )
-      && (block&&block.protocolState)){
-        const slotsPerEpoch = daemonStatus.consensusConfiguration.slotsPerEpoch;
-        const slotDuration = daemonStatus.consensusConfiguration.slotDuration;
-        const slot = block.protocolState.consensusState.slot;
-        const epoch = block.protocolState.consensusState.epoch;
-        const lastTime = (slotsPerEpoch - slot) * slotDuration / 1000;
-        const days = Math.floor(lastTime / 60 / 60 / 24);
-        const leave1 = lastTime % (24 * 3600);
-        const hours = Math.floor(leave1 / (3600));
-        const leave2 = leave1 % 3600;
-        const minutes = Math.floor(leave2 / 60);
-        this.callSetState({
-          slotsPerEpoch,
-          epoch,
-          slot,
-          days,
-          hours,
-          minutes,
-          percentage: parseInt((100 * slot / slotsPerEpoch).toFixed(0))
-        });
-    }
-  }
-  async setDelegationInfo(account,validatorDetail) {
-    let isSelf = this.props.currentAccount.address === account.delegate;
-    this.callSetState({
-      delegatePublicKey: isSelf ? '' : account.delegate,
-      validatorDetail
-    });
-  }
-  goStaking = () => {
-    this.props.history.push({
-      pathname: "/staking_list",
-      params: {
-        nodeAddress: this.state.delegatePublicKey
-      }
-    });
-  }
-  renderLoading = () => {
-    return (
-      <div className={"home-bottom-loading"}>
-        <img className={"loading-img"} src={loadingCommon} />
-      </div>
-    )
-  }
-  onClickGuide=()=>{
-    const { staking_guide, staking_guide_cn } = this.props.cache
-    let lan = getCurrentLang()
+  useEffect(() => {
+    setIsUnknow(getNetTypeNotSupportStaking(netType))
+  }, [netType])
+
+
+
+
+  const baseFetchData = useCallback((isSlient = false) => {
+    fetchData(isSlient)
+    dispatch(getStakingList())
+  }, [])
+
+
+  useEffect(() => {
+    baseFetchData(false)
+  }, [])
+
+  const cache = useSelector(state => state.cache)
+  const history = useHistory()
+
+  const onClickGuide = useCallback(() => {
+    const { staking_guide, staking_guide_cn } = cache
+    let lan = i18n.language
     let url = ""
-    if(lan === LANG_SUPPORT_LIST.EN){
-        url = staking_guide
-    }else if(lan === LANG_SUPPORT_LIST.ZH_CN){
-        url = staking_guide_cn
+    if (lan === LANG_SUPPORT_LIST.EN) {
+      url = staking_guide
+    } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
+      url = staking_guide_cn
     }
-    if(url){
-        openTab(url)
+    if (url) {
+      openTab(url)
     }
+  }, [cache, i18n])
+
+
+
+  return (<CustomView
+    title={i18n.t('staking')}
+    customeTitleClass={styles.customeTitleClass}
+    contentClassName={styles.contentClassName}>
+    <EpochInfo />
+    {
+      isUnknow ? <UnknownView onClickGuide={onClickGuide} />
+        : loading ? <LoadingView onClickGuide={onClickGuide} /> : (delegatePublicKey ? <DelegationInfo delegatePublicKey={delegatePublicKey} onClickGuide={onClickGuide}/> : <EmptyView onClickGuide={onClickGuide} />)
+    }
+    <Clock schemeEvent={() => baseFetchData(true)} />
+  </CustomView>)
 }
-  onCopy=(delegatePublicKey)=>{
-    copyText(delegatePublicKey).then(() => {
-      Toast.info(getLanguage('copySuccess'))
+const UnknownView = ({ onClickGuide }) => {
+  return (
+    <div className={styles.delegationContainer}>
+      <div className={styles.delegationRow}>
+        <div className={styles.rowTitleContainer}>
+          <img className={styles.rowIcon} src="/img/icon_Epoch.svg" />
+          <p className={styles.rowTitle}>{i18n.t('delegationInfo')}</p>
+        </div>
+        <p className={styles.rowHelp} onClick={onClickGuide}>{i18n.t("stakingGuide")}</p>
+      </div>
+      <div className={styles.unknowContainer}>
+        <img className={styles.unknowIcon} src="/img/icon_empty.svg" />
+        <p className={styles.unknowTip}>{i18n.t('unknownInfo')}</p>
+      </div>
+    </div>
+  )
+}
+const LoadingView = ({
+  onClickGuide
+}) => {
+  return (<div className={styles.delegationContainer}>
+    <div className={styles.delegationRow}>
+      <div className={styles.rowTitleContainer}>
+        <img className={styles.rowIcon} src="/img/icon_Delegation.svg" />
+        <p className={styles.rowTitle}>{i18n.t('delegationInfo')}</p>
+      </div>
+      <p className={styles.rowHelp} onClick={onClickGuide}>{i18n.t("stakingGuide")}</p>
+    </div>
+    <div className={styles.loadingContainer}>
+      <img className={styles.refreshLoading} src="/img/loading_purple.svg" />
+      <p className={styles.loadingTip}>{i18n.t('loading')}...</p>
+    </div>
+  </div>)
+}
+
+const EmptyView = ({
+  onClickGuide
+}) => {
+
+  const history = useHistory()
+  const onChangeNode = useCallback(() => {
+    history.push({
+      pathname: "staking_list",
     })
-  }
-  renderUnknown = () => {
-    return(
-      <div className={'module'}>
-        <div className={'title'}>{getLanguage('delegationInfo')}</div>
-        <div className={"home-bottom-tip"}>
-          <img className={"history-img"} src={homeNoTx} />
-          <p className={"history-content-noTx"}>{getLanguage('unknownInfo')}</p>
-      </div>
-      </div>
-    )
-  }
-  renderContent() {
-    const { stakingList,netConfig } = this.props;
-    const { validatorDetail, delegatePublicKey } = this.state;
-    const netType = netConfig.currentConfig?.netType
-    let showContent = true
-    if (getNetTypeNotSupportStaking(netType)) {
-      showContent = false
+  }, [])
+
+  return (<div className={styles.emptyContainer}>
+    <p className={styles.emptyTitle}>{i18n.t('emptyDelegateTitle')}</p>
+    <div className={styles.emptyContent}>
+      <Trans
+        i18nKey={"emptyDelegateDesc"}
+        components={{ click: <span className={styles.emptyGuide} onClick={onClickGuide} /> }}
+      />
+    </div>
+    <div className={styles.btnContainer}>
+      <Button
+        size={button_size.small}
+        onClick={onChangeNode}>
+        {i18n.t('goStake')}
+      </Button>
+    </div>
+  </div>)
+}
+
+
+const DelegationInfo = ({ 
+  delegatePublicKey = "",
+  onClickGuide=()=>{}
+}) => {
+
+  const history = useHistory()
+  const stakingList = useSelector(state => state.staking.stakingList)
+  const validatorDetail = useSelector(state => state.staking.validatorDetail)
+
+  const onChangeNode = useCallback(() => {
+    history.push({
+      pathname: "staking_list",
+      params: {
+        nodeAddress: delegatePublicKey
+      }
+    })
+  }, [delegatePublicKey])
+
+  const {
+    showNodeAddress, showtotalStake, nodeName,showDelegations,showBlocksCreated
+  } = useMemo(() => {
+    let showNodeAddress = addressSlice(delegatePublicKey)
+    let showtotalStake
+    if(isNumber(validatorDetail.stake)){
+      showtotalStake = getAmountForUI(validatorDetail.stake) + " " + cointypes.symbol
     }
-    let nodeName = '';
+    let showDelegations = validatorDetail.delegations
+    if(isNumber(validatorDetail.delegations)){
+      showDelegations = getAmountForUI(validatorDetail.delegations)
+    }
+
+    let showBlocksCreated = validatorDetail.blocks_created
+    if(isNumber(validatorDetail.blocks_created)){
+      showBlocksCreated = getAmountForUI(validatorDetail.blocks_created)
+    }
+    
+    let nodeName = ""
     if (delegatePublicKey) {
       let delegateNode = stakingList.find(({ nodeAddress }) => nodeAddress === delegatePublicKey);
       if (delegateNode && delegateNode.nodeAddress) {
-        nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress,8);
+        nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress, 8);
       }
     }
-    return (<div className={'staking-content'}>
-      <div className={'module epoch-module'}>
-        <div className={'title'}>{getLanguage('epochInfo')}</div>
-        <div className={'panel'}>
-          <div className={'item itemFirst'}>
-            <label>Epoch</label>
-            <span className={'value-highlight bold-text'}>{this.state.epoch}</span>
-          </div>
-          <div className={'item'}>
-            <label>Slot</label>
-            <span className={'value'}><span className={'highlight bold-text'}>{this.state.slot}</span> / {this.state.slotsPerEpoch}</span>
-          </div>
-          <div className={'item multi'}>
-            <label>{getLanguage('epochEndTime')}</label>
-            <div className={'value time-value'}>
-              <span>{this.state.days}d</span>
-              <span className={'sep'}>:</span>
-              <span>{this.state.hours}h</span>
-              <span className={'sep'}>:</span>
-              <span>{this.state.minutes}m</span>
-            </div>
-          </div>
-          <div className={'circle-con'}>
-            <GradientSVG rotation={90} startColor={'#A642FF'} endColor={'#737BE4'} idCSS={'circleGradient'}/>
-            <CircularProgressbar styles={buildStyles({
-              textSize: '18px'
-            })} strokeWidth={10} value={this.state.percentage} text={`${this.state.percentage}%`} />
+    return {
+      showNodeAddress, showtotalStake, nodeName,showDelegations,showBlocksCreated
+    }
+  }, [delegatePublicKey, validatorDetail, stakingList])
+ 
+  return (<div className={styles.delegationContainer}>
+    <div className={styles.delegationRow}>
+      <div className={styles.rowTitleContainer}>
+        <img className={styles.rowIcon} src="/img/icon_Delegation.svg" />
+        <p className={styles.rowTitle}>{i18n.t('delegationInfo')}</p>
+      </div>
+      <p className={styles.rowHelp} onClick={onClickGuide}>{i18n.t("stakingGuide")}</p>
+    </div>
+
+    <div className={styles.delegationContent}>
+      <div className={styles.rowLeft}>
+        {nodeName && <RowItem title={i18n.t('blockProducerName')} content={nodeName} />}
+        <RowItem title={i18n.t('blockProducerAddress')} content={showNodeAddress} copyContent={delegatePublicKey} isMargin={true}/>
+        {showtotalStake &&<RowItem title={i18n.t('totalStake')} content={showtotalStake} isMargin={true} />}
+        {showDelegations && <RowItem title={i18n.t('totalDelegators')} content={showDelegations} isMargin={true} />}
+        {showBlocksCreated && <RowItem title={i18n.t('blocksProduced')} content={showBlocksCreated} isMargin={true} />}
+      </div>
+      <div className={styles.rowRight}>
+        <Button
+          size={button_size.small}
+          onClick={onChangeNode}>
+          {i18n.t('change')}
+        </Button>
+      </div>
+
+    </div>
+  </div>)
+}
+
+const EpochInfo = ({ }) => {
+  const dispatch = useDispatch()
+  const daemonStatus = useSelector(state => state.staking.daemonStatus)
+  const block = useSelector(state => state.staking.block)
+
+  const initEpochData = useMemo(() => {
+    return {
+      slotsPerEpoch: "-",
+      epoch: "-",
+      slot: "-",
+      days: "-",
+      hours: "-",
+      minutes: "-",
+      percentage: "-"
+    }
+  }, [])
+
+  const epochDataAction = useCallback((daemonStatus, block) => {
+    if ((daemonStatus && daemonStatus.consensusConfiguration)
+      && (block && block.protocolState)) {
+      const slotsPerEpoch = daemonStatus.consensusConfiguration.slotsPerEpoch;
+      const slotDuration = daemonStatus.consensusConfiguration.slotDuration;
+      const slot = block.protocolState.consensusState.slot;
+      const epoch = block.protocolState.consensusState.epoch;
+      const lastTime = (slotsPerEpoch - slot) * slotDuration / 1000;
+      let days = Math.floor(lastTime / 60 / 60 / 24);
+      days = BigNumber(days).gt(10) ? days : "0"+days
+      const leave1 = lastTime % (24 * 3600);
+      let hours = Math.floor(leave1 / (3600));
+      hours = BigNumber(hours).gt(10) ? hours : "0"+hours
+      const leave2 = leave1 % 3600;
+      let minutes = Math.floor(leave2 / 60);
+      minutes = BigNumber(minutes).gt(10) ? minutes : "0"+minutes
+      let epochData = {
+        slotsPerEpoch,
+        epoch,
+        slot,
+        days,
+        hours,
+        minutes,
+        percentage: parseInt((100 * slot / slotsPerEpoch).toFixed(0))
+      }
+      return epochData
+    }
+  }, [])
+
+  const [epochData, setEpochData] = useState(() => {
+    if (daemonStatus.stateHash && block.protocolState) {
+      return epochDataAction(daemonStatus, block)
+    } else {
+      return initEpochData
+    }
+  })
+
+
+  const fetchData = useCallback(() => {
+    fetchDaemonStatus().then((daemonStatus) => {
+      if (daemonStatus.stateHash) {
+        dispatch(updateDaemonStatus(daemonStatus));
+        fetchBlockInfo(daemonStatus.stateHash).then((block) => {
+          if (block.protocolState) {
+            dispatch(updateBlockInfo(block));
+            let epochData = epochDataAction(daemonStatus, block)
+            setEpochData(epochData)
+          }
+        });
+      }
+    })
+  }, [epochDataAction])
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+
+  return (<div className={styles.epochContainer}>
+    <div className={styles.rowTitleContainer}>
+      <img className={styles.rowIcon} src="/img/icon_Epoch.svg" />
+      <p className={styles.rowTitle}>{i18n.t('epochInfo')}</p>
+    </div>
+
+    <div className={styles.epochContent}>
+      <div className={styles.leftEpochContent}>
+        <div className={styles.rowItem}>
+          <p className={styles.label}>Epoch</p>
+          <span className={styles.highlightContent}>{epochData.epoch}</span>
+        </div>
+
+        <div className={cls(styles.rowItem, styles.mgtM10)}>
+          <p className={styles.label}>Slot</p>
+          <span className={styles.highlightContent}>{epochData.slot} / <span className={styles.content}>{epochData.slotsPerEpoch}</span></span>
+        </div>
+
+        <div className={cls(styles.rowItem, styles.mgtM10)}>
+          <p className={styles.label}>{i18n.t('epochEndTime')}</p>
+          <div className={styles.timeValue}>
+            <p className={styles.time}>{epochData.days}<span className={styles.timeUnit}>d</span> : </p>
+            <p className={styles.time}>{epochData.hours}<span className={styles.timeUnit}>h</span> : </p>
+            <p className={styles.time}>{epochData.minutes}<span className={styles.timeUnit}>m</span></p>
           </div>
         </div>
       </div>
-      {showContent ? <div className={'module'}>
-        <div className={'title'}>{getLanguage('delegationInfo')}</div>
-        {
-
-          <div className={'panel'}>
-            {
-              !this.state.loading ? <>
-                {
-                  !delegatePublicKey ? <EmptyGuide /> :
-                    <>
-                      <div className={'change-pos'}>
-                        <div className={'change-btn  click-cursor'} onClick={this.goStaking}>{getLanguage('changeNode')}</div>
-                      </div>
-                      {
-                        nodeName && <>
-                          <div className={'delegation-label first'}>{getLanguage('blockProducerName')}</div>
-                          <div className={'delegation-value nodeName'}>{nodeName}</div>
-                        </>
-                      }
-                      <div className={"deletaion-AddressContainer"} onClick={()=>this.onCopy(delegatePublicKey)}>
-                        <div className={'delegation-label'}>{getLanguage('blockProducerAddress')}</div>
-                        <div className={'delegation-value'}>{addressSlice(delegatePublicKey)}</div>
-                      </div>
-                      {
-                        validatorDetail && <>
-                          <div className={'delegation-label'}>{getLanguage('producerTotalStake')}</div>
-                          <div className={'delegation-value'}>{getAmountForUI(validatorDetail.stake)}</div>
-
-                          <div className={'delegation-label'}>{getLanguage('producerTotalAccount')}</div>
-                          <div className={'delegation-value'}>{validatorDetail.delegations}</div>
-
-                          <div className={'delegation-label'}>{getLanguage('blocksProduced')}</div>
-                          <div className={'delegation-value'}>{validatorDetail.blocks_created}</div>
-                        </>
-                      }
-                      <div className={"delegation-help click-cursor"} onClick={this.onClickGuide}>
-                        <p className={"delegation-help-text"}>{getLanguage('delegationHelp')}</p>
-                      </div>
-                    </>
-                }
-              </> : null
-            }
+      <div className={styles.circleContainer}>
+        <div className={styles.circleCon}>
+          <GradientSVG
+            rotation={90}
+            startColor={'#594AF1'}
+            endColor={'#FF7870'}
+            idCSS={'circleGradient'} />
+          <CircularProgressbar strokeWidth={10} value={epochData.percentage} />
+          <div className={styles.percentageContainer}>
+            <span className={styles.percentage}>{epochData.percentage}<span className={styles.percentageUnit}> %</span></span>
           </div>
-        }
-      </div>:this.renderUnknown()}
-      {
-        showContent && !this.state.delegatePublicKey && (<div className={'operate-con'}>
-          <div className={'go-staking click-cursor'} onClick={this.goStaking}>
-            {getLanguage('goStake')}
-            <img className={'double-arrow'} src={goNext} />
-          </div>
-        </div>)
-      }
-    </div>)
-  }
-  render() {
-
-    return (
-      <div
-        className={'staking-root'}
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
-      >
-        <p className={"tab-common-title"}>{getLanguage('staking')}</p>
-        {
-          this.state.loading ? this.renderLoading() : this.renderContent()
-        }
-        <Clock schemeEvent={() => { this.fetchLoadingData(true) }} />
+        </div>
       </div>
-    );
-  }
+    </div>
+    <Clock schemeEvent={fetchData} />
+  </div>)
 }
 
-const mapStateToProps = (state) => ({
-  stakingLoadingRefresh: state.accountInfo.stakingLoadingRefresh,
-  currentAccount: state.accountInfo.currentAccount,
-  stakingList: state.staking.stakingList,
-  shouldRefresh: state.accountInfo.shouldRefresh,
-  daemonStatus: state.staking.daemonStatus,
-  block: state.staking.block,
-  validatorDetail: state.staking.validatorDetail,
-  account: state.staking.account,
-  cache: state.cache,
-  netConfig: state.network,
-});
+export default Staking
 
-export default withRouter(
-  connect(mapStateToProps)(Staking)
-);
+const GradientSVG = ({ startColor, endColor, idCSS, rotation }) => {
+  const gradientTransform = useMemo(() => {
+    return `rotate(${rotation})`;
+  }, [rotation])
+  return (
+    <svg style={{ height: "0px" }}>
+      <defs>
+        <linearGradient id={idCSS} gradientTransform={gradientTransform}>
+          <stop offset="0%" stopColor={startColor} />
+          <stop offset="100%" stopColor={endColor} />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+}
 
-class GradientSVG extends React.Component {
-  render() {
-    let { startColor, endColor, idCSS, rotation } = this.props;
-
-    let gradientTransform = `rotate(${rotation})`;
-
-    return (
-      <svg style={{ height: 0 }}>
-        <defs>
-          <linearGradient id={idCSS} gradientTransform={gradientTransform}>
-            <stop offset="0%" stopColor={startColor} />
-            <stop offset="100%" stopColor={endColor} />
-          </linearGradient>
-        </defs>
-      </svg>
-    );
-  }
+const RowItem = ({
+  title = "",
+  content = "",
+  isMargin = false,
+  copyContent=""
+}) => {
+  const canCopy = useMemo(()=>{
+    return !!copyContent
+  },[copyContent])
+  const onCopy = useCallback(() => {
+    if (canCopy) {
+      copyText(copyContent).then(() => {
+        Toast.info(i18n.t('copySuccess'))
+      })
+    }
+  }, [canCopy, copyContent,i18n])
+  return (<div className={cls(styles.rowItem, {
+    [styles.mgtM10]: isMargin
+  })}>
+    <p className={styles.label}>{title}</p>
+    <div onClick={onCopy} className={cls(styles.contentContainer, {
+      [styles.canCopy]: canCopy
+    })}>
+      <span className={styles.labelContent}>{content}</span>
+      {canCopy && <img className={styles.copy} src="/img/icon_copy_purple.svg" />}
+    </div>
+  </div>)
 }

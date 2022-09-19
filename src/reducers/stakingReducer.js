@@ -12,7 +12,9 @@ const UPDATE_VALIDATOR_DETAIL = 'UPDATE_VALIDATOR_DETAIL';
 export function getStakingList() {
   return async (dispatch) => {
     const stakingList = await fetchStakingList();
-    dispatch(updateStakingList({ stakingList }));
+    if(stakingList && stakingList.length>0){
+      dispatch(updateStakingList({ stakingList }));
+    }
   }
 }
 /**

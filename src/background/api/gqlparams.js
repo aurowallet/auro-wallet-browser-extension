@@ -219,7 +219,7 @@ function balanceBodyBase(index){
 }
 
 export function getBalanceBatchBody(addressArrayLength){
-  const variablesDeclare = new Array(addressArrayLength).fill(null).map((_, i)=>`$account${i}:String!`).join(',')
+  const variablesDeclare = new Array(addressArrayLength).fill(null).map((_, i)=>`$account${i}:PublicKey!`).join(',')
   const addressesQueryContent = new Array(addressArrayLength).fill(null).map((address, index)=>balanceBodyBase(index))
   return`
   query batchBalance(${variablesDeclare}) {
