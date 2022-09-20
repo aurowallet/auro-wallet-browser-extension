@@ -205,7 +205,7 @@ const SignTransaction = () => {
     if (signParams.sendAction !== DAppActions.mina_signMessage) {
       toAddress = trimSpace(params.to)
       fee = trimSpace(feeValue)
-      memo = params.memo || ""
+      memo =  params?.feePayer?.memo || params?.memo || ""
     }
 
     let fromAddress = currentAccount.address
@@ -354,7 +354,7 @@ const SignTransaction = () => {
       }
     }, (res) => {
       Loading.show()
-      let siteFee = res.params?.fee || ""
+      let siteFee = res.params?.feePayer?.fee || res.params?.fee || ""
       let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : ""
 
       checkFeeHigh()
@@ -395,7 +395,7 @@ const SignTransaction = () => {
     let realToAddress = params?.to || ""
     let showToAddress = addressSlice(realToAddress, 6)
 
-    let memo = params?.memo || ""
+    let memo =  params?.feePayer?.memo || params?.memo || ""
     let content = params?.message || ""
 
     let tabList = []
