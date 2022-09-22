@@ -715,7 +715,7 @@ class APIService {
         extension.notifications.create(hash, {
             title: title,
             message: message,
-            iconUrl: '/img/128.png',
+            iconUrl: '/img/logo/128.png',
             type: 'basic'
         },(notificationItem)=>{
             myNotificationID = notificationItem

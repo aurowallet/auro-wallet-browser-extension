@@ -382,7 +382,18 @@ const SignTransaction = () => {
   }, [])
 
 
-
+  const getContractAddress = useCallback((tx)=>{
+    let address
+    if(tx){
+      let realTx = JSON.parse(tx)
+      let firstZKapp = realTx?.accountUpdates.find(update=>update.authorization.proof!==undefined)
+      if(firstZKapp === undefined){
+      }else{
+        address = firstZKapp.body.publicKey
+      }
+    }
+    return address
+  },[])
 
   const {
     showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList
@@ -391,8 +402,8 @@ const SignTransaction = () => {
     let params = signParams?.params
     let toAmount = params?.amount || ""
     toAmount = toAmount +" "+ cointypes.symbol
-
-    let realToAddress = params?.to || ""
+    let partyContractAddress = getContractAddress(params?.transaction)
+    let realToAddress = partyContractAddress||params?.to || ""
     let showToAddress = addressSlice(realToAddress, 6)
 
     let memo =  params?.feePayer?.memo || params?.memo || ""
