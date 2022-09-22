@@ -79,6 +79,7 @@ const Wallet = ({ }) => {
       dispatch(updateNetConfig(config))
       dispatch(updateStakingRefresh(true))
 
+      dispatch(updateShouldRequest(true))
       sendNetworkChangeMsg(newConfig)
     }
 
