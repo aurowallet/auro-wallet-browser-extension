@@ -12,7 +12,7 @@ import Input from "../../component/Input";
 import TextArea from "../../component/TextArea";
 import styles from "./index.module.scss";
 
-const ImportKeypair = ({ }) => {
+const ImportKeypair = ({ }) => {// 在这里修改
   const [keystoreValue, setKeystoreValue] = useState("")
   const [pwdValue, setPwdValue] = useState('')
   const [btnStatus, setBtnStatus] = useState(false)
@@ -64,7 +64,7 @@ const ImportKeypair = ({ }) => {
         } else {
           dispatch(updateCurrentAccount(account))
           setTimeout(() => {
-            history.replace("account_manage")
+            history.go(-4)
           }, 300);
         }
       })
