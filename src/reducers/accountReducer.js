@@ -15,6 +15,8 @@ const UPDATE_NET_HOME_REFRESH = "UPDATE_NET_HOME_REFRESH"
 
 const UPDATE_STAKING_DATA = "UPDATE_STAKING_DATA"
 
+const UPDATE_ACCOUNT_LIST_BALANCE = "UPDATE_ACCOUNT_LIST_BALANCE"
+
 export function updateAccountTx(txList, txPendingList) {
     return {
         type: CHANGE_ACCOUNT_TX_HISTORY,
@@ -60,6 +62,13 @@ export function updateStakingRefresh(shouldRefresh) {
     };
 }
 
+export function updateAccountList(list) {
+    return {
+        type: UPDATE_ACCOUNT_LIST_BALANCE,
+        list
+    };
+}
+
 export const ACCOUNT_BALANCE_CACHE_STATE = {
     INIT_STATE: "INIT_STATE",
     USING_CACHE: "USING_CACHE",
@@ -75,7 +84,8 @@ const initState = {
     shouldRefresh: false,
     homeBottomType: "",
     isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
-    stakingLoadingRefresh: false
+    stakingLoadingRefresh: false,
+    accountBalanceMap:{}
 };
 
 function pendingTx(txList) {
@@ -180,6 +190,11 @@ const accountInfo = (state = initState, action) => {
             return {
                 ...state,
                 stakingLoadingRefresh: action.shouldRefresh
+            }
+        case UPDATE_ACCOUNT_LIST_BALANCE:
+            return {
+                ...state,
+                accountBalanceMap: action.list
             }
         default:
             return state;
