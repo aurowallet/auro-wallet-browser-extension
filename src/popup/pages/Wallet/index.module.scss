@@ -77,7 +77,6 @@ $toolbarHeight: 58px;
     display: flex;
     align-items: center;
     .accountName {
-        font-family: "Helvetica Neue";
         font-size: 15px;
         line-height: 18px;
         color: #ffffff;
@@ -92,7 +91,6 @@ $toolbarHeight: 58px;
         padding: 3px 9px;
         gap: 10px;
 
-        font-family: "PingFang SC";
         font-style: normal;
         font-weight: 600;
         font-size: 12px;
@@ -165,7 +163,6 @@ $toolbarHeight: 58px;
         align-items: baseline;
     }
     .amountNumber {
-        font-family: "Helvetica Neue";
         font-size: 32px;
         line-height: 39px;
         color: #ffffff;
@@ -186,7 +183,6 @@ $toolbarHeight: 58px;
         color: #ffffff;
     }
     .amountValue {
-        font-family: "Helvetica Neue";
         font-style: normal;
         font-weight: 400;
         font-size: 16px;
@@ -268,14 +264,12 @@ $toolbarHeight: 58px;
             margin-right: 6px;
         }
         .reminderTitle {
-            font-family: "Helvetica Neue";
             font-size: 16px;
             line-height: 19px;
             color: #000000;
             margin: 0;
         }
         .reminderContent {
-            font-family: "SF Pro Text";
             font-style: normal;
             font-weight: 400;
             font-size: 12px;
@@ -528,7 +522,6 @@ $toolbarHeight: 58px;
     
     .baseTip {
         background: rgba(0, 0, 0, 0.8);
-        font-family: "Helvetica Neue";
         font-style: normal;
         font-weight: 400;
         font-size: 12px;

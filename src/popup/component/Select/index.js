@@ -8,10 +8,6 @@ const Select = ({
     optionList = [],
     onChange = () => { }
 }) => { 
-
-    const [currentValue, setCurrentValue] = useState(value)
-
-
     const [optionStatus, setOptionStatus] = useState(false)
 
     const onClickEntry = useCallback(() => {
