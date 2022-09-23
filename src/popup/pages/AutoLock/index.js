@@ -21,7 +21,7 @@ const AutoLock = ({ }) => {
       action: WALLET_UPDATE_LOCK_TIME,
       payload: data.value
     }, () => {
-      history.goBack()
+      // history.goBack()
     })
   }, [i18n])
 
