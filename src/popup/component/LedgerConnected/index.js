@@ -8,7 +8,7 @@ const LedgerConnected = ({ tips=['back2extension', 'dontclose'] }) => {
     <div className={styles.imgContainer}>
       <img src='/img/ledgerConnect.svg'/>
     </div>
-    <p className={styles.connectTip}>{i18n.t('connectedLedger')}</p>
+    <p className={styles.connectTip}>{i18n.t('dappConnect')}</p>
     {
       tips.map((tip, index) => {
         return <div key={index + ""} className={styles.tipsContainer}>
