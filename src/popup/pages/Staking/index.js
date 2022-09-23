@@ -357,8 +357,8 @@ const EpochInfo = ({ }) => {
         <div className={styles.circleCon}>
           <GradientSVG
             rotation={90}
-            startColor={'#594AF1'}
-            endColor={'#FF7870'}
+            startColor={'#FF7870'}
+            endColor={'#594AF1'}
             idCSS={'circleGradient'} />
           <CircularProgressbar strokeWidth={10} value={epochData.percentage} />
           <div className={styles.percentageContainer}>
