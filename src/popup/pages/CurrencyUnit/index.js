@@ -30,8 +30,8 @@ const CurrencyUnit = ({ }) => {
   const onSelect = useCallback((item) => {
     setCurrentCurrency(item)
     if (item !== oldCurrency) {
-      let list = currencyList.map((item, index) => {
-        let newItem = { ...item }
+      let list = currencyList.map((mapItem, index) => {
+        let newItem = { ...mapItem }
         if (newItem.key === item.key) {
           newItem.isSelect = true
           return newItem
