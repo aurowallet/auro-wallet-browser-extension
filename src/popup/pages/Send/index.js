@@ -271,11 +271,11 @@ const SendPage = ({ }) => {
 
     let list = [
       {
-        label: i18n.t('from'),
+        label: i18n.t('to'),
         value: toAddress,
       },
       {
-        label: i18n.t('to'),
+        label: i18n.t('from'),
         value: currentAddress,
       },
       {

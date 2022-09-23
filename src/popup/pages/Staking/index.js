@@ -199,12 +199,16 @@ const DelegationInfo = ({
     }
     let showDelegations = validatorDetail.delegations
     if(isNumber(validatorDetail.delegations)){
-      showDelegations = getAmountForUI(validatorDetail.delegations)
+      showDelegations = validatorDetail.delegations
+    }else{
+      showDelegations = "NaN"
     }
-
+    
     let showBlocksCreated = validatorDetail.blocks_created
     if(isNumber(validatorDetail.blocks_created)){
-      showBlocksCreated = getAmountForUI(validatorDetail.blocks_created)
+      showBlocksCreated = validatorDetail.blocks_created
+    }else{
+      showBlocksCreated = "NaN"
     }
     
     let nodeName = ""

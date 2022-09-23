@@ -151,7 +151,7 @@ const WalletInfo = () => {
   } = useMemo(() => {
     let dappModalContent = dappConnectStatus ? i18n.t('walletConnected') : i18n.t('noAccountConnect')
     let leftBtnContent = dappConnectStatus ? i18n.t('cancel') : ""
-    let rightBtnContent = dappConnectStatus ? i18n.t('disconnect') : i18n.t('cancel')
+    let rightBtnContent = dappConnectStatus ? i18n.t('disconnect') : i18n.t('ok')
 
     return {
       dappModalContent,
@@ -323,6 +323,9 @@ const WalletInfo = () => {
     fetchAccountData()
   }, [netConfig.currentConfig.netType, fetchAccountData])
  
+  useEffect(()=>{
+    fetchPrice()
+  },[currencyConfig.currentCurrency])
   return (
     <>
       <div className={styles.walletInfoContainer}>
@@ -377,7 +380,7 @@ const WalletInfo = () => {
           <p className={cls(styles.btn, styles.stakingBtn)} onClick={toStaking}>{i18n.t('staking')}</p>
         </div>
       </div>
-      <PopupModal
+      <PopupModal 
         title={siteUrl}
         leftBtnContent={leftBtnContent}
         rightBtnContent={rightBtnContent}
@@ -576,7 +579,7 @@ const TxListView = ({
       <div className={styles.emptyContainer}>
         <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
         <span className={styles.emptyContent}>
-          {i18n.t('unknownInfo')}
+          {i18n.t('notSupportTx')}
         </span>
       </div>)}
     {loading && <div className={styles.loadingCon}>
