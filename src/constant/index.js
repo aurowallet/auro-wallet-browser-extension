@@ -12,27 +12,27 @@ const lockDuration = {
 
 export const AUTO_LOCK_TIME_LIST = [
     {
-        label:i18n.t('lockTime_5m'),
+        label:'lockTime_5m',
         value:lockDuration.dura_1
     },
     {
-        label:i18n.t('lockTime_10m'),
+        label:'lockTime_10m',
         value:lockDuration.dura_2
     },
     {
-        label:i18n.t('lockTime_30m'),
+        label:'lockTime_30m',
         value:lockDuration.dura_3
     },
     {
-        label:i18n.t('lockTime_1h'),
+        label:'lockTime_1h',
         value:lockDuration.dura_4
     },
     {
-        label:i18n.t('lockTime_8h'),
+        label:'lockTime_8h',
         value:lockDuration.dura_5
     },
     {
-        label:i18n.t('lockTime_never'),
+        label:'lockTime_never',
         value:lockDuration.dura_6
     }
 ]

@@ -56,7 +56,7 @@ const Setting = ({ }) => {
             })
             if (lockTime.length > 0) {
                 lockTime = lockTime[0]
-                autoLockTime = lockTime.label
+                autoLockTime = i18n.t(lockTime.label)
             }
             return autoLockTime
         }

@@ -234,10 +234,10 @@
   "epochInfo": "Epoch 信息",
   "notSupportTx":"非主网节点，不提供交易记录",
   "signatureRequest":"签名请求",
-  "lockTime_5m":"5分钟",
-  "lockTime_10m":"10分钟",
-  "lockTime_30m":"30分钟",
-  "lockTime_1h":"1小时",
-  "lockTime_8h":"8小时",
+  "lockTime_5m":"5 分钟",
+  "lockTime_10m":"10 分钟",
+  "lockTime_30m":"30 分钟",
+  "lockTime_1h":"1 小时",
+  "lockTime_8h":"8 小时",
   "lockTime_never":"从不"
 }
