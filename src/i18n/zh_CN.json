@@ -199,7 +199,7 @@
   "unknownInfo": "非主网节点，无法提供相关记录。",
   "loading": "加载中",
   "reminder": "提醒",
-  "notActiveAccountTip": "Mina 网络一次性收取 1 Mina 的帐户创建费，它将自动从收到的第一个交易中扣除，并非钱包收取。",
+  "notActiveAccountTip": "Mina 网络一次性收取 1 MINA 的帐户创建费，它将自动从收到的第一个交易中扣除，并非钱包收取。",
   "dappDisconnect": "未连接",
   "dappConnect": "已连接",
   "delegationInfo": "委托信息",
