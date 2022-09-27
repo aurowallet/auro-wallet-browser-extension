@@ -12,7 +12,7 @@ import Input from "../../component/Input";
 import TextArea from "../../component/TextArea";
 import styles from "./index.module.scss";
 
-const ImportKeypair = ({ }) => {// 在这里修改
+const ImportKeypair = ({ }) => {
   const [keystoreValue, setKeystoreValue] = useState("")
   const [pwdValue, setPwdValue] = useState('')
   const [btnStatus, setBtnStatus] = useState(false)
