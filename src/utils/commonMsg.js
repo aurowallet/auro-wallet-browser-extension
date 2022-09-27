@@ -1,6 +1,6 @@
 import extension from 'extensionizer'
 /**
- * 发送消息的封装类
+ * sending messages
  * @param {*} message 
  * @param {*} sendResponse 
  */
@@ -18,7 +18,7 @@ export function sendMsg(message, sendResponse) {
 
 
 /**
- * 打开网页
+ * open web  page
  * @param {*} url 
  */
 export function openTab(url){

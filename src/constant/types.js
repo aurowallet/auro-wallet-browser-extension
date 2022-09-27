@@ -12,52 +12,52 @@ export const WALLET_SET_UNLOCKED_STATUS = "WALLET_SET_UNLOCKED_STATUS";
 export const WALLET_APP_SUBMIT_PWD = "WALLET_APP_SUBMIT_PWD";
 
 /**
- * 获取所有账户
+ * Get all accounts
  */
 export const WALLET_GET_ALL_ACCOUNT = "WALLET_GET_ALL_ACCOUNT";
 
 
 /**
- * 创建账户
+ * create Account
  */
 export const WALLET_CREATE_HD_ACCOUNT = "WALLET_CREATE_HD_ACCOUNT";
 
 
 
 /**
- * 导入账户
+ * import account
  */
 export const WALLET_IMPORT_HD_ACCOUNT = "WALLET_IMPORT_HD_ACCOUNT";
 
 /**
- * 更改当前账户
+ * Change current account
  */
 export const WALLET_CHANGE_CURRENT_ACCOUNT = "WALLET_CHANGE_CURRENT_ACCOUNT";
 
 /**
- * 更改用户名
+ * change username
  */
 export const WALLET_CHANGE_ACCOUNT_NAME = "WALLET_CHANGE_ACCOUNT_NAME";
 
 /**
- * 删除账户
+ * delete account
  */
 export const WALLET_CHANGE_DELETE_ACCOUNT = "WALLET_CHANGE_DELETE_ACCOUNT";
 
 /**
- * 校验密码
+ * check password
  */
 export const WALLET_CHECKOUT_PASSWORD = "WALLET_CHECKOUT_PASSWORD";
 
 
 /**
- * 获取助记词
+ * get mnemonic
  */
 export const WALLET_GET_MNE = "WALLET_GET_MNE";
 
 
 /**
- * 获取私钥
+ * get private key
  */
 export const WALLET_GET_PRIVATE_KEY = "WALLET_GET_PRIVATE_KEY";
 
@@ -69,13 +69,13 @@ export const WALLET_CHANGE_SEC_PASSWORD = "WALLET_CHANGE_SEC_PASSWORD"
 
 
 /**
- * 获取当前的私钥
+ * Get the current private key
  */
 export const WALLET_GET_CURRENT_PRIVATE_KEY = "WALLET_GET_CURRENT_PRIVATE_KEY"
 
 
 /**
- * 发送交易
+ * send transaction
  */
 export const WALLET_SEND_TRANSTRACTION = "WALLET_SEND_TRANSTRACTION"
 
@@ -85,41 +85,41 @@ export const WALLET_SEND_TRANSTRACTION = "WALLET_SEND_TRANSTRACTION"
 export const WALLET_SEND_MESSAGE_TRANSTRACTION = "WALLET_SEND_MESSAGE_TRANSTRACTION"
 
 /**
- * 发送质押交易
+ * Send a stake transaction
  */
 export const WALLET_SEND_STAKE_TRANSTRACTION = "WALLET_SEND_STAKE_TRANSTRACTION"
 
 /**
- * 查询质押状态
+ * Query stake status
  */
 export const WALLET_CHECK_TX_STATUS = "WALLET_CHECK_TX_STATUS"
 
 /**
- * 导入ledger钱包
+ * Import ledger wallet
  */
 export const WALLET_IMPORT_LEDGER = "WALLET_IMPORT_LEDGER"
 
 /**
- * 导入watch mode钱包
+ * Import watch mode wallet
  */
 export const WALLET_IMPORT_WATCH_MODE = "WALLET_IMPORT_WATCH_MODE"
 
 
 /**
-* 导入keystore钱包
+* Import keystore wallet
 */
 export const WALLET_IMPORT_KEY_STORE = "WALLET_IMPORT_KEY_STORE"
 
 
 
 /**
- * 后台生成助记词
+ * generate mnemonic
  */
 export const WALLET_GET_CREATE_MNEMONIC = "WALLET_GET_CREATE_MNEMONIC"
 
 
 /**
- * 更新最后活跃时间
+ * Update last active time
  */
 export const WALLET_RESET_LAST_ACTIVE_TIME = "WALLET_RESET_LAST_ACTIVE_TIME"
 
@@ -132,35 +132,35 @@ export const WALLET_GET_LOCK_TIME = "WALLET_GET_LOCK_TIME"
 // ====================================================================================bottom back to popup
 
 /**
- * 后台向转账页发送消息
+ * Send a message to the transfer page
  */
 export const FROM_BACK_TO_RECORD = "FROM_BACK_TO_RECORD"
 
 /**
- * 转账有结果
+ * Transfer results
  */
 export const TX_SUCCESS = "TX_SUCCESS"
 
 /**
- * 进入锁定页面
+ * go to lock page
  */
 export const SET_LOCK = "SET_LOCK"
 
 
 /**
- * LEDGER 连接成功
+ * LEDGER connection succeeded
  * @type {string}
  */
 export const LEDGER_CONNECTED_SUCCESSFULLY = 'LEDGER_CONNECTED_SUCCESSFULLY';
 
 
 /**
- * 删除观察账户
+ * delete watch account
  */
  export const WALLET_DELETE_WATCH_ACCOUNT = "WALLET_DELETE_WATCH_ACCOUNT";
 
 /**
- * 清除账户
+ * clear account
  */
  export const RESET_WALLET = "RESET_WALLET"
 

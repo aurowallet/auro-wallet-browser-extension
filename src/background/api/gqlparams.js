@@ -1,5 +1,5 @@
 /**
- * 返回地址余额
+ * return account balance
  */
 export function getBalanceBody() {
   return `query accountBalance($publicKey: PublicKey!) {

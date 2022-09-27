@@ -4,7 +4,7 @@ const CHANGE_CURRENCY_SELECT = "CHANGE_CURRENCY_SELECT"
 
 
 /**
- * 更改网络配置
+ * update currency config
  * @param {*} data 
  */
 export function updateCurrencyConfig(list) {

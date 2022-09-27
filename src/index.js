@@ -113,7 +113,7 @@ function updateNetLocalConfig(netConfig){
 }
 /**
  * 
- * @param {*} selectKey 旧版本存储为 array ， 新版本改为string
+ * @param {*} selectKey The old version is stored as an array, the new version is changed to string
  * @param {*} newConfigList 
  * @returns 
  */

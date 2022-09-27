@@ -7,7 +7,7 @@ const UPDATE_BLOCK_INFO = 'UPDATE_BLOCK_INFO';
 const UPDATE_DELEGATION_INFO = 'UPDATE_DELEGATION_INFO';
 const UPDATE_VALIDATOR_DETAIL = 'UPDATE_VALIDATOR_DETAIL';
 /**
- * 请求节点列表
+ * request net list
  */
 export function getStakingList() {
   return async (dispatch) => {
@@ -18,7 +18,7 @@ export function getStakingList() {
   }
 }
 /**
- * 更新节点列表
+ * update staking list
  */
 export function updateStakingList({ stakingList, submitBpUrl }) {
   return {

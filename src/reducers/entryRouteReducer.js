@@ -1,5 +1,5 @@
 /**
- * 更新入口界面的 reducer
+ * entry reducer
  */
 export const ENTRY_WITCH_ROUTE = {
   HOME_PAGE: 'ENTRY_WITCH_ROUTE_HOME_PAGE',

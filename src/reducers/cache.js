@@ -1,28 +1,28 @@
 /**
- * 更改钱包名称
+ * Change wallet name
  */
 const CHANGE_ACCOUNT_NAME = "CHANGE_ACCOUNT_NAME"
 
 /**
- * 进入用户详情界面
+ * Enter the user details interface
  */
 const SET_ACCOUNT_INFO = "SET_ACCOUNT_INFO"
 
 /**
- *  更新欢迎界面的下一层路由
+ *  Update the next level routing of the welcome screen
  */
 const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
 
 
 /**
- * 更新账户名称页面来源
+ * Update Account Name page source
  */
 const UPDATE_ACCOUNT_TYPE_FROM = "UPDATE_ACCOUNT_TYPE_FROM"
 
 
 
 /**
- * 更新一些插件的基础信息
+ * Update the basic information
  */
 const UPDATE_EXTENSION_BASE_INFO = "UPDATE_EXTENSION_BASE_INFO"
 
@@ -63,7 +63,7 @@ export function updateAddressBookFrom(from) {
     }
 }
 /**
- * 更改钱包名称
+ * update wallet info
  */
 export function updateExtensionBaseInfo(data) {
     return {
@@ -74,7 +74,7 @@ export function updateExtensionBaseInfo(data) {
 
 
 /**
- * 更改钱包名称
+ * update account name 
  */
 export function setChangeAccountName(data) {
     return {
@@ -90,7 +90,7 @@ export function setAccountInfo(info) {
     };
 }
 /**
- * 更新欢迎界面的下一层路由
+ * update welcome next route 
  * @param {*} info 
  */
 export function setWelcomeNextRoute(nextRoute) {
