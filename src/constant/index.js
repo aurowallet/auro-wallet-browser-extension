@@ -1,4 +1,5 @@
 export const POWER_BY = "aurowallet.com";
+import i18n from "i18next";
 
 export const lockDuration = {
   dura_1: 5 * 60 * 1000,
@@ -11,27 +12,27 @@ export const lockDuration = {
 
 export const AUTO_LOCK_TIME_LIST = [
     {
-        label:"5 minutes",
+        label:'lockTime_5m',
         value:lockDuration.dura_1
     },
     {
-        label:"10 minutes",
+        label:'lockTime_10m',
         value:lockDuration.dura_2
     },
     {
-        label:"30 minutes",
+        label:'lockTime_30m',
         value:lockDuration.dura_3
     },
     {
-        label:"1 hour",
+        label:'lockTime_1h',
         value:lockDuration.dura_4
     },
     {
-        label:"8 hour",
+        label:'lockTime_8h',
         value:lockDuration.dura_5
     },
     {
-        label:"Never",
+        label:'lockTime_never',
         value:lockDuration.dura_6
     }
 ]

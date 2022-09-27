@@ -396,7 +396,7 @@ const SignTransaction = () => {
   },[])
 
   const {
-    showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList
+    showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList,pageTitle
   } = useMemo(() => {
     let showAccountAddress = "(" + addressSlice(currentAccount.address, 0, 6) + ")"
     let params = signParams?.params
@@ -421,9 +421,13 @@ const SignTransaction = () => {
         tabInitId = "tab2"
       }
     }
+    let pageTitle = i18n.t('transactionRequest')
+    if(signParams.sendAction === DAppActions.mina_signMessage){
+      pageTitle = i18n.t('signatureRequest')
+    }
 
     return {
-      showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList
+      showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList,pageTitle
     }
   }, [currentAccount, signParams, i18n])
 
@@ -464,13 +468,14 @@ const SignTransaction = () => {
     checkFeeHigh()
   }, [feeValue])
 
+  
   if (!lockStatus) {
     return <LockPage onDappConfirm={true} onClickUnLock={onClickUnLock} history={history} />;
   }
   return (<div className={styles.conatiner}>
     <div className={styles.titleRow}>
       <p className={styles.title}>
-        {i18n.t('transactionRequest')}
+        {pageTitle}
       </p>
       <div className={styles.netContainer}>
         <div className={styles.dot} />

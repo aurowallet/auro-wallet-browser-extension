@@ -1,14 +1,14 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { cointypes } from "../../../../config";
 import { getBalanceBatch } from "../../../background/api";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
 import { DAPP_CHANGE_CONNECTING_ADDRESS, WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
-import { updateCurrentAccount } from "../../../reducers/accountReducer";
+import { updateAccountList, updateCurrentAccount } from "../../../reducers/accountReducer";
 import { setAccountInfo, setChangeAccountName, updateAccoutType } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice, amountDecimals, isNumber } from "../../../utils/utils";
@@ -21,14 +21,30 @@ import styles from "./index.module.scss";
 const AccountManagePage = ({ }) => {
   const dispatch = useDispatch()
   const history = useHistory()
+  const accountBalanceMap = useSelector(state=>state.accountInfo.accountBalanceMap)
   const [accountList, setAccountList] = useState([])
   const [commonAccountList, setCommonAccountList] = useState([])
   const [watchModeAccountList, setWatchModeAccountList] = useState([])
-  const [balanceList, setBalanceList] = useState([])
+  const [balanceList, setBalanceList] = useState(accountBalanceMap||{})
 
   const [currentAddress, setCurrentAddress] = useState("")
+  useEffect(()=>{
+    setBalanceList(accountBalanceMap) 
+  },[accountBalanceMap])
 
+  const setBalanceMap = useCallback((commonAccountList, watchModeAccountList,balanceList)=>{
+    let tempCommonAccountList = setBalance2Account(commonAccountList, balanceList)
+    let tempWatchModeAccountList = setBalance2Account(watchModeAccountList, balanceList)
+    setCommonAccountList(tempCommonAccountList)
+    setWatchModeAccountList(tempWatchModeAccountList)
+  },[])
 
+  useEffect(()=>{
+    let keys = Object.keys(balanceList)
+    if(keys.length>0){
+      setBalanceMap(commonAccountList,watchModeAccountList,balanceList)
+    }
+  },[balanceList,commonAccountList,watchModeAccountList])
 
   const getAccountTypeIndex = useCallback((list) => {
     if (list.length === 0) {
@@ -99,11 +115,9 @@ const AccountManagePage = ({ }) => {
 
   const fetchBalance = useCallback(async (addressList, commonAccountList, watchModeAccountList) => {
     let tempBalanceList = await getBalanceBatch(addressList)
-    let tempCommonAccountList = setBalance2Account(commonAccountList, tempBalanceList)
-    let tempWatchModeAccountList = setBalance2Account(watchModeAccountList, tempBalanceList)
-    setCommonAccountList(tempCommonAccountList)
-    setWatchModeAccountList(tempWatchModeAccountList)
-    setBalanceList(tempBalanceList)
+    dispatch(updateAccountList(tempBalanceList))
+
+    setBalanceMap(commonAccountList,watchModeAccountList,tempBalanceList)
   }, [])
 
 
@@ -238,6 +252,14 @@ const CommonAccountRow = ({
   const dispatch = useDispatch()
   const history = useHistory()
 
+  const [showBalance,setShowBalance] = useState(0)
+  
+  useEffect(()=>{
+    let balance = isNumber(account.balance) ? account.balance : 0
+    balance = balance + " " + cointypes.symbol
+    setShowBalance(balance)
+  },[account.balance])
+
   const getAccountType = useCallback((item) => {
     let typeText = ""
     switch (item.type) {
@@ -257,7 +279,7 @@ const CommonAccountRow = ({
   }, [i18n])
 
   const {
-    menuIcon, accountRightIcon, showBalance, typeText
+    menuIcon, accountRightIcon, typeText
   } = useMemo(() => {
     let menuIcon = isSelect ? "/img/pointMenu.svg" : "/img/pointMenu_dark.svg"
     let accountRightIcon = ""
@@ -268,11 +290,9 @@ const CommonAccountRow = ({
         accountRightIcon = "/img/icon_checked_white.svg"
       }
     }
-    let showBalance = isNumber(account.balance) ? account.balance : 0
-    showBalance = showBalance + " " + cointypes.symbol
     let typeText = getAccountType(account)
     return {
-      menuIcon, accountRightIcon, showBalance, typeText
+      menuIcon, accountRightIcon, typeText
     }
   }, [isSelect, notSupport, account, account.balance])
 

@@ -21,7 +21,7 @@ const AutoLock = ({ }) => {
       action: WALLET_UPDATE_LOCK_TIME,
       payload: data.value
     }, () => {
-      history.goBack()
+      // history.goBack()
     })
   }, [i18n])
 
@@ -38,7 +38,7 @@ const AutoLock = ({ }) => {
         AUTO_LOCK_TIME_LIST.map((item, index) => {
           let isChecked = currentLockDuration === item.value
           return <div className={styles.rowContainer} key={index} onClick={() => onSelect(item)} >
-            <span>{item.label}</span>
+            <span>{i18n.t(item.label)}</span>
             {isChecked && <img src="/img/icon_checked.svg" />}
           </div>
         })

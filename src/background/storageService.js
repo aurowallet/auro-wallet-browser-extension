@@ -2,7 +2,7 @@ import extension from 'extensionizer'
 const extensionStorage = extension.storage && extension.storage.local
 
 /**
- * 存储在本地存储
+ * save local in storage
  */
 export function save(value) {
     return new Promise((resolve, reject) => {
@@ -18,7 +18,7 @@ export function save(value) {
 
 
 /**
- * 获取本地存储的值
+ * get local storage 
  * @param {*} value 
  */
 export function get(value) {
@@ -34,7 +34,7 @@ export function get(value) {
 }
 
 /**
- * 移除本地存储的值
+ * remove local storage
  * @param {*} value 
  */
 export function removeValue(value) {
@@ -50,7 +50,7 @@ export function removeValue(value) {
 }
 
 /**
- * 移除所有存储
+ * remove all local storage
  */
 export function clearStorage() {
     extensionStorage.clear();

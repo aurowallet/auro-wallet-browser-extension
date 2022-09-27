@@ -1,6 +1,6 @@
 
 /**
- * 存储在本地存储
+ * save local
  */
  export function saveLocal(key, value) {
     return localStorage.setItem(key, value);
@@ -8,7 +8,7 @@
 
 
 /**
- * 获取本地存储的值
+ * get local value
  * @param {*} value
  */
 export function getLocal(key) {
@@ -16,7 +16,7 @@ export function getLocal(key) {
 }
 
 /**
- * 移除本地存储的值
+ * remove local value
  * @param {*} value
  */
 export function removeLocal(key) {
@@ -24,14 +24,14 @@ export function removeLocal(key) {
 }
 
 /**
- * 移除所有存储
+ * remove all local storage
  */
 export function clearLocal() {
     localStorage.clear();
 }
 
 /**
- * 获取所有本地存储
+ * get all local storage
  */
  export function getAllLocal() {
     return localStorage.valueOf();
@@ -39,7 +39,7 @@ export function clearLocal() {
 
 
 /**
- * 清除所有本地存储
+ * clear local storage except some key
  */
  export function clearLocalExcept(targetKey) {
      if(targetKey){

@@ -51,7 +51,7 @@ function axiosRetryInterceptor(err) {
     });
 }
 let queue = [];
-// // axios内置的中断ajax的方法
+
 const cancelToken = axios.CancelToken;
 const token = (config) => {
     let newConfig = {...config}
@@ -66,7 +66,7 @@ const token = (config) => {
     }else{
         let queryData = config.data
         let expectIndex
-        if(queryData.variables){//是个对象
+        if(queryData.variables){
             let variables = queryData.variables
             expectIndex = variables && variables.requestType && variables.requestType === "extensionAccountInfo" || ""
             let query = queryData.query
@@ -76,18 +76,17 @@ const token = (config) => {
             }else{
                 requestSession = query
             }
-        }else{//是个字符串
+        }else{
             expectIndex = queryData.indexOf("extensionAccountInfo")
-            if(expectIndex === -1){ // 如果没有
+            if(expectIndex === -1){
                 requestSession = queryData
-            }else { // 如果是给定的字符串
+            }else {
                 requestSession = queryData.slice(0,expectIndex)
             }
         }
     }
     return requestSession
 }
-// 中断重复的请求，并从队列中移除
 const removeQueue = (config) => {
     let configSession = token(config)
     for (let i = 0, size = queue.length; i < size; i++) {
@@ -99,11 +98,8 @@ const removeQueue = (config) => {
     }
 }
 
-// 先看数组里面有吗
-// 如果有，则取消之前的请求，并删除数组中的元素
-//如果没有，则继续往下
+
 axios.interceptors.request.use(function (config) {
-    //重试阶段 不移除
     if(!config.isRetrying){
         removeQueue(config);
     }

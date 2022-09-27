@@ -31,7 +31,7 @@ export const BackupTips = () => {
 
 
   return (
-    <CustomView title={i18n.t('backTips_title')}>
+    <CustomView title={i18n.t('backupMnemonicPhrase')}>
       <p className={styles.title_1}>
         {i18n.t("backTips_1")}
       </p>

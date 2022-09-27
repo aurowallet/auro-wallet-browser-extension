@@ -64,7 +64,7 @@ const ImportKeypair = ({ }) => {
         } else {
           dispatch(updateCurrentAccount(account))
           setTimeout(() => {
-            history.replace("account_manage")
+            history.go(-4)
           }, 300);
         }
       })

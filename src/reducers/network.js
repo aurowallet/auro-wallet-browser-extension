@@ -4,7 +4,7 @@ export const NET_CONFIG_DEFAULT = "DEFAULT"
 export const NET_CONFIG_ADD = "ADD"
 
 /**
- * 更改网络配置
+ * update net config
  * @param {*} data 
  */
 export function updateNetConfig(data) {

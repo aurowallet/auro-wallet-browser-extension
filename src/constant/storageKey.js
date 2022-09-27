@@ -1,5 +1,5 @@
 /**
- * 本地存储的网络配置
+ * Locally stored network configuration
  */
 export const NET_WORK_CONFIG = "NET_WORK_CONFIG"
 
@@ -7,32 +7,32 @@ export const NET_WORK_CONFIG = "NET_WORK_CONFIG"
 
 
 /**
- * 本地存储的语言设置
+ * Locally stored language settings
  */
 export const LANGUAGE_CONFIG = "LANGUAGE_CONFIG"
 
 
 
 /**
- * 本地存储的用户协议
+ * Locally Stored User Agreement
  */
 export const USER_AGREEMENT = "USER_AGREEMENT"
 
 
 
 /**
- * 地址簿信息
+ * Address Book Information
  */
 export const ADDRESS_BOOK_CONFIG = "ADDRESS_BOOK_CONFIG"
 
 
 /**
- * 本地存储的currency 信息
+ * locally stored currency information
  */
 export const CURRENCY_UNIT_CONFIG = "CURRENCY_UNIT_CONFIG"
 
 /**
- * 本地存储的观察钱包是否显示过的 提示
+ * The local storage watch wallet has shown the prompt
  */
 export const WATCH_MODE_TIP_SHOW = "WATCH_MODE_TIP_SHOW"
 
@@ -49,11 +49,11 @@ export const NETWORK_ID_AND_TYPE = "NETWORK_ID_AND_TYPE"
 export const LOCAL_BASE_INFO = "LOCAL_BASE_INFO"
 
 /**
- * 本地缓存的基本数据
+ * Basic data cached locally
  */
 export const LOCAL_CACHE_KEYS = {
     /**
-     * 交易记录 
+     * Transaction Record
      */
     "TRANSACTION_HISTORY": "TRANSACTION_HISTORY",
     /**
@@ -61,7 +61,7 @@ export const LOCAL_CACHE_KEYS = {
      */
     "PENDING_TRANSACTION_HISTORY": "PENDING_TRANSACTION_HISTORY",
     /**
-     * 余额 
+     * balance 
      */
     "ACCOUNT_BALANCE": "ACCOUNT_BALANCE",
     /**
@@ -69,26 +69,26 @@ export const LOCAL_CACHE_KEYS = {
      */
     "COIN_PRICE": "COIN_PRICE",
     /**
-     * 区块信息   
+     * block information   
      */
     "BLOCK_INFO": "BLOCK_INFO",
     /**
-     * 状态 
+     * state 
      */
     "DAEMON_STATUS": "DAEMON_STATUS",
 
     /**
-     * 质押信息
+     * pledge information
      */
     "DELEGATION_INFO": "DELEGATION_INFO",
 
     /**
-     * 节点质押信息
+     * Node pledge information
      */
     "VALIDATOR_DETAIL": "VALIDATOR_DETAIL",
 
     /**
-     * 验证人列表  
+     * Validator list
      */
     "STAKING_LIST": "STAKING_LIST"
 }

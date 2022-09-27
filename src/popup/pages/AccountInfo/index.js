@@ -244,9 +244,19 @@ const AccountInfo = ({}) => {
     [currentAccount, account, i18n]
   );
 
+  const [resetModalBtnStatus,setResetModalBtnStatus] = useState(true)
+  const onResetModalInput = useCallback((e)=>{
+    let checkStatus = e.target.value.length > 0 
+    if (checkStatus) {
+        setResetModalBtnStatus(false)
+    }else{
+        setResetModalBtnStatus(true)
+    }
+  },[i18n])
+
   if (showSecurity) {
     return (
-      <SecurityPwd onClickCheck={onClickCheck} action={SEC_DELETE_ACCOUNT} />
+      <SecurityPwd onClickCheck={onClickCheck} action={SEC_DELETE_ACCOUNT} btnTxt={i18n.t("confirm")}/>
     );
   }
   return (
@@ -307,8 +317,9 @@ const AccountInfo = ({}) => {
         onCloseModal={onCloseModal}
         inputPlaceholder={currentModal?.inputPlaceholder}
         bottomTipClass={styles.waringTip}
-        onInputChange={currentModal?.onInputChange}
         maxInputLength={currentModal?.maxInputLength}
+        onInputChange={onResetModalInput}
+        rightBtnDisable={resetModalBtnStatus}
       />
     </CustomView>
   );

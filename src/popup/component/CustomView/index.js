@@ -19,11 +19,11 @@ const CustomView = ({
     rightIcon = '',
     onClickRightIcon = () => { }
 }) => {
- 
     let history = useHistory();
     const goBack = useCallback(() => {
-        if (onGoBack && onGoBack()) {
-            return;
+        if (onGoBack) {
+            onGoBack()
+            return
         }
         if (backRoute) {
             history.push(backRoute)

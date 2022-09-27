@@ -30,7 +30,7 @@ export function addressSlice(address, sliceLength = 10,lastLength = "") {
 }
 
 /**
- * 去掉科学计数法
+ * remove scientific notation
  * @param {*} num_str
  */
 export function toNonExponential(ExpNumber) {
@@ -38,7 +38,7 @@ export function toNonExponential(ExpNumber) {
     return num.toFixed();
 }
 /**
- * 精度换算
+ * Precision conversion
  * @param {*} amount
  * @param {*} decimal
  */
@@ -50,7 +50,7 @@ export function amountDecimals(amount, decimal = 0) {
 }
 
 /**
- * 展示金额转换。默认4位小数
+ * Impression amount conversion. 4 decimal places by default
  * @param {*} number
  * @param {*} fixed
  */
@@ -80,7 +80,7 @@ export function getAmountForUI(rawAmount, decimal = cointypes.decimals) {
 
 
 /**
- * 去掉字符串前后空格
+ * Remove spaces before and after a string
  * @param {*} str
  */
 export function trimSpace(str) {
@@ -93,7 +93,7 @@ export function trimSpace(str) {
 }
 
 /**
- * 校验地址是否有效
+ * Check if the address is valid
  * @param {*} url
  */
 export function urlValid(url) {
@@ -105,9 +105,9 @@ export function urlValid(url) {
 
 
 /**
- * 判断是不是数字
+ * determine whether it is a number
  * @param n
- * @param includeE 是否认为科学计数法也算作数字 默认不算
+ * @param includeE Whether to consider scientific notation to count as a number Default not to
  */
 export function isNumber(n, includeE = false) {
     let isNum = !!String(n).match(/^\d+(?:\.\d*)?$/);
@@ -118,7 +118,7 @@ export function isNumber(n, includeE = false) {
 }
 
 /**
- * 校验是否是大于0 的整数
+ * Check if it is an integer greater than 0
  * @param {*} n 
  * @param {*} includeE 
  * @returns 
@@ -129,7 +129,7 @@ export function isTrueNumber(n) {
 }
 
 /**
- * 校验用户名长度 默认16位
+ * Check username length default 16 digits
  * @param {*} name
  * @param {*} defaultLength
  */
@@ -152,7 +152,7 @@ export function nameLengthCheck(name, defaultLength = 16) {
 }
 
 /**
- * 复制文本
+ * copy text
  */
 export function copyText(text) {
     return navigator.clipboard.writeText(text)
@@ -209,7 +209,7 @@ export function getCurrentNetConfig() {
     return {}
 }
 /**
- * 处理转账等的返回错误
+ * Return errors for processing transfers, etc.
  * @param {*} error 
  * @returns 
  */
@@ -241,7 +241,7 @@ export function getRealErrorMsg(error) {
 }
 
 /**
- * 处理 staking list 的数据
+ * Process staking list data
  */
 export function parseStakingList(stakingListFromServer) {
     return stakingListFromServer.map(node => {

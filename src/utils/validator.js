@@ -47,7 +47,7 @@ export function pwdConfirmValidate(pwd, confirmPwd) {
 }
 
 /**
- * 校验地址是否有效
+ * Check if the address is valid
  * @param {*} address 
  */
 export function addressValid(address) {

@@ -27,7 +27,7 @@ async function getSignClient(){
 }
 
 /**
- * 获取签名交易
+ * get signed transaction
  * @param {*} privateKey
  * @param {*} fromAddress
  * @param {*} toAddress

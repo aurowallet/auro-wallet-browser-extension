@@ -197,12 +197,16 @@ const DelegationInfo = ({
     }
     let showDelegations = validatorDetail.delegations
     if(isNumber(validatorDetail.delegations)){
-      showDelegations = getAmountForUI(validatorDetail.delegations)
+      showDelegations = validatorDetail.delegations
+    }else{
+      showDelegations = "NaN"
     }
-
+    
     let showBlocksCreated = validatorDetail.blocks_created
     if(isNumber(validatorDetail.blocks_created)){
-      showBlocksCreated = getAmountForUI(validatorDetail.blocks_created)
+      showBlocksCreated = validatorDetail.blocks_created
+    }else{
+      showBlocksCreated = "NaN"
     }
     
     let nodeName = ""
@@ -351,8 +355,8 @@ const EpochInfo = ({ }) => {
         <div className={styles.circleCon}>
           <GradientSVG
             rotation={90}
-            startColor={'#594AF1'}
-            endColor={'#FF7870'}
+            startColor={'#FF7870'}
+            endColor={'#594AF1'}
             idCSS={'circleGradient'} />
           <CircularProgressbar strokeWidth={10} value={epochData.percentage} />
           <div className={styles.percentageContainer}>

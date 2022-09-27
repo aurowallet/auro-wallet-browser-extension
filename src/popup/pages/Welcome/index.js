@@ -99,7 +99,7 @@ const Welcome = () => {
         leftIcon={"/img/icon_download.svg"}
         onClick={() => { goNextRoute("/restore_account") }}
       >
-        {i18n.t('importAccount')}
+        {i18n.t('restoreWallet')}
       </Button>
     </div>
 

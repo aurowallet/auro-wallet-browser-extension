@@ -127,7 +127,7 @@ export const BackupMnemonics = () => {
   }, [mnemonicRandomList, i18n])
 
   return (
-    <CustomView title={i18n.t('backTips_title')}>
+    <CustomView title={i18n.t('backupMnemonicPhrase')}>
       <p className={styles.backTitle}>
         {i18n.t('confirmMneTip')}
       </p>

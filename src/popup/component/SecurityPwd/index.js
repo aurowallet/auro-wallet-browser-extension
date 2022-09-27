@@ -10,7 +10,8 @@ import styles from "./index.module.scss";
 const SecurityPwd = ({
   onClickCheck = () => { },
   action = "",
-  pageTitle = ""
+  pageTitle = "",
+  btnTxt = ""
 }) => {
 
   const [inputValue, setInputValue] = useState("")
@@ -63,6 +64,10 @@ const SecurityPwd = ({
       modalContent
     }
   }, [action])
+
+  const showBtnTxt = useMemo(()=>{
+    return btnTxt || i18n.t('next')
+  },[btnTxt,i18n])
   return (
     <>
       <CustomView title={pageTitle || i18n.t('security')}>
@@ -80,7 +85,7 @@ const SecurityPwd = ({
             <Button
               disable={!btnClick}
               onClick={onConfirm}>
-              {i18n.t('next')}
+              {showBtnTxt}
             </Button>
           </div>
         </form>

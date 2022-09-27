@@ -1,5 +1,6 @@
 import { NET_CONFIG_TYPE } from "./src/constant/walletType"
 
+
 export const cointypes = {
   name: 'MINA',
   segwitAvailable: true,
@@ -7,25 +8,24 @@ export const cointypes = {
   network: null,
   symbol:'MINA',
   decimals:9
-}
+} 
 /**
- * lock time default is 24 hours
+ *  lock time
  */
 export const LOCK_TIME = 30 * 60  * 1000
 
-
 /**
- * fee等配置信息接口
+ * fee config interface
  */
 export const BASE_INFO_URL = ""
 
 /**
- * 默认的语言选项
+ * default language config
  */
 export const DEFAULT_LANGUAGE = "en"
 
 /**
- * 首页默认的请求条数
+ * default home page tx length
  */
 export const TX_LIST_LENGTH = 20
 
@@ -33,9 +33,9 @@ const GQL_URL_MAINNET = ""
 const TRANSACTION_URL_MAINNET = ""
 const EXPLORER_URL_MAINNET = ""
 
-const GQL_URL_TESTNET = ""
-const TRANSACTION_URL_TESTNET = ""
-const EXPLORER_URL_TESTNET = ""
+const GQL_URL_DEVNET = ""
+const TRANSACTION_URL_DEVNET = ""
+const EXPLORER_URL_DEVNET = ""
 
 export const MAIN_NET_BASE_CONFIG={
     netType:NET_CONFIG_TYPE.Mainnet,
@@ -45,10 +45,11 @@ export const MAIN_NET_BASE_CONFIG={
 }
 export const TEST_NET_BASE_CONFIG={
   netType:NET_CONFIG_TYPE.Devnet,
-  url:GQL_URL_TESTNET,
-  txUrl:TRANSACTION_URL_TESTNET,
-  explorer:EXPLORER_URL_TESTNET,
+  url:GQL_URL_DEVNET,
+  txUrl:TRANSACTION_URL_DEVNET,
+  explorer:EXPLORER_URL_DEVNET,
 }
+
 export const UNKNOWN_NET_BASE_CONFIG={
   netType:NET_CONFIG_TYPE.Unknown
 }
@@ -56,7 +57,7 @@ export const UNKNOWN_NET_BASE_CONFIG={
 /**
  * current net config version if net change just add 1 
  */
-export const NET_CONFIG_VERSION = 1017
+export const NET_CONFIG_VERSION = 1019
 
 export const network_config=[
   {
