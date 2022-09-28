@@ -14,7 +14,7 @@ import { updateDAppOpenWindow } from "../../../reducers/cache";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect, requestSignDelegation, requestSignPayment } from '../../../utils/ledger';
-import { addressSlice, copyText, getQueryStringArgs, getRealErrorMsg, isNumber, toNonExponential, trimSpace } from "../../../utils/utils";
+import { addressSlice, copyText, exportFile, getQueryStringArgs, getRealErrorMsg, isNumber, toNonExponential, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import Button, { button_size, button_theme } from "../../component/Button";
 import { ConfirmModal } from '../../component/ConfirmModal';
@@ -408,11 +408,18 @@ const SignTransaction = () => {
 
     let memo =  params?.feePayer?.memo || params?.memo || ""
     let content = params?.message || ""
+    if(signParams.sendAction === DAppActions.mina_sendTransaction){
+      content = i18n.t('exportZkAppCommand')
+    }
 
     let tabList = []
     let tabInitId = ""
     if (content) {
-      tabList.push({ id: "tab1", label: i18n.t('content'), content: content })
+      let contentObj = { id: "tab1", label: i18n.t('content'), content: content }
+      if(signParams.sendAction === DAppActions.mina_sendTransaction){
+        contentObj.contentClick = true
+      }
+      tabList.push(contentObj)
       tabInitId = "tab1"
     }
     if (memo) {
@@ -468,6 +475,16 @@ const SignTransaction = () => {
     checkFeeHigh()
   }, [feeValue])
 
+  const onClickContent = useCallback((clickAble)=>{
+      if(clickAble){
+        let data = signParams?.params?.transaction
+        console.log('onClickContent===0',data);
+        if(data){
+          let res = JSON.parse(data)
+          exportFile(JSON.stringify(res,null,2),"zkapp_command.json")
+        }
+      }
+  },[signParams])
   
   if (!lockStatus) {
     return <LockPage onDappConfirm={true} onClickUnLock={onClickUnLock} history={history} />;
@@ -523,8 +540,11 @@ const SignTransaction = () => {
       {(tabList.length > 0) && <div className={styles.accountRow}>
         <Tabs selected={selectedTabIndex} initedId={tabInitId} onSelect={onSelectedTab}>
           {tabList.map((tab) => {
+            const clickAble = tab.contentClick
             return (<div key={tab.id} id={tab.id} label={tab.label}>
-              <p className={styles.tabContent}>
+              <p onClick={()=>onClickContent(clickAble)} className={cls(styles.tabContent,{
+                [styles.clickCss]:clickAble
+              })}>
                 {tab.content}
               </p>
             </div>)

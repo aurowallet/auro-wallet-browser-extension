@@ -322,3 +322,19 @@ export function getNetTypeNotSupportHistory(netType){
 export function getNetTypeNotSupportStaking(netType){
     return NET_CONFIG_NOT_SUPPORT_STAKING.indexOf(netType) !== -1
 }
+
+
+export function exportFile(data, fileName) {
+    const streamData = new Blob([data], { type: 'application/octet-stream' });
+    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+      window.navigator.msSaveOrOpenBlob(streamData, fileName);
+    } else {
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.style.display = 'none';
+      link.href = window.URL.createObjectURL(streamData);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
