@@ -37,4 +37,5 @@ export const NET_CONFIG_NOT_SUPPORT_TX_HISTORY =[
 /** not support stake   */
 export const NET_CONFIG_NOT_SUPPORT_STAKING =[
   NET_CONFIG_TYPE.Unknown,
+  NET_CONFIG_TYPE.QAnet
 ]

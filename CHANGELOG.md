@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.0]
 - New UI
 - upgrade mina-signer-experimental version to 1.3.0
 - fix nodeEditor net type
