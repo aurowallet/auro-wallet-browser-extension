@@ -8,6 +8,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
+import { cointypes } from "../../../../config";
 import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateValidatorDetail } from "../../../reducers/stakingReducer";
