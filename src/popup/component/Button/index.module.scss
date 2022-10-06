@@ -96,6 +96,7 @@
   }
   
   .refreshLoading {
+    display:none;
     animation: spin 0.5s linear infinite;
   }
   
@@ -107,4 +108,7 @@
     100% {
       transform: rotate(360deg);
     }
+  }
+  .refreshLoadingShow{
+    display:flex !important;
   }

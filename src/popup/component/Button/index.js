@@ -48,9 +48,11 @@ const Button = ({
         {leftIcon && !loading && <div className={styles.iconContainer}>
             <img src={leftIcon} className={styles.btnIcon} />
         </div>}
-        {
-            loading ? <img className={styles.refreshLoading} src="/img/loading_light.svg" /> : children
-        }
+        <img className={cls(styles.refreshLoading,{
+            [styles.refreshLoadingShow]:loading
+        })} src="/img/loading_light.svg" />
+
+        {!loading && children}
     </button>)
 }
 
