@@ -108,6 +108,7 @@ const NetworkPage = ({ }) => {
         dispatch(updateStakingRefresh(true))
 
         sendNetworkChangeMsg(config.currentConfig)
+        history.goBack()
 
     }, [netConfigList, editMode])
 
