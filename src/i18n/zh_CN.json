@@ -56,7 +56,7 @@
   "amount": "金额",
   "balance": "余额",
   "max": "全部",
-  "memo": "Memo(选填)",
+  "memo": "备注(选填)",
   "transactionDetails": "交易详情",
   "addressBook": "地址簿",
   "fee_slow": "慢",
