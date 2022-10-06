@@ -183,7 +183,7 @@ const Setting = ({ }) => {
         title={i18n.t('setting')}
         customeTitleClass={styles.customeTitleClass}
         onClickTitle={onClickTitle}
-        rightIcon={showOpenTabStatus ? "/img/icon_share.svg":""}
+        rightIcon={showOpenTabStatus ? "/img/icon_popnewwindow.svg":""}
         onClickRightIcon={onClickRightIcon}
         contentClassName={styles.contentClassName}
     >

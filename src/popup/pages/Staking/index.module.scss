@@ -19,6 +19,7 @@
     text-align: center;
     color: #000000;
     margin: 0px 0px 0px 8.5px;
+    font-weight: 500;
   }
 }
 .commonContent {
@@ -37,13 +38,6 @@
   justify-content: space-between;
   position: relative;
   width: 100%;
-  .label {
-    font-weight: 500;
-    font-size: 12px;
-    line-height: 15px;
-    color: rgba(0, 0, 0, 0.5);
-    margin: 2px 0 0;
-  }
   .highlightContent {
     font-weight: 500;
     font-size: 16px;
@@ -239,4 +233,11 @@
     color: rgba(0, 0, 0, 0.3);
     margin: 10px 0px 0px;
   }
+}
+.label {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 15px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 2px 0 0;
 }

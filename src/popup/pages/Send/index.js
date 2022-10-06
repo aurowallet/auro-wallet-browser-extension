@@ -68,7 +68,7 @@ const SendPage = ({ }) => {
   const [waintLedgerStatus, setWaintLedgerStatus] = useState(false)
 
   const [contentList, setContentList] = useState([])
-
+  const [btnDisableStatus,setBtnDisableStatus] = useState(true)
 
 
   const onToAddressInput = useCallback((e) => {
@@ -302,6 +302,14 @@ const SendPage = ({ }) => {
   }, [i18n, toAddress, amount, feeAmount, balance, inputNonce, currentAddress, memo, isAllTransfer, getRealTransferAmount, clickNextStep])
 
  
+  useEffect(()=>{
+    if(trimSpace(toAddress).length>0 && trimSpace(amount).length>0){
+      setBtnDisableStatus(false)
+    }else{
+      setBtnDisableStatus(true)
+    }
+    
+  },[toAddress,amount])
   return (<CustomView title={i18n.t('send')} contentClassName={styles.container}>
     <div className={styles.contentContainer}>
       <div className={styles.inputContainer}>
@@ -311,6 +319,7 @@ const SendPage = ({ }) => {
           value={toAddress}
           inputType={'text'}
           subLabel={toAddressName}
+          placeholder={i18n.t('address')}
           rightComponent={<div onClick={onClickAddressBook} className={styles.addressBook}>{i18n.t('addressBook')}</div>}
         />
         <Input
@@ -318,6 +327,7 @@ const SendPage = ({ }) => {
           onChange={onAmountInput}
           value={amount}
           inputType={'text'}
+          placeholder={0}
           rightComponent={<div className={styles.balance}>
             {i18n.t('balance') + ": " + getDisplayAmount(balance, cointypes.decimals)}
           </div>}
@@ -356,6 +366,7 @@ const SendPage = ({ }) => {
     </div>
     <div className={cls(styles.bottomContainer)}>
       <Button
+        disable={btnDisableStatus}
         onClick={onConfirm}>
         {i18n.t('next')}
       </Button>

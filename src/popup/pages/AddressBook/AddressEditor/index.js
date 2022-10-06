@@ -1,5 +1,5 @@
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useHistory } from 'react-router-dom';
 import { getLocal, saveLocal } from "../../../../background/localStorage";
 import { ADDRESS_BOOK_CONFIG } from "../../../../constant/storageKey";
@@ -24,6 +24,7 @@ const AddressEditor = ({ }) => {
     const history = useHistory()
     const [reminderModalStatus, setReminderModalStatus] = useState(false)
 
+    const [btnStatus,setBtnStatus] = useState(true)
     const {
         editorType, editIndex, editItem
     } = useMemo(() => {
@@ -163,6 +164,14 @@ const AddressEditor = ({ }) => {
         setReminderModalStatus(false)
     }, [])
 
+    useEffect(()=>{
+        if(trimSpace(addressName).length > 0 && trimSpace(addressValue).length > 0){
+            setBtnStatus(false)
+        }else{
+            setBtnStatus(true)
+        }
+    },[addressName,addressValue])
+
 
     return (<CustomView title={title}
         rightComponent={
@@ -193,6 +202,7 @@ const AddressEditor = ({ }) => {
         <div className={styles.hold} />
         <div className={styles.bottomContainer}>
             <Button
+                disable={btnStatus}
                 onClick={onAddAddress}>
                 {i18n.t('confirm')}
             </Button>

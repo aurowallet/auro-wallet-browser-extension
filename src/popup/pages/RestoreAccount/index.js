@@ -20,6 +20,7 @@ const RestoreAccount = () => {
   const [btnLoading, setBtnLoading] = useState(false)
   const [bottomTipError, setBottomTipError] = useState("")
 
+  const [btnDisableStatus,setBtnDisableStatus] = useState(true)
   const childRef = useRef();
 
 
@@ -110,6 +111,13 @@ const RestoreAccount = () => {
       })
   }, [mneInput, i18n])
 
+  useEffect(()=>{
+    if(trimSpace(mneInput).length>0){
+      setBtnDisableStatus(false)
+    }else{
+      setBtnDisableStatus(true)
+    }
+  },[mneInput])
 
   return (
     <CustomView title={i18n.t('restoreWallet')}>
@@ -141,6 +149,7 @@ const RestoreAccount = () => {
         </div>
       </div>
       <BottomBtn
+        disable={btnDisableStatus}
         rightLoadingStatus={btnLoading}
         onClick={goToCreate}
         rightBtnContent={i18n.t('confirm')}

@@ -216,7 +216,7 @@
   "epochEndTime": "Current epoch ends in",
   "selectNode": "Please select node provider",
   "blockProducers": "Block Producers",
-  "searchPlaceholder": "Search for block producer name or address",
+  "searchPlaceholder": "Block Producer name or address",
   "manualAdd": "Input BP node address",
   "stake": "Stake",
   "users": "Users",
