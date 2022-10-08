@@ -139,7 +139,7 @@ const WalletInfo = () => {
 
   const [currentAccount, setCurrentAccount] = useState(accountInfo.currentAccount)
   const [dappConnectStatus, setDappConnectStatus] = useState(false)
-  const [dappIcon, setDappIcon] = useState("")
+  const [dappIcon, setDappIcon] = useState("/img/dappUnConnect.svg")
 
   const [dappModalStatus, setDappModalStatus] = useState(false)
   const [siteUrl, setSiteUrl] = useState('')
