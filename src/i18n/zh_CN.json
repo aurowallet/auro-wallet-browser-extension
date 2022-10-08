@@ -240,5 +240,6 @@
   "lockTime_1h":"1 小时",
   "lockTime_8h":"8 小时",
   "lockTime_never":"从不",
-  "noConnectedApps":"没有已连接的应用"
+  "noConnectedApps":"没有已连接的应用",
+  "popOutWindow":"弹出到新窗口"
 }

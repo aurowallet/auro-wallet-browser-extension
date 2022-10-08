@@ -185,6 +185,7 @@ const Setting = ({ }) => {
         onClickTitle={onClickTitle}
         rightIcon={showOpenTabStatus ? "/img/icon_popnewwindow.svg":""}
         onClickRightIcon={onClickRightIcon}
+        rightHoverContent={i18n.t('popOutWindow')}
         contentClassName={styles.contentClassName}
     >
         {routeList.map((routeItem, index) => {

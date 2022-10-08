@@ -57,4 +57,46 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    position: relative;
+}
+
+.baseTipContainer{
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    top: 20px;
+    right: 0;
+    min-width: 56px;
+
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    
+    .baseTip {
+        background: rgba(0, 0, 0, 0.8);
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 14px;
+    
+        color: #ffffff;
+    
+        text-align: center;
+        padding: 6px 10px;
+        border-radius: 6px;
+    
+       
+        min-width: 56px;
+        white-space:nowrap
+    }
+    .arrow {
+        margin-right: 10px;
+        width: 0;
+        height: 0;
+        border: 6px solid transparent;
+        border-bottom: 6px solid rgba(0, 0, 0, 0.8);;
+    }
+}
+.rightIcon:hover + .baseTipContainer {
+    visibility: visible;
 }

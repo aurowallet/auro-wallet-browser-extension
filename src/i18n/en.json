@@ -240,5 +240,6 @@
   "lockTime_1h":"1 hour",
   "lockTime_8h":"8 hours",
   "lockTime_never":"Never",
-  "noConnectedApps":"No connected apps"
+  "noConnectedApps":"No connected apps",
+  "popOutWindow":"Pop out to a new window"
 }

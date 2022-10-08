@@ -17,7 +17,8 @@ const CustomView = ({
     customeTitleClass = '',
     onClickTitle=()=>{},
     rightIcon = '',
-    onClickRightIcon = () => { }
+    onClickRightIcon = () => { },
+    rightHoverContent=""
 }) => {
     let history = useHistory();
     const goBack = useCallback(() => {
@@ -59,6 +60,10 @@ const CustomView = ({
                     <img
                         src={rightIcon}
                         className={styles.rightIcon} onClick={onClickRightIcon} />
+                    {rightHoverContent && <div className={styles.baseTipContainer}>
+                        <div className={styles.arrow} />
+                        <span className={styles.baseTip}>{rightHoverContent}</span>
+                    </div>}
                 </div>}
             </div>
             <div className={cls(styles.contentContainer, contentClassName)}>
