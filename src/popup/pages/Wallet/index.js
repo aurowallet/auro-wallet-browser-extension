@@ -338,7 +338,6 @@ const WalletInfo = () => {
               <div className={styles.dappContainer}>
                 <img src={dappIcon} className={styles.dappConnectIcon} onClick={onShowDappModal} />
                 <div className={styles.baseTipContainer}>
-                  <div className={styles.arrow} />
                   <span className={styles.baseTip}>{showTip}</span>
                 </div>
                 

@@ -61,7 +61,6 @@ const CustomView = ({
                         src={rightIcon}
                         className={styles.rightIcon} onClick={onClickRightIcon} />
                     {rightHoverContent && <div className={styles.baseTipContainer}>
-                        <div className={styles.arrow} />
                         <span className={styles.baseTip}>{rightHoverContent}</span>
                     </div>}
                 </div>}

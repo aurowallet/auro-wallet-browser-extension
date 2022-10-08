@@ -509,7 +509,7 @@ $toolbarHeight: 58px;
     visibility: hidden;
     position: absolute;
     z-index: 1;
-    top: 20px;
+    top: 25px;
     left: 50%;
     transform: translate(-50%, 0);
     min-width: 56px;
@@ -535,12 +535,6 @@ $toolbarHeight: 58px;
        
         min-width: 56px;
         white-space:nowrap
-    }
-    .arrow {
-        width: 0;
-        height: 0;
-        border: 6px solid transparent;
-        border-bottom: 6px solid rgba(0, 0, 0, 0.8);;
     }
 }
 .dappConnectIcon:hover + .baseTipContainer {

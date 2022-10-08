@@ -64,7 +64,7 @@
     visibility: hidden;
     position: absolute;
     z-index: 1;
-    top: 20px;
+    bottom: -30px;
     right: 0;
     min-width: 56px;
 
@@ -88,13 +88,6 @@
        
         min-width: 56px;
         white-space:nowrap
-    }
-    .arrow {
-        margin-right: 10px;
-        width: 0;
-        height: 0;
-        border: 6px solid transparent;
-        border-bottom: 6px solid rgba(0, 0, 0, 0.8);;
     }
 }
 .rightIcon:hover + .baseTipContainer {
