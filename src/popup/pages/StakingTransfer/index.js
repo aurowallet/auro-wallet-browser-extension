@@ -60,7 +60,12 @@ const StakingTransfer = () => {
   const [contentList, setContentList] = useState([])
 
   const [waintLedgerStatus, setWaintLedgerStatus] = useState(false)
-  const [btnDisableStatus,setBtnDisableStatus] = useState(true)
+  const [btnDisableStatus,setBtnDisableStatus] = useState(()=>{
+    if(menuAdd){
+      return true
+    }
+    return false
+  })
 
 
 
@@ -250,10 +255,10 @@ const StakingTransfer = () => {
   }, [])
 
   useEffect(()=>{
-    if(trimSpace(blockAddress).length>0){
-      setBtnDisableStatus(false)
-    }else{
+    if(menuAdd && trimSpace(blockAddress).length === 0 ){
       setBtnDisableStatus(true)
+    }else{
+      setBtnDisableStatus(false)
     }
   },[menuAdd,blockAddress])
   return (<CustomView title={i18n.t('staking')} contentClassName={styles.container}>
