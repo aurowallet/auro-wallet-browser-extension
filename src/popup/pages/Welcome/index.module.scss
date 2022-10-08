@@ -20,7 +20,7 @@
 }
 .btnContainer {
   padding: 0px 38px;
-  :not(:last-child) {
+  >:not(:last-child) {
     margin-bottom: 20px;
   }
 }
