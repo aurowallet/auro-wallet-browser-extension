@@ -227,7 +227,7 @@
   "accountAddress":"账户地址",
   "confirmTransaction": "确认交易",
   "waitingLedgerConfirm":"等待确认",
-  "waitingLedgerConfirmTip":"请在Ledger硬件钱包中进行确认，签名可能会需要1-3分钟",
+  "waitingLedgerConfirmTip":"请在 Ledger 硬件钱包中进行确认，签名可能会需要 1-3分钟",
   "waitingLedgerConfirmTip_2":"在此之前<b>请勿关闭</b>此窗口。",
   "epochInfo": "Epoch 信息",
   "notSupportTx":"非主网节点，无法提供交易记录",

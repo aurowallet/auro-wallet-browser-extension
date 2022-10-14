@@ -120,3 +120,26 @@
         }
     }
 }
+.advanceEntry {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    width: fit-content;
+    margin-top: 20px;
+    .advanceTitle {
+        font-size: 12px;
+        line-height: 14px;
+        color: #594af1;
+        margin: 0 5px 0px 0px;
+        font-weight: 500;
+    }
+
+    .openAdvance {
+        transform: rotate(180deg);
+        transition: 0.35s;
+    }
+    .closeAdvance {
+        transform: rotate(0);
+        transition: 0.35s;
+    }
+}

@@ -27,6 +27,7 @@ const AccountName = ({ }) => {
   const [accountIndex, setAccountIndex] = useState(0)
   const [repeatAccount, setRepeatAccount] = useState({})
   const [btnLoadingStatus,setBtnLoadingStatus] = useState(false)
+  const [isOpenAdvance,setIsOpenAdvance] = useState(false)
 
   const onSubmit = (event) => {
     event.preventDefault();
@@ -156,6 +157,10 @@ const AccountName = ({ }) => {
     setAccountIndex(accountIndex - 1)
   }, [accountIndex])
 
+  const onClickAdvance = useCallback(()=>{
+    setIsOpenAdvance(state=>!state)
+  },[])
+
   return (
     <CustomView title={i18n.t('accountName')} >
       <form onSubmit={onSubmit} className={styles.container}>
@@ -168,7 +173,11 @@ const AccountName = ({ }) => {
             placeholder={placeholderText}
           />
         </div>
-        {isLedger && <LedgerAdvance value={accountIndex} onChange={onAccountIndexChange} onAdd={onAdd} onMinus={onMinus} />}
+        <div className={styles.advanceEntry} onClick={onClickAdvance}>
+                <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
+                <img className={isOpenAdvance ? styles.openAdvance : styles.closeAdvance} src="/img/icon_unfold_Default.svg" />
+            </div>
+        {isLedger && isOpenAdvance && <LedgerAdvance value={accountIndex} onChange={onAccountIndexChange} onAdd={onAdd} onMinus={onMinus} />}
         <div className={styles.hold} />
         <div className={styles.bottomContainer}>
           <Button
@@ -209,7 +218,7 @@ const LedgerAdvance = ({
 }) => {
   return (<div className={styles.ledgerContainer}>
     <p className={styles.ledgerTitle}>{i18n.t('hdDerivedPath')}</p>
-    <div className={styles.ledgerPath}>m / 44' / 12586'
+    <div className={styles.ledgerPath}>m / 44' / 12586' /
       <InputNumber value={value} onChange={onChange} onAdd={onAdd} onMinus={onMinus} />
       ' / 0 / 0</div>
   </div>)

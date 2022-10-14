@@ -1,5 +1,6 @@
 import cls from "classnames";
 import i18n from "i18next";
+import { Trans } from "react-i18next";
 import Button from "../Button";
 import styles from "./index.module.scss";
 
@@ -38,7 +39,14 @@ export const ConfirmModal = ({
                             <img className={styles.waitingIcon} src="/img/detail_pending.svg"/>
                             <p className={styles.waitingTitle}>{i18n.t('waitingLedgerConfirm')+"..."}</p>
                             <p className={styles.waitingContent}>{i18n.t('waitingLedgerConfirmTip')}</p>
-                            <p className={styles.waitingTip}>{i18n.t('waitingLedgerConfirmTip_2')}</p>
+                            <p className={styles.waitingTip}>
+                            <Trans
+                                i18nKey={"waitingLedgerConfirmTip_2"}
+                                components={{
+                                    b: <span className={styles.accountRepeatName} />,
+                                }}
+                                />
+                            </p>
                         </div>}
 
                         {!waitingLedger && <div className={styles.bottomContent}>

@@ -134,7 +134,7 @@
 }
 
 .ledgerContent {
-    padding: 48px 0 100px;
+    padding: 48px 20px 100px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -162,5 +162,8 @@
         @extend .waitingContent;
         color: #E4B200;
         margin: 20px 10px;
+    }
+    .accountRepeatName{
+        font-weight: 700;
     }
 }
