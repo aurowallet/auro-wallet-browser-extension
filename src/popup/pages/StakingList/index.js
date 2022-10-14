@@ -19,10 +19,7 @@ const StakingList = ({ }) => {
   const stakingList = useSelector(state => state.staking.stakingList)
 
   const [keywords, setKeywords] = useState("")
-  const [currentSelectAddress, setCurrentSelectAddress] = useState(() => {
-    let delegatedAddress = history.location?.params?.nodeAddress ?? "";
-    return delegatedAddress
-  })
+  const [currentSelectAddress, setCurrentSelectAddress] = useState("")
 
   const [fromPage,] = useState(() => {
     let fromPage = history.location?.params?.fromPage ?? "";
@@ -54,10 +51,6 @@ const StakingList = ({ }) => {
       if (node) {
         nodeParams = node;
       }
-    }
-    if (!nodeParams) {
-      Toast.info(i18n.t('selectNode'))
-      return;
     }
 
     if (fromPage === 'stakingTransfer') {
@@ -113,6 +106,7 @@ const StakingList = ({ }) => {
     </div>
     <div className={cls(styles.bottomContainer)}>
       <Button
+        disable={!currentSelectAddress}
         onClick={onConfirm}>
         {i18n.t('next')}
       </Button>

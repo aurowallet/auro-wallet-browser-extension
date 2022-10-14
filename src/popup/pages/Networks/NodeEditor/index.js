@@ -139,6 +139,7 @@ const NodeEditor = ({ }) => {
             return {}
         }
 
+
         let existIndex = checkExist(urlInput) 
         if (existIndex !== -1) {
             if (editorType === NodeEditorType.add) {

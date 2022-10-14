@@ -145,6 +145,11 @@
     display: flex;
   }
 }
+.rowRight{
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
 
 .rowItem {
   .labelContent {

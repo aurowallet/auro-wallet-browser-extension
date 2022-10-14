@@ -13,9 +13,6 @@ import { useHistory } from 'react-router-dom';
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
-
-
-import { PopupModal } from "../../component/PopupModal";
 import { NodeEditorType } from "./NodeEditor";
 
 
@@ -24,7 +21,6 @@ const NetworkPage = ({ }) => {
     const netConfigList = useSelector(state => state.network.netList)
     const currentConfig = useSelector(state => state.network.currentConfig)
 
-    const [reminderModalStatus, setReminderModalStatus] = useState(false)
     const [editMode, setEditMode] = useState(false)
 
     const dispatch = useDispatch()
@@ -50,7 +46,7 @@ const NetworkPage = ({ }) => {
                 list: defaultList
             },
             {
-                title: i18n.t('costomNode'),
+                title: i18n.t('customNode'),
                 type: NET_CONFIG_ADD,
                 list: customList
             }
@@ -113,11 +109,6 @@ const NetworkPage = ({ }) => {
     }, [netConfigList, editMode])
 
 
-    const [deleteItemTemp, setDeleteItemTemp] = useState({})
-    const onDeleteNode = useCallback((nodeItem) => {
-        setDeleteItemTemp(nodeItem)
-        setReminderModalStatus(true)
-    }, [netConfigList])
 
     const onEditItem = useCallback((nodeItem) => {
         history.push({
@@ -128,40 +119,6 @@ const NetworkPage = ({ }) => {
             }
         })
     }, [netConfigList])
-
-    const onConfirmDelete = useCallback(() => {
-
-        let currentConfigTemp = currentConfig
-        let list = netConfigList
-        if (deleteItemTemp.url === currentConfigTemp.url) {
-            currentConfigTemp = list[0]
-        }
-        list = list.filter((item, index) => {
-            return item.url !== deleteItemTemp.url
-        })
-
-        let newConfig = {
-            netList: list,
-            currentConfig: currentConfigTemp,
-            netConfigVersion: NET_CONFIG_VERSION
-        }
-
-
-        saveLocal(NET_WORK_CONFIG, JSON.stringify(newConfig))
-
-        clearLocalCache()
-
-        dispatch(updateNetConfig(newConfig))
-        dispatch(updateShouldRequest(true))
-        dispatch(updateStakingRefresh(true))
-        sendNetworkChangeMsg(newConfig.currentConfig)
-        setReminderModalStatus(false)
-
-    }, [deleteItemTemp, currentConfig, netConfigList, deleteItemTemp])
-
-    const onCancel = useCallback(() => {
-        setReminderModalStatus(false)
-    }, [])
 
     return (
         <CustomView
@@ -205,9 +162,6 @@ const NetworkPage = ({ }) => {
                                                 <img src="/img/icon_edit.svg" className={styles.editIcon} />
                                             </div>}
                                         </div>
-                                        {editMode && showNetType && <div className={styles.deleteIconContainer} onClick={() => onDeleteNode(nodeItem)}>
-                                            <img src="/img/icon_delete.svg" className={styles.deleteIcon} />
-                                        </div>}
                                     </div>
                                 })
                             }
@@ -222,15 +176,6 @@ const NetworkPage = ({ }) => {
                     {i18n.t('addNode')}
                 </Button>
             </div>
-
-            <PopupModal
-                title={i18n.t('deleteNode')}
-                leftBtnContent={i18n.t('cancel')}
-                onLeftBtnClick={onCancel}
-                rightBtnContent={i18n.t('delete')}
-                onRightBtnClick={onConfirmDelete}
-                rightBtnStyle={styles.modalDelete}
-                modalVisable={reminderModalStatus} />
         </CustomView >
     )
 }

@@ -403,7 +403,7 @@ const SignTransaction = () => {
         tabInitId = "tab2"
       }
     }
-    let pageTitle = i18n.t('transactionRequest')
+    let pageTitle = i18n.t('confirmTransaction')
     if(signParams.sendAction === DAppActions.mina_signMessage){
       pageTitle = i18n.t('signatureRequest')
     }
@@ -478,7 +478,7 @@ const SignTransaction = () => {
         :
         <>
           <CommonRow 
-          leftTitle={i18n.t('account')} 
+          leftTitle={i18n.t('from')} 
           leftContent={currentAccount.accountName} 
           leftDescContent={showAccountAddress} 
           rightTitle={i18n.t('to')} 
@@ -497,7 +497,7 @@ const SignTransaction = () => {
             </div>
             <div className={styles.rowRight}>
               <p className={cls(styles.rowTitle, styles.rightTitle)} />
-              <p className={styles.rowPurpleContent} onClick={onClickAdvance}>{i18n.t('advance')}</p>
+              <p className={styles.rowPurpleContent} onClick={onClickAdvance}>{i18n.t('advanceMode')}</p>
             </div>
           </div>
           <div className={styles.highFeeTip}>{feeErrorTip}</div>
