@@ -173,10 +173,10 @@ const AccountName = ({ }) => {
             placeholder={placeholderText}
           />
         </div>
-        <div className={styles.advanceEntry} onClick={onClickAdvance}>
-                <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
-                <img className={isOpenAdvance ? styles.openAdvance : styles.closeAdvance} src="/img/icon_unfold_Default.svg" />
-            </div>
+        {isLedger && <div className={styles.advanceEntry} onClick={onClickAdvance}>
+              <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
+              <img className={isOpenAdvance ? styles.openAdvance : styles.closeAdvance} src="/img/icon_unfold_Default.svg" />
+          </div>}
         {isLedger && isOpenAdvance && <LedgerAdvance value={accountIndex} onChange={onAccountIndexChange} onAdd={onAdd} onMinus={onMinus} />}
         <div className={styles.hold} />
         <div className={styles.bottomContainer}>
