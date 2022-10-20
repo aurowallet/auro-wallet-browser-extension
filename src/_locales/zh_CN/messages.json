@@ -1,10 +1,10 @@
 {
     "appName": {
-        "message": "Auro 钱包",
-        "description": "The name of the application"
+        "message": "Auro 钱包 (BETA)",
+        "description": "The name of the application "
     },
     "appDescription": {
-        "message": "Mina浏览器插件钱包",
+        "message": "Mina浏览器插件钱包(此扩展程序用于 BETA 测试)",
         "description": "The description of the application"
     }
 }
