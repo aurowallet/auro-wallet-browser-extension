@@ -148,7 +148,9 @@ class APIService {
     }
     setUnlockedStatus(status) {
         if (!status) {
-            this.memStore.updateState(this.initLockedState())
+            let nextState = this.initLockedState()
+            nextState.autoLockTime = this.getStore().autoLockTime
+            this.memStore.updateState(nextState)
             extension.runtime.sendMessage({
                 type: FROM_BACK_TO_RECORD,
                 action: SET_LOCK,

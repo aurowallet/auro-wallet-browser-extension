@@ -39,7 +39,7 @@ const ReceivePage = ({ }) => {
           level={"H"}
           fgColor="#000000"
           imageSettings={{
-            src: "/img/home_logo.png",
+            src: '/img/logo/128.png',
             height: 30,
             width: 30,
             excavate: true

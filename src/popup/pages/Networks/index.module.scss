@@ -70,7 +70,12 @@
     .rowTopContainer {
         display: flex;
         align-items: center;
+        justify-content: space-between;
 
+        .rowTopLeftContainer{
+            display: flex;
+        align-items: center;
+        }
         .nodeName {
             font-weight: 500;
             font-size: 16px;
@@ -93,6 +98,13 @@
                 text-align: center;
                 color: rgba(0, 0, 0, 0.3);
             }
+        }
+        .chainId{
+            margin: 0;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 14px;
+            color: rgba(0, 0, 0, 0.1);
         }
     }
     .nodeUrl {
@@ -128,4 +140,8 @@
 
 .modalDelete {
     color: #d65a5a;
+}
+
+.rowleft{
+    width: 260px;
 }

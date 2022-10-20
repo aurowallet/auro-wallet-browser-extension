@@ -202,7 +202,7 @@ const StakingTransfer = () => {
       },
       {
         label: i18n.t('fee'),
-        value: inputFee + cointypes.symbol,
+        value: inputFee +" "+ cointypes.symbol,
       }
     ]
     if (isTrueNumber(nonce)) {

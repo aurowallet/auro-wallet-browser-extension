@@ -76,12 +76,12 @@ const Reset = ({ }) => {
                 password: newPassword.trim()
             }
         }, (res) => {
-            setBtnLoading(false)
             if (res.code === 0) {
                 setTimeout(() => {
                     history.goBack()
                 }, 500);
             } else {
+                setBtnLoading(false)
                 Toast.info(i18n.t('passwordError'))
             }
         })

@@ -102,7 +102,7 @@ const AboutUs = ({}) => {
       title={i18n.t("about")}
       contentClassName={styles.aboutContainer}
     >
-      <img src="/img/icon_logo.svg" className={styles.icon} />
+      <img src="/img/logo/128.png" className={styles.icon} />
       <p className={styles.walletName}>{i18n.t("walletName")}</p>
       <p className={styles.walletVersion}>{"V" + pkg.version}</p>
       <p className={styles.walletTip}>{i18n.t("walletAbout")}</p>

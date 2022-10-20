@@ -7,7 +7,7 @@ import { getNetworkList, getNodeChainId } from "../../../../background/api";
 import { getLocal, removeLocal, saveLocal } from "../../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../../constant/storageKey";
 import { updateShouldRequest, updateStakingRefresh } from "../../../../reducers/accountReducer";
-import { NET_CONFIG_ADD, updateNetConfig } from "../../../../reducers/network";
+import { NET_CONFIG_ADD, updateNetChainIdConfig, updateNetConfig } from "../../../../reducers/network";
 import { sendNetworkChangeMsg, trimSpace, urlValid } from "../../../../utils/utils";
 import Button from "../../../component/Button";
 import CustomView from "../../../component/CustomView";
@@ -62,6 +62,9 @@ const NodeEditor = ({ }) => {
     })
     const fetchData = useCallback(async () => {
         let network = await getNetworkList()
+        if(Array.isArray(network) &&  network.length>0){
+            dispatch(updateNetChainIdConfig(network)) 
+          }
         if (network.length <= 0) {
             let listJson = getLocal(NETWORK_ID_AND_TYPE)
             let list = JSON.parse(listJson)
@@ -160,7 +163,7 @@ const NodeEditor = ({ }) => {
             setErrorTip(i18n.t('incorrectNodeAddress'))
             return {}
         }
-        return { urlInput, nameInput, config: chainConfig.config }
+        return { urlInput, nameInput, config: chainConfig.config,chainId:chainConfig.chainId }
     }, [nodeAddressValue, nodeName, editItem, netConfigList])
 
     const clearLocalCache = useCallback(() => {
@@ -177,7 +180,7 @@ const NodeEditor = ({ }) => {
         if (!baseCheck.urlInput) {
             return
         }
-        const { urlInput, nameInput, config } = baseCheck
+        const { urlInput, nameInput, config,chainId } = baseCheck
 
         let newConfig = {}
         if (editorType === NodeEditorType.add) {
@@ -187,6 +190,7 @@ const NodeEditor = ({ }) => {
                 url: urlInput,
                 id: urlInput,
                 type: NET_CONFIG_ADD,
+                chainId
             }
             let list = [...netConfigList];
             list.push(addItem)
@@ -212,6 +216,7 @@ const NodeEditor = ({ }) => {
                 url: urlInput,
                 id: urlInput,
                 type: NET_CONFIG_ADD,
+                chainId,
             }
             let list = [...netConfigList];
             let newList = list.map((item) => {

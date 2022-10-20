@@ -22,7 +22,7 @@
   "createPasswordTip": "安全密码将用于在 Auro 钱包中发送交易和身份验证。Auro 钱包不保存安全密码，也无法帮您找回，请妥善保管。",
   "inputPassword": "安全密码",
   "confirmPassword": "确定安全密码",
-  "passwordDifferent": "密码不匹配，请重试!",
+  "passwordDifferent": "密码不匹配",
   "next": "下一步",
   "passwordRequires": "8 字符",
   "atLeastOneUppercaseLetter": "包含大写字母",

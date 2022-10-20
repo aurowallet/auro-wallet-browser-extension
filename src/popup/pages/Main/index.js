@@ -1,9 +1,11 @@
 import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { getNetworkList } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS } from "../../../constant/storageKey";
 import { updateAccountTx, updateNetAccount } from "../../../reducers/accountReducer";
 import { updateCurrentPrice } from "../../../reducers/cache";
+import { updateNetChainIdConfig } from "../../../reducers/network";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { getNetTypeNotSupportHistory, isNumber } from "../../../utils/utils";
 import Wallet from "../Wallet";
@@ -130,8 +132,15 @@ const HomePage = () => {
     shouldUpdateTxList, updateLocalAccount, updateLocalPrice, updateLocalDaemonStatus,
     updateLocalDelegation, updateLocalBlock, updateLocalValidator, updateLocalStaking])
 
+    const getNetConfig = useCallback(async()=>{
+      let network = await getNetworkList()
+      if(Array.isArray(network) &&  network.length>0){
+        dispatch(updateNetChainIdConfig(network)) 
+      }
+    },[])
   useEffect(() => {
     getlocalCache()
+    getNetConfig()
   }, [])
 
   return (<div

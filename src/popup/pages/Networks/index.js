@@ -6,7 +6,7 @@ import { removeLocal, saveLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../constant/storageKey";
 import { updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, NET_CONFIG_DEFAULT, updateNetConfig } from "../../../reducers/network";
-import { sendNetworkChangeMsg } from "../../../utils/utils";
+import { addressSlice, sendNetworkChangeMsg } from "../../../utils/utils";
 
 import i18n from "i18next";
 import { useHistory } from 'react-router-dom';
@@ -148,10 +148,13 @@ const NetworkPage = ({ }) => {
                                         })} onClick={() => onClickRow(nodeItem)}>
                                             <div className={styles.rowleft}>
                                                 <div className={styles.rowTopContainer}>
-                                                    <p className={styles.nodeName}>{nodeItem.name}</p>
-                                                    {showNetType && <div className={styles.nodeTypeContainer}>
-                                                        <span className={styles.nodeType}>{nodeItem.netType}</span>
-                                                    </div>}
+                                                    <div className={styles.rowTopLeftContainer}>
+                                                        <p className={styles.nodeName}>{nodeItem.name}</p>
+                                                        {showNetType && <div className={styles.nodeTypeContainer}>
+                                                            <span className={styles.nodeType}>{nodeItem.netType}</span>
+                                                        </div>}
+                                                    </div>
+                                                    {nodeItem.chainId && <p className={styles.chainId}>{addressSlice(nodeItem.chainId,6)}</p>}
                                                 </div>
                                                 <p className={styles.nodeUrl}>{nodeItem.url}</p>
                                             </div>
