@@ -16,6 +16,7 @@ import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from "../../../utils/commonMsg";
 import { sendNetworkChangeMsg } from "../../../utils/utils";
 import Button from "../../component/Button";
+import FormView from "../../component/FormView";
 import Input from "../../component/Input";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
@@ -152,24 +153,26 @@ export const LockPage = ({
                 <p className={styles.welcomBack}>
                     {i18n.t('welcomeBack')}
                 </p>
-                <div className={styles.pwdInputContainer}>
-                    <Input
-                        label={i18n.t('password')}
-                        placeholder={i18n.t('enterSecurityPwd')}
-                        onChange={onPwdInput}
-                        value={pwdValue}
-                        inputType={'password'}
-                    />
-                    <div className={styles.btnContainer}>
-                        <Button
-                            disable={!unLockBtnStatus}
-                            onClick={goToConfirm}
-                        >
-                            {i18n.t('unlock')}
-                        </Button>
-                        <p className={styles.bottomUrl}>{POWER_BY}</p>
+                <FormView >
+                    <div className={styles.pwdInputContainer}>
+                        <Input
+                            label={i18n.t('password')}
+                            placeholder={i18n.t('enterSecurityPwd')}
+                            onChange={onPwdInput}
+                            value={pwdValue}
+                            inputType={'password'}
+                        />
+                        <div className={styles.btnContainer}>
+                            <Button
+                                disable={!unLockBtnStatus}
+                                onClick={goToConfirm}
+                            >
+                                {i18n.t('unlock')}
+                            </Button>
+                            <p className={styles.bottomUrl}>{POWER_BY}</p>
+                        </div>
                     </div>
-                </div>
+                </FormView>
             </div>
             <PopupModal
                 title={i18n.t('reset_tip_1')}

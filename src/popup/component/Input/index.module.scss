@@ -27,6 +27,7 @@
     caret-color: #594af1;
     height: 100%;
     border-radius:6px ;
+    width: 100%;
 }
 
 input::-webkit-input-placeholder {
@@ -39,10 +40,6 @@ input::-webkit-input-placeholder {
 
 .inputCon:focus-within {
     border: 0.5px solid #594af1;
-}
-input[type="password"] {
-    letter-spacing: 5px;
-    font-family: caption;
 }
 input[type="text"] {
     letter-spacing: normal;

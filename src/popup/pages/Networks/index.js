@@ -26,7 +26,7 @@ const NetworkPage = ({ }) => {
     const dispatch = useDispatch()
     const history = useHistory()
 
-    const { nodeList, } = useMemo(() => {
+    const { nodeList,showEditBtn } = useMemo(() => {
 
         let defaultList = []
         let customList = []
@@ -38,7 +38,7 @@ const NetworkPage = ({ }) => {
             }
         })
 
-
+        let showEditBtn = customList.length > 0
         let nodeList = [
             {
                 title: i18n.t('defaultNode'),
@@ -54,7 +54,7 @@ const NetworkPage = ({ }) => {
 
 
         return {
-            nodeList,
+            nodeList,showEditBtn
         }
     }, [netConfigList, i18n])
 
@@ -120,16 +120,21 @@ const NetworkPage = ({ }) => {
         })
     }, [netConfigList])
 
+    const rightComponent = useMemo(()=>{
+        if(showEditBtn){
+            return(<p className={styles.editBtn}
+                onClick={onClickEdit}>
+                {rightBtcContent}
+            </p>)
+        }
+        return <></>
+    },[showEditBtn])
+
     return (
         <CustomView
             title={i18n.t('network')}
             contentClassName={styles.contentClassName}
-            rightComponent={
-                <p className={styles.editBtn}
-                    onClick={onClickEdit}>
-                    {rightBtcContent}
-                </p>
-            }>
+            rightComponent={rightComponent}>
             <div className={styles.innerContent}>
                 {
                     nodeList.map((netNode, index) => {
