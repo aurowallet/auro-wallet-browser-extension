@@ -56,11 +56,11 @@ const ImportAccount = ({ }) => {
       } else {
         dispatch(updateCurrentAccount(account))
         setTimeout(() => {
-          history.go(-4)
+          history.go(-(history.length-2))
         }, 50);
       }
     })
-  }, [inputValue, accountName])
+  }, [inputValue, accountName,history])
   return (<CustomView title={i18n.t('importPrivateKey')} >
 
     <p className={styles.title}>{i18n.t('pleaseInputPriKey')}</p>

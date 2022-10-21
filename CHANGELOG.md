@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.0]
 - New UI
+- New features:
+    -  Add popup window
+    - Add Auto-lock
+    - Add Connect DApp List
 
 ## [2.0.6]
 - fix (ledger): signing not working on testnet

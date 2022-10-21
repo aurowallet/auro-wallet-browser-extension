@@ -28,7 +28,7 @@ const Welcome = () => {
   const [nextRoute, setNextRoute] = useState('')
 
 
-  const onClickGuide = useCallback(() => {
+  const onClickGuide = useCallback((type) => {
     const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = cache
     let lan = getCurrentLang()
     let url = ""

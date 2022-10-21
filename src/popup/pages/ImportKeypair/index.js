@@ -64,11 +64,11 @@ const ImportKeypair = ({ }) => {
         } else {
           dispatch(updateCurrentAccount(account))
           setTimeout(() => {
-            history.go(-4)
+            history.go(-(history.length-2))
           }, 300);
         }
       })
-  }, [keystoreValue, pwdValue, accountName])
+  }, [keystoreValue, pwdValue, accountName,history])
   return (<CustomView title={i18n.t('importKeystone')} >
     <p className={styles.title}>{i18n.t('pleaseInputKeyPair')}</p>
     <div className={styles.textAreaContainer}>

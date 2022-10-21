@@ -119,8 +119,8 @@ const StakingTransfer = () => {
         }
       }, () => { })
     }
-    history.go(-3)
-  }, [])
+    history.go(-(history.length-1))
+  }, [history])
 
 
   useEffect(()=>{
