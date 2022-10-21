@@ -80,6 +80,7 @@ $toolbarHeight: 58px;
         font-size: 16px;
         line-height: 18px;
         color: #ffffff;
+        font-weight: 600;
     }
     .accountStatus {
         background: rgba(255, 255, 255, 0.2);
@@ -92,7 +93,7 @@ $toolbarHeight: 58px;
         gap: 10px;
 
         font-style: normal;
-        font-weight: 600;
+        font-weight: 500;
         font-size: 12px;
         line-height: 14px;
         color: #ffffff;
@@ -297,6 +298,7 @@ $toolbarHeight: 58px;
         .historyTitle {
             font-size: 14px;
             line-height: 16px;
+            font-weight: 600;
             text-align: center;
             color: #000000;
             text-transform: uppercase;
@@ -404,6 +406,7 @@ $toolbarHeight: 58px;
             text-align: right;
             color: #000000;
             margin: 0;
+            font-weight: 500;
         }
         .itemStatus {
             margin-top: 6px;

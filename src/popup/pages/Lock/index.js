@@ -31,6 +31,7 @@ export const LockPage = ({
     const [unLockBtnStatus, setUnLockBtnStatus] = useState(false)
     const [waringModalStatus, setWaringModalStatus] = useState(false)
     const [resetModalStatus, setResetModalStatus] = useState(false)
+    const [btnLoading, setBtnLoading] = useState(false)
     
     const dispatch = useDispatch()
     const history = useHistory()
@@ -51,11 +52,13 @@ export const LockPage = ({
 
 
     const goToConfirm = useCallback(() => {
+        setBtnLoading(true)
         sendMsg({
             action: WALLET_APP_SUBMIT_PWD,
             payload: pwdValue
         },
             (account) => {
+                setBtnLoading(false)
                 if (account.error) {
                     if (account.type === "local") {
                         Toast.info(i18n.t(account.error))
@@ -164,6 +167,7 @@ export const LockPage = ({
                         />
                         <div className={styles.btnContainer}>
                             <Button
+                                loading={btnLoading}
                                 disable={!unLockBtnStatus}
                                 onClick={goToConfirm}
                             >
