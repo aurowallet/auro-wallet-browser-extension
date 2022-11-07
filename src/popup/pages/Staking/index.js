@@ -2,7 +2,7 @@
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { Trans } from "react-i18next";
@@ -25,29 +25,33 @@ const Staking = ({ }) => {
   const netAccount = useSelector(state => state.accountInfo.netAccount)
   const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
   const netType = useSelector(state => state.network.currentConfig.netType)
+  const block = useSelector(state => state.staking.block)
+  const validatorDetail = useSelector(state => state.staking.validatorDetail)
   const dispatch = useDispatch()
 
   const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === netAccount.delegate ? "" : netAccount.delegate)
   const [loading, setLoading] = useState(false)
   const [isUnknow, setIsUnknow] = useState(getNetTypeNotSupportStaking(netType))
+  const isFirstRequest = useRef(!isNumber(validatorDetail.totalDelegated));
 
   const fetchData = useCallback((isSlient = false) => {
     if (isUnknow) {
       return
     }
-    if (!isSlient) {
+    if (isFirstRequest.current && !isSlient) {
       setLoading(true)
     }
     fetchDelegationInfo(currentAddress).then((account) => {
       let delegateKey = currentAddress === account.delegate ? "" : account.delegate;
       setDelegatePublicKey(delegateKey)
-      if (delegateKey) {
-        fetchValidatorDetail(delegateKey).then((validatorDetail) => {
-          if(validatorDetail.delegate){
+      if (delegateKey && isNumber(block.protocolState?.consensusState?.epoch)) {
+        fetchValidatorDetail(delegateKey,block.protocolState.consensusState.epoch).then((validatorDetail) => {
+          if(isNumber(validatorDetail.countDelegates)){
             dispatch(updateValidatorDetail(validatorDetail));
           }
         }).finally(() => {
           setLoading(false)
+          isFirstRequest.current = false
         })
       } else {
         setLoading(false)
@@ -55,7 +59,7 @@ const Staking = ({ }) => {
     }).catch(() => {
       setLoading(false)
     })
-  }, [currentAddress, isUnknow])
+  }, [currentAddress, isUnknow,block.protocolState])
 
 
   useEffect(() => {
@@ -190,25 +194,18 @@ const DelegationInfo = ({
   }, [delegatePublicKey])
 
   const {
-    showNodeAddress, showtotalStake, nodeName,showDelegations,showBlocksCreated
+    showNodeAddress, showtotalStake, nodeName,showDelegations
   } = useMemo(() => {
     let showNodeAddress = addressSlice(delegatePublicKey)
     let showtotalStake
-    if(isNumber(validatorDetail.stake)){
-      showtotalStake = getAmountForUI(validatorDetail.stake) + " " + cointypes.symbol
+    if(isNumber(validatorDetail.totalDelegated)){
+      showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0) + " " + cointypes.symbol
     }
-    let showDelegations = validatorDetail.delegations
-    if(isNumber(validatorDetail.delegations)){
-      showDelegations = validatorDetail.delegations
+    let showDelegations = validatorDetail.countDelegates
+    if(isNumber(validatorDetail.countDelegates)){
+      showDelegations = validatorDetail.countDelegates
     }else{
       showDelegations = "NaN"
-    }
-    
-    let showBlocksCreated = validatorDetail.blocks_created
-    if(isNumber(validatorDetail.blocks_created)){
-      showBlocksCreated = validatorDetail.blocks_created
-    }else{
-      showBlocksCreated = "NaN"
     }
     
     let nodeName = ""
@@ -219,7 +216,7 @@ const DelegationInfo = ({
       }
     }
     return {
-      showNodeAddress, showtotalStake, nodeName,showDelegations,showBlocksCreated
+      showNodeAddress, showtotalStake, nodeName,showDelegations
     }
   }, [delegatePublicKey, validatorDetail, stakingList])
  
@@ -238,7 +235,6 @@ const DelegationInfo = ({
         <RowItem title={i18n.t('blockProducerAddress')} content={showNodeAddress} copyContent={delegatePublicKey} isMargin={true}/>
         {showtotalStake &&<RowItem title={i18n.t('totalStake')} content={showtotalStake} isMargin={true} />}
         {showDelegations && <RowItem title={i18n.t('totalDelegators')} content={showDelegations} isMargin={true} />}
-        {showBlocksCreated && <RowItem title={i18n.t('blocksProduced')} content={showBlocksCreated} isMargin={true} />}
       </div>
       <div className={styles.rowRight}>
         <Button
@@ -278,13 +274,13 @@ const EpochInfo = ({ }) => {
       const epoch = block.protocolState.consensusState.epoch;
       const lastTime = (slotsPerEpoch - slot) * slotDuration / 1000;
       let days = Math.floor(lastTime / 60 / 60 / 24);
-      days = BigNumber(days).gt(10) ? days : "0"+days
+      days = BigNumber(days).gte(10) ? days : "0"+days
       const leave1 = lastTime % (24 * 3600);
       let hours = Math.floor(leave1 / (3600));
-      hours = BigNumber(hours).gt(10) ? hours : "0"+hours
+      hours = BigNumber(hours).gte(10) ? hours : "0"+hours
       const leave2 = leave1 % 3600;
       let minutes = Math.floor(leave2 / 60);
-      minutes = BigNumber(minutes).gt(10) ? minutes : "0"+minutes
+      minutes = BigNumber(minutes).gte(10) ? minutes : "0"+minutes
       let epochData = {
         slotsPerEpoch,
         epoch,

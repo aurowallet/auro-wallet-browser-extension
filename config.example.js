@@ -32,22 +32,26 @@ export const TX_LIST_LENGTH = 20
 const GQL_URL_MAINNET = ""
 const TRANSACTION_URL_MAINNET = ""
 const EXPLORER_URL_MAINNET = ""
+const TX_GQL_URL_MAINNET = ""
 
 const GQL_URL_DEVNET = ""
 const TRANSACTION_URL_DEVNET = ""
 const EXPLORER_URL_DEVNET = ""
+const TX_GQL_URL_DEVNET = ""
 
 export const MAIN_NET_BASE_CONFIG={
     netType:NET_CONFIG_TYPE.Mainnet,
     url:GQL_URL_MAINNET,
     txUrl:TRANSACTION_URL_MAINNET,
     explorer:EXPLORER_URL_MAINNET,
+    gqlTxUrl:TX_GQL_URL_MAINNET
 }
 export const TEST_NET_BASE_CONFIG={
   netType:NET_CONFIG_TYPE.Devnet,
   url:GQL_URL_DEVNET,
   txUrl:TRANSACTION_URL_DEVNET,
   explorer:EXPLORER_URL_DEVNET,
+  gqlTxUrl:TX_GQL_URL_DEVNET
 }
 
 export const UNKNOWN_NET_BASE_CONFIG={
@@ -57,7 +61,7 @@ export const UNKNOWN_NET_BASE_CONFIG={
 /**
  * current net config version if net change just add 1 
  */
-export const NET_CONFIG_VERSION = 1019
+export const NET_CONFIG_VERSION = 1020
 
 export const network_config=[
   {

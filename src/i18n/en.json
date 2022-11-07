@@ -195,7 +195,7 @@
   "staking": "Staking",
   "history": "History",
   "goToExplorer": "Check more transaction history",
-  "unknownInfo": "Non-mainnet, unable to provide history.",
+  "unknownInfo": "Unknown network",
   "loading": "Loading",
   "reminder": "Reminder",
   "notActiveAccountTip": "The Mina network charges a one-time account creation fee of 1 MINA for spam prevention. It will be automatically deducted from the first transaction received, it is not charged by the wallet.",
@@ -230,7 +230,6 @@
   "waitingLedgerConfirmTip":"Please confirm in the Ledger hardware wallet, the signature may take 1-3 minutes.",
   "waitingLedgerConfirmTip_2":"Do not close this window until confirmed.",
   "epochInfo": "Epoch Info",
-  "notSupportTx":"Non-mainnet, unable to provide history.",
   "signatureRequest":"Signature Request",
   "lockTime_5m":"5 minutes",
   "lockTime_10m":"10 minutes",
@@ -239,5 +238,9 @@
   "lockTime_8h":"8 hours",
   "lockTime_never":"Never",
   "noConnectedApps":"No connected apps",
-  "popOutWindow":"Pop out to a new window"
+  "popOutWindow":"Pop out to a new window",
+  "APPLIED":"APPLIED",
+  "FAILED":"FAILED",
+  "PENDING":"PENDING",
+  "serviceSupport":"GraphQL API by Mina Explorer"
 }

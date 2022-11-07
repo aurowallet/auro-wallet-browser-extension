@@ -282,3 +282,51 @@ export function getChainIdBody() {
   }
   `
 }
+
+
+/**
+ * return tx history
+ */
+ export function getTxHistoryBody() {
+  return `query txHistory($publicKey: String,$limit:Int) {
+    transactions(limit: $limit, sortBy: DATETIME_DESC, query: {
+      canonical: true,
+      OR: [{
+        to: $publicKey
+      }, {
+        from: $publicKey
+      }]
+    }) {
+      fee
+      from
+      to
+      nonce
+      amount
+      memo
+      hash
+      kind
+      dateTime
+      failureReason
+    }
+  }
+  
+  `
+}
+
+
+
+/**
+ * return deletion total
+ */
+ export function getDeletionTotalBody() {
+  return `query delegationTotals($publicKey: String,$epoch:Int) {
+    stake(query: {epoch: $epoch, public_key: $publicKey}) {
+      delegationTotals {
+        countDelegates
+        totalDelegated
+      }
+    }
+  }
+  
+  `
+}

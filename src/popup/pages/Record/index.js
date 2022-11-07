@@ -30,40 +30,34 @@ const Record = ({ }) => {
 
   const history = useHistory()
   const [txDetail, setTxDetail] = useState(history.location.params?.txDetail || {})
-
-  const [txStatus, setTxStatus] = useState(history.location.params?.txDetail?.status || STATUS.TX_STATUS_PENDING)
   const {
     statusIcon, statusTitle, statusClass,
     contentList
   } = useMemo(() => {
     let statusIcon, statusTitle, statusClass = ''
-    switch (txStatus) {
-      case STATUS.TX_STATUS_SUCCESS:
-      case STATUS.TX_STATUS_INCLUDED:
-        statusIcon = "/img/detail_success.svg"
-        statusTitle = i18n.t('success')
-        statusClass = styles.txSuccess
-        break;
-      case STATUS.TX_STATUS_FAILED:
-      case STATUS.TX_STATUS_UNKNOWN:
-        statusIcon = "/img/detail_failed.svg"
-        statusTitle = i18n.t('failed')
-        statusClass = styles.txFailed
-        break;
-      case STATUS.TX_STATUS_PENDING:
-      default:
+
+    if(txDetail.status === STATUS.TX_STATUS_PENDING){
         statusIcon = "/img/detail_pending.svg"
         statusTitle = i18n.t('wait')
         statusClass = styles.txPending
-        break;
+    }else{
+      if(txDetail.failureReason){
+        statusIcon = "/img/detail_failed.svg"
+        statusTitle = i18n.t('failed')
+        statusClass = styles.txFailed
+      }else{
+        statusIcon = "/img/detail_success.svg"
+        statusTitle = i18n.t('success')
+        statusClass = styles.txSuccess
+      }
     }
 
     let amount = getAmountDisplay(txDetail.amount, cointypes.decimals, cointypes.decimals) + " " + cointypes.symbol
-    let receiveAddress = txDetail.to || String(txDetail.receiver)
-    let sendAddress = txDetail.from || String(txDetail.sender)
+    let receiveAddress = txDetail.to 
+    let sendAddress = txDetail.from
     let memo = txDetail.memo || ""
     let fee = getAmountDisplay(txDetail.fee, cointypes.decimals, cointypes.decimals) + " " + cointypes.symbol
-    let txTime = txDetail.time ? getShowTime(txDetail.time) : ""
+    let txTime = txDetail.dateTime ? getShowTime(txDetail.dateTime) : ""
     let nonce = String(txDetail.nonce)
     let txHash = txDetail.hash
 
@@ -110,7 +104,7 @@ const Record = ({ }) => {
       statusIcon, statusTitle, statusClass,
       contentList,
     }
-  }, [i18n, txStatus, txDetail])
+  }, [i18n, txDetail])
 
   const getExplorerUrl = useCallback(() => {
     let currentConfig = netConfig.currentConfig

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.1]
+- Update transaction history provider
+- Update delegation detail provider
+
 ## [2.1.0]
 - New UI
 - New features:

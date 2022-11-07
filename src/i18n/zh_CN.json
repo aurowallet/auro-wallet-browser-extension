@@ -195,7 +195,7 @@
   "staking": "委托",
   "history": "交易记录",
   "goToExplorer": "去浏览器查看交易记录",
-  "unknownInfo": "非主网节点，无法提供相关记录。",
+  "unknownInfo": "无法提供记录",
   "loading": "加载中",
   "reminder": "提醒",
   "notActiveAccountTip": "Mina 网络一次性收取 1 MINA 的帐户创建费，它将自动从收到的第一个交易中扣除，并非钱包收取。",
@@ -230,7 +230,6 @@
   "waitingLedgerConfirmTip":"请在 Ledger 硬件钱包中进行确认，签名可能会需要 1-3分钟",
   "waitingLedgerConfirmTip_2":"在此之前<b>请勿关闭</b>此窗口。",
   "epochInfo": "Epoch 信息",
-  "notSupportTx":"非主网节点，无法提供交易记录",
   "signatureRequest":"签名请求",
   "lockTime_5m":"5 分钟",
   "lockTime_10m":"10 分钟",
@@ -239,5 +238,9 @@
   "lockTime_8h":"8 小时",
   "lockTime_never":"从不",
   "noConnectedApps":"没有已连接的应用",
-  "popOutWindow":"弹出到新窗口"
+  "popOutWindow":"弹出到新窗口",
+  "APPLIED": "完成",
+  "FAILED": "失败",
+  "PENDING": "等待",
+  "serviceSupport":"Mina Explorer 提供 GraphQL服务"
 }

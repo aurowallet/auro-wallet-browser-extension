@@ -3,7 +3,7 @@ import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../co
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getPendingTxBody, getStakeTxSend, getTxSend, getTxStatusBody } from './gqlparams';
+import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getDeletionTotalBody, getPendingTxBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody } from './gqlparams';
 
 /**
 * get balance
@@ -115,22 +115,6 @@ export async function fetchDelegationInfo(publicKey) {
   return account;
 }
 
-/**
- * get vaildator detail by id
- * @param {*} id 
- * @returns 
- */
-export async function fetchValidatorDetail(id) {
-  let netConfig = getCurrentNetConfig()
-  let baseUrl = netConfig.txUrl
-  if (!baseUrl) {
-    return ""
-  }
-  const data = await commonFetch(`${baseUrl}/validators/${id}`)
-  let validatorDetail = data?.validator || "";
-  saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
-  return validatorDetail;
-}
 export async function fetchStakingList() {
   let netConfig = getCurrentNetConfig()
   let baseUrl = netConfig.txUrl
@@ -270,4 +254,55 @@ export async function getNetworkList() {
     saveLocal(NETWORK_ID_AND_TYPE, JSON.stringify(result))
   }
   return result
+}
+
+/** request gql transaction */
+export async function getGqlTxHistory(address,limit){
+  let netConfig = getCurrentNetConfig()
+  let gqlTxUrl = netConfig.gqlTxUrl
+  if (!gqlTxUrl) {
+    return []
+  }
+  let txBody = getTxHistoryBody()
+  let result = await startFetchMyQuery(
+    txBody,
+    {
+      requestType: "extensionAccountInfo",
+      publicKey: address,
+      limit:limit||20
+    },
+    gqlTxUrl,
+  ).catch((error) => error)
+  let list = result.transactions  || []
+  saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
+  return list
+}
+
+
+/**
+ * get vaildator detail by id
+ * @param {*} id 
+ * @returns 
+ */
+ export async function fetchValidatorDetail(publicKey,epoch) {
+  let netConfig = getCurrentNetConfig()
+  let gqlTxUrl = netConfig.gqlTxUrl
+  if (!gqlTxUrl) {
+    return {}
+  }
+  const query = getDeletionTotalBody()
+  let res = await startFetchMyQuery(query, 
+    { 
+      requestType: "extensionAccountInfo", 
+      publicKey,
+      epoch
+     },
+     gqlTxUrl
+     );
+  let validatorDetail = {}
+  if(res.stake){
+    validatorDetail = res.stake.delegationTotals || {}
+  }
+  saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
+  return validatorDetail;
 }
