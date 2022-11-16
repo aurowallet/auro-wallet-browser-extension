@@ -16,6 +16,7 @@ export const ACCOUNT_TYPE = {
 export const NET_CONFIG_TYPE = {
   Mainnet:"Mainnet",
   Devnet:"Devnet",
+  Berkeley:"Berkeley",
   Unknown:"Unknown",
 }
 

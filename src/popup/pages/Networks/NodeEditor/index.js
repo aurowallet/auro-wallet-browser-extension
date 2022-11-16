@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { MAIN_NET_BASE_CONFIG, NET_CONFIG_VERSION, TEST_NET_BASE_CONFIG, UNKNOWN_NET_BASE_CONFIG } from "../../../../../config";
+import { Berkeley_NET_BASE_CONFIG, MAIN_NET_BASE_CONFIG, NET_CONFIG_VERSION, TEST_NET_BASE_CONFIG, UNKNOWN_NET_BASE_CONFIG } from "../../../../../config";
 import { getNetworkList, getNodeChainId } from "../../../../background/api";
 import { getLocal, removeLocal, saveLocal } from "../../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../../constant/storageKey";
@@ -126,6 +126,9 @@ const NodeEditor = ({ }) => {
                 break;
             case "1":
                 config = TEST_NET_BASE_CONFIG
+                break;
+            case "11":
+                config = Berkeley_NET_BASE_CONFIG
                 break;
             default:
                 config = UNKNOWN_NET_BASE_CONFIG

@@ -30,6 +30,13 @@
     width: 100%;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+.member-form,.rpo-form input[type="number"] {
+  -moz-appearance: textfield;
+}
 input::-webkit-input-placeholder {
     font-size: 16px;
     line-height: 19px;

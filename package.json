@@ -1,6 +1,6 @@
 {
   "name": "auro-wallet",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",
@@ -16,7 +16,7 @@
     "i18next": "19.8.4",
     "libsodium-wrappers": "0.7.9",
     "mina-ledger-js": "1.0.6",
-    "mina-signer": "^1.1.0",
+    "mina-signer": "1.6.0",
     "obs-store": "4.0.3",
     "prop-types": "15.7.2",
     "qrcode-generator": "1.4.4",

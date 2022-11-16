@@ -84,8 +84,13 @@ const network = (state = initState, action) => {
             let devNetChainConfig = chainIdList.filter((config)=>{
                 return config.type === "1" 
             })  
-            let devNetChainId = mainNetChainConfig.length > 0 ? devNetChainConfig[0].chain_id:""
+            let devNetChainId = devNetChainConfig.length > 0 ? devNetChainConfig[0].chain_id:""
             
+            let berkeleyNetChainConfig = chainIdList.filter((config)=>{
+                return config.type === "11" 
+            })  
+            let berkeleyChainId = berkeleyNetChainConfig.length > 0 ? berkeleyNetChainConfig[0].chain_id:""
+
             let newNetConfigList = []
             for (let index = 0; index < netConfigList.length; index++) {
                 let config = {...netConfigList[index]};
@@ -94,6 +99,8 @@ const network = (state = initState, action) => {
                         config.chainId = mainNetChainId
                     }else if(config.netType === NET_CONFIG_TYPE.Devnet){
                         config.chainId = devNetChainId
+                    }else if(config.netType === NET_CONFIG_TYPE.Berkeley){
+                        config.chainId = berkeleyChainId
                     }
                 }
                 newNetConfigList.push(config)
