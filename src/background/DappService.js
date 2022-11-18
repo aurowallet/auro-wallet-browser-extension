@@ -20,7 +20,8 @@ let badgeList = []
 const SIGN_TYPE = {
   TRANSFER: "TRANSFER",
   STAKING: "STAKING",
-  MESSAGE: "MESSAGE"
+  MESSAGE: "MESSAGE",
+  PARTY:"PARTY"
 }
 const BADGE_ADD = "BADGE_ADD"
 const BADGE_MINUS = "BADGE_MINUS"
@@ -72,6 +73,14 @@ class DappService {
           sendResponse
         )
         break;
+
+      case DAppActions.mina_sendTransaction:
+        this.requestCallback(
+          () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.PARTY),
+          id,
+          sendResponse
+        )
+        break;
       case DAppActions.mina_signMessage:
         this.requestCallback(
           () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.MESSAGE),
@@ -105,7 +114,7 @@ class DappService {
           reject({ message: "please connect first" })
           return
         }
-        if (type !== SIGN_TYPE.MESSAGE) {
+        if (type !== SIGN_TYPE.MESSAGE && type !== SIGN_TYPE.PARTY) {
           if (params.to.length <= 0 || !addressValid(params.to)) {
             let errorMessage = type === SIGN_TYPE.TRANSFER ? "send address error" : "delegate address error"
             reject({ message: errorMessage })

@@ -242,5 +242,6 @@
   "APPLIED":"APPLIED",
   "FAILED":"FAILED",
   "PENDING":"PENDING",
-  "serviceSupport":"GraphQL API by Mina Explorer"
+  "serviceSupport":"GraphQL API by Mina Explorer",
+  "exportZkAppCommand":"Export zkApp command"
 }

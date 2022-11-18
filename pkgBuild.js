@@ -1,6 +1,6 @@
 var fs = require('fs');
 
-const FILE_NAME_LIST = ["0.js"]
+const FILE_NAME_LIST = ["0.js","1.js"]
 const EDIT_TYPE = {
     "DELETE": "DELETE",
     "ADD": "ADD"

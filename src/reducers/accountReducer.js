@@ -17,11 +17,12 @@ const UPDATE_STAKING_DATA = "UPDATE_STAKING_DATA"
 
 const UPDATE_ACCOUNT_LIST_BALANCE = "UPDATE_ACCOUNT_LIST_BALANCE"
 
-export function updateAccountTx(txList, txPendingList) {
+export function updateAccountTx(txList, txPendingList,zkAppList) {
     return {
         type: CHANGE_ACCOUNT_TX_HISTORY,
         txList,
-        txPendingList
+        txPendingList,
+        zkAppList
     };
 }
 
@@ -104,24 +105,71 @@ function pendingTx(txList) {
             "nonce": detail.nonce,
             "memo": detail.memo,
             "status": "PENDING",
+            timestamp : new Date(detail.time).getTime()
         })
     }
     return newList
 }
 
+function getZkOtherAccount (zkApp){
+    let accountUpdates = zkApp.zkappCommand.accountUpdates
+    if(Array.isArray(accountUpdates) && accountUpdates.length > 0){
+        return accountUpdates[0]?.body?.publicKey
+    }
+    return ""
+}
+function zkAppFormat(zkAppList){
+    let newList = []
+    for (let index = 0;  index < zkAppList.length; index++) {
+        const zkApp = zkAppList[index];
+        newList.push({
+            "id": "",
+            "hash": zkApp.hash,
+            "kind": "ZKAPP",
+            "dateTime": zkApp.dateTime,
+            "from": zkApp.zkappCommand.feePayer.body.publicKey,
+            "to": getZkOtherAccount(zkApp),
+            "amount": "0",
+            "fee": zkApp.zkappCommand.feePayer.body.fee,
+            "nonce": zkApp.zkappCommand.feePayer.body.nonce,
+            "memo": zkApp.zkappCommand.memo,
+            "status":  zkApp.failureReason ? "failed":"applied",
+            type:"zkApp",
+            body:zkApp,
+            timestamp : new Date(zkApp.dateTime).getTime()
+        })
+    }
+    return newList
+}
+function commonHistoryFormat(list){
+    return  list.map((item)=>{
+        item.timestamp = new Date(item.dateTime).getTime()
+        return item
+    })
+
+}
 const accountInfo = (state = initState, action) => {
     switch (action.type) {
         case CHANGE_ACCOUNT_TX_HISTORY:
             let txList = action.txList
             let txPendingList = action.txPendingList || []
-            if (txList.length >= TX_LIST_LENGTH) {
-                txList.push({
+            let zkAppList = action.zkAppList || []
+           
+
+            txPendingList = txPendingList.reverse()
+            txPendingList = pendingTx(txPendingList)
+            zkAppList = zkAppFormat(zkAppList)
+            let commonList = commonHistoryFormat(txList)
+            let txSortedList = [...zkAppList, ...commonList]
+            txSortedList = txSortedList.sort((a,b)=>b.timestamp-a.timestamp)
+            
+            if (txSortedList.length >= TX_LIST_LENGTH) {
+                txSortedList.push({
                     showExplorer: true
                 })
             }
-            txPendingList = txPendingList.reverse()
-            txPendingList = pendingTx(txPendingList)
-            let newList = [...txPendingList, ...txList]
+
+            let newList = [...txPendingList, ...txSortedList]
             return {
                 ...state,
                 txList: newList

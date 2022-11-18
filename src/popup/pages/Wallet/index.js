@@ -7,7 +7,7 @@ import { Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { cointypes } from '../../../../config';
-import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getTransactionList } from "../../../background/api";
+import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getTransactionList, getZkAppTxHistory } from "../../../background/api";
 import { saveLocal } from '../../../background/localStorage';
 import { NET_WORK_CONFIG } from '../../../constant/storageKey';
 import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
@@ -425,11 +425,13 @@ const WalletDetail = () => {
       }
       let pendingTxList = getPendingTxList(address)
       let gqlTxList = getGqlTxHistory(address)
-      await Promise.all([gqlTxList,pendingTxList]).then((data) => {
+      let zkAppTxList = getZkAppTxHistory(address)
+      await Promise.all([gqlTxList,pendingTxList,zkAppTxList]).then((data) => {
         let newList = data[0]
         let txPendingData = data[1]
+        let zkApp = data[2]
         let txPendingList = txPendingData.txList
-        dispatch(updateAccountTx(newList,txPendingList))
+        dispatch(updateAccountTx(newList,txPendingList,zkApp))
       }).catch((err) => {
       }).finally(() => {
         setHistoryRefreshing(false)
@@ -636,7 +638,10 @@ const TxItem = ({ txData, currentAccount }) => {
     if (txData.kind.toLowerCase() === "payment") {
       isReceive = txData.to.toLowerCase() === currentAccount.address.toLowerCase()
       statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg"
-    } else {
+    } else if(txData.kind.toLowerCase() === "zkapp"){
+      isReceive = false
+      statusIcon = "/img/tx_history_zkapp.svg"
+    }else {
       statusIcon = "/img/tx_pending.svg"
     }
 
@@ -649,6 +654,10 @@ const TxItem = ({ txData, currentAccount }) => {
     amount = amountDecimals(txData.amount, cointypes.decimals)
     amount = getDisplayAmount(amount, 2)
     amount = isReceive ? "+" + amount : "-" + amount
+
+    if(txData.kind.toLowerCase() === "zkapp"){
+      amount = "0"
+    }
 
     let showPendTx = false
 

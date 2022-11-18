@@ -238,3 +238,7 @@ export const DAPP_CLOSE_POPUP_WINDOW = "DAPP_CLOSE_POPUP_WINDOW"
 
 
  export const DAPP_CONNECTION_LIST = "DAPP_CONNECTION_LIST"
+
+
+ /** Berkeley qa net sign   */
+export const QA_SIGN_TRANSTRACTION = "QA_SIGN_TRANSTRACTION"

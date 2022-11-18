@@ -1,7 +1,7 @@
 export const POWER_BY = "aurowallet.com";
 import i18n from "i18next";
 
-const lockDuration = {
+export const lockDuration = {
   dura_1: 5 * 60 * 1000,
   dura_2: 10 * 60 * 1000,
   dura_3: 30 * 60 * 1000,

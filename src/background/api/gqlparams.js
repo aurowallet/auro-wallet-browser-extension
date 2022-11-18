@@ -283,6 +283,23 @@ export function getChainIdBody() {
   `
 }
 
+export function getPartyBody(){
+  return `
+  mutation sendZkapp($zkappCommandInput:ZkappCommandInput!){
+    sendZkapp(input: {
+      zkappCommand: $zkappCommandInput
+    }) {
+      zkapp {
+        hash
+        id
+        zkappCommand {
+          memo
+        }
+      }
+    }
+  }
+  `
+}
 
 /**
  * return tx history
@@ -309,7 +326,6 @@ export function getChainIdBody() {
       failureReason
     }
   }
-  
   `
 }
 
@@ -328,5 +344,47 @@ export function getChainIdBody() {
     }
   }
   
+  `
+}
+
+export function getQATxStatusBody() {
+  return `
+  query txStatus($zkappTransaction:ID) {
+    transactionStatus(zkappTransaction: $zkappTransaction)
+  }
+  `
+}
+
+
+export function getZkAppTransactionListBody() {
+  return `
+  query zkApps($publicKey: String,$limit:Int) {
+    zkapps(limit: $limit, query: {
+      zkappCommand: {feePayer: 
+      {body: {publicKey: $publicKey}}}}, sortBy: DATETIME_DESC) {
+        hash
+    dateTime
+    failureReason {
+      failures
+    }
+    zkappCommand {
+      feePayer {
+        authorization
+        body {
+          nonce
+          publicKey
+          fee
+        }
+      }
+      memo
+      accountUpdates {
+        body {
+          publicKey
+          
+        }
+      }
+    }
+    }
+  }
   `
 }

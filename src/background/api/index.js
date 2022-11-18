@@ -3,7 +3,7 @@ import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../co
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getDeletionTotalBody, getPendingTxBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody } from './gqlparams';
+import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getDeletionTotalBody, getPartyBody, getPendingTxBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody, getZkAppTransactionListBody } from './gqlparams';
 
 /**
 * get balance
@@ -33,6 +33,12 @@ export async function getTxStatus(paymentId) {
   let result = await startFetchMyQuery(txBody, { paymentId })
   return result
 }
+export async function getQATxStatus(zkappTransaction) { 
+  let txBody = getQATxStatusBody()
+  let result = await startFetchMyQuery(txBody, { zkappTransaction })
+  return result
+}
+
 
 function _getGQLVariables(payload, signature, includeAmount = true) {
   let isRawSignature = !!signature.rawSignature;
@@ -77,6 +83,18 @@ export async function sendStakeTx(payload, signature) {
   return res
 }
 
+ 
+/**
+* send zk transaction 
+*/
+export async function sendParty(sendJson) {
+  let txBody = getPartyBody()
+  const variables = {
+    zkappCommandInput:JSON.parse(sendJson)
+  }
+  let res = await startFetchMyMutation('sendZkapp',txBody,variables)
+  return res
+}
 
 /**
 * get daemon status
@@ -305,4 +323,26 @@ export async function getGqlTxHistory(address,limit){
   }
   saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
   return validatorDetail;
+}
+
+/** request gql transaction */
+export async function getZkAppTxHistory(address,limit){
+  let netConfig = getCurrentNetConfig()
+  let gqlTxUrl = netConfig.gqlTxUrl
+  if (!gqlTxUrl) {
+    return []
+  }
+  let txBody = getZkAppTransactionListBody()
+  let result = await startFetchMyQuery(
+    txBody,
+    {
+      requestType: "extensionAccountInfo",
+      publicKey: address,
+      limit:limit||20
+    },
+    gqlTxUrl,
+  ).catch((error) => error)
+  let list = result.zkapps  || []
+  // saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
+  return list
 }

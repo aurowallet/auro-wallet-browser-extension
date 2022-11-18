@@ -1,13 +1,14 @@
 import { LOCK_TIME } from '../../config';
 import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
 import { getLanguage } from '../i18n';
-import { getTxStatus, sendStakeTx, sendTx } from './api';
-import { signMessagePayment, signPayment, stakePayment } from './lib';
+import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
+import { signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
 import { getCurrentNetConfig } from '../utils/utils';
 import i18n from "i18next"
+import { DAppActions } from '@aurowallet/mina-provider';
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -21,6 +22,8 @@ const STATUS = {
 
 
 const default_account_name = "Account 1"
+const FETCH_TYPE_QA = "Berkeley-QA"
+
 class APIService {
     constructor() {
         this.memStore = new ObservableStore(this.initLockedState())
@@ -656,6 +659,50 @@ class APIService {
         }
     }
 
+    sendQATransaction= async (params) => {
+        try {
+            const privateKey = await this.getCurrentPrivateKey()
+            let signedTx = await signTransaction(privateKey,params)
+            if (signedTx.error) {
+                return { error: signedTx.error }
+            }
+            switch (params.sendAction) {
+                case DAppActions.mina_sendStakeDelegation:
+                    let stakeRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error =>  error )
+                    let delegation = stakeRes.sendDelegation && stakeRes.sendDelegation.delegation || {}
+                    if (delegation.hash && delegation.id) {
+                        this.checkTxStatus(delegation.id,delegation.hash)
+                    }
+                    return { ...stakeRes }
+                case DAppActions.mina_sendPayment:
+                    let sendRes = await sendTx(signedTx.data, signedTx.signature).catch(error => error )
+                    let payment = sendRes.sendPayment && sendRes.sendPayment.payment || {}
+                    if (payment.hash && payment.id) {
+                        this.checkTxStatus(payment.id,payment.hash)
+                    }
+                    return { ...sendRes }
+                case DAppActions.mina_sendTransaction:
+                    let sendPartyRes = await sendParty(signedTx.data.zkappCommand, signedTx.signature).catch(error =>  error )
+                    if(!sendPartyRes.error){
+                        let partyRes = sendPartyRes?.sendZkapp?.zkapp || {}
+                        if ( partyRes.id && partyRes.hash ) {
+                            this.checkTxStatus(partyRes.id,partyRes.hash,FETCH_TYPE_QA)
+                        }
+                        return { ...partyRes }
+                    }else{
+                        return sendPartyRes
+                    }
+                case DAppActions.mina_signMessage:
+                    return signedTx
+                default:
+                    return {error:"not support"}
+            }
+        } catch (err) {
+            return { error: err }
+        }
+
+    }
+
     notification = (hash) => {
         let netConfig =  getCurrentNetConfig()
         let myNotificationID
@@ -678,11 +725,22 @@ class APIService {
         });
         return
     }
-    checkTxStatus = (paymentId, hash) => {
-        this.fetchTransactionStatus(paymentId, hash)
+    checkTxStatus = (paymentId, hash,type) => {
+        if(type === FETCH_TYPE_QA){
+            this.fetchQAnetTransactionStatus(paymentId, hash)
+        }else{
+            this.fetchTransactionStatus(paymentId, hash)
+        }
+        
+    }
+    fetchQAnetTransactionStatus = (paymentId, hash) => {
+        this.baseTransactionStatus(getQATxStatus,paymentId, hash)
     }
     fetchTransactionStatus = (paymentId, hash) => {
-        getTxStatus(paymentId).then((data) => {
+        this.baseTransactionStatus(getTxStatus,paymentId, hash)
+    }
+    baseTransactionStatus= (method,paymentId, hash) => {
+        method(paymentId).then((data) => {
             if (data && data.transactionStatus && (
                 (data.transactionStatus === STATUS.TX_STATUS_INCLUDED
                     || data.transactionStatus === STATUS.TX_STATUS_UNKNOWN)
@@ -699,12 +757,12 @@ class APIService {
                 }
             } else {
                 this.timer = setTimeout(() => {
-                    this.fetchTransactionStatus(paymentId, hash);
+                    this.baseTransactionStatus(method,paymentId, hash);
                 }, 5000);
             }
         }).catch((error) => {
             this.timer = setTimeout(() => {
-                this.fetchTransactionStatus(paymentId, hash);
+                this.baseTransactionStatus(method,paymentId, hash);
             }, 5000);
         })
     }
