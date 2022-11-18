@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+
+## [2.1.2]
+- Upgrade mina-signer to v1.6.0
+- Add support for Berkeley network
+
 ## [2.1.1]
 - Update transaction history provider
 - Update delegation detail provider

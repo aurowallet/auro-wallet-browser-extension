@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { ERROR_TYPE } = require('../../constant/errType');
-const timeout = 20000;
+const timeout = 1 * 60 * 1000;
 axios.defaults.retry = 3;
 axios.defaults.retryDelay = 1000;
 
