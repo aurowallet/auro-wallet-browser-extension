@@ -7,7 +7,7 @@ import { Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { cointypes } from '../../../../config';
-import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getTransactionList, getZkAppTxHistory } from "../../../background/api";
+import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getTransactionList, getZkAppPendingTx, getZkAppTxHistory } from "../../../background/api";
 import { saveLocal } from '../../../background/localStorage';
 import { NET_WORK_CONFIG } from '../../../constant/storageKey';
 import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
@@ -426,12 +426,14 @@ const WalletDetail = () => {
       let pendingTxList = getPendingTxList(address)
       let gqlTxList = getGqlTxHistory(address)
       let zkAppTxList = getZkAppTxHistory(address)
-      await Promise.all([gqlTxList,pendingTxList,zkAppTxList]).then((data) => {
+      let getZkAppPending = getZkAppPendingTx(address)
+      await Promise.all([gqlTxList,pendingTxList,zkAppTxList,getZkAppPending]).then((data) => {
         let newList = data[0]
         let txPendingData = data[1]
         let zkApp = data[2]
         let txPendingList = txPendingData.txList
-        dispatch(updateAccountTx(newList,txPendingList,zkApp))
+        let zkPendingList = data[3]
+        dispatch(updateAccountTx(newList,txPendingList,zkApp,zkPendingList))
       }).catch((err) => {
       }).finally(() => {
         setHistoryRefreshing(false)

@@ -243,5 +243,5 @@
   "FAILED": "失败",
   "PENDING": "等待",
   "serviceSupport":"Mina Explorer 提供 GraphQL服务",
-  "exportZkAppCommand":"导出 zkApp 交易体"
+  "exportZkAppCommand":"导出 zkApp 交易内容"
 }

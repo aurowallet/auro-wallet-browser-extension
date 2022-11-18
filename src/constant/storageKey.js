@@ -90,5 +90,17 @@ export const LOCAL_CACHE_KEYS = {
     /**
      * Validator list
      */
-    "STAKING_LIST": "STAKING_LIST"
+    "STAKING_LIST": "STAKING_LIST",
+
+
+    /**
+     * zkapp transaction list 
+     */
+    "ZKAPP_TX_LIST": "ZKAPP_TX_LIST",
+
+    /**
+     * zkapp transaction list 
+     */
+    "ZKAPP_PENDING_TX_LIST": "ZKAPP_PENDING_TX_LIST",
+
 }

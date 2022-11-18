@@ -27,6 +27,8 @@ const HomePage = () => {
     let localHistory = getLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY)
     let txList = []
     let pendingTxList = []
+    let zkList = []
+    let zkPengingList = []
     if (localHistory) {
       let localHistoryJson = safeJsonParse(localHistory)
       txList = localHistoryJson ? localHistoryJson[address] : []
@@ -36,9 +38,26 @@ const HomePage = () => {
       let localPendingJson = safeJsonParse(localPendingHistory)
       pendingTxList = localPendingJson ? localPendingJson[address] : []
     }
+
+    let localZkAppHistory = getLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST)
+    if (localZkAppHistory) {
+      let localZkAppHistoryJson = safeJsonParse(localZkAppHistory)
+      zkList = localZkAppHistoryJson ? localZkAppHistoryJson[address] : []
+    }
+    let localZkAppPendingHistory = getLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST)
+    if (localZkAppPendingHistory) {
+      let localZkAppPendingHistoryJson = safeJsonParse(localZkAppPendingHistory)
+      zkPengingList = localZkAppPendingHistoryJson ? localZkAppPendingHistoryJson[address] : []
+    }
+    
+
     let updateTxList = txList && Array.isArray(txList) ? txList : []
     let updatePendingTxList = pendingTxList && Array.isArray(pendingTxList) ? pendingTxList : []
-    dispatch(updateAccountTx(updateTxList, updatePendingTxList))
+    let updateZkList = zkList && Array.isArray(zkList) ? zkList : []
+    let updateZkPendingList = zkPengingList && Array.isArray(zkPengingList) ? zkPengingList : []
+    
+
+    dispatch(updateAccountTx(updateTxList, updatePendingTxList,updateZkList,updateZkPendingList))
   }, [])
 
   const updateLocalAccount = useCallback((address) => {

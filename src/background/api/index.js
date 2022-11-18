@@ -3,7 +3,7 @@ import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../co
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getDeletionTotalBody, getPartyBody, getPendingTxBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody, getZkAppTransactionListBody } from './gqlparams';
+import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getDeletionTotalBody, getPartyBody, getPendingTxBody, getPendingZkAppTxBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody, getZkAppTransactionListBody } from './gqlparams';
 
 /**
 * get balance
@@ -343,6 +343,31 @@ export async function getZkAppTxHistory(address,limit){
     gqlTxUrl,
   ).catch((error) => error)
   let list = result.zkapps  || []
-  // saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
+  saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: list }))
+  return list
+}
+
+
+export async function getZkAppPendingTx(address,limit){
+  let netConfig = getCurrentNetConfig()
+  let gqlTxUrl = netConfig.url
+  if (!gqlTxUrl) {
+    return []
+  }
+  if(gqlTxUrl.indexOf("graphql")!==-1){
+    gqlTxUrl.substring(gqlTxUrl.indexOf("graphql"))
+  }
+  let txBody = getPendingZkAppTxBody()
+  let result = await startFetchMyQuery(
+    txBody,
+    {
+      requestType: "extensionAccountInfo",
+      publicKey: address,
+      limit:limit||20
+    },
+    gqlTxUrl,
+  ).catch((error) => error)
+  let list = result.pooledZkappCommands  || []
+  saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: list }))
   return list
 }

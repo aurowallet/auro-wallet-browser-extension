@@ -189,7 +189,7 @@ export function getTxSend(isRawSignature) {
 
 export function getPendingTxBody() {
   return `
-  query pengdingTx($publicKey: PublicKey) {
+  query pendingTx($publicKey: PublicKey) {
     pooledUserCommands(publicKey: $publicKey) {
       id
       nonce
@@ -386,5 +386,36 @@ export function getZkAppTransactionListBody() {
     }
     }
   }
+  `
+}
+
+export function getPendingZkAppTxBody() {
+  return `
+  query pendingZkTx($publicKey: PublicKey){
+    pooledZkappCommands(publicKey: $publicKey) {
+		hash     
+    failureReason{
+      index
+      failures  
+    }
+    zkappCommand{
+      feePayer{
+        body{
+          publicKey
+          fee
+          validUntil
+          nonce
+        }
+        authorization
+      }
+      accountUpdates{
+        body{
+          publicKey
+        }
+      }
+      memo
+    }
+  }
+}
   `
 }
