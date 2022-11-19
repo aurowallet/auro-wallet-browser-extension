@@ -106,6 +106,7 @@ function pendingTx(txList) {
             "nonce": detail.nonce,
             "memo": detail.memo,
             "status": "PENDING",
+            timestamp : new Date(detail.time).getTime()
         })
     }
     return newList
@@ -137,11 +138,17 @@ function zkAppFormat(zkAppList,isPending=false){
             "status":  status,
             type:"zkApp",
             body:zkApp,
+            timestamp : isPending ? "": new Date(zkApp.dateTime).getTime()
         })
     }
     return newList
 }
-
+function commonHistoryFormat(list){
+    return  list.map((item)=>{
+        item.timestamp = new Date(item.dateTime).getTime()
+        return item
+    })
+}
 const accountInfo = (state = initState, action) => {
     switch (action.type) {
         case CHANGE_ACCOUNT_TX_HISTORY:
@@ -154,9 +161,20 @@ const accountInfo = (state = initState, action) => {
             txPendingList = pendingTx(txPendingList)
             zkAppList = zkAppFormat(zkAppList)
             zkPendingList = zkAppFormat(zkPendingList,true)
+            
+            txList = commonHistoryFormat(txList)
 
-            let newList = [...txPendingList, ...txList,...zkAppList,...zkPendingList]
-            newList.sort((a,b)=>b.nonce-a.nonce)
+            const commonList = [...txList,...zkAppList]
+            commonList.sort((a,b)=>b.timestamp-a.timestamp)
+
+            const commonPendingList = [...txPendingList,...zkPendingList]
+            commonPendingList.sort((a,b)=>b.nonce-a.nonce)
+            let newList = [...commonPendingList,...commonList]
+            if (newList.length > 0) {
+                newList.push({
+                    showExplorer: true
+                })
+            }
             return {
                 ...state,
                 txList: newList
@@ -179,7 +197,7 @@ const accountInfo = (state = initState, action) => {
             }
         case UPDATE_NET_ACCOUNT:
             let netAccount = action.account
-            let balance = amountDecimals(netAccount.balance.total, cointypes.decimals)
+            let balance = amountDecimals(netAccount.balance?.total, cointypes.decimals)
             let nonce = netAccount.nonce
             let inferredNonce = netAccount.inferredNonce
 

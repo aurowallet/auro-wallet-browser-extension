@@ -7,7 +7,7 @@ import { Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { cointypes } from '../../../../config';
-import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getTransactionList, getZkAppPendingTx, getZkAppTxHistory } from "../../../background/api";
+import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getZkAppPendingTx, getZkAppTxHistory } from "../../../background/api";
 import { saveLocal } from '../../../background/localStorage';
 import { NET_WORK_CONFIG } from '../../../constant/storageKey';
 import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
@@ -317,7 +317,7 @@ const WalletInfo = () => {
       }
     })
     fetchPrice()
-  }, [i18n, currentAccount, fetchPrice])
+  }, [i18n, currentAccount])
 
   useEffect(() => {
     fetchAccountData()
@@ -325,7 +325,7 @@ const WalletInfo = () => {
  
   useEffect(()=>{
     fetchPrice()
-  },[currencyConfig.currentCurrency])
+  },[currencyConfig.currentCurrency,netConfig.currentConfig.netType])
   return (
     <>
       <div className={styles.walletInfoContainer}>
@@ -450,8 +450,7 @@ const WalletDetail = () => {
     if (showHistoryStatus) {
       requestHistory(true)
     }
-  }, [showHistoryStatus, requestHistory])
-
+  }, [showHistoryStatus])
 
   useEffect(() => {
     setHistoryList(accountInfo.txList)
@@ -474,7 +473,7 @@ const WalletDetail = () => {
     } else {
       setShowHistoryStatus(true)
     }
-  }, [netConfig.currentConfig.netType, requestHistory])
+  }, [netConfig.currentConfig.netType])
 
 
   useEffect(() => {
@@ -637,10 +636,10 @@ const TxItem = ({ txData, currentAccount }) => {
     let statusIcon, showAddress, timeInfo, amount, statusText, statusStyle = ''
 
 
-    if (txData.kind.toLowerCase() === "payment") {
+    if (txData.kind?.toLowerCase() === "payment") {
       isReceive = txData.to.toLowerCase() === currentAccount.address.toLowerCase()
       statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg"
-    } else if(txData.kind.toLowerCase() === "zkapp"){
+    } else if(txData.kind?.toLowerCase() === "zkapp"){
       isReceive = false
       statusIcon = "/img/tx_history_zkapp.svg"
     }else {
@@ -657,7 +656,7 @@ const TxItem = ({ txData, currentAccount }) => {
     amount = getDisplayAmount(amount, 2)
     amount = isReceive ? "+" + amount : "-" + amount
 
-    if(txData.kind.toLowerCase() === "zkapp"){
+    if(txData.kind?.toLowerCase() === "zkapp"){
       amount = "0"
     }
 

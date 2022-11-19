@@ -2,7 +2,6 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { cointypes } from "../../../../config";
-import { getTransactionList } from "../../../background/api";
 import { SEC_DELETE_ACCOUNT } from "../../../constant/secTypes";
 import {
   DAPP_DELETE_ACCOUNT_CONNECT_HIS,
@@ -96,56 +95,6 @@ const AccountInfo = ({}) => {
       params: { address: account.address },
     });
   }, []);
-
-  const exportCsvTransactions = useCallback(async () => {
-    Loading.show();
-    const { txList } = await getTransactionList(account.address, null);
-    Loading.hide();
-    const csvList = txList.map((tx) => {
-      return {
-        date: tx.time.replace(/T/, " ").replace(/Z/, " UTC"),
-        amount: amountDecimals(tx.amount, cointypes.decimals),
-        sender: tx.sender,
-        receiver: tx.receiver,
-        memo: tx.memo ? tx.memo : "",
-        fee: amountDecimals(tx.fee, cointypes.decimals),
-        nonce: tx.nonce,
-        type: tx.type,
-        hash: tx.hash,
-        status: tx.status,
-      };
-    });
-    JSonToCSV.setDataConver({
-      data: csvList,
-      fileName: account.address,
-      columns: {
-        title: [
-          "Date",
-          "Amount",
-          "Sender",
-          "Receiver",
-          "Memo",
-          "Fee",
-          "Nonce",
-          "Type",
-          "TxHash",
-          "Status",
-        ],
-        key: [
-          "date",
-          "amount",
-          "sender",
-          "receiver",
-          "memo",
-          "fee",
-          "nonce",
-          "type",
-          "hash",
-          "status",
-        ],
-      },
-    });
-  }, [account]);
 
   const deleteAccount = useCallback(() => {
     if (account.type === ACCOUNT_TYPE.WALLET_WATCH) {

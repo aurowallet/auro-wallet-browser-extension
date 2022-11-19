@@ -1,5 +1,6 @@
 import { BASE_INFO_URL, TX_LIST_LENGTH } from "../../../config";
 import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../constant/storageKey";
+import { NET_CONFIG_TYPE } from "../../constant/walletType";
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
@@ -17,7 +18,9 @@ export async function getBalance(address) {
       publicKey: address
     }
   ).catch((error) => error)
-  let account = result.account || {}
+  let account = result.account || {
+    publicKey:address
+  }
   saveLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE, JSON.stringify({ [address]: account }))
   if(result.error){
     account.error = result.error
@@ -171,26 +174,6 @@ export async function getBaseInfo() {
   return data
 }
 
-
-
-/**
-* get transaction history
-* @param {*} address
-* @param {*} limit
-* @returns
-*/
-export async function getTransactionList(address, limit = TX_LIST_LENGTH) {
-  let netConfig = getCurrentNetConfig()
-  let baseUrl = netConfig.txUrl
-  let txUrl = baseUrl + "/transactions?account=" + address
-  if (limit) {
-    txUrl += "&limit=" + limit
-  }
-  let txList = await commonFetch(txUrl).catch(() => [])
-  saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: txList }))
-  return { txList, address }
-}
-
 /**
 * get pending transation in gql
 * @param {*} address
@@ -257,6 +240,9 @@ export async function getNodeChainId(gqlUrl) {
 */
 export async function getCurrencyPrice(currency) {
   let netConfig = getCurrentNetConfig()
+  if(!netConfig.txUrl){
+    return 0
+  }
   let priceUrl = netConfig.txUrl + "/prices?currency=" + currency
   let data = await commonFetch(priceUrl).catch(() => { })
   let price = data?.data || 0
@@ -287,7 +273,7 @@ export async function getGqlTxHistory(address,limit){
     {
       requestType: "extensionAccountInfo",
       publicKey: address,
-      limit:limit||20
+      limit:limit||10
     },
     gqlTxUrl,
   ).catch((error) => error)
@@ -329,7 +315,9 @@ export async function getGqlTxHistory(address,limit){
 export async function getZkAppTxHistory(address,limit){
   let netConfig = getCurrentNetConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
-  if (!gqlTxUrl) {
+
+  if (!gqlTxUrl || netConfig.netType !== NET_CONFIG_TYPE.Berkeley) {
+    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
   let txBody = getZkAppTransactionListBody()
@@ -338,7 +326,7 @@ export async function getZkAppTxHistory(address,limit){
     {
       requestType: "extensionAccountInfo",
       publicKey: address,
-      limit:limit||20
+      limit:limit||10
     },
     gqlTxUrl,
   ).catch((error) => error)
@@ -351,7 +339,8 @@ export async function getZkAppTxHistory(address,limit){
 export async function getZkAppPendingTx(address,limit){
   let netConfig = getCurrentNetConfig()
   let gqlTxUrl = netConfig.url
-  if (!gqlTxUrl) {
+  if (!gqlTxUrl || netConfig.netType !== NET_CONFIG_TYPE.Berkeley) {
+    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
   if(gqlTxUrl.indexOf("graphql")!==-1){

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { ERROR_TYPE } = require('../../constant/errType');
+const { default: store } = require('../../store/store');
 const timeout = 1 * 60 * 1000;
 axios.defaults.retry = 3;
 axios.defaults.retryDelay = 1000;
@@ -109,9 +110,36 @@ axios.interceptors.request.use(function (config) {
         let timeToken = setTimeout(() => tokenItem.cancel({ message: 'Timeout', config: config }), timeout);
         config.clearCancelToken = () => clearTimeout(timeToken);
     });
+    let netType =  store.getState().network?.currentConfig?.netType||""
+    if(netType){
+        config.netType = netType
+    }
     return config;
 });
+
+const stableOperationNameList = ["sendTx","stakeTx","sendZkapp","txStatus"]
+
 axios.interceptors.response.use(function (response) {
     removeQueue(response.config);
+    let netType =  store.getState().network?.currentConfig?.netType||""
+    if(netType !== response.config.netType){
+        try {
+            if(response.config.data){
+                let gqlData = JSON.parse(response.config.data)
+                let operationName = gqlData.operationName
+                if(operationName && stableOperationNameList.indexOf(operationName)=== -1){
+                    if(Array.isArray(response.data.data)){
+                        response.data = []
+                        return response
+                    }else{
+                        response.data ={}
+                        return response
+                    }
+                }
+            }
+        } catch (error) {
+            return response;
+        }
+    }
     return response;
 }, axiosRetryInterceptor);

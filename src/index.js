@@ -18,6 +18,7 @@ import { updateDAppOpenWindow } from "./reducers/cache";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
 import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
+import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
 import { sendNetworkChangeMsg } from "./utils/utils";
 
@@ -217,8 +218,7 @@ async function getLocalStatus(store) {
 
 export const applicationEntry = {
   async run() {
-    this.createReduxStore();
-    await this.appInit(this.reduxStore)
+    await this.appInit(store)
     this.render();
   },
 
@@ -239,17 +239,11 @@ export const applicationEntry = {
       store.dispatch(updateEntryWitchRoute(nextRoute))
     }
   },
-  createReduxStore() {
-    this.reduxStore = configureStore({
-      reducer: rootReducer,
-      middleware: [...getDefaultMiddleware(),
-      ],
-    });
-  },
+ 
   render() {
     ReactDOM.render(
       <React.StrictMode>
-        <Provider store={this.reduxStore}>
+        <Provider store={store}>
           <App />
         </Provider>
       </React.StrictMode>,
