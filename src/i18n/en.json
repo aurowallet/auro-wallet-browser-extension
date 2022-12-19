@@ -41,7 +41,7 @@
     "ledgerSuccessTip": "Congrats! You have successfully imported the Ledger wallet.",
     "restoreWallet": "Restore Wallet",
     "inputSeed": "Please enter the mnemonic phrase in order, with each word separated by a space.",
-    "inputVaildSeed": "Please enter your valid mnemonic phrase",
+    "inputVaildSeed": "Invalid mnemonic phrase",
     "confirm": "Confirm",
     "feeTooHigh": "Fees are much higher than average",
     "postFailed": "Transaction broadcast failed",

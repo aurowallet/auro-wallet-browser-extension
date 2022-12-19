@@ -41,7 +41,7 @@
     "ledgerSuccessTip": "恭喜！已经成功导入 Ledger 钱包。",
     "restoreWallet": "恢复钱包",
     "inputSeed": "请按顺序输入12位助记词，每位单词使用空格隔开。",
-    "inputVaildSeed": "请输入有效的助记词",
+    "inputVaildSeed": "无效的助记词",
     "confirm": "确定",
     "feeTooHigh": "交易费用远高于平均值",
     "postFailed": "广播失败",
