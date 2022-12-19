@@ -160,7 +160,7 @@
     "addNode": "添加网络",
     "deleteNode": "删除网络?",
     "editNode": "编辑网络",
-    "incorrectNodeAddress": "节点地址不正确",
+    "incorrectNodeAddress": "无效的节点地址",
     "nodeAddressExists": "节点地址已存在",
     "addNetworkTip": "只添加你信任的节点，使用未知节点可能存在风险。",
     "nodeAddress": "节点地址",
