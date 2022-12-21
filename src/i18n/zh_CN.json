@@ -46,7 +46,7 @@
     "feeTooHigh": "交易费用远高于平均值",
     "postFailed": "广播失败",
     "sendAddressError": "请输入有效地址",
-    "amountError": "您输入的金额格式有误，请核对后重新输入",
+    "amountError": "请输入有效的金额",
     "inputFeeError": "请输入有效的交易费",
     "balanceNotEnough": "余额不足",
     "inputNonceError": "请输入有效的 Nonce",
