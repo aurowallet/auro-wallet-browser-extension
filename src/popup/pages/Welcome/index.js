@@ -117,10 +117,10 @@ const Welcome = () => {
       }}
       componentContent={
         <div>
-          <p className={styles.confirmContent_1}>{i18n.t('termsAndPrivacy_0')}</p>
+          <p className={styles.confirmContent_1}>{i18n.t('termsAndPrivacy_line1')}</p>
           <p className={styles.confirmContent_2}>
             <Trans
-              i18nKey={i18n.t('termsAndPrivacy_1')}
+              i18nKey={i18n.t('termsAndPrivacy_line2')}
               components={{
                 conditions: <span className={styles.tipsSpical} onClick={() => onClickGuide(type_conditions)} />,
                 policy: <span className={styles.tipsSpical} onClick={() => onClickGuide(type_policy)} />
