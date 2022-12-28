@@ -9,6 +9,7 @@ const AdvanceMode = ({
     onClickAdvance = () => { },
 
     feeValue = "",
+    feePlaceholder = "",
     onFeeInput = () => { },
     feeErrorTip = "",
 
@@ -32,7 +33,8 @@ const AdvanceMode = ({
                     label={i18n.t('transactionFee')}
                     onChange={onFeeInput}
                     value={feeValue}
-                    inputType={'text'}
+                    inputType={'number'}
+                    placeholder={feePlaceholder}
                     showBottomTip={true}
                     bottomTip={feeErrorTip}
                     bottomTipClass={styles.waringTip}
@@ -41,7 +43,7 @@ const AdvanceMode = ({
                     label={"Nonce"}
                     onChange={onNonceInput}
                     value={nonceValue}
-                    inputType={'text'}
+                    inputType={'number'}
                     placeholder={nonceHolder}
                 />
             </div>}

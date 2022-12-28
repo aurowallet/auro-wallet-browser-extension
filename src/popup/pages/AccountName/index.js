@@ -166,7 +166,7 @@ const AccountName = ({ }) => {
       <form onSubmit={onSubmit} className={styles.container}>
         <div >
           <Input
-            label={i18n.t('accountName')}
+            label={i18n.t('inputAccountName')}
             onChange={onNameInput}
             value={accountName}
             inputType={'text'}

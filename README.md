@@ -20,6 +20,7 @@ Auro Wallet provide one-stop management for MINA assets, convenient staking, and
 
 - `react 17.x.x` 
 - `npm 6.x.x` 
+- `yarn 1.22.10`
 - `node v10.18.x` 
 
 ### Build
@@ -27,12 +28,12 @@ Auro Wallet extension repo uses git-secret to encrypt the endpoints and the api 
 
 Dev
 ```sh
-npm run dev
+yarn dev
 ```
 
 Production
 ```sh
-npm run build
+yarn build
 ``` 
 
 Extension's build output is placed in `/dist`, and you can check out [this page](https://developer.chrome.com/extensions/getstarted) for installing the developing extension.  
@@ -42,14 +43,14 @@ Extension's build output is placed in `/dist`, and you can check out [this page]
 ### UI Test
 
 ```sh
-npm run storybook
+yarn storybook
 ``` 
 ### LIB Test
 
 run bottom sh and will open url in the chrome http://localhost:6006/
 
 ```sh
-npm run test
+yarn test
 ``` 
 
 ## LICENSE

@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Un-Released]
 
 
+## [2.1.3]
+- Add transaction memo parse
+- Update some i18n 
+- Fix some ui (contains windows ui)
+
 ## [2.1.2]
 - Upgrade mina-signer to v1.6.0
 - Add support for Berkeley network
@@ -16,7 +21,7 @@ All notable changes to this project will be documented in this file.
 ## [2.1.0]
 - New UI
 - New features:
-    -  Add popup window
+    - Add popup window
     - Add Auto-lock
     - Add Connect DApp List
 

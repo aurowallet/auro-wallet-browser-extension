@@ -10,6 +10,7 @@ import { languageOption } from "../../../i18n";
 import { updateAddressBookFrom } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { fitPopupWindow, openPopupWindow } from "../../../utils/popup";
+import { showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import styles from './index.module.scss';
 
@@ -61,7 +62,7 @@ const Setting = ({ }) => {
             return autoLockTime
         }
         const getNetwork = () => {
-            return currentConfig.name
+            return showNameSlice(currentConfig.name)
         }
         const getLanguage = () => {
             let currentLangeuage = languageOption.filter((language) => {

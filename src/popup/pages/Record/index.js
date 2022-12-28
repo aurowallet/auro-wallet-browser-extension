@@ -8,7 +8,7 @@ import { cointypes } from '../../../../config';
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from '../../../constant/types';
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { openTab } from '../../../utils/commonMsg';
-import { copyText, getAmountDisplay, getShowTime } from "../../../utils/utils";
+import { copyText, decodeMemo, getAmountDisplay, getShowTime, getTimeGMT } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
@@ -76,10 +76,11 @@ const Record = ({ }) => {
         content: sendAddress
       }
     ]
-    if (memo) {
+    let showMemo = decodeMemo(memo)
+    if (showMemo) {
       contentList.push({
         title: 'Memo',
-        content: memo
+        content: showMemo
       })
     }
     contentList.push({
@@ -90,7 +91,7 @@ const Record = ({ }) => {
     if (txTime) {
       contentList.push({
         title: i18n.t('time'),
-        content: txTime
+        content: txTime + " "+getTimeGMT(txDetail.dateTime)
       })
     }
     contentList.push({

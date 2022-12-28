@@ -123,7 +123,7 @@
   "importSameAccount_1": "The address of the account to be created is:",
   "importSameAccount_2": "An existing imported account [<b>{{accountName}}</b>] is a duplicate of this address. Auro Wallet does not support the creation of duplicate account addresses. Please go to the <click>Account Management</click> to delete the imported account.",
   "importPrivateKey": "Import Private Key",
-  "pleaseInputPriKey": "Please enter the mnemonic phrase in order, with each word separated by a space.",
+  "pleaseInputPriKey": "Please enter Private Key",
   "importAccount_2": "The imported accounts will not be associated with your originally created Auro wallet.",
   "importAccount_3": "The imported accounts will be marked with [Imported] in the account list.",
   "privateError": "Private Key Incorrect",
@@ -195,7 +195,7 @@
   "staking": "Staking",
   "history": "History",
   "goToExplorer": "Check more transaction history",
-  "unknownInfo": "Unknown network",
+  "unknownInfo": "Unknown network, unable to provide history",
   "loading": "Loading",
   "reminder": "Reminder",
   "notActiveAccountTip": "The Mina network charges a one-time account creation fee of 1 MINA for spam prevention. It will be automatically deducted from the first transaction received, it is not charged by the wallet.",
@@ -204,7 +204,8 @@
   "delegationInfo": "Delegation Info",
   "stakingGuide": "Staking Guide",
   "emptyDelegateTitle": "You have not yet delegated",
-  "emptyDelegateDesc": "Delegating MINA to a block producer node can help you to obtain rewards for producing blocks. The Block Producer will distribute rewards according to the amount of your delegated proportion, and your percentage of rewards will also depend on the commission rate set by the Block Producer. Here is some information regarding the effective time of delegating and rewards distributing rules: <click>Staking Guide</click>",
+  "emptyDelegateDesc_1": "Delegating MINA to a block producer node can help you to obtain rewards for producing blocks.",
+  "emptyDelegateDesc_2": "The Block Producer will distribute rewards according to the amount of your delegated proportion, and your percentage of rewards will also depend on the commission rate set by the Block Producer. Here is some information regarding the effective time of delegating and rewards distributing rules: <click>Staking Guide</click>",
   "goStake": "Go to staking",
   "blockProducerName": "Block Producer Name",
   "blockProducerAddress": "Block Producer Address",
@@ -243,5 +244,6 @@
   "FAILED": "FAILED",
   "PENDING": "PENDING",
   "serviceSupport": "GraphQL API by Mina Explorer",
-  "exportZkAppCommand":"Export zkApp command"
+  "exportZkAppCommand":"Export zkApp command",
+  "inputAccountName":"Please enter your account name"
 }

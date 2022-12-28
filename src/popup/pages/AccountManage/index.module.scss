@@ -14,7 +14,8 @@ $bottomBtnGroupHeight: 80px;
     padding: 0px 20px;
 }
 .rowCommomContainer {
-    background-color: #ffffff;
+    background: #f9fafc;
+    border: 0.5px solid rgba(0, 0, 0, 0.05);
     border-radius: 12px;
 
     padding: 10px 6px 6px 16px;
@@ -96,7 +97,7 @@ $bottomBtnGroupHeight: 80px;
 .rowCanSelect {
     cursor: pointer;
     &:hover {
-        background: rgba(0, 0, 0, 0.05);
+        border: 1px solid #594AF1;
     }
 }
 

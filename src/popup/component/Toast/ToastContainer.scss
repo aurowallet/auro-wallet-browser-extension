@@ -15,9 +15,11 @@
 
 .toast-wrap {
     position: fixed;
-    left: 50%;
     top: 40%;
-    transform: translateX(-50%);
+    margin: 0 auto;
+    left: 0;
+    right: 0;
     max-width: 80%;
     z-index: 300;
+    width: fit-content;
 }

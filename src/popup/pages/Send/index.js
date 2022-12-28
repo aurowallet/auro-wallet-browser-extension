@@ -56,6 +56,7 @@ const SendPage = ({ }) => {
   const [amount, setAmount] = useState('')
   const [memo, setMemo] = useState('')
   const [feeAmount, setFeeAmount] = useState(0.1)
+  const [inputedFee, setInputedFee] = useState("")
   const [inputNonce, setInputNonce] = useState("")
   const [feeErrorTip, setFeeErrorTip] = useState("")
 
@@ -122,7 +123,7 @@ const SendPage = ({ }) => {
 
   const onFeeInput = useCallback((e) => {
     setFeeAmount(e.target.value)
-
+    setInputedFee(e.target.value)
     if (BigNumber(e.target.value).gt(10)) {
       setFeeErrorTip(i18n.t('feeTooHigh'))
     } else {
@@ -354,7 +355,8 @@ const SendPage = ({ }) => {
         <AdvanceMode
           onClickAdvance={onClickAdvance}
           isOpenAdvance={isOpenAdvance}
-          feeValue={feeAmount}
+          feeValue={inputedFee}
+          feePlaceholder={feeAmount}
           onFeeInput={onFeeInput}
           feeErrorTip={feeErrorTip}
 

@@ -79,6 +79,7 @@ const Reset = ({ }) => {
             if (res.code === 0) {
                 setTimeout(() => {
                     history.goBack()
+                    Toast.info(i18n.t('passwordChangedSuccessful')) 
                 }, 500);
             } else {
                 setBtnLoading(false)

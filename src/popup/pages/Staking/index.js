@@ -159,8 +159,9 @@ const EmptyView = ({
   return (<div className={styles.emptyContainer}>
     <p className={styles.emptyTitle}>{i18n.t('emptyDelegateTitle')}</p>
     <div className={styles.emptyContent}>
+      <p className={styles.emptyTip}>{i18n.t("emptyDelegateDesc_1")}</p>
       <Trans
-        i18nKey={"emptyDelegateDesc"}
+        i18nKey={"emptyDelegateDesc_2"}
         components={{ click: <span className={styles.emptyGuide} onClick={onClickGuide} /> }}
       />
     </div>
@@ -199,7 +200,7 @@ const DelegationInfo = ({
     let showNodeAddress = addressSlice(delegatePublicKey)
     let showtotalStake
     if(isNumber(validatorDetail.totalDelegated)){
-      showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0) + " " + cointypes.symbol
+      showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0,0) + " " + cointypes.symbol
     }
     let showDelegations = validatorDetail.countDelegates
     if(isNumber(validatorDetail.countDelegates)){

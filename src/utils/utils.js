@@ -6,6 +6,7 @@ import { NET_WORK_CONFIG } from "../constant/storageKey";
 import { DAPP_CHANGE_NETWORK } from "../constant/types";
 import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } from "../constant/walletType";
 import { sendMsg } from "./commonMsg";
+import bs58check from "bs58check";
 /**
  * address slice
  * @param {*} address
@@ -65,10 +66,10 @@ export function getDisplayAmount(number, fixed = 4) {
 export function getAmountDisplay(amount, decimal = 0, fixed = 4) {
     return getDisplayAmount(amountDecimals(amount, decimal), fixed)
 }
-export function getAmountForUI(rawAmount, decimal = cointypes.decimals) {
+export function getAmountForUI(rawAmount, decimal = cointypes.decimals,fixed = 2) {
     return new BigNumber(rawAmount)
         .dividedBy(new BigNumber(10).pow(decimal))
-        .toFormat(2,
+        .toFormat(fixed,
             BigNumber.ROUND_DOWN,
             {
                 groupSeparator: ',',
@@ -248,7 +249,7 @@ export function parseStakingList(stakingListFromServer) {
         return {
             nodeAddress: node.public_key,
             nodeName: node.identity_name,
-            totalStake: getAmountForUI(node.stake),
+            totalStake: getAmountForUI(node.stake,cointypes.decimals,0), 
             delegations: node.delegations,
         };
     })
@@ -337,5 +338,26 @@ export function exportFile(data, fileName) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+}
+ 
+export function decodeMemo(encode) {
+    try {
+        const encoded = bs58check.decode(encode)
+        const res = encoded.slice(3, 3 + encoded[2]).toString('utf-8')
+        return res
+    } catch (error) {
+        return ""
+    }
+}
+
+export function getTimeGMT(time) {
+    try {
+        let date = new Date(time).toString();
+        let gmtIndex = date.indexOf("GMT")
+        let str = date.slice(gmtIndex,gmtIndex+8)
+        return str
+    } catch (error) {
+        return ""
     }
 }
