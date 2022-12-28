@@ -1,6 +1,6 @@
 {
   "createWallet": "Create Wallet",
-  "importAccount": "Import Account",
+  "restoreWallet": "Restore Wallet",
   "ledgerUserTip": "If you would like to import a private key/keystore or connect Ledger, you will first need to [Create Wallet] or [Restore Wallet].",
   "termsAndPrivacy": "Terms and Privacy Policy",
   "refuse": "Refuse",
@@ -39,7 +39,6 @@
   "backup_success": "Congrats! You have successfully created a wallet!",
   "backup_success_restore": "Congrats! You have successfully restored a wallet!",
   "ledgerSuccessTip": "Congrats! You have successfully imported the Ledger wallet.",
-  "restoreWallet": "Restore Wallet",
   "inputSeed": "Please enter the mnemonic phrase in order, with each word separated by a space.",
   "inputVaildSeed": "Invalid mnemonic phrase",
   "confirm": "Confirm",
@@ -91,6 +90,7 @@
   "lock": "Lock",
   "noSupported": "noSupported",
   "create": "Create",
+  "importAccount": "Import Account",
   "import": "Import",
   "imported": "Imported",
   "watch": "Watch",

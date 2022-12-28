@@ -1,6 +1,6 @@
 {
   "createWallet": "创建钱包",
-  "importAccount": "导入账户",
+  "restoreWallet": "恢复钱包",
   "ledgerUserTip": "提示: 若要导入私钥/Keystore或连接Ledger，需先[创建钱包]或者[恢复钱包]。",
   "termsAndPrivacy": "使用条款及隐私政策",
   "refuse": "拒绝",
@@ -39,7 +39,6 @@
   "backup_success": "恭喜，已经成功创建钱包!",
   "backup_success_restore": "恭喜，已经成功导入钱包!",
   "ledgerSuccessTip": "恭喜！已经成功导入 Ledger 钱包。",
-  "restoreWallet": "恢复钱包",
   "inputSeed": "请按顺序输入12位助记词，每位单词使用空格隔开。",
   "inputVaildSeed": "无效的助记词",
   "confirm": "确定",
@@ -91,6 +90,7 @@
   "lock": "锁定",
   "noSupported": "不再支持",
   "create": "创建",
+  "importAccount": "导入账户",
   "import": "导入",
   "imported": "导入",
   "watch": "观察",
