@@ -34,6 +34,10 @@ const Staking = ({ }) => {
   const [isUnknow, setIsUnknow] = useState(getNetTypeNotSupportStaking(netType))
   const isFirstRequest = useRef(!isNumber(validatorDetail.totalDelegated));
 
+  const closeLoading = useCallback(()=>{
+    setLoading(false)
+    isFirstRequest.current = false
+  },[])
   const fetchData = useCallback((isSlient = false) => {
     if (isUnknow) {
       return
@@ -41,22 +45,38 @@ const Staking = ({ }) => {
     if (isFirstRequest.current && !isSlient) {
       setLoading(true)
     }
-    fetchDelegationInfo(currentAddress).then((account) => {
+    Promise.all([fetchDelegationInfo(currentAddress),fetchDaemonStatus()]).then((data)=>{
+      let account = data[0]
       let delegateKey = currentAddress === account.delegate ? "" : account.delegate;
       setDelegatePublicKey(delegateKey)
-      if (delegateKey && isNumber(block.protocolState?.consensusState?.epoch)) {
-        fetchValidatorDetail(delegateKey,block.protocolState.consensusState.epoch).then((validatorDetail) => {
-          if(isNumber(validatorDetail.countDelegates)){
-            dispatch(updateValidatorDetail(validatorDetail));
+      
+      let daemonStatus = data[1]
+      if (daemonStatus.stateHash) {
+        dispatch(updateDaemonStatus(daemonStatus));
+        fetchBlockInfo(daemonStatus.stateHash).then((block) => {
+          if (block.protocolState) {
+            dispatch(updateBlockInfo(block));
+            if (delegateKey && isNumber(block.protocolState?.consensusState?.epoch)) {
+              fetchValidatorDetail(delegateKey,block.protocolState.consensusState.epoch).then((validatorDetail) => {
+                if(isNumber(validatorDetail.countDelegates)){
+                  dispatch(updateValidatorDetail(validatorDetail));
+                }
+              }).finally(() => {
+                closeLoading()
+              })
+            }else{
+              closeLoading()
+            }
+          }else{
+            closeLoading()
           }
-        }).finally(() => {
-          setLoading(false)
-          isFirstRequest.current = false
-        })
-      } else {
-        setLoading(false)
+        }).finally(()=>{
+          closeLoading()
+        });
+      }else{
+        closeLoading()
       }
-    }).catch(() => {
+    }).catch(()=>{
       setLoading(false)
     })
   }, [currentAddress, isUnknow,block.protocolState])
@@ -302,25 +322,12 @@ const EpochInfo = ({ }) => {
       return initEpochData
     }
   })
-
-
-  const fetchData = useCallback(() => {
-    fetchDaemonStatus().then((daemonStatus) => {
-      if (daemonStatus.stateHash) {
-        dispatch(updateDaemonStatus(daemonStatus));
-        fetchBlockInfo(daemonStatus.stateHash).then((block) => {
-          if (block.protocolState) {
-            dispatch(updateBlockInfo(block));
-            let epochData = epochDataAction(daemonStatus, block)
-            setEpochData(epochData)
-          }
-        });
-      }
-    })
-  }, [epochDataAction])
   useEffect(() => {
-    fetchData()
-  }, [])
+    if(daemonStatus.stateHash && block.protocolState){
+      let epochData = epochDataAction(daemonStatus, block)
+      setEpochData(epochData)
+    }
+  }, [daemonStatus, block])
 
 
   return (<div className={styles.epochContainer}>
@@ -364,7 +371,6 @@ const EpochInfo = ({ }) => {
         </div>
       </div>
     </div>
-    <Clock schemeEvent={fetchData} />
   </div>)
 }
 
