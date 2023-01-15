@@ -56,7 +56,11 @@ const ImportAccount = ({ }) => {
       } else {
         dispatch(updateCurrentAccount(account))
         setTimeout(() => {
-          history.go(-(history.length-2))
+          if(history.length>=4){
+            history.go(-3)
+          }else{
+            history.replace("/")
+          }
         }, 50);
       }
     })

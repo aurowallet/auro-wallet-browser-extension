@@ -139,6 +139,9 @@ export async function fetchDelegationInfo(publicKey) {
 export async function fetchStakingList() {
   let netConfig = getCurrentNetConfig()
   let baseUrl = netConfig.txUrl
+  if(netConfig.netType !== NET_CONFIG_TYPE.Mainnet){
+    return []
+  }
   if (!baseUrl) {
     return []
   }

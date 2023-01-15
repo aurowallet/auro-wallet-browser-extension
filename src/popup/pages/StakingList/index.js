@@ -11,12 +11,19 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import styles from './index.module.scss';
 import Input from "../../component/Input";
+import { NET_CONFIG_TYPE } from "../../../constant/walletType";
 
 const StakingList = ({ }) => {
 
   const history = useHistory()
   const dispatch = useDispatch()
-  const stakingList = useSelector(state => state.staking.stakingList)
+  const netType = useSelector(state => state.network.currentConfig.netType)
+  const stakingList = useSelector(state => {
+    if(netType === NET_CONFIG_TYPE.Mainnet){
+      return state.staking.stakingList
+    }
+    return []
+  })
 
   const [keywords, setKeywords] = useState("")
   const [currentSelectAddress, setCurrentSelectAddress] = useState("")

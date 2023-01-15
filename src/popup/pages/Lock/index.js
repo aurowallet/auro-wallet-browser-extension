@@ -12,6 +12,7 @@ import { resetWallet } from "../../../reducers";
 import { initCurrentAccount } from "../../../reducers/accountReducer";
 import { updateExtensionBaseInfo } from "../../../reducers/cache";
 import { updateCurrencyConfig } from "../../../reducers/currency";
+import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from "../../../utils/commonMsg";
 import { sendNetworkChangeMsg } from "../../../utils/utils";
@@ -66,6 +67,7 @@ export const LockPage = ({
                         Toast.info(account.error)
                     }
                 } else {
+                    dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
                     dispatch(initCurrentAccount(account))
                     onClickUnLock()
                     if (!onDappConfirm) {
