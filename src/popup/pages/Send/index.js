@@ -241,7 +241,7 @@ const SendPage = ({ }) => {
       return
     }
     let amountValue = trimSpace(amount)
-    if (!isNumber(amountValue) || !new BigNumber(amountValue).gt(0)) {
+    if (!isNumber(amountValue) || !new BigNumber(amountValue).gte(0)) {
       Toast.info(i18n.t('amountError'))
       return
     }

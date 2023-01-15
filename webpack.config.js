@@ -53,17 +53,9 @@ module.exports = (env, argv) => {
           ]
         },
         {
-          test: /\.js$/, exclude: /node_modules/, loader: "babel-loader",
-        },
-        {
-          test: /\.jsx$/,
-          exclude: /(node_modules)/,
-          use: {
-            loader: "babel-loader",
-            options: {
-              presets: ["@babel/env", "@babel/react"],
-            },
-          },
+          test: /\.(js|jsx)$/,
+          exclude: /node_modules/,
+          loader: "babel-loader",
         },
         {
           test: sassRegex,
@@ -118,10 +110,14 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: getPlugins(),
-    // performance: getPerformance(),
-    node: {
-      fs: 'empty',
-      'child_process': 'empty'
+    resolve:{
+      fallback:{
+        'child_process': 'empty',
+        "crypto": require.resolve("crypto-browserify"),
+        "stream": require.resolve("stream-browserify"),
+        "path": require.resolve("path-browserify"),
+        "buffer": require.resolve("safe-buffer"),
+      },
     },
   };
   if (isDev) {
@@ -154,6 +150,8 @@ function getPlugins() {
     }),
     new webpack.ProvidePlugin({
       React: "react",
+      Buffer: ['buffer', 'Buffer'],
+      process: 'process/browser.js', 
     })
   );
   return plugins;

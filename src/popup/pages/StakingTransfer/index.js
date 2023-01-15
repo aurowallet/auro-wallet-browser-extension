@@ -34,7 +34,7 @@ const StakingTransfer = () => {
   const {
     menuAdd, nodeName, nodeAddress, showNodeName
   } = useMemo(() => {
-    let params = history.location?.params
+    let params = history.location?.params || {}
 
     let menuAdd = !!params.menuAdd
     let nodeName = params.nodeName
@@ -120,7 +120,7 @@ const StakingTransfer = () => {
         }
       }, () => { })
     }
-    history.go(-(history.length-1))
+    history.replace("/")
   }, [history])
 
 

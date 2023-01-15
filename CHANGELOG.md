@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.4]
+- Upgrade mina-signer to v1.7.0
+- Upgrade webpack to v5
+- Bug fix
 
 ## [2.1.3]
 - Add transaction memo parse
