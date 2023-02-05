@@ -39,7 +39,6 @@ export const LockPage = ({
 
     const onPwdInput = useCallback((e) => {
         let value = e.target.value
-        value = value.trim()
         setPwdValue(value)
     }, [])
 
