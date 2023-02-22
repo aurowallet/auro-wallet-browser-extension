@@ -197,7 +197,7 @@ const accountInfo = (state = initState, action) => {
             }
         case UPDATE_NET_ACCOUNT:
             let netAccount = action.account
-            let balance = amountDecimals(netAccount.balance?.total, cointypes.decimals)
+            let balance = amountDecimals(netAccount.balance?.total||0, cointypes.decimals)
             let nonce = netAccount.nonce
             let inferredNonce = netAccount.inferredNonce
 

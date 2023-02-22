@@ -2,7 +2,7 @@ import { LOCK_TIME } from '../../config';
 import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
 import { getLanguage } from '../i18n';
 import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
-import { signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
+import { signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
@@ -768,6 +768,13 @@ class APIService {
     }
     getLockStatus=()=>{
         return this.getStore().isUnlocked
+    }
+    getLedgerAccountIndex= ()=>{
+        const allAccount = this.getAllAccount()
+        const ledgerList = allAccount.accounts.allList.filter((account)=>{
+            return account.type === ACCOUNT_TYPE.WALLET_LEDGER
+        })
+        return ledgerList.length
     }
 }
 

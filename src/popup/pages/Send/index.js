@@ -76,7 +76,15 @@ const SendPage = ({ }) => {
     setToAddress(e.target.value)
   }, [])
   const onAmountInput = useCallback((e) => {
-    setAmount(e.target.value)
+    let value = e.target.value
+    if(value.indexOf(".")!==-1){
+      let splitList = value.split('.')
+      if(splitList[splitList.length-1].length <= cointypes.decimals){
+        setAmount(e.target.value)
+      }
+    }else{
+      setAmount(e.target.value)
+    }
   }, [])
   const onMemoInput = useCallback((e) => {
     setMemo(e.target.value)

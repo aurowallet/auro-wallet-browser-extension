@@ -21,6 +21,7 @@ import ImportPage from '../pages/ImportPage';
 import LanguageManagement from '../pages/LanguageManage';
 import LedgerConnect from '../pages/LedgerConnect';
 import LedgerImport from '../pages/LedgerImport';
+import { LedgerPage } from '../pages/LedgerPage';
 import {LockPage} from '../pages/Lock';
 import HomePage from '../pages/Main';
 import NetworkPage from '../pages/Networks';
@@ -96,6 +97,7 @@ export function getAllRouter() {
         <Route path={"/auto_lock"} component={AutoLock}/>
         <Route path={"/address_editor"} component={AddressEditor}/>
         <Route path={"/node_editor"} component={NodeEditor}/>
+        <Route path={"/ledger_page"} component={LedgerPage}/>
       </Switch>
     </HashRouter>
   );

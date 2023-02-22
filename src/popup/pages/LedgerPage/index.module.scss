@@ -1,0 +1,224 @@
+.outerContainer {
+    height: 100vh;
+    min-width: 750px;
+    min-height: 600px;
+    background-color: rgb(249, 250, 252);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .innerContainer {
+        width: 750px;
+        height: 600px;
+        position: relative;
+    }
+    .innerContent {
+        width: 100%;
+        height: 100%;
+    }
+
+    .viewOuter {
+        margin: 60px 40px 0;
+        height: 100%;
+    }
+    .viewTitle {
+        font-weight: 700;
+        font-size: 24px;
+        line-height: 29px;
+        color: #000000;
+    }
+    .viewTip {
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 19px;
+        margin-top: 30px;
+        color: #000000;
+    }
+    .ledgerIcon {
+        height: 50px;
+        margin-top: 20px;
+    }
+    .startDesc {
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 17px;
+        color: rgba(0, 0, 0, 0.5);
+        margin-top: 10px;
+        margin-bottom: 40px;
+    }
+
+    .stepContainer {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .stepNumber {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #594af1;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 17px;
+            color: #ffffff;
+        }
+        .stepContent {
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 17px;
+            color: #000000;
+            margin-left: 8px;
+        }
+        .stepContentLight {
+            font-weight: 700 !important;
+        }
+    }
+    .waringTip {
+        background: rgba(214, 90, 90, 0.1);
+        border: 1px solid #d65a5a;
+        border-radius: 10px;
+
+        display: flex;
+        align-items: center;
+
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 17px;
+        color: #d65a5a;
+        padding: 12px 10px;
+        margin-top: 20px;
+    }
+    .accountWarningTip {
+        @extend .waringTip;
+        margin-bottom: 32px;
+        min-width: 632px;
+        transform: translate(-16px);
+    }
+    .bottomContainer {
+        position: absolute;
+        width: 600px;
+        bottom: 30px;
+        left: 50%;
+        transform: translate(-50%);
+    }
+
+    .accountNameTip {
+        @extend .startDesc;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+    .clickIntro {
+        color: #594af1;
+        cursor: pointer;
+    }
+    .inputContainer {
+        width: 355px;
+        margin-top: 20px;
+    }
+
+    .ledgerContainer {
+        margin-top: 20px;
+        .ledgerPath {
+            font-weight: 400;
+            font-size: 16px;
+            color: #666666;
+            display: flex;
+            align-items: center;
+        }
+    }
+    .inputNumberContainer {
+        width: fit-content;
+        position: relative;
+
+        display: flex;
+        align-items: center;
+        position: relative;
+
+        height: 32px;
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+        border-radius: 6px;
+
+        margin: 0 20px;
+        &:hover {
+            border: 0.5px solid #594af1;
+        }
+
+        .customeInput {
+            display: inline-block;
+            outline: none;
+            background: #ffffff;
+            border: none;
+
+            font-weight: 500;
+            font-size: 16px;
+            color: #00142a;
+            flex: 1;
+            caret-color: #594af1;
+            width: 64px;
+            text-align: center;
+            display: inline-block;
+            padding-right: 26px;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .imgContainer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 0 4px;
+            justify-content: center;
+            .topArrow {
+                width: 14px;
+                height: 14px;
+                cursor: pointer;
+                &:hover {
+                    background: rgba(0, 0, 0, 0.15);
+                }
+            }
+            .bottomArrow {
+                width: 14px;
+                height: 14px;
+                transform: rotate(180deg);
+                cursor: pointer;
+                &:hover {
+                    background: rgba(0, 0, 0, 0.15);
+                }
+            }
+        }
+    }
+    .innterContent {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 60px auto 0;
+    }
+
+    .importSuccess {
+        font-weight: 600;
+        font-size: 22px;
+        line-height: 26px;
+        color: #000000;
+        margin: 30px auto 20px;
+    }
+    .importContent {
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 19px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.5);
+        margin-bottom: 20px;
+    }
+}

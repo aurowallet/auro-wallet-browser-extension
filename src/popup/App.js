@@ -18,7 +18,8 @@ function App() {
     const url = new URL(window.location.href); 
     let dappIndex = url.href.indexOf('popup.html#/approve_page') !==-1 || url.href.indexOf('popup.html#/request_sign')!==-1
     let ledgerIndex = url.href.indexOf('popup.html#/ledger_connect') !==-1
-    if (url.pathname.indexOf('popup.html') !==-1 && !dappIndex && !ledgerIndex) {
+    let ledgerPageIndex = url.href.indexOf('popup.html#/ledger_page') !==-1
+    if (url.pathname.indexOf('popup.html') !==-1 && !dappIndex && !ledgerIndex && !ledgerPageIndex) {
       setShowFullStatus(false)
     }else{
       setShowFullStatus(true)

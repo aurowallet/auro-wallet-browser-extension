@@ -242,3 +242,10 @@ export const DAPP_CLOSE_POPUP_WINDOW = "DAPP_CLOSE_POPUP_WINDOW"
 
  /** Berkeley qa net sign   */
 export const QA_SIGN_TRANSTRACTION = "QA_SIGN_TRANSTRACTION"
+
+/** get app lock status */
+export const GET_WALLET_LOCK_STATUS = "GET_WALLET_LOCK_STATUS"
+
+
+/** get ledger account number */
+export const GET_LEDGER_ACCOUNT_NUMBER = "GET_LEDGER_ACCOUNT_NUMBER"

@@ -7,6 +7,12 @@
         border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
         width: 100%;
     }
+    .stepTabBtn{
+        border-bottom: unset;
+        margin: 0px 0px;
+        background: rgb(174, 175, 176);
+        height: 3px;
+    }
     .tabIndicator {
         position: absolute;
         z-index: 1;
@@ -15,6 +21,9 @@
         height: 3px;
         transition: all 0.3s;
         background: #000000;
+    }
+    .stepTabIndicator{
+        background: #594AF1;
     }
     .tabBtn {
         font-weight: 600;
@@ -54,8 +63,14 @@
         background: white;
         min-height: 50px;
     }
+    .stepTabPanels{
+        height: 100%;
+    }
     .tabTracker {
         display: flex;
         transition: transform 0.3s;
     }
+}
+.stepTabContainer{
+    height: 100%;
 }

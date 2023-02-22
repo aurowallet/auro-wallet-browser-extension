@@ -17,6 +17,7 @@ import CustomView from "../../component/CustomView";
 import Loading from "../../component/Loading";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import extension from 'extensionizer'
 
 const AccountManagePage = ({ }) => {
   const dispatch = useDispatch()
@@ -69,8 +70,8 @@ const AccountManagePage = ({ }) => {
       fromType: ACCOUNT_NAME_FROM_TYPE.LEDGER,
       accountCount
     }))
-    history.push({
-      pathname: "/account_name",
+    extension.tabs.create({
+      url: "popup.html#/ledger_page",
     });
   }, [i18n, accountList])
 

@@ -9,6 +9,7 @@ $toolbarHeight: 58px;
 .toolbarContainer {
     position: fixed;
     width: 100%;
+    max-width: 375px;
     z-index: 3;
     background: #edeff2;
 }
