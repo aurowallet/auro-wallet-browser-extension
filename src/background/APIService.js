@@ -38,6 +38,11 @@ class APIService {
           autoLockTime:LOCK_TIME
         };
       }
+    initAppLocalConfig=async()=>{
+        const {autoLockTime} = await get("autoLockTime")
+        return autoLockTime||LOCK_TIME
+    }
+
     getStore = () => {
         return this.memStore.getState()
     };
@@ -76,11 +81,13 @@ class APIService {
             await this.migrateDate(password, vault)
             let currentAddress = vault[0].currentAddress
             let currentAccount = this.filterCurrentAccount(vault[0].accounts, currentAddress)
+            let autoLockTime = await this.initAppLocalConfig()
             this.memStore.updateState({
                 data: vault,
                 isUnlocked: true,
                 password,
-                currentAccount
+                currentAccount,
+                autoLockTime,
             })
             return this.getAccountWithoutPrivate(currentAccount)
         } catch (error) {
@@ -143,8 +150,9 @@ class APIService {
         }
 
     }
-    updateLockTime(autoLockTime){
+    async updateLockTime(autoLockTime){
         this.memStore.updateState({autoLockTime:autoLockTime})
+        await save({ autoLockTime: autoLockTime })
     }
     getCurrentAutoLockTime(){
         return this.getStore().autoLockTime
