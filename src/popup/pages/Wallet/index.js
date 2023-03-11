@@ -317,7 +317,7 @@ const WalletInfo = () => {
       }
     })
     fetchPrice()
-  }, [i18n, currentAccount])
+  }, [i18n, currentAccount,netConfig])
 
   useEffect(() => {
     fetchAccountData()
