@@ -1,6 +1,6 @@
 import axios from "axios";
 import { NET_WORK_CONFIG } from "../constant/storageKey";
-import { trimSpace } from "../utils/utils";
+import { getRealErrorMsg } from "../utils/utils";
 import "./api/axios";
 import { getLocal } from "./localStorage";
 
@@ -77,13 +77,8 @@ export async function startFetchMyMutation(operationName, gqlparams, variables =
     url
   ).catch(errors => errors);
   let { errors, data } = result
-  if (result.errors) {
-    let errMessage = ""
-    if (Array.isArray(errors) && errors[0] && errors[0].message) {
-      errMessage = errors[0].message
-    } else {
-      errMessage = JSON.stringify(errors)
-    }
+  if (errors) {
+    const errMessage = getRealErrorMsg(errors)
     return { error: errMessage }
   }
   return data
