@@ -152,7 +152,7 @@
   "privacyPolicy": "Privacy Policy",
   "checkOnGithub": "Check it out on Github",
   "walletName": "Auro Wallet",
-  "walletAbout": "Auro Wallet is a Mina wallet developed by the community. It is simple, convenient, and fully open source. It currently supports all the functions of the Mina mainnet.",
+  "walletAbout": "Auro Wallet is a non-custodial wallet developed by the community. It is simple, convenient, and fully open source. It currently supports all the functions of the Mina Protocol.",
   "followUs": "Follow Us",
   "defaultNode": "Default",
   "customNode": "Custom",
