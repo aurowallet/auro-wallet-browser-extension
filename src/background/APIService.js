@@ -710,6 +710,15 @@ class APIService {
         }
 
     }
+    
+    signFields=async(params)=>{
+        const privateKey = await this.getCurrentPrivateKey()
+        let signedResult = await signFieldsMessage(privateKey,params)
+        if (signedResult.error) {
+            return { error: signedResult.error }
+        }
+        return signedResult
+    }
 
     notification = (hash) => {
         let netConfig =  getCurrentNetConfig()

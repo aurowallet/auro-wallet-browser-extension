@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { cointypes } from "../../../../config";
 import { getBalance, getFeeRecom, sendStakeTx, sendTx } from "../../../background/api";
-import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS,QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
+import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS,QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { updateNetAccount } from "../../../reducers/accountReducer";
 import { updateDAppOpenWindow } from "../../../reducers/cache";
@@ -119,6 +119,7 @@ const SignTransaction = () => {
           resultAction = DAPP_ACTION_SEND_TRANSACTION
           break;
         case DAppActions.mina_signMessage:
+        case DAppActions.mina_signFields:
           payload.signature = data.signature
           payload.data = data.data
           resultAction = DAPP_ACTION_SIGN_MESSAGE
@@ -152,7 +153,7 @@ const SignTransaction = () => {
     let { sendAction } = signParams
     const { ledgerApp } = await checkLedgerConnect()
     if (ledgerApp) {
-      if (sendAction === DAppActions.mina_signMessage) {
+      if (sendAction === DAppActions.mina_signMessage || sendAction === DAppActions.mina_signFields) {
         Toast.info(i18n.t('ledgerNotSupportSign'))
         sendMsg({
           action: resultAction,
@@ -196,29 +197,24 @@ const SignTransaction = () => {
   }, [signParams, currentAccount])
 
   const clickNextStep = useCallback(() => {
-    console.log("clickNextStep==0",signParams);
     let { params } = signParams
-    console.log("clickNextStep==1",params);
     let vaildNonce = nonceValue || netAccount.inferredNonce
-    console.log("clickNextStep==2",vaildNonce);
     let nonce = trimSpace(vaildNonce)
 
     let toAddress = ''
     let fee = ""
     let memo = ""
-    if (signParams.sendAction !== DAppActions.mina_signMessage) {
+    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields) {
       toAddress = trimSpace(params.to)
       fee = trimSpace(feeValue)
       memo =  params?.feePayer?.memo || params?.memo || ""
     }
-    console.log("clickNextStep==3",memo);
 
     let fromAddress = currentAccount.address
     let payload = {
       fromAddress, toAddress, nonce, currentAccount, fee, memo
     }
-    console.log("clickNextStep==4",payload);
-    if (signParams.sendAction === DAppActions.mina_signMessage) {
+    if (signParams.sendAction === DAppActions.mina_signMessage || signParams.sendAction === DAppActions.mina_signFields) {
       payload.message = params.message
     }
     if (signParams.sendAction === DAppActions.mina_sendPayment) {
@@ -230,12 +226,12 @@ const SignTransaction = () => {
       payload.transaction = params.transaction
       memo = params.feePayer?.memo || ""
     }
-    console.log("clickNextStep==5",payload);
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       return ledgerTransfer(payload)
     }
     setBtnLoading(true)
     let sendAction = ""
+    let connectAction = QA_SIGN_TRANSTRACTION
     switch (signParams.sendAction) {
       case DAppActions.mina_sendStakeDelegation:
         sendAction = WALLET_SEND_STAKE_TRANSTRACTION
@@ -246,16 +242,16 @@ const SignTransaction = () => {
       case DAppActions.mina_signMessage:
         sendAction = WALLET_SEND_MESSAGE_TRANSTRACTION
         break;
-      // case DAppActions.mina_signMessage:
-      //   sendAction = WALLET_SEND_MESSAGE_TRANSTRACTION
-      //   break;
+      case DAppActions.mina_signFields:
+        sendAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
+        connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
+        break;
       default:
         break;
     }
-    console.log("clickNextStep==6",signParams);
     payload.sendAction = signParams.sendAction
     sendMsg({
-      action: QA_SIGN_TRANSTRACTION,
+      action: connectAction,
       payload
     }, (data) => {
       setBtnLoading(false)
@@ -266,7 +262,7 @@ const SignTransaction = () => {
 
   const onConfirm = useCallback(() => {
     let params = signParams.params
-    if (signParams.sendAction !== DAppActions.mina_signMessage  && signParams.sendAction !== DAppActions.mina_sendTransaction) {
+    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields  && signParams.sendAction !== DAppActions.mina_sendTransaction) {
       let toAddress = trimSpace(params.to)
       if (!addressValid(toAddress)) {
         Toast.info(i18n.t('sendAddressError'))
@@ -291,7 +287,7 @@ const SignTransaction = () => {
       Toast.info(i18n.t('inputFeeError'))
       return
     }
-    if (signParams.sendAction !== DAppActions.mina_signMessage) {
+    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields) {
       let amount = trimSpace(params.amount)
       let maxAmount = new BigNumber(amount).plus(fee).toString()
       if (new BigNumber(maxAmount).gt(balance)) {
@@ -364,7 +360,9 @@ const SignTransaction = () => {
         openId: params.openId
       }
     }, (res) => {
-      Loading.show()
+      if(res.params?.action !== DAppActions.mina_signMessage && res.params?.action !== DAppActions.mina_signFields){
+        Loading.show()
+      }
       let siteFee = res.params?.feePayer?.fee || res.params?.fee || ""
       let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : ""
 
@@ -446,7 +444,7 @@ const SignTransaction = () => {
       }
     }
     let pageTitle = i18n.t('confirmTransaction')
-    if(signParams.sendAction === DAppActions.mina_signMessage){
+    if(signParams.sendAction === DAppActions.mina_signMessage || signParams.sendAction === DAppActions.mina_signFields){
       pageTitle = i18n.t('signatureRequest')
     }
 
@@ -495,7 +493,6 @@ const SignTransaction = () => {
     const onClickContent = useCallback((clickAble)=>{
       if(clickAble){
         let data = signParams?.params?.transaction
-        console.log('onClickContent===0',data);
         if(data){
           let res = JSON.parse(data)
           exportFile(JSON.stringify(res,null,2),"zkapp_command.json")
@@ -519,7 +516,7 @@ const SignTransaction = () => {
       <div className={styles.websiteContainer}>
         <DappWebsite siteIcon={signParams?.site?.webIcon} siteUrl={signParams?.site?.origin} />
       </div>
-      {signParams?.sendAction === DAppActions.mina_signMessage ?
+      {signParams?.sendAction === DAppActions.mina_signMessage || signParams?.sendAction === DAppActions.mina_signFields ?
         <CommonRow 
           leftTitle={i18n.t('account')} 
           leftContent={currentAccount.accountName} 

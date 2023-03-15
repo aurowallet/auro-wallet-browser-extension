@@ -6,7 +6,7 @@ import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
 import { getArrayDiff, getCurrentNetConfig, getOriginFromUrl, isNumber } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
-import { verifyMessage } from './lib';
+import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get } from './storageService';
 
 let signRequests = [];
@@ -59,6 +59,13 @@ class DappService {
           sendResponse
         )
         break;
+      case DAppActions.mina_accounts:
+        this.requestCallback(
+          () => this.requestConnectedAccount(site),
+          id,
+          sendResponse
+        )
+        break;
       case DAppActions.mina_sendPayment:
         this.requestCallback(
           () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.TRANSFER),
@@ -102,6 +109,20 @@ class DappService {
           sendResponse
         )
         break;
+      case DAppActions.mina_signFields:
+        this.requestCallback(
+          () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.MESSAGE),
+          id,
+          sendResponse
+        )
+        break;
+      case DAppActions.mina_verifyFields:
+          this.requestCallback(
+            () => verifyFieldsMessage(params.publicKey, params.signature, params.payload),
+            id,
+            sendResponse
+          )
+          break;
     }
   }
   async signTransaction(id, params, site, type) {
@@ -234,6 +255,27 @@ class DappService {
     } else {
       return false
     }
+  }
+  async requestConnectedAccount(site) {
+    return new Promise(async (resolve) => {
+      try {
+        let isCreate = await this.checkLocalWallet()
+        if (!isCreate) {
+          resolve([])
+          return
+        }
+        let currentAccount = this.getCurrentAccountAddress()
+        let connectStatus = this.getCurrentAccountConnectStatus(site.origin, currentAccount)
+        if (connectStatus) {
+          resolve([currentAccount])
+          return
+        }
+        resolve([])
+      } catch (error) {
+        resolve([])
+      }
+    })
+
   }
   async requestAccounts(site) {
     let that = this

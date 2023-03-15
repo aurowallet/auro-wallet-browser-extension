@@ -93,7 +93,7 @@ export async function sendStakeTx(payload, signature) {
 export async function sendParty(sendJson) {
   let txBody = getPartyBody()
   const variables = {
-    zkappCommandInput:JSON.parse(sendJson)
+    zkappCommandInput:sendJson
   }
   let res = await startFetchMyMutation('sendZkapp',txBody,variables)
   return res

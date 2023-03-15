@@ -98,22 +98,17 @@ export async function signMessagePayment(privateKey, fromAddress, message) {
 }
 
 
-export async function verifyMessage(publicKey, signature, payload) {
+export async function verifyMessage(publicKey,signature,verifyMessage) { 
     let verifyResult
     try {
-        let realMessage = {
-            data:{
-                message: payload,
-                publicKey: publicKey
-            },
-            signature:{
-                signature:signature,
-                signer: publicKey,
-                string: payload
-            }
-        }
+        const nextSignature = typeof signature === "string" ? JSON.parse(signature):signature
         let signClient = await getSignClient()
-        verifyResult = signClient.verifyMessage(realMessage)
+        const verifyBody = {
+            data:verifyMessage,
+            publicKey:publicKey,
+            signature:nextSignature
+        }
+        verifyResult = signClient.verifyMessage(verifyBody)
     } catch (error) {
         verifyResult = { error: { message: "verify failed" } }
     }
@@ -129,10 +124,7 @@ export async function signTransaction(privateKey,params){
         let signBody = {}
 
         if(params.sendAction === DAppActions.mina_signMessage){
-            signBody = {
-                message:params.message,
-                publicKey: params.fromAddress
-            }
+            signBody = params.message
         }else if (params.sendAction === DAppActions.mina_sendTransaction){
             let decimal = new BigNumber(10).pow(cointypes.decimals)
             let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
@@ -162,13 +154,62 @@ export async function signTransaction(privateKey,params){
             }
         }
         signResult = signClient.signTransaction(signBody, privateKey)
-        if(params.sendAction === DAppActions.mina_signMessage){
-            signResult = signResult.signature
-        }
-
     } catch (err) {
-        let errorMessage = getRealErrorMsg(err)||getLanguage("buildFailed")
+        let errorMessage = getRealErrorMsg(err)||i18n.t("buildFailed")
         signResult = { error: { message: errorMessage } }
     }
     return signResult
-} 
+}
+
+
+export async function signFieldsMessage(privateKey,params){
+    let signResult
+    try {
+        const fields = JSON.parse(params.message)
+        if(!Array.isArray(fields)){
+           return { error: { message: "Must use array" } }
+        }
+        const nextFields = fields.map((field)=>{
+            if(typeof field === "number"){
+                return BigInt(field)
+            }
+            return field
+        })
+        let signClient = await getSignClient()
+        signResult = signClient.signFields(nextFields, privateKey)
+        signResult.data = fields
+    } catch (err) {
+        let errorMessage = getRealErrorMsg(err)||i18n.t("buildFailed")
+        signResult = { error: { message: errorMessage } }
+    }
+    return signResult
+}
+
+
+
+export async function verifyFieldsMessage(publicKey,signature,verifyMessage) {
+    let verifyResult
+    try {
+        let signClient = await getSignClient()
+
+        const fields = JSON.parse(verifyMessage)
+        if(!Array.isArray(fields)){
+           return { error: { message: "Must use array" } }
+        }
+        const nextFields = fields.map((field)=>{
+            if(typeof field === "number"){
+                return BigInt(field)
+            }
+            return field
+        })
+        const verifyBody = {
+            data:nextFields,
+            publicKey:publicKey,
+            signature:signature
+        }
+        verifyResult = signClient.verifyFields(verifyBody)
+    } catch (error) {
+        verifyResult = { error: { message: "verify failed" } }
+    }
+    return verifyResult
+}
