@@ -361,3 +361,7 @@ export function getTimeGMT(time) {
         return ""
     }
 }
+
+export function numberFormat(str){
+    return str.replace(/[^\d^\.]+/g, "").replace(/\.{2,}/, "")
+}

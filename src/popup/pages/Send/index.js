@@ -335,7 +335,7 @@ const SendPage = ({ }) => {
           label={i18n.t('amount')}
           onChange={onAmountInput}
           value={amount}
-          inputType={'number'}
+          inputType={'numric'}
           placeholder={0}
           rightComponent={<div className={styles.balance}>
             {i18n.t('balance') + ": " + getDisplayAmount(balance, cointypes.decimals)}

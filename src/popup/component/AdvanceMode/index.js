@@ -33,7 +33,7 @@ const AdvanceMode = ({
                     label={i18n.t('transactionFee')}
                     onChange={onFeeInput}
                     value={feeValue}
-                    inputType={'number'}
+                    inputType={'numric'}
                     placeholder={feePlaceholder}
                     showBottomTip={true}
                     bottomTip={feeErrorTip}
@@ -43,7 +43,7 @@ const AdvanceMode = ({
                     label={"Nonce"}
                     onChange={onNonceInput}
                     value={nonceValue}
-                    inputType={'number'}
+                    inputType={'numric'}
                     placeholder={nonceHolder}
                 />
             </div>}

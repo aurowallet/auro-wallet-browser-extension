@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { Trans } from "react-i18next";
 import styles from "./index.module.scss";
 import i18n from "i18next";
+import { numberFormat } from "../../../utils/utils";
 
 const Input = ({ 
     onChange = () => { },
@@ -41,6 +42,21 @@ const Input = ({
         setShowPwd(!showPwd)
     }, [showPwd])
 
+    const onChangeValue=useCallback((e)=>{
+        if(onChange){
+            if(inputType === "numric"){
+                onChange({
+                    ...e,
+                    target:{
+                        value:numberFormat(e.target.value)
+                    }
+                })
+            }else{
+                onChange(e)
+            }
+        }
+    },[onChange,inputType])
+
     return (
         <div className={styles.container}>
             <div className={styles.label}>
@@ -61,7 +77,7 @@ const Input = ({
             <div className={cls(styles.inputCon, customInputContainer)}>
                 {showSearchIcon && <img className={styles.search} src="/img/icon_search.svg" />}
                 <input
-                    onChange={onChange}
+                    onChange={onChangeValue}
                     placeholder={placeholder}
                     value={value}
                     onKeyUp={onKeyup}
