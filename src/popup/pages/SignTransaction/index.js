@@ -151,17 +151,17 @@ const SignTransaction = () => {
 
   const ledgerTransfer = useCallback(async (params) => {
     let { sendAction } = signParams
+    if (sendAction === DAppActions.mina_signMessage || sendAction === DAppActions.mina_signFields) {
+      Toast.info(i18n.t('ledgerNotSupportSign'))
+      sendMsg({
+        action: resultAction,
+        payload: { error: "not support ledger sign message" },
+      }, async (params) => { })
+      return
+    }
+
     const { ledgerApp } = await checkLedgerConnect()
     if (ledgerApp) {
-      if (sendAction === DAppActions.mina_signMessage || sendAction === DAppActions.mina_signFields) {
-        Toast.info(i18n.t('ledgerNotSupportSign'))
-        sendMsg({
-          action: resultAction,
-          payload: { error: "not support ledger sign message" },
-        }, async (params) => { })
-        return
-      }
-
       setLedgerModalStatus(true)
       let signResult
       let postRes
