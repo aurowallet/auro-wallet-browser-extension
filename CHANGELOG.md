@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.6]
+- Upgrade mina-signer to 2.0.2
+- Bug fixes
+
 ## [2.1.5]
 - Optimize Ledger UX
 

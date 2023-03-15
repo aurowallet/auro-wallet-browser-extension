@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@aurowallet/mina-provider@0.1.4":
-  version "0.1.4"
-  resolved "https://registry.npmjs.org/@aurowallet/mina-provider/-/mina-provider-0.1.4.tgz"
-  integrity sha512-oWL6UjHRyrA9n0EGIfHA+Qpi6xcaZjcge7I3NKDm0tA2U30F0oYdmsPpSw3wxbiZ5B0sFeGdw5JfS91dMVfkSQ==
+"@aurowallet/mina-provider@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.npmmirror.com/@aurowallet/mina-provider/-/mina-provider-0.1.5.tgz#df2be4658e7244136e8c261c7c444541a8efcffd"
+  integrity sha512-dXMfe7bSfzF5BofIG9hat6Gp+LQ4wcA6sNWOlb1cVT3nL+sXT2FHiQmx/Fy0SDkHpV6XahAk3wzdXReG44BoMw==
   dependencies:
     "@types/eventemitter3" "^2.0.2"
     "@types/uuid" "^8.3.1"
@@ -11320,10 +11320,10 @@ mina-ledger-js@1.0.6:
   dependencies:
     buffer "6.0.3"
 
-mina-signer@1.7.0:
-  version "1.7.0"
-  resolved "https://registry.npmmirror.com/mina-signer/-/mina-signer-1.7.0.tgz#c7e43bc135e135a006e514311dfb2dd11a8958d2"
-  integrity sha512-VA7MO8mNrDETl3FDhPbabQMkTRSxCYkjBGKcZLAA+ICdF8BwMZZ5Dne7RlssOB2S3xTWTZ5wsGk/ArH1EIh/VA==
+mina-signer@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.npmmirror.com/mina-signer/-/mina-signer-2.0.2.tgz#b340d7709528ddb194ce6485ed3d4b2780c34149"
+  integrity sha512-XoTZ6odHJGaVe4xu8AFIsu0DJ8/48mFP3GFajsBzezdnRgqeTNlESoqYCyvkF9BQNedzSSW0czZp1GGUWiQwvA==
   dependencies:
     blakejs "^1.2.1"
     js-sha256 "^0.9.0"
