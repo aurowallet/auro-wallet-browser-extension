@@ -60,6 +60,10 @@
     background-color: #f2f2f2;
 }
 
+.ledgerTip{
+    max-height: 400px !important;
+    margin-bottom: 180px !important;
+}
 .bottomContent {
     padding: 0px 20px 0px;
     overflow-y: auto;
@@ -100,16 +104,7 @@
     }
 }
 
-.bottomContainer {
-    padding: 12px 38px 20px;
-    position: fixed;
-    bottom: 0;
-    width: calc(100%);
-    background-color: white;
 
-    animation: openModal 0.35s;
-    animation-fill-mode: forwards;
-}
 
 .contentItemContainer {
     margin-bottom: 10px;
@@ -167,3 +162,78 @@
         font-weight: 700;
     }
 }
+.rightRow{
+    display: flex;
+    align-items: center;
+}
+
+.ledgerCon{
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    padding: 4px 8px;
+    gap: 4px;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .statusDot{
+        width: 8px;
+        height: 8px;
+        border-radius: 100%;
+        background-color:#D65A5A;
+        
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .dotWin{
+        background-color: #0DB27C;
+    }
+    .miniDot{
+        width: 6px;
+        height: 6px;
+        border-radius: 100%;
+        background-color:#D65A5A;
+    }
+    .statusContent{
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 14px;
+        display: flex;
+        align-items: center;
+        color: #000000;
+    }
+}
+.bottomContainer {
+    padding: 12px 38px 20px;
+    position: fixed;
+    bottom: 0;
+    width: calc(100%);
+    background-color: white;
+
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+.reminderContainer {
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+    position: fixed;
+    z-index: 2;
+    margin: 0px 20px 90px;
+
+
+    background: rgba(214, 90, 90, 0.1);
+    border: 1px solid #d65a5a;
+    border-radius: 10px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 17px;
+    color: #d65a5a;
+    padding: 12px 10px;
+  }
+  .clickItem{
+      color: #594AF1;
+      cursor: pointer;
+  }

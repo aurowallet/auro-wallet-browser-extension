@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./index.module.scss";
 import cls from "classnames";
 
@@ -14,6 +14,11 @@ const Tabs = (props) => {
     initedId,
     tabType = TAB_TYPE.TAB,
   } = props;
+  const nextChildren = useMemo(()=>{
+    return children.filter((child)=>{
+      return typeof child !== "boolean"
+    })
+  },[children])
 
   const tabButtonsRef = useRef();
   const tabIndicatorRef = useRef();
@@ -23,17 +28,17 @@ const Tabs = (props) => {
       onSelect && onSelect(index);
       updateTabIndicator(tabButtonsRef.current, tabIndicatorRef.current, id);
     },
-    [tabButtonsRef, tabIndicatorRef, children.length, tabType]
+    [tabButtonsRef, tabIndicatorRef, nextChildren.length, tabType]
   );
 
   useEffect(() => {
     if (tabType === TAB_TYPE.STEP) {
-      updateStepIndicator(tabIndicatorRef.current, children.length, selected);
+      updateStepIndicator(tabIndicatorRef.current, nextChildren.length, selected);
     }
   }, [selected]);
   useEffect(() => {
     if (tabType === TAB_TYPE.STEP) {
-      updateStepIndicator(tabIndicatorRef.current, children.length, selected);
+      updateStepIndicator(tabIndicatorRef.current, nextChildren.length, selected);
     } else {
       updateTabIndicator(
         tabButtonsRef.current,
@@ -42,7 +47,7 @@ const Tabs = (props) => {
       );
     }
   }, [initedId]);
-  const buttons = React.Children.map(children, (child, index) => {
+  const buttons = React.Children.map(nextChildren, (child, index) => {
     const { id } = child.props;
     const isSelected = selected === index;
     const handleClick = () => onSelectTab(index, id);
@@ -56,7 +61,7 @@ const Tabs = (props) => {
     );
   });
 
-  const panels = React.Children.map(children, (child, index) => {
+  const panels = React.Children.map(nextChildren, (child, index) => {
     const id = child.props.id;
     const isSelected = selected === index;
     return (

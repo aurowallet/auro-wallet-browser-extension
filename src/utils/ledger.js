@@ -15,6 +15,13 @@ import { getCurrentNetConfig } from "./utils";
 export const LEDGER_CONENCT_TYPE = {
   isPage: "isPage",
 };
+
+export const LEDGER_STATUS ={
+  "READY":"READY",
+  "LEDGER_DISCONNECT":"LEDGER_DISCONNECT",
+  "LEDGER_CONNECT_APP_NOT_OPEN":"LEDGER_CONNECT_APP_NOT_OPEN"
+}
+
 const status = {
   rejected: "CONDITIONS_OF_USE_NOT_SATISFIED",
 };
@@ -224,4 +231,41 @@ async function requestSign(app, body, type, ledgerAccountIndex) {
       validUntil: payload.validUntil,
     },
   };
+}
+
+export async function getLedgerStatus(){
+  let app = null;
+  if (!appInstance) {
+    const transport = await getPort();
+    if (transport) {
+      app = new MinaLedgerJS(transport);
+      portInstance = transport;
+      appInstance = app;
+    }else{
+      return {status:LEDGER_STATUS.LEDGER_DISCONNECT}
+    }
+  } else {
+    app = appInstance;
+  }
+  let timer = null;
+  const result = await Promise.race([
+    app.getAppName(),
+    new Promise((resolve) => {
+      timer = setTimeout(() => {
+        timer = null;
+        resolve({ timeout: true });
+      }, 300);
+    }),
+  ]);
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  if (result.returnCode === "5000" || !result.name || result.timeout) {
+    portInstance.close();
+    portInstance = null;
+    appInstance = null;
+    return { status: LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN};
+  }
+  return { app,status:LEDGER_STATUS.READY };
 }

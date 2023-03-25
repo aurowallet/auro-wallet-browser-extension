@@ -15,6 +15,7 @@ import {
     LEDGER_CONENCT_TYPE,
     requestAccount
 } from "../../../utils/ledger";
+import { getQueryStringArgs } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
 import Tabs, { TAB_TYPE } from "../../component/Tabs";
@@ -26,11 +27,26 @@ const Tip_Type = {
   openLedger: "openLedger",
   openLedgerApp: "openLedgerApp",
   openLockStatus: "openLockStatus",
+
+  grantSuccess:"grantSuccess"
 };
-export const LedgerPage = ({}) => {
+export const LEDGER_PAGE_TYPE = {
+  permissionGrant:"permissionGrant"
+}
+export const LedgerPage = ({}) => { 
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);
+  const [isShowSuccessTip,setIsShowSuccessTip] = useState(false)
 
+  const {isLedgerPermission} = useMemo(() => {
+    const url = window.location?.href || ""
+    const params = getQueryStringArgs(url)
+    const ledgerPageType = params.ledgerPageType||""
+    const isLedgerPermission = ledgerPageType === LEDGER_PAGE_TYPE.permissionGrant
+    return {
+      isLedgerPermission
+    }
+  },[])
   const onClickNextTab = useCallback(() => {
     setTabIndex((state) => state + 1);
   }, []);
@@ -49,6 +65,10 @@ export const LedgerPage = ({}) => {
   }, []);
 
   const onClickConnect = useCallback(async (permissionisCheck = true) => {
+    if(isShowSuccessTip){
+      window.close();
+      return 
+    }
     setTipType(Tip_Type.init);
     const walletLockStatus = await getWalletLockStatus();
     if (!walletLockStatus) {
@@ -72,8 +92,12 @@ export const LedgerPage = ({}) => {
       if (ledgerApp) {
         const result = await ledgerApp.getAppName();
         if (result.name === "Mina") {
-          if (permissionisCheck) {
+          if (permissionisCheck && !isLedgerPermission) {
             onClickNextTab();
+          }
+          if(isLedgerPermission){
+            setIsShowSuccessTip(true)
+            setTipType(Tip_Type.grantSuccess);
           }
           return ledgerApp;
         } else {
@@ -93,7 +117,7 @@ export const LedgerPage = ({}) => {
     } catch (error) {
       setTipType(Tip_Type.openLedger);
     }
-  }, []);
+  }, [isShowSuccessTip,isLedgerPermission]);
   const onClickImport = useCallback(() => {
     onClickNextTab();
   }, []);
@@ -112,7 +136,9 @@ export const LedgerPage = ({}) => {
       case Tip_Type.openLockStatus:
         msg = i18n.t("auroLocked");
         break;
-
+      case Tip_Type.grantSuccess:
+        msg = i18n.t("grantSuccess");
+        break;
       default:
         break;
     }
@@ -125,30 +151,42 @@ export const LedgerPage = ({}) => {
         <Tabs selected={tabIndex} tabType={TAB_TYPE.STEP}>
           <div className={styles.innerContent} id={1}>
             <LedgerConnectView
+              isLedgerPermission={isLedgerPermission}
               onClickNext={onClickConnect}
               tipContent={tipContent}
+              isShowSuccessTip={isShowSuccessTip}
             />
           </div>
+          {!isLedgerPermission &&
           <div className={styles.innerContent} id={2}>
             <AccountNameView
               onClickNext={onClickImport}
               tipContent={tipContent}
               onClickConnect={onClickConnect}
             />
-          </div>
+          </div>}
+          {!isLedgerPermission &&
           <div className={styles.innerContent} id={3}>
             <SuccessView onClickNext={onClickDone} />
-          </div>
+          </div>}
         </Tabs>
       </div>
     </div>
   );
 };
 
-const LedgerConnectView = ({ onClickNext, tipContent }) => {
+const LedgerConnectView = ({ onClickNext, tipContent,isShowSuccessTip,isLedgerPermission }) => {
+  const viewTitle = useMemo(()=>{
+      const title = isLedgerPermission ?"grantLedger":"connectHardwareWallet"
+      return i18n.t(title)
+  },[isLedgerPermission,i18n])
+  const btnTxt = useMemo(()=>{
+    const txt = isShowSuccessTip ?"done":"next"
+    return i18n.t(txt)
+  },[isShowSuccessTip,i18n])
   return (
     <div className={styles.viewOuter}>
-      <div className={styles.viewTitle}>{i18n.t("connectHardwareWallet")}</div>
+      <div className={styles.viewTitle}>{viewTitle}</div>
       <div className={styles.viewTip}>{i18n.t("selectHardware")}</div>
       <img src="/img/ledger-logo.svg" className={styles.ledgerIcon} />
       <div className={styles.viewTip}>{i18n.t("getStarted")}</div>
@@ -170,10 +208,12 @@ const LedgerConnectView = ({ onClickNext, tipContent }) => {
         </span>
       </div>
       <div className={cls(styles.bottomContainer)}>
-        {tipContent && (
-          <div className={styles.accountWarningTip}>{tipContent}</div>
+        {tipContent && ( 
+          <div className={cls(styles.accountWarningTip,{
+            [styles.ledgerSuccessTip]:isShowSuccessTip
+          })}>{tipContent}</div>
         )}
-        <Button onClick={onClickNext}>{i18n.t("next")}</Button>
+        <Button onClick={onClickNext}>{btnTxt}</Button>
       </div>
     </div>
   );

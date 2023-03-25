@@ -250,8 +250,8 @@
   "selectHardware":"选择你想要使用的硬件钱包",
   "getStarted":"开始",
   "ledgerStartDesc":"开始之前，请确保你的 Ledger 固件版本已经是最新，并且 Ledger 中已经安装好了 Mina 应用。",
-  "ledgerConnect_1":"将 Ledger 与电脑连接",
-  "ledgerConnect_2":"在 Ledger 中打开 Mina 应用，直到看到 <b>Mina is ready.</b>",
+  "ledgerConnect_1":"将 Ledger 与电脑连接。",
+  "ledgerConnect_2":"在 Ledger 中打开 Mina 应用，直到看到 <b>Mina is ready</b>。",
   "selectHDPath":"选择 HD 派生路径",
   "ledgerSeletPathTip":"如果你不明白下面的设置是什么，你不需要更改它，详见<click>介绍</click>。",
   "ledgerConentTip_1":"Please continue the follow-up operation according to the prompt of the Ledger hardware wallet.",
@@ -264,5 +264,10 @@
   "ledgerReturnExtension":"请返回插件。",
   "ledgerConnetTip":"Ledger 没有连接。请先连接 Ledger，并点击下一步授权连接。",
   "ledgerConnetOpenTip":"请在 Ledger 设备中打开 Mina 应用。",
-  "auroLocked":"钱包已经锁定，请先解锁钱包。"
+  "auroLocked":"钱包已经锁定，请先解锁钱包。",
+  "grantLedger":"授权硬件钱包",
+  "ledgerStatus":"Ledger 状态",
+  "ledgerNotConnectTip":"Ledger 没有连接。请检查 Ledger 状态，或者点击<click>这里</click>重新授权。",
+  "ledgerAppConnectTip":"Ledger 已连接。但 Mina 应用没有打，请在 Ledger 打开Mina 应用，或者点击<click>这里</click>重新授权。",
+  "grantSuccess":"授权成功，请返回插件。"
 }

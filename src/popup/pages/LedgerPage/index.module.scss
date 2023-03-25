@@ -100,6 +100,12 @@
         min-width: 632px;
         transform: translate(-16px);
     }
+    .ledgerSuccessTip {
+        @extend .accountWarningTip;
+        background: rgba(13, 178, 124, 0.1);
+        border: 1px solid #0DB27C;
+        color: #0DB27C;
+    }
     .bottomContainer {
         position: absolute;
         width: 600px;

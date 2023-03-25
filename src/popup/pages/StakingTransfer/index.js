@@ -20,8 +20,10 @@ import { cointypes } from "../../../../config";
 import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
 import { sendMsg } from "../../../utils/commonMsg";
 import Toast from "../../component/Toast";
-import { checkLedgerConnect, requestSignDelegation } from "../../../utils/ledger";
+import { getLedgerStatus, LEDGER_STATUS, requestSignDelegation } from "../../../utils/ledger";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
+import extension from 'extensionizer'
+import { LEDGER_PAGE_TYPE } from "../LedgerPage";
 
 const StakingTransfer = () => { 
   const dispatch = useDispatch()
@@ -68,7 +70,8 @@ const StakingTransfer = () => {
     return false
   })
 
-
+  const [ledgerStatus,setLedgerStatus] = useState("")
+  const [ledgerApp,setLedgerApp] = useState()
 
 
   const onBlockAddressInput = useCallback((e) => {
@@ -131,7 +134,6 @@ const StakingTransfer = () => {
   },[confrimModalStatus])
 
   const ledgerTransfer = useCallback(async(params)=>{
-    const { ledgerApp } = await checkLedgerConnect()
     if (ledgerApp) {
       setWaintLedgerStatus(true)
       const { signature, payload, error,rejected } = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
@@ -145,9 +147,17 @@ const StakingTransfer = () => {
       let postRes = await sendStakeTx(payload, { rawSignature: signature }).catch(error => error)
       onSubmitSuccess(postRes,"ledger")
     }
-  },[currentAccount,onSubmitSuccess])
+  },[currentAccount,onSubmitSuccess,ledgerApp])
 
-  const clickNextStep = useCallback(() => {
+  const clickNextStep = useCallback(async() => {
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER && ledgerStatus!==LEDGER_STATUS.READY){
+      const ledger = await getLedgerStatus()
+      setLedgerStatus(ledger.status)
+      if(ledger.status!==LEDGER_STATUS.READY){
+        return 
+      }
+      setLedgerApp(ledger.app)
+    }
     let fromAddress = currentAccount.address
     let toAddress = nodeAddress || trimSpace(blockAddress)
     let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
@@ -167,10 +177,10 @@ const StakingTransfer = () => {
       setConfrimBtnStatus(false)
       onSubmitSuccess(data)
     })
-  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer])
+  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus])
 
 
-  const onConfirm = useCallback(() => {
+  const onConfirm = useCallback(async() => {
     let realBlockAddress = nodeAddress || blockAddress
     if (!addressValid(realBlockAddress)) {
       Toast.info(i18n.t('sendAddressError'))
@@ -218,9 +228,16 @@ const StakingTransfer = () => {
         value: memo,
       })
     }
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
+      const ledger = await getLedgerStatus()
+      setLedgerApp(ledger.app) 
+      setLedgerStatus(ledger.status)
+    }else{
+      setLedgerStatus("")
+    }
     setContentList(list)
     setConfrimModalStatus(true)
-  }, [nodeAddress, balance, feeAmount, inputNonce,
+  }, [nodeAddress, balance, feeAmount, inputNonce,currentAccount,
     clickNextStep, nodeName, nodeAddress, blockAddress, currentAccount, memo])
 
 
@@ -262,6 +279,15 @@ const StakingTransfer = () => {
       setBtnDisableStatus(false)
     }
   },[menuAdd,blockAddress])
+
+  const onClickReminder = useCallback(()=>{
+    const ledgerPageType = LEDGER_PAGE_TYPE.permissionGrant
+    let openParams = new URLSearchParams({ ledgerPageType }).toString()
+    extension.tabs.create({
+      url: "popup.html#/ledger_page?"+openParams,
+    });
+  },[ledgerStatus])
+
   return (<CustomView title={i18n.t('staking')} contentClassName={styles.container}>
     <div className={styles.contentContainer}>
       <div className={styles.inputContainer}>
@@ -323,6 +349,8 @@ const StakingTransfer = () => {
       onClickClose={onClickClose}
       contentList={contentList}
       waitingLedger={waintLedgerStatus}
+      ledgerStatus={ledgerStatus}
+      onClickReminder={onClickReminder}
     />
   </CustomView>)
 }

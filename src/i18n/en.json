@@ -251,7 +251,7 @@
   "getStarted":"Get Started",
   "ledgerStartDesc":"Before you start, ensure you have the most up-to-date firmware on your Ledger device and that Ledger is set up. And the Mina App has been installed in the Ledger device.",
   "ledgerConnect_1":"Connect your Ledger to the computer.",
-  "ledgerConnect_2":"Open the Mina app in your Ledger device, Until you see <b>Mina is ready.</b>",
+  "ledgerConnect_2":"Open the Mina app in your Ledger device, Until you see <b>Mina is ready</b>.",
   "selectHDPath":"Select HD Path",
   "ledgerSeletPathTip":"If you don't know what this setting below is, you don't need to change it. View detailed <click>instructions</click>",
   "ledgerConentTip_1":"Please continue the follow-up operation according to the prompt of the Ledger hardware wallet.",
@@ -264,5 +264,10 @@
   "ledgerReturnExtension":"Please return to the extension.",
   "ledgerConnetTip":"The Ledger device was not connected. Please check the Ledger status, click “Next” again and approve connection.",
   "ledgerConnetOpenTip":"You must open the Mina app on Ledger device.",
-  "auroLocked":"The wallet has been locked, please unlock the wallet first."
+  "auroLocked":"The wallet has been locked, please unlock the wallet first.",
+  "grantLedger":"Grant Permission Hardware Wallet",
+  "ledgerStatus":"Ledger status",
+  "ledgerNotConnectTip":"Ledger device is not connected. Please check the Ledger status or <click>click</click> here to regrant permission.",
+  "ledgerAppConnectTip":"Ledger device is connected, but Mina app is not open. Please open Mina app in ledger or click <click>here</click> to regrant permission.",
+  "grantSuccess":"Grant permission successful. Please return to the extension."
 }

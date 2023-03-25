@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.8]
+- Upgrade mina-provider to 0.1.7
+- Ledger enhancements
+
 ## [2.1.7]
 - Upgrade mina-provider to 0.1.6
 

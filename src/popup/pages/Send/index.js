@@ -11,7 +11,7 @@ import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateAddressBookFrom, updateAddressDetail } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
-import { checkLedgerConnect, requestSignPayment } from "../../../utils/ledger";
+import { getLedgerStatus, LEDGER_STATUS, requestSignPayment } from "../../../utils/ledger";
 import { getDisplayAmount, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
@@ -22,7 +22,8 @@ import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
-
+import extension from 'extensionizer'
+import { LEDGER_PAGE_TYPE } from "../LedgerPage";
 
 const SendPage = ({ }) => {
 
@@ -70,7 +71,8 @@ const SendPage = ({ }) => {
 
   const [contentList, setContentList] = useState([])
   const [btnDisableStatus,setBtnDisableStatus] = useState(true)
-
+  const [ledgerStatus,setLedgerStatus] = useState("")
+  const [ledgerApp,setLedgerApp] = useState()
 
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value)
@@ -193,7 +195,6 @@ const SendPage = ({ }) => {
     }
   }, [confrimModalStatus])
   const ledgerTransfer = useCallback(async (params) => {
-    const { ledgerApp } = await checkLedgerConnect()
     if (ledgerApp) {
       setWaintLedgerStatus(true)
       const { signature, payload, error, rejected } = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
@@ -209,9 +210,17 @@ const SendPage = ({ }) => {
 
       onSubmitTx(postRes, "ledger")
     }
-  }, [currentAccount, onSubmitTx])
+  }, [currentAccount, onSubmitTx,ledgerApp])
 
-  const clickNextStep = useCallback(() => {
+  const clickNextStep = useCallback(async() => {
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER && ledgerStatus!==LEDGER_STATUS.READY){
+      const ledger = await getLedgerStatus()
+      setLedgerStatus(ledger.status)
+      if(ledger.status!==LEDGER_STATUS.READY){
+        return 
+      }
+      setLedgerApp(ledger.app)
+    }
     let fromAddress = currentAddress
     let toAddressValue = trimSpace(toAddress)
     let amount = getRealTransferAmount()
@@ -234,7 +243,7 @@ const SendPage = ({ }) => {
       onSubmitTx(data)
     })
 
-  }, [getRealTransferAmount, onSubmitTx, ledgerTransfer,
+  }, [getRealTransferAmount, onSubmitTx, ledgerTransfer,ledgerStatus,
     currentAccount, currentAddress, netAccount, toAddress, inputNonce, memo, feeAmount])
 
   const onClickClose = useCallback(() => {
@@ -242,7 +251,7 @@ const SendPage = ({ }) => {
   }, [])
 
 
-  const onConfirm = useCallback(() => {
+  const onConfirm = useCallback(async() => {
     let toAddressValue = trimSpace(toAddress)
     if (!addressValid(toAddressValue)) {
       Toast.info(i18n.t('sendAddressError'))
@@ -305,10 +314,18 @@ const SendPage = ({ }) => {
       })
     }
 
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
+      const ledger = await getLedgerStatus()
+      setLedgerApp(ledger.app)
+      setLedgerStatus(ledger.status)
+    }else{
+      setLedgerStatus("")
+    }
     setContentList(list)
     setConfrimModalStatus(true)
 
-  }, [i18n, toAddress, amount, feeAmount, balance, inputNonce, currentAddress, memo, isAllTransfer, getRealTransferAmount, clickNextStep])
+  }, [i18n, toAddress, amount, feeAmount, balance, inputNonce, currentAddress, memo, currentAccount,
+    isAllTransfer, getRealTransferAmount, clickNextStep])
 
  
   useEffect(()=>{
@@ -319,6 +336,15 @@ const SendPage = ({ }) => {
     }
     
   },[toAddress,amount])
+  
+  const onClickReminder = useCallback(()=>{
+    const ledgerPageType = LEDGER_PAGE_TYPE.permissionGrant
+    let openParams = new URLSearchParams({ ledgerPageType }).toString()
+    extension.tabs.create({
+      url: "popup.html#/ledger_page?"+openParams,
+    });
+  },[ledgerStatus])
+
   return (<CustomView title={i18n.t('send')} contentClassName={styles.container}>
     <div className={styles.contentContainer}>
       <div className={styles.inputContainer}>
@@ -392,6 +418,8 @@ const SendPage = ({ }) => {
       loadingStatus={confrimBtnStatus}
       onClickClose={onClickClose}
       waitingLedger={waintLedgerStatus}
+      ledgerStatus={ledgerStatus}
+      onClickReminder={onClickReminder}
       contentList={contentList}/>
   </CustomView>)
 }
