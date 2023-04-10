@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.9]
+- Upgrade mina-signer to 2.0.3
+
 ## [2.1.8]
 - Upgrade mina-provider to 0.1.7
 - Ledger enhancements
