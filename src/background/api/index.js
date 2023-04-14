@@ -1,7 +1,7 @@
 import { BASE_INFO_URL, TX_LIST_LENGTH } from "../../../config";
 import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../constant/storageKey";
 import { NET_CONFIG_TYPE } from "../../constant/walletType";
-import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
+import { getCurrentNetConfig, isNumber, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
 import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getDeletionTotalBody, getPartyBody, getPendingTxBody, getPendingZkAppTxBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody, getZkAppTransactionListBody } from './gqlparams';
@@ -306,9 +306,9 @@ export async function getGqlTxHistory(address,limit){
      },
      gqlTxUrl
      );
-  let validatorDetail = {}
-  if(res.stake){
-    validatorDetail = res.stake.delegationTotals || {}
+  let validatorDetail = { "countDelegates":0,"totalDelegated":0 }
+  if(res.stake && isNumber(res.stake?.delegationTotals?.totalDelegated)){
+    validatorDetail = res.stake.delegationTotals
   }
   saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
   return validatorDetail;

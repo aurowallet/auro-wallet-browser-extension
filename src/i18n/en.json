@@ -269,5 +269,7 @@
   "ledgerStatus":"Ledger status",
   "ledgerNotConnectTip":"Ledger device is not connected. Please check the Ledger status or <click>click</click> here to regrant permission.",
   "ledgerAppConnectTip":"Ledger device is connected, but Mina app is not open. Please open Mina app in ledger or click <click>here</click> to regrant permission.",
-  "grantSuccess":"Grant permission successful. Please return to the extension."
+  "grantSuccess":"Grant permission successful. Please return to the extension.",
+  "submitNode":"Submit your node to this list?",
+  "delegators":"Delegators"
 }

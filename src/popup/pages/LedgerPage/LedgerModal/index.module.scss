@@ -1,11 +1,13 @@
+$ProcessHight:3px;
+
 .outerContainer {
     position: absolute;
-    top: 0;
+    top: $ProcessHight;
     left: 0;
     z-index: 10;
     background: rgba(0, 0, 0, 0.8);
     width: 750px;
-    height: 600px;
+    height: calc(600px - $ProcessHight);
 
     display: flex;
     align-items: center;

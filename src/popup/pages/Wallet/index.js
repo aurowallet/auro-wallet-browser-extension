@@ -558,7 +558,7 @@ const TxListView = ({
               </div>
             </div>)
           }
-          return <TxItem txData={item} key={index} currentAccount={accountInfo.currentAccount} />
+          return <TxItem txData={item} index={index} key={index} currentAccount={accountInfo.currentAccount} />
         })}
       </div> 
   </div>)
@@ -622,7 +622,7 @@ const TX_STATUS = {
   FAILED: "failed",
 }
 
-const TxItem = ({ txData, currentAccount }) => {
+const TxItem = ({ txData, currentAccount,index }) => {
   const {
     statusIcon,
     showAddress,
@@ -694,21 +694,28 @@ const TxItem = ({ txData, currentAccount }) => {
       params: { txDetail: txData }
     })
   }, [txData])
-
-  return (<div className={cls(styles.itemContainer, {
-    [styles.pendingCls]: showPendTx
-  })} onClick={onToDetail}>
-    <div className={styles.itemLeftContainer}>
-      <img src={statusIcon} className={styles.txStatusIcon} />
-      <div className={styles.itemAccount}>
-        <p className={styles.itemAccountAddress}>{showAddress}</p>
-        <p className={styles.itemAccountInfo}>{timeInfo}</p>
+  const paddingLineStyle = useMemo(()=>{
+    return  index !== 0
+  },[index])
+  return (<div className={styles.txItemCon}>
+    <div className={cls(styles.dividedLine,{
+      [styles.paddingLine]: paddingLineStyle
+    })}/>
+    <div className={cls(styles.itemContainer, {
+      [styles.pendingCls]: showPendTx
+    })} onClick={onToDetail}>
+      <div className={styles.itemLeftContainer}>
+        <img src={statusIcon} className={styles.txStatusIcon} />
+        <div className={styles.itemAccount}>
+          <p className={styles.itemAccountAddress}>{showAddress}</p>
+          <p className={styles.itemAccountInfo}>{timeInfo}</p>
+        </div>
       </div>
-    </div>
-    <div className={styles.itemRightContainer}>
-      <p className={styles.itemAmount}> {amount} </p>
-      <div className={cls(styles.itemStatus, statusStyle)}>
-        {statusText}
+      <div className={styles.itemRightContainer}>
+        <p className={styles.itemAmount}> {amount} </p>
+        <div className={cls(styles.itemStatus, statusStyle)}>
+          {statusText}
+        </div>
       </div>
     </div>
   </div>)

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.1.10]
+- Staking UI enhancements
+- Bug fixes
+
 ## [2.1.9]
 - Upgrade mina-signer to 2.0.3
 

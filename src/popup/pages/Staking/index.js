@@ -218,18 +218,19 @@ const DelegationInfo = ({
     showNodeAddress, showtotalStake, nodeName,showDelegations
   } = useMemo(() => {
     let showNodeAddress = addressSlice(delegatePublicKey)
-    let showtotalStake
+    let showtotalStake = "0"  
     if(isNumber(validatorDetail.totalDelegated)){
-      showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0,0) + " " + cointypes.symbol
+      showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0,0)
     }
+    showtotalStake = showtotalStake + " " + cointypes.symbol
     let showDelegations = validatorDetail.countDelegates
     if(isNumber(validatorDetail.countDelegates)){
-      showDelegations = validatorDetail.countDelegates
+      showDelegations = getAmountForUI(validatorDetail.countDelegates,0,0) 
     }else{
-      showDelegations = "NaN"
+      showDelegations = "0"
     }
     
-    let nodeName = ""
+    let nodeName = showNodeAddress
     if (delegatePublicKey) {
       let delegateNode = stakingList.find(({ nodeAddress }) => nodeAddress === delegatePublicKey);
       if (delegateNode && delegateNode.nodeAddress) {
@@ -252,7 +253,7 @@ const DelegationInfo = ({
 
     <div className={styles.delegationContent}>
       <div className={styles.rowLeft}>
-        {nodeName && <RowItem title={i18n.t('blockProducerName')} content={nodeName} />}
+        <RowItem title={i18n.t('blockProducerName')} content={nodeName} />
         <RowItem title={i18n.t('blockProducerAddress')} content={showNodeAddress} copyContent={delegatePublicKey} isMargin={true}/>
         {showtotalStake &&<RowItem title={i18n.t('totalStake')} content={showtotalStake} isMargin={true} />}
         {showDelegations && <RowItem title={i18n.t('totalDelegators')} content={showDelegations} isMargin={true} />}

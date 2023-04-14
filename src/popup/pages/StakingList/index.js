@@ -5,13 +5,14 @@ import 'react-circular-progressbar/dist/styles.css';
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { getStakingList } from "../../../reducers/stakingReducer";
-import { addressSlice } from "../../../utils/utils";
+import { addressSlice, getAmountForUI, showNameSlice } from "../../../utils/utils";
 import Toast from "../../component/Toast";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import styles from './index.module.scss';
 import Input from "../../component/Input";
 import { NET_CONFIG_TYPE } from "../../../constant/walletType";
+import { cointypes } from "../../../../config";
 
 const StakingList = ({ }) => {
 
@@ -40,7 +41,18 @@ const StakingList = ({ }) => {
 
   const onClickRow = useCallback((nodeItem) => {
     setCurrentSelectAddress(nodeItem.nodeAddress)
-  }, [])
+    if (fromPage === 'stakingTransfer') {
+      history.replace({
+        pathname: "/staking_transfer",
+        params: nodeItem
+      });
+    } else {
+      history.push({
+        pathname: "/staking_transfer",
+        params: nodeItem
+      });
+    }
+  }, [fromPage])
 
   const onClickManual = useCallback(() => {
     history.push({
@@ -51,32 +63,6 @@ const StakingList = ({ }) => {
     });
   }, [])
 
-  const onConfirm = useCallback(() => {
-    let nodeParams = null;
-    if (currentSelectAddress) {
-      let node = stakingList.find(n => n.nodeAddress === currentSelectAddress);
-      if (node) {
-        nodeParams = node;
-      }
-    }
-
-    if (fromPage === 'stakingTransfer') {
-      history.replace({
-        pathname: "/staking_transfer",
-        params: nodeParams
-      });
-    } else {
-      history.push({
-        pathname: "/staking_transfer",
-        params: nodeParams
-      });
-    }
-
-  }, [currentSelectAddress, stakingList, fromPage])
-
-  useEffect(() => {
-    dispatch(getStakingList())
-  }, [])
   return (<CustomView
     title={i18n.t('blockProducers')}
     contentClassName={styles.contentClassName}>
@@ -109,14 +95,12 @@ const StakingList = ({ }) => {
       }
       <div className={styles.manualAddContainer} >
         <p onClick={onClickManual} className={styles.manualAddContent}>{i18n.t('manualAdd')}</p>
+        <a href={"https://github.com/aurowallet/launch/tree/master/validators"} 
+          target="_blank"
+          className={styles.manualSubmit}>
+          {i18n.t("submitNode")}
+          </a>
       </div>
-    </div>
-    <div className={cls(styles.bottomContainer)}>
-      <Button
-        disable={!currentSelectAddress}
-        onClick={onConfirm}>
-        {i18n.t('next')}
-      </Button>
     </div>
   </CustomView>)
 }
@@ -127,34 +111,62 @@ const NodeItem = ({
   currentSelectAddress,
 }) => {
   const {
-    select, showName, showAddress
+    select, showName, showAddress,showTotalStake,showDelegations
   } = useMemo(() => {
     let select = nodeItem.nodeAddress === currentSelectAddress
 
-    let showName = nodeItem.nodeName || addressSlice(nodeItem.nodeAddress, 8)
-    let showAddress = addressSlice(nodeItem.nodeAddress, 10)
-    return {
-      select, showName, showAddress
+    let showName = nodeItem.nodeName
+    if(showName.length>=16){
+      showName = showNameSlice(nodeItem.nodeName,13)
     }
-  }, [nodeItem, currentSelectAddress])
-
-  return (<div className={styles.rowContainer}>
-    <div className={cls(styles.nodeItemContainer, {
+    let showAddress = addressSlice(nodeItem.nodeAddress, 6)
+    const showTotalStake = nodeItem.totalStake + " " + cointypes.symbol
+    const showDelegations = getAmountForUI(nodeItem.delegations,0,0) + " " + i18n.t('delegators')
+    return {
+      select, showName, showAddress,showTotalStake,showDelegations
+    }
+  }, [nodeItem, currentSelectAddress,i18n])
+  return(<div className={styles.rowContainer}>
+     <div className={cls(styles.nodeItemContainer, {
+      [styles.selectedBorder]:select
     })} onClick={() => onClickRow(nodeItem)}>
       <div className={styles.rowleft}>
-        <div className={styles.rowTopContainer}>
-          <p className={styles.nodeName}>{showName}</p>
-        </div>
-        <p className={styles.nodeAddress}>{showAddress}</p>
-        <div className={styles.stakeRow}>
-          <p className={styles.numberTitle}>{i18n.t("stake")} <span className={styles.numberContent}> {nodeItem.totalStake}</span></p>
-          <p className={styles.numberTitle}>{i18n.t("users")} <span className={styles.numberContent}> {nodeItem.delegations}</span></p>
-        </div>
+          <NodeIcon nodeItem={nodeItem}/>
+          <div className={styles.nodeInfoCon}>
+            <p className={styles.nodeName}>{showName}</p>
+            <p className={styles.nodeAddress}>{showAddress}</p>
+          </div>
       </div>
       <div className={styles.rowRight}>
-        {select && <img src="/img/icon_checked.svg" className={styles.checkedIcon} />}
+        <p className={styles.numberTitle}>
+        {showTotalStake}
+        </p>
+        <p className={cls(styles.nodeAddress,styles.rightTxt)}>
+            {showDelegations}
+        </p>
       </div>
     </div>
+  </div>)
+}
+
+const NodeIcon = ({nodeItem})=>{
+  const [showHolderIcon,setShowHolderIcon] = useState(!nodeItem.icon)
+  
+  const holderIconName = useMemo(()=>{
+    let showIdentityName = nodeItem.nodeName.slice(0,1)||""
+    showIdentityName = showIdentityName.toUpperCase()
+    return showIdentityName
+  },[nodeItem])
+
+  const onLoadError = useCallback(()=>{
+    setShowHolderIcon(true)
+  },[])
+  return(<div className={styles.iconCon}>
+    {showHolderIcon ?
+    <div className={styles.holderIconCon}>
+      {holderIconName}
+    </div>:
+     <img src={nodeItem.icon} className={styles.nodeIcon} onError={onLoadError}/>}
   </div>)
 }
 

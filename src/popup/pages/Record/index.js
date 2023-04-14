@@ -154,11 +154,14 @@ const Record = ({ }) => {
     {contentList.map((item, index) => {
       return <DetailRow key={index} title={item.title} content={item.content} />
     }, [])}
-    {showExplorer && <div className={styles.explorerContainer} onClick={onGoExplorer}>
+    {showExplorer && 
+    <div className={styles.explorerOuter}>
+      <div className={styles.explorerContainer} onClick={onGoExplorer}>
       <p className={styles.explorerTitle}>
         {i18n.t('queryDetails')}
       </p>
       <img src="/img/icon_link.svg" className={styles.iconLink} />
+      </div>
     </div>}
   </CustomView>)
 }

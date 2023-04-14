@@ -251,6 +251,7 @@ export function parseStakingList(stakingListFromServer) {
             nodeName: node.identity_name,
             totalStake: getAmountForUI(node.stake,cointypes.decimals,0), 
             delegations: node.delegations,
+            icon:node.validator_logo||""
         };
     })
 }

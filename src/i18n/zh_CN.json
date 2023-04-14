@@ -269,5 +269,7 @@
   "ledgerStatus":"Ledger 状态",
   "ledgerNotConnectTip":"Ledger 没有连接。请检查 Ledger 状态，或者点击<click>这里</click>重新授权。",
   "ledgerAppConnectTip":"Ledger 已连接。但 Mina 应用没有打，请在 Ledger 打开Mina 应用，或者点击<click>这里</click>重新授权。",
-  "grantSuccess":"授权成功，请返回插件。"
+  "grantSuccess":"授权成功，请返回插件。",
+  "submitNode":"提交节点到这个列表？",
+  "delegators":"委托者"
 }

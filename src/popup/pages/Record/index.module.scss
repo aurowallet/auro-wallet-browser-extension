@@ -1,6 +1,7 @@
 .container {
-    padding: 10px 20px 0px;
+    padding: 10px 20px 60px;
     overflow-y: auto;
+    position: relative;
 }
 .statusContainer {
     display: flex;
@@ -53,11 +54,17 @@
     }
 }
 
+.explorerOuter{
+    position: fixed;
+    bottom: 0;
+    width: calc(100% - 40px) ;
+    background-color: white;
+}
 .explorerContainer {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 10px auto;
+    margin: 20px auto;
     cursor: pointer;
     width: fit-content;
     .explorerTitle {
