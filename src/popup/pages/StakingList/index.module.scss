@@ -104,6 +104,7 @@
     width: fit-content;
     color: #594af1;;
     cursor: pointer;
+    font-size: 14px;
   }
   .manualSubmit{
     font-weight: 400;
@@ -137,7 +138,8 @@
     align-items: center;
     justify-content: center;
     background-color: rgba(0, 0, 0, 0.3);
-
+    color: white;
+    font-size: 16px;
   }
   .nodeIcon{
     width: 30px;

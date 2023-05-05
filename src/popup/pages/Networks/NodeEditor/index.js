@@ -15,6 +15,7 @@ import Input from "../../../component/Input";
 import { PopupModal } from "../../../component/PopupModal";
 import TextArea from "../../../component/TextArea";
 import styles from "./index.module.scss";
+import {extSaveLocal} from "../../../../background/extensionStorage";
 
 export const NodeEditorType = {
     add: "add",
@@ -237,7 +238,7 @@ const NodeEditor = ({ }) => {
             }
         }
 
-        saveLocal(NET_WORK_CONFIG, JSON.stringify(newConfig))
+        await extSaveLocal(NET_WORK_CONFIG, newConfig)
 
         clearLocalCache()
 
@@ -286,7 +287,7 @@ const NodeEditor = ({ }) => {
         setReminderModalStatus(false)
     }, [])
 
-    const onConfirmDelete = useCallback(() => {
+    const onConfirmDelete = useCallback(async () => {
         let currentConfigTemp = currentConfig
         let list = netConfigList
         if (editItem.url === currentConfigTemp.url) {
@@ -302,7 +303,7 @@ const NodeEditor = ({ }) => {
             netConfigVersion: NET_CONFIG_VERSION
         }
 
-        saveLocal(NET_WORK_CONFIG, JSON.stringify(newConfig))
+        await extSaveLocal(NET_WORK_CONFIG, newConfig)
         clearLocalCache()
         dispatch(updateNetConfig(newConfig))
         dispatch(updateShouldRequest(true))

@@ -180,8 +180,9 @@ function reEncodeRawSignature(rawSignature) {
   const scalar = rawSignature.substring(64);
   return shuffleBytes(field) + shuffleBytes(scalar);
 }
-function networkId() {
-  const netType = getCurrentNetConfig().netType;
+async function networkId() {
+  const networkConfig = await getCurrentNetConfig()
+  const netType = networkConfig.netType;
   if (netType === NET_CONFIG_TYPE.Mainnet) {
     return Networks.MAINNET;
   } else {
@@ -202,7 +203,7 @@ async function requestSign(app, body, type, ledgerAccountIndex) {
     fee: sendFee,
     nonce: +body.nonce,
     memo: body.memo || "",
-    networkId: networkId(),
+    networkId: await networkId(),
     validUntil: 4294967295,
   };
   const { signature, returnCode, statusText } = await app.signTransaction(

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.0]
+- Upgrade to manifest v3
+- Upgrade mina-provider to 0.1.8
+- Bug fixes
+
 ## [2.1.10]
 - Staking UI enhancements
 - Bug fixes

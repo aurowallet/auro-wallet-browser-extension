@@ -18,10 +18,10 @@ function fileUpdate(){
         pathCommon = './dist/' + fileName;
         fs.readFile(pathCommon, function (err, data) {
             if (err) {
-                checkManifest(EDIT_TYPE.DELETE,fileName)
+                // checkManifest(EDIT_TYPE.DELETE,fileName)
                 checkPopupHtml(EDIT_TYPE.DELETE,fileName)
             } else {
-                checkManifest(EDIT_TYPE.ADD,fileName)
+                // checkManifest(EDIT_TYPE.ADD,fileName)
                 checkPopupHtml(EDIT_TYPE.ADD,fileName)
             }
         })
@@ -77,6 +77,7 @@ function checkPopupHtml(editType,fileName) {
     })
 }
 function checkManifest(editType,fileName) {
+    return
     fs.readFile(pathManifest, function (err, data) {
         if (err) {
             throw new Error("read manifest.json failed , please check")

@@ -2,20 +2,19 @@ import axios from "axios";
 import { NET_WORK_CONFIG } from "../constant/storageKey";
 import { getRealErrorMsg } from "../utils/utils";
 import "./api/axios";
-import { getLocal } from "./localStorage";
+import {extGetLocal} from "./extensionStorage";
 
-function getNowUrl() {
-  let localNetConfig = getLocal(NET_WORK_CONFIG)
+async function getNowUrl() {
+  let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
   let url = ""
   if (localNetConfig) {
-    localNetConfig = JSON.parse(localNetConfig)
     url = localNetConfig.currentConfig?.url||""
   }
   return url
 }
 
 async function fetchGraphQL(operationsDoc, operationName, variables, url) {
-  let fetchUrl = url || getNowUrl()
+  let fetchUrl = url || await getNowUrl()
   return new Promise((resolve, reject) => {
     axios.post(
       fetchUrl,

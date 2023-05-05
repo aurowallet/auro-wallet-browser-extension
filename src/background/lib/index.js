@@ -6,7 +6,7 @@ import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 
 async function getSignClient(){
-    let netConfig = getCurrentNetConfig()
+    let netConfig = await getCurrentNetConfig()
     let netType = ''
     const { default: Client } = await import('mina-signer')
     if(netConfig.netType){
@@ -165,16 +165,8 @@ export async function signTransaction(privateKey,params){
 export async function signFieldsMessage(privateKey,params){
     let signResult
     try {
-        const fields = JSON.parse(params.message)
-        if(!Array.isArray(fields)){
-           return { error: { message: "Must use array" } }
-        }
-        const nextFields = fields.map((field)=>{
-            if(typeof field === "number"){
-                return BigInt(field)
-            }
-            return field
-        })
+        let fields = params.message
+        const nextFields = fields.map(BigInt)
         let signClient = await getSignClient()
         signResult = signClient.signFields(nextFields, privateKey)
         signResult.data = fields
@@ -187,21 +179,12 @@ export async function signFieldsMessage(privateKey,params){
 
 
 
-export async function verifyFieldsMessage(publicKey,signature,verifyMessage) {
+export async function verifyFieldsMessage(publicKey,signature,fields) {
     let verifyResult
     try {
         let signClient = await getSignClient()
 
-        const fields = JSON.parse(verifyMessage)
-        if(!Array.isArray(fields)){
-           return { error: { message: "Must use array" } }
-        }
-        const nextFields = fields.map((field)=>{
-            if(typeof field === "number"){
-                return BigInt(field)
-            }
-            return field
-        })
+        const nextFields = fields.map(BigInt)
         const verifyBody = {
             data:nextFields,
             publicKey:publicKey,

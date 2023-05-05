@@ -6,8 +6,9 @@ import { Provider } from "react-redux";
 import { MAIN_NET_BASE_CONFIG, network_config, NET_CONFIG_VERSION } from "../config";
 import { windowId } from "./background/DappService";
 import { getLocal, saveLocal } from "./background/localStorage";
+import { extGetLocal, extSaveLocal } from "./background/extensionStorage";
 import { CURRENCY_UNIT } from "./constant/pageType";
-import { CURRENCY_UNIT_CONFIG, NET_WORK_CONFIG } from "./constant/storageKey";
+import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
 import { DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/types";
 import { WALLET_CONNECT_TYPE } from "./constant/walletType";
 import "./i18n";
@@ -24,8 +25,8 @@ import { sendNetworkChangeMsg } from "./utils/utils";
 
 
 function getLocalNetConfig(store) {
-  return new Promise((resolve)=>{
-    let localNetConfig = getLocal(NET_WORK_CONFIG)
+  return new Promise(async (resolve)=>{
+    let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
     let config
     if (!localNetConfig) {
       let netList = network_config.map((item) => {
@@ -38,16 +39,17 @@ function getLocalNetConfig(store) {
         netConfigVersion:NET_CONFIG_VERSION
       }
       store.dispatch(updateNetConfig(config))
-      saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+      await extSaveLocal(NET_WORK_CONFIG, config)
       resolve(config)
     }else{
-      let newJson = updateNetLocalConfig(JSON.parse(localNetConfig))
+      let newJson = await updateNetLocalConfig(localNetConfig)
       store.dispatch(updateNetConfig(newJson))
       resolve(newJson)
     }
   })
 }
-function updateNetLocalConfig(netConfig){
+
+async function updateNetLocalConfig(netConfig){
   let localVersion = netConfig.netConfigVersion || 0 
 
   if(localVersion >= NET_CONFIG_VERSION){
@@ -109,7 +111,7 @@ function updateNetLocalConfig(netConfig){
       netConfigVersion:NET_CONFIG_VERSION
     }
   }
-  saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+  await extSaveLocal(NET_WORK_CONFIG, config) 
   return config
 }
 /**
@@ -215,6 +217,32 @@ async function getLocalStatus(store) {
     })
   })
 }
+async function upgradeStorageConfig(){
+  // 这里存在
+  // 1. 从v2 升级到 v3 这里需要升级  标示是存储过 语言记录或者网络记录
+    
+  // 当不存在这两个记录时，则此处不需要升级，直接返回即可， 说明是v3 或者是新使用
+  
+  // 当存在任意一个记录时，则标示是升级，存在哪个升级哪个，升级结束后，本地保存一份升级的记录，
+  // 下次打开时，如果存在这个记录，说明已升级，直接返回，如果不存在，则继续升级过程
+  const languageConfig = getLocal(LANGUAGE_CONFIG) 
+  const networkConfig = getLocal(NET_WORK_CONFIG) 
+  if(!languageConfig || !networkConfig){// 当不存在这两个记录时，则此处不需要升级，直接返回即可， 说明是v3 或者是新使用
+    return 
+  }
+  const storageUpgradeToV3Status = getLocal(STORAGE_UPGRADE_STATUS)
+  if(storageUpgradeToV3Status){ // 下次打开时，如果存在这个记录，说明已升级，直接返回，
+    return
+  }
+
+  if(languageConfig){
+    await extSaveLocal(LANGUAGE_CONFIG, languageConfig)
+  }
+  if(networkConfig){
+    await extSaveLocal(NET_WORK_CONFIG, JSON.parse(networkConfig))
+  }
+  saveLocal(STORAGE_UPGRADE_STATUS,true)
+}
 
 export const applicationEntry = {
   async run() {
@@ -225,8 +253,9 @@ export const applicationEntry = {
   async appInit(store) {
     extension.runtime.connect({ name: WALLET_CONNECT_TYPE.WALLET_APP_CONNECT });
 
+    await upgradeStorageConfig()
     // init netRequest
-    let netConfig =  await getLocalNetConfig(store)
+    let netConfig = await getLocalNetConfig(store)
     sendNetworkChangeMsg(netConfig.currentConfig)
 
     // init nextRoute

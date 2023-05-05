@@ -14,6 +14,7 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
 import { NodeEditorType } from "./NodeEditor";
+import {extSaveLocal} from "../../../background/extensionStorage";
 
 
 const NetworkPage = ({ }) => {
@@ -87,7 +88,7 @@ const NetworkPage = ({ }) => {
         }
     }, [])
 
-    const onClickRow = useCallback((nodeItem) => {
+    const onClickRow = useCallback(async (nodeItem) => {
         if (editMode) {
             return
         }
@@ -96,7 +97,7 @@ const NetworkPage = ({ }) => {
             currentConfig: nodeItem,
             netConfigVersion: NET_CONFIG_VERSION
         }
-        saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+        await extSaveLocal(NET_WORK_CONFIG, config)
         clearLocalCache()
 
         dispatch(updateNetConfig(config))

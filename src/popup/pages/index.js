@@ -33,8 +33,8 @@ const MainRouter = () => {
     }
   }, []);
 
-  useEffect(() => {
-    let lan = languageInit();
+  useEffect(async() => {
+    let lan = await languageInit();
     dispatch(setLanguage(lan));
     initBaseInfo();
   }, []);

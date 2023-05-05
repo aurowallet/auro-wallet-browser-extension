@@ -589,8 +589,8 @@ class DappService {
     }
   }
   requestNetwork() {
-    return new Promise((resolve) => {
-      let netConfig = getCurrentNetConfig()
+    return new Promise(async (resolve) => {
+      let netConfig = await getCurrentNetConfig()
       let netType = ''
       if (netConfig.netType) {
         netType = netConfig.netType

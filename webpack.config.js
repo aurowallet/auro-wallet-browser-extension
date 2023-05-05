@@ -1,6 +1,8 @@
 const webpack = require("webpack");
 const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin")
+
 module.exports = (env, argv) => {
   console.log('argv.mode', argv.mode)
   const mode = argv.mode;
@@ -12,8 +14,38 @@ module.exports = (env, argv) => {
   const sassModuleRegex = /\.module\.(scss|sass)$/;
 
   const config = {
+    devtool: false,
+    optimization: {
+      minimizer:[
+        new TerserPlugin({
+          extractComments:false
+        })
+      ],
+      splitChunks: {
+        chunks: 'async',// 指明要分割的插件类型, async:异步插件(动态导入),inital:同步插件,all：全部类型
+        minSize: 20000,// 文件最小大小,单位bite;即超过minSize有可能被分割；
+        minRemainingSize: 0,// webpack5新属性，防止0尺寸的chunk
+        maxSize: 0,
+        minChunks: 1,
+        maxAsyncRequests: 30,// webpack4,5区别较大
+        maxInitialRequests: 30,// webpack4,5区别较大
+        enforceSizeThreshold: 50000,
+        cacheGroups: {
+          defaultVendors: {
+            test: /[\\/]node_modules[\\/]/,
+            priority: -10,
+            reuseExistingChunk: true
+          },
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true
+          }
+        }
+      }
+    },
     entry: {
-      background: "./src/background/index.js",
+      background: ["./src/background/regeneratorRuntime.js", "./src/background/index.js"],
       popup: "./src/index.js",
       contentScript: "./src/contentScript/index.js",
       webhook: "./src/webHook/index.js"
@@ -110,6 +142,7 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: getPlugins(),
+    performance: getPerformance(),
     resolve:{
       fallback:{
         'child_process': 'empty',
@@ -132,9 +165,9 @@ module.exports = (env, argv) => {
 
 function getPerformance() {
   return {
-    hints: false,
-    maxEntrypointSize: 512000,
-    maxAssetSize: 512000,
+    hints: 'warning',
+    maxAssetSize: 4 * 1024 * 1024, // 4MB
+    maxEntrypointSize: 4 * 1024 * 1024, // 4MB
   };
 }
 function getPlugins() {

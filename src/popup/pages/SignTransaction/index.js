@@ -425,6 +425,8 @@ const SignTransaction = () => {
     let content = params?.message || ""
     if(signParams.sendAction === DAppActions.mina_sendTransaction){
       content = i18n.t('exportZkAppCommand')
+    }else if(signParams.sendAction === DAppActions.mina_signFields){
+      content = JSON.stringify(content)
     }
 
     let tabList = []

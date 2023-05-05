@@ -61,7 +61,7 @@ export const UNKNOWN_NET_BASE_CONFIG={
 /**
  * current net config version if net change just add 1 
  */
-export const NET_CONFIG_VERSION = 1020
+export const NET_CONFIG_VERSION = 1024
 
 export const network_config=[
   {

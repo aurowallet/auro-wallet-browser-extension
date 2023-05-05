@@ -1,9 +1,11 @@
 const axios = require('axios');
+const fetchAdapter = require('@vespaiach/axios-fetch-adapter').default
 const { ERROR_TYPE } = require('../../constant/errType');
 const { default: store } = require('../../store/store');
 const timeout = 1 * 60 * 1000;
 axios.defaults.retry = 3;
 axios.defaults.retryDelay = 1000;
+axios.defaults.adapter = fetchAdapter;
 
 function axiosRetryInterceptor(err) {
     var message, config;
@@ -14,7 +16,7 @@ function axiosRetryInterceptor(err) {
         message = err.message;
         config = err.config;
     }
-    config.clearCancelToken();
+    config?.clearCancelToken();
     // If config does not exist or the retry option is not set, reject
     if (!config || !config.retry) return Promise.reject(new Error(message));
     // Set the variable for keeping track of the retry count
