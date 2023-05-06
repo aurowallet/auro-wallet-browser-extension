@@ -22,13 +22,13 @@ module.exports = (env, argv) => {
         })
       ],
       splitChunks: {
-        chunks: 'async',// 指明要分割的插件类型, async:异步插件(动态导入),inital:同步插件,all：全部类型
-        minSize: 20000,// 文件最小大小,单位bite;即超过minSize有可能被分割；
-        minRemainingSize: 0,// webpack5新属性，防止0尺寸的chunk
+        chunks: 'async',
+        minSize: 20000,
+        minRemainingSize: 0,
         maxSize: 0,
         minChunks: 1,
-        maxAsyncRequests: 30,// webpack4,5区别较大
-        maxInitialRequests: 30,// webpack4,5区别较大
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
         enforceSizeThreshold: 50000,
         cacheGroups: {
           defaultVendors: {
