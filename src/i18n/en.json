@@ -204,8 +204,8 @@
   "delegationInfo": "Delegation Info",
   "stakingGuide": "Staking Guide",
   "emptyDelegateTitle": "You have not yet delegated",
-  "emptyDelegateDesc_1": "Delegating MINA to a block producer node can help you to obtain rewards for producing blocks.",
-  "emptyDelegateDesc_2": "The Block Producer will distribute rewards according to the amount of your delegated proportion, and your percentage of rewards will also depend on the commission rate set by the Block Producer. Here is some information regarding the effective time of delegating and rewards distributing rules: <click>Staking Guide</click>",
+  "emptyDelegateDesc_1": "Delegating MINA to a Block Producer node can help you to obtain rewards for producing blocks.The Block Producer will distribute rewards according to the amount of your delegated proportion, and your percentage of rewards will also depend on the commission rate set by the Block Producer.",
+  "emptyDelegateDesc_2": "Effective time of delegation and rewards distributing rules: <click>Staking Guide</click>",
   "goStake": "Go to staking",
   "blockProducerName": "Block Producer Name",
   "blockProducerAddress": "Block Producer Address",
@@ -270,6 +270,6 @@
   "ledgerNotConnectTip":"Ledger device is not connected. Please check the Ledger status or <click>click</click> here to regrant permission.",
   "ledgerAppConnectTip":"Ledger device is connected, but Mina app is not open. Please open Mina app in ledger or click <click>here</click> to regrant permission.",
   "grantSuccess":"Grant permission successful. Please return to the extension.",
-  "submitNode":"Submit your node to this list?",
+  "submitNode":"Submit/Update your node to this list",
   "delegators":"Delegators"
 }

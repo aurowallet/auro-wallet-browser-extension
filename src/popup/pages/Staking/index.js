@@ -124,8 +124,8 @@ const Staking = ({ }) => {
     contentClassName={styles.contentClassName}>
     <EpochInfo />
     {
-      isUnknow ? <UnknownView onClickGuide={onClickGuide} />
-        : loading ? <LoadingView onClickGuide={onClickGuide} /> : (delegatePublicKey ? <DelegationInfo delegatePublicKey={delegatePublicKey} onClickGuide={onClickGuide}/> : <EmptyView onClickGuide={onClickGuide} />)
+      // isUnknow ? <UnknownView onClickGuide={onClickGuide} />: 
+        loading ? <LoadingView onClickGuide={onClickGuide} /> : (delegatePublicKey ? <DelegationInfo delegatePublicKey={delegatePublicKey} onClickGuide={onClickGuide}/> : <EmptyView onClickGuide={onClickGuide} />)
     }
     <Clock schemeEvent={() => baseFetchData(true)} />
   </CustomView>)

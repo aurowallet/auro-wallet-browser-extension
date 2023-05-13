@@ -39,7 +39,7 @@ const contentScript = {
     const hostPage = (document.head || document.documentElement);
     const script = document.createElement('script');
 
-    script.src = extensionizer.extension.getURL('webhook.js');
+    script.src = extensionizer.runtime.getURL('webhook.js');
     script.onload = function() {
       this.parentNode.removeChild(this);
     };

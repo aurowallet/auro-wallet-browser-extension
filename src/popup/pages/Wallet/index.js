@@ -16,12 +16,13 @@ import { ACCOUNT_BALANCE_CACHE_STATE, updateAccountTx, updateNetAccount, updateS
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { updateNetConfig } from "../../../reducers/network";
 import { openTab, sendMsg } from '../../../utils/commonMsg';
-import { addressSlice, amountDecimals, copyText, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, getShowTime, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
+import { addressSlice, amountDecimals, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, getShowTime, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
 import Clock from '../../component/Clock';
 import { PopupModal } from '../../component/PopupModal';
 import Select from '../../component/Select';
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import {extSaveLocal} from "../../../background/extensionStorage";
 
 const Wallet = ({ }) => {
 
@@ -60,7 +61,7 @@ const Wallet = ({ }) => {
   }, [])
 
 
-  const onChangeOption = useCallback((option) => {
+  const onChangeOption = useCallback(async (option) => {
     const { currentConfig, currentNetConfig, netList } = netConfig
     if (option.value !== currentConfig.url) {
       let newConfig = {}
@@ -75,7 +76,7 @@ const Wallet = ({ }) => {
         ...currentNetConfig,
         currentConfig: newConfig
       }
-      saveLocal(NET_WORK_CONFIG, JSON.stringify(config))
+      await extSaveLocal(NET_WORK_CONFIG, config)
       dispatch(updateNetConfig(config))
       dispatch(updateStakingRefresh(true))
 
@@ -187,8 +188,10 @@ const WalletInfo = () => {
     let unitBalance = "--"
     if (cache.currentPrice) {
       unitBalance = new BigNumber(cache.currentPrice).multipliedBy(balance).toString()
-      unitBalance = currencyConfig.currentCurrency.symbol + ' ' + getDisplayAmount(unitBalance, 2)
+      unitBalance = currencyConfig.currentCurrency.symbol + ' ' + getAmountForUI(unitBalance,0,2)
     }
+    // format
+    balance = new BigNumber(balance).toFormat()
 
     const netType = netConfig.currentConfig?.netType
     let showCurrency = netType == NET_CONFIG_TYPE.Mainnet
@@ -635,20 +638,20 @@ const TxItem = ({ txData, currentAccount,index }) => {
     let isReceive = true
     let statusIcon, showAddress, timeInfo, amount, statusText, statusStyle = ''
 
-
     if (txData.kind?.toLowerCase() === "payment") {
       isReceive = txData.to.toLowerCase() === currentAccount.address.toLowerCase()
       statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg"
+    } else if(txData.kind?.toLowerCase() === "stake_delegation"){
+      isReceive = false
+      statusIcon = "/img/tx_pending.svg"
     } else if(txData.kind?.toLowerCase() === "zkapp"){
       isReceive = false
       statusIcon = "/img/tx_history_zkapp.svg"
-    }else {
+    } else {
       statusIcon = "/img/tx_pending.svg"
     }
-
     showAddress = addressSlice(isReceive ? txData.from : txData.to, 8)
     showAddress = !showAddress ? txData.kind.toUpperCase() : showAddress
-
     timeInfo = txData.status === TX_STATUS.PENDING ? "Nonce " + txData.nonce : getShowTime(txData.dateTime)
 
 

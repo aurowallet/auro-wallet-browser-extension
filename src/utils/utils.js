@@ -7,6 +7,7 @@ import { DAPP_CHANGE_NETWORK } from "../constant/types";
 import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } from "../constant/walletType";
 import { sendMsg } from "./commonMsg";
 import bs58check from "bs58check";
+import {extGetLocal} from "../background/extensionStorage";
 /**
  * address slice
  * @param {*} address
@@ -201,10 +202,9 @@ export function getQueryStringArgs(queryUrl = "") {
     return args;
 }
 
-export function getCurrentNetConfig() {
-    let localNetConfig = getLocal(NET_WORK_CONFIG)
+export async function getCurrentNetConfig() {
+    let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
     if (localNetConfig) {
-        localNetConfig = JSON.parse(localNetConfig)
         return localNetConfig.currentConfig
     }
     return {}

@@ -4,6 +4,7 @@ import { generateMnemonic } from "bip39";
 import bs58check from "bs58check";
 import { Buffer } from 'safe-buffer';
 import { cointypes } from "../../config";
+import Client from 'mina-signer';
 
 export function validateMnemonic(mnemonic) {
     return bip39.validateMnemonic(mnemonic);
@@ -47,7 +48,6 @@ export async function importWalletByMnemonic(mnemonic, index = 0) {
     const childPrivateKey = reverse(child0.privateKey)
     const privateKeyHex = `5a01${childPrivateKey.toString('hex')}`
     const privateKey = bs58check.encode(Buffer.from(privateKeyHex, 'hex'))
-    const { default: Client } = await import('mina-signer')
     const client = new Client({ network: "mainnet" })
     const publicKey = client.derivePublicKey(privateKey)
     return {
@@ -78,7 +78,6 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
         const privateKeyHex = '5a' + sodium.crypto_secretbox_open_easy(ciphertext, nonce, key, 'hex')
         const privateKeyBuffer = Buffer.from(privateKeyHex, 'hex')
         const privateKey = bs58check.encode(privateKeyBuffer)
-        const { default: Client } = await import('mina-signer')
         const client = new Client({ network: "mainnet" })
         const publicKey = client.derivePublicKey(privateKey)
         return {
@@ -91,7 +90,6 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
     }
 }
 export async function importWalletByPrivateKey(privateKey) {
-    const { default: Client } = await import('mina-signer')
     const client = new Client({ network: "mainnet" })
     const publicKey = client.derivePublicKey(privateKey)
     return {

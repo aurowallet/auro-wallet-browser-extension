@@ -1,10 +1,27 @@
 import { BASE_INFO_URL, TX_LIST_LENGTH } from "../../../config";
 import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../constant/storageKey";
 import { NET_CONFIG_TYPE } from "../../constant/walletType";
-import { getCurrentNetConfig, isNumber, parseStakingList } from "../../utils/utils";
-import { saveLocal } from "../localStorage";
+import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
-import { getBalanceBatchBody, getBalanceBody, getBlockInfoBody, getChainIdBody, getDaemonStatusBody, getDelegationInfoBody, getDeletionTotalBody, getPartyBody, getPendingTxBody, getPendingZkAppTxBody, getStakeTxSend, getTxHistoryBody, getTxSend, getTxStatusBody, getZkAppTransactionListBody } from './gqlparams';
+import {
+  getBalanceBatchBody,
+  getBalanceBody,
+  getBlockInfoBody,
+  getChainIdBody,
+  getDaemonStatusBody,
+  getDelegationInfoBody,
+  getDeletionTotalBody,
+  getPartyBody,
+  getPendingTxBody,
+  getPendingZkAppTxBody,
+  getQATxStatusBody,
+  getStakeTxSend,
+  getTxHistoryBody,
+  getTxSend,
+  getTxStatusBody,
+  getZkAppTransactionListBody
+} from './gqlparams';
+import {saveLocal} from "../localStorage";
 
 /**
 * get balance
@@ -18,11 +35,11 @@ export async function getBalance(address) {
       publicKey: address
     }
   ).catch((error) => error)
-  let account = result.account || {
-    publicKey:address
+  let account = result?.account || {
+    publicKey: address
   }
-  saveLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE, JSON.stringify({ [address]: account }))
-  if(result.error){
+  await saveLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE, JSON.stringify({ [address]: account }))
+  if(result?.error){
     account.error = result.error
   }
   return account
@@ -107,7 +124,7 @@ export async function fetchDaemonStatus() {
   const query = getDaemonStatusBody()
   let res = await startFetchMyQuery(query, {});
   let daemonStatus = res.daemonStatus || {}
-  saveLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS, JSON.stringify(daemonStatus))
+  await saveLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS, JSON.stringify(daemonStatus))
   return daemonStatus;
 }
 /**
@@ -119,7 +136,7 @@ export async function fetchBlockInfo(stateHash) {
   const query = getBlockInfoBody()
   let res = await startFetchMyQuery(query, { stateHash });
   let block = res.block || {}
-  saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO, JSON.stringify(block))
+  await saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO, JSON.stringify(block))
   return block;
 }
 
@@ -132,12 +149,12 @@ export async function fetchDelegationInfo(publicKey) {
   const query = getDelegationInfoBody()
   let res = await startFetchMyQuery(query, { requestType: "extensionAccountInfo", publicKey });
   let account = res.account || {}
-  saveLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO, JSON.stringify({ [publicKey]: account }))
+  await saveLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO, JSON.stringify({ [publicKey]: account }))
   return account;
 }
 
 export async function fetchStakingList() {
-  let netConfig = getCurrentNetConfig()
+  let netConfig = await getCurrentNetConfig()
   let baseUrl = netConfig.txUrl
   if(netConfig.netType !== NET_CONFIG_TYPE.Mainnet){
     return []
@@ -147,7 +164,7 @@ export async function fetchStakingList() {
   }
   const data = await commonFetch(baseUrl + '/validators').catch(() => [])
   const stakingList = parseStakingList(data)
-  saveLocal(LOCAL_CACHE_KEYS.STAKING_LIST, JSON.stringify(stakingList))
+  await saveLocal(LOCAL_CACHE_KEYS.STAKING_LIST, JSON.stringify(stakingList))
   return stakingList;
 }
 
@@ -191,7 +208,7 @@ export async function getPendingTxList(address) {
       publicKey: address
     }).catch(() => [])
   let list = result.pooledUserCommands || []
-  saveLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
+  await saveLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
   return { txList: list, address }
 }
 
@@ -242,14 +259,14 @@ export async function getNodeChainId(gqlUrl) {
 * @returns 
 */
 export async function getCurrencyPrice(currency) {
-  let netConfig = getCurrentNetConfig()
+  let netConfig = await getCurrentNetConfig()
   if(!netConfig.txUrl){
     return 0
   }
   let priceUrl = netConfig.txUrl + "/prices?currency=" + currency
   let data = await commonFetch(priceUrl).catch(() => { })
   let price = data?.data || 0
-  saveLocal(LOCAL_CACHE_KEYS.COIN_PRICE, JSON.stringify({ price }))
+  await saveLocal(LOCAL_CACHE_KEYS.COIN_PRICE, JSON.stringify({ price }))
   return price
 }
 
@@ -258,14 +275,14 @@ export async function getNetworkList() {
   let networkUrl = BASE_INFO_URL + "network_list.json"
   let result = await commonFetch(networkUrl).catch(error => [])
   if (result.length > 0) {
-    saveLocal(NETWORK_ID_AND_TYPE, JSON.stringify(result))
+    await saveLocal(NETWORK_ID_AND_TYPE, JSON.stringify(result))
   }
   return result
 }
 
 /** request gql transaction */
 export async function getGqlTxHistory(address,limit){
-  let netConfig = getCurrentNetConfig()
+  let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
   if (!gqlTxUrl) {
     return []
@@ -281,7 +298,7 @@ export async function getGqlTxHistory(address,limit){
     gqlTxUrl,
   ).catch((error) => error)
   let list = result.transactions  || []
-  saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
+  await saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
   return list
 }
 
@@ -292,7 +309,7 @@ export async function getGqlTxHistory(address,limit){
  * @returns 
  */
  export async function fetchValidatorDetail(publicKey,epoch) {
-  let netConfig = getCurrentNetConfig()
+  let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
   if (!gqlTxUrl) {
     return {}
@@ -306,21 +323,21 @@ export async function getGqlTxHistory(address,limit){
      },
      gqlTxUrl
      );
-  let validatorDetail = { "countDelegates":0,"totalDelegated":0 }
-  if(res.stake && isNumber(res.stake?.delegationTotals?.totalDelegated)){
-    validatorDetail = res.stake.delegationTotals
+  let validatorDetail = {}
+  if(res.stake){
+    validatorDetail = res.stake.delegationTotals || {}
   }
-  saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
+  await saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
   return validatorDetail;
 }
 
 /** request gql transaction */
 export async function getZkAppTxHistory(address,limit){
-  let netConfig = getCurrentNetConfig()
+  let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
 
   if (!gqlTxUrl || netConfig.netType !== NET_CONFIG_TYPE.Berkeley) {
-    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
+    await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
   let txBody = getZkAppTransactionListBody()
@@ -334,16 +351,16 @@ export async function getZkAppTxHistory(address,limit){
     gqlTxUrl,
   ).catch((error) => error)
   let list = result.zkapps  || []
-  saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: list }))
+  await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: list }))
   return list
 }
 
 
 export async function getZkAppPendingTx(address,limit){
-  let netConfig = getCurrentNetConfig()
+  let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.url
   if (!gqlTxUrl || netConfig.netType !== NET_CONFIG_TYPE.Berkeley) {
-    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
+   await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
   if(gqlTxUrl.indexOf("graphql")!==-1){
@@ -360,6 +377,6 @@ export async function getZkAppPendingTx(address,limit){
     gqlTxUrl,
   ).catch((error) => error)
   let list = result.pooledZkappCommands  || []
-  saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: list }))
+  await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: list }))
   return list
 }

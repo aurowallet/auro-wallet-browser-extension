@@ -5,6 +5,7 @@ import { DEFAULT_LANGUAGE } from "../../config";
 import { LANGUAGE_CONFIG } from "../constant/storageKey";
 import en from "./en.json";
 import zh from "./zh_CN.json";
+import {extGetLocal, extSaveLocal} from "../background/extensionStorage";
 
 
 export const LANG_SUPPORT_LIST = {
@@ -25,9 +26,9 @@ const resources = {
   },
 };
 
-export function changeLanguage(lan) {
+export async function changeLanguage(lan) {
   i18n.changeLanguage(lan);
-  saveLocal(LANGUAGE_CONFIG, lan)
+  await extSaveLocal(LANGUAGE_CONFIG, lan)
 }
 
 export function getCurrentLang() {
@@ -43,8 +44,8 @@ function checkIsZh(language){
   return browserLangParse(language) === LANG_SUPPORT_LIST.ZH_CN || browserLangParse(language) == "zh"
 }
 
-export function languageInit() {
-  i18n
+export async function languageInit() {
+  await i18n
     .use(initReactI18next)
     .init({
       resources,
@@ -55,7 +56,7 @@ export function languageInit() {
       },
     });
 
-  let res = getLocal(LANGUAGE_CONFIG)
+  let res = await extGetLocal(LANGUAGE_CONFIG)
   if (res) {
     changeLanguage(res)
     default_language = res
@@ -64,7 +65,7 @@ export function languageInit() {
     res = checkIsZh(language) ? LANG_SUPPORT_LIST.ZH_CN : LANG_SUPPORT_LIST.EN;
     changeLanguage(res)
     default_language = res
-    saveLocal(LANGUAGE_CONFIG, res)
+    await extSaveLocal(LANGUAGE_CONFIG, res)
   }
   return res
 }

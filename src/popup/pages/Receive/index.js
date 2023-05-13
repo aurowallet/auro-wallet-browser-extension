@@ -25,7 +25,6 @@ const ReceivePage = ({ }) => {
     title={i18n.t('receive')}
     contentClassName={styles.container}>
 
-    <img src={'/img/receiveBg.svg'} className={styles.bgImg} />
     <div className={styles.content}>
       <p className={styles.title}>{i18n.t('scanPay')}</p>
       <div className={styles.dividedLine} />

@@ -1,6 +1,6 @@
 import { LOCK_TIME } from '../../config';
 import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
-import { getLanguage } from '../i18n';
+import '../i18n';
 import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
 import { signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
@@ -9,6 +9,9 @@ import extension from 'extensionizer'
 import { getCurrentNetConfig } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
+import { changeLanguage, getCurrentLang } from '../i18n';
+import { extGetLocal } from './extensionStorage';
+import { LANGUAGE_CONFIG } from '../constant/storageKey';
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -720,8 +723,8 @@ class APIService {
         return signedResult
     }
 
-    notification = (hash) => {
-        let netConfig =  getCurrentNetConfig()
+    notification = async (hash) => {
+        let netConfig = await getCurrentNetConfig()
         let myNotificationID
         extension.notifications &&
             extension.notifications.onClicked.addListener(function (clickId) {
@@ -730,6 +733,11 @@ class APIService {
                     extension.tabs.create({ url: url });
                 }
             });
+        const i18nLanguage = getCurrentLang()
+        const localLanguage = await extGetLocal(LANGUAGE_CONFIG)
+        if(localLanguage !== i18nLanguage){
+            changeLanguage(localLanguage)
+        }
         let title = i18n.t('notificationTitle')
         let message = i18n.t('notificationContent')
         extension.notifications.create(hash, {

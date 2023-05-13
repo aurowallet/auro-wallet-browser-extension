@@ -1,10 +1,10 @@
 {
     "appName": {
-        "message": "Auro 钱包",
+        "message": "Auro Wallet",
         "description": "The name of the application"
     },
     "appDescription": {
-        "message": "Mina浏览器插件钱包",
+        "message": "Mina 浏览器插件钱包",
         "description": "The description of the application"
     }
 }

@@ -22,6 +22,7 @@ import Input from "../../component/Input";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import {extGetLocal, extSaveLocal} from "../../../background/extensionStorage";
 
 export const LockPage = ({
     onClickUnLock = () => { },
@@ -92,7 +93,7 @@ export const LockPage = ({
     },[])
  
    
-    const onConfirmDeleteClick = useCallback(({ inputValue }) => {
+    const onConfirmDeleteClick = useCallback(async ({ inputValue }) => {
         let deleteTag = i18n.t("deleteTag")
         let checkStatus = inputValue.trim() === deleteTag
         if (!checkStatus) {
@@ -101,16 +102,16 @@ export const LockPage = ({
         }
         sendMsg({
             action: RESET_WALLET,
-        }, () => {
+        }, async () => {
+            const localNetConfig = await extGetLocal(NET_WORK_CONFIG)
             clearStorage()
+            await extSaveLocal(NET_WORK_CONFIG,localNetConfig)
             let baseInfo = getLocal(LOCAL_BASE_INFO)
-            clearLocalExcept(NET_WORK_CONFIG)
+            clearLocalExcept()
             dispatch(resetWallet())
-            let netConfig = getLocal(NET_WORK_CONFIG)
-            if (netConfig) {
-                netConfig = JSON.parse(netConfig)
-                dispatch(updateNetConfig(netConfig))
-                sendNetworkChangeMsg(netConfig.currentConfig)
+            if (localNetConfig) {
+                dispatch(updateNetConfig(localNetConfig))
+                sendNetworkChangeMsg(localNetConfig.currentConfig)
             }
             if (baseInfo) {
                 baseInfo = JSON.parse(baseInfo)
