@@ -346,7 +346,7 @@ const EpochInfo = ({ }) => {
 
         <div className={cls(styles.rowItem, styles.mgtM10)}>
           <p className={styles.label}>Slot</p>
-          <span className={styles.highlightContent}>{epochData.slot} / <span className={styles.content}>{epochData.slotsPerEpoch}</span></span>
+          <span className={styles.highlightContent}>{epochData.slot} <span className={styles.content}>/ {epochData.slotsPerEpoch}</span></span>
         </div>
 
         <div className={cls(styles.rowItem, styles.mgtM10)}>

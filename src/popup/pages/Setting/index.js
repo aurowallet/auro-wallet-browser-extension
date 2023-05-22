@@ -9,7 +9,8 @@ import { DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/ty
 import { languageOption } from "../../../i18n";
 import { updateAddressBookFrom } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
-import { fitPopupWindow, openPopupWindow } from "../../../utils/popup";
+import { fitPopupWindow } from "../../../utils/pageUtils";
+import { openPopupWindow } from "../../../utils/popup";
 import { showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import styles from './index.module.scss';

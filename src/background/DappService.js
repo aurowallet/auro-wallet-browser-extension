@@ -364,11 +364,11 @@ class DappService {
       }
     }
     if (badgeList.length > 0) {
-      extension.browserAction.setBadgeText({ text: badgeList.length.toString() });
-      extension.browserAction.setBadgeBackgroundColor({ color: [76, 148, 255, 255] });
+      chrome.action?.setBadgeText({ text: badgeList.length.toString() });
+      chrome.action?.setBadgeBackgroundColor({ color: [76, 148, 255, 255] });
     } else {
-      extension.browserAction.setBadgeText({ text: "" });
-      extension.browserAction.setBadgeBackgroundColor({ color: [0, 0, 0, 0] });
+      chrome.action?.setBadgeText({ text: "" });
+      chrome.action?.setBadgeBackgroundColor({ color: [0, 0, 0, 0] });
     }
   }
   getSignParams(openId) {
