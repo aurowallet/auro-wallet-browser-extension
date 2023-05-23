@@ -129,6 +129,7 @@
 .iconCon{
   width: 30px;
   height: 30px;
+  border-radius: 100%;
 
   .holderIconCon{
     width: 100%;
@@ -146,5 +147,6 @@
     height: 30px;
     object-fit: scale-down;
     border-radius: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
   }
 }
