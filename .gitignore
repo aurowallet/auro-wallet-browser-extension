@@ -27,3 +27,5 @@ yarn-error.log*
 .eslintcache
 
 config.js
+
+zip

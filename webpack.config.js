@@ -177,7 +177,7 @@ function getPlugins() {
       patterns: [
         { from: "./public/static", to: "./" },
         { from: "./public/img", to: "./img" },
-        { from: "./public/manifest.json", to: "./" },
+        // { from: "./public/manifest.json", to: "./" },
         { from: "./src/_locales", to: "./_locales" },
       ],
     }),

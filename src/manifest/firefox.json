@@ -1,0 +1,17 @@
+{
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "type": "module"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{e0ee8d7f-537c-4c5f-b1cc-bd66d61e4306}",
+      "strict_min_version": "109.0"
+    }
+  }
+}
