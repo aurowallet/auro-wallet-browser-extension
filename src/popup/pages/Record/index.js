@@ -73,7 +73,8 @@ const Record = ({ }) => {
       },
       {
         title: i18n.t('from'),
-        content: sendAddress
+        content: sendAddress,
+        showScamTag:txDetail.isFromAddressScam
       }
     ]
     let showMemo = decodeMemo(memo)
@@ -152,7 +153,7 @@ const Record = ({ }) => {
     </div>
     <div className={styles.dividedLine} />
     {contentList.map((item, index) => {
-      return <DetailRow key={index} title={item.title} content={item.content} />
+      return <DetailRow key={index} title={item.title} content={item.content} showScamTag={item.showScamTag}/>
     }, [])}
     {showExplorer && 
     <div className={styles.explorerOuter}>
@@ -166,7 +167,7 @@ const Record = ({ }) => {
   </CustomView>)
 }
 
-const DetailRow = ({ title, content }) => {
+const DetailRow = ({ title, content,showScamTag }) => {
   const onCopy = useCallback(() => {
     copyText(content).then(() => {
       Toast.info(i18n.t('copySuccess'))
@@ -174,8 +175,15 @@ const DetailRow = ({ title, content }) => {
   }, [title, content])
 
   return (<div className={styles.rowContainer} onClick={onCopy}>
-    <p className={styles.rowTitle}>{title}</p>
-    <p className={styles.rowContent}>{content}</p>
+    <p className={styles.rowTitle}>
+      {title}
+     
+    </p>
+    <p className={styles.rowContent}>{content}
+    {showScamTag && <span className={styles.scamTag}>
+        {i18n.t("scam")}
+    </span>}
+    </p>
   </div>)
 }
 

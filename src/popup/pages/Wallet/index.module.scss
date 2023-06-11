@@ -388,10 +388,20 @@ $toolbarHeight: 58px;
         display: flex;
         align-items: center;
         .itemAccount {
-            margin-left: 16px;
+            margin-left: 8px;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+        }
+        .scamTag{
+            font-weight: 500;
+            font-size: 12px;
+            line-height: 14px;
+            color: #D65A5A;
+
+            border: 1px solid #D65A5A;
+            border-radius: 2px;
+            margin-left: 4px;
         }
         .itemAccountAddress {
             font-size: 14px;
@@ -450,6 +460,9 @@ $toolbarHeight: 58px;
 }
 .pendingCls {
     background-color: #f9fafc;
+    &:hover {
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), #f9fafc;
+    }
 }
 .explorerContainer {
     display: flex;

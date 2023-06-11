@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.1]
+- Add scam-address match
+- Ledger enhancements
+- UI enhancements
+- Bug fixes
+
 ## [2.2.0]
 - Upgrade to manifest v3
 - Upgrade mina-provider to 0.2.0

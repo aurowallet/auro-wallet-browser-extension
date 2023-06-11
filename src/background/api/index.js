@@ -1,5 +1,5 @@
 import { BASE_INFO_URL, TX_LIST_LENGTH } from "../../../config";
-import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE } from "../../constant/storageKey";
+import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, RECOMMOND_FEE, SCAM_LIST } from "../../constant/storageKey";
 import { NET_CONFIG_TYPE } from "../../constant/walletType";
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
@@ -174,6 +174,9 @@ export async function fetchStakingList() {
 export async function getFeeRecom() {
   let feeUrl = BASE_INFO_URL + "minter_fee.json"
   const result = await commonFetch(feeUrl).catch(err => [])
+  if (Array.isArray(result) && result.length>0) {
+    saveLocal(RECOMMOND_FEE, JSON.stringify(result))
+  }
   return result
 }
 
@@ -351,7 +354,7 @@ export async function getZkAppTxHistory(address,limit){
     gqlTxUrl,
   ).catch((error) => error)
   let list = result.zkapps  || []
-  await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: list }))
+  saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: list }))
   return list
 }
 
@@ -360,7 +363,7 @@ export async function getZkAppPendingTx(address,limit){
   let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.url
   if (!gqlTxUrl || netConfig.netType !== NET_CONFIG_TYPE.Berkeley) {
-   await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
+   saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
   if(gqlTxUrl.indexOf("graphql")!==-1){
@@ -377,6 +380,19 @@ export async function getZkAppPendingTx(address,limit){
     gqlTxUrl,
   ).catch((error) => error)
   let list = result.pooledZkappCommands  || []
-  await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: list }))
+  saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: list }))
   return list
+}
+
+
+/**
+* get scam list
+*/
+export async function getScamList() {
+  let feeUrl = BASE_INFO_URL + "scam_list"
+  const result = await commonFetch(feeUrl).catch(err => [])
+  if (Array.isArray(result) && result.length>0) {
+    saveLocal(SCAM_LIST, JSON.stringify(result))
+  }
+  return result
 }

@@ -710,7 +710,12 @@ const TxItem = ({ txData, currentAccount,index }) => {
       <div className={styles.itemLeftContainer}>
         <img src={statusIcon} className={styles.txStatusIcon} />
         <div className={styles.itemAccount}>
-          <p className={styles.itemAccountAddress}>{showAddress}</p>
+          <p className={styles.itemAccountAddress}>
+            {showAddress}
+            {txData.isFromAddressScam && <span className={styles.scamTag}>
+                {i18n.t("scam")}
+            </span>}
+          </p>
           <p className={styles.itemAccountInfo}>{timeInfo}</p>
         </div>
       </div>

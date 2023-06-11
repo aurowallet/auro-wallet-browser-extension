@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { cointypes } from "../../../../config";
-import { getBalance, getFeeRecom, sendStakeTx, sendTx } from "../../../background/api";
+import { getBalance, sendStakeTx, sendTx } from "../../../background/api";
 import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS,QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { updateNetAccount } from "../../../reducers/accountReducer";
@@ -44,7 +44,7 @@ const SignTransaction = () => {
   const balance = useSelector(state => state.accountInfo.balance)
   const netAccount = useSelector(state => state.accountInfo.netAccount)
   const currentConfig = useSelector(state => state.network.currentConfig)
-
+  const netFeeList = useSelector(state => state.cache.feeRecom)
 
   const [lockStatus, setLockStatus] = useState(false)
   const [advanceStatus, setAdvanceStatus] = useState(false)
@@ -84,8 +84,26 @@ const SignTransaction = () => {
   }, [dappWindow])
 
   const onCancel = useCallback(() => {
+    let resultAction = ""
+      switch (signParams.sendAction) {
+        case DAppActions.mina_sendStakeDelegation:
+          resultAction = DAPP_ACTION_SEND_TRANSACTION
+          break;
+        case DAppActions.mina_sendPayment:
+          resultAction = DAPP_ACTION_SEND_TRANSACTION
+          break;
+        case DAppActions.mina_signMessage:
+        case DAppActions.mina_signFields:
+          resultAction = DAPP_ACTION_SIGN_MESSAGE
+          break;
+        case DAppActions.mina_sendTransaction:
+          resultAction = DAPP_ACTION_SEND_TRANSACTION
+          break;
+        default:
+          break;
+      }
     sendMsg({
-      action: DAPP_ACTION_SEND_TRANSACTION,
+      action: resultAction,
       payload: {
         cancel: true,
         resultOrigin: signParams.site?.origin
@@ -154,7 +172,7 @@ const SignTransaction = () => {
     if (sendAction === DAppActions.mina_signMessage || sendAction === DAppActions.mina_signFields) {
       Toast.info(i18n.t('ledgerNotSupportSign'))
       sendMsg({
-        action: resultAction,
+        action: DAPP_ACTION_SIGN_MESSAGE, 
         payload: { error: "not support ledger sign message" },
       }, async (params) => { })
       return
@@ -346,12 +364,13 @@ const SignTransaction = () => {
     Loading.hide()
   }, [dispatch, currentAddress])
 
-  const fetchFeeData = useCallback(async () => {
-    let feeRecom = await getFeeRecom()
-    if (feeRecom.length >= 1) {
-      setFeeDefault(feeRecom[1].value)
+  useEffect(()=>{
+    if(!feeDefault){
+      if (netFeeList.length >= 1) {
+        setFeeDefault(netFeeList[1].value)
+      }
     }
-  }, [])
+  },[netFeeList,feeDefault])
 
   const getSignParams = useCallback(() => {
     sendMsg({
@@ -375,10 +394,9 @@ const SignTransaction = () => {
         siteRecommendFee: siteRecommendFee,
       })
 
-      fetchFeeData()
       fetchAccountInfo()
     })
-  }, [params, fetchAccountInfo, fetchFeeData])
+  }, [params, fetchAccountInfo])
 
   useEffect(() => {
     sendMsg({
@@ -412,7 +430,7 @@ const SignTransaction = () => {
   const {
     showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList,pageTitle
   } = useMemo(() => {
-    let showAccountAddress = "(" + addressSlice(currentAccount.address, 0, 6) + ")"
+    let showAccountAddress = addressSlice(currentAccount.address, 6, 6)
     let params = signParams?.params
     let toAmount = params?.amount || ""
     toAmount = toAmount +" "+ cointypes.symbol
@@ -520,17 +538,15 @@ const SignTransaction = () => {
       </div>
       {signParams?.sendAction === DAppActions.mina_signMessage || signParams?.sendAction === DAppActions.mina_signFields ?
         <CommonRow 
-          leftTitle={i18n.t('account')} 
-          leftContent={currentAccount.accountName} 
-          leftDescContent={showAccountAddress} 
+          leftTitle={currentAccount.accountName}
+          leftContent={showAccountAddress}
           leftCopyContent= {currentAccount.address}
           rightContent={balance + " " + cointypes.symbol} />
         :
         <>
           <CommonRow 
-          leftTitle={i18n.t('from')} 
-          leftContent={currentAccount.accountName} 
-          leftDescContent={showAccountAddress} 
+          leftTitle={currentAccount.accountName}
+          leftContent={showAccountAddress}
           rightTitle={i18n.t('to')} 
           rightContent={showToAddress}
           leftCopyContent= {currentAccount.address}

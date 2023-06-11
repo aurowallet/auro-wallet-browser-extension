@@ -155,11 +155,15 @@
     }
     .waitingTip{
         @extend .waitingContent;
-        color: #E4B200;
+        font-weight: 400;
+        color: rgba(0, 0, 0, 0.5);
         margin: 20px 10px;
     }
     .accountRepeatName{
         font-weight: 700;
+    }
+    .redFont{
+        color: #D65A5A;
     }
 }
 .rightRow{

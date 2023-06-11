@@ -41,6 +41,8 @@ const UPDATE_ACCOUNT_BALANCE_LIST = "UPDATE_ACCOUNT_BALANCE_LIST"
 
 export const UPDATE_DAPP_CURRENT_OPEN_WINDOW = "UPDATE_DAPP_CURRENT_OPEN_WINDOW"
 
+const UPDATE_RECOMMOND_FEE_LIST = "UPDATE_RECOMMOND_FEE_LIST"
+
 export function updateCurrentPrice(price) {
     return {
         type: UPDATE_CURRENT_PRICE,
@@ -136,6 +138,14 @@ export function updateAccountBalanceList(accountDetail) {
     }
 }
 
+
+export function updateRecomFee(feeList) {
+    return {
+        type: UPDATE_RECOMMOND_FEE_LIST,
+        feeRecom:feeList
+    }
+}
+
 const initState = {
     fromType: '',
     accountCount: "",
@@ -162,6 +172,7 @@ const initState = {
 
     dappWindow: {},
     accountBalanceList: {},
+    feeRecom:[],
 };
 
 const cacheReducer = (state = initState, action) => {
@@ -244,6 +255,11 @@ const cacheReducer = (state = initState, action) => {
             return {
                 ...state,
                 accountBalanceList: accountList
+            }
+        case UPDATE_RECOMMOND_FEE_LIST:
+            return{
+                ...state,
+                feeRecom:action.feeRecom,
             }
         default:
             return state;

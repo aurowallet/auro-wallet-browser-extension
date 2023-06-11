@@ -230,6 +230,7 @@
   "waitingLedgerConfirm": "等待确认",
   "waitingLedgerConfirmTip": "请在 Ledger 硬件钱包中进行确认，签名可能会需要 1-3分钟。",
   "waitingLedgerConfirmTip_2": "在此之前<b>请勿关闭</b>此窗口。",
+  "waitingLedgerConfirmTip_3":"<red>不要关闭本窗口，</red> Ledger 完成后，页面将自动跳转。",
   "epochInfo": "Epoch 信息",
   "signatureRequest": "签名请求",
   "lockTime_5m": "5 分钟",
@@ -259,7 +260,7 @@
   "generate":"Generate",
   "approve":"Approve",
   "ledgerCloseWarning":"<red>不要关闭</red> 此窗口",
-  "ledgerCloseTip":"完成导入后，页面将自动跳转。",
+  "ledgerCloseTip":"Ledger 完成后，页面将自动跳转。",
   "ledgerSuccess":"恭喜你，已经成功导入硬件钱包。",
   "ledgerReturnExtension":"请返回插件。",
   "ledgerConnetTip":"Ledger 没有连接。请先连接 Ledger，并点击下一步授权连接。",
@@ -271,5 +272,6 @@
   "ledgerAppConnectTip":"Ledger 已连接。但 Mina 应用没有打，请在 Ledger 打开Mina 应用，或者点击<click>这里</click>重新授权。",
   "grantSuccess":"授权成功，请返回插件。",
   "submitNode":"提交/更新节点到这个列表",
-  "delegators":"委托者"
+  "delegators":"委托者",
+  "scam":"风险"
 }

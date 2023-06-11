@@ -219,18 +219,18 @@ const AccountInfo = ({}) => {
           <span className={styles.rowAddressContent}>{account.address}</span>
         </div>
         <div className={styles.rowInfoContainer}>
-          {isLedger && (
+          <AccountInfoRow
+            title={i18n.t("accountName")}
+            desc={account.accountName}
+            onClick={onClickAccountName}
+          />
+           {isLedger && (
             <AccountInfoRow
               title={i18n.t("hdDerivedPath")}
               desc={hdPath}
               noArrow={true}
             />
           )}
-          <AccountInfoRow
-            title={i18n.t("accountName")}
-            desc={account.accountName}
-            onClick={onClickAccountName}
-          />
           {!hideExport && (
             <AccountInfoRow
               title={i18n.t("exportPrivateKey")}

@@ -1,0 +1,136 @@
+.outerContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: end;
+    flex-direction: column;
+}
+
+@keyframes openModal {
+    from {
+        bottom: -50%;
+    }
+    to {
+        bottom: 0;
+    }
+}
+
+.innerContent {
+    background: #ffffff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    width: 100%;
+
+    position: absolute;
+    bottom: 0;
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+
+    min-height: 358px;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 8px 20px;
+
+    .rowTitle {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        color: #222222;
+    }
+    .rowClose {
+        display: block;
+        cursor: pointer;
+    }
+}
+
+.dividedLine {
+    width: 100%;
+    height: 0.5px;
+    background-color: #f2f2f2;
+}
+
+.rightRow {
+    display: flex;
+    align-items: center;
+}
+
+.bottomContainer {
+    padding: 12px 38px 20px;
+    position: fixed;
+    bottom: 0;
+    width: calc(100%);
+    background-color: white;
+
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+.reminderContainer {
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+    position: fixed;
+    z-index: 2;
+    margin: 0px 20px 90px;
+
+    background: rgba(214, 90, 90, 0.1);
+    border: 1px solid #d65a5a;
+    border-radius: 10px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 17px;
+    color: #d65a5a;
+    padding: 12px 10px;
+}
+.clickItem {
+    color: #594af1;
+    cursor: pointer;
+}
+
+.stepOuterContainer {
+    margin-top: 24px;
+    padding: 0px 20px;
+    .stepContainer {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .stepNumber {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            border-radius: 50%;
+            background-color: #594af1;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 17px;
+            color: #ffffff;
+        }
+        .stepContent {
+            font-weight: 400;
+            font-size: 14px;
+            line-height: 17px;
+            color: #000000;
+            margin-left: 8px;
+        }
+        .stepContentLight {
+            font-weight: 700 !important;
+        }
+    }
+}

@@ -2,7 +2,8 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useMemo } from "react";
 import { Trans } from "react-i18next";
-import { LEDGER_STATUS } from "../../../utils/ledger";
+import { useSelector } from "react-redux";
+import { LEDGER_STATUS } from "../../../constant/ledger";
 import Button from "../Button";
 import styles from "./index.module.scss";
 
@@ -19,27 +20,7 @@ export const ConfirmModal = ({
     loadingStatus = false,
     onClickClose = () => { },
     waitingLedger = false,
-    ledgerStatus="",
-    onClickReminder=()=>{}
 }) => {
-    const {showLedgerTip,nextLedgerTip} = useMemo(()=>{
-        let nextLedgerTip = ""
-        switch (ledgerStatus) {
-            case LEDGER_STATUS.LEDGER_DISCONNECT:
-                nextLedgerTip = "ledgerNotConnectTip"
-              break;
-            case LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN:
-                nextLedgerTip = "ledgerAppConnectTip"
-              break;
-            default:
-              break;
-          }
-        const showLedgerTip = !!nextLedgerTip
-        return {
-            showLedgerTip,nextLedgerTip
-        }
-    },[ledgerStatus])
-    
   
     return ( 
         <>
@@ -53,7 +34,7 @@ export const ConfirmModal = ({
                                 </span>
                                 
                                 <div className={styles.rightRow}>
-                                    {ledgerStatus && <LedgerStatusView status={ledgerStatus}/>}
+                                    <LedgerStatusView/>
                                     <img onClick={onClickClose} className={styles.rowClose} src="/img/icon_nav_close.svg" />
                                 </div>
                             </div>
@@ -66,16 +47,16 @@ export const ConfirmModal = ({
                             <p className={styles.waitingContent}>{i18n.t('waitingLedgerConfirmTip')}</p>
                             <p className={styles.waitingTip}>
                             <Trans
-                                i18nKey={"waitingLedgerConfirmTip_2"}
+                                i18nKey={"waitingLedgerConfirmTip_3"}
                                 components={{
                                     b: <span className={styles.accountRepeatName} />,
+                                    red: <span className={styles.redFont} />,
                                 }}
                                 />
                             </p>
                         </div>}
 
                         {!waitingLedger && <div className={cls(styles.bottomContent,{
-                            [styles.ledgerTip]:showLedgerTip
                         })}>
                             <div className={styles.highlightContainer}>
                                 <span className={styles.highlightTitle}>
@@ -100,16 +81,6 @@ export const ConfirmModal = ({
                             }
                         </div>}
 
-
-
-                        {nextLedgerTip && <div className={styles.reminderContainer}>
-                            <Trans
-                                i18nKey={nextLedgerTip}
-                                components={{
-                                    click: <span onClick={onClickReminder} className={styles.clickItem} />
-                                }}
-                                />
-                        </div>}
                         {!waitingLedger && <div className={cls(styles.bottomContainer)}>
                             <Button
                                 loading={loadingStatus}
@@ -123,36 +94,26 @@ export const ConfirmModal = ({
         </>
     )
 } 
-const LedgerStatusView = ({ status }) => {
-  const {showStatus,innerStatus} = useMemo(() => {
-    let innerStatus = false
+const LedgerStatusView = () => {
+    const ledgerStatus = useSelector(state=>state.ledger.ledgerConnectStatus)
+  const {showStatus} = useMemo(() => {
+    
     let showStatus = false
-    switch (status) {
-      case LEDGER_STATUS.LEDGER_DISCONNECT:
-        showStatus = false
-        break;
-      case LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN:
+    if(ledgerStatus === LEDGER_STATUS.READY){
         showStatus = true
-        innerStatus = true
-        break;
-      case LEDGER_STATUS.READY:
-        showStatus = true
-        break;
-      default:
-        break;
     }
     return {
-        showStatus,innerStatus
+        showStatus
     }
-  }, [status]);
-
+  }, [ledgerStatus]);
+  if(!ledgerStatus){
+    return<></>
+  }
   return (
     <div className={styles.ledgerCon}>
         <div className={cls(styles.statusDot,{
             [styles.dotWin]:showStatus
-        })}>
-            {innerStatus && <div className={styles.miniDot}/>}
-        </div>
+        })}/>
         <span className={styles.statusContent}>
             {i18n.t('ledgerStatus')}
         </span>

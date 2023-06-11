@@ -5,6 +5,7 @@ import extension from "extensionizer";
 import i18n from "i18next";
 import { MinaLedgerJS, Networks, TxType } from "mina-ledger-js";
 import { cointypes } from "../../config";
+import { LEDGER_STATUS } from "../constant/ledger";
 import { LEDGER_CONNECTED_SUCCESSFULLY } from "../constant/types";
 import { NET_CONFIG_TYPE } from "../constant/walletType";
 import Loading from "../popup/component/Loading";
@@ -15,12 +16,6 @@ import { getCurrentNetConfig } from "./utils";
 export const LEDGER_CONENCT_TYPE = {
   isPage: "isPage",
 };
-
-export const LEDGER_STATUS ={
-  "READY":"READY",
-  "LEDGER_DISCONNECT":"LEDGER_DISCONNECT",
-  "LEDGER_CONNECT_APP_NOT_OPEN":"LEDGER_CONNECT_APP_NOT_OPEN"
-}
 
 const status = {
   rejected: "CONDITIONS_OF_USE_NOT_SATISFIED",

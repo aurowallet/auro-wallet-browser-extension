@@ -5,13 +5,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { cointypes } from "../../../../config";
-import { getBalance, getFeeRecom, sendTx } from "../../../background/api";
+import { getBalance, sendTx } from "../../../background/api";
 import { WALLET_CHECK_TX_STATUS, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
 import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import { updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateAddressBookFrom, updateAddressDetail } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
-import { getLedgerStatus, LEDGER_STATUS, requestSignPayment } from "../../../utils/ledger";
+import { getLedgerStatus, requestSignPayment } from "../../../utils/ledger";
 import { getDisplayAmount, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
@@ -23,7 +23,9 @@ import Input from "../../component/Input";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 import extension from 'extensionizer'
-import { LEDGER_PAGE_TYPE } from "../LedgerPage";
+import { LedgerInfoModal } from "../../component/LedgerInfoModal";
+import { updateLedgerConnectStatus } from "../../../reducers/ledger";
+import { LEDGER_STATUS } from "../../../constant/ledger";
 
 const SendPage = ({ }) => {
 
@@ -35,6 +37,8 @@ const SendPage = ({ }) => {
   const netAccount = useSelector(state => state.accountInfo.netAccount)
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
   const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
+  const netFeeList = useSelector(state => state.cache.feeRecom)
+  const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
 
   const {
     addressDetail
@@ -62,7 +66,6 @@ const SendPage = ({ }) => {
   const [feeErrorTip, setFeeErrorTip] = useState("")
 
 
-  const [netFeeList, setNetFeeList] = useState([])
   const [isOpenAdvance, setIsOpenAdvance] = useState(false)
   const [confrimModalStatus, setConfrimModalStatus] = useState(false)
   const [confrimBtnStatus, setConfrimBtnStatus] = useState(false)
@@ -71,8 +74,9 @@ const SendPage = ({ }) => {
 
   const [contentList, setContentList] = useState([])
   const [btnDisableStatus,setBtnDisableStatus] = useState(true)
-  const [ledgerStatus,setLedgerStatus] = useState("")
   const [ledgerApp,setLedgerApp] = useState()
+
+  const [ledgerModalStatus,setLedgerModalStatus] = useState(false)
 
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value)
@@ -107,13 +111,13 @@ const SendPage = ({ }) => {
   }, [])
 
 
-  const fetchFeeData = useCallback(async () => {
-    let feeRecom = await getFeeRecom()
-    if (feeRecom.length > 0) {
-      setNetFeeList(feeRecom)
-      setFeeAmount(feeRecom[1].value)
+  useEffect(()=>{
+    if(feeAmount === 0.1){
+      if(netFeeList.length>0){
+        setFeeAmount(netFeeList[1].value)
+      }
     }
-  }, [])
+  },[feeAmount,netFeeList])
 
   const fetchAccountInfo = useCallback(async () => {
     let account = await getBalance(currentAddress)
@@ -124,7 +128,6 @@ const SendPage = ({ }) => {
 
   useEffect(() => {
     fetchAccountInfo()
-    fetchFeeData()
   }, [])
 
   const onClickAdvance = useCallback(() => {
@@ -194,10 +197,11 @@ const SendPage = ({ }) => {
       setWaintLedgerStatus(false)
     }
   }, [confrimModalStatus])
-  const ledgerTransfer = useCallback(async (params) => {
-    if (ledgerApp) {
+  const ledgerTransfer = useCallback(async (params,preLedgerApp) => {
+    const nextLedgerApp = preLedgerApp || ledgerApp
+    if (nextLedgerApp) {
       setWaintLedgerStatus(true)
-      const { signature, payload, error, rejected } = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
+      const { signature, payload, error, rejected } = await requestSignPayment(nextLedgerApp, params, currentAccount.hdPath)
       if (rejected) {
         setConfrimModalStatus(false)
       }
@@ -212,14 +216,17 @@ const SendPage = ({ }) => {
     }
   }, [currentAccount, onSubmitTx,ledgerApp])
 
-  const clickNextStep = useCallback(async() => {
-    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER && ledgerStatus!==LEDGER_STATUS.READY){
-      const ledger = await getLedgerStatus()
-      setLedgerStatus(ledger.status)
-      if(ledger.status!==LEDGER_STATUS.READY){
-        return 
+  const clickNextStep = useCallback(async(ledgerReady=false,preLedgerApp) => {
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
+      if(!ledgerReady){
+        const ledger = await getLedgerStatus()
+        dispatch(updateLedgerConnectStatus(ledger.status))
+        if(ledger.status!==LEDGER_STATUS.READY){
+          setLedgerModalStatus(true)
+          return 
+        }
+        setLedgerApp(ledger.app)
       }
-      setLedgerApp(ledger.app)
     }
     let fromAddress = currentAddress
     let toAddressValue = trimSpace(toAddress)
@@ -231,7 +238,7 @@ const SendPage = ({ }) => {
       fromAddress, toAddress: toAddressValue, amount, fee, nonce, memo: realMemo
     }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      return ledgerTransfer(payload)
+      return ledgerTransfer(payload,preLedgerApp)
     }
 
     setConfrimBtnStatus(true)
@@ -250,8 +257,13 @@ const SendPage = ({ }) => {
     setConfrimModalStatus(false)
   }, [])
 
+  const onLedgerInfoModalConfirm = useCallback((ledger)=>{
+    setLedgerApp(ledger.app)
+    setLedgerModalStatus(false)
+    onConfirm(true)
+  },[confrimModalStatus,clickNextStep,onConfirm])
 
-  const onConfirm = useCallback(async() => {
+  const onConfirm = useCallback(async(ledgerReady=false) => {
     let toAddressValue = trimSpace(toAddress)
     if (!addressValid(toAddressValue)) {
       Toast.info(i18n.t('sendAddressError'))
@@ -313,19 +325,21 @@ const SendPage = ({ }) => {
         value: memo,
       })
     }
-
-    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
-      const ledger = await getLedgerStatus()
-      setLedgerApp(ledger.app)
-      setLedgerStatus(ledger.status)
-    }else{
-      setLedgerStatus("")
-    }
     setContentList(list)
-    setConfrimModalStatus(true)
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
+      if(!ledgerReady){
+        const ledger = await getLedgerStatus()
+        setLedgerApp(ledger.app)
+        dispatch(updateLedgerConnectStatus(ledger.status))
+      }
+      setConfrimModalStatus(true)
+    }else{
+      dispatch(updateLedgerConnectStatus(""))
+      setConfrimModalStatus(true)
+    }
 
   }, [i18n, toAddress, amount, feeAmount, balance, inputNonce, currentAddress, memo, currentAccount,
-    isAllTransfer, getRealTransferAmount, clickNextStep])
+    isAllTransfer, getRealTransferAmount, clickNextStep,ledgerStatus])
 
  
   useEffect(()=>{
@@ -337,14 +351,6 @@ const SendPage = ({ }) => {
     
   },[toAddress,amount])
   
-  const onClickReminder = useCallback(()=>{
-    const ledgerPageType = LEDGER_PAGE_TYPE.permissionGrant
-    let openParams = new URLSearchParams({ ledgerPageType }).toString()
-    extension.tabs.create({
-      url: "popup.html#/ledger_page?"+openParams,
-    });
-  },[ledgerStatus])
-
   return (<CustomView title={i18n.t('send')} contentClassName={styles.container}>
     <div className={styles.contentContainer}>
       <div className={styles.inputContainer}>
@@ -418,9 +424,12 @@ const SendPage = ({ }) => {
       loadingStatus={confrimBtnStatus}
       onClickClose={onClickClose}
       waitingLedger={waintLedgerStatus}
-      ledgerStatus={ledgerStatus}
-      onClickReminder={onClickReminder}
       contentList={contentList}/>
+    <LedgerInfoModal
+      modalVisable={ledgerModalStatus}
+      onClickClose={()=>setLedgerModalStatus(false)}
+      onConfirm={onLedgerInfoModalConfirm}
+      />
   </CustomView>)
 }
 

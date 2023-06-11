@@ -3,6 +3,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch } from "react-redux";
+import { LEDGER_PAGE_TYPE } from "../../../constant/ledger";
 import {
     GET_LEDGER_ACCOUNT_NUMBER,
     GET_WALLET_LOCK_STATUS,
@@ -30,9 +31,6 @@ const Tip_Type = {
 
   grantSuccess:"grantSuccess"
 };
-export const LEDGER_PAGE_TYPE = {
-  permissionGrant:"permissionGrant"
-}
 export const LedgerPage = ({}) => { 
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);

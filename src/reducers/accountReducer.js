@@ -17,6 +17,8 @@ const UPDATE_STAKING_DATA = "UPDATE_STAKING_DATA"
 
 const UPDATE_ACCOUNT_LIST_BALANCE = "UPDATE_ACCOUNT_LIST_BALANCE"
 
+const UPDATE_SCAM_LIST = "UPDATE_SCAM_LIST"
+
 export function updateAccountTx(txList, txPendingList,zkAppList,zkPendingList) {
     return {
         type: CHANGE_ACCOUNT_TX_HISTORY,
@@ -71,6 +73,13 @@ export function updateAccountList(list) {
     };
 }
 
+
+export function updateScamList(scamList) {
+    return {
+        type: UPDATE_SCAM_LIST,
+        scamList:scamList
+    }
+}
 export const ACCOUNT_BALANCE_CACHE_STATE = {
     INIT_STATE: "INIT_STATE",
     USING_CACHE: "USING_CACHE",
@@ -87,7 +96,8 @@ const initState = {
     homeBottomType: "",
     isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
     stakingLoadingRefresh: false,
-    accountBalanceMap:{}
+    accountBalanceMap:{},
+    scamList:[]
 };
 
 function pendingTx(txList) {
@@ -149,6 +159,22 @@ function commonHistoryFormat(list){
         return item
     })
 }
+
+function matchScamAndTxList(scamList,txList,type){
+    let nextTxList = txList.map((txData)=>{
+        const nextTxData = {...txData}
+        if(nextTxData.from){
+            const address = nextTxData.from.toLowerCase()
+            const scamInfo = scamList.filter((scam)=>{
+                return scam.address === address
+            })
+            nextTxData.isFromAddressScam = scamInfo.length>0
+        }
+        return nextTxData
+    })
+    return nextTxList
+}
+
 const accountInfo = (state = initState, action) => {
     switch (action.type) {
         case CHANGE_ACCOUNT_TX_HISTORY:
@@ -174,6 +200,9 @@ const accountInfo = (state = initState, action) => {
                 newList.push({
                     showExplorer: true
                 })
+            }
+            if(state.scamList.length>0){
+                newList = matchScamAndTxList (state.scamList,newList,"txHistory")
             }
             return {
                 ...state,
@@ -249,6 +278,26 @@ const accountInfo = (state = initState, action) => {
                 ...state,
                 accountBalanceMap: action.list
             }
+            case UPDATE_SCAM_LIST:
+                const nextScamList = action.scamList.map((scamData)=>{
+                    return {
+                        ...scamData,
+                        address:scamData.address.toLowerCase()
+                    }
+                })
+                
+                if(state.txList.length>0){
+                    const newList = matchScamAndTxList(nextScamList,state.txList,"scamlist")
+                    return{
+                        ...state,
+                        scamList:nextScamList,
+                        txList:newList
+                    }
+                }
+                return{
+                    ...state,
+                    scamList:nextScamList,
+                }
         default:
             return state;
     }

@@ -110,3 +110,13 @@ export const LOCAL_CACHE_KEYS = {
  * STORAGE_UPGRADE from v2->v3
  */
 export const STORAGE_UPGRADE_STATUS = "STORAGE_UPGRADE_STATUS"
+
+/**
+ * recommond fee list
+ */
+export const RECOMMOND_FEE= "RECOMMOND_FEE"
+
+/**
+ * recommond fee list
+ */
+export const SCAM_LIST= "SCAM_LIST"
