@@ -97,7 +97,7 @@ class DappService {
         break;
       case DAppActions.mina_verifyMessage:
         this.requestCallback(
-          () => verifyMessage(params.publicKey, params.signature, params.payload),
+          () => verifyMessage(params.publicKey, params.signature, params.data),
           id,
           sendResponse
         )
@@ -198,12 +198,12 @@ class DappService {
                     extension.runtime.onMessage.removeListener(onMessage)
                     delete payload.resultOrigin
                     resolve(payload)
-                    await closePopupWindow(windowId.request_sign)
+                    closePopupWindow(windowId.request_sign)
                     that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
                   } else {
                     extension.runtime.onMessage.removeListener(onMessage)
                     reject({ message: "user reject", code: 4001 })
-                    await closePopupWindow(windowId.request_sign)
+                    closePopupWindow(windowId.request_sign)
                     that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
                   }
                   sendResponse()

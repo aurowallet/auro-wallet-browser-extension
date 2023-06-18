@@ -81,16 +81,11 @@ export async function stakePayment(privateKey, fromAddress, toAddress, fee, nonc
  * @param {*} message
  * @returns
  */
-export async function signMessagePayment(privateKey, fromAddress, message) {
+export async function signMessagePayment(privateKey, message) {
     let signedResult
     try {
-        let keys = {
-            privateKey: privateKey,
-            publicKey: fromAddress
-        }
         let signClient = await getSignClient()
-        signedResult = signClient.signMessage(message, keys)
-        signedResult = signedResult.signature
+        signedResult = signClient.signMessage(message, privateKey)
     } catch (error) {
         signedResult = { error: { message: i18n.t("buildFailed") } }
     }

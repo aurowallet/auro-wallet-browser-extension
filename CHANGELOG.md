@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
+- Upgrade mina-provider to 0.2.1
 
 ## [2.2.1]
 - Add scam-address match

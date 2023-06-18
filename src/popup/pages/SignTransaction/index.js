@@ -138,8 +138,10 @@ const SignTransaction = () => {
           break;
         case DAppActions.mina_signMessage:
         case DAppActions.mina_signFields:
-          payload.signature = data.signature
-          payload.data = data.data
+          payload = {
+            ...payload,
+            ...data
+          }
           resultAction = DAPP_ACTION_SIGN_MESSAGE
           break;
         case DAppActions.mina_sendTransaction:
