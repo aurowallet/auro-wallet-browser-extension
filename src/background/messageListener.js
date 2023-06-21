@@ -241,3 +241,16 @@ export function setupMessageListeners() {
   extension.runtime.onMessage.addListener(internalMessageListener);
   extension.runtime.onConnect.addListener(onConnectListener);
 }
+
+async function createOffscreen() {
+  if(chrome.offscreen){
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['BLOBS'],
+      justification: 'keep service worker running',
+    }).catch(() => {});
+  }
+}
+chrome.runtime.onStartup.addListener(createOffscreen);
+self.onmessage = e => {};
+createOffscreen();

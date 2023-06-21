@@ -103,12 +103,12 @@ const Setting = ({ }) => {
                 targetRoute: "app_connection",
                 rightContent: connectCount
             },
-            // {
-            //     icon: '/img/icon_autoLock.svg',
-            //     title: i18n.t('autoLock'),
-            //     targetRoute: "auto_lock",
-            //     rightContent: getAutoLockTime()
-            // },
+            {
+                icon: '/img/icon_autoLock.svg',
+                title: i18n.t('autoLock'),
+                targetRoute: "auto_lock",
+                rightContent: getAutoLockTime()
+            },
             {
                 icon: '/img/icon_network.svg',
                 title: i18n.t('network'),

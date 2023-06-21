@@ -25,10 +25,10 @@ const firefoxManifestProperties = require("../src/manifest/firefox.json");
 const chromeManifestProperties = require("../src/manifest/chrome.json");
 
 const firefoxManifest = deepmerge(baseManifest, firefoxManifestProperties, {
-  arrayMerge: (_, source) => source,
+  // arrayMerge: (_, source) => source,
 });
 const chromeManifest = deepmerge(baseManifest, chromeManifestProperties, {
-  arrayMerge: (_, source) => source,
+  // arrayMerge: (_, source) => source,
 });
 
 async function copyFilesToMultipleFolders(sourceFolder, targetFolders) {
@@ -73,9 +73,9 @@ async function writeManifestFile(targetPath, fileContent) {
 
 (async () => {
   try {
-    const id = "1006";
+    const id = "1007";
 
-    const chromeFileName = `${pck.name}-chrome-${pck.version}-${id}`;
+    const chromeFileName = `${pck.name}-chrome-edge-${pck.version}-${id}`;
     const firefoxFileName = `${pck.name}-firefox-${pck.version}-${id}`;
     const sourceFileName = `${pck.name}-source-${pck.version}-${id}`;
     const publishFileName = `${pck.name}-${pck.version}-${id}`;

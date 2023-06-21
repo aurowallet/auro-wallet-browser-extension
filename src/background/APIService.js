@@ -50,9 +50,12 @@ class APIService {
         return this.memStore.getState()
     };
     resetWallet=()=>{
+        if (this.activeTimer) {
+            clearTimeout(this.activeTimer)
+        }
         this.memStore.putState(this.initLockedState())
         return
-      }
+    }
     getCreateMnemonic = (isNewMne) => {
         if (isNewMne) {
             let mnemonic = generateMne()
@@ -63,9 +66,7 @@ class APIService {
             if (mne) {
                 return mne
             } else {
-                let mnemonic = generateMne()
-                this.memStore.updateState({ mne: mnemonic })
-                return mnemonic
+                return ""
             }
         }
     }
@@ -146,7 +147,7 @@ class APIService {
             if (!timeoutMinutes) {
                 return
             }
-
+            
             this.activeTimer = setTimeout(() => {
                 this.setUnlockedStatus(false)
             }, timeoutMinutes)
@@ -159,7 +160,7 @@ class APIService {
     }
     getCurrentAutoLockTime(){
         return this.getStore().autoLockTime
-    }
+    } 
     setUnlockedStatus(status) {
         if (!status) {
             let nextState = this.initLockedState()
@@ -228,7 +229,7 @@ class APIService {
     getAllAccount = () => {
         let data = this.getStore().data
         let accountList = this.accountSort(data[0].accounts)
-     
+
         let currentAccount = this.getStore().currentAccount
         return {
             accounts: accountList,
