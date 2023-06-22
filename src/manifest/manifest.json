@@ -3,7 +3,7 @@
   "short_name": "__MSG_appName__",
   "description": "__MSG_appDescription__",
   "manifest_version": 3,
-  "version": "2.2.2",
+  "version": "2.2.3",
   "default_locale": "en",
   "icons": {
     "16": "img/logo/16.png",
@@ -13,19 +13,6 @@
     "64": "img/logo/64.png",
     "128": "img/logo/128.png",
     "512": "img/logo/512.png"
-  },
-  "action": {
-    "default_icon": {
-      "16": "img/logo/16.png",
-      "19": "img/logo/19.png",
-      "32": "img/logo/32.png",
-      "38": "img/logo/38.png",
-      "64": "img/logo/64.png",
-      "128": "img/logo/128.png",
-      "512": "img/logo/512.png"
-    },
-    "default_title": "Auro Wallet",
-    "default_popup": "popup.html"
   },
   "permissions": [
     "storage",
@@ -47,18 +34,6 @@
       ],
       "run_at": "document_start",
       "all_frames": true
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "webhook.js"
-      ],
-      "matches": [
-        "file://*/*",
-        "http://*/*",
-        "https://*/*"
-      ]
     }
   ]
 }

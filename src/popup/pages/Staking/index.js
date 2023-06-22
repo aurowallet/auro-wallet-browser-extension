@@ -13,7 +13,7 @@ import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorD
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, copyText, getAmountForUI, getNetTypeNotSupportStaking, isNumber } from "../../../utils/utils";
+import { addressSlice, copyText, getAmountForUI, isNumber } from "../../../utils/utils";
 import Button, { button_size } from "../../component/Button";
 import Clock from "../../component/Clock";
 import CustomView from "../../component/CustomView";
@@ -31,7 +31,6 @@ const Staking = ({ }) => {
 
   const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === netAccount.delegate ? "" : netAccount.delegate)
   const [loading, setLoading] = useState(false)
-  const [isUnknow, setIsUnknow] = useState(getNetTypeNotSupportStaking(netType))
   const isFirstRequest = useRef(!isNumber(validatorDetail.totalDelegated));
 
   const closeLoading = useCallback(()=>{
@@ -39,9 +38,6 @@ const Staking = ({ }) => {
     isFirstRequest.current = false
   },[])
   const fetchData = useCallback((isSlient = false) => {
-    if (isUnknow) {
-      return
-    }
     if (isFirstRequest.current && !isSlient) {
       setLoading(true)
     }
@@ -79,12 +75,9 @@ const Staking = ({ }) => {
     }).catch(()=>{
       setLoading(false)
     })
-  }, [currentAddress, isUnknow,block.protocolState])
+  }, [currentAddress,block.protocolState])
 
 
-  useEffect(() => {
-    setIsUnknow(getNetTypeNotSupportStaking(netType))
-  }, [netType])
 
 
 
@@ -124,7 +117,6 @@ const Staking = ({ }) => {
     contentClassName={styles.contentClassName}>
     <EpochInfo />
     {
-      // isUnknow ? <UnknownView onClickGuide={onClickGuide} />: 
         loading ? <LoadingView onClickGuide={onClickGuide} /> : (delegatePublicKey ? <DelegationInfo delegatePublicKey={delegatePublicKey} onClickGuide={onClickGuide}/> : <EmptyView onClickGuide={onClickGuide} />)
     }
     <Clock schemeEvent={() => baseFetchData(true)} />

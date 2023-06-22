@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.3]
+- Firefox manifest version to V2
+- Staking page optimization under unknown network
+
 ## [2.2.2]
 - Upgrade mina-provider to 0.2.1
 - Recover Auto Lock feature

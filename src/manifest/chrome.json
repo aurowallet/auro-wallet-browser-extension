@@ -1,4 +1,17 @@
 {
+  "action": {
+    "default_icon": {
+      "16": "img/logo/16.png",
+      "19": "img/logo/19.png",
+      "32": "img/logo/32.png",
+      "38": "img/logo/38.png",
+      "64": "img/logo/64.png",
+      "128": "img/logo/128.png",
+      "512": "img/logo/512.png"
+    },
+    "default_title": "Auro Wallet",
+    "default_popup": "popup.html"
+  },
   "permissions": [
     "offscreen"
   ],
@@ -6,5 +19,17 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "minimum_chrome_version":"88"
+  "minimum_chrome_version":"88",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "webhook.js"
+      ],
+      "matches": [
+        "file://*/*",
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ]
 }
