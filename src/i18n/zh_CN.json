@@ -152,7 +152,7 @@
   "privacyPolicy": "隐私政策",
   "checkOnGithub": "Github 开源地址",
   "walletName": "Auro 钱包",
-  "walletAbout": "Auro 钱包是一款由社区开发的非托管钱包。它简单，易用，并且完全开源。支持 Mina 的所有的功能。",
+  "walletAbout": "Auro 钱包是一款由社区开发的非托管钱包。它简单，易用，并且完全开源。支持 Mina 的所有功能。",
   "followUs": "关注我们",
   "defaultNode": "默认",
   "customNode": "自定义",

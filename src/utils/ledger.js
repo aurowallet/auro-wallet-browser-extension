@@ -31,6 +31,7 @@ function initLedgerWindowListener() {
           sendResponse && sendResponse();
           break;
       }
+      return true;
     }
     extension.runtime.onMessage.addListener(onMessage);
   });

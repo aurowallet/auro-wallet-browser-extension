@@ -19,7 +19,7 @@ const AdvanceMode = ({
 }) => {
     const netAccount = useSelector(state => state.accountInfo.netAccount)
     const nonceHolder = useMemo(() => {
-        return netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
+        return netAccount?.inferredNonce || ""
     }, [netAccount])
 
     return (

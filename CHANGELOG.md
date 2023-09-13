@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
+- UI enhancements
+- Bug fixes
 
 ## [2.2.3]
 - Firefox manifest version to V2

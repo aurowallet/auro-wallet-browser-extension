@@ -169,7 +169,11 @@ class APIService {
             extension.runtime.sendMessage({
                 type: FROM_BACK_TO_RECORD,
                 action: SET_LOCK,
-            });
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error("set lock error",extension.runtime.lastError);
+                }
+              });
         }
         this.memStore.updateState({ isUnlocked: status })
     };

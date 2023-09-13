@@ -1,12 +1,12 @@
 import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_GET_ACCOUNT, DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, WALLET_GET_CURRENT_ACCOUNT } from "../../../constant/types";
 import { updateDAppOpenWindow } from "../../../reducers/cache";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { getQueryStringArgs } from "../../../utils/utils";
+import { addressSlice, getQueryStringArgs } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
 import { LockPage } from "../Lock";
@@ -95,6 +95,10 @@ const ApprovePage = () => {
     })
   }, [currentAccount, params])
 
+  const showAccountInfo = useMemo(()=>{
+    return currentAccount.accountName +"("+ addressSlice(currentAccount.address,6)  + ")"
+  },[currentAccount])
+
   if (!lockStatus) {
     return <LockPage onDappConfirm={true} onClickUnLock={onClickUnLock} history={history} />;
   }
@@ -112,7 +116,7 @@ const ApprovePage = () => {
       </div>
       <p className={styles.accountTip}>{i18n.t('approveTip') + ":"}</p>
       <p className={styles.accountAddress}>{
-        currentAccount.address
+        showAccountInfo
       }</p>
       <p className={styles.warningTip}>{'* ' + i18n.t('approveWaring')}</p>
 

@@ -32,6 +32,7 @@ const contentScript = {
         this.channel.send(message.action, message.result);
       }
       sendResponse('content-back')
+      return true;
     })
   },
 

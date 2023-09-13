@@ -543,6 +543,7 @@ const SignTransaction = () => {
           leftTitle={currentAccount.accountName}
           leftContent={showAccountAddress}
           leftCopyContent= {currentAccount.address}
+          rightTitle={i18n.t('amount')} 
           rightContent={balance + " " + cointypes.symbol} />
         :
         <>
@@ -553,6 +554,7 @@ const SignTransaction = () => {
           rightContent={showToAddress}
           leftCopyContent= {currentAccount.address}
           rightCopyContent ={realToAddress}
+          showArrow={true}
            />
           {signParams?.sendAction === DAppActions.mina_sendPayment && <CommonRow leftTitle={i18n.t('amount')} leftContent={toAmount} />}
           <div className={styles.accountRow}>
@@ -624,7 +626,8 @@ const CommonRow = ({
   rightTitle = " ",
   rightContent = "",
   leftCopyContent="",
-  rightCopyContent=""
+  rightCopyContent="",
+  showArrow = false
 }) => {
   const {leftCopyAble,rightCopyAble} = useMemo(()=>{
     const leftCopyAble = !!leftCopyContent
@@ -656,6 +659,9 @@ const CommonRow = ({
         [styles.copyCss]:leftCopyAble
       })} onClick={onClickLeft}>{leftContent}<span className={styles.rowDescContent}>{leftDescContent}</span></p>
     </div>
+    {showArrow && <div className={styles.rowArrow}>
+      <img src='/img/icon_arrow_purple.svg'/>
+    </div>}
     <div className={styles.rowRight}>
       <p className={cls(styles.rowTitle, styles.rightTitle)}>{rightTitle}</p>
       <p className={cls(styles.rowContent,{

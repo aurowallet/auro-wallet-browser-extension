@@ -420,6 +420,9 @@ $toolbarHeight: 58px;
         }
     }
     .itemRightContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: end;
         .itemAmount {
             font-size: 16px;
             line-height: 19px;
