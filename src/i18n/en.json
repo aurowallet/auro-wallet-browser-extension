@@ -273,5 +273,6 @@
   "grantSuccess":"Grant permission successful. Please return to the extension.",
   "submitNode":"Submit/Update your node to this list",
   "delegators":"Delegators",
-  "scam":"scam"
+  "scam":"scam",
+  "noAddressSaved":"No addresses saved"
 }

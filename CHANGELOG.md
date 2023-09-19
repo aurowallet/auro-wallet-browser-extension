@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 - UI enhancements
+- Add internal transfer
 - Bug fixes
 
 ## [2.2.3]

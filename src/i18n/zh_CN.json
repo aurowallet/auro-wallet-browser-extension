@@ -273,5 +273,6 @@
   "grantSuccess":"授权成功，请返回插件。",
   "submitNode":"提交/更新节点到这个列表",
   "delegators":"委托者",
-  "scam":"风险"
+  "scam":"风险",
+  "noAddressSaved":"没有保存的地址"
 }
