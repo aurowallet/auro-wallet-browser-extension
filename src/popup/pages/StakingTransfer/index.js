@@ -13,7 +13,7 @@ import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
 import styles from "./index.module.scss";
 import { updateNetAccount } from '../../../reducers/accountReducer';
-import { addressSlice, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
+import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 
 import { cointypes } from "../../../../config";
@@ -212,7 +212,7 @@ const StakingTransfer = () => {
       return;
     }
     let nonce = trimSpace(inputNonce)
-    if (nonce.length > 0 && !isTrueNumber(nonce)) {
+    if (nonce.length > 0 && !isNaturalNumber(nonce)) {
       Toast.info(i18n.t('inputNonceError'))
       return
     }
@@ -231,7 +231,7 @@ const StakingTransfer = () => {
         value: inputFee +" "+ cointypes.symbol,
       }
     ]
-    if (isTrueNumber(nonce)) {
+    if (isNaturalNumber(nonce)) {
       list.push({
         label: "Nonce",
         value: nonce,

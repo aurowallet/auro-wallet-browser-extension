@@ -348,9 +348,6 @@ const WalletInfo = () => {
             </div>
             <div className={styles.walletInfoLeftBottom} onClick={onCopyAddress}>
               <p className={styles.accountAddress}>{showAddress}</p>
-              <div className={styles.copyConatiner}>
-                <img src="/img/icon_copy_homepage_address.svg" />
-              </div>
             </div>
           </div>
           <div className={styles.dappConnectContainer} onClick={toAccountInfo}>

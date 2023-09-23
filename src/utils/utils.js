@@ -131,11 +131,16 @@ export function isTrueNumber(n) {
 }
 
 /**
- * Check username length default 16 digits
- * @param {*} name
- * @param {*} defaultLength
+ * check if number is natural number
+ * @param {*} n 
+ * @returns 
  */
-export function nameLengthCheck(name, defaultLength = 16) {
+export function isNaturalNumber(n) {
+    let isNum = !!String(n).match(/^([0]|[1-9][0-9]*)$/);
+    return isNum;
+}
+
+export function getCharLength(name){
     let realLength = 0
     let len = name.length
     let charCode = -1;
@@ -147,6 +152,16 @@ export function nameLengthCheck(name, defaultLength = 16) {
             realLength += 2;
         }
     }
+    return realLength
+}
+
+/**
+ * Check username length default 16 digits
+ * @param {*} name
+ * @param {*} defaultLength
+ */
+export function nameLengthCheck(name, defaultLength = 16) {
+    let realLength = getCharLength(name)
     if (realLength > defaultLength) {
         return false
     }

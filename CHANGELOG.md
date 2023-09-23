@@ -3,7 +3,9 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
-- UI enhancements
+
+## [2.2.4]
+- Upgrade mina-signer to 2.1.1
 - Add internal transfer
 - Bug fixes
 
