@@ -122,7 +122,7 @@ const Record = ({ }) => {
   }, [netConfig.currentConfig])
 
   const onGoExplorer = useCallback(() => {
-    let url = getExplorerUrl() + "/transaction/" + txDetail.hash
+    let url = getExplorerUrl() + "/tx/" + txDetail.hash
     openTab(url)
   }, [netConfig, txDetail])
 

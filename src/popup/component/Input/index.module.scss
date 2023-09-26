@@ -12,6 +12,15 @@
         border: 0.5px solid #594af1;
     }
 }
+.disableCls{
+    
+    &:hover {
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+    }
+}
+.disableInput{
+    color: rgba(0, 0, 0, 0.3) !important;
+}
 .input {
     background: none;
     outline: none;

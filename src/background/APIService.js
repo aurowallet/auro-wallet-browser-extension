@@ -6,7 +6,7 @@ import { signFieldsMessage, signMessagePayment, signPayment, signTransaction, st
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from "../constant/walletType"
 import extension from 'extensionizer'
-import { getCurrentNetConfig } from '../utils/utils';
+import { decodeMemo, getCurrentNetConfig } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { changeLanguage, getCurrentLang } from '../i18n';
@@ -508,7 +508,7 @@ class APIService {
         })
         deleteAccount = deleteAccount.length>0 ?deleteAccount[0]:{}
         let canDelete = false
-        if(deleteAccount && deleteAccount.type === ACCOUNT_TYPE.WALLET_WATCH){
+        if(deleteAccount && (deleteAccount.type === ACCOUNT_TYPE.WALLET_WATCH||deleteAccount.type === ACCOUNT_TYPE.WALLET_LEDGER)){
             canDelete = true
         }else{
             let isCorrect = this.checkPassword(password)
@@ -627,6 +627,10 @@ class APIService {
             let fee = params.fee
             let nonce = params.nonce
             let memo = params.memo
+            const isSpeedUp = params.isSpeedUp
+            if(isSpeedUp){
+                memo = decodeMemo(params.memo)
+            }
             const privateKey = await this.getCurrentPrivateKey()
             let signedTx = await signPayment(privateKey, fromAddress, toAddress, amount, fee, nonce, memo)
             if (signedTx.error) {
@@ -657,7 +661,11 @@ class APIService {
     }
     sendStakTransaction = async (params) => {
         try {
-            let { fromAddress, toAddress, fee, nonce, memo } = params;
+            let { fromAddress, toAddress, fee, nonce,isSpeedUp } = params;
+            let memo = params.memo
+            if(isSpeedUp){
+                memo = decodeMemo(params.memo)
+            }
             const privateKey = await this.getCurrentPrivateKey()
             let signedTx = await stakePayment(privateKey, fromAddress, toAddress, fee, nonce, memo)
             if (signedTx.error) {
@@ -733,7 +741,7 @@ class APIService {
         extension.notifications &&
             extension.notifications.onClicked.addListener(function (clickId) {
                 if(myNotificationID === clickId){
-                    let url = netConfig.explorer +"/transaction/"+ clickId
+                    let url = netConfig.explorer +"/tx/"+ clickId
                     extension.tabs.create({ url: url });
                 }
             });
@@ -771,8 +779,7 @@ class APIService {
     baseTransactionStatus= (method,paymentId, hash) => {
         method(paymentId).then((data) => {
             if (data && data.transactionStatus && (
-                (data.transactionStatus === STATUS.TX_STATUS_INCLUDED
-                    || data.transactionStatus === STATUS.TX_STATUS_UNKNOWN)
+                (data.transactionStatus === STATUS.TX_STATUS_INCLUDED)
             )) {
                 extension.runtime.sendMessage({
                     type: FROM_BACK_TO_RECORD,
@@ -784,7 +791,13 @@ class APIService {
                     clearTimeout(this.timer);
                     this.timer = null;
                 }
-            } else {
+            } else if(data && data.transactionStatus && (
+                (data.transactionStatus === STATUS.TX_STATUS_UNKNOWN))){
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+            }else {
                 this.timer = setTimeout(() => {
                     this.baseTransactionStatus(method,paymentId, hash);
                 }, 5000);

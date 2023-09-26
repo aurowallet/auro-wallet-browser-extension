@@ -24,7 +24,8 @@ const Input = ({
     showSearchIcon = false,
     customInputContainer = "",
     
-    transLabel = ""
+    transLabel = "",
+    inputDisable=false
 }) => { 
 
     const [showPwd, setShowPwd] = useState(false)
@@ -74,7 +75,9 @@ const Input = ({
                 </div>
                 {rightComponent}
             </div>
-            <div className={cls(styles.inputCon, customInputContainer)}>
+            <div className={cls(styles.inputCon, customInputContainer,{
+                [styles.disableCls]:inputDisable
+            })}>
                 {showSearchIcon && <img className={styles.search} src="/img/icon_search.svg" />}
                 <input
                     onChange={onChangeValue}
@@ -82,8 +85,11 @@ const Input = ({
                     value={value}
                     onKeyUp={onKeyup}
                     type={realType}
+                    disabled={inputDisable}
                     className={cls(styles.input,
-                        className,
+                        className,{
+                            [styles.disableInput]:inputDisable
+                        }
                     )} />
                 {inputType === "password" && <div className={styles.imgContainer} onClick={onClickPwd}>
                     <img src={showPwd ? "/img/icon_input_show.svg" : "/img/icon_input_hide.svg"} />

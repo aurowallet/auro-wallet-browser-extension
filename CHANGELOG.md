@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.5]
+- Add transaction speed-up and cancel
+- Ledger enhancements
+
 ## [2.2.4]
 - Upgrade mina-signer to 2.1.1
 - Add internal transfer

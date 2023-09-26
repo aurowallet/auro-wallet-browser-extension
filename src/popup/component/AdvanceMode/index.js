@@ -16,6 +16,7 @@ const AdvanceMode = ({
     nonceValue = "",
     onNonceInput = () => { },
 
+    type ="",
 }) => {
     const netAccount = useSelector(state => state.accountInfo.netAccount)
     const nonceHolder = useMemo(() => {
@@ -24,10 +25,10 @@ const AdvanceMode = ({
 
     return (
         <div className={styles.advanceContainer}>
-            <div className={styles.advanceEntry} onClick={onClickAdvance}>
+            {!type && <div className={styles.advanceEntry} onClick={onClickAdvance}>
                 <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
                 <img className={isOpenAdvance ? styles.openAdvance : styles.closeAdvance} src="/img/icon_unfold_Default.svg" />
-            </div>
+            </div>}
             {isOpenAdvance && <div className={styles.advanceInput}>
                 <Input
                     label={i18n.t('transactionFee')}
@@ -45,6 +46,7 @@ const AdvanceMode = ({
                     value={nonceValue}
                     inputType={'numric'}
                     placeholder={nonceHolder}
+                    inputDisable={!!type}
                 />
             </div>}
         </div>

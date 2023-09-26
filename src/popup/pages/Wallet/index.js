@@ -8,21 +8,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { cointypes } from '../../../../config';
 import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getZkAppPendingTx, getZkAppTxHistory } from "../../../background/api";
-import { saveLocal } from '../../../background/localStorage';
+import { extSaveLocal } from "../../../background/extensionStorage";
 import { NET_WORK_CONFIG } from '../../../constant/storageKey';
 import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
 import { NET_CONFIG_TYPE } from '../../../constant/walletType';
 import { ACCOUNT_BALANCE_CACHE_STATE, updateAccountTx, updateNetAccount, updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { updateNetConfig } from "../../../reducers/network";
-import { openTab, sendMsg } from '../../../utils/commonMsg';
-import { addressSlice, amountDecimals, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, getShowTime, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
+import { sendMsg } from '../../../utils/commonMsg';
+import { addressSlice, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
 import Clock from '../../component/Clock';
 import { PopupModal } from '../../component/PopupModal';
 import Select from '../../component/Select';
 import Toast from "../../component/Toast";
+import { EmptyView, LoadingView, NoBalanceDetail } from './component/StatusView';
+import TxListView from './component/TxListView';
 import styles from "./index.module.scss";
-import {extSaveLocal} from "../../../background/extensionStorage";
 
 const Wallet = ({ }) => {
 
@@ -503,7 +504,7 @@ const WalletDetail = () => {
   let childView =(<></>)
   if(showNoBalanceView){
     childView = <NoBalanceDetail /> 
-  }else{// 
+  }else{
     if(loadingStatus){
       childView = <LoadingView/>
     }else {
@@ -523,205 +524,5 @@ const WalletDetail = () => {
   return (<div className={styles.walletDetail}>
     {childView}
     <Clock schemeEvent={() => { requestHistory(true) }} />
-  </div>)
-}
-/**
- * 
- * @param {*} showEmpty 
- * @param {*} showEmpty
- * @returns 
- */
-const TxListView = ({
-  history = [],
-  showHistoryStatus = false,
-  historyRefreshing = false,
-  onClickRefesh = () => { }
-}) => {
-  const accountInfo = useSelector(state => state.accountInfo)
-  const netConfig = useSelector(state => state.network)
-
-  const onGoExplorer = useCallback(() => {
-    let currentConfig = netConfig.currentConfig
-    let url = currentConfig.explorer + "/wallet/" + accountInfo.currentAccount.address
-    openTab(url)
-  }, [netConfig, accountInfo])
-
-  return (<div className={cls(styles.historyContainer,styles.holderContainer)}>
-    <HistoryHeader showHistoryStatus={showHistoryStatus} historyRefreshing={historyRefreshing} onClickRefesh={onClickRefesh}/>
-      <div className={styles.listContainer}>
-        {history.map((item, index) => {
-          if (item.showExplorer) {
-            return (<div key={index} className={styles.explorerContainer}>
-              <div className={styles.explorerContent} onClick={onGoExplorer}>
-                <p className={styles.explorerTitle}>{i18n.t('goToExplorer')}</p>
-                <img src="/img/icon_link.svg" className={styles.iconLink} />
-              </div>
-            </div>)
-          }
-          return <TxItem txData={item} index={index} key={index} currentAccount={accountInfo.currentAccount} />
-        })}
-      </div> 
-  </div>)
-}
-const HistoryHeader=({historyRefreshing,onClickRefesh,showHistoryStatus})=>{
-  return (
-    <div className={styles.historyHead}>
-      <span className={styles.historyTitle}>{i18n.t("history")}</span>
-      {showHistoryStatus && <div className={cls(styles.refreshContainer,{
-        [styles.refresh]: historyRefreshing
-      })} onClick={onClickRefesh}>
-        <img src="/img/refresh.svg"  className={styles.refreshIcon}/>
-      </div>
-      }
-    </div>
-  )
-}
-const LoadingView=()=>{
-  return(
-    <div className={cls(styles.historyContainer,styles.loadingOuterContainer)}>
-      <HistoryHeader showHistoryStatus={false}/>
-      <div className={styles.loadingCon}>
-        <img className={styles.refreshLoading} src="/img/loading_purple.svg" />
-        <p className={styles.loadingContent}>
-          {i18n.t('loading') + "..."}
-        </p>
-      </div>
-    </div>
-  )
-}
-const EmptyView = ()=>{
-  return (<div className={styles.historyContainer}>
-    <div className={styles.historyHead}>
-      <span className={styles.historyTitle}>{i18n.t("history")}</span>
-    </div>
-      <div className={styles.emptyContainer}>
-        <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
-        <span className={styles.emptyContent}>
-          {i18n.t('unknownInfo')}
-        </span>
-      </div>
-  </div>)
-}
-const NoBalanceDetail = () => {
-  return (<div className={styles.noBalanceContainer}>
-    <div className={styles.noBalanceTopContainer}>
-      <img src="/img/reminder.svg" className={styles.reminderIcon} />
-      <p className={styles.reminderTitle}>
-        {i18n.t('reminder')}
-      </p>
-    </div>
-    <p className={styles.reminderContent}>
-      {i18n.t('notActiveAccountTip')}
-    </p>
-  </div>)
-}
-
-const TX_STATUS = {
-  PENDING: "PENDING",
-  SUCCESS: "applied",
-  FAILED: "failed",
-}
-
-const TxItem = ({ txData, currentAccount,index }) => {
-  const {
-    statusIcon,
-    showAddress,
-    timeInfo,
-    amount,
-    statusText,
-    statusStyle,
-    showPendTx
-  } = useMemo(() => {
-    let isReceive = true
-    let statusIcon, showAddress, timeInfo, amount, statusText, statusStyle = ''
-
-    if (txData.kind?.toLowerCase() === "payment") {
-      isReceive = txData.to.toLowerCase() === currentAccount.address.toLowerCase()
-      statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg"
-    } else if(txData.kind?.toLowerCase() === "stake_delegation"){
-      isReceive = false
-      statusIcon = "/img/tx_pending.svg"
-    } else if(txData.kind?.toLowerCase() === "zkapp"){
-      isReceive = false
-      statusIcon = "/img/tx_history_zkapp.svg"
-    } else {
-      statusIcon = "/img/tx_pending.svg"
-    }
-    showAddress = addressSlice(isReceive ? txData.from : txData.to, 8)
-    showAddress = !showAddress ? txData.kind.toUpperCase() : showAddress
-    timeInfo = txData.status === TX_STATUS.PENDING ? "Nonce " + txData.nonce : getShowTime(txData.dateTime)
-
-
-    amount = amountDecimals(txData.amount, cointypes.decimals)
-    amount = getDisplayAmount(amount, 2)
-    amount = isReceive ? "+" + amount : "-" + amount
-
-    if(txData.kind?.toLowerCase() === "zkapp"){
-      amount = "0"
-    }
-
-    let showPendTx = false
-
-    if(txData.status === TX_STATUS.PENDING){
-      statusStyle = styles.itemStatus_Pending
-      showPendTx = true
-      statusText = i18n.t(txData.status && txData.status.toUpperCase()) 
-    }else{
-      if(txData.failureReason){
-        statusStyle = styles.itemStatus_Failed
-        statusText = i18n.t("FAILED")
-      }else{
-        statusStyle = styles.itemStatus_Success
-        statusText = i18n.t("APPLIED")
-      }
-    }
-
-    return {
-      statusIcon,
-      showAddress,
-      timeInfo,
-      amount,
-      statusText,
-      statusStyle,
-      showPendTx
-    }
-  }, [txData, i18n])
-
-  const history = useHistory()
-  const onToDetail = useCallback(() => {
-    history.push({
-      pathname: '/record_page',
-      params: { txDetail: txData }
-    })
-  }, [txData])
-  const paddingLineStyle = useMemo(()=>{
-    return  index !== 0
-  },[index])
-  return (<div className={styles.txItemCon}>
-    <div className={cls(styles.dividedLine,{
-      [styles.paddingLine]: paddingLineStyle
-    })}/>
-    <div className={cls(styles.itemContainer, {
-      [styles.pendingCls]: showPendTx
-    })} onClick={onToDetail}>
-      <div className={styles.itemLeftContainer}>
-        <img src={statusIcon} className={styles.txStatusIcon} />
-        <div className={styles.itemAccount}>
-          <p className={styles.itemAccountAddress}>
-            {showAddress}
-            {txData.isFromAddressScam && <span className={styles.scamTag}>
-                {i18n.t("scam")}
-            </span>}
-          </p>
-          <p className={styles.itemAccountInfo}>{timeInfo}</p>
-        </div>
-      </div>
-      <div className={styles.itemRightContainer}>
-        <p className={styles.itemAmount}> {amount} </p>
-        <div className={cls(styles.itemStatus, statusStyle)}>
-          {statusText}
-        </div>
-      </div>
-    </div>
   </div>)
 }

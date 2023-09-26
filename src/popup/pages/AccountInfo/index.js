@@ -41,6 +41,7 @@ const AccountInfo = ({}) => {
 
   const [currentModal, setCurrentModal] = useState({});
   const [showSecurity, setShowSecurity] = useState(false);
+  const [resetModalBtnStatus,setResetModalBtnStatus] = useState(true)
 
   const onCloseModal = useCallback(() => {
     setPopupModalStatus(false);
@@ -85,6 +86,7 @@ const AccountInfo = ({}) => {
       content: "",
       inputPlaceholder: i18n.t("accountNameLimit"),
       maxInputLength: 16,
+      rightBtnStyle:""
     });
     setPopupModalStatus(true);
   }, [i18n]);
@@ -96,33 +98,51 @@ const AccountInfo = ({}) => {
     });
   }, []);
 
-  const deleteAccount = useCallback(() => {
-    if (account.type === ACCOUNT_TYPE.WALLET_WATCH) {
-      Loading.show();
-      sendMsg(
-        {
-          action: WALLET_DELETE_WATCH_ACCOUNT,
-          payload: {
-            address: account.address,
-          },
+  const onConfirmDeleteLedger = useCallback(()=>{
+    setPopupModalStatus(false);
+    Loading.show();
+    sendMsg(
+      {
+        action: WALLET_DELETE_WATCH_ACCOUNT,
+        payload: {
+          address: account.address,
         },
-        async (currentAccount) => {
-          Loading.hide();
-          if (currentAccount.error) {
-            if (currentAccount.type === "local") {
-              Toast.info(i18n.t(currentAccount.error));
-            } else {
-              Toast.info(currentAccount.error);
-            }
+      },
+      async (currentAccount) => {
+        Loading.hide();
+        if (currentAccount.error) {
+          if (currentAccount.type === "local") {
+            Toast.info(i18n.t(currentAccount.error));
           } else {
-            dispatch(updateCurrentAccount(currentAccount));
-
-            setTimeout(() => {
-              history.goBack();
-            }, 300);
+            Toast.info(currentAccount.error);
           }
+        } else {
+          dispatch(updateCurrentAccount(currentAccount));
+
+          setTimeout(() => {
+            history.goBack();
+          }, 300);
         }
-      );
+      }
+    );
+  },[account])
+  const onClickDeleteLedger = useCallback(()=>{
+    setResetModalBtnStatus(false)
+    setCurrentModal({
+      title: i18n.t('deleteAccount'),
+      leftBtnContent: i18n.t("cancel"), 
+      rightBtnContent: i18n.t("delete"),
+      type: PopupModal_type.common,
+      onLeftBtnClick: onCloseModal,
+      onRightBtnClick: onConfirmDeleteLedger,
+      content: "",
+      rightBtnStyle:styles.modalDelete
+    });
+    setPopupModalStatus(true);
+  },[i18n])
+  const deleteAccount = useCallback(() => {
+    if (account.type === ACCOUNT_TYPE.WALLET_WATCH||account.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      onClickDeleteLedger()
     } else {
       setShowSecurity(true);
     }
@@ -193,7 +213,6 @@ const AccountInfo = ({}) => {
     [currentAccount, account, i18n]
   );
 
-  const [resetModalBtnStatus,setResetModalBtnStatus] = useState(true)
   const onResetModalInput = useCallback((e)=>{
     let checkStatus = e.target.value.length > 0 
     if (checkStatus) {

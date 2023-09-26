@@ -179,6 +179,11 @@ const SignTransaction = () => {
       }, async (params) => { })
       return
     }
+    const supportAction = [DAppActions.mina_sendPayment,DAppActions.mina_sendStakeDelegation]
+    if(supportAction.indexOf(sendAction)===-1){
+      Toast.info(i18n.t('notSupportNow')) 
+      return
+    }
 
     const { ledgerApp } = await checkLedgerConnect()
     if (ledgerApp) {
@@ -206,9 +211,6 @@ const SignTransaction = () => {
           return
         }
         postRes = await sendStakeTx(payload, { rawSignature: signature }).catch(error => error)
-      } else {
-        Toast.info(i18n.t('notSupportNow'))
-        return
       }
 
       setLedgerModalStatus(false)

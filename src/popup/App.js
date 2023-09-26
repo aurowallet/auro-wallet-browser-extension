@@ -45,11 +45,10 @@ function App() {
   }, [])
 
   const fetchFeeData = useCallback(async () => {
+    getLocalFeeList()
     let feeRecom = await getFeeRecom()
     if (feeRecom.length > 0) {
       dispatch(updateRecomFee(feeRecom))
-    }else{
-      getLocalFeeList()
     }
   }, [])
   const getLocalScamList = useCallback(() => {

@@ -60,72 +60,85 @@
     background-color: #f2f2f2;
 }
 
-.ledgerTip{
-    max-height: 400px !important;
-    margin-bottom: 180px !important;
-}
 .bottomContent {
-    padding: 0px 20px 0px;
     overflow-y: auto;
     background: #ffffff;
     max-height: 350px;
     margin-bottom: 100px;
+}
 
-    .highlightContainer {
-        margin-top: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-    }
-    .highlightTitle {
-        font-size: 12px;
-        line-height: 17px;
-        color: rgba(0, 0, 0, 0.5);
-    }
-    .highlightCon {
-        display: flex;
-        align-items: baseline;
-        margin: 8px 0px 30px;
-    }
-    .highlightContent {
-        font-size: 24px;
-        line-height: 16px;
-        display: flex;
-        align-items: center;
-        color: #000000;
-        font-weight: 600;
-    }
-    .subHighlightContent {
-        font-weight: 600;
-        font-size: 16px;
-        line-height: 16px;
-        margin-left: 4px;
+.rightRow {
+    display: flex;
+    align-items: center;
+}
+
+.bottomContainer {
+    padding: 12px 38px 20px;
+    position: fixed;
+    bottom: 0;
+    width: calc(100%);
+    background-color: white;
+
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+
+.modalContentCls {
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+
+    margin: 20px 20px;
+    .lightFont {
+        color: rgba(0, 0, 0, 0.8);
     }
 }
 
+.feeContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
+    padding: 0px 20px;
 
-.contentItemContainer {
-    margin-bottom: 10px;
-    .contentTitle {
-        font-weight: 500;
-        font-size: 12px;
-        line-height: 17px;
-        display: flex;
-        align-items: center;
+    .feeTitle {
         color: rgba(0, 0, 0, 0.5);
-    }
-    .contentValue {
+        font-size: 12px;
         font-weight: 500;
-        font-size: 14px;
-        line-height: 16px;
+    }
+    .feeContent {
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 4px;
+    }
+    .rightFee {
+        text-align: right;
+    }
+    .feeArrow {
         display: flex;
         align-items: center;
-        color: #000000;
-        margin: 4px 0px 0px;
-        word-break: break-all;
+        justify-content: center;
+        width: 40px;
+        .arrowCls {
+            width: 10px;
+        }
     }
+}
+.feeItem {
+    flex: 1;
+}
+
+.changeCls {
+    margin-right: 20px;
+    color: #594af1;
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: right;
 }
 
 .ledgerContent {
@@ -153,52 +166,16 @@
         margin: 0;
         font-weight: 500;
     }
-    .waitingTip{
+    .waitingTip {
         @extend .waitingContent;
         font-weight: 400;
         color: rgba(0, 0, 0, 0.5);
         margin: 20px 10px;
     }
-    .accountRepeatName{
+    .accountRepeatName {
         font-weight: 700;
     }
-    .redFont{
-        color: #D65A5A;
+    .redFont {
+        color: #d65a5a;
     }
 }
-.rightRow{
-    display: flex;
-    align-items: center;
-}
-
-.bottomContainer {
-    padding: 12px 38px 20px;
-    position: fixed;
-    bottom: 0;
-    width: calc(100%);
-    background-color: white;
-
-    animation: openModal 0.35s;
-    animation-fill-mode: forwards;
-}
-.reminderContainer {
-    animation: openModal 0.35s;
-    animation-fill-mode: forwards;
-    position: fixed;
-    z-index: 2;
-    margin: 0px 20px 90px;
-
-
-    background: rgba(214, 90, 90, 0.1);
-    border: 1px solid #d65a5a;
-    border-radius: 10px;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 17px;
-    color: #d65a5a;
-    padding: 12px 10px;
-  }
-  .clickItem{
-      color: #594AF1;
-      cursor: pointer;
-  }

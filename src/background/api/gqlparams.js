@@ -391,31 +391,162 @@ export function getZkAppTransactionListBody() {
 
 export function getPendingZkAppTxBody() {
   return `
-  query pendingZkTx($publicKey: PublicKey){
+  query pendingZkTx($publicKey: PublicKey) {
     pooledZkappCommands(publicKey: $publicKey) {
-		hash     
-    failureReason{
-      index
-      failures  
-    }
-    zkappCommand{
-      feePayer{
-        body{
-          publicKey
-          fee
-          validUntil
-          nonce
-        }
-        authorization
+      hash
+      failureReason {
+        index
+        failures
       }
-      accountUpdates{
-        body{
-          publicKey
+      zkappCommand {
+        feePayer {
+          body {
+            publicKey
+            fee
+            validUntil
+            nonce
+          }
+          authorization
         }
+        accountUpdates {
+          body {
+            publicKey
+            tokenId
+            update {
+              appState
+              delegate
+              verificationKey {
+                data
+                hash
+              }
+              permissions {
+                editState
+                access
+                send
+                receive
+                setDelegate
+                setPermissions
+                setVerificationKey
+                setZkappUri
+                editActionState
+                setTokenSymbol
+                incrementNonce
+                setVotingFor
+                setTiming
+              }
+              zkappUri
+              tokenSymbol
+              timing {
+                initialMinimumBalance
+                cliffTime
+                cliffAmount
+                vestingPeriod
+                vestingIncrement
+              }
+              votingFor
+            }
+            balanceChange {
+              magnitude
+              sgn
+            }
+            incrementNonce
+            events
+            actions
+            callData
+            callDepth
+            preconditions {
+              network {
+                snarkedLedgerHash
+                blockchainLength {
+                  lower
+                  upper
+                }
+                minWindowDensity {
+                  lower
+                  upper
+                }
+                totalCurrency {
+                  lower
+                  upper
+                }
+                globalSlotSinceGenesis {
+                  lower
+                  upper
+                }
+                stakingEpochData {
+                  ledger {
+                    hash
+                    totalCurrency {
+                      lower
+                      upper
+                    }
+                  }
+                  seed
+                  startCheckpoint
+                  lockCheckpoint
+                  epochLength {
+                    lower
+                    upper
+                  }
+                }
+                nextEpochData {
+                  ledger {
+                    hash
+                    totalCurrency {
+                      lower
+                      upper
+                    }
+                  }
+                  seed
+                  startCheckpoint
+                  lockCheckpoint
+                  epochLength {
+                    lower
+                    upper
+                  }
+                }
+              }
+              account {
+                balance {
+                  lower
+                  upper
+                }
+                nonce {
+                  lower
+                  upper
+                }
+                receiptChainHash
+                delegate
+                state
+                actionState
+                provedState
+                isNew
+              }
+              validWhile {
+                lower
+                upper
+              }
+            }
+            useFullCommitment
+            implicitAccountCreationFee
+            mayUseToken {
+              parentsOwnToken
+              inheritFromParent
+            }
+            authorizationKind {
+              isSigned
+              isProved
+              verificationKeyHash
+            }
+          }
+          authorization {
+            proof
+            signature
+          }
+        }
+        memo
       }
-      memo
     }
   }
-}
   `
 }

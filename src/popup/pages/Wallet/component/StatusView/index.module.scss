@@ -1,0 +1,130 @@
+.historyHead {
+    width: 100%;
+    z-index: 2;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+}
+.historyTitle {
+    font-size: 14px;
+    line-height: 16px;
+    font-weight: 600;
+    text-align: center;
+    color: #000000;
+    text-transform: uppercase;
+}
+.historyContainer {
+    background: #ffffff;
+    height: 100%;
+    
+    .emptyContainer {
+        padding-top: 45px;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        height: 255px;
+        overflow: hidden;
+    }
+    .emptyIcon {
+        margin-bottom: 10px;
+        width: 100px;
+        height: 100px;
+    }
+    .emptyContent {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 17px;
+        color: rgba(0, 0, 0, 0.3);
+    }
+    .refreshLoading {
+        animation: spin 0.5s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+}
+@keyframes refreshAni {
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.refreshContainer{
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+}
+.refresh {
+    transform-origin: 11px 11px;
+    animation: refreshAni 0.8s infinite linear;
+}
+.refreshIcon {
+    cursor: pointer;
+    width: 22px;
+    height: 22px;
+    padding: 4px;
+}
+
+.loadingCon {
+    height: 100%;
+    padding-top: 80px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    height: 255px;
+    overflow: hidden;
+    .loadingContent {
+        font-size: 12px;
+        line-height: 17px;
+        margin: 10px 0px 0px;
+        color: rgba(0, 0, 0, 0.3);
+    }
+}
+
+.noBalanceContainer {
+    background: #ffffff;
+    border-radius: 12px;
+    margin: 0 20px;
+    padding: 20px;
+    .noBalanceTopContainer {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .reminderIcon {
+        margin-right: 6px;
+    }
+    .reminderTitle {
+        font-size: 16px;
+        line-height: 19px;
+        color: #000000;
+        margin: 0;
+    }
+    .reminderContent {
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 17px;
+        color: rgba(0, 0, 0, 0.5);
+        margin: 0;
+    }
+}

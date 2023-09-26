@@ -195,6 +195,9 @@ const accountInfo = (state = initState, action) => {
 
             const commonPendingList = [...txPendingList,...zkPendingList]
             commonPendingList.sort((a,b)=>b.nonce-a.nonce)
+            if(commonPendingList.length>0){
+                commonPendingList[commonPendingList.length-1].showSpeedUp = true
+            }
             let newList = [...commonPendingList,...commonList]
             if (newList.length > 0) {
                 newList.push({
