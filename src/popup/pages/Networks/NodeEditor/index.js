@@ -2,10 +2,12 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { Berkeley_NET_BASE_CONFIG, MAIN_NET_BASE_CONFIG, NET_CONFIG_VERSION, TEST_NET_BASE_CONFIG, UNKNOWN_NET_BASE_CONFIG } from "../../../../../config";
+import { NET_CONFIG_VERSION, UNKNOWN_NET_BASE_CONFIG } from "../../../../../config";
 import { getNetworkList, getNodeChainId } from "../../../../background/api";
-import { getLocal, removeLocal, saveLocal } from "../../../../background/localStorage";
+import { extSaveLocal } from "../../../../background/extensionStorage";
+import { getLocal, removeLocal } from "../../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../../constant/storageKey";
+import { NET_CONFIG_LIST } from "../../../../constant/walletType";
 import { updateShouldRequest, updateStakingRefresh } from "../../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, updateNetChainIdConfig, updateNetConfig } from "../../../../reducers/network";
 import { sendNetworkChangeMsg, trimSpace, urlValid } from "../../../../utils/utils";
@@ -15,7 +17,6 @@ import Input from "../../../component/Input";
 import { PopupModal } from "../../../component/PopupModal";
 import TextArea from "../../../component/TextArea";
 import styles from "./index.module.scss";
-import {extSaveLocal} from "../../../../background/extensionStorage";
 
 export const NodeEditorType = {
     add: "add",
@@ -120,20 +121,15 @@ const NodeEditor = ({ }) => {
                 break
             }
         }
-        let config = {}
-        switch (networkConfig.type) {
-            case "0":
-                config = MAIN_NET_BASE_CONFIG
-                break;
-            case "1":
-                config = TEST_NET_BASE_CONFIG
-                break;
-            case "11":
-                config = Berkeley_NET_BASE_CONFIG
-                break;
-            default:
-                config = UNKNOWN_NET_BASE_CONFIG
-                break;
+        let config
+        Object.keys(NET_CONFIG_LIST).forEach((key)=>{
+            const item = NET_CONFIG_LIST[key]
+            if(item.type_id === networkConfig.type){
+                config = item.config
+            }
+        })
+        if(!config){
+            config = UNKNOWN_NET_BASE_CONFIG
         }
         return { chainId, config }
     })

@@ -63,7 +63,7 @@ const Setting = ({ }) => {
             return autoLockTime
         }
         const getNetwork = () => {
-            return showNameSlice(currentConfig.name)
+            return showNameSlice(currentConfig.name,10)
         }
         const getLanguage = () => {
             let currentLangeuage = languageOption.filter((language) => {

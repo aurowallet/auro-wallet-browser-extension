@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.6]
+- Add network [testworld2]
+
 ## [2.2.5]
 - Add transaction speed-up and cancel
 - Ledger enhancements

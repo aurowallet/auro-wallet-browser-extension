@@ -1,5 +1,5 @@
 
-import {NET_CONFIG_TYPE} from '../constant/walletType'
+import {NET_CONFIG_LIST} from '../constant/walletType'
 const UPDATE_NET_CONFIG = "UPDATE_NET_CONFIG"
 
 const UPDATE_NETWORK_CHAINID_CONFIG = "UPDATE_NETWORK_CHAINID_CONFIG"
@@ -77,34 +77,20 @@ const network = (state = initState, action) => {
         case UPDATE_NETWORK_CHAINID_CONFIG:
             let chainIdList = action.data
             let netConfigList = state.netList
-            let mainNetChainConfig = chainIdList.filter((config)=>{
-                return config.type === "0" 
-            })  
-            let mainNetChainId = mainNetChainConfig.length > 0 ? mainNetChainConfig[0].chain_id:""
-            let devNetChainConfig = chainIdList.filter((config)=>{
-                return config.type === "1" 
-            })  
-            let devNetChainId = devNetChainConfig.length > 0 ? devNetChainConfig[0].chain_id:""
-            
-            let berkeleyNetChainConfig = chainIdList.filter((config)=>{
-                return config.type === "11" 
-            })  
-            let berkeleyChainId = berkeleyNetChainConfig.length > 0 ? berkeleyNetChainConfig[0].chain_id:""
-
+            let typeAndIdMap = {}
+            for (let index = 0; index < chainIdList.length; index++) {
+                const chainItem = chainIdList[index];
+                typeAndIdMap[chainItem.type] = chainItem.chain_id
+            }
+           
             let newNetConfigList = []
             for (let index = 0; index < netConfigList.length; index++) {
                 let config = {...netConfigList[index]};
                 if(config.type === NET_CONFIG_DEFAULT){
-                    if(config.netType === NET_CONFIG_TYPE.Mainnet){
-                        config.chainId = mainNetChainId
-                    }else if(config.netType === NET_CONFIG_TYPE.Devnet){
-                        config.chainId = devNetChainId
-                    }else if(config.netType === NET_CONFIG_TYPE.Berkeley){
-                        config.chainId = berkeleyChainId
-                    }
+                    let type_id = NET_CONFIG_LIST[config.netType].type_id
+                    config.chainId = typeAndIdMap[type_id]||""
                 }
                 newNetConfigList.push(config)
-                
             }
             return {
                 ...state,

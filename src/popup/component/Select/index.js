@@ -76,7 +76,7 @@ const Option = ({ label, value, isSelect, onClick }) => {
         className={cls(styles.optionContainer, {
             [styles.selectedOption]: isSelect
         })}>
-        {showNameSlice(label)}
+        {showNameSlice(label,10)}
     </div>)
 }
 
