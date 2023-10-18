@@ -47,7 +47,7 @@ const Select = ({
                 onClick={onClickEntry}
             >
                 <p className={styles.selectTitle}>
-                    {showNameSlice(currentLabel)}
+                    {showNameSlice(currentLabel,10)}
                 </p>
                 <div className={styles.arrowtIcon}>
                 <img src="/img/icon_arrow_unfold.svg"  />

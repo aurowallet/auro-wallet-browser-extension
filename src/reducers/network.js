@@ -87,7 +87,7 @@ const network = (state = initState, action) => {
             for (let index = 0; index < netConfigList.length; index++) {
                 let config = {...netConfigList[index]};
                 if(config.type === NET_CONFIG_DEFAULT){
-                    let type_id = NET_CONFIG_LIST[config.netType].type_id
+                    let type_id = NET_CONFIG_LIST[config.netType]?.type_id
                     config.chainId = typeAndIdMap[type_id]||""
                 }
                 newNetConfigList.push(config)

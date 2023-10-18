@@ -51,8 +51,8 @@ export const WALLET_CONNECT_TYPE = {
 
 /** not support transaction history */
 export const NET_CONFIG_NOT_SUPPORT_TX_HISTORY =[
-  NET_CONFIG_TYPE.Unknown,
-  NET_CONFIG_TYPE.Testworld2,
+  // NET_CONFIG_TYPE.Unknown,
+  // NET_CONFIG_TYPE.Testworld2,
   // NET_CONFIG_TYPE.Devnet,
 ]
 /** not support stake   */
@@ -60,3 +60,10 @@ export const NET_CONFIG_NOT_SUPPORT_STAKING =[
   NET_CONFIG_TYPE.Unknown,
   // NET_CONFIG_TYPE.Devnet,
 ]
+
+/** the netType that support zkapp */
+export const NET_CONFIG_SUPPORT_ZKAPP =[
+  NET_CONFIG_TYPE.Berkeley,
+  NET_CONFIG_TYPE.Testworld2,
+]
+

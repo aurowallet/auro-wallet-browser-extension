@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Un-Released]
 
 ## [2.2.6]
-- Add network [testworld2]
+- Add support for Testworld2.0 network
 
 ## [2.2.5]
 - Add transaction speed-up and cancel

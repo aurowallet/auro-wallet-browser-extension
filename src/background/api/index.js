@@ -1,6 +1,6 @@
 import { BASE_INFO_URL, TX_LIST_LENGTH } from "../../../config";
 import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, RECOMMOND_FEE, SCAM_LIST } from "../../constant/storageKey";
-import { NET_CONFIG_TYPE } from "../../constant/walletType";
+import { NET_CONFIG_SUPPORT_ZKAPP, NET_CONFIG_TYPE } from "../../constant/walletType";
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
 import {
@@ -211,7 +211,7 @@ export async function getPendingTxList(address) {
       publicKey: address
     }).catch(() => [])
   let list = result.pooledUserCommands || []
-  await saveLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
+  saveLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
   return { txList: list, address }
 }
 
@@ -339,8 +339,8 @@ export async function getZkAppTxHistory(address,limit){
   let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
 
-  if (!gqlTxUrl || netConfig.netType !== NET_CONFIG_TYPE.Berkeley) {
-    await saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
+  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
+    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
   let txBody = getZkAppTransactionListBody()
@@ -362,7 +362,7 @@ export async function getZkAppTxHistory(address,limit){
 export async function getZkAppPendingTx(address,limit){
   let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.url
-  if (!gqlTxUrl || netConfig.netType !== NET_CONFIG_TYPE.Berkeley) {
+  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }

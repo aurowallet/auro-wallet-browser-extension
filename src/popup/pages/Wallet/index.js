@@ -16,12 +16,12 @@ import { ACCOUNT_BALANCE_CACHE_STATE, updateAccountTx, updateNetAccount, updateS
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from '../../../utils/commonMsg';
-import { addressSlice, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
+import { addressSlice, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, isNaturalNumber, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
 import Clock from '../../component/Clock';
 import { PopupModal } from '../../component/PopupModal';
 import Select from '../../component/Select';
 import Toast from "../../component/Toast";
-import { EmptyView, LoadingView, NoBalanceDetail } from './component/StatusView';
+import { LoadingView, NoBalanceDetail, UnknownInfoView } from './component/StatusView';
 import TxListView from './component/TxListView';
 import styles from "./index.module.scss";
 
@@ -400,11 +400,14 @@ const WalletDetail = () => {
   const accountInfo = useSelector(state => state.accountInfo)
   const shouldRefresh = useSelector(state => state.accountInfo.shouldRefresh)
 
+  const netType = useMemo(()=>{
+    return netConfig?.currentConfig?.netType
+  },[netConfig])
+
   const [currentAccount, setCurrentAccount] = useState(accountInfo.currentAccount)
   const [historyList, setHistoryList] = useState(accountInfo.txList)
   const [showHistoryStatus, setShowHistoryStatus] = useState(()=>{
     let status
-    let netType = netConfig?.currentConfig?.netType
     if (getNetTypeNotSupportHistory(netType)) {
       status = false
     } else {
@@ -419,7 +422,6 @@ const WalletDetail = () => {
   const isFirstRequest = useRef(historyList.length===0);
  
   const requestHistory = useCallback(async (silent = false, address = currentAccount.address) => {
-    let netType = netConfig?.currentConfig?.netType
     if (!getNetTypeNotSupportHistory(netType)) {
       if (isFirstRequest.current && !silent) {
         setLoadingStatus(true)
@@ -444,7 +446,7 @@ const WalletDetail = () => {
       })
     }
 
-  }, [currentAccount.address, netConfig])
+  }, [currentAccount.address, netType])
 
 
   useEffect(() => {
@@ -463,63 +465,44 @@ const WalletDetail = () => {
   }, [requestHistory])
 
 
-  const [showNoBalanceView, setShowNoBalanceView] = useState(false)
-
 
   useEffect(() => {
-    let netType = netConfig?.currentConfig?.netType
     if (getNetTypeNotSupportHistory(netType)) {
       setShowHistoryStatus(false)
       setLoadingStatus(false)
+      isFirstRequest.current = false
     } else {
       setShowHistoryStatus(true)
     }
-  }, [netConfig.currentConfig.netType])
+  }, [netType])
 
 
   useEffect(() => {
-    let netType = netConfig?.currentConfig?.netType
     if (shouldRefresh && !getNetTypeNotSupportHistory(netType)) {
       setLoadingStatus(true)
       setShowHistoryStatus(true)
       requestHistory()
     }
-  }, [shouldRefresh])
-
-  useEffect(() => {
-    let netType = netConfig?.currentConfig?.netType
-    if (getNetTypeNotSupportHistory(netType)) {
-      isFirstRequest.current = false
-    }
-  }, [])
-
-  useEffect(() => {
-    if (historyList.length === 0 && !loadingStatus && showHistoryStatus) {
-      setShowNoBalanceView(true)
-    } else {
-      setShowNoBalanceView(false)
-    }
-  }, [historyList, showHistoryStatus, loadingStatus])
+  }, [shouldRefresh,netType])
 
   let childView =(<></>)
-  if(showNoBalanceView){
-    childView = <NoBalanceDetail /> 
+  if(loadingStatus){
+    childView = <LoadingView/>
   }else{
-    if(loadingStatus){
-      childView = <LoadingView/>
-    }else {
-      if(historyList.length !== 0){
-        childView = <TxListView
-        history={historyList}
-        onClickRefesh={onClickRefesh}
-        historyRefreshing={historyRefreshing}
-        showHistoryStatus={showHistoryStatus}
-      />
-      }else{
-        childView =  <EmptyView/>
-      }
+    if(historyList.length !== 0){
+      childView = <TxListView
+                    history={historyList}
+                    onClickRefesh={onClickRefesh}
+                    historyRefreshing={historyRefreshing}
+                    showHistoryStatus={showHistoryStatus}
+                  />
+    }else{
+        if(netType === NET_CONFIG_TYPE.Unknown){
+          childView =  <UnknownInfoView/>
+        }else{
+          childView = <NoBalanceDetail />
+        }
     }
-
   }
   return (<div className={styles.walletDetail}>
     {childView}

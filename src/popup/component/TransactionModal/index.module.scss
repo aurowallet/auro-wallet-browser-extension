@@ -131,6 +131,11 @@
     flex: 1;
 }
 
+.changeWrapper{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
 .changeCls {
     margin-right: 20px;
     color: #594af1;

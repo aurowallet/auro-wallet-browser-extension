@@ -35,7 +35,7 @@ export const LoadingView = () => {
     </div>
   );
 };
-export const EmptyView = () => {
+export const UnknownInfoView = () => {
   return (
     <div className={styles.historyContainer}>
       <div className={styles.historyHead}>

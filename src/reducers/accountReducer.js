@@ -1,5 +1,5 @@
 import { cointypes, TX_LIST_LENGTH } from "../../config";
-import { amountDecimals } from "../utils/utils";
+import { amountDecimals, txSort } from "../utils/utils";
 
 const CHANGE_ACCOUNT_TX_HISTORY = "CHANGE_ACCOUNT_TX_HISTORY"
 
@@ -191,7 +191,7 @@ const accountInfo = (state = initState, action) => {
             txList = commonHistoryFormat(txList)
 
             const commonList = [...txList,...zkAppList]
-            commonList.sort((a,b)=>b.timestamp-a.timestamp)
+            commonList.sort(txSort)
 
             const commonPendingList = [...txPendingList,...zkPendingList]
             commonPendingList.sort((a,b)=>b.nonce-a.nonce)

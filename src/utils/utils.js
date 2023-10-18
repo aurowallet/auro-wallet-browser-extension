@@ -381,3 +381,12 @@ export function getTimeGMT(time) {
 export function numberFormat(str){
     return str.replace(/[^\d^\.]+/g, "").replace(/\.{2,}/, "")
 }
+
+/** tx sort */
+export function txSort(preTx,nextTx){
+    if(preTx.timestamp !== nextTx.timestamp){
+        return nextTx.timestamp - preTx.timestamp
+    }else{
+        return nextTx.nonce - preTx.nonce
+    }
+}
