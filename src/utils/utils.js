@@ -363,7 +363,7 @@ export function decodeMemo(encode) {
         const res = encoded.slice(3, 3 + encoded[2]).toString('utf-8')
         return res
     } catch (error) {
-        return ""
+        return encode
     }
 }
 
