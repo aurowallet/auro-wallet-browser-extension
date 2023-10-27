@@ -21,7 +21,6 @@ import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteR
 import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
-import { sendNetworkChangeMsg } from "./utils/utils";
 
 
 function getLocalNetConfig(store) {
@@ -186,6 +185,8 @@ async function getDappStatus(store){
             nextRoute = ENTRY_WITCH_ROUTE.DAPP_SIGN_PAGE
           }else if(window.channel === windowId.approve_page){
             nextRoute = ENTRY_WITCH_ROUTE.DAPP_APPROVE_PAGE
+          }else if(window.channel === windowId.zkpp_notification){
+            nextRoute = ENTRY_WITCH_ROUTE.DAPP_APPROVE_PAGE
           }
         }else{
           nextRoute = ENTRY_WITCH_ROUTE.HOME_PAGE
@@ -255,9 +256,7 @@ export const applicationEntry = {
 
     await upgradeStorageConfig()
     // init netRequest
-    let netConfig = await getLocalNetConfig(store)
-    sendNetworkChangeMsg(netConfig.currentConfig)
-
+    await getLocalNetConfig(store)
     // init nextRoute
     let accountData = await getLocalStatus(store)
     const {nextRoute} = accountData

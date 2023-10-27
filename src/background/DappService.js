@@ -11,10 +11,12 @@ import { get } from './storageService';
 
 let signRequests = [];
 let approveRequests = [];
+let notificationRequests = []
 
 export const windowId = {
   approve_page: "approve_page",
   request_sign: "request_sign",
+  zkpp_notification: "zkpp_notification"
 }
 let badgeList = []
 
@@ -23,6 +25,10 @@ const SIGN_TYPE = {
   STAKING: "STAKING",
   MESSAGE: "MESSAGE",
   PARTY:"PARTY"
+}
+
+const Notification_TYPE = {
+  SwitchChain: "SwitchChain",
 }
 const BADGE_ADD = "BADGE_ADD"
 const BADGE_MINUS = "BADGE_MINUS"
@@ -126,7 +132,77 @@ class DappService {
             sendResponse
           )
           break;
+      case DAppActions.mina_switchChain:
+        this.requestCallback(
+          () => this.signNotification(id, { ...params, action }, site, Notification_TYPE.SwitchChain),
+          id,
+          sendResponse
+        )
+        break;
     }
+  }
+  async signNotification(id, params, site, type) {
+    return new Promise(async (resolve, reject) => {
+      let that = this
+      try {
+        let currentAccount = this.getCurrentAccountAddress()
+        let approveAccountStatus = this.getCurrentAccountConnectStatus(site.origin, currentAccount)
+        if (!approveAccountStatus) {
+          reject({ message: "please connect first" })
+          return
+        }
+        if (this.popupId) {
+          let isExist = await checkAndTop(this.popupId, windowId.zkpp_notification)
+          if (isExist) {
+            reject({ message: "have unfinished transaction" })
+            return
+          }
+        }
+        function onMessage(message, sender, sendResponse) {
+          const { action, payload } = message;
+          switch (action) {
+            case DAPP_ACTION_SWITCH_CHAIN: 
+              {
+                ((async ()=>{
+                  if (payload.resultOrigin !== site.origin) {
+                    reject({ message: "origin dismatch" })
+                    return
+                  }
+                  if(payload){
+                    if(payload.cancel){
+                      extension.runtime.onMessage.removeListener(onMessage)
+                      reject({ message: "user reject", code: 4001 })
+                      closePopupWindow(windowId.zkpp_notification)
+                      that.setBadgeContent(windowId.zkpp_notification, BADGE_MINUS)
+                    }else if(payload.status){
+                      extension.runtime.onMessage.removeListener(onMessage)
+                      resolve(true)
+                      closePopupWindow(windowId.zkpp_notification)
+                      that.setBadgeContent(windowId.zkpp_notification, BADGE_MINUS)
+                    }else{
+                        let msg = payload.message || "Unsupport chain"
+                        reject({ message: msg })
+                    }
+                  }
+                  sendResponse()
+                })())
+                return true
+              }
+          }
+          return false
+        }
+        extension.runtime.onMessage.addListener(onMessage)
+        let siteUrl = site.origin
+        let openId = id
+
+        let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon, openId }).toString()
+        this.popupId = await this.dappOpenPopWindow(reject,'./popup.html#/notification_page?' + openParams, windowId.zkpp_notification, "dapp")
+        notificationRequests.push({ id, params, site,popupId:this.popupId })
+        this.setBadgeContent(windowId.zkpp_notification, BADGE_ADD)
+      } catch (error) {
+        reject({ message: String(error) })
+      }
+    })
   }
   async signTransaction(id, params, site, type) {
     return new Promise(async (resolve, reject) => {
@@ -241,7 +317,7 @@ class DappService {
           type: FROM_BACK_TO_RECORD,
           action: DAPP_CLOSE_POPUP_WINDOW,
         });
-        let requestList = [...signRequests,...approveRequests]
+        let requestList = [...signRequests,...approveRequests,...notificationRequests]
         
         const requestItem = requestList.filter((item)=>{
           return item.popupId === changeInfo.windowId
@@ -253,6 +329,8 @@ class DappService {
           signRequests = []
         }else if(channel === windowId.approve_page){
           approveRequests = []
+        }else if(channel === windowId.zkpp_notification){
+          notificationRequests = []
         }
         that.setBadgeContent(channel, BADGE_MINUS)
         that.clearCurrentOpenWindow()
@@ -384,7 +462,7 @@ class DappService {
     }
   }
   getSignParams(openId) {
-    let params = [...signRequests].filter((item) => {
+    let params = [...signRequests,...notificationRequests].filter((item) => {
       if (item.id === openId) {
         return item
       }
@@ -551,13 +629,15 @@ class DappService {
   }
   notifyNetworkChange(currentNet) {
     let netType = currentNet.netType || ""
-
+    let message = {
+      action: "chainChanged",
+      result: netType
+    }
+    this.tabNotify(message)
+  }
+  tabNotify(message){
     extension.tabs.query({
     }, (tabs) => {
-      let message = {
-        action: "chainChanged",
-        result: netType
-      }
       let currentConnect = this.getDappStore().currentConnect
       for (let index = 0; index < tabs.length; index++) {
         const tab = tabs[index];

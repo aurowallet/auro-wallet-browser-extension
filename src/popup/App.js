@@ -26,10 +26,15 @@ function App() {
   const [showFullStatus,setShowFullStatus] = useState(false)
   useEffect(()=>{
     const url = new URL(window.location.href); 
-    let dappIndex = url.href.indexOf('popup.html#/approve_page') !==-1 || url.href.indexOf('popup.html#/request_sign')!==-1
-    let ledgerIndex = url.href.indexOf('popup.html#/ledger_connect') !==-1
-    let ledgerPageIndex = url.href.indexOf('popup.html#/ledger_page') !==-1
-    if (url.pathname.indexOf('popup.html') !==-1 && !dappIndex && !ledgerIndex && !ledgerPageIndex) {
+    const dappPageList = ['popup.html#/approve_page','popup.html#/request_sign','popup.html#/notification_page']
+    const ledgerPageList= ['popup.html#/ledger_connect','popup.html#/ledger_page']
+    let findIndex = false;
+    [...dappPageList,...ledgerPageList].map((path)=>{
+      if(url.href.indexOf(path)!==-1){
+        findIndex = true
+      }
+    })
+    if (url.pathname.indexOf('popup.html') !==-1 && !findIndex) {
       setShowFullStatus(false)
     }else{
       setShowFullStatus(true)

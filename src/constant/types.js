@@ -255,3 +255,7 @@ export const GET_WALLET_LOCK_STATUS = "GET_WALLET_LOCK_STATUS"
 
 /** get ledger account number */
 export const GET_LEDGER_ACCOUNT_NUMBER = "GET_LEDGER_ACCOUNT_NUMBER"
+/**
+ * switch chain
+ */
+export const DAPP_ACTION_SWITCH_CHAIN = "DAPP_ACTION_SWITCH_CHAIN"

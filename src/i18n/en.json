@@ -282,5 +282,10 @@
   "transactionCancelTip":"Cancel the transaction by sending a transaction with the same Nonce to yourself address. The fee will be greater than the current transaction fee (+0.0001 MINA) .",
   "currentFee":"Current Fee",
   "newFee":"New Fee",
-  "deleteAccount":"Delete Account ?"
+  "deleteAccount":"Delete Account ?",
+  "switch":"Switch",
+  "switchNetwork":"Switch Network",
+  "allowSwitch":"Allow this site to switch the network?",
+  "current":"Current",
+  "target":"Target"
 }

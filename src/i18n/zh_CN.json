@@ -282,5 +282,10 @@
   "transactionCancelTip":"通过给自己的地址发送一笔相同 Nonce 的交易来取消之前的交易。 该费用将高于当前的交易费用（+0.0001 MINA）。",
   "currentFee":"当前交易费",
   "newFee":"新交易费",
-  "deleteAccount":"删除账户 ？"
+  "deleteAccount":"删除账户 ？",
+  "switch":"切换",
+  "switchNetwork":"切换网络",
+  "allowSwitch":"允许此网站切换网络？",
+  "current":"当前网络",
+  "target":"目标网络"
 }
