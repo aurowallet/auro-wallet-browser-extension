@@ -4,10 +4,10 @@ import BigNumber from "bignumber.js";
 import extension from "extensionizer";
 import i18n from "i18next";
 import { MinaLedgerJS, Networks, TxType } from "mina-ledger-js";
-import { cointypes } from "../../config";
-import { LEDGER_STATUS } from "../constant/ledger";
-import { LEDGER_CONNECTED_SUCCESSFULLY } from "../constant/types";
-import { NET_CONFIG_TYPE } from "../constant/walletType";
+import { MAIN_COIN_CONFIG } from "../constant";
+import { LEDGER_STATUS } from "../constant/commonType";
+import { LEDGER_CONNECTED_SUCCESSFULLY } from "../constant/msgTypes";
+import { NET_CONFIG_TYPE } from "../constant/network";
 import Loading from "../popup/component/Loading";
 import Toast from "../popup/component/Toast";
 import { closePopupWindow, openPopupWindow } from "./popup";
@@ -187,7 +187,7 @@ async function networkId() {
 }
 async function requestSign(app, body, type, ledgerAccountIndex) {
   let amount = body.amount || 0;
-  let decimal = new BigNumber(10).pow(cointypes.decimals);
+  let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
   let sendFee = new BigNumber(body.fee).multipliedBy(decimal).toNumber();
   let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber();
   let payload = {

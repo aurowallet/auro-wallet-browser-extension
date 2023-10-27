@@ -3,12 +3,12 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch } from "react-redux";
-import { LEDGER_PAGE_TYPE } from "../../../constant/ledger";
+import { LEDGER_PAGE_TYPE } from "../../../constant/commonType";
 import {
     GET_LEDGER_ACCOUNT_NUMBER,
     GET_WALLET_LOCK_STATUS,
     WALLET_IMPORT_LEDGER
-} from "../../../constant/types";
+} from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
 import {

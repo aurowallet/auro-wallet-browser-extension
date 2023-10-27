@@ -16,15 +16,14 @@ import { updateNetAccount } from '../../../reducers/accountReducer';
 import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 
-import { cointypes } from "../../../../config";
-import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
+import { MAIN_COIN_CONFIG } from "../../../constant";
+import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import Toast from "../../component/Toast";
 import { getLedgerStatus, requestSignDelegation } from "../../../utils/ledger";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
 import extension from 'extensionizer'
 
-import { LEDGER_STATUS } from "../../../constant/ledger";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 
@@ -228,7 +227,7 @@ const StakingTransfer = () => {
       },
       {
         label: i18n.t('fee'),
-        value: inputFee +" "+ cointypes.symbol,
+        value: inputFee +" "+ MAIN_COIN_CONFIG.symbol,
       }
     ]
     if (isNaturalNumber(nonce)) {

@@ -1,11 +1,10 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { getLocal, saveLocal } from "../background/localStorage";
-import { DEFAULT_LANGUAGE } from "../../config";
+import { extGetLocal, extSaveLocal } from "../background/extensionStorage";
+import { DEFAULT_LANGUAGE } from "../constant";
 import { LANGUAGE_CONFIG } from "../constant/storageKey";
 import en from "./en.json";
 import zh from "./zh_CN.json";
-import {extGetLocal, extSaveLocal} from "../background/extensionStorage";
 
 
 export const LANG_SUPPORT_LIST = {

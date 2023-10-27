@@ -6,10 +6,8 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { cointypes } from "../../../../config";
 import { getBalance, sendStakeTx, sendTx } from "../../../background/api";
-import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS,QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
+import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS,QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/msgTypes";
 import { updateNetAccount } from "../../../reducers/accountReducer";
 import { updateDAppOpenWindow } from "../../../reducers/cache";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -28,6 +26,8 @@ import { LockPage } from "../Lock";
 import styles from "./index.module.scss";
 import { TypeRowInfo } from './TypeRowInfo';
 import { toPretty } from '../../../utils/zkUtils';
+import { ACCOUNT_TYPE } from '../../../constant/commonType';
+import { MAIN_COIN_CONFIG } from '../../../constant';
  
 const FeeTypeEnum = {
   site: "FEE_RECOMMED_SITE",
@@ -436,7 +436,7 @@ const SignTransaction = () => {
     let showAccountAddress = addressSlice(currentAccount.address, 6, 6)
     let params = signParams?.params
     let toAmount = params?.amount || ""
-    toAmount = toAmount +" "+ cointypes.symbol
+    toAmount = toAmount +" "+ MAIN_COIN_CONFIG.symbol
 
     let partyContractAddress = getContractAddress(params?.transaction)
     let realToAddress = partyContractAddress||params?.to || ""
@@ -551,7 +551,7 @@ const SignTransaction = () => {
           leftContent={showAccountAddress}
           leftCopyContent= {currentAccount.address}
           rightTitle={i18n.t('amount')} 
-          rightContent={balance + " " + cointypes.symbol} />
+          rightContent={balance + " " + MAIN_COIN_CONFIG.symbol} />
         :
         <>
           <CommonRow 
@@ -568,7 +568,7 @@ const SignTransaction = () => {
             <div className={styles.rowLeft}>
               <p className={styles.rowTitle}>{i18n.t('transactionFee')}</p>
               <div className={styles.feeCon}>
-                <p className={cls(styles.rowContent, styles.feeContent)}>{feeValue + " " + cointypes.symbol}</p>
+                <p className={cls(styles.rowContent, styles.feeContent)}>{feeValue + " " + MAIN_COIN_CONFIG.symbol}</p>
                 {feeType !== FeeTypeEnum.custom && <span className={cls(feeType === FeeTypeEnum.site ? styles.feeTypeSite : styles.feeTypeDefault)}>{feeType === FeeTypeEnum.site ? i18n.t('siteSuggested') : i18n.t('fee_default')}</span>}
               </div>
             </div>

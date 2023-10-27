@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
+import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/commonType";
 import { updateAccoutType } from "../../../reducers/cache";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";

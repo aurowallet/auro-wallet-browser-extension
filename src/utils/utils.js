@@ -1,10 +1,10 @@
 import BigNumber from "bignumber.js";
 import validUrl from 'valid-url';
-import { cointypes } from '../../config';
+import { MAIN_COIN_CONFIG } from "../constant";
 import { getLocal } from "../background/localStorage";
 import { NET_WORK_CONFIG } from "../constant/storageKey";
-import { DAPP_CHANGE_NETWORK } from "../constant/types";
-import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } from "../constant/walletType";
+import { DAPP_CHANGE_NETWORK } from "../constant/msgTypes";
+import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } from "../constant/network";
 import { sendMsg } from "./commonMsg";
 import bs58check from "bs58check";
 import {extGetLocal} from "../background/extensionStorage";
@@ -67,7 +67,7 @@ export function getDisplayAmount(number, fixed = 4) {
 export function getAmountDisplay(amount, decimal = 0, fixed = 4) {
     return getDisplayAmount(amountDecimals(amount, decimal), fixed)
 }
-export function getAmountForUI(rawAmount, decimal = cointypes.decimals,fixed = 2) {
+export function getAmountForUI(rawAmount, decimal = MAIN_COIN_CONFIG.decimals,fixed = 2) {
     return new BigNumber(rawAmount)
         .dividedBy(new BigNumber(10).pow(decimal))
         .toFormat(fixed,
@@ -264,7 +264,7 @@ export function parseStakingList(stakingListFromServer) {
         return {
             nodeAddress: node.public_key,
             nodeName: node.identity_name,
-            totalStake: getAmountForUI(node.stake,cointypes.decimals,0), 
+            totalStake: getAmountForUI(node.stake,MAIN_COIN_CONFIG.decimals,0), 
             delegations: node.delegations,
             icon:node.validator_logo||""
         };

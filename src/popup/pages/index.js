@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { getBaseInfo } from "../../background/api";
-import { FROM_BACK_TO_RECORD, SET_LOCK } from "../../constant/types";
+import { FROM_BACK_TO_RECORD, SET_LOCK } from "../../constant/msgTypes";
 import { languageInit } from "../../i18n";
 import { setLanguage } from "../../reducers/appReducer";
 import { updateExtensionBaseInfo } from "../../reducers/cache";

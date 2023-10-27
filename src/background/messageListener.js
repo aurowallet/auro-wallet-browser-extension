@@ -25,12 +25,12 @@ import {
   WALLET_DELETE_WATCH_ACCOUNT,
   RESET_WALLET,
   DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, DAPP_GET_CURRENT_OPEN_WINDOW, GET_SIGN_PARAMS, WALLET_SEND_MESSAGE_TRANSTRACTION, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSTRACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
-} from "../constant/types";
+} from "../constant/msgTypes";
 import apiService from "./APIService";
 import * as storage from "./storageService";
 import dappService from "./DappService";
 import extension from 'extensionizer'
-import { WALLET_CONNECT_TYPE } from "../constant/walletType";
+import { WALLET_CONNECT_TYPE } from "../constant/commonType";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;

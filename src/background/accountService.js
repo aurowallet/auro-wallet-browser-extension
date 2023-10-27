@@ -3,8 +3,8 @@ import * as bip39 from 'bip39';
 import { generateMnemonic } from "bip39";
 import bs58check from "bs58check";
 import { Buffer } from 'safe-buffer';
-import { cointypes } from "../../config";
 import Client from 'mina-signer';
+import { MAIN_COIN_CONFIG } from '../constant';
 
 export function validateMnemonic(mnemonic) {
     return bip39.validateMnemonic(mnemonic);
@@ -14,7 +14,7 @@ export function getHDpath(account = 0) {
     let purpse = 44
     let index = 0
     let charge = 0
-    let hdpath = "m/" + purpse + "'/" + cointypes.coinType + "'/" + account + "'/" + charge + "/" + index
+    let hdpath = "m/" + purpse + "'/" + MAIN_COIN_CONFIG.coinType + "'/" + account + "'/" + charge + "/" + index
     return hdpath
 }
 

@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
-import { cointypes } from '../../../config';
+import { MAIN_COIN_CONFIG } from "../../constant";
 import { getCurrentNetConfig, getRealErrorMsg } from '../../utils/utils';
-import { NET_CONFIG_TYPE } from '../../constant/walletType';
+import { NET_CONFIG_TYPE } from '../../constant/network';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 
@@ -36,7 +36,7 @@ export async  function signPayment(privateKey, fromAddress, toAddress, amount, f
     try {
         let signClient = await getSignClient()
 
-        let decimal = new BigNumber(10).pow(cointypes.decimals)
+        let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
         let sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber()
         let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber()
         signedPayment = signClient.signPayment({
@@ -58,7 +58,7 @@ export async function stakePayment(privateKey, fromAddress, toAddress, fee, nonc
     let signedStakingPayment
     try {
         let signClient = await getSignClient()
-        let decimal = new BigNumber(10).pow(cointypes.decimals)
+        let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
         let sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber()
         signedStakingPayment = signClient.signStakeDelegation({
             to: toAddress,
@@ -121,7 +121,7 @@ export async function signTransaction(privateKey,params){
         if(params.sendAction === DAppActions.mina_signMessage){
             signBody = params.message
         }else if (params.sendAction === DAppActions.mina_sendTransaction){
-            let decimal = new BigNumber(10).pow(cointypes.decimals)
+            let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
             let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
             signBody={
                 zkappCommand: JSON.parse(params.transaction),
@@ -133,7 +133,7 @@ export async function signTransaction(privateKey,params){
                 },
             }
         }else{
-            let decimal = new BigNumber(10).pow(cointypes.decimals)
+            let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
             let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
             signBody = {
                 to: params.toAddress,

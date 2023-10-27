@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { WALLET_IMPORT_LEDGER } from "../../../constant/types";
+import { WALLET_IMPORT_LEDGER } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect, requestAccount } from "../../../utils/ledger";

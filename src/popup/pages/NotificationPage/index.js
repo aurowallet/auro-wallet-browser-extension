@@ -9,8 +9,8 @@ import {
   DAPP_ACTION_SWITCH_CHAIN,
   GET_SIGN_PARAMS,
   WALLET_GET_CURRENT_ACCOUNT,
-} from "../../../constant/types";
-import { NET_CONFIG_LIST } from "../../../constant/walletType";
+} from "../../../constant/msgTypes";
+import { NET_CONFIG_LIST } from "../../../constant/network";
 import {
   updateShouldRequest,
   updateStakingRefresh,

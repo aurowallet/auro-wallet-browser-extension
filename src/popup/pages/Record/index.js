@@ -4,8 +4,8 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { cointypes } from '../../../../config';
-import { FROM_BACK_TO_RECORD, TX_SUCCESS } from '../../../constant/types';
+import { MAIN_COIN_CONFIG } from "../../../constant";
+import { FROM_BACK_TO_RECORD, TX_SUCCESS } from '../../../constant/msgTypes';
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { openTab } from '../../../utils/commonMsg';
 import { copyText, decodeMemo, getAmountDisplay, getShowTime, getTimeGMT } from "../../../utils/utils";
@@ -52,11 +52,11 @@ const Record = ({ }) => {
       }
     }
 
-    let amount = getAmountDisplay(txDetail.amount, cointypes.decimals, cointypes.decimals) + " " + cointypes.symbol
+    let amount = getAmountDisplay(txDetail.amount, MAIN_COIN_CONFIG.decimals, MAIN_COIN_CONFIG.decimals) + " " + MAIN_COIN_CONFIG.symbol
     let receiveAddress = txDetail.to 
     let sendAddress = txDetail.from
     let memo = txDetail.memo || ""
-    let fee = getAmountDisplay(txDetail.fee, cointypes.decimals, cointypes.decimals) + " " + cointypes.symbol
+    let fee = getAmountDisplay(txDetail.fee, MAIN_COIN_CONFIG.decimals, MAIN_COIN_CONFIG.decimals) + " " + MAIN_COIN_CONFIG.symbol
     let txTime = txDetail.dateTime ? getShowTime(txDetail.dateTime) : ""
     let nonce = String(txDetail.nonce)
     let txHash = txDetail.hash

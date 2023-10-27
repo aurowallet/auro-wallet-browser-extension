@@ -6,12 +6,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import { cointypes } from '../../../../config';
+import { MAIN_COIN_CONFIG } from '../../../constant';
 import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getZkAppPendingTx, getZkAppTxHistory } from "../../../background/api";
 import { extSaveLocal } from "../../../background/extensionStorage";
 import { NET_WORK_CONFIG } from '../../../constant/storageKey';
-import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/types';
-import { NET_CONFIG_TYPE } from '../../../constant/walletType';
+import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/msgTypes';
+import { NET_CONFIG_TYPE } from '../../../constant/network';
 import { ACCOUNT_BALANCE_CACHE_STATE, updateAccountTx, updateNetAccount, updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { updateNetConfig } from "../../../reducers/network";
@@ -365,7 +365,7 @@ const WalletInfo = () => {
             </p>
             <span className={cls(styles.amountSymbol, {
               [styles.cacheBalance]: isCache
-            })}>{cointypes.symbol}</span>
+            })}>{MAIN_COIN_CONFIG.symbol}</span>
           </div>
           <p className={cls(styles.amountValue,{
             [styles.fontHolder]:!showCurrency

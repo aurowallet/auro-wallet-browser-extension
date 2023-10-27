@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { getLocal } from "../../../background/localStorage";
 import { AUTO_LOCK_TIME_LIST } from "../../../constant";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
-import { DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/types";
+import { DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/msgTypes";
 import { languageOption } from "../../../i18n";
 import { updateAddressBookFrom } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";

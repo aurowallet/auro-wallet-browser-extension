@@ -2,7 +2,7 @@ import './App.scss';
 import { getAllRouter as AllRouter } from './router';
 import IdleTimer from 'react-idle-timer'
 import { sendMsg } from '../utils/commonMsg';
-import { WALLET_RESET_LAST_ACTIVE_TIME } from '../constant/types';
+import { WALLET_RESET_LAST_ACTIVE_TIME } from '../constant/msgTypes';
 import { useCallback, useEffect, useState } from 'react';
 import cls from "classnames"
 import { getFeeRecom, getScamList } from '../background/api';
@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getLocal } from '../background/localStorage';
 import { RECOMMOND_FEE, SCAM_LIST } from '../constant/storageKey';
 import { updateScamList } from '../reducers/accountReducer';
-import { NET_CONFIG_TYPE } from '../constant/walletType';
+import { NET_CONFIG_TYPE } from '../constant/network';
 
 function setLastActiveTime(){ 
   sendMsg({

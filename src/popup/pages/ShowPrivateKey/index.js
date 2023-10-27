@@ -1,8 +1,8 @@
 import i18n from "i18next";
 import { useCallback, useState } from "react";
 import { useHistory } from 'react-router-dom';
-import { SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
-import { WALLET_GET_PRIVATE_KEY } from "../../../constant/types";
+import { SEC_FROM_TYPE } from "../../../constant/commonType";
+import { WALLET_GET_PRIVATE_KEY } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import { copyText } from '../../../utils/utils';
 import SecurityPwd from "../../component/SecurityPwd";
@@ -63,7 +63,7 @@ const ShowPrivateKeyPage = ({ }) => {
     setConfirmModalStatus(false)
   }, [])
   if (showSecurity) {
-    return <SecurityPwd pageTitle={i18n.t('privateKey')} onClickCheck={onClickCheck} action={SEC_SHOW_PRIVATE_KEY} />
+    return <SecurityPwd pageTitle={i18n.t('privateKey')} onClickCheck={onClickCheck} action={SEC_FROM_TYPE.SEC_SHOW_PRIVATE_KEY} />
   }
   return (<CustomView title={i18n.t('privateKey')}>
     <div className={styles.addressContainer}>

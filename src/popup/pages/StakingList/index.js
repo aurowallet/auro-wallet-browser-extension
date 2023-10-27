@@ -1,18 +1,15 @@
 import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import 'react-circular-progressbar/dist/styles.css';
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { getStakingList } from "../../../reducers/stakingReducer";
+import { MAIN_COIN_CONFIG } from "../../../constant";
+import { NET_CONFIG_TYPE } from "../../../constant/network";
 import { addressSlice, getAmountForUI, showNameSlice } from "../../../utils/utils";
-import Toast from "../../component/Toast";
-import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
-import styles from './index.module.scss';
 import Input from "../../component/Input";
-import { NET_CONFIG_TYPE } from "../../../constant/walletType";
-import { cointypes } from "../../../../config";
+import styles from './index.module.scss';
 
 const StakingList = ({ }) => {
 
@@ -120,7 +117,7 @@ const NodeItem = ({
       showName = showNameSlice(nodeItem.nodeName,13)
     }
     let showAddress = addressSlice(nodeItem.nodeAddress, 6)
-    const showTotalStake = nodeItem.totalStake + " " + cointypes.symbol
+    const showTotalStake = nodeItem.totalStake + " " + MAIN_COIN_CONFIG.symbol
     const showDelegations = getAmountForUI(nodeItem.delegations,0,0) + " " + i18n.t('delegators')
     return {
       select, showName, showAddress,showTotalStake,showDelegations

@@ -1,6 +1,6 @@
-import { BASE_INFO_URL, TX_LIST_LENGTH } from "../../../config";
+import { BASE_INFO_URL } from "../../../config";
 import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, RECOMMOND_FEE, SCAM_LIST } from "../../constant/storageKey";
-import { NET_CONFIG_SUPPORT_ZKAPP, NET_CONFIG_TYPE } from "../../constant/walletType";
+import { NET_CONFIG_SUPPORT_ZKAPP, NET_CONFIG_TYPE } from "../../constant/network";
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
 import {
@@ -22,6 +22,7 @@ import {
   getZkAppTransactionListBody
 } from './gqlparams';
 import {saveLocal} from "../localStorage";
+import { DEFAULT_TX_REQUEST_LENGTH } from "../../constant";
 
 /**
 * get balance
@@ -296,7 +297,7 @@ export async function getGqlTxHistory(address,limit){
     {
       requestType: "extensionAccountInfo",
       publicKey: address,
-      limit:limit||10
+      limit:limit||DEFAULT_TX_REQUEST_LENGTH
     },
     gqlTxUrl,
   ).catch((error) => error)
@@ -349,7 +350,7 @@ export async function getZkAppTxHistory(address,limit){
     {
       requestType: "extensionAccountInfo",
       publicKey: address,
-      limit:limit||10
+      limit:limit||DEFAULT_TX_REQUEST_LENGTH
     },
     gqlTxUrl,
   ).catch((error) => error)

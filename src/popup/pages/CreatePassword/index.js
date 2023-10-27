@@ -3,7 +3,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { WALLET_CREATE_PWD } from "../../../constant/types";
+import { WALLET_CREATE_PWD } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import { matchList as matchRuleList } from "../../../utils/validator";
 import BottomBtn from "../../component/BottomBtn";

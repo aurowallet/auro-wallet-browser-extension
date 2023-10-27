@@ -8,7 +8,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { cointypes } from "../../../../config";
+import { MAIN_COIN_CONFIG } from "../../../constant";
 import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateValidatorDetail } from "../../../reducers/stakingReducer";
@@ -214,7 +214,7 @@ const DelegationInfo = ({
     if(isNumber(validatorDetail.totalDelegated)){
       showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0,0)
     }
-    showtotalStake = showtotalStake + " " + cointypes.symbol
+    showtotalStake = showtotalStake + " " + MAIN_COIN_CONFIG.symbol
     let showDelegations = validatorDetail.countDelegates
     if(isNumber(validatorDetail.countDelegates)){
       showDelegations = getAmountForUI(validatorDetail.countDelegates,0,0) 

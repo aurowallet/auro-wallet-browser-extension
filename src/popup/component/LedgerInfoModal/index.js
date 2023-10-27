@@ -4,7 +4,7 @@ import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/ledger";
+import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { getLedgerStatus } from "../../../utils/ledger";
 import Button from "../Button";

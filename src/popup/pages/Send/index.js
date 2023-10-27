@@ -4,14 +4,13 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { cointypes } from "../../../../config";
+import { MAIN_COIN_CONFIG } from "../../../constant";
 import { getBalance, sendTx } from "../../../background/api";
 import {
   WALLET_CHECK_TX_STATUS,
   WALLET_GET_ALL_ACCOUNT,
   WALLET_SEND_TRANSTRACTION,
-} from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
+} from "../../../constant/msgTypes";
 import {
   updateNetAccount,
   updateShouldRequest,
@@ -42,7 +41,7 @@ import styles from "./index.module.scss";
 import extension from "extensionizer";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
-import { LEDGER_STATUS } from "../../../constant/ledger";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
 import { getLocal } from "../../../background/localStorage";
 import ICON_Address from "../../component/SVG/ICON_Address";
@@ -100,7 +99,7 @@ const SendPage = ({}) => {
     let value = e.target.value;
     if (value.indexOf(".") !== -1) {
       let splitList = value.split(".");
-      if (splitList[splitList.length - 1].length <= cointypes.decimals) {
+      if (splitList[splitList.length - 1].length <= MAIN_COIN_CONFIG.decimals) {
         setAmount(e.target.value);
       }
     } else {
@@ -368,7 +367,7 @@ const SendPage = ({}) => {
         },
         {
           label: i18n.t("fee"),
-          value: inputFee + " " + cointypes.symbol,
+          value: inputFee + " " + MAIN_COIN_CONFIG.symbol,
         },
       ];
       if (isNaturalNumber(nonce)) {
@@ -517,7 +516,7 @@ const SendPage = ({}) => {
               <div className={styles.balance}>
                 {i18n.t("balance") +
                   ": " +
-                  getDisplayAmount(balance, cointypes.decimals)}
+                  getDisplayAmount(balance, MAIN_COIN_CONFIG.decimals)}
               </div>
             }
             rightStableComponent={
@@ -570,7 +569,7 @@ const SendPage = ({}) => {
         title={i18n.t("transactionDetails")}
         highlightTitle={i18n.t("amount")}
         highlightContent={realTransferAmount}
-        subHighlightContent={cointypes.symbol}
+        subHighlightContent={MAIN_COIN_CONFIG.symbol}
         onConfirm={clickNextStep}
         loadingStatus={confrimBtnStatus}
         onClickClose={onClickClose}

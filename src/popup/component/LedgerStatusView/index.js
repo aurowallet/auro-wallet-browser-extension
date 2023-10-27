@@ -2,7 +2,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { LEDGER_STATUS } from "../../../constant/ledger";
+import { LEDGER_STATUS } from "../../../constant/commonType";
 import styles from "./index.module.scss";
 
 const LedgerStatusView = () => {

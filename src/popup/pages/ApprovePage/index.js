@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_GET_ACCOUNT, DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, WALLET_GET_CURRENT_ACCOUNT } from "../../../constant/types";
+import { DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_GET_ACCOUNT, DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, WALLET_GET_CURRENT_ACCOUNT } from "../../../constant/msgTypes";
 import { updateDAppOpenWindow } from "../../../reducers/cache";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";

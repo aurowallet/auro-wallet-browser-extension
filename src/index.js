@@ -7,10 +7,9 @@ import { MAIN_NET_BASE_CONFIG, network_config, NET_CONFIG_VERSION } from "../con
 import { windowId } from "./background/DappService";
 import { getLocal, saveLocal } from "./background/localStorage";
 import { extGetLocal, extSaveLocal } from "./background/extensionStorage";
-import { CURRENCY_UNIT } from "./constant/pageType";
+import { CURRENCY_UNIT } from "./constant";
 import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
-import { DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/types";
-import { WALLET_CONNECT_TYPE } from "./constant/walletType";
+import { DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
 import "./i18n";
 import App from "./popup/App";
 import rootReducer from "./reducers";
@@ -21,6 +20,7 @@ import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteR
 import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
+import { WALLET_CONNECT_TYPE } from "./constant/commonType";
 
 
 function getLocalNetConfig(store) {

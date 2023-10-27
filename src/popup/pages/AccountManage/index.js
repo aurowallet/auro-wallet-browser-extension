@@ -3,11 +3,10 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { cointypes } from "../../../../config";
+import { MAIN_COIN_CONFIG } from "../../../constant";
 import { getBalanceBatch } from "../../../background/api";
-import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
-import { DAPP_CHANGE_CONNECTING_ADDRESS, WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
+import { ACCOUNT_NAME_FROM_TYPE, ACCOUNT_TYPE } from "../../../constant/commonType";
+import { DAPP_CHANGE_CONNECTING_ADDRESS, WALLET_CHANGE_CURRENT_ACCOUNT, WALLET_GET_ALL_ACCOUNT, WALLET_SET_UNLOCKED_STATUS } from "../../../constant/msgTypes";
 import { updateAccountList, updateCurrentAccount } from "../../../reducers/accountReducer";
 import { setAccountInfo, setChangeAccountName, updateAccoutType } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -107,7 +106,7 @@ const AccountManagePage = ({ }) => {
       let accountBalance = balanceList[account.address]
       if (accountBalance) {
         let balance = accountBalance.balance.total
-        balance = amountDecimals(balance, cointypes.decimals)
+        balance = amountDecimals(balance, MAIN_COIN_CONFIG.decimals)
         accountList[index].balance = balance
       }
     }
@@ -257,7 +256,7 @@ const CommonAccountRow = ({
   
   useEffect(()=>{
     let balance = isNumber(account.balance) ? account.balance : 0
-    balance = balance + " " + cointypes.symbol
+    balance = balance + " " + MAIN_COIN_CONFIG.symbol
     setShowBalance(balance)
   },[account.balance])
 

@@ -2,7 +2,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory } from 'react-router-dom';
-import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/types";
+import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";

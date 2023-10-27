@@ -1,5 +1,5 @@
 
-import {NET_CONFIG_LIST} from '../constant/walletType'
+import {NET_CONFIG_LIST} from '../constant/network'
 const UPDATE_NET_CONFIG = "UPDATE_NET_CONFIG"
 
 const UPDATE_NETWORK_CHAINID_CONFIG = "UPDATE_NETWORK_CHAINID_CONFIG"

@@ -1,4 +1,4 @@
-import { NET_CONFIG_TYPE } from "./src/constant/walletType"
+import { NET_CONFIG_TYPE } from "./src/constant/network"
 
 
 export const cointypes = {

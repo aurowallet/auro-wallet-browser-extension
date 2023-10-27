@@ -7,7 +7,7 @@ import { getNetworkList, getNodeChainId } from "../../../../background/api";
 import { extSaveLocal } from "../../../../background/extensionStorage";
 import { getLocal, removeLocal } from "../../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../../constant/storageKey";
-import { NET_CONFIG_LIST } from "../../../../constant/walletType";
+import { NET_CONFIG_LIST } from "../../../../constant/network";
 import { updateShouldRequest, updateStakingRefresh } from "../../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, updateNetChainIdConfig, updateNetConfig } from "../../../../reducers/network";
 import { sendNetworkChangeMsg, trimSpace, urlValid } from "../../../../utils/utils";

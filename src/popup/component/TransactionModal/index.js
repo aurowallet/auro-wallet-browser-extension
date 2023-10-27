@@ -5,7 +5,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { Trans } from "react-i18next";
-import { cointypes } from "../../../../config";
+import { MAIN_COIN_CONFIG } from "../../../constant";
 import { AdvancedModal } from "../AdvancedModal";
 import Button from "../Button";
 import LedgerStatusView from "../LedgerStatusView";
@@ -111,7 +111,7 @@ export const TransactionModal = ({
                         {i18n.t("currentFee")}
                       </div>
                       <div className={styles.feeContent}>
-                        {currentFee + " " + cointypes.symbol}
+                        {currentFee + " " + MAIN_COIN_CONFIG.symbol}
                       </div>
                     </div>
                     <div className={styles.feeArrow}>
@@ -125,7 +125,7 @@ export const TransactionModal = ({
                         {i18n.t("newFee")}
                       </div>
                       <div className={cls(styles.feeContent, styles.rightFee)}>
-                        {nextInputFee + " " + cointypes.symbol}
+                        {nextInputFee + " " + MAIN_COIN_CONFIG.symbol}
                       </div>
                     </div>
                   </div>

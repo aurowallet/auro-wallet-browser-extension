@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { SEC_DELETE_ACCOUNT, SEC_SHOW_MNEMONIC, SEC_SHOW_PRIVATE_KEY } from "../../../constant/secTypes";
+import { SEC_FROM_TYPE } from "../../../constant/commonType";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
@@ -45,15 +45,15 @@ const SecurityPwd = ({
   const { modalContent } = useMemo(() => {
     let modalContent = []
     switch (action) {
-      case SEC_DELETE_ACCOUNT:
+      case SEC_FROM_TYPE.SEC_DELETE_ACCOUNT:
         modalContent = [i18n.t('deleteAccountTip')]
         break
-      case SEC_SHOW_PRIVATE_KEY:
+      case SEC_FROM_TYPE.SEC_SHOW_PRIVATE_KEY:
         modalContent = [
           i18n.t('privateKeyTip_1'),
           i18n.t('privateKeyTip_2')]
         break
-      case SEC_SHOW_MNEMONIC:
+      case SEC_FROM_TYPE.SEC_SHOW_MNEMONIC:
         modalContent = [
           i18n.t('backTips_1'),
           i18n.t('backTips_2'),

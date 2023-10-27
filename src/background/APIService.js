@@ -1,10 +1,10 @@
-import { LOCK_TIME } from '../../config';
-import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
+import { LOCK_TIME_DEFAULT } from '../constant';
+import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/msgTypes';
 import '../i18n';
 import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
 import { signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
-import { ACCOUNT_TYPE } from "../constant/walletType"
+import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
 import { decodeMemo, getCurrentNetConfig } from '../utils/utils';
 import i18n from "i18next"
@@ -38,12 +38,12 @@ class APIService {
           password: '',
           currentAccount: {},
           mne: "",
-          autoLockTime:LOCK_TIME
+          autoLockTime:LOCK_TIME_DEFAULT
         };
       }
     initAppLocalConfig=async()=>{
         const {autoLockTime} = await get("autoLockTime")
-        return autoLockTime||LOCK_TIME
+        return autoLockTime||LOCK_TIME_DEFAULT
     }
 
     getStore = () => {

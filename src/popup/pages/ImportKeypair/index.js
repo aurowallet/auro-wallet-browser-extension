@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { WALLET_IMPORT_KEY_STORE } from "../../../constant/types";
+import { WALLET_IMPORT_KEY_STORE } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import Toast from "../../component/Toast";

@@ -1,7 +1,7 @@
 import extensionizer from "extensionizer";
 import {sendMsg} from "../utils/commonMsg";
 import { MessageChannel } from '@aurowallet/mina-provider';
-import { WALLET_CONNECT_TYPE } from "../constant/walletType";
+import { WALLET_CONNECT_TYPE } from "../constant/commonType";
 
 const CONTENT_SCRIPT = WALLET_CONNECT_TYPE.CONTENT_SCRIPT;
 const contentScript = {

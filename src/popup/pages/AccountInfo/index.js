@@ -1,15 +1,13 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
-import { cointypes } from "../../../../config";
-import { SEC_DELETE_ACCOUNT } from "../../../constant/secTypes";
 import {
   DAPP_DELETE_ACCOUNT_CONNECT_HIS,
   WALLET_CHANGE_ACCOUNT_NAME,
   WALLET_CHANGE_DELETE_ACCOUNT,
   WALLET_DELETE_WATCH_ACCOUNT,
-} from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
+} from "../../../constant/msgTypes";
+import { ACCOUNT_TYPE, SEC_FROM_TYPE } from "../../../constant/commonType";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { JSonToCSV } from "../../../utils/JsonToCSV";
@@ -224,7 +222,7 @@ const AccountInfo = ({}) => {
 
   if (showSecurity) {
     return (
-      <SecurityPwd onClickCheck={onClickCheck} action={SEC_DELETE_ACCOUNT} btnTxt={i18n.t("confirm")}/>
+      <SecurityPwd onClickCheck={onClickCheck} action={SEC_FROM_TYPE.SEC_DELETE_ACCOUNT} btnTxt={i18n.t("confirm")}/>
     );
   }
   return (

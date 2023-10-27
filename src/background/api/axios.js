@@ -1,6 +1,6 @@
 const axios = require('axios');
 const fetchAdapter = require('@vespaiach/axios-fetch-adapter').default
-const { ERROR_TYPE } = require('../../constant/errType');
+const { ERROR_TYPE } = require('../../constant/commonType');
 const { default: store } = require('../../store/store');
 const timeout = 1 * 60 * 1000;
 axios.defaults.retry = 3;

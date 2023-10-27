@@ -5,20 +5,19 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { cointypes } from "../../../../../../config";
+import { MAIN_COIN_CONFIG } from "../../../../../constant";
 import {
   getPendingTxList,
   sendStakeTx,
   sendTx,
 } from "../../../../../background/api";
-import { LEDGER_STATUS } from "../../../../../constant/ledger";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../../../constant/commonType";
 import {
   QA_SIGN_TRANSTRACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_SEND_STAKE_TRANSTRACTION,
   WALLET_SEND_TRANSTRACTION,
-} from "../../../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../../../constant/walletType";
+} from "../../../../../constant/msgTypes";
 import { updateShouldRequest } from "../../../../../reducers/accountReducer";
 import { updateLedgerConnectStatus } from "../../../../../reducers/ledger";
 import { openTab, sendMsg } from "../../../../../utils/commonMsg";
@@ -105,7 +104,7 @@ const TxListView = ({
   const setCurrentTransactionFee = useCallback((txData) => {
     let fee = txData?.fee || "";
     if (isNumber(fee)) {
-      fee = amountDecimals(fee, cointypes.decimals);
+      fee = amountDecimals(fee, MAIN_COIN_CONFIG.decimals);
     }
     setCurrentFee(fee);
     return fee;
@@ -287,7 +286,8 @@ const TxListView = ({
                 toAddress: transactionModalData.to,
                 amount: amountDecimals(
                   transactionModalData.amount,
-                  cointypes.decimals
+                  MAIN_COIN_CONFIG
+                  .decimals
                 ),
                 isSpeedUp: true,
               };
@@ -456,7 +456,7 @@ const TxItem = ({
         ? "Nonce " + txData.nonce
         : getShowTime(txData.dateTime);
 
-    amount = amountDecimals(txData.amount, cointypes.decimals);
+    amount = amountDecimals(txData.amount, MAIN_COIN_CONFIG.decimals);
     amount = getDisplayAmount(amount, 2);
     amount = isReceive ? "+" + amount : "-" + amount;
 

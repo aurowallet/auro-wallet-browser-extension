@@ -1,4 +1,4 @@
-import { cointypes, TX_LIST_LENGTH } from "../../config";
+import { MAIN_COIN_CONFIG } from "../constant";
 import { amountDecimals, txSort } from "../utils/utils";
 
 const CHANGE_ACCOUNT_TX_HISTORY = "CHANGE_ACCOUNT_TX_HISTORY"
@@ -230,7 +230,7 @@ const accountInfo = (state = initState, action) => {
             }
         case UPDATE_NET_ACCOUNT:
             let netAccount = action.account
-            let balance = amountDecimals(netAccount.balance?.total||0, cointypes.decimals)
+            let balance = amountDecimals(netAccount.balance?.total||0, MAIN_COIN_CONFIG.decimals)
             let nonce = netAccount.nonce
             let inferredNonce = netAccount.inferredNonce
 
