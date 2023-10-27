@@ -26,6 +26,7 @@ import { getQueryStringArgs, sendNetworkChangeMsg } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import { LockPage } from "../Lock";
 import styles from "./index.module.scss";
+import DappWebsite from "../../component/DappWebsite";
 
 const NotificationPage = () => {
   const dispatch = useDispatch();
@@ -46,6 +47,7 @@ const NotificationPage = () => {
     return getQueryStringArgs(url);
   });
 
+  console.log('lsp==params=',params);
   const goToHome = useCallback(() => {
     let url = dappWindow?.url;
     if (url) {
@@ -59,7 +61,7 @@ const NotificationPage = () => {
       {
         action: GET_SIGN_PARAMS,
         payload: {
-          openId: params.openId,
+          openId: params.openId, 
         },
       },
       (res) => {
@@ -157,6 +159,9 @@ const NotificationPage = () => {
         </div>
       </div>
       <div className={styles.content}>
+      <div className={styles.websiteContainer}>
+        <DappWebsite siteIcon={params.siteIcon} siteUrl={params.siteUrl} />
+      </div>
         <p className={styles.accountTip}>{i18n.t("allowSwitch")}</p>
         <div className={styles.accountRow}>
           <div className={styles.rowLeft}>
