@@ -148,7 +148,8 @@ function zkAppFormat(zkAppList,isPending=false){
             "status":  status,
             type:"zkApp",
             body:zkApp,
-            timestamp : isPending ? "": new Date(zkApp.dateTime).getTime()
+            timestamp : isPending ? "": new Date(zkApp.dateTime).getTime(),
+            failureReason:zkApp.failureReason||""
         })
     }
     return newList
