@@ -1,7 +1,7 @@
 import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
-import { DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/types';
+import { DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/types';
 import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
 import { getArrayDiff, getCurrentNetConfig, getOriginFromUrl, isNumber } from '../utils/utils';
 import { addressValid } from '../utils/validator';
@@ -10,6 +10,7 @@ import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get } from './storageService';
 
 let signRequests = [];
+let approveRequests = [];
 
 export const windowId = {
   approve_page: "approve_page",
@@ -54,7 +55,7 @@ class DappService {
     switch (action) {
       case DAppActions.mina_requestAccounts:
         this.requestCallback(
-          () => this.requestAccounts(site),
+          () => this.requestAccounts(id,site),
           id,
           sendResponse
         )
@@ -89,6 +90,7 @@ class DappService {
         )
         break;
       case DAppActions.mina_signMessage:
+      case DAppActions.mina_sign_JsonMessage:
         this.requestCallback(
           () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.MESSAGE),
           id,
@@ -96,6 +98,7 @@ class DappService {
         )
         break;
       case DAppActions.mina_verifyMessage:
+      case DAppActions.mina_verify_JsonMessage:
         this.requestCallback(
           () => verifyMessage(params.publicKey, params.signature, params.data),
           id,
@@ -118,7 +121,7 @@ class DappService {
         break;
       case DAppActions.mina_verifyFields:
           this.requestCallback(
-            () => verifyFieldsMessage(params.publicKey, params.signature, params.payload),
+            () => verifyFieldsMessage(params.publicKey, params.signature, params.data),
             id,
             sendResponse
           )
@@ -156,7 +159,6 @@ class DappService {
             return
           }
         }
-        signRequests.push({ id, params, site })
         function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
           switch (action) {
@@ -172,12 +174,12 @@ class DappService {
                     resolve({
                       hash: payload.hash
                     })
-                    await closePopupWindow(windowId.request_sign)
+                    closePopupWindow(windowId.request_sign)
                     that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
                   } else if (payload && payload.cancel) {
                     extension.runtime.onMessage.removeListener(onMessage)
                     reject({ message: "user reject", code: 4001 })
-                    await closePopupWindow(windowId.request_sign)
+                    closePopupWindow(windowId.request_sign)
                     that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
                   } else {
                     let msg = payload.message || "transaction error"
@@ -218,14 +220,15 @@ class DappService {
         let openId = id
 
         let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon, openId }).toString()
-        this.popupId = await this.dappOpenPopWindow('./popup.html#/request_sign?' + openParams, windowId.request_sign, "dapp")
+        this.popupId = await this.dappOpenPopWindow(reject,'./popup.html#/request_sign?' + openParams, windowId.request_sign, "dapp")
+        signRequests.push({ id, params, site,popupId:this.popupId })
         this.setBadgeContent(windowId.request_sign, BADGE_ADD)
       } catch (error) {
         reject({ message: String(error) })
       }
     })
   }
-  async dappOpenPopWindow(url,
+  async dappOpenPopWindow(reject,url,
     channel = "default",
     windowType = "") {
     let that = this
@@ -238,8 +241,18 @@ class DappService {
           type: FROM_BACK_TO_RECORD,
           action: DAPP_CLOSE_POPUP_WINDOW,
         });
+        let requestList = [...signRequests,...approveRequests]
+        
+        const requestItem = requestList.filter((item)=>{
+          return item.popupId === changeInfo.windowId
+        })
+        if(requestItem.length > 0){
+          reject({ message: "user reject", code: 4001 })
+        }
         if (channel === windowId.request_sign) {
           signRequests = []
+        }else if(channel === windowId.approve_page){
+          approveRequests = []
         }
         that.setBadgeContent(channel, BADGE_MINUS)
         that.clearCurrentOpenWindow()
@@ -277,7 +290,7 @@ class DappService {
     })
 
   }
-  async requestAccounts(site) {
+  async requestAccounts(id,site) {
     let that = this
     return new Promise(async (resolve, reject) => {
       try {
@@ -301,8 +314,7 @@ class DappService {
                   reject({ message: "origin dismatch" })
                   return
                 }
-                extension.runtime.onMessage.removeListener(onMessage)
-                await closePopupWindow(windowId.approve_page)
+                closePopupWindow(windowId.approve_page)
                 that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
                 if (payload.selectAccount && payload.selectAccount.length > 0) {
                   let account = payload.selectAccount[0]
@@ -319,6 +331,7 @@ class DappService {
                 } else {
                   reject({ message: 'user reject', code: 4001 })
                 }
+                extension.runtime.onMessage.removeListener(onMessage) 
                 sendResponse()
               })())
               return true
@@ -330,7 +343,7 @@ class DappService {
                 }
                 extension.runtime.onMessage.removeListener(onMessage)
                 resolve([payload.account])
-                await closePopupWindow(payload.page)
+                closePopupWindow(payload.page)
                 that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
                 sendResponse()
               })())
@@ -343,8 +356,9 @@ class DappService {
         extension.runtime.onMessage.addListener(onMessage)
         let siteUrl = site.origin
         let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon }).toString()
-        this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page?' + openParams,
+        this.popupId = await this.dappOpenPopWindow(reject,'./popup.html#/approve_page?' + openParams,
           windowId.approve_page, "dapp")
+        approveRequests.push({ id, site,popupId:this.popupId })
         this.setBadgeContent(windowId.approve_page, BADGE_ADD)
       } catch (error) {
         reject({ message: String(error) })
@@ -365,20 +379,18 @@ class DappService {
     }
     if (badgeList.length > 0) {
       chrome.action?.setBadgeText({ text: badgeList.length.toString() });
-      chrome.action?.setBadgeBackgroundColor({ color: [76, 148, 255, 255] });
     } else {
       chrome.action?.setBadgeText({ text: "" });
-      chrome.action?.setBadgeBackgroundColor({ color: [0, 0, 0, 0] });
     }
   }
   getSignParams(openId) {
-    let params = signRequests.filter((item) => {
+    let params = [...signRequests].filter((item) => {
       if (item.id === openId) {
         return item
       }
     })
     if (params.length > 0) {
-      return signRequests[0];
+      return params[0];
     } else {
       return null;
     }

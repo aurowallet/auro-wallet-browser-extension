@@ -26,6 +26,8 @@ import Tabs from "../../component/Tabs";
 import Toast from "../../component/Toast";
 import { LockPage } from "../Lock";
 import styles from "./index.module.scss";
+import { TypeRowInfo } from './TypeRowInfo';
+import { toPretty } from '../../../utils/zkUtils';
  
 const FeeTypeEnum = {
   site: "FEE_RECOMMED_SITE",
@@ -33,6 +35,12 @@ const FeeTypeEnum = {
   custom: "FEE_RECOMMED_CUSTOM",
 }
 
+/** mina sign event */
+const SIGN_MESSAGE_EVENT = [
+  DAppActions.mina_signMessage,
+  DAppActions.mina_signFields,
+  DAppActions.mina_sign_JsonMessage
+]
  
 const SignTransaction = () => {
   const dispatch = useDispatch()
@@ -94,6 +102,7 @@ const SignTransaction = () => {
           break;
         case DAppActions.mina_signMessage:
         case DAppActions.mina_signFields:
+        case DAppActions.mina_sign_JsonMessage:
           resultAction = DAPP_ACTION_SIGN_MESSAGE
           break;
         case DAppActions.mina_sendTransaction:
@@ -138,6 +147,7 @@ const SignTransaction = () => {
           break;
         case DAppActions.mina_signMessage:
         case DAppActions.mina_signFields:
+        case DAppActions.mina_sign_JsonMessage:
           payload = {
             ...payload,
             ...data
@@ -171,7 +181,7 @@ const SignTransaction = () => {
 
   const ledgerTransfer = useCallback(async (params) => {
     let { sendAction } = signParams
-    if (sendAction === DAppActions.mina_signMessage || sendAction === DAppActions.mina_signFields) {
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction)!==-1){
       Toast.info(i18n.t('ledgerNotSupportSign'))
       sendMsg({
         action: DAPP_ACTION_SIGN_MESSAGE, 
@@ -226,17 +236,16 @@ const SignTransaction = () => {
     let toAddress = ''
     let fee = ""
     let memo = ""
-    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields) {
+    if(SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) === -1){
       toAddress = trimSpace(params.to)
       fee = trimSpace(feeValue)
       memo =  params?.feePayer?.memo || params?.memo || ""
     }
-
     let fromAddress = currentAccount.address
     let payload = {
       fromAddress, toAddress, nonce, currentAccount, fee, memo
     }
-    if (signParams.sendAction === DAppActions.mina_signMessage || signParams.sendAction === DAppActions.mina_signFields) {
+    if(SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) !== -1){ 
       payload.message = params.message
     }
     if (signParams.sendAction === DAppActions.mina_sendPayment) {
@@ -252,26 +261,16 @@ const SignTransaction = () => {
       return ledgerTransfer(payload)
     }
     setBtnLoading(true)
-    let sendAction = ""
     let connectAction = QA_SIGN_TRANSTRACTION
-    switch (signParams.sendAction) {
-      case DAppActions.mina_sendStakeDelegation:
-        sendAction = WALLET_SEND_STAKE_TRANSTRACTION
-        break;
-      case DAppActions.mina_sendPayment:
-        sendAction = WALLET_SEND_TRANSTRACTION
-        break;
-      case DAppActions.mina_signMessage:
-        sendAction = WALLET_SEND_MESSAGE_TRANSTRACTION
-        break;
-      case DAppActions.mina_signFields:
-        sendAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
-        connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
-        break;
-      default:
-        break;
+    if(signParams.sendAction === DAppActions.mina_signFields){
+      connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
     }
-    payload.sendAction = signParams.sendAction
+    if(signParams.sendAction === DAppActions.mina_sign_JsonMessage){
+      payload.sendAction = DAppActions.mina_signMessage
+    }else{
+      payload.sendAction = signParams.sendAction
+    }
+    
     sendMsg({
       action: connectAction,
       payload
@@ -284,7 +283,7 @@ const SignTransaction = () => {
 
   const onConfirm = useCallback(() => {
     let params = signParams.params
-    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields  && signParams.sendAction !== DAppActions.mina_sendTransaction) {
+    if (SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) == -1 && signParams.sendAction !== DAppActions.mina_sendTransaction ){
       let toAddress = trimSpace(params.to)
       if (!addressValid(toAddress)) {
         Toast.info(i18n.t('sendAddressError'))
@@ -309,7 +308,7 @@ const SignTransaction = () => {
       Toast.info(i18n.t('inputFeeError'))
       return
     }
-    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields) {
+    if(SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction)===-1){
       let amount = trimSpace(params.amount)
       let maxAmount = new BigNumber(amount).plus(fee).toString()
       if (new BigNumber(maxAmount).gt(balance)) {
@@ -383,7 +382,7 @@ const SignTransaction = () => {
         openId: params.openId
       }
     }, (res) => {
-      if(res.params?.action !== DAppActions.mina_signMessage && res.params?.action !== DAppActions.mina_signFields){
+      if(SIGN_MESSAGE_EVENT.indexOf(res.params?.action) === -1){
         Loading.show()
       }
       let siteFee = res.params?.feePayer?.fee || res.params?.fee || ""
@@ -446,9 +445,13 @@ const SignTransaction = () => {
     let memo =  params?.feePayer?.memo || params?.memo || ""
     let content = params?.message || ""
     if(signParams.sendAction === DAppActions.mina_sendTransaction){
-      content = i18n.t('exportZkAppCommand')
+      content = toPretty(params?.transaction)
     }else if(signParams.sendAction === DAppActions.mina_signFields){
       content = JSON.stringify(content)
+    }else if(signParams.sendAction === DAppActions.mina_sign_JsonMessage){
+      try {
+        content = JSON.parse(content)  
+      } catch (error) {}
     }
 
     let tabList = []
@@ -456,7 +459,9 @@ const SignTransaction = () => {
     if (content) {
       let contentObj = { id: "tab1", label: i18n.t('content'), content: content }
       if(signParams.sendAction === DAppActions.mina_sendTransaction){
-        contentObj.contentClick = true
+        contentObj.isJsonData = true
+      }else if(signParams.sendAction === DAppActions.mina_sign_JsonMessage){
+        contentObj.isJsonData = true
       }
       tabList.push(contentObj)
       tabInitId = "tab1"
@@ -468,7 +473,7 @@ const SignTransaction = () => {
       }
     }
     let pageTitle = i18n.t('confirmTransaction')
-    if(signParams.sendAction === DAppActions.mina_signMessage || signParams.sendAction === DAppActions.mina_signFields){
+    if(SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) !==-1){
       pageTitle = i18n.t('signatureRequest')
     }
 
@@ -540,7 +545,7 @@ const SignTransaction = () => {
       <div className={styles.websiteContainer}>
         <DappWebsite siteIcon={signParams?.site?.webIcon} siteUrl={signParams?.site?.origin} />
       </div>
-      {signParams?.sendAction === DAppActions.mina_signMessage || signParams?.sendAction === DAppActions.mina_signFields ?
+      {SIGN_MESSAGE_EVENT.indexOf(signParams?.sendAction) !==-1 ?
         <CommonRow 
           leftTitle={currentAccount.accountName}
           leftContent={showAccountAddress}
@@ -574,16 +579,17 @@ const SignTransaction = () => {
           </div>
           <div className={styles.highFeeTip}>{feeErrorTip}</div>
         </>}
-      {(tabList.length > 0) && <div className={styles.accountRow}>
+      { 
+      (tabList.length > 0) && <div className={styles.accountRow}>
         <Tabs selected={selectedTabIndex} initedId={tabInitId} onSelect={onSelectedTab}>
         {tabList.map((tab) => {
             const clickAble = tab.contentClick
             return (<div key={tab.id} id={tab.id} label={tab.label}>
-              <p onClick={()=>onClickContent(clickAble)} className={cls(styles.tabContent,{
+              {<div onClick={()=>onClickContent(clickAble)} className={cls(styles.tabContent,{
                 [styles.clickCss]:clickAble
               })}>
-                {tab.content}
-              </p>
+                {tab.isJsonData ? <TypeRowInfo data={tab.content}/> :tab.content}
+              </div>}
             </div>)
           })}
         </Tabs>

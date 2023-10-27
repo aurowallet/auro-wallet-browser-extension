@@ -160,10 +160,11 @@
     line-height: 17px;
     color: rgba(0, 0, 0, 0.3);
     margin: 0;
-
-    height: 120px;
+    max-height: calc(100vh - 400px);// sign message too long
     overflow-y: auto;
-    word-break: break-all;
+    width: 100%;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .highFeeTip {
