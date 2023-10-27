@@ -1,5 +1,5 @@
 
-import {NET_CONFIG_LIST} from '../constant/network'
+import {NET_CONFIG_MAP} from '../constant/network'
 const UPDATE_NET_CONFIG = "UPDATE_NET_CONFIG"
 
 const UPDATE_NETWORK_CHAINID_CONFIG = "UPDATE_NETWORK_CHAINID_CONFIG"
@@ -87,7 +87,7 @@ const network = (state = initState, action) => {
             for (let index = 0; index < netConfigList.length; index++) {
                 let config = {...netConfigList[index]};
                 if(config.type === NET_CONFIG_DEFAULT){
-                    let type_id = NET_CONFIG_LIST[config.netType]?.type_id
+                    let type_id = NET_CONFIG_MAP[config.netType]?.type_id
                     config.chainId = typeAndIdMap[type_id]||""
                 }
                 newNetConfigList.push(config)

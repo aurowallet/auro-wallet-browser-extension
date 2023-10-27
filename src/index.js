@@ -3,7 +3,7 @@ import extension from 'extensionizer';
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import { MAIN_NET_BASE_CONFIG, network_config, NET_CONFIG_VERSION } from "../config";
+import { NET_CONFIG_VERSION } from "../config";
 import { windowId } from "./background/DappService";
 import { getLocal, saveLocal } from "./background/localStorage";
 import { extGetLocal, extSaveLocal } from "./background/extensionStorage";
@@ -21,6 +21,7 @@ import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
 import { WALLET_CONNECT_TYPE } from "./constant/commonType";
+import { NETWORK_CONFIG_LIST, NET_CONFIG_MAP, NET_CONFIG_TYPE } from "./constant/network";
 
 
 function getLocalNetConfig(store) {
@@ -28,7 +29,7 @@ function getLocalNetConfig(store) {
     let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
     let config
     if (!localNetConfig) {
-      let netList = network_config.map((item) => {
+      let netList = NETWORK_CONFIG_LIST.map((item) => {
         item.type = NET_CONFIG_DEFAULT
         return item
       })
@@ -68,7 +69,7 @@ async function updateNetLocalConfig(netConfig){
     }else{
       let id = item.url
       newItem =  {
-        ...MAIN_NET_BASE_CONFIG,
+        ...NET_CONFIG_MAP[NET_CONFIG_TYPE.Mainnet].config,
         name:item.name||"Unknown",
         id,
         ...item,
@@ -83,7 +84,7 @@ async function updateNetLocalConfig(netConfig){
   })
   let config
   if(addList.length === 0){
-    let netList = network_config.map((item) => {
+    let netList = NETWORK_CONFIG_LIST.map((item) => {
       item.type = NET_CONFIG_DEFAULT
       return item
     })
@@ -93,7 +94,7 @@ async function updateNetLocalConfig(netConfig){
       netConfigVersion:NET_CONFIG_VERSION
     }
   }else{
-    let newNetList = network_config.map((item) => {
+    let newNetList = NETWORK_CONFIG_LIST.map((item) => {
       item.type = NET_CONFIG_DEFAULT
       return item
     }) 

@@ -2,12 +2,12 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { NET_CONFIG_VERSION, UNKNOWN_NET_BASE_CONFIG } from "../../../../../config";
+import { NET_CONFIG_VERSION } from "../../../../../config";
 import { getNetworkList, getNodeChainId } from "../../../../background/api";
 import { extSaveLocal } from "../../../../background/extensionStorage";
 import { getLocal, removeLocal } from "../../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../../constant/storageKey";
-import { NET_CONFIG_LIST } from "../../../../constant/network";
+import { BASE_unknown_config, NET_CONFIG_MAP } from "../../../../constant/network";
 import { updateShouldRequest, updateStakingRefresh } from "../../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, updateNetChainIdConfig, updateNetConfig } from "../../../../reducers/network";
 import { sendNetworkChangeMsg, trimSpace, urlValid } from "../../../../utils/utils";
@@ -122,14 +122,14 @@ const NodeEditor = ({ }) => {
             }
         }
         let config
-        Object.keys(NET_CONFIG_LIST).forEach((key)=>{
-            const item = NET_CONFIG_LIST[key]
+        Object.keys(NET_CONFIG_MAP).forEach((key)=>{
+            const item = NET_CONFIG_MAP[key]
             if(item.type_id === networkConfig.type){
                 config = item.config
             }
         })
         if(!config){
-            config = UNKNOWN_NET_BASE_CONFIG
+            config = BASE_unknown_config
         }
         return { chainId, config }
     })

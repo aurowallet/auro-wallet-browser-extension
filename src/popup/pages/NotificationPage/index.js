@@ -10,7 +10,7 @@ import {
   GET_SIGN_PARAMS,
   WALLET_GET_CURRENT_ACCOUNT,
 } from "../../../constant/msgTypes";
-import { NET_CONFIG_LIST } from "../../../constant/network";
+import { NET_CONFIG_MAP } from "../../../constant/network";
 import {
   updateShouldRequest,
   updateStakingRefresh,
@@ -99,7 +99,7 @@ const NotificationPage = () => {
   }, [goToHome, params]);
 
   const onConfirm = useCallback(async () => {
-    const currentSupportChainList = Object.keys(NET_CONFIG_LIST);
+    const currentSupportChainList = Object.keys(NET_CONFIG_MAP);
     const nextChainIndex = currentSupportChainList.indexOf(targetChainId);
     let message = "";
     let status = false;
@@ -110,7 +110,7 @@ const NotificationPage = () => {
         const { currentNetConfig } = netConfig;
         let config = {
           ...currentNetConfig,
-          currentConfig: NET_CONFIG_LIST[targetChainId].config,
+          currentConfig: NET_CONFIG_MAP[targetChainId].config,
         };
         await extSaveLocal(NET_WORK_CONFIG, config);
         dispatch(updateNetConfig(config));

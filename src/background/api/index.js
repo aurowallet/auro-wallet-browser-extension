@@ -156,16 +156,12 @@ export async function fetchDelegationInfo(publicKey) {
 
 export async function fetchStakingList() {
   let netConfig = await getCurrentNetConfig()
-  let baseUrl = netConfig.txUrl
   if(netConfig.netType !== NET_CONFIG_TYPE.Mainnet){
     return []
   }
-  if (!baseUrl) {
-    return []
-  }
-  const data = await commonFetch(baseUrl + '/validators').catch(() => [])
+  const data = await commonFetch(BASE_INFO_URL + '/validators').catch(() => [])
   const stakingList = parseStakingList(data)
-  await saveLocal(LOCAL_CACHE_KEYS.STAKING_LIST, JSON.stringify(stakingList))
+  saveLocal(LOCAL_CACHE_KEYS.STAKING_LIST, JSON.stringify(stakingList))
   return stakingList;
 }
 
@@ -173,7 +169,7 @@ export async function fetchStakingList() {
 * get recommond fee
 */
 export async function getFeeRecom() {
-  let feeUrl = BASE_INFO_URL + "minter_fee.json"
+  let feeUrl = BASE_INFO_URL + "/minter_fee.json"
   const result = await commonFetch(feeUrl).catch(err => [])
   if (Array.isArray(result) && result.length>0) {
     saveLocal(RECOMMOND_FEE, JSON.stringify(result))
@@ -186,7 +182,7 @@ export async function getFeeRecom() {
 * get about page base info 
 */
 export async function getBaseInfo() {
-  let feeUrl = BASE_INFO_URL + "about_us.json"
+  let feeUrl = BASE_INFO_URL + "/about_us.json"
   let baseInfo = await commonFetch(feeUrl).catch(error => {
     return error
   })
@@ -264,10 +260,10 @@ export async function getNodeChainId(gqlUrl) {
 */
 export async function getCurrencyPrice(currency) {
   let netConfig = await getCurrentNetConfig()
-  if(!netConfig.txUrl){
+  if(netConfig.netType !== NET_CONFIG_TYPE.Mainnet){
     return 0
   }
-  let priceUrl = netConfig.txUrl + "/prices?currency=" + currency
+  let priceUrl = BASE_INFO_URL + "/prices?currency=" + currency
   let data = await commonFetch(priceUrl).catch(() => { })
   let price = data?.data || 0
   await saveLocal(LOCAL_CACHE_KEYS.COIN_PRICE, JSON.stringify({ price }))
@@ -276,7 +272,7 @@ export async function getCurrencyPrice(currency) {
 
 
 export async function getNetworkList() {
-  let networkUrl = BASE_INFO_URL + "network_list.json"
+  let networkUrl = BASE_INFO_URL + "/network_list.json"
   let result = await commonFetch(networkUrl).catch(error => [])
   if (result.length > 0) {
     await saveLocal(NETWORK_ID_AND_TYPE, JSON.stringify(result))
@@ -390,7 +386,7 @@ export async function getZkAppPendingTx(address,limit){
 * get scam list
 */
 export async function getScamList() {
-  let feeUrl = BASE_INFO_URL + "scam_list"
+  let feeUrl = BASE_INFO_URL + "/scam_list"
   const result = await commonFetch(feeUrl).catch(err => [])
   if (Array.isArray(result) && result.length>0) {
     saveLocal(SCAM_LIST, JSON.stringify(result))
