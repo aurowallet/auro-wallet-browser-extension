@@ -174,6 +174,12 @@ export const LEDGER_CONNECTED_SUCCESSFULLY = 'LEDGER_CONNECTED_SUCCESSFULLY';
  /**
  * get dapp sign params
  */
+export const GET_SIGN_PARAMS_BY_ID = "GET_SIGN_PARAMS_BY_ID"
+
+
+ /**
+ * get dapp sign params
+ */
 export const GET_SIGN_PARAMS = "GET_SIGN_PARAMS"
 
 
@@ -259,3 +265,6 @@ export const GET_LEDGER_ACCOUNT_NUMBER = "GET_LEDGER_ACCOUNT_NUMBER"
  * switch chain
  */
 export const DAPP_ACTION_SWITCH_CHAIN = "DAPP_ACTION_SWITCH_CHAIN"
+
+/** cancel all pending zk tx */
+export const DAPP_ACTION_CANCEL_ALL = "DAPP_ACTION_CANCEL_ALL"

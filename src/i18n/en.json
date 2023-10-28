@@ -287,5 +287,7 @@
   "switchNetwork":"Switch Network",
   "allowSwitch":"Allow this site to switch the network?",
   "current":"Current",
-  "target":"Target"
+  "target":"Target",
+  "pendingZkTx":"Waiting requests <bold>{{current}}/{{total}}</bold>",
+  "rejectAllTx":"Reject {{total}} transactions"
 }

@@ -1,5 +1,5 @@
 .conatiner {
-    .titleRow { 
+    .titleRow {
         display: flex;
         align-items: center;
         height: 48px;
@@ -16,7 +16,7 @@
         margin: 0;
     }
     .netContainer {
-        background: rgba(0, 0, 0, 0.10);
+        background: rgba(0, 0, 0, 0.1);
         border-radius: 16px;
         padding: 4px 10px;
         display: flex;
@@ -29,7 +29,7 @@
             margin-right: 4px;
             border-radius: 50%;
         }
-        .netContent{
+        .netContent {
             font-weight: 500;
             font-size: 12px;
             line-height: 14px;
@@ -75,7 +75,7 @@
             font-size: 12px;
             line-height: 14px;
             color: rgba(0, 0, 0, 0.5);
-            margin: 0 0 4px 0 ;
+            margin: 0 0 4px 0;
         }
         .rowContent {
             font-weight: 500;
@@ -86,7 +86,7 @@
         .rowDescContent {
             font-size: 12px;
         }
-        .copyCss{
+        .copyCss {
             cursor: pointer;
         }
         .rightTitle {
@@ -126,18 +126,18 @@
         .feeContent {
             margin-right: 4px;
         }
-        .rowArrow{
+        .rowArrow {
             height: 100%;
             position: absolute;
             left: 50%;
             top: 50%;
-            transform: translate(-50%,-50%);
+            transform: translate(-50%, -50%);
 
             display: flex;
             align-items: center;
             justify-content: center;
-            
-            img{
+
+            img {
                 width: 10px;
             }
         }
@@ -160,25 +160,93 @@
     line-height: 17px;
     color: rgba(0, 0, 0, 0.3);
     margin: 0;
-    max-height: calc(100vh - 400px);// sign message too long
+    max-height: calc(100vh - 400px); // sign message too long
     overflow-y: auto;
     width: 100%;
     overflow-wrap: break-word;
     white-space: pre-wrap;
 }
-
+.multiContent {
+    max-height: calc(100vh - 400px - 40px);
+}
 .highFeeTip {
     font-weight: 500;
     font-size: 12px;
     line-height: 17px;
     color: #e4b200;
 }
-.clickCss{
+.clickCss {
     font-style: normal;
     font-weight: 400;
     font-size: 14px;
     line-height: 17px;
-    color: #594AF1;
+    color: #594af1;
     cursor: pointer;
     height: min-content;
+}
+
+.multiTitleRow {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    // margin-top: 10px;
+    padding: 0px 20px;
+    position: relative;
+    justify-content: space-between;
+
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    .multiTitle {
+        color: rgba(0, 0, 0, 0.5);
+        text-align: center;
+        font-size: 14px;
+        // font-weight: 400;
+    }
+    .multiTitleBold {
+        font-weight: 600;
+    }
+    .multiTitleRowRight {
+        display: flex;
+        align-items: center;
+
+        &:not(:first-child) {
+            margin-left: 10px;
+        }
+    }
+    .multiRowArrow {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .multiRowArrowDisable {
+        cursor: not-allowed;
+    }
+
+    .rightArrow {
+        transform: rotate(180deg);
+    }
+    .rowArrowImg {
+        width: 10px;
+    }
+}
+
+.multiBottomWrapper{
+    width: 100%;
+    height: 40px;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    position: absolute;
+    bottom: 0;
+}
+.multiBottom {
+    color: #594af1;
+    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+.multiBottomBtn {
+    bottom: 40px !important;
 }

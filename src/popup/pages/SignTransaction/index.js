@@ -3,12 +3,14 @@ import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { getBalance, sendStakeTx, sendTx } from "../../../background/api";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { ACCOUNT_TYPE } from "../../../constant/commonType";
 import {
+  DAPP_ACTION_CANCEL_ALL,
   DAPP_ACTION_SEND_TRANSACTION,
   DAPP_ACTION_SIGN_MESSAGE,
   GET_SIGN_PARAMS,
@@ -35,6 +37,7 @@ import {
   exportFile,
   getQueryStringArgs,
   getRealErrorMsg,
+  isNaturalNumber,
   isNumber,
   toNonExponential,
   trimSpace,
@@ -46,15 +49,27 @@ import { ConfirmModal } from "../../component/ConfirmModal";
 import DAppAdvance from "../../component/DAppAdvance";
 import DappWebsite from "../../component/DappWebsite";
 import Loading from "../../component/Loading";
+import ICON_Arrow from "../../component/SVG/ICON_Arrow";
 import Tabs from "../../component/Tabs";
 import Toast from "../../component/Toast";
 import { LockPage } from "../Lock";
 import { TypeRowInfo } from "./TypeRowInfo";
 import styles from "./index.module.scss";
+
+const ICON_COLOR = {
+  black: "rgba(0, 0, 0, 1)",
+  gray: "rgba(0, 0, 0, 0.5)",
+};
 const FeeTypeEnum = {
   site: "FEE_RECOMMED_SITE",
   default: "FEE_RECOMMED_DEFAULT",
   custom: "FEE_RECOMMED_CUSTOM",
+};
+
+/** page click event */
+const TX_CLICK_TYPE = {
+  CONFIRM: "TX_CLICK_TYPE_CONFIRM",
+  CANCEL: "TX_CLICK_TYPE_CANCEL",
 };
 
 /** mina sign event */
@@ -63,14 +78,37 @@ const SIGN_MESSAGE_EVENT = [
   DAppActions.mina_signFields,
   DAppActions.mina_sign_JsonMessage,
 ];
+/** mina sign event and broa */
+const SIGN_EVENT_WITH_BROADCASE = [
+  DAppActions.mina_sendTransaction,
+  DAppActions.mina_sendPayment,
+  DAppActions.mina_sendStakeDelegation,
+];
 
 const SignTransaction = () => {
   const dispatch = useDispatch();
   const history = useHistory();
 
   const [pendingSignList, setPendingSignList] = useState([]);
+  const [currentSignIndex, setCurrentSignIndex] = useState(0);
+  const [showMultiView, setShowMultiView] = useState(false);
+  const [leftArrowStatus, setLeftArrowStatus] = useState(true);
+  const [rightArrowStatus, setRightArrowStatus] = useState(false);
+  const [advanceData, setAdvanceData] = useState({});
 
   const dappWindow = useSelector((state) => state.cache.dappWindow);
+  const inferredNonce = useSelector(
+    (state) => state.accountInfo.netAccount.inferredNonce
+  );
+  const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
+    inferredNonce
+  );
+  useEffect(() => {
+    if (inferredNonce) {
+      setNextUseInferredNonce(inferredNonce);
+    }
+  }, [inferredNonce]);
+
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -83,19 +121,11 @@ const SignTransaction = () => {
   const params = useMemo(() => {
     let url = dappWindow.url || window.location?.href || "";
     return getQueryStringArgs(url);
-  });
+  }, [dappWindow]);
 
   const onClickUnLock = useCallback(() => {
     setLockStatus(true);
   }, [currentAccount, params]);
-
-  const fetchAccountInfo = useCallback(async () => {
-    let account = await getBalance(currentAddress);
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account));
-    }
-    Loading.hide();
-  }, [dispatch, currentAddress]);
 
   const getSignParams = useCallback(() => {
     sendMsg(
@@ -106,23 +136,17 @@ const SignTransaction = () => {
         },
       },
       (res) => {
-        if (SIGN_MESSAGE_EVENT.indexOf(res.params?.action) === -1) {
+        setPendingSignList(res);
+        // fetchAccountInfo
+        const firstSignParams = res[0];
+        const sendAction = firstSignParams?.params?.action || "";
+        if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
           Loading.show();
         }
-        let siteFee = res.params?.feePayer?.fee || res.params?.fee || "";
-        let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
-
-        let pendingData = {
-          site: res.site,
-          params: res.params,
-          sendAction: res.params.action,
-          siteRecommendFee: siteRecommendFee,
-        };
-        setPendingSignList([...pendingSignList, pendingData]);
         fetchAccountInfo();
       }
     );
-  }, [params, fetchAccountInfo, pendingSignList]);
+  }, [params, pendingSignList, fetchAccountInfo]);
 
   useEffect(() => {
     sendMsg(
@@ -133,9 +157,136 @@ const SignTransaction = () => {
         setLockStatus(currentAccount.isUnlocked);
       }
     );
+  }, [dappWindow]);
+  const fetchAccountInfo = useCallback(async () => {
+    let account = await getBalance(currentAddress);
+    Loading.hide();
+    if (account.publicKey) {
+      dispatch(updateNetAccount(account));
+    }
+    Loading.hide();
+  }, [dispatch, currentAddress]);
 
+  useEffect(() => {
     getSignParams();
-  }, []);
+  }, [window.location?.href]);
+
+  const { leftArrowColor, rightArrowColor } = useMemo(() => {
+    let leftArrowColor =
+      currentSignIndex === 0 ? ICON_COLOR.gray : ICON_COLOR.black;
+    const total = pendingSignList.length;
+    let rightArrowColor =
+      currentSignIndex === total - 1 ? ICON_COLOR.gray : ICON_COLOR.black;
+    return {
+      leftArrowColor,
+      rightArrowColor,
+    };
+  }, [currentSignIndex, pendingSignList]);
+
+  useEffect(() => {
+    setShowMultiView(pendingSignList.length > 1);
+  }, [pendingSignList]);
+
+  const onClickLeftBtn = useCallback(() => {
+    if (leftArrowStatus) {
+      return;
+    }
+    setRightArrowStatus(false);
+    let nextIndex = currentSignIndex - 1;
+    if (nextIndex <= 0) {
+      nextIndex = 0;
+      setLeftArrowStatus(true);
+    } else {
+      setLeftArrowStatus(false);
+    }
+    setCurrentSignIndex(nextIndex);
+  }, [currentSignIndex, leftArrowStatus, pendingSignList]);
+
+  const onClickRightBtn = useCallback(() => {
+    if (rightArrowStatus) {
+      return;
+    }
+    setLeftArrowStatus(false);
+    const total = pendingSignList.length;
+    let nextIndex = currentSignIndex + 1;
+
+    if (nextIndex >= total - 1) {
+      nextIndex = total - 1;
+      setRightArrowStatus(true);
+    } else {
+      setRightArrowStatus(false);
+    }
+
+    setCurrentSignIndex(nextIndex);
+  }, [pendingSignList, rightArrowStatus, currentSignIndex]);
+
+  const onRemoveTx = useCallback(
+    (openId, type, nonce) => {
+      let signList = [...pendingSignList];
+      let tempSignParams;
+      signList = signList.filter((item) => {
+        let checkStatus = item.id !== openId;
+        if (!checkStatus) {
+          tempSignParams = item;
+        }
+        return checkStatus;
+      });
+      if (signList.length === 0) {
+        goToHome();
+        return;
+      }
+      setPendingSignList(signList);
+      setCurrentSignIndex(0);
+      // if the zk tx is confirmed and the nonce is same with nextUseInferredNonce , then + 1
+      if (type === TX_CLICK_TYPE.CONFIRM) {
+        const sendAction = tempSignParams?.params?.action || "";
+        if (
+          SIGN_EVENT_WITH_BROADCASE.indexOf(sendAction) !== -1 &&
+          nextUseInferredNonce === nonce
+        ) {
+          setNextUseInferredNonce((state) =>
+            BigNumber(state).plus(1).toNumber()
+          );
+        }
+      }
+    },
+    [pendingSignList, nextUseInferredNonce, goToHome]
+  );
+  const goToHome = useCallback(
+    () => {
+      let url = dappWindow?.url;
+      if (url) {
+        dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
+      }
+      dispatch(updateDAppOpenWindow({}));
+    },
+    [dappWindow, showMultiView]
+  );
+  /** reject all tx */
+  const onRejectAll = useCallback(() => {
+    sendMsg(
+      {
+        action: DAPP_ACTION_CANCEL_ALL,
+        payload: {
+          cancel: true,
+        },
+      },
+      async (params) => {}
+    );
+    goToHome();
+  }, [pendingSignList]);
+
+  const onUpdateAdvance = useCallback(
+    ({ id, fee, nonce }) => {
+      let preAdvanceData = { ...advanceData };
+      preAdvanceData[id] = {
+        fee,
+        nonce,
+      };
+      setAdvanceData(preAdvanceData);
+    },
+    [advanceData]
+  );
 
   if (!lockStatus) {
     return (
@@ -148,68 +299,123 @@ const SignTransaction = () => {
   }
   return (
     <div className={styles.conatiner}>
-      {pendingSignList.map((item, index) => {
-        return <SignView key={index} signParams={item} />;
-      })}
+      {showMultiView && (
+        <div className={styles.multiTitleRow}>
+          <div className={styles.multiTitle}>
+            <Trans
+              i18nKey={"pendingZkTx"}
+              values={{
+                current: currentSignIndex + 1,
+                total: pendingSignList.length,
+              }}
+              components={{
+                bold: <span className={styles.multiTitleBold} />,
+              }}
+            />
+          </div>
+          <div className={styles.multiTitleRowRight}>
+            <div
+              className={cls(styles.multiRowArrow, {
+                [styles.multiRowArrowDisable]: leftArrowStatus,
+              })}
+              onClick={onClickLeftBtn}
+            >
+              <ICON_Arrow stroke={leftArrowColor} />
+            </div>
+            <div
+              className={cls(styles.multiRowArrow, styles.rightArrow, {
+                [styles.multiRowArrowDisable]: rightArrowStatus,
+              })}
+              onClick={onClickRightBtn}
+            >
+              <ICON_Arrow stroke={rightArrowColor} />
+            </div>
+          </div>
+        </div>
+      )}
+      <SignView
+        signParams={pendingSignList[currentSignIndex]}
+        showMultiView={showMultiView}
+        onRemoveTx={onRemoveTx}
+        inferredNonce={nextUseInferredNonce}
+        advanceData={advanceData}
+        onUpdateAdvance={onUpdateAdvance}
+        key={pendingSignList[currentSignIndex]?.id}
+      />
+      {showMultiView && (
+        <div className={styles.multiBottomWrapper}>
+          <div className={styles.multiBottom} onClick={onRejectAll}>
+            {i18n.t("rejectAllTx", { total: pendingSignList.length })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-const SignView = ({ signParams }) => {
-  const dispatch = useDispatch();
-
-  const dappWindow = useSelector((state) => state.cache.dappWindow);
+const SignView = ({
+  signParams,
+  showMultiView,
+  onRemoveTx,
+  inferredNonce,
+  advanceData,
+  onUpdateAdvance,
+}) => {
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
   const balance = useSelector((state) => state.accountInfo.balance);
-  const netAccount = useSelector((state) => state.accountInfo.netAccount);
   const currentConfig = useSelector((state) => state.network.currentConfig);
   const netFeeList = useSelector((state) => state.cache.feeRecom);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
-
   const [feeValue, setFeeValue] = useState("");
   const [feeDefault, setFeeDefault] = useState("");
   const [customFeeStatus, setCustomFeeStatus] = useState(false);
   const [feeType, setFeeType] = useState("");
   const [nonceValue, setNonceValue] = useState("");
-
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-
   const [feeErrorTip, setFeeErrorTip] = useState("");
-
   const [btnLoading, setBtnLoading] = useState(false);
-
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
+
+  const { sendAction, siteRecommendFee, currentAdvanceData } = useMemo(() => {
+    let sendAction = signParams?.params?.action || "";
+    let siteFee = signParams?.feePayer?.fee || signParams?.params?.fee || "";
+    let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
+    let currentAdvanceData = advanceData[signParams.id] || {};
+    return {
+      sendAction,
+      siteRecommendFee,
+      currentAdvanceData,
+    };
+  }, [signParams, advanceData]);
+
+  useEffect(() => {
+    if (isNumber(currentAdvanceData.fee)) {
+      setCustomFeeStatus(true);
+      setFeeValue(currentAdvanceData.fee);
+    }
+    if (isNaturalNumber(currentAdvanceData.nonce)) {
+      setNonceValue(currentAdvanceData.nonce);
+    }
+  }, [currentAdvanceData]);
 
   const onSelectedTab = useCallback((tabIndex) => {
     setSelectedTabIndex(tabIndex);
   }, []);
 
-  const goToHome = useCallback(() => {
-    let url = dappWindow?.url;
-    if (url) {
-      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-    }
-    dispatch(updateDAppOpenWindow({}));
-  }, [dappWindow]);
-
   const onCancel = useCallback(() => {
     let resultAction = "";
-    switch (signParams.sendAction) {
+    switch (sendAction) {
       case DAppActions.mina_sendStakeDelegation:
-        resultAction = DAPP_ACTION_SEND_TRANSACTION;
-        break;
       case DAppActions.mina_sendPayment:
+      case DAppActions.mina_sendTransaction:
         resultAction = DAPP_ACTION_SEND_TRANSACTION;
         break;
       case DAppActions.mina_signMessage:
       case DAppActions.mina_signFields:
       case DAppActions.mina_sign_JsonMessage:
         resultAction = DAPP_ACTION_SIGN_MESSAGE;
-        break;
-      case DAppActions.mina_sendTransaction:
-        resultAction = DAPP_ACTION_SEND_TRANSACTION;
         break;
       default:
         break;
@@ -220,16 +426,17 @@ const SignView = ({ signParams }) => {
         payload: {
           cancel: true,
           resultOrigin: signParams.site?.origin,
+          id: signParams.id,
         },
       },
       async (params) => {
-        goToHome();
+        onRemoveTx(signParams.id);
       }
     );
-  }, [currentAccount, goToHome, signParams]);
+  }, [currentAccount, signParams, sendAction, onRemoveTx]);
 
   const onSubmitSuccess = useCallback(
-    (data, type) => {
+    (data, nonce, type) => {
       if (data.error) {
         let errorMessage = i18n.t("postFailed");
         let realMsg = getRealErrorMsg(data.error);
@@ -241,7 +448,8 @@ const SignView = ({ signParams }) => {
         let payload = {};
         let id = "";
         payload.resultOrigin = signParams?.site?.origin;
-        switch (signParams.sendAction) {
+        payload.id = signParams.id;
+        switch (sendAction) {
           case DAppActions.mina_sendStakeDelegation:
             payload.hash = data.sendDelegation.delegation.hash;
             id = data.sendDelegation.delegation.id;
@@ -285,17 +493,17 @@ const SignView = ({ signParams }) => {
             action: resultAction,
             payload: payload,
           },
-          async (params) => {}
+          async (params) => {
+            onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM, nonce);
+          }
         );
       }
-      goToHome();
     },
-    [signParams, goToHome]
+    [signParams, sendAction, onRemoveTx]
   );
 
   const ledgerTransfer = useCallback(
     async (params) => {
-      let { sendAction } = signParams;
       if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
         Toast.info(i18n.t("ledgerNotSupportSign"));
         sendMsg(
@@ -356,21 +564,21 @@ const SignView = ({ signParams }) => {
         }
 
         setLedgerModalStatus(false);
-        onSubmitSuccess(postRes, "ledger");
+        onSubmitSuccess(postRes, params.nonce, "ledger");
       }
     },
-    [signParams, currentAccount]
+    [signParams, currentAccount, sendAction]
   );
 
   const clickNextStep = useCallback(() => {
     let { params } = signParams;
-    let vaildNonce = nonceValue || netAccount.inferredNonce;
+    let vaildNonce = nonceValue || inferredNonce; 
     let nonce = trimSpace(vaildNonce);
 
     let toAddress = "";
     let fee = "";
     let memo = "";
-    if (SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) === -1) {
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
       toAddress = trimSpace(params.to);
       fee = trimSpace(feeValue);
       memo = params?.feePayer?.memo || params?.memo || "";
@@ -384,15 +592,15 @@ const SignView = ({ signParams }) => {
       fee,
       memo,
     };
-    if (SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) !== -1) {
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
       payload.message = params.message;
     }
-    if (signParams.sendAction === DAppActions.mina_sendPayment) {
+    if (sendAction === DAppActions.mina_sendPayment) {
       let amount = trimSpace(params.amount);
       amount = toNonExponential(new BigNumber(amount).toString());
       payload.amount = amount;
     }
-    if (signParams.sendAction === DAppActions.mina_sendTransaction) {
+    if (sendAction === DAppActions.mina_sendTransaction) {
       payload.transaction = params.transaction;
       memo = params.feePayer?.memo || "";
     }
@@ -401,15 +609,14 @@ const SignView = ({ signParams }) => {
     }
     setBtnLoading(true);
     let connectAction = QA_SIGN_TRANSTRACTION;
-    if (signParams.sendAction === DAppActions.mina_signFields) {
+    if (sendAction === DAppActions.mina_signFields) {
       connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION;
     }
-    if (signParams.sendAction === DAppActions.mina_sign_JsonMessage) {
+    if (sendAction === DAppActions.mina_sign_JsonMessage) {
       payload.sendAction = DAppActions.mina_signMessage;
     } else {
-      payload.sendAction = signParams.sendAction;
+      payload.sendAction = sendAction;
     }
-
     sendMsg(
       {
         action: connectAction,
@@ -417,7 +624,7 @@ const SignView = ({ signParams }) => {
       },
       (data) => {
         setBtnLoading(false);
-        onSubmitSuccess(data);
+        onSubmitSuccess(data, payload.nonce);
       }
     );
   }, [
@@ -426,14 +633,16 @@ const SignView = ({ signParams }) => {
     nonceValue,
     feeValue,
     onSubmitSuccess,
-    netAccount,
+    // netAccount,
+    sendAction,
+    inferredNonce,
   ]);
 
   const onConfirm = useCallback(() => {
     let params = signParams.params;
     if (
-      SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) == -1 &&
-      signParams.sendAction !== DAppActions.mina_sendTransaction
+      SIGN_MESSAGE_EVENT.indexOf(sendAction) == -1 &&
+      sendAction !== DAppActions.mina_sendTransaction
     ) {
       let toAddress = trimSpace(params.to);
       if (!addressValid(toAddress)) {
@@ -441,14 +650,14 @@ const SignView = ({ signParams }) => {
         return;
       }
     }
-    if (signParams.sendAction === DAppActions.mina_sendPayment) {
+    if (sendAction === DAppActions.mina_sendPayment) {
       let amount = trimSpace(params.amount);
       if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
         Toast.info(i18n.t("amountError"));
         return;
       }
     }
-    let vaildNonce = nonceValue || netAccount.inferredNonce;
+    let vaildNonce = nonceValue || inferredNonce;
     let nonce = trimSpace(vaildNonce) || "";
     if (nonce.length > 0 && !isNumber(nonce)) {
       Toast.info(i18n.t("waitNonce"));
@@ -459,7 +668,7 @@ const SignView = ({ signParams }) => {
       Toast.info(i18n.t("inputFeeError"));
       return;
     }
-    if (SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) === -1) {
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
       let amount = trimSpace(params.amount);
       let maxAmount = new BigNumber(amount).plus(fee).toString();
       if (new BigNumber(maxAmount).gt(balance)) {
@@ -474,10 +683,10 @@ const SignView = ({ signParams }) => {
     signParams,
     balance,
     nonceValue,
-    netAccount,
     feeValue,
     clickNextStep,
-    goToHome,
+    sendAction,
+    inferredNonce,
   ]);
 
   const onClickAdvance = useCallback(() => {
@@ -492,7 +701,7 @@ const SignView = ({ signParams }) => {
 
   const onFeeInput = useCallback(
     (e) => {
-      setAdvanceFee(e.target.value);
+      setAdvanceFee(e.target.value); 
       if (BigNumber(e.target.value).gt(10)) {
         setFeeErrorTip(i18n.t("feeTooHigh"));
       } else {
@@ -514,7 +723,12 @@ const SignView = ({ signParams }) => {
       setNonceValue(advanceNonce);
     }
     setAdvanceStatus(false);
-  }, [advanceFee, advanceNonce]);
+    onUpdateAdvance({
+      id: signParams.id,
+      fee: advanceFee,
+      nonce: advanceNonce,
+    });
+  }, [advanceFee, advanceNonce, onUpdateAdvance, signParams]);
 
   useEffect(() => {
     if (!feeDefault) {
@@ -563,11 +777,11 @@ const SignView = ({ signParams }) => {
 
     let memo = params?.feePayer?.memo || params?.memo || "";
     let content = params?.message || "";
-    if (signParams.sendAction === DAppActions.mina_sendTransaction) {
+    if (sendAction === DAppActions.mina_sendTransaction) {
       content = toPretty(params?.transaction);
-    } else if (signParams.sendAction === DAppActions.mina_signFields) {
+    } else if (sendAction === DAppActions.mina_signFields) {
       content = JSON.stringify(content);
-    } else if (signParams.sendAction === DAppActions.mina_sign_JsonMessage) {
+    } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
       try {
         content = JSON.parse(content);
       } catch (error) {}
@@ -581,9 +795,9 @@ const SignView = ({ signParams }) => {
         label: i18n.t("content"),
         content: content,
       };
-      if (signParams.sendAction === DAppActions.mina_sendTransaction) {
+      if (sendAction === DAppActions.mina_sendTransaction) {
         contentObj.isJsonData = true;
-      } else if (signParams.sendAction === DAppActions.mina_sign_JsonMessage) {
+      } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
         contentObj.isJsonData = true;
       }
       tabList.push(contentObj);
@@ -596,7 +810,7 @@ const SignView = ({ signParams }) => {
       }
     }
     let pageTitle = i18n.t("confirmTransaction");
-    if (SIGN_MESSAGE_EVENT.indexOf(signParams.sendAction) !== -1) {
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
       pageTitle = i18n.t("signatureRequest");
     }
 
@@ -609,37 +823,37 @@ const SignView = ({ signParams }) => {
       tabList,
       pageTitle,
     };
-  }, [currentAccount, signParams, i18n]);
+  }, [currentAccount, signParams, i18n, sendAction]);
 
   useEffect(() => {
     if (customFeeStatus) {
       setFeeType(FeeTypeEnum.custom);
       return;
     }
-    if (signParams?.siteRecommendFee) {
+    if (siteRecommendFee) {
       setFeeType(FeeTypeEnum.site);
-      setFeeValue(signParams.siteRecommendFee);
+      setFeeValue(siteRecommendFee);
       return;
     }
     if (feeDefault) {
       setFeeType(FeeTypeEnum.default);
       setFeeValue(feeDefault);
     }
-  }, [signParams, feeDefault, feeValue, customFeeStatus]);
+  }, [feeDefault, feeValue, customFeeStatus, siteRecommendFee]);
 
   const checkFeeHigh = useCallback(() => {
     let checkFee = "";
     if (customFeeStatus) {
       checkFee = feeValue;
     } else {
-      checkFee = signParams.siteRecommendFee;
+      checkFee = siteRecommendFee;
     }
     if (BigNumber(checkFee).gt(10)) {
       setFeeErrorTip(i18n.t("feeTooHigh"));
     } else {
       setFeeErrorTip("");
     }
-  }, [feeValue, i18n, signParams, customFeeStatus]);
+  }, [feeValue, i18n, signParams, customFeeStatus, siteRecommendFee]);
 
   useEffect(() => {
     checkFeeHigh();
@@ -674,7 +888,7 @@ const SignView = ({ signParams }) => {
             siteUrl={signParams?.site?.origin}
           />
         </div>
-        {SIGN_MESSAGE_EVENT.indexOf(signParams?.sendAction) !== -1 ? (
+        {SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1 ? (
           <CommonRow
             leftTitle={currentAccount.accountName}
             leftContent={showAccountAddress}
@@ -693,7 +907,7 @@ const SignView = ({ signParams }) => {
               rightCopyContent={realToAddress}
               showArrow={true}
             />
-            {signParams?.sendAction === DAppActions.mina_sendPayment && (
+            {sendAction === DAppActions.mina_sendPayment && (
               <CommonRow leftTitle={i18n.t("amount")} leftContent={toAmount} />
             )}
             <div className={styles.accountRow}>
@@ -744,6 +958,7 @@ const SignView = ({ signParams }) => {
                         onClick={() => onClickContent(clickAble)}
                         className={cls(styles.tabContent, {
                           [styles.clickCss]: clickAble,
+                          [styles.multiContent]: showMultiView,
                         })}
                       >
                         {tab.isJsonData ? (
@@ -760,7 +975,11 @@ const SignView = ({ signParams }) => {
           </div>
         )}
       </div>
-      <div className={styles.btnGroup}>
+      <div
+        className={cls(styles.btnGroup, {
+          [styles.multiBottomBtn]: showMultiView,
+        })}
+      >
         <Button
           onClick={onCancel}
           theme={button_theme.BUTTON_THEME_LIGHT}

@@ -7,7 +7,7 @@ import { extSaveLocal } from "../../../background/extensionStorage";
 import { NET_WORK_CONFIG } from "../../../constant/storageKey";
 import {
   DAPP_ACTION_SWITCH_CHAIN,
-  GET_SIGN_PARAMS,
+  GET_SIGN_PARAMS_BY_ID,
   WALLET_GET_CURRENT_ACCOUNT,
 } from "../../../constant/msgTypes";
 import { NET_CONFIG_MAP } from "../../../constant/network";
@@ -59,7 +59,7 @@ const NotificationPage = () => {
   const getSignParams = useCallback(() => {
     sendMsg(
       {
-        action: GET_SIGN_PARAMS,
+        action: GET_SIGN_PARAMS_BY_ID,
         payload: {
           openId: params.openId, 
         },

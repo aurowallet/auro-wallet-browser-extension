@@ -220,20 +220,13 @@ async function getLocalStatus(store) {
   })
 }
 async function upgradeStorageConfig(){
-  // 这里存在
-  // 1. 从v2 升级到 v3 这里需要升级  标示是存储过 语言记录或者网络记录
-    
-  // 当不存在这两个记录时，则此处不需要升级，直接返回即可， 说明是v3 或者是新使用
-  
-  // 当存在任意一个记录时，则标示是升级，存在哪个升级哪个，升级结束后，本地保存一份升级的记录，
-  // 下次打开时，如果存在这个记录，说明已升级，直接返回，如果不存在，则继续升级过程
   const languageConfig = getLocal(LANGUAGE_CONFIG) 
   const networkConfig = getLocal(NET_WORK_CONFIG) 
-  if(!languageConfig || !networkConfig){// 当不存在这两个记录时，则此处不需要升级，直接返回即可， 说明是v3 或者是新使用
+  if(!languageConfig || !networkConfig){
     return 
   }
   const storageUpgradeToV3Status = getLocal(STORAGE_UPGRADE_STATUS)
-  if(storageUpgradeToV3Status){ // 下次打开时，如果存在这个记录，说明已升级，直接返回，
+  if(storageUpgradeToV3Status){
     return
   }
 
