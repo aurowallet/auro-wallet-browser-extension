@@ -129,13 +129,11 @@ export const TransactionModal = ({
                       </div>
                     </div>
                   </div>
-                  {modalType === TransactionModalType.speedUp && (
                     <div className={styles.changeWrapper}>
                       <div className={styles.changeCls} onClick={onClickAdvance}>
                         {i18n.t("change")} 
                       </div>
                     </div>
-                  )}
                 </div>
                 <div className={cls(styles.bottomContainer)}>
                   <Button
