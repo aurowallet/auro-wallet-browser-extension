@@ -1,8 +1,8 @@
 import BigNumber from "bignumber.js";
 import validUrl from 'valid-url';
 import { MAIN_COIN_CONFIG } from "../constant";
-import { getLocal } from "../background/localStorage";
-import { NET_WORK_CONFIG } from "../constant/storageKey";
+import { getLocal, removeLocal } from "../background/localStorage";
+import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../constant/storageKey";
 import { DAPP_CHANGE_NETWORK } from "../constant/msgTypes";
 import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } from "../constant/network";
 import { sendMsg } from "./commonMsg";
@@ -388,5 +388,13 @@ export function txSort(preTx,nextTx){
         return nextTx.timestamp - preTx.timestamp
     }else{
         return nextTx.nonce - preTx.nonce
+    }
+}
+export function clearLocalCache(){
+    let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS)
+    for (let index = 0; index < localCacheKeys.length; index++) {
+        const keys = localCacheKeys[index];
+        let localKey = LOCAL_CACHE_KEYS[keys]
+        removeLocal(localKey)
     }
 }

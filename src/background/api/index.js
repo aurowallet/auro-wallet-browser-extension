@@ -298,7 +298,7 @@ export async function getGqlTxHistory(address,limit){
     gqlTxUrl,
   ).catch((error) => error)
   let list = result.transactions  || []
-  await saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
+  saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
   return list
 }
 

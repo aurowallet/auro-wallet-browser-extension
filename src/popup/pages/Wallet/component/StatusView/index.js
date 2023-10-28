@@ -43,7 +43,7 @@ export const UnknownInfoView = () => {
       </div>
       <div className={styles.emptyContainer}>
         <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
-        <span className={styles.emptyContent}>{i18n.t("unknownInfo")}</span>
+        <span className={styles.emptyContent}>{i18n.t("txHistoryTip")}</span>
       </div>
     </div>
   );

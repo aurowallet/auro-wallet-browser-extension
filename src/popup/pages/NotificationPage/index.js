@@ -22,7 +22,7 @@ import {
 } from "../../../reducers/entryRouteReducer";
 import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from "../../../utils/commonMsg";
-import { getQueryStringArgs, sendNetworkChangeMsg } from "../../../utils/utils";
+import { clearLocalCache, getQueryStringArgs, sendNetworkChangeMsg } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import { LockPage } from "../Lock";
 import styles from "./index.module.scss";
@@ -118,6 +118,7 @@ const NotificationPage = () => {
 
         dispatch(updateShouldRequest(true));
         sendNetworkChangeMsg(config.currentConfig);
+        clearLocalCache()
       }
       status = true;
     }

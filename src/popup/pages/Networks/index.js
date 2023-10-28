@@ -2,11 +2,10 @@ import cls from "classnames";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NET_CONFIG_VERSION } from "../../../../config";
-import { removeLocal, saveLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../constant/storageKey";
 import { updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, NET_CONFIG_DEFAULT, updateNetConfig } from "../../../reducers/network";
-import { addressSlice, sendNetworkChangeMsg } from "../../../utils/utils";
+import { addressSlice, clearLocalCache, sendNetworkChangeMsg } from "../../../utils/utils";
 
 import i18n from "i18next";
 import { useHistory } from 'react-router-dom';
@@ -78,14 +77,6 @@ const NetworkPage = ({ }) => {
             pathname: "node_editor",
             params: { editorType: NodeEditorType.add }
         })
-    }, [])
-    const clearLocalCache = useCallback(() => {
-        let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS)
-        for (let index = 0; index < localCacheKeys.length; index++) {
-            const keys = localCacheKeys[index];
-            let localKey = LOCAL_CACHE_KEYS[keys]
-            removeLocal(localKey)
-        }
     }, [])
 
     const onClickRow = useCallback(async (nodeItem) => {

@@ -16,7 +16,7 @@ import { ACCOUNT_BALANCE_CACHE_STATE, updateAccountTx, updateNetAccount, updateS
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
 import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from '../../../utils/commonMsg';
-import { addressSlice, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, isNaturalNumber, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
+import { addressSlice, clearLocalCache, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, isNaturalNumber, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
 import Clock from '../../component/Clock';
 import { PopupModal } from '../../component/PopupModal';
 import Select from '../../component/Select';
@@ -82,7 +82,8 @@ const Wallet = ({ }) => {
       dispatch(updateStakingRefresh(true))
 
       dispatch(updateShouldRequest(true))
-      sendNetworkChangeMsg(newConfig)
+      sendNetworkChangeMsg(newConfig) 
+      clearLocalCache()
     }
 
   }, [netConfig])
@@ -399,6 +400,9 @@ const WalletDetail = () => {
   const netConfig = useSelector(state => state.network)
   const accountInfo = useSelector(state => state.accountInfo)
   const shouldRefresh = useSelector(state => state.accountInfo.shouldRefresh)
+  const inferredNonce = useSelector(
+    (state) => state.accountInfo.netAccount.inferredNonce
+  );
 
   const netType = useMemo(()=>{
     return netConfig?.currentConfig?.netType
@@ -497,7 +501,7 @@ const WalletDetail = () => {
                     showHistoryStatus={showHistoryStatus}
                   />
     }else{
-        if(netType === NET_CONFIG_TYPE.Unknown){
+        if(isNaturalNumber(inferredNonce)){
           childView =  <UnknownInfoView/>
         }else{
           childView = <NoBalanceDetail />

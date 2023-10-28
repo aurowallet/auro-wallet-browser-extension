@@ -289,5 +289,6 @@
   "current":"当前网络",
   "target":"目标网络",
   "pendingZkTx":"待确认的请求 <bold>{{current}}/{{total}}</bold>",
-  "rejectAllTx":"拒绝 {{total}} 笔交易"
+  "rejectAllTx":"拒绝 {{total}} 笔交易",
+  "txHistoryTip": "无法提供交易记录"
 }

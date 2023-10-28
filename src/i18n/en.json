@@ -289,5 +289,6 @@
   "current":"Current",
   "target":"Target",
   "pendingZkTx":"Waiting requests <bold>{{current}}/{{total}}</bold>",
-  "rejectAllTx":"Reject {{total}} transactions"
+  "rejectAllTx":"Reject {{total}} transactions",
+  "txHistoryTip": "Unable to provide transaction history"
 }
