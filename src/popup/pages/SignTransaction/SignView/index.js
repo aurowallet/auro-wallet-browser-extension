@@ -1,25 +1,25 @@
-import { DAppActions } from "@aurowallet/mina-provider";
-import BigNumber from "bignumber.js";
-import cls from "classnames";
-import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
-import { sendStakeTx, sendTx } from "../../../../background/api";
-import { MAIN_COIN_CONFIG } from "../../../../constant";
-import { ACCOUNT_TYPE } from "../../../../constant/commonType";
+import { sendStakeTx, sendTx } from "@/background/api";
+import { MAIN_COIN_CONFIG } from "@/constant";
+import { ACCOUNT_TYPE } from "@/constant/commonType";
 import {
   DAPP_ACTION_SEND_TRANSACTION,
   DAPP_ACTION_SIGN_MESSAGE,
   QA_SIGN_TRANSTRACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION,
-} from "../../../../constant/msgTypes";
-import { sendMsg } from "../../../../utils/commonMsg";
+} from "@/constant/msgTypes";
+import Button, { button_size, button_theme } from "@/popup/component/Button";
+import { ConfirmModal } from "@/popup/component/ConfirmModal";
+import DAppAdvance from "@/popup/component/DAppAdvance";
+import DappWebsite from "@/popup/component/DappWebsite";
+import Tabs from "@/popup/component/Tabs";
+import Toast from "@/popup/component/Toast";
+import { sendMsg } from "@/utils/commonMsg";
 import {
   checkLedgerConnect,
   requestSignDelegation,
   requestSignPayment,
-} from "../../../../utils/ledger";
+} from "@/utils/ledger";
 import {
   addressSlice,
   copyText,
@@ -29,15 +29,15 @@ import {
   isNumber,
   toNonExponential,
   trimSpace,
-} from "../../../../utils/utils";
-import { addressValid } from "../../../../utils/validator";
-import { toPretty } from "../../../../utils/zkUtils";
-import Button, { button_size, button_theme } from "../../../component/Button";
-import { ConfirmModal } from "../../../component/ConfirmModal";
-import DAppAdvance from "../../../component/DAppAdvance";
-import DappWebsite from "../../../component/DappWebsite";
-import Tabs from "../../../component/Tabs";
-import Toast from "../../../component/Toast";
+} from "@/utils/utils";
+import { addressValid } from "@/utils/validator";
+import { toPretty } from "@/utils/zkUtils";
+import { DAppActions } from "@aurowallet/mina-provider";
+import BigNumber from "bignumber.js";
+import cls from "classnames";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
 
@@ -58,12 +58,6 @@ const SIGN_MESSAGE_EVENT = [
   DAppActions.mina_signMessage,
   DAppActions.mina_signFields,
   DAppActions.mina_sign_JsonMessage,
-];
-/** mina sign event and broa */
-const SIGN_EVENT_WITH_BROADCASE = [
-  DAppActions.mina_sendTransaction,
-  DAppActions.mina_sendPayment,
-  DAppActions.mina_sendStakeDelegation,
 ];
 
 const SignView = ({
@@ -383,7 +377,7 @@ const SignView = ({
       return;
     }
     if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-      let amount = trimSpace(params.amount) || 0 ;
+      let amount = trimSpace(params.amount) || 0;
       let maxAmount = new BigNumber(amount).plus(fee).toString();
       if (new BigNumber(maxAmount).gt(balance)) {
         Toast.info(i18n.t("balanceNotEnough"));
@@ -798,4 +792,4 @@ const CommonRow = ({
   );
 };
 
-export default SignView
+export default SignView;

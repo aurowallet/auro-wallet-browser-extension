@@ -1,3 +1,19 @@
+import { getBalance } from "@/background/api";
+import {
+  DAPP_ACTION_CANCEL_ALL,
+  GET_SIGN_PARAMS,
+  WALLET_GET_CURRENT_ACCOUNT,
+} from "@/constant/msgTypes";
+import Loading from "@/popup/component/Loading";
+import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
+import { updateNetAccount } from "@/reducers/accountReducer";
+import { updateDAppOpenWindow } from "@/reducers/cache";
+import {
+  ENTRY_WITCH_ROUTE,
+  updateEntryWitchRoute,
+} from "@/reducers/entryRouteReducer";
+import { sendMsg } from "@/utils/commonMsg";
+import { getQueryStringArgs } from "@/utils/utils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -6,65 +22,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { getBalance, sendStakeTx, sendTx } from "../../../background/api";
-import { MAIN_COIN_CONFIG } from "../../../constant";
-import { ACCOUNT_TYPE } from "../../../constant/commonType";
-import {
-  DAPP_ACTION_CANCEL_ALL,
-  DAPP_ACTION_SEND_TRANSACTION,
-  DAPP_ACTION_SIGN_MESSAGE,
-  GET_SIGN_PARAMS,
-  QA_SIGN_TRANSTRACTION,
-  WALLET_CHECK_TX_STATUS,
-  WALLET_GET_CURRENT_ACCOUNT,
-  WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION,
-} from "../../../constant/msgTypes";
-import { updateNetAccount } from "../../../reducers/accountReducer";
-import { updateDAppOpenWindow } from "../../../reducers/cache";
-import {
-  ENTRY_WITCH_ROUTE,
-  updateEntryWitchRoute,
-} from "../../../reducers/entryRouteReducer";
-import { sendMsg } from "../../../utils/commonMsg";
-import {
-  checkLedgerConnect,
-  requestSignDelegation,
-  requestSignPayment,
-} from "../../../utils/ledger";
-import {
-  addressSlice,
-  copyText,
-  exportFile,
-  getQueryStringArgs,
-  getRealErrorMsg,
-  isNaturalNumber,
-  isNumber,
-  toNonExponential,
-  trimSpace,
-} from "../../../utils/utils";
-import { addressValid } from "../../../utils/validator";
-import { toPretty } from "../../../utils/zkUtils";
-import Button, { button_size, button_theme } from "../../component/Button";
-import { ConfirmModal } from "../../component/ConfirmModal";
-import DAppAdvance from "../../component/DAppAdvance";
-import DappWebsite from "../../component/DappWebsite";
-import Loading from "../../component/Loading";
-import ICON_Arrow from "../../component/SVG/ICON_Arrow";
-import Tabs from "../../component/Tabs";
-import Toast from "../../component/Toast";
 import { LockPage } from "../Lock";
-import { TypeRowInfo } from "./TypeRowInfo";
-import styles from "./index.module.scss";
 import SignView from "./SignView";
+import styles from "./index.module.scss";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
   gray: "rgba(0, 0, 0, 0.5)",
-};
-const FeeTypeEnum = {
-  site: "FEE_RECOMMED_SITE",
-  default: "FEE_RECOMMED_DEFAULT",
-  custom: "FEE_RECOMMED_CUSTOM",
 };
 
 /** page click event */
@@ -253,16 +217,13 @@ const SignTransaction = () => {
     },
     [pendingSignList, nextUseInferredNonce, goToHome]
   );
-  const goToHome = useCallback(
-    () => {
-      let url = dappWindow?.url;
-      if (url) {
-        dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-      }
-      dispatch(updateDAppOpenWindow({}));
-    },
-    [dappWindow, showMultiView]
-  );
+  const goToHome = useCallback(() => {
+    let url = dappWindow?.url;
+    if (url) {
+      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
+    }
+    dispatch(updateDAppOpenWindow({}));
+  }, [dappWindow, showMultiView]);
   /** reject all tx */
   const onRejectAll = useCallback(() => {
     sendMsg(

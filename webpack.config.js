@@ -151,6 +151,9 @@ module.exports = (env, argv) => {
         "path": require.resolve("path-browserify"),
         "buffer": require.resolve("safe-buffer"),
       },
+      alias: {
+        "@": path.resolve(__dirname, "src"),
+      }
     },
   };
   if (isDev) {
