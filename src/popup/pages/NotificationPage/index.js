@@ -47,7 +47,6 @@ const NotificationPage = () => {
     return getQueryStringArgs(url);
   });
 
-  console.log('lsp==params=',params);
   const goToHome = useCallback(() => {
     let url = dappWindow?.url;
     if (url) {
