@@ -153,6 +153,11 @@ class DappService {
             reject({ message: "Unsupport chain" })
             return
           }
+          const currentNetType = await this.requestNetwork()
+          if(currentNetType === params.chainId){
+            resolve(true)
+            return
+          }
         }
         if(type===Notification_TYPE.SwitchChain && notificationRequests.length>0){
           reject({ message: "have unfinished transaction" })
