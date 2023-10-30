@@ -26,7 +26,7 @@ function App() {
   const [showFullStatus,setShowFullStatus] = useState(false)
   useEffect(()=>{
     const url = new URL(window.location.href); 
-    const dappPageList = ['popup.html#/approve_page','popup.html#/request_sign','popup.html#/notification_page']
+    const dappPageList = ['popup.html#/approve_page','popup.html#/request_sign']
     const ledgerPageList= ['popup.html#/ledger_connect','popup.html#/ledger_page']
     let findIndex = false;
     [...dappPageList,...ledgerPageList].map((path)=>{

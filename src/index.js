@@ -186,8 +186,6 @@ async function getDappStatus(store){
             nextRoute = ENTRY_WITCH_ROUTE.DAPP_SIGN_PAGE
           }else if(window.channel === windowId.approve_page){
             nextRoute = ENTRY_WITCH_ROUTE.DAPP_APPROVE_PAGE
-          }else if(window.channel === windowId.zkpp_notification){
-            nextRoute = ENTRY_WITCH_ROUTE.DAPP_APPROVE_PAGE
           }
         }else{
           nextRoute = ENTRY_WITCH_ROUTE.HOME_PAGE

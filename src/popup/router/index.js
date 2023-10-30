@@ -41,8 +41,6 @@ import Staking from '../pages/Staking';
 import StakingList from '../pages/StakingList';
 import StakingTransfer from '../pages/StakingTransfer';
 import Welcome from '../pages/Welcome';
-import NotificationPage from '../pages/NotificationPage';
-
 
 
 
@@ -93,7 +91,6 @@ export function getAllRouter() {
 
         <Route path="/request_sign" component={SignTransaction} />
         <Route path="/approve_page" component={ApprovePage} />
-        <Route path="/notification_page" component={NotificationPage} />
         
         <Route path={"/app_connection"} component={AppConnection}/>
         <Route path={"/auto_lock"} component={AutoLock}/>

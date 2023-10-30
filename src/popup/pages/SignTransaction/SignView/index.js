@@ -581,7 +581,7 @@ const SignView = ({
   );
 
   return (
-    <>
+    <section className={styles.sectionSign}>
       <div className={styles.titleRow}>
         <p className={styles.title}>{pageTitle}</p>
         <div className={styles.netContainer}>
@@ -720,7 +720,7 @@ const SignView = ({
         title={i18n.t("transactionDetails")}
         waitingLedger={ledgerModalStatus}
       />
-    </>
+    </section>
   );
 };
 

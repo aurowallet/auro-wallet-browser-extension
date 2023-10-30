@@ -18,13 +18,14 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { LockPage } from "../Lock";
 import SignView from "./SignView";
 import styles from "./index.module.scss";
+import SwitchChain from "./SwitchChain";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
@@ -53,6 +54,7 @@ const SIGN_EVENT_WITH_BROADCASE = [
 const SignTransaction = () => {
   const dispatch = useDispatch();
   const history = useHistory();
+  const isFirstRequest = useRef(true)
 
   const [pendingSignList, setPendingSignList] = useState([]);
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
@@ -60,6 +62,11 @@ const SignTransaction = () => {
   const [leftArrowStatus, setLeftArrowStatus] = useState(true);
   const [rightArrowStatus, setRightArrowStatus] = useState(false);
   const [advanceData, setAdvanceData] = useState({});
+  const [notifyData, setNotifyData] = useState({});
+  const [state,setState]=useState({
+    signViewStatus:true,
+    notifyViewStatus:false
+  })
 
   const dappWindow = useSelector((state) => state.cache.dappWindow);
   const inferredNonce = useSelector(
@@ -101,14 +108,33 @@ const SignTransaction = () => {
         },
       },
       (res) => {
-        setPendingSignList(res);
-        // fetchAccountInfo
-        const firstSignParams = res[0];
-        const sendAction = firstSignParams?.params?.action || "";
-        if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-          Loading.show();
+        const {signRequests,notificationRequests,topItem} = res
+        setPendingSignList(signRequests);
+
+        if(notificationRequests.length>0){// current support 1 event
+          setNotifyData(notificationRequests[0])
         }
-        fetchAccountInfo();
+
+        if(topItem && topItem.params?.action === DAppActions.mina_switchChain){
+          setState({
+            notifyViewStatus:true,
+            signViewStatus:false
+          })
+        }else{
+          setState({
+            notifyViewStatus:false,
+            signViewStatus:true
+          })
+          if(isFirstRequest.current){
+            const firstSignParams = signRequests[0];
+            const sendAction = firstSignParams?.params?.action || "";
+            if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
+              Loading.show();
+            }
+            fetchAccountInfo();
+          }
+        }
+       
       }
     );
   }, [params, pendingSignList, fetchAccountInfo]);
@@ -125,10 +151,10 @@ const SignTransaction = () => {
   }, [dappWindow]);
   const fetchAccountInfo = useCallback(async () => {
     let account = await getBalance(currentAddress);
-    Loading.hide();
     if (account.publicKey) {
       dispatch(updateNetAccount(account));
     }
+    isFirstRequest.current = false
     Loading.hide();
   }, [dispatch, currentAddress]);
 
@@ -185,6 +211,17 @@ const SignTransaction = () => {
     setCurrentSignIndex(nextIndex);
   }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
+  const onRemoveNotify = useCallback(()=>{
+    setNotifyData({})
+    if(pendingSignList.length>0){
+      setState({
+        signViewStatus:true,
+        notifyViewStatus:false
+      })
+    }else{
+      goToHome();
+    }
+  },[pendingSignList])
   const onRemoveTx = useCallback(
     (openId, type, nonce) => {
       let signList = [...pendingSignList];
@@ -196,8 +233,18 @@ const SignTransaction = () => {
         }
         return checkStatus;
       });
-      if (signList.length === 0) {
-        goToHome();
+      
+      if (signList.length === 0) { 
+        if(notifyData.id){
+          setState({
+              signViewStatus:false,
+              notifyViewStatus:true
+            })
+          setPendingSignList(signList);
+          setCurrentSignIndex(0);
+        }else{
+          goToHome();
+        }
         return;
       }
       setPendingSignList(signList);
@@ -215,7 +262,7 @@ const SignTransaction = () => {
         }
       }
     },
-    [pendingSignList, nextUseInferredNonce, goToHome]
+    [pendingSignList, nextUseInferredNonce, goToHome,notifyData]
   );
   const goToHome = useCallback(() => {
     let url = dappWindow?.url;
@@ -235,8 +282,17 @@ const SignTransaction = () => {
       },
       async (params) => {}
     );
-    goToHome();
-  }, [pendingSignList]);
+    if(notifyData.id){
+      setPendingSignList([])
+      setState({
+          signViewStatus:false,
+          notifyViewStatus:true
+        })
+    }else{
+      goToHome();
+    }
+    
+  }, [pendingSignList,notifyData]);
 
   const onUpdateAdvance = useCallback(
     ({ id, fee, nonce }) => {
@@ -261,7 +317,7 @@ const SignTransaction = () => {
   }
   return (
     <div className={styles.conatiner}>
-      {showMultiView && (
+      {showMultiView && state.signViewStatus && (
         <div className={styles.multiTitleRow}>
           <div className={styles.multiTitle}>
             <Trans
@@ -295,7 +351,7 @@ const SignTransaction = () => {
           </div>
         </div>
       )}
-      <SignView
+      {state.signViewStatus && <SignView
         signParams={pendingSignList[currentSignIndex]}
         showMultiView={showMultiView}
         onRemoveTx={onRemoveTx}
@@ -303,8 +359,12 @@ const SignTransaction = () => {
         advanceData={advanceData}
         onUpdateAdvance={onUpdateAdvance}
         key={pendingSignList[currentSignIndex]?.id}
-      />
-      {showMultiView && (
+      />}
+      {state.notifyViewStatus && <SwitchChain 
+        notifyParams={notifyData}
+        onRemoveNotify={onRemoveNotify}
+      />}
+      {showMultiView && state.signViewStatus && (
         <div className={styles.multiBottomWrapper}>
           <div className={styles.multiBottom} onClick={onRejectAll}>
             {i18n.t("rejectAllTx", { total: pendingSignList.length })}
