@@ -486,7 +486,7 @@ const SignView = ({
     let memo = params?.feePayer?.memo || params?.memo || "";
     let content = params?.message || "";
     if (sendAction === DAppActions.mina_sendTransaction) {
-      content = toPretty(params?.transaction);
+      content = params?.transaction;
     } else if (sendAction === DAppActions.mina_signFields) {
       content = JSON.stringify(content);
     } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
@@ -504,7 +504,7 @@ const SignView = ({
         content: content,
       };
       if (sendAction === DAppActions.mina_sendTransaction) {
-        contentObj.isJsonData = true;
+        // contentObj.isJsonData = true;
       } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
         contentObj.isJsonData = true;
       }

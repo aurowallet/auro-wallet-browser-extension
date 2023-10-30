@@ -10,42 +10,10 @@ export const TypeRowInfo = ({ data }) => {
     </div>
   );
 };
-const ChildView = ({ data, count = 0 }) => {
-  if (typeof data === "object" && data !== null && data !== undefined) {
-    let keys = Object.keys(data).filter((key) => {
-      return key !== "label";
-    });
-    const label = data?.label || "";
-    if (label) {
-      keys = ["label", ...keys];
-    }
-    return keys.map((key, i) => {
-      const showData = data[key];
-      if (typeof showData === "object") {
-        return (
-          <div>
-            <ContentRow key={i} title={key} count={count} />
-            <ChildView data={showData} key={i} count={count + 2} />
-          </div>
-        );
-      } else {
-        if (key === "label") {
-          return <TitleRow key={i} title={showData} />;
-        } else {
-          return (
-            <ContentRow key={i} title={key} content={showData} count={count} />
-          );
-        }
-      }
-    });
-  } else {
-    return <ContentRow key={i} content={data} />;
-  }
+const ChildView = ({ data }) => {
+  return (<ContentRow title={data.label} content={data.value}/>)
 };
 
-const TitleRow = ({ title }) => {
-  return <div className={styles.rowTitle}>{title}</div>;
-};
 const ContentRow = ({ title, content, count = 0 }) => {
   const marginleftValue = useMemo(() => {
     return 10 * count + "px";
