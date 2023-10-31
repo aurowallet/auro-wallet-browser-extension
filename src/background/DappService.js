@@ -13,6 +13,8 @@ import { NET_CONFIG_MAP } from '@/constant/network';
 let signRequests = [];
 let approveRequests = [];
 let notificationRequests = []
+// Interceptor to prevent zkapp from requesting accounts at the same time
+let pendingApprove = undefined
 
 export const windowId = {
   approve_page: "approve_page",
@@ -430,6 +432,18 @@ class DappService {
           resolve([currentAccount])
           return
         }
+        if (this.popupId) {
+          let isExist = await checkAndTop(this.popupId, windowId.approve_page)
+          if (isExist) { 
+            reject({ message: "have pending approve" })
+            return
+          }
+        }
+        if(pendingApprove && pendingApprove.site.origin === site.origin){
+          reject({ message: "have pending approve" })
+          return
+        }
+        pendingApprove = { id, site}
         function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
           switch (action) {
@@ -479,6 +493,7 @@ class DappService {
         this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page?' + openParams,
           windowId.approve_page, "dapp")
         approveRequests.push({ id, site,popupId:this.popupId,resolve,reject })
+        pendingApprove=undefined
         this.setBadgeContent()
       } catch (error) {
         reject({ message: String(error) })
