@@ -2,11 +2,13 @@ import { sendStakeTx, sendTx } from "@/background/api";
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { ACCOUNT_TYPE } from "@/constant/commonType";
 import {
+  DAPP_ACTION_CREATE_NULLIFIER,
   DAPP_ACTION_SEND_TRANSACTION,
   DAPP_ACTION_SIGN_MESSAGE,
   QA_SIGN_TRANSTRACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION,
+  WALLET_SEND_NULLIFIER,
 } from "@/constant/msgTypes";
 import Button, { button_size, button_theme } from "@/popup/component/Button";
 import { ConfirmModal } from "@/popup/component/ConfirmModal";
@@ -58,6 +60,7 @@ const SIGN_MESSAGE_EVENT = [
   DAppActions.mina_signMessage,
   DAppActions.mina_signFields,
   DAppActions.mina_sign_JsonMessage,
+  DAppActions.mina_createNullifier,
 ];
 
 const SignView = ({
@@ -125,6 +128,9 @@ const SignView = ({
       case DAppActions.mina_sign_JsonMessage:
         resultAction = DAPP_ACTION_SIGN_MESSAGE;
         break;
+      case DAppActions.mina_sign_JsonMessage:
+        resultAction = DAPP_ACTION_CREATE_NULLIFIER
+        break;
       default:
         break;
     }
@@ -180,6 +186,13 @@ const SignView = ({
           case DAppActions.mina_sendTransaction:
             payload.hash = data.hash;
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
+            break;
+          case DAppActions.mina_createNullifier:
+            payload = {
+              ...payload,
+              ...data,
+            };
+            resultAction = DAPP_ACTION_CREATE_NULLIFIER;
             break;
           default:
             break;
@@ -319,9 +332,12 @@ const SignView = ({
     let connectAction = QA_SIGN_TRANSTRACTION;
     if (sendAction === DAppActions.mina_signFields) {
       connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION;
+    }else if(sendAction === DAppActions.mina_createNullifier){
+      connectAction = WALLET_SEND_NULLIFIER;
     }
     if (sendAction === DAppActions.mina_sign_JsonMessage) {
       payload.sendAction = DAppActions.mina_signMessage;
+      payload.message = JSON.stringify(payload.message)
     } else {
       payload.sendAction = sendAction;
     }
@@ -487,12 +503,8 @@ const SignView = ({
     let content = params?.message || "";
     if (sendAction === DAppActions.mina_sendTransaction) {
       content = params?.transaction;
-    } else if (sendAction === DAppActions.mina_signFields) {
+    } else if (sendAction === DAppActions.mina_signFields || sendAction === DAppActions.mina_createNullifier) {
       content = JSON.stringify(content);
-    } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
-      try {
-        content = JSON.parse(content);
-      } catch (error) {}
     }
 
     let tabList = [];

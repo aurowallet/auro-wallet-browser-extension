@@ -1,7 +1,7 @@
 import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
-import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/msgTypes';
+import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/msgTypes';
 import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
 import { getArrayDiff, getCurrentNetConfig, getOriginFromUrl, isNumber } from '../utils/utils';
 import { addressValid } from '../utils/validator';
@@ -75,14 +75,14 @@ class DappService {
         break;
       case DAppActions.mina_sendPayment:
         this.requestCallback(
-          () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.TRANSFER),
+          () => this.signTransaction(id, { ...params, action }, site),
           id,
           sendResponse
         )
         break;
       case DAppActions.mina_sendStakeDelegation:
         this.requestCallback(
-          () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.STAKING),
+          () => this.signTransaction(id, { ...params, action }, site),
           id,
           sendResponse
         )
@@ -90,7 +90,7 @@ class DappService {
 
       case DAppActions.mina_sendTransaction:
         this.requestCallback(
-          () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.PARTY),
+          () => this.signTransaction(id, { ...params, action }, site),
           id,
           sendResponse
         )
@@ -99,7 +99,7 @@ class DappService {
       case DAppActions.mina_sign_JsonMessage:
       case DAppActions.mina_signFields:
         this.requestCallback(
-          () => this.signTransaction(id, { ...params, action }, site, SIGN_TYPE.MESSAGE),
+          () => this.signTransaction(id, { ...params, action }, site),
           id,
           sendResponse
         )
@@ -128,15 +128,22 @@ class DappService {
           break;
       case DAppActions.mina_switchChain:
         this.requestCallback(
-          () => this.signTransaction(id, { ...params, action }, site, Notification_TYPE.SwitchChain),
+          () => this.signTransaction(id, { ...params, action }, site),
           id,
           sendResponse
         )
         break;
+      case DAppActions.mina_createNullifier:
+          this.requestCallback(
+            () => this.signTransaction(id, { ...params, action }, site),
+            id,
+            sendResponse
+          )
+          break;
     }
   }
   
-  async signTransaction(id, params, site, type) {
+  async signTransaction(id, params, site) {
     return new Promise(async (resolve, reject) => {
       let that = this
       try {
@@ -146,7 +153,8 @@ class DappService {
           reject({ message: "please connect first" })
           return
         }
-        if(params.action === DAppActions.mina_switchChain){
+        const sendAction = params.action 
+        if(sendAction === DAppActions.mina_switchChain){
           const currentSupportChainList = Object.keys(NET_CONFIG_MAP);
           const nextChainIndex = currentSupportChainList.indexOf(params.chainId);
           if (nextChainIndex === -1) {
@@ -159,19 +167,23 @@ class DappService {
             return
           }
         }
-        if(type===Notification_TYPE.SwitchChain && notificationRequests.length>0){
+        if(sendAction === DAppActions.mina_switchChain && notificationRequests.length>0){
           reject({ message: "have unfinished transaction" })
           return
         }
-        if (type !== SIGN_TYPE.MESSAGE && type !== SIGN_TYPE.PARTY && type!==Notification_TYPE.SwitchChain) {
+        
+        const checkAddressAction = [
+          DAppActions.mina_sendPayment,DAppActions.mina_sendStakeDelegation
+        ]
+        if(checkAddressAction.indexOf(sendAction)!==-1){
           if (params.to.length <= 0 || !addressValid(params.to)) {
-            let errorMessage = type === SIGN_TYPE.TRANSFER ? "send address error" : "delegate address error"
+            let errorMessage = sendAction === DAppActions.mina_sendPayment ? "send address error" : "delegate address error"
             reject({ message: errorMessage })
             return
           }
         }
 
-        if (type === SIGN_TYPE.TRANSFER) {
+        if (sendAction === DAppActions.mina_sendPayment) {
           if (!isNumber(params.amount)) {
             reject({ message: "amount error" })
             return
@@ -188,7 +200,7 @@ class DappService {
                 item.reject({ message: "user reject", code: 4001 })
             })
             signRequests=[]
-            that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+            that.setBadgeContent()
             if(notificationRequests.length === 0){
               closePopupWindow(windowId.request_sign) 
               extension.runtime.onMessage.removeListener(onMessage)
@@ -220,7 +232,7 @@ class DappService {
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
-                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                    that.setBadgeContent()
                   } else if (payload && payload.cancel) {
                     nextReject({ message: "user reject", code: 4001 })
                     that.removeSignParamsByOpenId(payload.id)
@@ -229,7 +241,7 @@ class DappService {
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
-                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                    that.setBadgeContent()
                   } else {
                     let msg = payload.message || "transaction error"
                     nextReject({ message: msg })
@@ -250,7 +262,7 @@ class DappService {
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
-                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                    that.setBadgeContent()
                     
                   } else {
                     nextReject({ message: "user reject", code: 4001 })
@@ -260,7 +272,7 @@ class DappService {
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
-                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                    that.setBadgeContent()
                   }
                   sendResponse()
                 return true
@@ -278,7 +290,7 @@ class DappService {
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
-                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                    that.setBadgeContent()
                   }else if(payload.status){
                     nextResolve(true)
                     that.removeNotifyParamsByOpenId(payload.id)
@@ -287,12 +299,39 @@ class DappService {
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
-                    that.setBadgeContent(windowId.request_sign, BADGE_MINUS)
+                    that.setBadgeContent()
                   }else{
                       let msg = payload.message || "Unsupport chain"
                       nextReject({ message: msg })
                   }
-                }else{
+                }
+                sendResponse()
+                return true
+              case DAPP_ACTION_CREATE_NULLIFIER:
+                if (payload.resultOrigin !== site.origin) {
+                  nextReject({ message: "origin dismatch" })
+                  return
+                }
+                if (payload && payload.private) {
+                  nextResolve(payload)
+                  that.removeSignParamsByOpenId(payload.id)
+                  if(signRequests.length == 0 && notificationRequests.length ===0){
+                    closePopupWindow(windowId.request_sign)
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    that.signEventListener = undefined
+                  }
+                  that.setBadgeContent()
+                  delete payload.resultOrigin
+                  delete payload.id
+                } else {
+                  nextReject({ message: "user reject", code: 4001 })
+                  that.removeSignParamsByOpenId(payload.id)
+                  if(signRequests.length == 0 && notificationRequests.length ===0){
+                    closePopupWindow(windowId.request_sign)
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    that.signEventListener = undefined
+                  }
+                  that.setBadgeContent()
                 }
                 sendResponse()
                 return true
@@ -307,12 +346,12 @@ class DappService {
         let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon, openId }).toString()
         this.popupId = await this.dappOpenPopWindow('./popup.html#/request_sign?' + openParams, windowId.request_sign, "dapp")
         let time = new Date().getTime()
-        if(type === Notification_TYPE.SwitchChain){
+        if(sendAction === DAppActions.mina_switchChain){
           notificationRequests.push({ id, params, site,popupId:this.popupId,resolve,reject,time })
         }else{
           signRequests.push({ id, params, site,popupId:this.popupId,resolve,reject,time })
         }
-        this.setBadgeContent(windowId.request_sign, BADGE_ADD)
+        this.setBadgeContent()
       } catch (error) {
         reject({ message: String(error) })
       }
@@ -340,7 +379,7 @@ class DappService {
         signRequests = []
         approveRequests = []
         notificationRequests = []
-        that.setBadgeContent(channel, BADGE_MINUS)
+        that.setBadgeContent()
         that.clearCurrentOpenWindow()
       }
     }
@@ -400,7 +439,7 @@ class DappService {
                   return
                 }
                 closePopupWindow(windowId.approve_page)
-                that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
+                that.setBadgeContent()
                 if (payload.selectAccount && payload.selectAccount.length > 0) {
                   let account = payload.selectAccount[0]
                   let accountApprovedUrlList = that.dappStore.getState().accountApprovedUrlList
@@ -426,7 +465,7 @@ class DappService {
                 extension.runtime.onMessage.removeListener(onMessage)
                 resolve([payload.account])
                 closePopupWindow(payload.page)
-                that.setBadgeContent(windowId.approve_page, BADGE_MINUS)
+                that.setBadgeContent()
                 sendResponse()
                 return true
             default:
@@ -440,14 +479,14 @@ class DappService {
         this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page?' + openParams,
           windowId.approve_page, "dapp")
         approveRequests.push({ id, site,popupId:this.popupId,resolve,reject })
-        this.setBadgeContent(windowId.approve_page, BADGE_ADD)
+        this.setBadgeContent()
       } catch (error) {
         reject({ message: String(error) })
       }
     })
 
   }
-  setBadgeContent(content, type) {
+  setBadgeContent() {
     const list = [...approveRequests,...signRequests,...notificationRequests]
     if (list.length > 0) {
       chrome.action?.setBadgeText({ text: list.length.toString() });

@@ -268,3 +268,9 @@ export const DAPP_ACTION_SWITCH_CHAIN = "DAPP_ACTION_SWITCH_CHAIN"
 
 /** cancel all pending zk tx */
 export const DAPP_ACTION_CANCEL_ALL = "DAPP_ACTION_CANCEL_ALL"
+
+/** DAPP createNullifier event */
+export const DAPP_ACTION_CREATE_NULLIFIER = "DAPP_ACTION_CREATE_NULLIFIER"
+
+/** extension createNullifier event */
+export const WALLET_SEND_NULLIFIER = "WALLET_SEND_NULLIFIER"

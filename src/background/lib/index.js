@@ -191,3 +191,18 @@ export async function verifyFieldsMessage(publicKey,signature,fields) {
     }
     return verifyResult
 }
+
+export async function createNullifier(privateKey,params){
+    let createResult
+    try {
+        let fields = params.message
+        const nextFields = fields.map(BigInt)
+        let signClient = await getSignClient()
+        createResult = signClient.createNullifier(nextFields, privateKey)
+        createResult.data = fields
+    } catch (err) {
+        let errorMessage = getRealErrorMsg(err)||i18n.t("buildFailed")
+        createResult = { error: { message: errorMessage } }
+    }
+    return createResult
+}

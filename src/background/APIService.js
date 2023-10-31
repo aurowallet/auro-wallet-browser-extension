@@ -2,7 +2,7 @@ import { LOCK_TIME_DEFAULT } from '../constant';
 import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/msgTypes';
 import '../i18n';
 import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
-import { signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
+import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
@@ -735,6 +735,14 @@ class APIService {
         return signedResult
     }
 
+    createNullifierByApi=async(params)=>{
+        const privateKey = await this.getCurrentPrivateKey()
+        let createResult = await createNullifier(privateKey,params)
+        if (createResult.error) {
+            return { error: createResult.error }
+        }
+        return createResult
+    }
     notification = async (hash) => {
         let netConfig = await getCurrentNetConfig()
         let myNotificationID
