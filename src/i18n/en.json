@@ -290,5 +290,6 @@
   "target":"Target",
   "pendingZkTx":"Waiting requests <bold>{{current}}/{{total}}</bold>",
   "rejectAllTx":"Reject {{total}} transactions",
-  "txHistoryTip": "Unable to provide transaction history"
+  "txHistoryTip": "Unable to provide transaction history",
+  "allowAdd":"Allow this site to add a network?"
 }

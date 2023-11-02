@@ -301,7 +301,7 @@ const AddChainView = ({ notifyParams }) => {
           siteUrl={notifyParams.site?.origin}
         />
       </div>
-      <p className={styles.accountTip}>{i18n.t("allowSwitch")}</p>
+      <p className={styles.accountTip}>{i18n.t("allowAdd")}</p>
       <div className={styles.nodeWrapper}>
         <div className={styles.nodeTitle}>{i18n.t("name")}</div>
         <div className={styles.nodeContent}>{name}</div>
