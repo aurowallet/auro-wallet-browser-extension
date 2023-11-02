@@ -25,7 +25,7 @@ import { useHistory } from "react-router-dom";
 import { LockPage } from "../Lock";
 import SignView from "./SignView";
 import styles from "./index.module.scss";
-import SwitchChain from "./SwitchChain";
+import ZkAppChainView from "./ZkAppChainView";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
@@ -51,10 +51,15 @@ const SIGN_EVENT_WITH_BROADCASE = [
   DAppActions.mina_sendStakeDelegation,
 ];
 
+const ZKAPP_CHAIN_ACTION = [
+  DAppActions.mina_addChain,
+  DAppActions.mina_switchChain,
+];
+
 const SignTransaction = () => {
   const dispatch = useDispatch();
   const history = useHistory();
-  const isFirstRequest = useRef(true)
+  const isFirstRequest = useRef(true);
 
   const [pendingSignList, setPendingSignList] = useState([]);
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
@@ -63,10 +68,10 @@ const SignTransaction = () => {
   const [rightArrowStatus, setRightArrowStatus] = useState(false);
   const [advanceData, setAdvanceData] = useState({});
   const [notifyData, setNotifyData] = useState({});
-  const [state,setState]=useState({
-    signViewStatus:true,
-    notifyViewStatus:false
-  })
+  const [state, setState] = useState({
+    signViewStatus: true,
+    notifyViewStatus: false,
+  });
 
   const dappWindow = useSelector((state) => state.cache.dappWindow);
   const inferredNonce = useSelector(
@@ -108,24 +113,28 @@ const SignTransaction = () => {
         },
       },
       (res) => {
-        const {signRequests,notificationRequests,topItem} = res
+        const { signRequests, notificationRequests, topItem } = res;
         setPendingSignList(signRequests);
 
-        if(notificationRequests.length>0){// current support 1 event
-          setNotifyData(notificationRequests[0])
+        if (notificationRequests.length > 0) {
+          // current support 1 event
+          setNotifyData(notificationRequests[0]);
         }
 
-        if(topItem && topItem.params?.action === DAppActions.mina_switchChain){
+        if (
+          topItem &&
+          ZKAPP_CHAIN_ACTION.indexOf(topItem.params?.action) !== -1
+        ) {
           setState({
-            notifyViewStatus:true,
-            signViewStatus:false
-          })
-        }else{
+            notifyViewStatus: true,
+            signViewStatus: false,
+          });
+        } else {
           setState({
-            notifyViewStatus:false,
-            signViewStatus:true
-          })
-          if(isFirstRequest.current){
+            notifyViewStatus: false,
+            signViewStatus: true,
+          });
+          if (isFirstRequest.current) {
             const firstSignParams = signRequests[0];
             const sendAction = firstSignParams?.params?.action || "";
             if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
@@ -134,7 +143,6 @@ const SignTransaction = () => {
             fetchAccountInfo();
           }
         }
-       
       }
     );
   }, [params, pendingSignList, fetchAccountInfo]);
@@ -154,7 +162,7 @@ const SignTransaction = () => {
     if (account.publicKey) {
       dispatch(updateNetAccount(account));
     }
-    isFirstRequest.current = false
+    isFirstRequest.current = false;
     Loading.hide();
   }, [dispatch, currentAddress]);
 
@@ -211,17 +219,17 @@ const SignTransaction = () => {
     setCurrentSignIndex(nextIndex);
   }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
-  const onRemoveNotify = useCallback(()=>{
-    setNotifyData({})
-    if(pendingSignList.length>0){
+  const onRemoveNotify = useCallback(() => {
+    setNotifyData({});
+    if (pendingSignList.length > 0) {
       setState({
-        signViewStatus:true,
-        notifyViewStatus:false
-      })
-    }else{
+        signViewStatus: true,
+        notifyViewStatus: false,
+      });
+    } else {
       goToHome();
     }
-  },[pendingSignList])
+  }, [pendingSignList]);
   const onRemoveTx = useCallback(
     (openId, type, nonce) => {
       let signList = [...pendingSignList];
@@ -233,16 +241,16 @@ const SignTransaction = () => {
         }
         return checkStatus;
       });
-      
-      if (signList.length === 0) { 
-        if(notifyData.id){
+
+      if (signList.length === 0) {
+        if (notifyData.id) {
           setState({
-              signViewStatus:false,
-              notifyViewStatus:true
-            })
+            signViewStatus: false,
+            notifyViewStatus: true,
+          });
           setPendingSignList(signList);
           setCurrentSignIndex(0);
-        }else{
+        } else {
           goToHome();
         }
         return;
@@ -262,7 +270,7 @@ const SignTransaction = () => {
         }
       }
     },
-    [pendingSignList, nextUseInferredNonce, goToHome,notifyData]
+    [pendingSignList, nextUseInferredNonce, goToHome, notifyData]
   );
   const goToHome = useCallback(() => {
     let url = dappWindow?.url;
@@ -282,17 +290,16 @@ const SignTransaction = () => {
       },
       async (params) => {}
     );
-    if(notifyData.id){
-      setPendingSignList([])
+    if (notifyData.id) {
+      setPendingSignList([]);
       setState({
-          signViewStatus:false,
-          notifyViewStatus:true
-        })
-    }else{
+        signViewStatus: false,
+        notifyViewStatus: true,
+      });
+    } else {
       goToHome();
     }
-    
-  }, [pendingSignList,notifyData]);
+  }, [pendingSignList, notifyData]);
 
   const onUpdateAdvance = useCallback(
     ({ id, fee, nonce }) => {
@@ -351,19 +358,23 @@ const SignTransaction = () => {
           </div>
         </div>
       )}
-      {state.signViewStatus && <SignView
-        signParams={pendingSignList[currentSignIndex]}
-        showMultiView={showMultiView}
-        onRemoveTx={onRemoveTx}
-        inferredNonce={nextUseInferredNonce}
-        advanceData={advanceData}
-        onUpdateAdvance={onUpdateAdvance}
-        key={pendingSignList[currentSignIndex]?.id}
-      />}
-      {state.notifyViewStatus && <SwitchChain 
-        notifyParams={notifyData}
-        onRemoveNotify={onRemoveNotify}
-      />}
+      {state.signViewStatus && (
+        <SignView
+          signParams={pendingSignList[currentSignIndex]}
+          showMultiView={showMultiView}
+          onRemoveTx={onRemoveTx}
+          inferredNonce={nextUseInferredNonce}
+          advanceData={advanceData}
+          onUpdateAdvance={onUpdateAdvance}
+          key={pendingSignList[currentSignIndex]?.id}
+        />
+      )}
+      {state.notifyViewStatus && (
+        <ZkAppChainView
+          notifyParams={notifyData}
+          onRemoveNotify={onRemoveNotify}
+        />
+      )}
       {showMultiView && state.signViewStatus && (
         <div className={styles.multiBottomWrapper}>
           <div className={styles.multiBottom} onClick={onRejectAll}>

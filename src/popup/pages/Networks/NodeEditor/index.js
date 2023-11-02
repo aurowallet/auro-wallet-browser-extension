@@ -10,7 +10,7 @@ import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../../constant/storageK
 import { BASE_unknown_config, NET_CONFIG_MAP } from "../../../../constant/network";
 import { updateShouldRequest, updateStakingRefresh } from "../../../../reducers/accountReducer";
 import { NET_CONFIG_ADD, updateNetChainIdConfig, updateNetConfig } from "../../../../reducers/network";
-import { sendNetworkChangeMsg, trimSpace, urlValid } from "../../../../utils/utils";
+import { checkNetworkUrlExist, sendNetworkChangeMsg, trimSpace, urlValid } from "../../../../utils/utils";
 import Button from "../../../component/Button";
 import CustomView from "../../../component/CustomView";
 import Input from "../../../component/Input";
@@ -98,18 +98,6 @@ const NodeEditor = ({ }) => {
         }
     }, [editorType,i18n])
 
-    const checkExist = (url) => {
-        let list = netConfigList
-        let sameIndex = -1
-        for (let index = 0; index < list.length; index++) {
-            const net = list[index];
-            if (net.url === url) {
-                sameIndex = index
-                break
-            }
-        }
-        return sameIndex
-    }
     const checkGqlHealth = (async (url) => {
         let chainData = await getNodeChainId(url)
         let chainId = chainData?.daemonStatus?.chainId || ""
@@ -143,14 +131,13 @@ const NodeEditor = ({ }) => {
         }
 
 
-        let existIndex = checkExist(urlInput) 
-        if (existIndex !== -1) {
+        let exist = checkNetworkUrlExist(netConfigList,urlInput)////checkExist(urlInput) 
+        if (exist.index !== -1) {
             if (editorType === NodeEditorType.add) {
                 setErrorTip(i18n.t('nodeAddressExists'))
                 return {}
             } else {
-                let existConfig = netConfigList[existIndex]
-                if (existConfig.id !== editItem.id) {
+                if (exist.config.id !== editItem.id) {
                     Toast.info(i18n.t('nodeAddressExists'))
                     return {}
                 }

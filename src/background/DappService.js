@@ -3,7 +3,7 @@ import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/msgTypes';
 import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
-import { getArrayDiff, getCurrentNetConfig, getOriginFromUrl, isNumber } from '../utils/utils';
+import { checkNetworkUrlExist, getArrayDiff, getCurrentNetConfig, getLocalNetworkList, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
@@ -20,19 +20,10 @@ export const windowId = {
   approve_page: "approve_page",
   request_sign: "request_sign",
 }
-
-const SIGN_TYPE = {
-  TRANSFER: "TRANSFER",
-  STAKING: "STAKING",
-  MESSAGE: "MESSAGE",
-  PARTY:"PARTY"
-}
-
-const Notification_TYPE = {
-  SwitchChain: "SwitchChain",
-}
-const BADGE_ADD = "BADGE_ADD"
-const BADGE_MINUS = "BADGE_MINUS"
+const ZKAPP_CHAIN_ACTION = [
+  DAppActions.mina_addChain,
+  DAppActions.mina_switchChain
+]
 
 class DappService {
   constructor() {
@@ -135,6 +126,13 @@ class DappService {
           sendResponse
         )
         break;
+      case DAppActions.mina_addChain:
+        this.requestCallback(
+          () => this.signTransaction(id, { ...params, action }, site),
+          id,
+          sendResponse
+        )
+        break;
       case DAppActions.mina_createNullifier:
           this.requestCallback(
             () => this.signTransaction(id, { ...params, action }, site),
@@ -149,6 +147,7 @@ class DappService {
     return new Promise(async (resolve, reject) => {
       let that = this
       try {
+        let nextParams = {...params}
         let currentAccount = this.getCurrentAccountAddress()
         let approveAccountStatus = this.getCurrentAccountConnectStatus(site.origin, currentAccount)
         if (!approveAccountStatus) {
@@ -156,6 +155,16 @@ class DappService {
           return
         }
         const sendAction = params.action 
+
+        if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1 && notificationRequests.length>0){
+          reject({ message: "have unfinished transaction" })
+          return
+        }
+
+        let currentChainInfo 
+        if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1){
+          currentChainInfo = await this.requestCurrentNetwork()
+        }
         if(sendAction === DAppActions.mina_switchChain){
           const currentSupportChainList = Object.keys(NET_CONFIG_MAP);
           const nextChainIndex = currentSupportChainList.indexOf(params.chainId);
@@ -163,17 +172,38 @@ class DappService {
             reject({ message: "Unsupport chain" })
             return
           }
-          const currentNetType = await this.requestNetwork()
-          if(currentNetType === params.chainId){
-            resolve(true)
+          if(currentChainInfo.netType === params.chainId){
+            resolve({
+              chainId:currentChainInfo.netType,
+              name:currentChainInfo.name
+            })
             return
           }
         }
-        if(sendAction === DAppActions.mina_switchChain && notificationRequests.length>0){
-          reject({ message: "have unfinished transaction" })
-          return
+        if(sendAction === DAppActions.mina_addChain){
+          const realAddUrl = decodeURIComponent(params.url)
+          if (!urlValid(realAddUrl)) {
+            reject({ message: "Invalid URL" })
+            return
+          }
+          if (!params.name) {
+            reject({ message: "Invalid Name" })
+            return
+          }
+          let exist = await this.checkNetworkIsExist(realAddUrl)
+          if(exist.index!==-1){
+            if(exist.config.url === currentChainInfo.url){
+              resolve({
+                chainId:currentChainInfo.netType,
+                name:currentChainInfo.name
+              })
+              return 
+            }else{
+              nextParams.action = DAppActions.mina_switchChain
+              nextParams.targetConfig = exist.config
+            }
+          }
         }
-        
         const checkAddressAction = [
           DAppActions.mina_sendPayment,DAppActions.mina_sendStakeDelegation
         ]
@@ -293,8 +323,8 @@ class DappService {
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
-                  }else if(payload.status){
-                    nextResolve(true)
+                  }else if(payload.nextConfig){
+                    nextResolve(payload.nextConfig)
                     that.removeNotifyParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && notificationRequests.length ===0){
                       closePopupWindow(windowId.request_sign)
@@ -303,7 +333,7 @@ class DappService {
                     }
                     that.setBadgeContent()
                   }else{
-                      let msg = payload.message || "Unsupport chain"
+                      let msg = payload.message
                       nextReject({ message: msg })
                   }
                 }
@@ -348,10 +378,10 @@ class DappService {
         let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon, openId }).toString()
         this.popupId = await this.dappOpenPopWindow('./popup.html#/request_sign?' + openParams, windowId.request_sign, "dapp")
         let time = new Date().getTime()
-        if(sendAction === DAppActions.mina_switchChain){
-          notificationRequests.push({ id, params, site,popupId:this.popupId,resolve,reject,time })
+        if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1){
+          notificationRequests.push({ id, params:nextParams, site,popupId:this.popupId,resolve,reject,time })
         }else{
-          signRequests.push({ id, params, site,popupId:this.popupId,resolve,reject,time })
+          signRequests.push({ id, params:nextParams, site,popupId:this.popupId,resolve,reject,time })
         }
         this.setBadgeContent()
       } catch (error) {
@@ -704,7 +734,10 @@ class DappService {
     let netType = currentNet.netType || ""
     let message = {
       action: "chainChanged",
-      result: netType
+      result: {
+        chainId:netType,
+        name:currentNet.name,
+      }
     }
     this.tabNotify(message)
   }
@@ -756,17 +789,24 @@ class DappService {
   requestNetwork() {
     return new Promise(async (resolve) => {
       let netConfig = await getCurrentNetConfig()
-      let netType = ''
-      if (netConfig.netType) {
-        netType = netConfig.netType
-      }
-      resolve(netType)
+      resolve({chainId:netConfig.netType,name:netConfig.name})
+    })
+  }
+  requestCurrentNetwork() {
+    return new Promise(async (resolve) => {
+      let currentNetConfig = await getCurrentNetConfig()
+      resolve(currentNetConfig)
     })
   }
   getAppConnectionList(address){
     let accountApprovedUrlList = this.dappStore.getState().accountApprovedUrlList
     let currentAccountApproved = accountApprovedUrlList[address] || []
     return currentAccountApproved
+  }
+  async checkNetworkIsExist(url){
+     let networkList = await getLocalNetworkList()
+      let exist = checkNetworkUrlExist(networkList, url);
+      return exist
   }
 }
 const dappService = new DappService()

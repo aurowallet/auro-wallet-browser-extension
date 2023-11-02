@@ -224,6 +224,14 @@ export async function getCurrentNetConfig() {
     }
     return {}
 }
+/** get all network that contains custom add */
+export async function getLocalNetworkList() {
+    let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
+    if (localNetConfig) {
+        return localNetConfig.netList
+    }
+    return []
+}
 /**
  * Return errors for processing transfers, etc.
  * @param {*} error 
@@ -397,4 +405,20 @@ export function clearLocalCache(){
         let localKey = LOCAL_CACHE_KEYS[keys]
         removeLocal(localKey)
     }
+}
+
+/** check url is exist in netConfig */
+export function checkNetworkUrlExist(netConfigList,url){
+    let list = [...netConfigList]
+    let sameIndex = -1
+    let config
+    for (let index = 0; index < list.length; index++) {
+        const net = list[index];
+        if (net.url === url) {
+            sameIndex = index
+            config = net
+            break
+        }
+    }
+    return {index:sameIndex,config}
 }

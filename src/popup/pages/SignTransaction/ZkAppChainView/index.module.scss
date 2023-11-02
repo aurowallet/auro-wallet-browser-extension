@@ -8,7 +8,7 @@
         position: relative;
         justify-content: space-between;
     }
-    .title { 
+    .title {
         font-weight: 600;
         font-size: 18px;
         line-height: 21px;
@@ -16,7 +16,7 @@
         margin: 0;
     }
     .netContainer {
-        background: rgba(0, 0, 0, 0.10);
+        background: rgba(0, 0, 0, 0.1);
         border-radius: 16px;
         padding: 4px 10px;
         display: flex;
@@ -29,7 +29,7 @@
             margin-right: 4px;
             border-radius: 50%;
         }
-        .netContent{
+        .netContent {
             font-weight: 500;
             font-size: 12px;
             line-height: 14px;
@@ -38,7 +38,7 @@
         }
     }
     .content {
-        margin-top: 20px;
+        // margin-top: 20px;
         padding: 0px 20px;
         .accountTip {
             font-size: 14px;
@@ -59,7 +59,6 @@
             line-height: 20px;
             color: rgba(0, 0, 0, 0.3);
         }
-        
     }
     .btnGroup {
         position: absolute;
@@ -87,31 +86,77 @@
         font-size: 12px;
         line-height: 14px;
         color: rgba(0, 0, 0, 0.5);
-        margin: 0 0 4px 0 ;
+        margin: 0 0 4px 0;
     }
     .rowContent {
         font-weight: 500;
         font-size: 16px;
         color: #000000;
         margin: 0;
+        white-space: pre;
     }
-    .rowArrow{
+    .rowLeft {
+        text-align: left;
+    }
+    .rowRight {
+        text-align: right;
+    }
+    .rowDesc {
+        font-size: 14px;
+    }
+    .rowArrow {
         height: 100%;
         position: absolute;
         left: 50%;
         top: 50%;
-        transform: translate(-50%,-50%);
+        transform: translate(-50%, -50%);
 
         display: flex;
         align-items: center;
         justify-content: center;
-        
-        img{
+
+        img {
             width: 10px;
         }
     }
     .rightTitle {
         text-align: right;
         white-space: pre;
+    }
+    .addTipContainer {
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        background: rgba(214, 90, 90, 0.1);
+        width: 100vw;
+        margin-left: -20px;
+        .addTip {
+            font-size: 14px;
+            line-height: 20px;
+            color: #d65a5a;
+        }
+    }
+    .nodeWrapper {
+        margin-top: 20px;
+        border-radius: 4px;
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        padding: 10px;
+        flex-direction: column;
+        >:not(:first-child) {
+            margin-top: 10px;
+        }
+    }
+    .nodeTitle {
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 14px;
+        font-weight: 700;
+    }
+    .nodeContent {
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 14px;
+        font-weight: 400;
+    }
+    .mt20{
+        margin-top: 20px;
     }
 }

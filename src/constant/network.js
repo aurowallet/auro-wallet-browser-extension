@@ -6,13 +6,13 @@ import {
 } from "../../config";
 
 /** all network type contain unknown */
-export const NET_CONFIG_TYPE = {
-  Mainnet: "Mainnet",
-  Devnet: "Devnet",
-  Berkeley: "Berkeley",
-  Testworld2: "Testworld2",
-  Unknown: "Unknown",
-};
+export const NET_CONFIG_TYPE = { 
+  Mainnet: "mainnet",
+  Devnet: "devnet",
+  Berkeley: "berkeley",
+  Testworld2: "testworld2",
+  Unknown: "unknown",
+}; 
 /** main net config */
 const base_mainnet_config = {
   netType: NET_CONFIG_TYPE.Mainnet,
