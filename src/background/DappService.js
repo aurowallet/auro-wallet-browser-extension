@@ -602,12 +602,7 @@ class DappService {
   getCurrentAccountConnectStatus(siteUrl, currentAddress = "") {
     let accountApprovedUrlList = this.getDappStore().accountApprovedUrlList
     let currentAccountApproved = accountApprovedUrlList[currentAddress] || []
-
-    if (currentAccountApproved.indexOf(siteUrl) !== -1) {
-      return true
-    } else {
-      return false
-    }
+    return currentAccountApproved.indexOf(siteUrl) !== -1
   }
 
   getConncetStatus(siteUrl, address) {
@@ -689,10 +684,7 @@ class DappService {
     return apiService.getLockStatus()
   }
   getCurrentAccountAddress() {
-    let isUnlocked = this.getAppLockStatus()
-    if (isUnlocked) {
-      return apiService.getCurrentAccountAddress()
-    }
+    return apiService.getCurrentAccountAddress()
   }
   changeCurrentConnecting(address, currentAddress) {
     let accountApprovedUrlList = this.getDappStore().accountApprovedUrlList

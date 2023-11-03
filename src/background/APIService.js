@@ -165,6 +165,7 @@ class APIService {
         if (!status) {
             let nextState = this.initLockedState()
             nextState.autoLockTime = this.getStore().autoLockTime
+            nextState.currentAccount.address = this.getCurrentAccountAddress()
             this.memStore.updateState(nextState)
             extension.runtime.sendMessage({
                 type: FROM_BACK_TO_RECORD,
