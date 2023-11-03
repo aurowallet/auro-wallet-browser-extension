@@ -8,6 +8,7 @@ import { NET_CONFIG_NOT_SUPPORT_STAKING, NET_CONFIG_NOT_SUPPORT_TX_HISTORY } fro
 import { sendMsg } from "./commonMsg";
 import bs58check from "bs58check";
 import {extGetLocal} from "../background/extensionStorage";
+import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
 /**
  * address slice
  * @param {*} address
@@ -421,4 +422,16 @@ export function checkNetworkUrlExist(netConfigList,url){
         }
     }
     return {index:sameIndex,config}
+} 
+
+export function getMessageFromCode(
+    code,
+    fallbackMessage = FALLBACK_MESSAGE
+  ) {
+    const codeString = code.toString();
+    const message = errorValues[codeString]?.message
+    if (message) {
+    return message;
+    }
+    return fallbackMessage;
 }

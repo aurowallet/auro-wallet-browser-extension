@@ -3,12 +3,13 @@ import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/msgTypes';
 import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
-import { checkNetworkUrlExist, getArrayDiff, getCurrentNetConfig, getLocalNetworkList, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
+import { checkNetworkUrlExist, getArrayDiff, getCurrentNetConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get } from './storageService';
 import { NET_CONFIG_MAP } from '@/constant/network';
+import { errorCodes } from '@/constant/dappError';
 
 let signRequests = [];
 let approveRequests = [];
@@ -151,13 +152,13 @@ class DappService {
         let currentAccount = this.getCurrentAccountAddress()
         let approveAccountStatus = this.getCurrentAccountConnectStatus(site.origin, currentAccount)
         if (!approveAccountStatus) {
-          reject({ message: "please connect first" })
+          reject({ code:errorCodes.userDisconnect, message:getMessageFromCode(errorCodes.userDisconnect)})
           return
         }
         const sendAction = params.action 
 
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1 && notificationRequests.length>0){
-          reject({ message: "have unfinished transaction" })
+          reject({ code:errorCodes.zkPending,message: getMessageFromCode(errorCodes.zkPending)})
           return
         }
 
@@ -169,7 +170,7 @@ class DappService {
           const currentSupportChainList = Object.keys(NET_CONFIG_MAP);
           const nextChainIndex = currentSupportChainList.indexOf(params.chainId);
           if (nextChainIndex === -1) {
-            reject({ message: "Unsupport chain" })
+            reject({ code:errorCodes.notSupportChain, message: getMessageFromCode(errorCodes.notSupportChain) })
             return
           }
           if(currentChainInfo.netType === params.chainId){
@@ -182,12 +183,8 @@ class DappService {
         }
         if(sendAction === DAppActions.mina_addChain){
           const realAddUrl = decodeURIComponent(params.url)
-          if (!urlValid(realAddUrl)) {
-            reject({ message: "Invalid URL" })
-            return
-          }
-          if (!params.name) {
-            reject({ message: "Invalid Name" })
+          if (!urlValid(realAddUrl) || !params.name) {
+            reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
             return
           }
           let exist = await this.checkNetworkIsExist(realAddUrl)
@@ -209,15 +206,14 @@ class DappService {
         ]
         if(checkAddressAction.indexOf(sendAction)!==-1){
           if (params.to.length <= 0 || !addressValid(params.to)) {
-            let errorMessage = sendAction === DAppActions.mina_sendPayment ? "send address error" : "delegate address error"
-            reject({ message: errorMessage })
+            reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
             return
           }
         }
 
         if (sendAction === DAppActions.mina_sendPayment) {
           if (!isNumber(params.amount)) {
-            reject({ message: "amount error" })
+            reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
             return
           }
         }
@@ -229,7 +225,7 @@ class DappService {
           if(action === DAPP_ACTION_CANCEL_ALL){
             let requestList = signRequests
             requestList.map((item)=>{
-                item.reject({ message: "user reject", code: 4001 })
+                item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
             })
             signRequests=[]
             that.setBadgeContent()
@@ -251,7 +247,7 @@ class DappService {
           switch (action) {
             case DAPP_ACTION_SEND_TRANSACTION:
                   if (payload.resultOrigin !== site.origin) {
-                    nextReject({ message: "origin dismatch" })
+                    nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                     return
                   }
                   if (payload && payload.hash) {
@@ -266,7 +262,7 @@ class DappService {
                     }
                     that.setBadgeContent()
                   } else if (payload && payload.cancel) {
-                    nextReject({ message: "user reject", code: 4001 })
+                    nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && notificationRequests.length ===0){
                       closePopupWindow(windowId.request_sign)
@@ -275,14 +271,14 @@ class DappService {
                     }
                     that.setBadgeContent()
                   } else {
-                    let msg = payload.message || "transaction error"
-                    nextReject({ message: msg })
+                    let msg = payload.message || getMessageFromCode(errorCodes.internal)
+                    nextReject({ message: msg,code:errorCodes.internal })
                   }
                   sendResponse()
                 return true
             case DAPP_ACTION_SIGN_MESSAGE:
                   if (payload.resultOrigin !== site.origin) {
-                    nextReject({ message: "origin dismatch" })
+                    nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                     return
                   }
                   if (payload && payload.signature) {
@@ -297,7 +293,7 @@ class DappService {
                     that.setBadgeContent()
                     
                   } else {
-                    nextReject({ message: "user reject", code: 4001 })
+                    nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && notificationRequests.length ===0){
                       closePopupWindow(windowId.request_sign)
@@ -310,12 +306,12 @@ class DappService {
                 return true
             case DAPP_ACTION_SWITCH_CHAIN: 
                 if (payload.resultOrigin !== site.origin) {
-                  nextReject({ message: "origin dismatch" })
+                  nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
                 if(payload){
                   if(payload.cancel){
-                    nextReject({ message: "user reject", code: 4001 })
+                    nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeNotifyParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && notificationRequests.length ===0){
                       closePopupWindow(windowId.request_sign)
@@ -333,15 +329,15 @@ class DappService {
                     }
                     that.setBadgeContent()
                   }else{
-                      let msg = payload.message
-                      nextReject({ message: msg })
+                      let msg = payload.message|| getMessageFromCode(errorCodes.internal)
+                      nextReject({ message: msg,code:errorCodes.internal })
                   }
                 }
                 sendResponse()
                 return true
               case DAPP_ACTION_CREATE_NULLIFIER:
                 if (payload.resultOrigin !== site.origin) {
-                  nextReject({ message: "origin dismatch" })
+                  nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
                 if (payload && payload.private) {
@@ -356,7 +352,7 @@ class DappService {
                   delete payload.resultOrigin
                   delete payload.id
                 } else {
-                  nextReject({ message: "user reject", code: 4001 })
+                  nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                   that.removeSignParamsByOpenId(payload.id)
                   if(signRequests.length == 0 && notificationRequests.length ===0){
                     closePopupWindow(windowId.request_sign)
@@ -385,7 +381,7 @@ class DappService {
         }
         this.setBadgeContent()
       } catch (error) {
-        reject({ message: String(error) })
+        reject({ code:errorCodes.throwError,message:getMessageFromCode(errorCodes.throwError),stack: String(error), })
       }
     })
   }
@@ -405,7 +401,7 @@ class DappService {
         let requestList = [...signRequests,...approveRequests,...notificationRequests]
         requestList.map((item)=>{
           if(item.popupId === changeInfo.windowId){
-            item.reject({ message: "user reject", code: 4001 })
+            item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
           }
         })
         signRequests = []
@@ -453,7 +449,7 @@ class DappService {
       try {
         let isCreate = await this.checkLocalWallet()
         if (!isCreate) {
-          reject({ message: 'please create or restore wallet first' })
+          reject({ message: getMessageFromCode(errorCodes.noWallet),code:errorCodes.noWallet })
           return
         }
         let currentAccount = this.getCurrentAccountAddress()
@@ -465,12 +461,12 @@ class DappService {
         if (this.popupId) {
           let isExist = await checkAndTop(this.popupId, windowId.approve_page)
           if (isExist) { 
-            reject({ message: "have pending approve" })
+            reject({ message: getMessageFromCode(errorCodes.zkPending),code:errorCodes.zkPending })
             return
           }
         }
         if(pendingApprove && pendingApprove.site.origin === site.origin){
-          reject({ message: "have pending approve" })
+          reject({ message: getMessageFromCode(errorCodes.zkPending),code:errorCodes.zkPending })
           return
         }
         pendingApprove = { id, site}
@@ -479,7 +475,7 @@ class DappService {
           switch (action) {
             case DAPP_ACTION_GET_ACCOUNT:
                 if (payload.resultOrigin !== site.origin) {
-                  reject({ message: "origin dismatch" })
+                  reject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
                 closePopupWindow(windowId.approve_page)
@@ -497,13 +493,13 @@ class DappService {
                   })
                   resolve([account.address])
                 } else {
-                  reject({ message: 'user reject', code: 4001 })
+                  reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                 }
                 sendResponse()
               return true
             case DAPP_ACTION_CLOSE_WINDOW:
                 if (payload.resultOrigin !== site.origin) {
-                  reject({ message: "origin dismatch" })
+                  reject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
                 extension.runtime.onMessage.removeListener(onMessage)
@@ -526,7 +522,7 @@ class DappService {
         pendingApprove=undefined
         this.setBadgeContent()
       } catch (error) {
-        reject({ message: String(error) })
+        reject({ stack: String(error),code:errorCodes.throwError,message:getMessageFromCode(errorCodes.throwError) })
       }
     })
 
