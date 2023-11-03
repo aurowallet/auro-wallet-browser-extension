@@ -1,29 +1,29 @@
 .container {
-    .rowContainer {
-        margin: 4px 0;
-    }
-    .labelCss {
-        font-weight: 600;
-    }
-    .valueCss {
-        font-weight: 400;
-    }
-    .rowTitle {
-        font-size: 16px;
-        font-weight: 600;
-        color: "rgba(0,0,0,0,7)";
-        margin: 4px 0;
-        text-transform: capitalize;
-    }
-    .rowContentContainer {
-        margin: 2px 0;
+    > :not(:first-child) {
+        margin-top: 10px;
     }
     .rowTitle2 {
-        font-weight: 500;
-        color: "rgba(0,0,0,0,7)";
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 14px;
+        font-weight: 600;
     }
     .rowContent {
         font-weight: 400;
-        color: "rgba(0,0,0,0,7)";
+        color: rgba(0, 0, 0, 0.8);
+    }
+    .mt10 {
+        margin-top: 10px;
+    }
+    .loopWrapper {
+        > :not(:first-child) {
+            margin-top: 6px;
+        }
+    }
+
+    .viewRow {
+        display: flex;
+    }
+    .rowContentContainer {
+        white-space: pre;
     }
 }

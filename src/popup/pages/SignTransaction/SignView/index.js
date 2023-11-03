@@ -33,12 +33,12 @@ import {
   trimSpace,
 } from "@/utils/utils";
 import { addressValid } from "@/utils/validator";
-import { toPretty } from "@/utils/zkUtils";
+import { getZkInfo, toPretty } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
@@ -88,12 +88,17 @@ const SignView = ({
   const [feeErrorTip, setFeeErrorTip] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
+  const [showRawData, setShowRawData] = useState(false);
+  const [showRawDetail, setShowRawDetail] = useState(false);
+
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const { sendAction, siteRecommendFee, currentAdvanceData } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     let siteFee = signParams?.feePayer?.fee || signParams?.params?.fee || "";
     let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
-    let currentAdvanceData = advanceData[signParams.id] || {};
+    let id = signParams?.id || "";
+    let currentAdvanceData = advanceData[id] || {};
     return {
       sendAction,
       siteRecommendFee,
@@ -129,7 +134,7 @@ const SignView = ({
         resultAction = DAPP_ACTION_SIGN_MESSAGE;
         break;
       case DAppActions.mina_sign_JsonMessage:
-        resultAction = DAPP_ACTION_CREATE_NULLIFIER
+        resultAction = DAPP_ACTION_CREATE_NULLIFIER;
         break;
       default:
         break;
@@ -222,6 +227,27 @@ const SignView = ({
     },
     [signParams, sendAction, onRemoveTx]
   );
+  const { isSendZk, zkSourceData, zkFormatData } = useMemo(() => {
+    const isSendZk = sendAction === DAppActions.mina_sendTransaction;
+    let zkShowData = "",
+      zkSourceData = "",
+      zkFormatData = "";
+    if (isSendZk) {
+      zkShowData = signParams.params?.transaction;
+      zkSourceData = JSON.stringify(JSON.parse(zkShowData),null,2);
+      zkFormatData = getZkInfo(zkShowData,currentAccount.address);
+    }
+    return {
+      isSendZk,
+      zkSourceData,
+      zkFormatData,
+    };
+  }, [sendAction, signParams,currentAccount]);
+  useEffect(() => {
+    setShowRawData(
+      sendAction === DAppActions.mina_sendTransaction && selectedTabIndex === 0
+    );
+  }, [sendAction, selectedTabIndex]);
 
   const ledgerTransfer = useCallback(
     async (params) => {
@@ -332,12 +358,12 @@ const SignView = ({
     let connectAction = QA_SIGN_TRANSTRACTION;
     if (sendAction === DAppActions.mina_signFields) {
       connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION;
-    }else if(sendAction === DAppActions.mina_createNullifier){
+    } else if (sendAction === DAppActions.mina_createNullifier) {
       connectAction = WALLET_SEND_NULLIFIER;
     }
     if (sendAction === DAppActions.mina_sign_JsonMessage) {
       payload.sendAction = DAppActions.mina_signMessage;
-      payload.message = JSON.stringify(payload.message)
+      payload.message = JSON.stringify(payload.message);
     } else {
       payload.sendAction = sendAction;
     }
@@ -503,7 +529,10 @@ const SignView = ({
     let content = params?.message || "";
     if (sendAction === DAppActions.mina_sendTransaction) {
       content = params?.transaction;
-    } else if (sendAction === DAppActions.mina_signFields || sendAction === DAppActions.mina_createNullifier) {
+    } else if (
+      sendAction === DAppActions.mina_signFields ||
+      sendAction === DAppActions.mina_createNullifier
+    ) {
       content = JSON.stringify(content);
     }
 
@@ -516,7 +545,8 @@ const SignView = ({
         content: content,
       };
       if (sendAction === DAppActions.mina_sendTransaction) {
-        // contentObj.isJsonData = true;
+        contentObj.isZkData = !showRawDetail;
+        contentObj.content = showRawDetail ? zkSourceData : zkFormatData;
       } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
         contentObj.isJsonData = true;
       }
@@ -533,7 +563,6 @@ const SignView = ({
     if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
       pageTitle = i18n.t("signatureRequest");
     }
-
     return {
       showAccountAddress,
       toAmount,
@@ -543,7 +572,15 @@ const SignView = ({
       tabList,
       pageTitle,
     };
-  }, [currentAccount, signParams, i18n, sendAction]);
+  }, [
+    currentAccount,
+    signParams,
+    i18n,
+    sendAction,
+    showRawDetail,
+    zkSourceData,
+    zkFormatData,
+  ]);
 
   useEffect(() => {
     if (customFeeStatus) {
@@ -592,6 +629,29 @@ const SignView = ({
     [signParams]
   );
 
+  const onClickRawData = useCallback(() => {
+    setShowRawDetail((state) => !state);
+  }, []);
+  const showRawTitle = useMemo(() => {
+    return showRawDetail ? i18n.t("rawData") + " </>" : i18n.t("showData");
+  }, [showRawDetail, i18n]);
+
+  const tabContentRef = useRef([]);
+  useEffect(() => {
+    const targetRef = tabContentRef.current[selectedTabIndex];
+    const showBtn = targetRef.scrollHeight > targetRef.clientHeight;
+    setShowScrollBtn(showBtn);
+  }, [tabContentRef, selectedTabIndex]);
+
+  const onClickScrollBtn = useCallback(() => {
+    const targtRef = tabContentRef.current[selectedTabIndex];
+    if (targtRef) {
+      targtRef.scrollTo({
+        top: targtRef.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [tabContentRef, selectedTabIndex]);
   return (
     <section className={styles.sectionSign}>
       <div className={styles.titleRow}>
@@ -668,21 +728,47 @@ const SignView = ({
               selected={selectedTabIndex}
               initedId={tabInitId}
               onSelect={onSelectedTab}
+              customBtnCss={styles.customBtnCss}
+              btnRightComponent={
+                showRawData && (
+                  <div className={styles.rowData} onClick={onClickRawData}>
+                    {showRawTitle}
+                  </div>
+                )
+              }
             >
-              {tabList.map((tab) => {
+              {tabList.map((tab, index) => {
                 const clickAble = tab.contentClick;
                 return (
                   <div key={tab.id} id={tab.id} label={tab.label}>
                     {
                       <div
                         onClick={() => onClickContent(clickAble)}
+                        ref={(element) =>
+                          (tabContentRef.current[index] = element)
+                        }
                         className={cls(styles.tabContent, {
                           [styles.clickCss]: clickAble,
                           [styles.multiContent]: showMultiView,
+                          [styles.highContent]: isSendZk,
+                          [styles.highMultiContent]: showMultiView && isSendZk,
                         })}
                       >
-                        {tab.isJsonData ? (
-                          <TypeRowInfo data={tab.content} />
+                        {showScrollBtn && (
+                          <div
+                            className={cls(styles.scrollBtn, {
+                              [styles.scrollBtnBm]: showMultiView,
+                            })}
+                            onClick={onClickScrollBtn}
+                          >
+                            <img src="/img/icon_roll.svg" />
+                          </div>
+                        )}
+                        {tab.isJsonData || tab.isZkData ? (
+                          <TypeRowInfo
+                            data={tab.content}
+                            isZkData={tab.isZkData}
+                          />
                         ) : (
                           tab.content
                         )}

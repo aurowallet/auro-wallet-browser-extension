@@ -1,4 +1,15 @@
 .sectionSign {
+    ::-webkit-scrollbar {
+        width: 5px;
+        height: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-track {
+        border-radius: 10px;
+    }
     .titleRow {
         display: flex;
         align-items: center;
@@ -154,20 +165,29 @@
         padding: 12px 0px 20px;
     }
     // }
-
+    .highContent {
+        max-height: calc(100vh - 400px) !important;
+    }
+    .highMultiContent {
+        max-height: calc(100vh - 400px - 80px) !important;
+    }
     .tabContent {
+        border-radius: 4px;
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+        padding: 10px;
         font-size: 14px;
         line-height: 17px;
-        color: rgba(0, 0, 0, 0.3);
+        color: rgba(0, 0, 0, 0.8);
         margin: 0;
-        max-height: calc(100vh - 400px); // sign message too long
+        max-height: calc(100vh - 360px); // message
         overflow-y: auto;
         width: 100%;
         overflow-wrap: break-word;
         white-space: pre-wrap;
+        position: relative;
     }
     .multiContent {
-        max-height: calc(100vh - 400px - 40px);
+        max-height: calc(100vh - 400px - 40px); // signMessage
     }
     .highFeeTip {
         font-weight: 500;
@@ -188,4 +208,23 @@
     .multiBottomBtn {
         bottom: 40px !important;
     }
+
+    .rowData {
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 4px 0 4px 4px;
+    }
+    .scrollBtn {
+        position: fixed;
+        bottom: 80px;
+        right: 30px;
+    }
+    .scrollBtnBm {
+        bottom: 120px;
+    }
+}
+.customBtnCss {
+    font-size: 12px !important;
 }

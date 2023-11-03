@@ -291,5 +291,7 @@
   "pendingZkTx":"待确认的请求 <bold>{{current}}/{{total}}</bold>",
   "rejectAllTx":"拒绝 {{total}} 笔交易",
   "txHistoryTip": "无法提供交易记录",
-  "allowAdd":"允许此网站添加网络？"
+  "allowAdd":"允许此网站添加网络？",
+  "rawData":"原始数据",
+  "showData":"展示数据"
 }

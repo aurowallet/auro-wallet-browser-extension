@@ -22,7 +22,7 @@ export const CURRENCY_UNIT = [
 ];
 
 /** default lock time */
-export const LOCK_TIME_DEFAULT = 30 * 60  * 1000
+export const LOCK_TIME_DEFAULT = 30 * 60 * 1000;
 
 export const lockDuration = {
   dura_1: 5 * 60 * 1000,
@@ -61,7 +61,15 @@ export const AUTO_LOCK_TIME_LIST = [
 ];
 
 /** default language */
-export const DEFAULT_LANGUAGE = "en"
+export const DEFAULT_LANGUAGE = "en";
 
 /** default tx length */
-export const DEFAULT_TX_REQUEST_LENGTH = 10
+export const DEFAULT_TX_REQUEST_LENGTH = 10;
+
+/** used for default zk zpp feePayer address, generate by PublicKey.empty().toBase58() that from o1js */
+export const ZK_EMPTY_PUBLICKEY =
+  "B62qiTKpEPjGTSHZrtM8uXiKgn8So916pLmNJKDhKeyBQL9TDb3nvBG";
+
+/** default token id , generate by Field(1) */
+export const ZK_DEFAULT_TOKENID =
+  "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf";

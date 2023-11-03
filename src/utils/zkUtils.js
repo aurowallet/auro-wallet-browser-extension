@@ -1,4 +1,7 @@
+import BigNumber from "bignumber.js";
 import { AccountUpdate } from "../constant/zkAccountUpdateDoc";
+import { addressSlice, amountDecimals } from "./utils";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKENID, ZK_EMPTY_PUBLICKEY } from "@/constant";
 
 function short(s) {
   return ".." + s.slice(-4);
@@ -134,4 +137,81 @@ export function toPretty(zkappCommand) {
       getFormatAccountUpdate(accountUpdates, index)
     ),
   ];
+}
+
+function getFormatFeePayerV2(zkappCommand,currentAddress) {
+  let feePayer = zkappCommand.feePayer;
+  let feePayerKey = feePayer.body.publicKey; // todo
+  if(feePayerKey.toLowerCase() === ZK_EMPTY_PUBLICKEY.toLocaleLowerCase()){
+    feePayerKey = currentAddress
+  }
+  let fee = feePayer.body.fee;
+  if (fee) {
+    fee = amountDecimals(fee, MAIN_COIN_CONFIG.decimals);
+  }
+  let res = {
+    label: "feePayer",
+    children: [
+      { label: "publicKey", value: addressSlice(feePayerKey) },
+      {
+        label: "fee",
+        value: fee + " " + MAIN_COIN_CONFIG.symbol,
+      },
+    ],
+  };
+  return res;
+}
+
+function getUpdateBody(zkappCommand) {
+  const accountUpdates = zkappCommand.accountUpdates;
+  let updateInfo = {
+    label: "accountUpdates",
+    children: [],
+  };
+  for (let index = 0; index < accountUpdates.length; index++) {
+    const accountItemBody = accountUpdates[index].body;
+    const publicKey = accountItemBody.publicKey;
+    const tokenId = accountItemBody.tokenId;
+    const balanceChangeBody = accountItemBody.balanceChange;
+    let balanceChangeOperator =
+      balanceChangeBody.sgn.toLowerCase() === "negative" ? "-" : "+";
+    let balanceChange = new BigNumber(balanceChangeBody.magnitude).isEqualTo(0)
+      ? 0
+      : balanceChangeOperator +
+        amountDecimals(balanceChangeBody.magnitude, MAIN_COIN_CONFIG.decimals);
+    let tokenSymbol;
+    if (
+      accountItemBody.tokenId === ZK_DEFAULT_TOKENID
+    ) {
+      tokenSymbol = MAIN_COIN_CONFIG.symbol;
+    } else {
+      const bodyTokenSymbol = accountItemBody.update.tokenSymbol;
+      tokenSymbol = bodyTokenSymbol === null ? "UNKNOWN" : bodyTokenSymbol;
+    }
+    const showBalanceChange = balanceChange + " " + tokenSymbol;
+    updateInfo.children.push({
+      label: "Account #" + (index + 1),
+      children: [
+        {
+          label: "publicKey",
+          value: addressSlice(publicKey),
+        },
+        {
+          label: "tokenId",
+          value: addressSlice(tokenId),
+        },
+        {
+          label: "balanceChange",
+          value: showBalanceChange,
+        },
+      ],
+    });
+  }
+  return updateInfo;
+}
+export function getZkInfo(zkappCommand,currentAddress) {
+  const nextZkCommond = JSON.parse(zkappCommand);
+  const feePayerBody = getFormatFeePayerV2(nextZkCommond,currentAddress);
+  const accountUpdateBody = getUpdateBody(nextZkCommond);
+  return [feePayerBody, accountUpdateBody];
 }

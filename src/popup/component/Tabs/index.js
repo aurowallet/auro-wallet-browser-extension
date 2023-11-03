@@ -13,6 +13,8 @@ const Tabs = (props) => {
     children,
     initedId,
     tabType = TAB_TYPE.TAB,
+    btnRightComponent,
+    customBtnCss
   } = props;
   const nextChildren = useMemo(()=>{
     return children.filter((child)=>{
@@ -55,7 +57,7 @@ const Tabs = (props) => {
       return <></>;
     }
     return (
-      <TabButton id={id} selected={isSelected} onClick={handleClick}>
+      <TabButton id={id} selected={isSelected} onClick={handleClick} customBtnCss={customBtnCss}>
         {child.props.label}
       </TabButton>
     );
@@ -82,7 +84,14 @@ const Tabs = (props) => {
         })}
         ref={tabButtonsRef}
       >
-        {buttons}
+        <div className={styles.btnRow}>
+        <div>
+          {buttons}
+        </div>
+        {btnRightComponent && <div>
+          {btnRightComponent}
+        </div>}
+        </div>
         <span
           ref={tabIndicatorRef}
           className={cls(styles.tabIndicator, {
@@ -104,11 +113,11 @@ const Tabs = (props) => {
 export default Tabs;
 
 const TabButton = (props) => {
-  const { id, selected, onClick, children } = props;
+  const { id, selected, onClick, children,customBtnCss } = props;
   return (
     <button
       data-id={id}
-      className={cls(styles.tabBtn, {
+      className={cls(styles.tabBtn,customBtnCss,{
         [styles.tabBtnActive]: selected,
       })}
       onClick={onClick}
