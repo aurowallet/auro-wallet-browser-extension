@@ -93,6 +93,9 @@ const SignView = ({
 
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
+  const [advanceFee, setAdvanceFee] = useState("");
+  const [advanceNonce, setAdvanceNonce] = useState("");
+
   const { sendAction, siteRecommendFee, currentAdvanceData } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     let siteFee = signParams?.feePayer?.fee || signParams?.params?.fee || "";
@@ -446,8 +449,6 @@ const SignView = ({
     setAdvanceStatus(false);
   }, []);
 
-  const [advanceFee, setAdvanceFee] = useState("");
-  const [advanceNonce, setAdvanceNonce] = useState("");
 
   const onFeeInput = useCallback(
     (e) => {
@@ -641,7 +642,7 @@ const SignView = ({
     const targetRef = tabContentRef.current[selectedTabIndex];
     const showBtn = targetRef.scrollHeight > targetRef.clientHeight;
     setShowScrollBtn(showBtn);
-  }, [tabContentRef, selectedTabIndex]);
+  }, [tabContentRef, selectedTabIndex,showMultiView]);
 
   const onClickScrollBtn = useCallback(() => {
     const targtRef = tabContentRef.current[selectedTabIndex];

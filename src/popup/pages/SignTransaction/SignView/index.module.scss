@@ -184,7 +184,6 @@
         width: 100%;
         overflow-wrap: break-word;
         white-space: pre-wrap;
-        position: relative;
     }
     .multiContent {
         max-height: calc(100vh - 400px - 40px); // signMessage
@@ -217,12 +216,12 @@
         padding: 4px 0 4px 4px;
     }
     .scrollBtn {
-        position: fixed;
-        bottom: 80px;
-        right: 30px;
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
     }
     .scrollBtnBm {
-        bottom: 120px;
+        bottom: 15px;
     }
 }
 .customBtnCss {

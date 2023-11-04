@@ -142,10 +142,13 @@ const SignTransaction = () => {
             }
             fetchAccountInfo();
           }
+          if(currentSignIndex < (signRequests.length-1)){
+            setRightArrowStatus(false)
+          }
         }
       }
     );
-  }, [params, pendingSignList, fetchAccountInfo]);
+  }, [params, pendingSignList, fetchAccountInfo,currentSignIndex]);
 
   useEffect(() => {
     sendMsg(
