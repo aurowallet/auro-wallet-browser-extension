@@ -293,5 +293,6 @@
   "txHistoryTip": "Unable to provide transaction history",
   "allowAdd":"Allow this site to add a network?",
   "rawData":"Raw data",
-  "showData":"Show data"
+  "showData":"Show data",
+  "sign":"Sign"
 }

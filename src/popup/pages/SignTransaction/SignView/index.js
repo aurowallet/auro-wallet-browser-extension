@@ -640,8 +640,10 @@ const SignView = ({
   const tabContentRef = useRef([]);
   useEffect(() => {
     const targetRef = tabContentRef.current[selectedTabIndex];
-    const showBtn = targetRef.scrollHeight > targetRef.clientHeight;
-    setShowScrollBtn(showBtn);
+    if(targetRef){
+      const showBtn = targetRef.scrollHeight > targetRef.clientHeight;
+      setShowScrollBtn(showBtn);
+    }
   }, [tabContentRef, selectedTabIndex,showMultiView]);
 
   const onClickScrollBtn = useCallback(() => {
@@ -653,6 +655,23 @@ const SignView = ({
       });
     }
   }, [tabContentRef, selectedTabIndex]);
+
+  const nextBtnTxt = useMemo(()=>{
+    let title = 'confirm'
+    switch (sendAction) {
+      case DAppActions.mina_signMessage:
+      case DAppActions.mina_sign_JsonMessage:
+      case DAppActions.mina_signFields:
+        title = "sign"
+        break;
+      case DAppActions.mina_createNullifier:
+        title = "create"
+        break;
+      default:
+        break;
+    }
+    return title
+  },[sendAction])
   return (
     <section className={styles.sectionSign}>
       <div className={styles.titleRow}>
@@ -799,7 +818,7 @@ const SignView = ({
           size={button_size.middle}
           onClick={onConfirm}
         >
-          {i18n.t("confirm")}
+          {i18n.t(nextBtnTxt)}
         </Button>
       </div>
       <DAppAdvance

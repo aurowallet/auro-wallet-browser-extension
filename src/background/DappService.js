@@ -158,7 +158,7 @@ class DappService {
         const sendAction = params.action 
 
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1 && notificationRequests.length>0){
-          reject({ code:errorCodes.zkPending,message: getMessageFromCode(errorCodes.zkPending)})
+          reject({ code:errorCodes.zkChainPending,message: getMessageFromCode(errorCodes.zkChainPending)})
           return
         }
 
@@ -461,12 +461,12 @@ class DappService {
         if (this.popupId) {
           let isExist = await checkAndTop(this.popupId, windowId.approve_page)
           if (isExist) { 
-            reject({ message: getMessageFromCode(errorCodes.zkPending),code:errorCodes.zkPending })
+            reject({ message: getMessageFromCode(errorCodes.zkChainPending),code:errorCodes.zkChainPending })
             return
           }
         }
         if(pendingApprove && pendingApprove.site.origin === site.origin){
-          reject({ message: getMessageFromCode(errorCodes.zkPending),code:errorCodes.zkPending })
+          reject({ message: getMessageFromCode(errorCodes.zkChainPending),code:errorCodes.zkChainPending })
           return
         }
         pendingApprove = { id, site}

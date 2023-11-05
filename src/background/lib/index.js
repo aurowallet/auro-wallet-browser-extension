@@ -1,9 +1,10 @@
 import BigNumber from "bignumber.js";
 import { MAIN_COIN_CONFIG } from "../../constant";
-import { getCurrentNetConfig, getRealErrorMsg } from '../../utils/utils';
+import { getCurrentNetConfig, getMessageFromCode, getRealErrorMsg } from '../../utils/utils';
 import { NET_CONFIG_TYPE } from '../../constant/network';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
+import { errorCodes } from "@/constant/dappError";
 
 async function getSignClient(){
     let netConfig = await getCurrentNetConfig()
@@ -105,7 +106,7 @@ export async function verifyMessage(publicKey,signature,verifyMessage) {
         }
         verifyResult = signClient.verifyMessage(verifyBody)
     } catch (error) {
-        verifyResult = { error: { message: "verify failed" } }
+        verifyResult = { message: getMessageFromCode(errorCodes.verifyFailed),code:errorCodes.verifyFailed } 
     }
     return verifyResult
 }
@@ -187,7 +188,7 @@ export async function verifyFieldsMessage(publicKey,signature,fields) {
         }
         verifyResult = signClient.verifyFields(verifyBody)
     } catch (error) {
-        verifyResult = { error: { message: "verify failed" } }
+        verifyResult = { message: getMessageFromCode(errorCodes.verifyFailed),code:errorCodes.verifyFailed }
     }
     return verifyResult
 }

@@ -2,17 +2,18 @@ export const errorCodes = {
   invalidInput: -32000,
   transactionRejected: -32003,
   methodNotSupported: -32004,
-  zkPending: -32005,
+  zkChainPending: -32005,
+  notSupportChain: -32006,
+  noWallet: -32007,
+  verifyFailed: -32008,
   parse: -32700,
   methodNotFound: -32601,
   invalidParams: -32602,
   internal: -32603,
-  notSupportChain: -32006,
-  noWallet: -32007,
   throwError: -32800,
   userRejectedRequest: 4001,
   userDisconnect: 4300,
-  originDismatch: 4500,
+  originDismatch: -32900,
 };
 export const FALLBACK_MESSAGE =
   "Unspecified error message. This is a bug, please report it.";
@@ -52,13 +53,16 @@ export const errorValues = {
   "-32007": {
     message: "Please create or restore wallet first",
   },
+  "-32008": {
+    message: "Verify failed",
+  },
   4001: {
     message: "User rejected the request.",
   },
   4300: {
     message: "User disconnect, please connect first",
   },
-  4500: {
+  "-32900": {
     message: "Origin dismatch",
   },
 };
