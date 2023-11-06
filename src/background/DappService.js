@@ -283,7 +283,6 @@ class DappService {
                   }
                   if (payload && payload.signature) {
                     nextResolve(payload)
-                    delete payload.resultOrigin
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && notificationRequests.length ===0){
                       closePopupWindow(windowId.request_sign)
@@ -291,7 +290,8 @@ class DappService {
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
-                    
+                    delete payload.resultOrigin
+                    delete payload.id
                   } else {
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeSignParamsByOpenId(payload.id)

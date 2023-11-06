@@ -133,10 +133,10 @@ const SignView = ({
         break;
       case DAppActions.mina_signMessage:
       case DAppActions.mina_signFields:
-      case DAppActions.mina_sign_JsonMessage:
+      case DAppActions.mina_sign_JsonMessage: 
         resultAction = DAPP_ACTION_SIGN_MESSAGE;
         break;
-      case DAppActions.mina_sign_JsonMessage:
+      case DAppActions.mina_createNullifier:
         resultAction = DAPP_ACTION_CREATE_NULLIFIER;
         break;
       default:
