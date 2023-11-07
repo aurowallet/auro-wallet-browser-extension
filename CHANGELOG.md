@@ -7,10 +7,10 @@ All notable changes to this project will be documented in this file.
 ## [2.2.7]
 - New features:
     - Add advance in cancel tx
-    - Add ZkApp multiple transactions at the same time
-    - Add ZkApp switch chain
-    - Add ZkApp add chain
-    - Add ZkApp sign json messgae
+    - Add zkApp multiple transactions at the same time
+    - Add zkApp switch chain
+    - Add zkApp add chain
+    - Add zkApp sign json messgae
     - Add nullifier support
     - Add zk-commond parse
 - Network config enhancements 
