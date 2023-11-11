@@ -123,12 +123,12 @@ function internalMessageListener(message, sender, sendResponse) {
       })
       break;
     case WALLET_SEND_TRANSTRACTION:
-      apiService.sendTransaction(payload).then((result) => {
+      apiService.sendLegacyPayment(payload).then((result) => {
         sendResponse(result);
       })
       break;
     case WALLET_SEND_STAKE_TRANSTRACTION:
-      apiService.sendStakTransaction(payload).then((result) => {
+      apiService.sendLegacyStakeDelegation(payload).then((result) => {
         sendResponse(result);
       })
       break;
@@ -208,7 +208,7 @@ function internalMessageListener(message, sender, sendResponse) {
       })
       break;
     case QA_SIGN_TRANSTRACTION:
-      apiService.sendQATransaction(payload).then((result) => {
+      apiService.sendTransaction(payload).then((result) => {
         sendResponse(result);
       })
       break;

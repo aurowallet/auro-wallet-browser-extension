@@ -7,6 +7,7 @@ import { useHistory } from "react-router-dom";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { getBalance, sendTx } from "../../../background/api";
 import {
+  QA_SIGN_TRANSTRACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_GET_ALL_ACCOUNT,
   WALLET_SEND_TRANSTRACTION,
@@ -46,6 +47,7 @@ import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
 import { getLocal } from "../../../background/localStorage";
 import ICON_Address from "../../component/SVG/ICON_Address";
 import ICON_Wallet from "../../component/SVG/ICON_Wallet";
+import { DAppActions } from "@aurowallet/mina-provider";
 
 const SendPage = ({}) => {
   const dispatch = useDispatch();
@@ -280,10 +282,11 @@ const SendPage = ({}) => {
         return ledgerTransfer(payload, preLedgerApp);
       }
 
+      payload.sendAction = DAppActions.mina_sendPayment
       setConfrimBtnStatus(true);
       sendMsg(
         {
-          action: WALLET_SEND_TRANSTRACTION,
+          action: QA_SIGN_TRANSTRACTION,
           payload,
         },
         (data) => {

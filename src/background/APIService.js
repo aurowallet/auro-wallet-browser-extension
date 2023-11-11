@@ -620,7 +620,7 @@ class APIService {
         delete newAccount.privateKey;
         return newAccount
     }
-    sendTransaction = async (params) => {
+    sendLegacyPayment = async (params) => {
         try {
             let fromAddress = params.fromAddress
             let toAddress = params.toAddress
@@ -660,7 +660,7 @@ class APIService {
             return { error: err }
         }
     }
-    sendStakTransaction = async (params) => {
+    sendLegacyStakeDelegation = async (params) => {
         try {
             let { fromAddress, toAddress, fee, nonce,isSpeedUp } = params;
             let memo = params.memo
@@ -682,42 +682,59 @@ class APIService {
             return { error: err }
         }
     }
+    postStakeTx = async(data,signature)=>{
+        let stakeRes = await sendStakeTx(data, signature).catch(error =>  error )
+        let delegation = stakeRes.sendDelegation && stakeRes.sendDelegation.delegation || {}
+        if (delegation.hash && delegation.id) {
+            this.checkTxStatus(delegation.id,delegation.hash)
+        }
+        return { ...stakeRes }
+    }
+    postPaymentTx = async(data,signature)=>{
+        let sendRes = await sendTx(data, signature).catch(error => error )
+        let payment = sendRes.sendPayment && sendRes.sendPayment.payment || {}
+        if (payment.hash && payment.id) {
+            this.checkTxStatus(payment.id,payment.hash)
+        }
+        return { ...sendRes }
+    }
+    postZkTx = async (signedTx)=>{
+        let sendPartyRes = await sendParty(signedTx.data.zkappCommand, signedTx.signature).catch(error =>  error )
+        if(!sendPartyRes.error){
+            let partyRes = sendPartyRes?.sendZkapp?.zkapp || {}
+            if ( partyRes.id && partyRes.hash ) {
+                this.checkTxStatus(partyRes.id,partyRes.hash,FETCH_TYPE_QA)
+            }
+            return { ...partyRes }
+        }else{
+            return sendPartyRes
+        }
+    }
 
-    sendQATransaction= async (params) => {
+    sendTransaction= async (params) => {
         try {
+            let nextParams = { ...params }
             const privateKey = await this.getCurrentPrivateKey()
-            let signedTx = await signTransaction(privateKey,params)
+            if(params.isSpeedUp){
+                nextParams.memo = decodeMemo(params.memo)
+            }
+            let signedTx = await signTransaction(privateKey,nextParams)
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
-            switch (params.sendAction) {
-                case DAppActions.mina_sendStakeDelegation:
-                    let stakeRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error =>  error )
-                    let delegation = stakeRes.sendDelegation && stakeRes.sendDelegation.delegation || {}
-                    if (delegation.hash && delegation.id) {
-                        this.checkTxStatus(delegation.id,delegation.hash)
-                    }
-                    return { ...stakeRes }
-                case DAppActions.mina_sendPayment:
-                    let sendRes = await sendTx(signedTx.data, signedTx.signature).catch(error => error )
-                    let payment = sendRes.sendPayment && sendRes.sendPayment.payment || {}
-                    if (payment.hash && payment.id) {
-                        this.checkTxStatus(payment.id,payment.hash)
-                    }
-                    return { ...sendRes }
-                case DAppActions.mina_sendTransaction:
-                    let sendPartyRes = await sendParty(signedTx.data.zkappCommand, signedTx.signature).catch(error =>  error )
-                    if(!sendPartyRes.error){
-                        let partyRes = sendPartyRes?.sendZkapp?.zkapp || {}
-                        if ( partyRes.id && partyRes.hash ) {
-                            this.checkTxStatus(partyRes.id,partyRes.hash,FETCH_TYPE_QA)
-                        }
-                        return { ...partyRes }
-                    }else{
-                        return sendPartyRes
-                    }
+            const sendAction = params.sendAction
+            switch (sendAction) {
                 case DAppActions.mina_signMessage:
-                    return signedTx
+                    return signedTx;
+                case DAppActions.mina_sendPayment:
+                    const sendRes = await this.postPaymentTx(signedTx.data, signedTx.signature)
+                    return sendRes
+                case DAppActions.mina_sendStakeDelegation:
+                    const stakeRes = await this.postStakeTx(signedTx.data, signedTx.signature)
+                    return stakeRes
+                case DAppActions.mina_sendTransaction:
+                    const sendPartyRes = await this.postZkTx(signedTx)
+                    return sendPartyRes
                 default:
                     return {error:"not support"}
             }

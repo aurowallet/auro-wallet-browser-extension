@@ -63,6 +63,11 @@ const SIGN_MESSAGE_EVENT = [
   DAppActions.mina_createNullifier,
 ];
 
+const COMMON_TRANSACTION_ACTION = [
+  DAppActions.mina_sendPayment,
+  DAppActions.mina_sendStakeDelegation,
+];
+
 const SignView = ({
   signParams,
   showMultiView,
@@ -96,16 +101,31 @@ const SignView = ({
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
 
-  const { sendAction, siteRecommendFee, currentAdvanceData } = useMemo(() => {
+  const { sendAction, siteRecommendFee, currentAdvanceData,transactionTypeName } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     let siteFee = signParams?.feePayer?.fee || signParams?.params?.fee || "";
     let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
     let id = signParams?.id || "";
     let currentAdvanceData = advanceData[id] || {};
+    let transactionTypeName = ""
+    switch (sendAction) {
+      case DAppActions.mina_sendPayment:
+        transactionTypeName = "Payment"
+        break;
+      case DAppActions.mina_sendStakeDelegation:
+        transactionTypeName = "Delegation"
+        break;
+      case DAppActions.mina_sendTransaction:
+        transactionTypeName = "zkApp"
+        break;
+      default:
+        break;
+    }
     return {
       sendAction,
       siteRecommendFee,
       currentAdvanceData,
+      transactionTypeName
     };
   }, [signParams, advanceData]);
 
@@ -234,11 +254,13 @@ const SignView = ({
     const isSendZk = sendAction === DAppActions.mina_sendTransaction;
     let zkShowData = "",
       zkSourceData = "",
-      zkFormatData = "";
+      zkFormatData = [];
     if (isSendZk) {
       zkShowData = signParams.params?.transaction;
-      zkSourceData = JSON.stringify(JSON.parse(zkShowData),null,2);
-      zkFormatData = getZkInfo(zkShowData,currentAccount.address);
+      try {
+        zkFormatData = getZkInfo(zkShowData,currentAccount.address);
+        zkSourceData = JSON.stringify(JSON.parse(zkShowData),null,2);
+      } catch (error) {}
     }
     return {
       isSendZk,
@@ -248,9 +270,9 @@ const SignView = ({
   }, [sendAction, signParams,currentAccount]);
   useEffect(() => {
     setShowRawData(
-      sendAction === DAppActions.mina_sendTransaction && selectedTabIndex === 0
+      isSendZk && selectedTabIndex === 0
     );
-  }, [sendAction, selectedTabIndex]);
+  }, [isSendZk, selectedTabIndex]);
 
   const ledgerTransfer = useCallback(
     async (params) => {
@@ -265,11 +287,7 @@ const SignView = ({
         );
         return;
       }
-      const supportAction = [
-        DAppActions.mina_sendPayment,
-        DAppActions.mina_sendStakeDelegation,
-      ];
-      if (supportAction.indexOf(sendAction) === -1) {
+      if (COMMON_TRANSACTION_ACTION.indexOf(sendAction) === -1) {
         Toast.info(i18n.t("notSupportNow"));
         return;
       }
@@ -350,7 +368,7 @@ const SignView = ({
       amount = toNonExponential(new BigNumber(amount).toString());
       payload.amount = amount;
     }
-    if (sendAction === DAppActions.mina_sendTransaction) {
+    if(isSendZk){
       payload.transaction = params.transaction;
       memo = params.feePayer?.memo || "";
     }
@@ -389,6 +407,7 @@ const SignView = ({
     // netAccount,
     sendAction,
     inferredNonce,
+    isSendZk
   ]);
 
   const onConfirm = useCallback(() => {
@@ -403,7 +422,7 @@ const SignView = ({
         return;
       }
     }
-    if (sendAction === DAppActions.mina_sendPayment) {
+    if (sendAction == DAppActions.mina_sendPayment) {
       let amount = trimSpace(params.amount);
       if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
         Toast.info(i18n.t("amountError"));
@@ -528,7 +547,7 @@ const SignView = ({
 
     let memo = params?.feePayer?.memo || params?.memo || "";
     let content = params?.message || "";
-    if (sendAction === DAppActions.mina_sendTransaction) {
+    if (isSendZk) {
       content = params?.transaction;
     } else if (
       sendAction === DAppActions.mina_signFields ||
@@ -545,7 +564,7 @@ const SignView = ({
         label: i18n.t("content"),
         content: content,
       };
-      if (sendAction === DAppActions.mina_sendTransaction) {
+      if(isSendZk){
         contentObj.isZkData = !showRawDetail;
         contentObj.content = showRawDetail ? zkSourceData : zkFormatData;
       } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
@@ -581,6 +600,7 @@ const SignView = ({
     showRawDetail,
     zkSourceData,
     zkFormatData,
+    isSendZk
   ]);
 
   useEffect(() => {
@@ -706,6 +726,7 @@ const SignView = ({
               leftCopyContent={currentAccount.address}
               rightCopyContent={realToAddress}
               showArrow={true}
+              toTypeName={transactionTypeName}
             />
             {sendAction === DAppActions.mina_sendPayment && (
               <CommonRow leftTitle={i18n.t("amount")} leftContent={toAmount} />
@@ -748,6 +769,7 @@ const SignView = ({
               selected={selectedTabIndex}
               initedId={tabInitId}
               onSelect={onSelectedTab}
+              customTabPanelCss={styles.customTabPanelCss}
               customBtnCss={styles.customBtnCss}
               btnRightComponent={
                 showRawData && (
@@ -851,6 +873,7 @@ const CommonRow = ({
   leftCopyContent = "",
   rightCopyContent = "",
   showArrow = false,
+  toTypeName=""
 }) => {
   const { leftCopyAble, rightCopyAble } = useMemo(() => {
     const leftCopyAble = !!leftCopyContent;
@@ -896,7 +919,10 @@ const CommonRow = ({
         </div>
       )}
       <div className={styles.rowRight}>
-        <p className={cls(styles.rowTitle, styles.rightTitle)}>{rightTitle}</p>
+        <div className={styles.rightWrapper}>
+          {toTypeName && <div className={styles.typeRow}>{toTypeName}</div>}
+          <p className={cls(styles.rowTitle, styles.rightTitle)}>{rightTitle}</p>
+        </div>
         <p
           className={cls(styles.rowContent, {
             [styles.copyCss]: rightCopyAble,

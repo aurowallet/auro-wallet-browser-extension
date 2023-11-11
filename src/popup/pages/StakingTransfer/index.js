@@ -17,7 +17,7 @@ import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, isTrueNumber,
 import { addressValid } from "../../../utils/validator";
 
 import { MAIN_COIN_CONFIG } from "../../../constant";
-import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/msgTypes";
+import { QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import Toast from "../../component/Toast";
 import { getLedgerStatus, requestSignDelegation } from "../../../utils/ledger";
@@ -26,6 +26,7 @@ import extension from 'extensionizer'
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
+import { DAppActions } from "@aurowallet/mina-provider";
 
 const StakingTransfer = () => { 
   const dispatch = useDispatch()
@@ -177,15 +178,16 @@ const StakingTransfer = () => {
     let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
     let memo = memo || ""
     let fee = trimSpace(feeAmount)
-    const payload = {
+    let payload = {
       fromAddress, toAddress, fee, nonce, memo
     }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       return ledgerTransfer(payload,preLedgerApp)
     }
     setConfrimBtnStatus(true)
+    payload.sendAction = DAppActions.mina_sendStakeDelegation
     sendMsg({
-      action: WALLET_SEND_STAKE_TRANSTRACTION,
+      action: QA_SIGN_TRANSTRACTION,
       payload
     }, (data) => {
       setConfrimBtnStatus(false)

@@ -111,6 +111,24 @@ export async function verifyMessage(publicKey,signature,verifyMessage) {
     return verifyResult
 }
 
+/** build payment and delegation tx body */
+function buildSignTxBody(params){
+    const sendAction = params.sendAction
+    let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
+    let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
+    let signBody = {
+            to: params.toAddress,
+            from: params.fromAddress,
+            fee: sendFee,
+            nonce: params.nonce,
+            memo:params.memo||""
+        }
+    if(sendAction === DAppActions.mina_sendPayment){
+        let sendAmount = new BigNumber(params.amount).multipliedBy(decimal).toNumber()
+        signBody.amount = sendAmount
+    }
+    return signBody
+}
 
 /** QA net sign */
 export async function signTransaction(privateKey,params){
@@ -134,20 +152,7 @@ export async function signTransaction(privateKey,params){
                 },
             }
         }else{
-            let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
-            let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
-            signBody = {
-                to: params.toAddress,
-                from: params.fromAddress,
-                fee: sendFee,
-                nonce: params.nonce,
-                memo:params.memo||""
-            }
-
-            if(params.sendAction === DAppActions.mina_sendPayment){
-                let sendAmount = new BigNumber(params.amount).multipliedBy(decimal).toNumber()
-                signBody.amount = sendAmount
-            }
+            signBody = buildSignTxBody(params)
         }
         signResult = signClient.signTransaction(signBody, privateKey)
     } catch (err) {

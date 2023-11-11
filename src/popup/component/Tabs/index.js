@@ -14,7 +14,8 @@ const Tabs = (props) => {
     initedId,
     tabType = TAB_TYPE.TAB,
     btnRightComponent,
-    customBtnCss
+    customBtnCss,
+    customTabPanelCss
   } = props;
   const nextChildren = useMemo(()=>{
     return children.filter((child)=>{
@@ -67,7 +68,7 @@ const Tabs = (props) => {
     const id = child.props.id;
     const isSelected = selected === index;
     return (
-      <TabPanel id={id} selected={isSelected}>
+      <TabPanel id={id} selected={isSelected} customTabPanelCss={customTabPanelCss}>
         {child.props.children}
       </TabPanel>
     );
@@ -128,11 +129,11 @@ const TabButton = (props) => {
 };
 
 const TabPanel = (props) => {
-  const { id, selected, children } = props;
+  const { id, selected, children,customTabPanelCss } = props;
   return (
     <div
       data-id={id}
-      className={cls(styles.tabPanel, {
+      className={cls(styles.tabPanel,customTabPanelCss,{
         [styles.tabPanelActive]: selected,
       })}
     >

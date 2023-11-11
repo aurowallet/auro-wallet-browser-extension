@@ -211,7 +211,8 @@ const TxListView = ({
   }, [transactionModalStatus]);
 
   const ledgerTransfer = useCallback(
-    async (nextction, nextPayload) => {
+    async (nextPayload) => {
+      const nextAction = nextPayload.sendAction
       setWaitLedgerStatus(true);
       let ledgerNextPayload = nextPayload;
       if (modalType === TransactionModalType.cancel) {
@@ -225,8 +226,7 @@ const TxListView = ({
           memo: decodeMemo(nextPayload.memo),
         };
       }
-      const nextFunc =
-        nextction === WALLET_SEND_STAKE_TRANSTRACTION
+      const nextFunc = nextAction === DAppActions.mina_sendStakeDelegation
           ? requestSignDelegation
           : requestSignPayment;
       const { signature, payload, error, rejected } = await nextFunc(
@@ -241,7 +241,7 @@ const TxListView = ({
         Toast.info(error.message);
         return;
       }
-      const nextPostFunc = WALLET_SEND_STAKE_TRANSTRACTION
+      const nextPostFunc = nextAction === DAppActions.mina_sendStakeDelegation
         ? sendStakeTx
         : sendTx;
       let postRes = await nextPostFunc(payload, {
@@ -263,7 +263,7 @@ const TxListView = ({
       let nextction = "";
       let nextPayload = {};
       if (modalType === TransactionModalType.cancel) {
-        nextction = WALLET_SEND_TRANSTRACTION;
+        nextction = QA_SIGN_TRANSTRACTION;
         nextPayload = {
           amount: 0,
           fee: nextInputFee,
@@ -271,13 +271,14 @@ const TxListView = ({
           toAddress: currentAddress,
           fromAddress: currentAddress,
           memo: "",
+          sendAction: DAppActions.mina_sendPayment
         };
       } else {
         if (transactionModalData.kind) {
           let kind_low = transactionModalData.kind.toLowerCase();
           switch (kind_low) {
             case "payment":
-              nextction = WALLET_SEND_TRANSTRACTION;
+              nextction = QA_SIGN_TRANSTRACTION;
               nextPayload = {
                 ...transactionModalData,
                 fee: nextInputFee,
@@ -290,10 +291,11 @@ const TxListView = ({
                   .decimals
                 ),
                 isSpeedUp: true,
+                sendAction: DAppActions.mina_sendPayment
               };
               break;
             case "stake_delegation":
-              nextction = WALLET_SEND_STAKE_TRANSTRACTION;
+              nextction = QA_SIGN_TRANSTRACTION;
               nextPayload = {
                 ...transactionModalData,
                 fee: nextInputFee,
@@ -301,6 +303,7 @@ const TxListView = ({
                 fromAddress: currentAddress,
                 toAddress: transactionModalData.to,
                 isSpeedUp: true,
+                sendAction: DAppActions.mina_sendStakeDelegation
               };
               break;
             case "zkapp":
@@ -326,7 +329,7 @@ const TxListView = ({
       }
 
       if (isLedgerAccount) {
-        return ledgerTransfer(nextction, nextPayload);
+        return ledgerTransfer(nextPayload);
       }
 
       sendMsg(

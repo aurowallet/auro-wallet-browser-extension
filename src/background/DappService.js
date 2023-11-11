@@ -10,6 +10,7 @@ import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get } from './storageService';
 import { NET_CONFIG_MAP } from '@/constant/network';
 import { errorCodes } from '@/constant/dappError';
+import { zkCommondFormat } from '@/utils/zkUtils';
 
 let signRequests = [];
 let approveRequests = [];
@@ -68,20 +69,7 @@ class DappService {
         )
         break;
       case DAppActions.mina_sendPayment:
-        this.requestCallback(
-          () => this.signTransaction(id, { ...params, action }, site),
-          id,
-          sendResponse
-        )
-        break;
       case DAppActions.mina_sendStakeDelegation:
-        this.requestCallback(
-          () => this.signTransaction(id, { ...params, action }, site),
-          id,
-          sendResponse
-        )
-        break;
-
       case DAppActions.mina_sendTransaction:
         this.requestCallback(
           () => this.signTransaction(id, { ...params, action }, site),
@@ -141,6 +129,15 @@ class DappService {
             sendResponse
           )
           break;
+      default:
+        this.requestCallback(
+          async ()=>{
+            return { code:errorCodes.unsupportMethod, message:getMessageFromCode(errorCodes.unsupportMethod)}
+          },
+          id,
+          sendResponse
+        )
+        break;
     }
   }
   
@@ -216,6 +213,10 @@ class DappService {
             reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
             return
           }
+        }
+        if(sendAction === DAppActions.mina_sendTransaction){
+          // format zk commond type
+          nextParams.transaction = zkCommondFormat(params.transaction)
         }
         if (this.popupId) {
           await checkAndTop(this.popupId, windowId.request_sign)

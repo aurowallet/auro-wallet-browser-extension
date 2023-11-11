@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.8]
+- Deprecated legacy method
+- UI enhancements
+
 ## [2.2.7]
 - New features:
     - Add advance in cancel tx

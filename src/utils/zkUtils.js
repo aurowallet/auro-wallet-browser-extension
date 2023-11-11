@@ -210,8 +210,27 @@ function getUpdateBody(zkappCommand) {
   return updateInfo;
 }
 export function getZkInfo(zkappCommand,currentAddress) {
-  const nextZkCommond = JSON.parse(zkappCommand);
-  const feePayerBody = getFormatFeePayerV2(nextZkCommond,currentAddress);
-  const accountUpdateBody = getUpdateBody(nextZkCommond);
-  return [feePayerBody, accountUpdateBody];
+  try {
+    const nextZkCommond = JSON.parse(zkappCommand); 
+    const feePayerBody = getFormatFeePayerV2(nextZkCommond,currentAddress);
+    const accountUpdateBody = getUpdateBody(nextZkCommond);
+    return [feePayerBody, accountUpdateBody];
+  } catch (error) {
+    return [
+      {
+        label: "Error",
+        value:String(error)
+      }
+    ]
+  }
+ 
+}
+
+/** format zkAppCommand to string */
+export function zkCommondFormat(zkAppCommand){
+  if(typeof zkAppCommand === "string"){ // if zkAppCommand is string
+    return zkAppCommand
+  }
+  // if zkAppCommand is object
+  return JSON.stringify(zkAppCommand)
 }

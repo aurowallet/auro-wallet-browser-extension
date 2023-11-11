@@ -152,6 +152,25 @@
                 width: 10px;
             }
         }
+
+        .rightWrapper{
+            display: flex;
+            justify-content: flex-end;
+        }
+        .typeRow{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 15px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            margin-right: 4px;
+            border: 1px solid  #594AF1;
+
+            color: #594AF1;
+            font-size: 10px;
+            font-weight: 500;
+        }
     }
     .btnGroup {
         position: absolute;
@@ -217,14 +236,18 @@
     }
     .scrollBtn {
         position: absolute;
-        bottom: 20px;
+        bottom: 10px;
         right: 20px;
         cursor: pointer;
     }
     .scrollBtnBm {
-        bottom: 15px;
+        bottom: 10px;
     }
 }
 .customBtnCss {
     font-size: 12px !important;
+}
+
+.customTabPanelCss{
+    position: relative;
 }
