@@ -83,7 +83,7 @@
   "inputNonceError": "Inserire un nonce valido",
   "importAccount_3": "Gli account importati verranno contrassegnati con [Importato] nell'elenco degli account.",
   "hdDerivedPath": "Percorso HD",
-  "deleteTag": "Cancellare",
+  "deleteTag": "cancellare",
   "passwordError": "Password di sicurezza errata",
   "ledgerUserTip": "Se si desidera importare una chiave privata/keystore o collegare Ledger, è necessario prima [Creare un portafoglio] o [Ripristinare un portafoglio].",
   "lockTime_1h": "1 ora",
