@@ -297,7 +297,7 @@ export async function getGqlTxHistory(address,limit){
     },
     gqlTxUrl,
   ).catch((error) => error)
-  let list = result.transactions  || []
+  let list = result?.transactions  || []
   saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
   return list
 }
@@ -327,7 +327,7 @@ export async function getGqlTxHistory(address,limit){
   if(res.stake){
     validatorDetail = res.stake.delegationTotals || {}
   }
-  await saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
+  saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
   return validatorDetail;
 }
 
@@ -350,7 +350,7 @@ export async function getZkAppTxHistory(address,limit){
     },
     gqlTxUrl,
   ).catch((error) => error)
-  let list = result.zkapps  || []
+  let list = result?.zkapps  || []
   saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: list }))
   return list
 }

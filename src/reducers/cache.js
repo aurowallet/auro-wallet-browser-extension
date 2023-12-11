@@ -215,7 +215,6 @@ const cacheReducer = (state = initState, action) => {
                 staking_guide_cn: action.data.staking_guide_cn,
                 terms_and_contions: action.data.terms_and_contions,
                 terms_and_contions_cn: action.data.terms_and_contions_cn,
-                graphql_api:action.data.graphql_api,
             }
         case UPDATE_ADDRESS_DETAIL:
             return {

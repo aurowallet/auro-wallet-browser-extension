@@ -15,7 +15,6 @@ const AboutUs = ({}) => {
     privacy_policy_cn: "",
     changelog: "",
     followus: [],
-    graphql_api:""
   });
   const fecthBaseInfo = useCallback(async () => {
     let baseInfo = await getBaseInfo().catch((err) => err);
@@ -31,7 +30,6 @@ const AboutUs = ({}) => {
       privacy_policy_cn: baseInfo.privacy_policy_cn,
       changelog: baseInfo.changelog,
       followus: baseInfo.followus,
-      graphql_api:baseInfo.graphql_api,
     });
   }, []);
 
@@ -94,10 +92,6 @@ const AboutUs = ({}) => {
       {
         title: i18n.t("checkOnGithub"),
         link: baseAboutInfo.changelog,
-      },
-      {
-        title: i18n.t("serviceSupport"),
-        link: baseAboutInfo.graphql_api,
       },
     ];
     return { followList, linkInfoList };

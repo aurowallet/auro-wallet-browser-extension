@@ -244,7 +244,6 @@
   "APPLIED": "完成",
   "FAILED": "失败",
   "PENDING": "等待",
-  "serviceSupport": "Mina Explorer 提供 GraphQL服务",
   "exportZkAppCommand": "导出 zkApp 交易详情",
   "inputAccountName": "请输入你的账户名称",
   "connectHardwareWallet":"连接硬件钱包",
