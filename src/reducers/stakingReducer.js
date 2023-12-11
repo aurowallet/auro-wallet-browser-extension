@@ -6,6 +6,9 @@ const UPDATE_DAEMON_STATUS = 'UPDATE_DAEMON_STATUS';
 const UPDATE_BLOCK_INFO = 'UPDATE_BLOCK_INFO';
 const UPDATE_DELEGATION_INFO = 'UPDATE_DELEGATION_INFO';
 const UPDATE_VALIDATOR_DETAIL = 'UPDATE_VALIDATOR_DETAIL';
+
+
+const UPDATE_DELEGATION_PUBLICKEY = 'UPDATE_DELEGATION_PUBLICKEY';
 /**
  * request net list
  */
@@ -56,6 +59,13 @@ export function updateValidatorDetail(validatorDetail ) {
   };
 }
 
+export function updateDelegationKey(delegationKey) {
+  return {
+    type: UPDATE_DELEGATION_PUBLICKEY,
+    delegationKey,
+  };
+}
+
 const initState = {
   stakingList: [],
   daemonStatus: {},
@@ -88,6 +98,12 @@ const staking = (state = initState, action) => {
           ...state,
           validatorDetail: action.validatorDetail
         };
+      case UPDATE_DELEGATION_PUBLICKEY:
+        return {
+          ...state,
+          delegationKey: action.delegationKey
+        };
+      
     default:
       return state;
   }

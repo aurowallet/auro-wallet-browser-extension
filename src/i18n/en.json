@@ -293,5 +293,6 @@
   "allowAdd":"Allow this site to add a network?",
   "rawData":"Raw data",
   "showData":"Show data",
-  "sign":"Sign"
+  "sign":"Sign",
+  "stakedBalance":"Staked"
 }

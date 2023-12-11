@@ -293,5 +293,6 @@
   "allowAdd":"允许此网站添加网络？",
   "rawData":"原始数据",
   "showData":"展示数据",
-  "sign":"签名"
+  "sign":"签名",
+  "stakedBalance":"已委托"
 }

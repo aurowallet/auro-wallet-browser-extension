@@ -8,10 +8,9 @@ import 'react-circular-progressbar/dist/styles.css';
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { MAIN_COIN_CONFIG } from "../../../constant";
 import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
-import { getStakingList, updateBlockInfo, updateDaemonStatus, updateValidatorDetail } from "../../../reducers/stakingReducer";
+import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationKey, updateValidatorDetail } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
 import { addressSlice, copyText, getAmountForUI, isNumber } from "../../../utils/utils";
 import Button, { button_size } from "../../component/Button";
@@ -19,19 +18,19 @@ import Clock from "../../component/Clock";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from './index.module.scss';
+import { MAIN_COIN_CONFIG } from "@/constant";
 
 const Staking = ({ }) => {
 
   const netAccount = useSelector(state => state.accountInfo.netAccount)
   const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
-  const netType = useSelector(state => state.network.currentConfig.netType)
   const block = useSelector(state => state.staking.block)
-  const validatorDetail = useSelector(state => state.staking.validatorDetail)
+  const daemonStatus = useSelector(state => state.staking.daemonStatus)
   const dispatch = useDispatch()
 
   const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === netAccount.delegate ? "" : netAccount.delegate)
   const [loading, setLoading] = useState(false)
-  const isFirstRequest = useRef(!isNumber(validatorDetail.totalDelegated));
+  const isFirstRequest = useRef(!isNumber(daemonStatus?.consensusConfiguration?.slotsPerEpoch));
 
   const closeLoading = useCallback(()=>{
     setLoading(false)
@@ -45,41 +44,23 @@ const Staking = ({ }) => {
       let account = data[0]
       let delegateKey = currentAddress === account.delegate ? "" : account.delegate;
       setDelegatePublicKey(delegateKey)
-      
+      dispatch(updateDelegationKey(delegateKey));
       let daemonStatus = data[1]
       if (daemonStatus.stateHash) {
         dispatch(updateDaemonStatus(daemonStatus));
         fetchBlockInfo(daemonStatus.stateHash).then((block) => {
           if (block.protocolState) {
             dispatch(updateBlockInfo(block));
-            if (delegateKey && isNumber(block.protocolState?.consensusState?.epoch)) {
-              fetchValidatorDetail(delegateKey,block.protocolState.consensusState.epoch).then((validatorDetail) => {
-                if(isNumber(validatorDetail.countDelegates)){
-                  dispatch(updateValidatorDetail(validatorDetail));
-                }
-              }).finally(() => {
-                closeLoading()
-              })
-            }else{
-              closeLoading()
-            }
-          }else{
-            closeLoading()
           }
-        }).finally(()=>{
           closeLoading()
-        });
+        })
       }else{
         closeLoading()
       }
     }).catch(()=>{
-      setLoading(false)
+      closeLoading()
     })
   }, [currentAddress,block.protocolState])
-
-
-
-
 
 
   const baseFetchData = useCallback((isSlient = false) => {
@@ -195,7 +176,7 @@ const DelegationInfo = ({
 
   const history = useHistory()
   const stakingList = useSelector(state => state.staking.stakingList)
-  const validatorDetail = useSelector(state => state.staking.validatorDetail)
+  const accountInfo = useSelector(state => state.accountInfo)
 
   const onChangeNode = useCallback(() => {
     history.push({
@@ -207,20 +188,9 @@ const DelegationInfo = ({
   }, [delegatePublicKey])
 
   const {
-    showNodeAddress, showtotalStake, nodeName,showDelegations
+    showNodeAddress, nodeName,stakedBalance
   } = useMemo(() => {
     let showNodeAddress = addressSlice(delegatePublicKey)
-    let showtotalStake = "0"  
-    if(isNumber(validatorDetail.totalDelegated)){
-      showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0,0)
-    }
-    showtotalStake = showtotalStake + " " + MAIN_COIN_CONFIG.symbol
-    let showDelegations = validatorDetail.countDelegates
-    if(isNumber(validatorDetail.countDelegates)){
-      showDelegations = getAmountForUI(validatorDetail.countDelegates,0,0) 
-    }else{
-      showDelegations = "0"
-    }
     
     let nodeName = showNodeAddress
     if (delegatePublicKey) {
@@ -229,10 +199,12 @@ const DelegationInfo = ({
         nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress, 8);
       }
     }
+    let stakedBalance = accountInfo.balance || "0.00"
+    stakedBalance = stakedBalance + " "+ MAIN_COIN_CONFIG.symbol
     return {
-      showNodeAddress, showtotalStake, nodeName,showDelegations
+      showNodeAddress, nodeName,stakedBalance
     }
-  }, [delegatePublicKey, validatorDetail, stakingList])
+  }, [delegatePublicKey, stakingList,accountInfo])
  
   return (<div className={styles.delegationContainer}>
     <div className={styles.delegationRow}>
@@ -247,8 +219,7 @@ const DelegationInfo = ({
       <div className={styles.rowLeft}>
         <RowItem title={i18n.t('blockProducerName')} content={nodeName} />
         <RowItem title={i18n.t('blockProducerAddress')} content={showNodeAddress} copyContent={delegatePublicKey} isMargin={true}/>
-        {showtotalStake &&<RowItem title={i18n.t('totalStake')} content={showtotalStake} isMargin={true} />}
-        {showDelegations && <RowItem title={i18n.t('totalDelegators')} content={showDelegations} isMargin={true} />}
+        <RowItem title={i18n.t('stakedBalance')} content={stakedBalance} isMargin={true} />
       </div>
       <div className={styles.rowRight}>
         <Button

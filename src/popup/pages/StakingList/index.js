@@ -38,16 +38,14 @@ const StakingList = ({ }) => {
 
   const onClickRow = useCallback((nodeItem) => {
     setCurrentSelectAddress(nodeItem.nodeAddress)
+    let nextParams = {
+      pathname: "/staking_transfer",
+      params: nodeItem
+    }
     if (fromPage === 'stakingTransfer') {
-      history.replace({
-        pathname: "/staking_transfer",
-        params: nodeItem
-      });
+      history.replace(nextParams);
     } else {
-      history.push({
-        pathname: "/staking_transfer",
-        params: nodeItem
-      });
+      history.push(nextParams);
     }
   }, [fromPage])
 
@@ -107,22 +105,22 @@ const NodeItem = ({
   nodeItem,
   currentSelectAddress,
 }) => {
+  const delegationKey = useSelector(state => state.staking.delegationKey)
   const {
-    select, showName, showAddress,showTotalStake,showDelegations
+    select, showName, showAddress,showTotalStake,showDelegations,isChecked
   } = useMemo(() => {
     let select = nodeItem.nodeAddress === currentSelectAddress
 
     let showName = nodeItem.nodeName
     if(showName.length>=16){
-      showName = showNameSlice(nodeItem.nodeName,13)
+      showName = showNameSlice(nodeItem.nodeName,16)
     }
     let showAddress = addressSlice(nodeItem.nodeAddress, 6)
-    const showTotalStake = nodeItem.totalStake + " " + MAIN_COIN_CONFIG.symbol
-    const showDelegations = getAmountForUI(nodeItem.delegations,0,0) + " " + i18n.t('delegators')
+    let isChecked = delegationKey === nodeItem.nodeAddress
     return {
-      select, showName, showAddress,showTotalStake,showDelegations
+      select, showName, showAddress,showTotalStake,showDelegations,isChecked
     }
-  }, [nodeItem, currentSelectAddress,i18n])
+  }, [nodeItem, currentSelectAddress,i18n,delegationKey])
   return(<div className={styles.rowContainer}>
      <div className={cls(styles.nodeItemContainer, {
       [styles.selectedBorder]:select
@@ -134,14 +132,9 @@ const NodeItem = ({
             <p className={styles.nodeAddress}>{showAddress}</p>
           </div>
       </div>
-      <div className={styles.rowRight}>
-        <p className={styles.numberTitle}>
-        {showTotalStake}
-        </p>
-        <p className={cls(styles.nodeAddress,styles.rightTxt)}>
-            {showDelegations}
-        </p>
-      </div>
+      {isChecked && <div className={styles.rowRight}> 
+         <img src="/img/icon_checked.svg" />
+      </div>}
     </div>
   </div>)
 }
