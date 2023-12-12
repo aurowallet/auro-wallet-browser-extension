@@ -149,7 +149,7 @@ const NetworkPage = ({}) => {
               {showNetTitle && (
                 <div className={styles.networkTitleWrapper}>
                   <hr className={styles.hrDotted} />
-                  <p className={styles.nodeListTitle}>{"Testnet"}</p>
+                  <p className={styles.nodeListTitle}>{i18n.t('testnet')}</p>
                   <hr className={styles.hrDotted} />
                 </div>
               )}

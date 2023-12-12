@@ -2,6 +2,7 @@ import cls from "classnames";
 import { useCallback, useEffect, useState } from "react";
 import { showNameSlice } from "../../../utils/utils";
 import styles from "./index.module.scss";
+import i18n from "i18next";
 
 const Select = ({
     value = "",
@@ -58,6 +59,13 @@ const Select = ({
                 <div className={styles.optionsContainer}>
                     {
                         optionList.map((option, index) => {
+                            if(option.type === 'dividedLine'){
+                                return  <div className={styles.networkTitleWrapper}>
+                                <hr className={styles.hrDotted} />
+                                <p className={styles.nodeListTitle}>{i18n.t('testnet')}</p>
+                                <hr className={styles.hrDotted} />
+                              </div>
+                            }
                             let isSelect = value == option.value
                             return <Option onClick={() => onClickOption(option)} isSelect={isSelect} key={index} label={option.label} value={option.value} />
                         })

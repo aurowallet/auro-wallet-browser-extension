@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.9]
+- Logo enhancements
+- Update tx history source
+- UI enhancements
+
 ## [2.2.8]
 - Deprecated legacy method
 - UI enhancements

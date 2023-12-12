@@ -294,5 +294,6 @@
   "rawData":"原始数据",
   "showData":"展示数据",
   "sign":"签名",
-  "stakedBalance":"已委托"
+  "stakedBalance":"已委托",
+  "testnet":"测试网"
 }
