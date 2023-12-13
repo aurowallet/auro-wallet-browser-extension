@@ -3,7 +3,11 @@ import { extSaveLocal } from "@/background/extensionStorage";
 import { getLocal } from "@/background/localStorage";
 import { DAPP_ACTION_SWITCH_CHAIN } from "@/constant/msgTypes";
 import { BASE_unknown_config, NET_CONFIG_MAP } from "@/constant/network";
-import { NETWORK_ID_AND_TYPE, NET_WORK_CONFIG } from "@/constant/storageKey";
+import {
+  NETWORK_ID_AND_TYPE,
+  NET_WORK_CHANGE_FLAG,
+  NET_WORK_CONFIG,
+} from "@/constant/storageKey";
 import Button, { button_size, button_theme } from "@/popup/component/Button";
 import DappWebsite from "@/popup/component/DappWebsite";
 import Toast from "@/popup/component/Toast";
@@ -76,16 +80,17 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
 
   const fetchData = useCallback(async () => {
     let network = await getNetworkList();
-    if (Array.isArray(network) && network.length > 0) {
-      dispatch(updateNetChainIdConfig(network));
-    }
-    if (network.length <= 0) {
+    if (
+      !Array.isArray(network) ||
+      (Array.isArray(network) && network.length == 0)
+    ) {
       let listJson = getLocal(NETWORK_ID_AND_TYPE);
       let list = JSON.parse(listJson);
       if (list.length > 0) {
         network = list;
       }
     }
+    dispatch(updateNetChainIdConfig(network));
     setNetworkApiConfig(network);
   }, []);
 
@@ -136,9 +141,8 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
       };
       await extSaveLocal(NET_WORK_CONFIG, config);
       dispatch(updateNetConfig(config));
-      dispatch(updateStakingRefresh(true));
 
-      dispatch(updateShouldRequest(true));
+      await extSaveLocal(NET_WORK_CHANGE_FLAG, true);
       sendNetworkChangeMsg(config.currentConfig);
       clearLocalCache();
     }
@@ -213,14 +217,20 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
       netConfigVersion: NET_CONFIG_VERSION,
     };
     await extSaveLocal(NET_WORK_CONFIG, newConfig);
-    dispatch(updateNetConfig(newConfig))
+    dispatch(updateNetConfig(newConfig));
 
     setNextChainConfig(addItem);
     setState({
       switchStatus: true,
       addStatus: false,
     });
-  }, [notifyParams, networkList, nextChainConfig, networkApiConfig,currentConfig]);
+  }, [
+    notifyParams,
+    networkList,
+    nextChainConfig,
+    networkApiConfig,
+    currentConfig,
+  ]);
 
   const onConfirm = useCallback(async () => {
     if (state.switchStatus) {

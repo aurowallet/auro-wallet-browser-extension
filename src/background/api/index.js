@@ -275,7 +275,7 @@ export async function getNetworkList() {
   let networkUrl = BASE_INFO_URL + "/network_list.json"
   let result = await commonFetch(networkUrl).catch(error => [])
   if (result.length > 0) {
-    await saveLocal(NETWORK_ID_AND_TYPE, JSON.stringify(result))
+    saveLocal(NETWORK_ID_AND_TYPE, JSON.stringify(result))
   }
   return result
 }

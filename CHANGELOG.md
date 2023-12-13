@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Logo enhancements
 - Update tx history source
 - UI enhancements
+- Fix zkApp switch chain refresh issue
 
 ## [2.2.8]
 - Deprecated legacy method

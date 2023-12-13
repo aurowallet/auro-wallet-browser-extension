@@ -6,14 +6,14 @@ import { Provider } from "react-redux";
 import { NET_CONFIG_VERSION } from "../config";
 import { windowId } from "./background/DappService";
 import { getLocal, saveLocal } from "./background/localStorage";
-import { extGetLocal, extSaveLocal } from "./background/extensionStorage";
+import { extGetLocal, extRemoveLocal, extSaveLocal } from "./background/extensionStorage";
 import { CURRENCY_UNIT } from "./constant";
-import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
+import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
 import { DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
 import "./i18n";
 import App from "./popup/App";
 import rootReducer from "./reducers";
-import { initCurrentAccount } from "./reducers/accountReducer";
+import { initCurrentAccount, updateShouldRequest } from "./reducers/accountReducer";
 import { updateDAppOpenWindow } from "./reducers/cache";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
@@ -58,21 +58,22 @@ async function updateNetLocalConfig(netConfig){
   let localNetList = netConfig.netList
   let currentUrl = netConfig.currentUrl || netConfig.currentConfig.url
   let currentConfig = {}
-  let defaultList = []
   let addList = []
   let currentUrlType = ""
   localNetList.map((item,index)=>{
    
     let newItem = item
-    if(item.type === NET_CONFIG_DEFAULT){
-      defaultList.push(item)
-    }else{
+    if(item.type !== NET_CONFIG_DEFAULT){
       let id = item.url
+      let preNetType = item.netType?.toLowerCase()||NET_CONFIG_TYPE.Mainnet
+      let nextConfig = NET_CONFIG_MAP[preNetType].config
       newItem =  {
-        ...NET_CONFIG_MAP[NET_CONFIG_TYPE.Mainnet].config,
         name:item.name||"Unknown",
         id,
         ...item,
+        explorer :nextConfig.explorer||"",
+        gqlTxUrl :nextConfig.gqlTxUrl||"",
+        netType :preNetType,
       }
       addList.push(newItem)
     }
@@ -237,6 +238,13 @@ async function upgradeStorageConfig(){
   saveLocal(STORAGE_UPGRADE_STATUS,true)
 }
 
+async function initNetworkFlag(){
+  let localFlage = await extGetLocal(NET_WORK_CHANGE_FLAG)
+  if(localFlage){
+    store.dispatch(updateShouldRequest(true))
+    await extRemoveLocal(NET_WORK_CHANGE_FLAG)
+  }
+}
 export const applicationEntry = {
   async run() {
     await this.appInit(store)
@@ -249,6 +257,8 @@ export const applicationEntry = {
     await upgradeStorageConfig()
     // init netRequest
     await getLocalNetConfig(store)
+
+    await initNetworkFlag(store)
     // init nextRoute
     let accountData = await getLocalStatus(store)
     const {nextRoute} = accountData

@@ -79,6 +79,10 @@ export const NET_CONFIG_MAP = {
     type_id: "12",
     config: base_testworld2_config,
   },
+  [NET_CONFIG_TYPE.Unknown]: {
+    type_id: "10999",
+    config: BASE_unknown_config,
+  },
 };
 
 /** not support transaction history */

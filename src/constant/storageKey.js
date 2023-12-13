@@ -120,3 +120,8 @@ export const RECOMMOND_FEE= "RECOMMOND_FEE"
  * recommond fee list
  */
 export const SCAM_LIST= "SCAM_LIST"
+
+/**
+ * Locally stored network changeflag
+ */
+export const NET_WORK_CHANGE_FLAG = "NET_WORK_CHANGE_FLAG"

@@ -60,7 +60,7 @@ const Select = ({
                     {
                         optionList.map((option, index) => {
                             if(option.type === 'dividedLine'){
-                                return  <div className={styles.networkTitleWrapper}>
+                                return  <div key={index} className={styles.networkTitleWrapper}>
                                 <hr className={styles.hrDotted} />
                                 <p className={styles.nodeListTitle}>{i18n.t('testnet')}</p>
                                 <hr className={styles.hrDotted} />

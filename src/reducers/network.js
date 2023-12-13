@@ -30,7 +30,7 @@ export function updateNetConfig(data) {
     };
 }
 
-function getNetConfigData(state, config) {
+function getNetConfigData(config) {
     let netList = config.netList
     let currentConfig = config.currentConfig
     let selectList = []
@@ -87,7 +87,7 @@ const initState = {
 const network = (state = initState, action) => {
     switch (action.type) {
         case UPDATE_NET_CONFIG:
-            let data = getNetConfigData(state, action.data)
+            let data = getNetConfigData(action.data)
             return {
                 ...state,
                 netList: data.netList,
