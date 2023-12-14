@@ -131,7 +131,7 @@ const NodeEditor = ({ }) => {
         }
 
 
-        let exist = checkNetworkUrlExist(netConfigList,urlInput)////checkExist(urlInput) 
+        let exist = checkNetworkUrlExist(netConfigList,urlInput)
         if (exist.index !== -1) {
             if (editorType === NodeEditorType.add) {
                 setErrorTip(i18n.t('nodeAddressExists'))
@@ -151,7 +151,7 @@ const NodeEditor = ({ }) => {
             return {}
         }
         return { urlInput, nameInput, config: chainConfig.config,chainId:chainConfig.chainId }
-    }, [nodeAddressValue, nodeName, editItem, netConfigList])
+    }, [nodeAddressValue, nodeName, editItem, netConfigList,networkList])
 
     const clearLocalCache = useCallback(() => {
         let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS)
