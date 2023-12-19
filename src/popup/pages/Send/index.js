@@ -517,7 +517,7 @@ const SendPage = ({}) => {
             placeholder={0}
             rightComponent={
               <div className={styles.balance}>
-                {i18n.t("balance") +
+                {i18n.t("available") +
                   ": " +
                   getDisplayAmount(balance, MAIN_COIN_CONFIG.decimals)}
               </div>

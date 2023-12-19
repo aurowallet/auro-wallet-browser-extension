@@ -295,5 +295,6 @@
   "showData":"展示数据",
   "sign":"签名",
   "stakedBalance":"已委托",
-  "testnet":"测试网"
+  "testnet":"测试网",
+  "available": "可用"
 }

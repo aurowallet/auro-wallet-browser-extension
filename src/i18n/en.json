@@ -295,5 +295,6 @@
   "showData":"Show data",
   "sign":"Sign",
   "stakedBalance":"Staked",
-  "testnet":"testnet"
+  "testnet":"testnet",
+  "available": "Available"
 }
