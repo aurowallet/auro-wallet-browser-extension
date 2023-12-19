@@ -133,7 +133,8 @@ function zkAppFormat(zkAppList,isPending=false){
     let newList = []
     for (let index = 0;  index < zkAppList.length; index++) {
         const zkApp = zkAppList[index];
-        let status = isPending ?  "PENDING":zkApp.failureReason ? "failed":"applied"
+        let isFailed = Array.isArray(zkApp.failureReason) && zkApp.failureReason.length>0
+        let status = isPending ?  "PENDING":isFailed ? "failed":"applied"
         newList.push({
             "id": "",
             "hash": zkApp.hash,
@@ -149,7 +150,7 @@ function zkAppFormat(zkAppList,isPending=false){
             type:"zkApp",
             body:zkApp,
             timestamp : isPending ? "": new Date(zkApp.dateTime).getTime(),
-            failureReason:zkApp.failureReason||""
+            failureReason:isFailed ? zkApp.failureReason :""
         })
     }
     return newList
