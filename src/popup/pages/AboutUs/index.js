@@ -66,16 +66,16 @@ const AboutUs = ({}) => {
     const getCurrentUrl = (type) => {
       let lan = i18n.language;
       let url = "";
-      if (lan === LANG_SUPPORT_LIST.EN) {
-        url =
-          type == "terms"
-            ? baseAboutInfo.terms_and_contions
-            : baseAboutInfo.privacy_policy;
-      } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
+       if (lan === LANG_SUPPORT_LIST.zh_CN) {
         url =
           type == "terms"
             ? baseAboutInfo.terms_and_contions_cn
             : baseAboutInfo.privacy_policy_cn;
+      }else{
+        url =
+        type == "terms"
+          ? baseAboutInfo.terms_and_contions
+          : baseAboutInfo.privacy_policy;
       }
       return url;
     };

@@ -9,7 +9,7 @@ import extension from 'extensionizer'
 import { decodeMemo, getCurrentNetConfig } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
-import { changeLanguage, getCurrentLang } from '../i18n';
+import { changeLanguage } from '../i18n';
 import { extGetLocal } from './extensionStorage';
 import { LANGUAGE_CONFIG } from '../constant/storageKey';
 
@@ -771,7 +771,7 @@ class APIService {
                     extension.tabs.create({ url: url });
                 }
             });
-        const i18nLanguage = getCurrentLang()
+        const i18nLanguage = i18n.language
         const localLanguage = await extGetLocal(LANGUAGE_CONFIG)
         if(localLanguage !== i18nLanguage){
             changeLanguage(localLanguage)

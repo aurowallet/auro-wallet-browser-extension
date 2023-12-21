@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 import { getLocal, saveLocal } from "../../../background/localStorage";
 import { POWER_BY } from "../../../constant";
 import { USER_AGREEMENT } from "../../../constant/storageKey";
-import { getCurrentLang, LANG_SUPPORT_LIST } from "../../../i18n";
+import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { setWelcomeNextRoute } from "../../../reducers/cache";
 import { openTab } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
@@ -30,17 +30,17 @@ const Welcome = () => {
 
   const onClickGuide = useCallback((type) => {
     const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = cache
-    let lan = getCurrentLang()
+    let lan = i18n.language
     let url = ""
-    if (lan === LANG_SUPPORT_LIST.EN) {
-      url = type === type_conditions ? terms_and_contions : privacy_policy
-    } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
+    if (lan === LANG_SUPPORT_LIST.zh_CN) {
       url = type === type_conditions ? terms_and_contions_cn : privacy_policy_cn
+    }else{
+      url = type === type_conditions ? terms_and_contions : privacy_policy
     }
     if (url) {
       openTab(url)
     }
-  }, [cache])
+  }, [cache,i18n])
 
 
   const onConfirmProtocol = useCallback((route) => {

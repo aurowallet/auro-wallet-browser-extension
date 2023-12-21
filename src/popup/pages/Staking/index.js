@@ -80,10 +80,10 @@ const Staking = ({ }) => {
     const { staking_guide, staking_guide_cn } = cache
     let lan = i18n.language
     let url = ""
-    if (lan === LANG_SUPPORT_LIST.EN) {
-      url = staking_guide
-    } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
+    if (lan === LANG_SUPPORT_LIST.zh_CN) {
       url = staking_guide_cn
+    } else {
+      url = staking_guide
     }
     if (url) {
       openTab(url)
