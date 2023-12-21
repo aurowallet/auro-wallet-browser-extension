@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.10]
+- Fix zkTx show status
+- UI enhancements
+
 ## [2.2.9]
 - Logo enhancements
 - Update tx history source
@@ -152,4 +156,3 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Bug fix
-
