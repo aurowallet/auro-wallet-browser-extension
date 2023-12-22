@@ -217,7 +217,6 @@
   "blockProducers": "出块节点",
   "searchPlaceholder": "出块节点名称或地址",
   "manualAdd": "输入出块节点地址",
-  "stake": "委托",
   "users": "用户",
   "blockProducer": "出块节点",
   "notificationTitle": "交易已确认",
