@@ -217,7 +217,6 @@
   "blockProducers": "Block Producers",
   "searchPlaceholder": "Block Producer name or address",
   "manualAdd": "Input BP node address",
-  "users": "Users",
   "blockProducer": "Block Producer",
   "notificationTitle": "Transaction Confirmed",
   "notificationContent": "The transfer has been confirmed, click to view the transaction.",
