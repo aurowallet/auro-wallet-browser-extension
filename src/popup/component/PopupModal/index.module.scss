@@ -79,6 +79,7 @@
     @extend .baseBtn;
     color: #594af1;
     border-bottom-right-radius: 12px;
+    text-transform: capitalize;
     &:hover {
         background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(0, 0, 0, 0.05);
     }

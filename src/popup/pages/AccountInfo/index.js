@@ -129,7 +129,7 @@ const AccountInfo = ({}) => {
     setCurrentModal({
       title: i18n.t('deleteAccount'),
       leftBtnContent: i18n.t("cancel"), 
-      rightBtnContent: i18n.t("delete"),
+      rightBtnContent: i18n.t("deleteTag"),
       type: PopupModal_type.common,
       onLeftBtnClick: onCloseModal,
       onRightBtnClick: onConfirmDeleteLedger,
@@ -263,7 +263,7 @@ const AccountInfo = ({}) => {
                 className={cls(styles.rowTitle, styles.deleteTitle)}
                 onClick={deleteAccount}
               >
-                {i18n.t("delete")}
+                {i18n.t("deleteTag")} 
               </p>
             </div>
           </>

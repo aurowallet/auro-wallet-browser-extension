@@ -303,7 +303,7 @@ const NodeEditor = ({ }) => {
         rightComponent={
             showDeleteBtn && <p className={styles.deleteBtn}
                 onClick={onClickDelete}>
-                {i18n.t('delete')}
+                {i18n.t('deleteTag')}
             </p>
         }>
         <div className={styles.addTipContainer}>
@@ -342,7 +342,7 @@ const NodeEditor = ({ }) => {
             title={i18n.t('deleteNode')}
             leftBtnContent={i18n.t('cancel')}
             onLeftBtnClick={onCancel}
-            rightBtnContent={i18n.t('delete')}
+            rightBtnContent={i18n.t('deleteTag')}
             onRightBtnClick={onConfirmDelete}
             rightBtnStyle={styles.modalDelete}
             modalVisable={reminderModalStatus} />

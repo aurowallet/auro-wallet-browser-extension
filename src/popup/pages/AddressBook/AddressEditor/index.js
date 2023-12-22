@@ -179,7 +179,7 @@ const AddressEditor = ({ }) => {
             editorType === AddressEditorType.edit &&
             <p className={styles.deleteBtn}
                 onClick={onClickDelete}>
-                {i18n.t('delete')}
+                {i18n.t('deleteTag')}
             </p>
         }
     >
@@ -213,7 +213,7 @@ const AddressEditor = ({ }) => {
             title={i18n.t('deleteAddress')}
             leftBtnContent={i18n.t('cancel')}
             onLeftBtnClick={onCancel}
-            rightBtnContent={i18n.t('delete')}
+            rightBtnContent={i18n.t('deleteTag')}
             onRightBtnClick={onCloseModal}
             rightBtnStyle={styles.modalDelete}
             modalVisable={reminderModalStatus} />

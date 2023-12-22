@@ -111,7 +111,7 @@ const Wallet = ({ }) => {
     <PopupModal
       title={i18n.t('watchModeDeleteBtn')}
       leftBtnContent={i18n.t('cancel')}
-      rightBtnContent={i18n.t("delete")}
+      rightBtnContent={i18n.t("deleteTag")}
       onLeftBtnClick={onCloseWatchModal}
       onRightBtnClick={onWatchModalConfirm}
       rightBtnStyle={styles.watchModalRightBtn}
