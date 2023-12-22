@@ -178,7 +178,7 @@
   "connectionRequest": "连接请求",
   "approveTip": "这个网站请求查看账户",
   "approveWaring": "请确保只与你信任的网站进行连接",
-  "waitNonce": "请输入 Nonce",
+  "waitNonce": "Nonce 不正确",
   "content": "内容",
   "siteSuggested": "网站建议",
   "ledgerNotSupportSign": "Ledger 不支持签名消息",
