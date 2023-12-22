@@ -70,7 +70,7 @@
   "repeatTip": "地址已存在",
   "incorrectAddressFormat": "无效的地址",
   "delete": "删除",
-  "name": "名称",
+  "name": "节点名称",
   "address": "地址",
   "deleteAddress": "删除地址?",
   "failed": "失败",
