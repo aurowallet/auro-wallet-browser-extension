@@ -243,5 +243,8 @@
   "staking": "Staking",
   "done": "Tamamlandı",
   "changeSecurityPassword": "Güvenlik Şifresini Değiştir",
-  "walletConnected": "Auro Wallet bu web sitesine bağlandı."
+  "walletConnected": "Auro Wallet bu web sitesine bağlandı.",
+  "getAddress": "Get Address",
+  "generate": "Generate",
+  "approve": "Approve"
 }
