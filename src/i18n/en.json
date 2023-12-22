@@ -180,7 +180,7 @@
   "content": "Content",
   "siteSuggested": "Site suggested",
   "ledgerNotSupportSign": "Ledger doesn't support sign message",
-  "notSupportNow": "Not supported",
+  "notSupportNow": "Not supported yet",
   "watchModeDeleteBtn": "Delete watch account",
   "watchModeDeleteTip": "Auro wallet no longer supports the [Watch Account] , you will need to <red>delete all watch accounts</red> before you can continue to use Auro Wallet.",
   "walletConnected": "Auro Wallet has connected to this website.",
