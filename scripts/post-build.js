@@ -73,7 +73,7 @@ async function writeManifestFile(targetPath, fileContent) {
 
 (async () => {
   try {
-    const id = "1005";
+    const id = "1002";
 
     const chromeFileName = `${pck.name}-chrome-edge-${pck.version}-${id}`;
     const firefoxFileName = `${pck.name}-firefox-${pck.version}-${id}`;
@@ -118,9 +118,10 @@ async function writeManifestFile(targetPath, fileContent) {
       "!node_modules/**",
       "!zip/**",
     ];
+    let pathName = path.resolve(__dirname, '..')
     const sourceFilelist = [
-      "../auro-wallet-browser-extension/**",
-      "../auro-wallet-browser-extension/.*",
+      pathName+"/**",
+      pathName+"/.*",
     ];
     // gulp
     //   .src([...sourceFileList, ...ignoreFileList])

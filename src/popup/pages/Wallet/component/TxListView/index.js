@@ -67,7 +67,7 @@ const TxListView = ({
   const onGoExplorer = useCallback(() => {
     let currentConfig = netConfig.currentConfig;
     let url =
-      currentConfig.explorer + "/account/" + accountInfo.currentAccount.address;
+      currentConfig.explorer + "/account/" + accountInfo.currentAccount.address + "/txs";
     openTab(url);
   }, [netConfig, accountInfo]);
 
