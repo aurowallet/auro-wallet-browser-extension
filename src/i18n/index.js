@@ -9,6 +9,7 @@ import { LANGUAGE_CONFIG } from "../constant/storageKey";
  */
 import en from "./en.json";
 import zh from "./zh_CN.json";
+import tr from "./tr.json";
 
 /**
  * 2. add language code to support list
@@ -18,6 +19,7 @@ export const LANG_SUPPORT_LIST = {
   zh: "zh",
 
   en: "en",
+  tr:"tr"
 };
 
 /**
@@ -26,6 +28,7 @@ export const LANG_SUPPORT_LIST = {
 export const languageOption = [
   { key: LANG_SUPPORT_LIST.en, value: "English" },
   { key: LANG_SUPPORT_LIST.zh_CN, value: "中文" },
+  { key: LANG_SUPPORT_LIST.tr, value: "Türkçe" },
 ];
 
 /**
@@ -39,6 +42,9 @@ function getResources() {
     },
     [LANG_SUPPORT_LIST.zh_CN]: {
       translation: zh,
+    },
+    [LANG_SUPPORT_LIST.tr]: {
+      translation: tr,
     },
   };
   return resources;

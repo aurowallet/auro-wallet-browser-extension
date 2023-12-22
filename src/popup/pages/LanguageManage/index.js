@@ -6,6 +6,7 @@ import { changeLanguage, languageOption } from "../../../i18n";
 import { setLanguage } from "../../../reducers/appReducer";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
+import { ContributeMoreLanguage } from "../../../constant";
 
 
 const LanguageManagementPage = ({ }) => {
@@ -35,6 +36,11 @@ const LanguageManagementPage = ({ }) => {
           </div>
         })
       }
+      <div className={styles.bottomCon}>
+        <a className={styles.tipContainer} href={ContributeMoreLanguage} target="_blank">
+          {i18n.t('contributeLanguage')}
+        </a>
+      </div>
     </CustomView>
   )
 }

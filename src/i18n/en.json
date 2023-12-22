@@ -292,5 +292,6 @@
   "sign": "Sign",
   "stakedBalance": "Staked",
   "testnet": "testnet",
-  "available": "Available"
+  "available": "Available",
+  "contributeLanguage":"Contribute other language"
 }
