@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [2.2.10]
 - Fix zkTx show status
 - UI enhancements
+- add language:Turkish
 
 ## [2.2.9]
 - Logo enhancements
