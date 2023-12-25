@@ -4,7 +4,7 @@
   "backup_checkbox_2": "Anımsatıcı ifadeyi korumanın tüm sorumluluğunu alıyorum.",
   "connect": "Bağlan",
   "revealMneTip": "Lütfen aşağıdaki anımsatıcı ifadeyi yazın ve güvenli bir yerde saklayın.",
-  "inputNewPwdRepeat": "<b>Yeni</b> şifrenizi tekrar girin",
+  "inputNewPwdRepeat": "<bold>Yeni</bold> şifrenizi tekrar girin",
   "backTips_3": "Cihazınız kaybolduğunda veya başka bir nedenden dolayı cüzdana erişilemiyorsa, varlıklarınızı geri almanın tek yolu anımsatıcı ifadeyi içe aktarmaktır.",
   "scanPay": "Kendinize ödeme yapmak için tarayın",
   "copyAnyway": "Yine de Kopyala",
@@ -41,7 +41,7 @@
   "ledgerImportTip": "Lütfen [İçe Aktar] düğmesine tıklayın ve Ledger cüzdanınızdan onaylayın.",
   "connectLedger": "Ledger’a Bağlan",
   "amountError": "Lütfen geçerli bir işlem tutarı girin",
-  "inputSeed": "Lütfen anımsatıcı ifadeyi, her kelime bir boşlukla ayrılmış olacak şekilde sırayla girin.",
+  "inputSeed": "Lütfen her kelime bir boşlukla ayrılmış olacak şekilde 12 anımsatıcı ifadeyi sırayla girin.",
   "keystorePassword": "Anahtar Deposu Şifresi",
   "fee_fast": "Hızlı",
   "balanceNotEnough": "Yetersiz bakiye",
@@ -65,7 +65,7 @@
   "inputFeeError": "Lütfen geçerli bir işlem ücreti girin",
   "copySuccess": "Kopyalandı",
   "notActiveAccountTip": "Mina ağı, spam saldırılarını önlemek için tek seferlik 1 MINA tutarında hesap oluşturma ücreti alır. Bu ücret yapılan ilk işlemden otomatik olarak düşülecektir, cüzdan ücretsizdir.",
-  "walletName": "Auro Wallet",
+  "walletName": "Auro Cüzdan",
   "epochEndTime": "Mevcut dönem şu tarihte sona eriyor",
   "waitingLedgerConfirmTip_2": "Onaylanana kadar bu pencereyi kapatmayın.",
   "agree": "Kabul Ediyorum",
@@ -139,7 +139,7 @@
   "network": "Ağ",
   "emptyDelegateDesc_1": "MINA'yı bir Blok Üreticisi düğümüne delege etmek, blok üretme karşılığında ödüller almanıza yardımcı olabilir. Blok Üreticisi size, delege edilen oran miktarına göre ödülleri dağıtacaktır ve ödül yüzdeniz aynı zamanda Blok Üreticisi tarafından belirlenen komisyon oranına da bağlı olacaktır.",
   "enterPwd": "Şifresini giriniz",
-  "pleaseInputPriKey": "Lütfen Özel Anahtarı giriniz",
+  "pleaseInputPriKey": "Lütfen Özel Anahtarı giriniz.",
   "about": "Hakkında",
   "lockTime_never": "Asla",
   "watchModeDeleteBtn": "İzleme hesabını sil",
@@ -291,5 +291,5 @@
   "switch": "Değiştir",
   "newFee": "Yeni Ücret",
   "deleteAccount": "Hesabı Sil?",
-  "contributeLanguage": "Dile katkıda bulunmak"
+  "contributeLanguage": "Başka bir dile katkıda bulunun"
 }
