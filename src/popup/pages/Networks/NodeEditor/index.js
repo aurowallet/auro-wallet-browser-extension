@@ -313,7 +313,7 @@ const NodeEditor = ({ }) => {
         </div>
         <div className={styles.inputContainer}>
             <Input
-                label={i18n.t('name')}
+                label={i18n.t('nodeName')}
                 onChange={onInputNodeName}
                 value={nodeName}
                 inputType={'text'}

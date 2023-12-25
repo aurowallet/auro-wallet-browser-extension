@@ -88,6 +88,7 @@
   "keystoreError": "Anahtar deposu içeriği veya şifresi yanlış",
   "totalDelegators": "Toplam Delegatörler",
   "name": "Düğüm Adı",
+  "nodeName": "Düğüm Adı",
   "addressBook": "Adres Defteri",
   "accountManage": "Hesap Yönetimi",
   "noAddress": "Adres Yok",

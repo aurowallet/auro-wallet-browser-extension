@@ -313,7 +313,7 @@ const AddChainView = ({ notifyParams }) => {
       </div>
       <p className={styles.accountTip}>{i18n.t("allowAdd")}</p>
       <div className={styles.nodeWrapper}>
-        <div className={styles.nodeTitle}>{i18n.t("name")}</div>
+        <div className={styles.nodeTitle}>{i18n.t("nodeName")}</div>
         <div className={styles.nodeContent}>{name}</div>
         <div className={styles.nodeTitle}>{i18n.t("nodeAddress")}</div>
         <div className={styles.nodeContent}>{url}</div>
