@@ -16,7 +16,7 @@
   "resetWallet": "重置钱包",
   "welcomeBack": "欢迎回来!",
   "password": "密码",
-  "enterPwd": "输入密码", 
+  "enterPwd": "输入密码",
   "unlock": "解锁",
   "createPassword": "创建密码",
   "createPasswordTip": "密码将用于在 Auro 钱包中发送交易和身份验证。Auro 钱包不保存密码，也无法帮您找回，请妥善保管。",
