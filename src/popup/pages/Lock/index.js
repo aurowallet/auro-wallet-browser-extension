@@ -162,7 +162,7 @@ export const LockPage = ({
                     <div className={styles.pwdInputContainer}>
                         <Input
                             label={i18n.t('password')}
-                            placeholder={i18n.t('enterSecurityPwd')}
+                            placeholder={i18n.t('enterPwd')}
                             onChange={onPwdInput}
                             value={pwdValue}
                             inputType={'password'}

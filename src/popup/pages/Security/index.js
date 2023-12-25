@@ -15,7 +15,7 @@ const Security = ({ }) => {
   }, [])
   return <CustomView title={i18n.t('security')} contentClassName={styles.container}>
     <RowItem title={i18n.t('backupMnemonicPhrase')} onClickItem={onToSeedPage} />
-    <RowItem title={i18n.t('changeSecurityPassword')} onClickItem={onResetPwd} />
+    <RowItem title={i18n.t('changePassword')} onClickItem={onResetPwd} />
   </CustomView>
 }
 

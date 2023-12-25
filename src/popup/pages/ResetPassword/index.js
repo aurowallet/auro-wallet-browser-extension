@@ -88,7 +88,7 @@ const Reset = ({ }) => {
         })
     }, [oldPassword, confirmPassword, newPassword, history, i18n])
 
-    return (<CustomView title={i18n.t('changeSecurityPassword')} >
+    return (<CustomView title={i18n.t('changePassword')} >
         <div className={cls(styles.inputContainer, {
         })}>
             <Input
