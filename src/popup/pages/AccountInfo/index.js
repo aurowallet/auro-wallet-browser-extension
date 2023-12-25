@@ -183,7 +183,7 @@ const AccountInfo = ({}) => {
           if (currentAccount.error) {
             if (currentAccount.type === "local") {
               if (currentAccount.error === "passwordError") {
-                Toast.info(i18n.t("incorrectSecurityPassword"));
+                Toast.info(i18n.t("passwordError"));
               } else {
                 Toast.info(i18n.t(currentAccount.error));
               }

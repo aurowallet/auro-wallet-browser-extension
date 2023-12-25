@@ -33,7 +33,7 @@ const ShowPrivateKeyPage = ({ }) => {
         if (privateKey.error) {
           if (privateKey.type === "local") {
             if(privateKey.error === "passwordError"){
-              Toast.info(i18n.t("incorrectSecurityPassword"))
+              Toast.info(i18n.t("passwordError"))
             }else{
               Toast.info(i18n.t(privateKey.error))
             }

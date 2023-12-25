@@ -74,7 +74,7 @@ const SecurityPwd = ({
         <form onSubmit={onSubmit} className={styles.container}>
           <div >
             <Input
-              label={i18n.t('inputPassword')}
+              label={i18n.t('password')}
               onChange={onPwdInput}
               value={inputValue}
               inputType={'password'}

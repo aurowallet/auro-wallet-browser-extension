@@ -96,7 +96,7 @@ const CreatePassword = () => {
         content={i18n.t('createPasswordTip')} />
       <div className={cls(styles.inputContainer)}>
         <Input
-          label={i18n.t('inputPassword')}
+          label={i18n.t('password')}
           onChange={onPwdInput}
           value={inputPwd}
           inputType={'password'}
