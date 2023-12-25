@@ -90,7 +90,7 @@ const RestoreAccount = () => {
 
     let mnemonicVaild = validateMnemonic(mnemonic)
     if (!mnemonicVaild) {
-      setBottomTipError(i18n.t('inputVaildSeed'))
+      setBottomTipError(i18n.t('seed_error'))
       return
     }
     setBtnLoading(true)

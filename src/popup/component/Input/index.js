@@ -68,6 +68,7 @@ const Input = ({
                         i18nKey={i18n.t(transLabel)}
                         components={{
                           b: <span className={styles.boldLabel} />,
+                          bold: <span className={styles.boldLabel} />,
                         }}
                       /> 
                     }
