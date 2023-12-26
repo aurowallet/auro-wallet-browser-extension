@@ -1,0 +1,10 @@
+{
+    "appName": {
+        "message": "Auro Wallet",
+        "description": "The name of the application"
+    },
+    "appDescription": {
+        "message": "Mina Protokol Cüzdanı Tarayıcı Eklentisi",
+        "description": "The description of the application"
+    }
+}
