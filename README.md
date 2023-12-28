@@ -57,7 +57,7 @@ yarn test
 We are thrilled that you like to contribute to Auro Wallet. Your contribution is essential for keeping Auro Wallet great. We currently have [auro-wallet-browser-extension](https://github.com/aurowallet/auro-wallet-browser-extension) and [auro-wallet-mobile-app](https://github.com/aurowallet/auro-wallet-mobile-app) .
 
 ### File structure
-Our languages are stored in `src/i18n` directory. The naming rule of the language is [language coding](https://developers.google.com/admin-sdk/directory/v1/languages). If language code contains `-`, you need to change the `-` to ` _`.
+Our languages are stored in `src/i18n` directory. The naming rule of the language is [language code standard](https://developers.google.com/admin-sdk/directory/v1/languages). If language code contains `-`, you need to change the `-` to ` _`.
 
 ### For all people
 You can use weblate to add new translations to [Auro Wallet](https://hosted.weblate.org/projects/aurowallet) or update existing translations. if you want to add more languages, please join [telegram](https://t.me/aurowallet) and ping admin.
