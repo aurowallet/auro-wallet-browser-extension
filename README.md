@@ -11,8 +11,8 @@ Auro Wallet provide one-stop management for MINA assets, convenient staking, and
 - Available for Chrome&Firefox.
 - Support English and Chineses.
 
-## Architecture
-[![Architecture Diagram](./docs/auro-extension-wallet.png)][1]
+<!-- ## Architecture
+[![Architecture Diagram](./docs/auro-extension-wallet.png)][1] -->
 
 ## Building
 
@@ -52,6 +52,18 @@ run bottom sh and will open url in the chrome http://localhost:6006/
 ```sh
 yarn test
 ``` 
+
+## Contributing for Translation
+We are thrilled that you like to contribute to Auro Wallet. Your contribution is essential for keeping Auro Wallet great. We currently have [auro-wallet-browser-extension](https://github.com/aurowallet/auro-wallet-browser-extension) and [auro-wallet-mobile-app](https://github.com/aurowallet/auro-wallet-mobile-app) .
+
+### File structure
+Our languages are stored in `src/i18n` directory. The naming rule of the language is [language coding](https://developers.google.com/admin-sdk/directory/v1/languages). If language code contains `-`, you need to change the `-` to ` _`.
+
+### For all people
+You can use weblate to add new translations to [Auro Wallet](https://hosted.weblate.org/projects/aurowallet) or update existing translations. if you want to add more languages, please join [telegram](https://t.me/aurowallet) and ping admin.
+
+#### For developer
+You need to pull the code from github first, and then switch to the `feature/translate` branch. If you need to update the existing translation, directly edit the content of the target file. If you need to add a new language file, please add a new language file according to the language encoding requirements, such as `tr.json`. After completion, you need to submit a PR to the `feature/translate` branch for merging.
 
 ## LICENSE
 
