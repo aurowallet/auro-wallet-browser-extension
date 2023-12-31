@@ -753,8 +753,7 @@ const SignView = ({
                   )}
                 </div>
               </div>
-              <div className={styles.rowRight}>
-                <p className={cls(styles.rowTitle, styles.rightTitle)} />
+              <div className={styles.modeWrapper}>
                 <p className={styles.rowPurpleContent} onClick={onClickAdvance}>
                   {i18n.t("advanceMode")}
                 </p>
