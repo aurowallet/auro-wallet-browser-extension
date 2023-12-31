@@ -38,16 +38,16 @@ const Record = ({ }) => {
 
     if(txDetail.status === STATUS.TX_STATUS_PENDING){
         statusIcon = "/img/detail_pending.svg"
-        statusTitle = i18n.t('wait')
+        statusTitle = i18n.t("PENDING");
         statusClass = styles.txPending
     }else{
       if(txDetail.failureReason){
         statusIcon = "/img/detail_failed.svg"
-        statusTitle = i18n.t('failed')
+        statusTitle = i18n.t("FAILED"); 
         statusClass = styles.txFailed
       }else{
         statusIcon = "/img/detail_success.svg"
-        statusTitle = i18n.t('success')
+        statusTitle = i18n.t('APPLIED')
         statusClass = styles.txSuccess
       }
     }
