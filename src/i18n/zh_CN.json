@@ -71,8 +71,6 @@
   "nodeName": "节点名称",
   "address": "地址",
   "deleteAddress": "删除地址?",
-  "failed": "失败",
-  "wait": "等待",
   "from": "发送",
   "time": "时间",
   "transationHash": "交易 Hash",

@@ -70,8 +70,6 @@
   "nodeName": "Node Name",
   "address": "Address",
   "deleteAddress": "Delete Address?",
-  "failed": "Failed",
-  "wait": "Wait",
   "from": "From",
   "time": "Time",
   "transationHash": "Transaction Hash",
