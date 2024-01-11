@@ -11,6 +11,7 @@ import {
   getDaemonStatusBody,
   getDelegationInfoBody,
   getDeletionTotalBody,
+  getFetchAccountBody,
   getPartyBody,
   getPendingTxBody,
   getPendingZkAppTxBody,
@@ -392,4 +393,27 @@ export async function getScamList() {
     saveLocal(SCAM_LIST, JSON.stringify(result))
   }
   return result
+}
+
+
+export async function getAccountInfo(address,tokenId){
+  let accountBody = getFetchAccountBody()
+  let queryParams = {
+    publicKey: address,
+  }
+  if(tokenId){
+    queryParams.tokenId = tokenId
+  }
+  let result = await startFetchMyQuery(
+    accountBody,
+    queryParams
+  ).catch((error) => error)
+  
+  let account = result?.account || {
+    publicKey: address
+  }
+  if(result?.error){
+    account.error = result.error
+  }
+  return account
 }

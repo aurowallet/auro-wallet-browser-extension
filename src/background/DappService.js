@@ -11,6 +11,7 @@ import { get } from './storageService';
 import { NET_CONFIG_MAP } from '@/constant/network';
 import { errorCodes } from '@/constant/dappError';
 import { zkCommondFormat } from '@/utils/zkUtils';
+import { getAccountInfo } from './api';
 
 let signRequests = [];
 let approveRequests = [];
@@ -129,6 +130,13 @@ class DappService {
             sendResponse
           )
           break;
+      case DAppActions.mina_fetchAccount:
+        this.requestCallback(
+          () => this.requestAccountNetInfo(params,site),
+          id,
+          sendResponse
+        )
+        break;
       default:
         this.requestCallback(
           async ()=>{
@@ -139,6 +147,22 @@ class DappService {
         )
         break;
     }
+  }
+  async requestAccountNetInfo(params,site){
+    return new Promise(async (resolve,reject) => {
+      const {publicKey,tokenId} = params
+      if(!publicKey || !addressValid(publicKey)){
+        reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
+        return 
+      }
+      const tokenID = tokenId ? tokenId : "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf"
+      const accountInfo =  await getAccountInfo(publicKey,tokenID)
+      if(accountInfo.data){
+        resolve({account:accountInfo})
+      }else{
+        resolve({code:errorCodes.throwError,account:undefined})
+      }
+    })
   }
   
   async signTransaction(id, params, site) {

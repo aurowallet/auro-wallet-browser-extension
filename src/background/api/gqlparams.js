@@ -550,3 +550,55 @@ export function getPendingZkAppTxBody() {
   }
   `
 }
+ 
+export function getFetchAccountBody(){
+  return `
+  query account($publicKey: PublicKey!,$tokenId:TokenId) {
+    account(publicKey: $publicKey, token: $tokenId) {
+      publicKey
+      token
+      nonce
+      balance {
+        total
+      }
+      tokenSymbol
+      receiptChainHash
+      timing {
+        initialMinimumBalance
+        cliffTime
+        cliffAmount
+        vestingPeriod
+        vestingIncrement
+      }
+      permissions {
+        editState
+        access
+        send
+        receive
+        setDelegate
+        setPermissions
+        setVerificationKey
+        setZkappUri
+        editActionState
+        setTokenSymbol
+        incrementNonce
+        setVotingFor
+        setTiming
+      }
+      delegateAccount {
+        publicKey
+      }
+      votingFor
+      zkappState
+      verificationKey {
+        verificationKey
+        hash
+      }
+      actionState
+      provedState
+      zkappUri
+    }
+  }
+  
+  `;
+}

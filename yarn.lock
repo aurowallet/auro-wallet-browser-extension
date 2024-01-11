@@ -2,10 +2,9 @@
 # yarn lockfile v1
 
 
-"@aurowallet/mina-provider@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@aurowallet/mina-provider/-/mina-provider-1.0.1.tgz#13b5cdb70648932b93ecff27aa7b8c8bc7615ffc"
-  integrity sha512-y2ZVe2r7c8aV3dAbOm+qy9bCBPEQDKawWoiiORqJnaF9BwN5rLkiTaPpwOBgSctinTKgi9oubCoIJq6iHtnzlQ==
+"@aurowallet/mina-provider@github:aurowallet/mina-provider#feature/fetchAccount":
+  version "1.0.2"
+  resolved "https://codeload.github.com/aurowallet/mina-provider/tar.gz/ce2a0b4e0aca45ed62113089fe95e53e5023fe1d"
   dependencies:
     "@types/eventemitter3" "^2.0.2"
     "@types/uuid" "^8.3.1"
