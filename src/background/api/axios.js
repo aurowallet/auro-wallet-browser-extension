@@ -112,7 +112,7 @@ axios.interceptors.request.use(function (config) {
         let timeToken = setTimeout(() => tokenItem.cancel({ message: 'Timeout', config: config }), timeout);
         config.clearCancelToken = () => clearTimeout(timeToken);
     });
-    let netType =  store.getState().network?.currentConfig?.netType||""
+    let netType =  store.getState().network?.currentConfig?.netType
     if(netType){
         config.netType = netType
     }
@@ -123,7 +123,7 @@ const stableOperationNameList = ["sendTx","stakeTx","sendZkapp","txStatus"]
 
 axios.interceptors.response.use(function (response) {
     removeQueue(response.config);
-    let netType =  store.getState().network?.currentConfig?.netType||""
+    let netType =  store.getState().network?.currentConfig?.netType
     if(netType !== response.config.netType){
         try {
             if(response.config.data){
