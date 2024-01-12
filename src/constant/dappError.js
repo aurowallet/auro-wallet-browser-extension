@@ -10,6 +10,7 @@ export const errorCodes = {
   internal: 21001,
   throwError: 22001,
   originDismatch: 23001,
+  notFound: 404,
 };
 export const FALLBACK_MESSAGE =
   "Unspecified error message. This is a bug, please report it.";

@@ -156,12 +156,17 @@ class DappService {
         return 
       }
       const tokenID = tokenId ? tokenId : "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf"
-      const accountInfo =  await getAccountInfo(publicKey,tokenID)
-      if(accountInfo.data){
-        resolve({account:accountInfo})
-      }else{
-        resolve({code:errorCodes.throwError,account:undefined})
+      const accountInfo = await getAccountInfo(publicKey,tokenID)
+      if(accountInfo.error){
+        reject({ code:errorCodes.throwError, message: JSON.stringify(accountInfo.error)})
       }
+      if (accountInfo.account === null) {
+        reject({
+          code: errorCodes.notFound,
+          message: `fetchAccount: Account with public key ${publicKey} does not exist.`,
+        })
+      }
+      resolve({account:accountInfo.account})
     })
   }
   
