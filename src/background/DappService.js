@@ -8,7 +8,7 @@ import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get } from './storageService';
-import { NET_CONFIG_MAP } from '@/constant/network';
+import { NET_CONFIG_MAP, NET_CONFIG_TYPE } from '@/constant/network';
 import { errorCodes } from '@/constant/dappError';
 import { zkCommondFormat } from '@/utils/zkUtils';
 import { getAccountInfo } from './api';
@@ -154,6 +154,11 @@ class DappService {
       if(!publicKey || !addressValid(publicKey)){
         reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
         return 
+      }
+      const supportNetType = [NET_CONFIG_TYPE.Berkeley,NET_CONFIG_TYPE.Testworld2]
+      let netConfig = await getCurrentNetConfig()
+      if(supportNetType.indexOf(netConfig.netType)===-1){
+        reject({ code:errorCodes.unsupportMethod, message: getMessageFromCode(errorCodes.unsupportMethod)})
       }
       const tokenID = tokenId ? tokenId : "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf"
       const accountInfo = await getAccountInfo(publicKey,tokenID)
