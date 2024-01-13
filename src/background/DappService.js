@@ -1,7 +1,7 @@
 import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
-import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/msgTypes';
+import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN } from '../constant/msgTypes';
 import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
 import { checkNetworkUrlExist, getArrayDiff, getCurrentNetConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
@@ -395,10 +395,6 @@ class DappService {
     function removeListener (tabInfo, changeInfo) {
       if (popupWindowId === changeInfo.windowId) {
         extension.tabs.onRemoved.removeListener(removeListener)
-        extension.runtime.sendMessage({
-          type: FROM_BACK_TO_RECORD,
-          action: DAPP_CLOSE_POPUP_WINDOW,
-        });
         let requestList = [...signRequests,...approveRequests,...notificationRequests]
         requestList.map((item)=>{
           if(item.popupId === changeInfo.windowId){
