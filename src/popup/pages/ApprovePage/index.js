@@ -50,6 +50,7 @@ const ApprovePage = () => {
         selectAccount: [],
         currentAddress: currentAccount.address,
         resultOrigin: params.siteUrl,
+        id: params.id,
       }
     }, async () => {
       goToHome()
@@ -63,6 +64,7 @@ const ApprovePage = () => {
       payload: {
         selectAccount,
         resultOrigin: params.siteUrl,
+        id: params.id,
       },
     }, () => {
       goToHome()
@@ -86,6 +88,7 @@ const ApprovePage = () => {
             page: "approve_page",
             account: currentAccount.address,
             resultOrigin: siteUrl,
+            id: params.id,
           },
         }, (params) => {
         })
