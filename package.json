@@ -6,7 +6,7 @@
     "@ledgerhq/hw-transport-webusb": "5.46.0",
     "@reduxjs/toolkit": "1.4.0",
     "@vespaiach/axios-fetch-adapter": "0.3.1",
-    "@aurowallet/mina-provider": "github:aurowallet/mina-provider#feature/fetchAccount",
+    "@aurowallet/mina-provider": "1.0.1",
     "axios": "0.21.1",
     "bignumber.js": "9.0.1",
     "bip32": "2.0.6",
@@ -35,7 +35,8 @@
     "safe-buffer": "5.2.1",
     "uuid": "8.3.2",
     "valid-url": "1.0.9",
-    "qrcode.react": "3.1.0"
+    "qrcode.react": "3.1.0",
+    "styled-components":"6.1.8"
   },
   "scripts": {
     "build": "rm -rf dist && webpack --mode production",
