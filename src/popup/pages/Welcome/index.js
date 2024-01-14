@@ -12,6 +12,7 @@ import { openTab } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
 import { PopupModal } from "../../component/PopupModal";
 import styles from "./index.module.scss";
+import extension from 'extensionizer'
 
 const type_conditions = "conditions"
 const type_policy = "policy"
@@ -64,6 +65,12 @@ const Welcome = () => {
     }
   }, [isGotoProtocol, nextRoute])
 
+  const openFullClick = useCallback(()=>{
+    extension.tabs.create({
+      url: "popup.html#/"
+  });
+  })
+
   const onCloseModal = useCallback(() => {
     setPopupModalStatus(false)
   }, [])
@@ -89,7 +96,10 @@ const Welcome = () => {
     <div className={styles.btnContainer}>
       <Button
         leftIcon={"/img/icon_add.svg"}
-        onClick={() => { goNextRoute("/backup_tips") }}
+        onClick={() => { 
+          // goNextRoute("/backup_tips")
+          openFullClick()
+         }}
       >
         {i18n.t('createWallet')}
       </Button>
