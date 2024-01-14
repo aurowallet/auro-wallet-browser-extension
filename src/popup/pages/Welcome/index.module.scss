@@ -1,6 +1,10 @@
 .container {
   width: 100%;
   height: 100%;
+  .topContainer{
+    width: 375px;
+    margin: 0 auto;
+  }
 }
 .logoContainer {
   margin: 89px auto 57px;

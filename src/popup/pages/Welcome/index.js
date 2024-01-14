@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
 import { getLocal, saveLocal } from "../../../background/localStorage";
 import { POWER_BY } from "../../../constant";
 import { USER_AGREEMENT } from "../../../constant/storageKey";
@@ -12,135 +12,160 @@ import { openTab } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
 import { PopupModal } from "../../component/PopupModal";
 import styles from "./index.module.scss";
-import extension from 'extensionizer'
+import extension from "extensionizer";
 
-const type_conditions = "conditions"
-const type_policy = "policy"
+const type_conditions = "conditions";
+const type_policy = "policy";
 
 const Welcome = () => {
+  const cache = useSelector((state) => state.cache);
+  const dispatch = useDispatch();
+  const history = useHistory();
 
-  const cache = useSelector(state => state.cache)
-  const dispatch = useDispatch()
-  const history = useHistory()
+  const [isGotoProtocol, setIsGotoProtocol] = useState(true);
+  const [popupModalStatus, setPopupModalStatus] = useState(false);
 
-  const [isGotoProtocol, setIsGotoProtocol] = useState(true)
-  const [popupModalStatus, setPopupModalStatus] = useState(false)
+  const [nextRoute, setNextRoute] = useState("");
 
-  const [nextRoute, setNextRoute] = useState('')
-
-
-  const onClickGuide = useCallback((type) => {
-    const { terms_and_contions, terms_and_contions_cn, privacy_policy, privacy_policy_cn } = cache
-    let lan = i18n.language
-    let url = ""
-    if (lan === LANG_SUPPORT_LIST.zh_CN) {
-      url = type === type_conditions ? terms_and_contions_cn : privacy_policy_cn
-    }else{
-      url = type === type_conditions ? terms_and_contions : privacy_policy
-    }
-    if (url) {
-      openTab(url)
-    }
-  }, [cache,i18n])
-
+  const onClickGuide = useCallback(
+    (type) => {
+      const {
+        terms_and_contions,
+        terms_and_contions_cn,
+        privacy_policy,
+        privacy_policy_cn,
+      } = cache;
+      let lan = i18n.language;
+      let url = "";
+      if (lan === LANG_SUPPORT_LIST.zh_CN) {
+        url =
+          type === type_conditions ? terms_and_contions_cn : privacy_policy_cn;
+      } else {
+        url = type === type_conditions ? terms_and_contions : privacy_policy;
+      }
+      if (url) {
+        openTab(url);
+      }
+    },
+    [cache, i18n]
+  );
 
   const onConfirmProtocol = useCallback((route) => {
-    setPopupModalStatus(true)
-    setNextRoute(route)
-  }, [])
+    setPopupModalStatus(true);
+    setNextRoute(route);
+  }, []);
 
   const goPage = useCallback((route, type) => {
     if (type === "saveProtocol") {
-      saveLocal(USER_AGREEMENT, "true")
+      saveLocal(USER_AGREEMENT, "true");
     }
-    dispatch(setWelcomeNextRoute(route))
-    history.push("/createpassword")
-  }, [])
+    dispatch(setWelcomeNextRoute(route));
+    history.push("/createpassword");
+  }, []);
 
-  const goNextRoute = useCallback((route) => {
-    if (isGotoProtocol) {
-      onConfirmProtocol(route)
-    } else {
-      goPage(route)
-    }
-  }, [isGotoProtocol, nextRoute])
+  const goNextRoute = useCallback(
+    (route) => {
+      if (isGotoProtocol) {
+        onConfirmProtocol(route);
+      } else {
+        goPage(route);
+      }
+    },
+    [isGotoProtocol, nextRoute]
+  );
 
-  const openFullClick = useCallback(()=>{
+  const openFullClick = useCallback(() => {
     extension.tabs.create({
-      url: "popup.html#/"
+      url: "popup.html#/welcome_page",
+    });
   });
-  })
 
   const onCloseModal = useCallback(() => {
-    setPopupModalStatus(false)
-  }, [])
+    setPopupModalStatus(false);
+  }, []);
 
   const initLocal = useCallback(() => {
-    let agreeStatus = getLocal(USER_AGREEMENT)
+    let agreeStatus = getLocal(USER_AGREEMENT);
     if (agreeStatus) {
-      setIsGotoProtocol(false)
+      setIsGotoProtocol(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    initLocal()
-  }, [])
+    initLocal();
+  }, []);
 
-
-
-  return (<div className={styles.container}>
-    <div className={styles.logoContainer}>
-      <img src="/img/colorful_logo.svg" className={styles.logo} />
-    </div>
-
-    <div className={styles.btnContainer}>
-      <Button
-        leftIcon={"/img/icon_add.svg"}
-        onClick={() => { 
-          // goNextRoute("/backup_tips")
-          openFullClick()
-         }}
-      >
-        {i18n.t('createWallet')}
-      </Button>
-
-      <Button
-        theme={button_theme.BUTTON_THEME_LIGHT}
-        leftIcon={"/img/icon_download.svg"}
-        onClick={() => { goNextRoute("/restore_account") }}
-      >
-        {i18n.t('restoreWallet')}
-      </Button>
-    </div>
-
-    <p className={styles.bottomTipLedger}>{i18n.t("ledgerUserTip")}</p>
-    <p className={styles.bottomUrl}>{POWER_BY}</p>
-
-    <PopupModal
-      title={i18n.t('termsAndPrivacy')}
-      leftBtnContent={i18n.t('refuse')}
-      rightBtnContent={i18n.t("agree")}
-      onLeftBtnClick={onCloseModal}
-      onRightBtnClick={() => {
-        onCloseModal()
-        goPage(nextRoute, "saveProtocol")
-      }}
-      componentContent={
-        <div>
-          <p className={styles.confirmContent_1}>{i18n.t('termsAndPrivacy_line1')}</p>
-          <p className={styles.confirmContent_2}>
-            <Trans
-              i18nKey={i18n.t('termsAndPrivacy_line2')}
-              components={{
-                conditions: <span className={styles.tipsSpical} onClick={() => onClickGuide(type_conditions)} />,
-                policy: <span className={styles.tipsSpical} onClick={() => onClickGuide(type_policy)} />
-              }}
-            />
-          </p>
+  return (
+    <div className={styles.container}>
+      <div className={styles.topContainer}>
+        <div className={styles.logoContainer}>
+          <img src="/img/colorful_logo.svg" className={styles.logo} />
         </div>
-      }
-      modalVisable={popupModalStatus}
-      onCloseModal={onCloseModal} />
-  </div>)
-}
-export default Welcome
+
+        <div className={styles.btnContainer}>
+          <Button
+            leftIcon={"/img/icon_add.svg"}
+            onClick={() => {
+              // goNextRoute("/backup_tips")
+              openFullClick();
+            }}
+          >
+            {i18n.t("createWallet")}
+          </Button>
+
+          <Button
+            theme={button_theme.BUTTON_THEME_LIGHT}
+            leftIcon={"/img/icon_download.svg"}
+            onClick={() => {
+              goNextRoute("/restore_account");
+            }}
+          >
+            {i18n.t("restoreWallet")}
+          </Button>
+        </div>
+      </div>
+      <p className={styles.bottomTipLedger}>{i18n.t("ledgerUserTip")}</p>
+      <p className={styles.bottomUrl}>{POWER_BY}</p>
+
+      <PopupModal
+        title={i18n.t("termsAndPrivacy")}
+        leftBtnContent={i18n.t("refuse")}
+        rightBtnContent={i18n.t("agree")}
+        onLeftBtnClick={onCloseModal}
+        onRightBtnClick={() => {
+          onCloseModal();
+          goPage(nextRoute, "saveProtocol");
+        }}
+        componentContent={
+          <div>
+            <p className={styles.confirmContent_1}>
+              {i18n.t("termsAndPrivacy_line1")}
+            </p>
+            <p className={styles.confirmContent_2}>
+              <Trans
+                i18nKey={i18n.t("termsAndPrivacy_line2")}
+                components={{
+                  conditions: (
+                    <span
+                      className={styles.tipsSpical}
+                      onClick={() => onClickGuide(type_conditions)}
+                    />
+                  ),
+                  policy: (
+                    <span
+                      className={styles.tipsSpical}
+                      onClick={() => onClickGuide(type_policy)}
+                    />
+                  ),
+                }}
+              />
+            </p>
+          </div>
+        }
+        modalVisable={popupModalStatus}
+        onCloseModal={onCloseModal}
+      />
+    </div>
+  );
+};
+export default Welcome;

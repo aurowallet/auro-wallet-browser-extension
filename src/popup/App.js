@@ -28,8 +28,9 @@ function App() {
     const url = new URL(window.location.href); 
     const dappPageList = ['popup.html#/approve_page','popup.html#/request_sign']
     const ledgerPageList= ['popup.html#/ledger_connect','popup.html#/ledger_page']
+    const initPageList = ['popup.html#/welcome_page']
     let findIndex = false;
-    [...dappPageList,...ledgerPageList].map((path)=>{
+    [...dappPageList,...ledgerPageList,...initPageList].map((path)=>{
       if(url.href.indexOf(path)!==-1){
         findIndex = true
       }
