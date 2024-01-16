@@ -247,8 +247,8 @@ async function initNetworkFlag(){
 }
 export const applicationEntry = {
   async run() {
-    await this.appInit(store)
     this.render();
+    await this.appInit(store)
   },
 
   async appInit(store) {

@@ -16,6 +16,7 @@ import { LockPage } from "./Lock";
 import HomePage from "./Main";
 import SignTransaction from "./SignTransaction";
 import Welcome from "./Welcome";
+import styled, { keyframes } from "styled-components";
 
 const MainRouter = () => {
   const dispatch = useDispatch();
@@ -33,7 +34,7 @@ const MainRouter = () => {
     }
   }, []);
 
-  useEffect(async() => {
+  useEffect(async () => {
     let lan = await languageInit();
     dispatch(setLanguage(lan));
     initBaseInfo();
@@ -69,7 +70,7 @@ const MainRouter = () => {
         setNextRoute(<SignTransaction />);
         return;
       default:
-        setNextRoute(<></>);
+        setNextRoute(<LoadingView />);
         return;
     }
   }, [entryWitchRoute]);
@@ -77,3 +78,33 @@ const MainRouter = () => {
   return nextRoute;
 };
 export default MainRouter;
+
+const rotate = keyframes`
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+`;
+const StyledLoadingWrapper = styled.div`
+  background: #ffffff;
+  box-shadow: 0px 0px 1px #00000030;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+`;
+const StyledLoadingImg = styled.img`
+  animation: ${rotate} 0.5s linear infinite;
+  height: 40px;
+`;
+const LoadingView = () => {
+  return (
+    <StyledLoadingWrapper>
+      <StyledLoadingImg src={"/img/loading_purple.svg"} />
+    </StyledLoadingWrapper>
+  );
+};
