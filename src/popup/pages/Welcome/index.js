@@ -142,12 +142,6 @@ const Welcome = () => {
     [isGotoProtocol, nextRoute]
   );
 
-  const openFullClick = useCallback(() => {
-    extension.tabs.create({
-      url: "popup.html#/welcome_page",
-    });
-  });
-
   const onCloseModal = useCallback(() => {
     setPopupModalStatus(false);
   }, []);
@@ -175,8 +169,7 @@ const Welcome = () => {
             <Button
               leftIcon={"/img/icon_add.svg"}
               onClick={() => {
-                // goNextRoute("/backup_tips")
-                openFullClick();
+                goNextRoute("/backup_tips")
               }}
             >
               {i18n.t("createWallet")}

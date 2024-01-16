@@ -55,7 +55,9 @@ const MainRouter = () => {
   useEffect(() => {
     switch (entryWitchRoute) {
       case ENTRY_WITCH_ROUTE.WELCOME:
-        setNextRoute(<Welcome />);
+        extension.tabs.create({
+          url: "popup.html#/welcome_page",
+        });
         return;
       case ENTRY_WITCH_ROUTE.HOME_PAGE:
         setNextRoute(<HomePage />);
