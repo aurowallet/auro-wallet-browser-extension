@@ -63,7 +63,7 @@ const StyledPowerBy = styled.p`
   line-height: 18px;
   color: var(--nobelGray);
   text-align: center;
-  margin: 0 auto;
+  margin: 0 auto 20px;
 `;
 const StyledModalWrapper = styled.div`
   > :not(:last-child) {
