@@ -14,7 +14,7 @@ import "./i18n";
 import App from "./popup/App";
 import rootReducer from "./reducers";
 import { initCurrentAccount, updateShouldRequest } from "./reducers/accountReducer";
-import { updateDAppOpenWindow } from "./reducers/cache";
+import { updateDAppOpenWindow, updateExtensionBaseInfo } from "./reducers/cache";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
 import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
@@ -22,6 +22,7 @@ import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
 import { WALLET_CONNECT_TYPE } from "./constant/commonType";
 import { NETWORK_CONFIG_LIST, NET_CONFIG_MAP, NET_CONFIG_TYPE } from "./constant/network";
+import { getBaseInfo } from "./background/api";
 
 
 function getLocalNetConfig(store) {
@@ -245,6 +246,13 @@ async function initNetworkFlag(){
     await extRemoveLocal(NET_WORK_CHANGE_FLAG)
   }
 }
+
+async function initBaseInfo(){
+  let baseInfo = await getBaseInfo().catch((err) => err);
+    if (baseInfo) {
+      store.dispatch(updateExtensionBaseInfo(baseInfo)); 
+    }
+}
 export const applicationEntry = {
   async run() {
     this.render();
@@ -264,6 +272,8 @@ export const applicationEntry = {
     const {nextRoute} = accountData
     // init Currency
     getLocalCurrencyConfig(store)
+    
+    await initBaseInfo(store)
     
     if(nextRoute){
       store.dispatch(updateEntryWitchRoute(nextRoute))

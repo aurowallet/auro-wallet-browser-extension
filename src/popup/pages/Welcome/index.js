@@ -10,9 +10,8 @@ import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { setWelcomeNextRoute } from "../../../reducers/cache";
 import { openTab } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
-import { PopupModal } from "../../component/PopupModal";
-import extension from "extensionizer";
 import styled from "styled-components";
+import { PopupModalV2 } from "@/popup/component/PopupModalV2";
 
 const type_conditions = "conditions";
 const type_policy = "policy";
@@ -31,6 +30,7 @@ const StyledInnerContent = styled.div`
   background-color: white;
   max-width: 750px;
   max-height: 600px;
+  position: relative;
 `;
 const StyledTopContainer = styled.div`
   width: 375px;
@@ -189,7 +189,7 @@ const Welcome = () => {
         <StyledLedgerTip>{i18n.t("ledgerUserTip")}</StyledLedgerTip>
         <StyledPowerBy>{POWER_BY}</StyledPowerBy>
 
-        <PopupModal
+        <PopupModalV2
           title={i18n.t("termsAndPrivacy")}
           leftBtnContent={i18n.t("refuse")}
           rightBtnContent={i18n.t("agree")}
