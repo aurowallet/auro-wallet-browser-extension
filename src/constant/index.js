@@ -75,5 +75,10 @@ export const ZK_EMPTY_PUBLICKEY =
 export const ZK_DEFAULT_TOKENID =
   "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf";
 
+export const ContributeMoreLanguage =
+  "https://hosted.weblate.org/projects/aurowallet/";
 
-export const ContributeMoreLanguage = "https://hosted.weblate.org/projects/aurowallet/"
+export const Terms_default = {
+  terms_and_contions: "https://www.aurowallet.com/terms-and-conditions",
+  privacy_policy: "https://www.aurowallet.com/privacy-policy",
+};

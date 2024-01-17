@@ -247,12 +247,6 @@ async function initNetworkFlag(){
   }
 }
 
-async function initBaseInfo(){
-  let baseInfo = await getBaseInfo().catch((err) => err);
-    if (baseInfo) {
-      store.dispatch(updateExtensionBaseInfo(baseInfo)); 
-    }
-}
 export const applicationEntry = {
   async run() {
     this.render();
@@ -261,7 +255,6 @@ export const applicationEntry = {
     if(!isWalletInited){
       store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.WELCOME))
     }
-    await initBaseInfo(store)
     if(isWalletInited){
       await this.appInit(store)
     }

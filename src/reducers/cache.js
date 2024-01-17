@@ -1,3 +1,5 @@
+import { Terms_default } from "@/constant"
+
 /**
  * Change wallet name
  */
@@ -157,12 +159,12 @@ const initState = {
     followus: [],
     gitReponame: "",
     gitReponame_app: "",
-    privacy_policy: "",
-    privacy_policy_cn: "",
+    privacy_policy: Terms_default.privacy_policy,
+    privacy_policy_cn: Terms_default.privacy_policy,
     staking_guide: "",
     staking_guide_cn: "",
-    terms_and_contions: "",
-    terms_and_contions_cn: "",
+    terms_and_contions: Terms_default.terms_and_contions,
+    terms_and_contions_cn: Terms_default.terms_and_contions,
 
     addressDetail: {},
     addressBookFrom: "",

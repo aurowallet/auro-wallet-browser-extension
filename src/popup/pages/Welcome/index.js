@@ -104,13 +104,10 @@ const Welcome = () => {
         privacy_policy_cn,
       } = cache;
       let lan = i18n.language;
-      let url = "";
-      if (lan === LANG_SUPPORT_LIST.zh_CN) {
-        url =
-          type === type_conditions ? terms_and_contions_cn : privacy_policy_cn;
-      } else {
-        url = type === type_conditions ? terms_and_contions : privacy_policy;
-      }
+      let url = (lan === LANG_SUPPORT_LIST.zh_CN)
+        ? (type === type_conditions ? terms_and_contions_cn : privacy_policy_cn)
+        : (type === type_conditions ? terms_and_contions : privacy_policy);
+
       if (url) {
         openTab(url);
       }

@@ -27,10 +27,17 @@ const MainRouter = () => {
     (state) => state.entryRouteReducer.entryWitchRoute
   );
 
+  const initBaseInfo = useCallback(async () => {
+    let baseInfo = await getBaseInfo().catch((err) => err);
+    if (baseInfo) {
+      dispatch(updateExtensionBaseInfo(baseInfo)); 
+    }
+  }, []);
 
   useEffect(async () => {
     let lan = await languageInit();
     dispatch(setLanguage(lan));
+    initBaseInfo();
   }, []);
 
   useEffect(() => {
