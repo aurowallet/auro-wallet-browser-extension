@@ -198,23 +198,23 @@ async function getDappStatus(store){
 
 }
 
-async function getLocalStatus(store) {
+async function getLocalAccountStatus(store) {
   return new Promise((resolve)=>{
     sendMsg({
       action: WALLET_GET_CURRENT_ACCOUNT,
     },async (currentAccount)=>{
       let nextRoute =""
-      if (currentAccount && currentAccount.localAccount && currentAccount.localAccount.keyringData) {
+      if (currentAccount?.localAccount?.keyringData) {
         if(currentAccount.isUnlocked){
           store.dispatch(initCurrentAccount(currentAccount))
           nextRoute = await getDappStatus(store)
         }else{
           nextRoute = ENTRY_WITCH_ROUTE.LOCK_PAGE
         }
-        resolve({currentAccount,nextRoute})
+        resolve(nextRoute)
       }else{
         nextRoute = ENTRY_WITCH_ROUTE.WELCOME
-        resolve({nextRoute})
+        resolve(nextRoute)
       }
     })
   })
@@ -256,7 +256,15 @@ async function initBaseInfo(){
 export const applicationEntry = {
   async run() {
     this.render();
-    await this.appInit(store)
+    let nextRoute = await getLocalAccountStatus(store)
+    const isWalletInited = nextRoute !== ENTRY_WITCH_ROUTE.WELCOME
+    if(!isWalletInited){
+      store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.WELCOME))
+    }
+    await initBaseInfo(store)
+    if(isWalletInited){
+      await this.appInit(store)
+    }
   },
 
   async appInit(store) {
@@ -268,16 +276,10 @@ export const applicationEntry = {
 
     await initNetworkFlag(store)
     // init nextRoute
-    let accountData = await getLocalStatus(store)
-    const {nextRoute} = accountData
     // init Currency
     getLocalCurrencyConfig(store)
     
-    await initBaseInfo(store)
     
-    if(nextRoute){
-      store.dispatch(updateEntryWitchRoute(nextRoute))
-    }
   },
  
   render() {
