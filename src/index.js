@@ -257,6 +257,7 @@ export const applicationEntry = {
     }
     if(isWalletInited){
       await this.appInit(store)
+      store.dispatch(updateEntryWitchRoute(nextRoute))
     }
   },
 

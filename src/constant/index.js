@@ -82,3 +82,21 @@ export const Terms_default = {
   terms_and_contions: "https://www.aurowallet.com/terms-and-conditions",
   privacy_policy: "https://www.aurowallet.com/privacy-policy",
 };
+
+export const Default_Follow_Link = [
+  {
+    website: "https://www.aurowallet.com",
+    name: "Website",
+    icon:"/img/ic_website.svg"
+  },
+  {
+    website: "https://twitter.com/aurowallet_com",
+    name: "X",
+    icon:"/img/ic_x.svg"
+  },
+  {
+    website: "https://t.me/aurowallet",
+    name: "Telegram",
+    icon:"/img/ic_telegram.svg"
+  },
+];
