@@ -29,7 +29,6 @@
   "atLeastOneNumber": "数字",
   "backup_checkbox_1": "如果助记词丢失，我的资产将永久丢失。",
   "backup_checkbox_2": "我对助记词的安全保存负全部责任。",
-  "backup_mne_title": "请抄写以下助记词并将其保存在安全的地方。",
   "show_seed_button": "我已保存",
   "seed_error": "助记词错误",
   "confirmMneTip": "为了确保你已经成功备份助记词，请按顺序选择12个单词。",

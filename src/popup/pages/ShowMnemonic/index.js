@@ -32,7 +32,7 @@ export const ShowMnemonic = () => {
   return (
     <CustomView title={i18n.t('backupMnemonicPhrase')}>
       <p className={styles.backTitle}>
-        {i18n.t('backup_mne_title')}
+        {i18n.t('revealMneTip')}
       </p>
       <div className={styles.mne_container}>
         {mneList.map((mne, index) => {
