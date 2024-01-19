@@ -41,6 +41,7 @@ import Staking from '../pages/Staking';
 import StakingList from '../pages/StakingList';
 import StakingTransfer from '../pages/StakingTransfer';
 import Welcome from '../pages/Welcome';
+import { CreateProcessPage } from '../pages/CreateProcessPage';
 
 
 
@@ -97,6 +98,9 @@ export function getAllRouter() {
         <Route path={"/address_editor"} component={AddressEditor}/>
         <Route path={"/node_editor"} component={NodeEditor}/>
         <Route path={"/ledger_page"} component={LedgerPage}/>
+
+        <Route path={"/createprocess"} component={CreateProcessPage}/>
+        
       </Switch>
     </HashRouter>
   );

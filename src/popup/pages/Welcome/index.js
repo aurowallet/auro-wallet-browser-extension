@@ -12,26 +12,11 @@ import { openTab } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
 import styled from "styled-components";
 import { PopupModalV2 } from "@/popup/component/PopupModalV2";
+import { StyledPageInnerContent, StyledPageOuterWrapper } from "@/popup/style/common";
 
 const type_conditions = "conditions";
 const type_policy = "policy";
 
-const StyledOuterWrapper = styled.div`
-  height: 100vh;
-  min-width: 750px;
-  min-height: 600px;
-  background-color: rgb(249, 250, 252);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const StyledInnerContent = styled.div`
-  background-color: white;
-  max-width: 750px;
-  max-height: 600px;
-  position: relative;
-`;
 const StyledTopContainer = styled.div`
   width: 375px;
   margin: 0 auto;
@@ -125,7 +110,7 @@ const Welcome = () => {
       saveLocal(USER_AGREEMENT, "true");
     }
     dispatch(setWelcomeNextRoute(route));
-    history.push("/createpassword");
+    history.push("/createprocess");
   }, []);
 
   const goNextRoute = useCallback(
@@ -155,8 +140,8 @@ const Welcome = () => {
   }, []);
 
   return (
-    <StyledOuterWrapper>
-      <StyledInnerContent>
+    <StyledPageOuterWrapper>
+      <StyledPageInnerContent>
         <StyledTopContainer>
           <StyledLogoContainer>
             <img src="/img/colorful_logo.svg" />
@@ -204,7 +189,7 @@ const Welcome = () => {
                 <Trans
                   i18nKey={i18n.t("termsAndPrivacy_line2")}
                   components={{
-                    conditions: (
+                    conditions: ( 
                       <StyledModalTip
                         onClick={() => onClickGuide(type_conditions)}
                       />
@@ -222,8 +207,8 @@ const Welcome = () => {
           modalVisable={popupModalStatus}
           onCloseModal={onCloseModal}
         />
-      </StyledInnerContent>
-    </StyledOuterWrapper>
+      </StyledPageInnerContent>
+    </StyledPageOuterWrapper>
   );
 };
 export default Welcome;
