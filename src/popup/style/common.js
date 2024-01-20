@@ -4,6 +4,7 @@ import styled from "styled-components";
 export const StyledPageOuterWrapper = styled.div`
   height: 100vh;
   width: 100vw;
+  min-height: 600px;
   background-color: rgb(249, 250, 252);
   display: flex;
   align-items: center;
