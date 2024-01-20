@@ -7,12 +7,13 @@ import { getLocal, saveLocal } from "../../../background/localStorage";
 import { POWER_BY } from "../../../constant";
 import { USER_AGREEMENT } from "../../../constant/storageKey";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
-import { setWelcomeNextRoute } from "../../../reducers/cache";
+import { setWelcomeNextType } from "../../../reducers/cache";
 import { openTab } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
 import styled from "styled-components";
 import { PopupModalV2 } from "@/popup/component/PopupModalV2";
 import { StyledPageInnerContent, StyledPageOuterWrapper } from "@/popup/style/common";
+import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 
 const type_conditions = "conditions";
 const type_policy = "policy";
@@ -109,7 +110,7 @@ const Welcome = () => {
     if (type === "saveProtocol") {
       saveLocal(USER_AGREEMENT, "true");
     }
-    dispatch(setWelcomeNextRoute(route));
+    dispatch(setWelcomeNextType(route));
     history.push("/createprocess");
   }, []);
 
@@ -151,7 +152,7 @@ const Welcome = () => {
             <Button
               leftIcon={"/img/icon_add.svg"}
               onClick={() => {
-                goNextRoute("/backup_tips")
+                goNextRoute(WALLET_CREATE_TYPE.create);
               }}
             >
               {i18n.t("createWallet")}
@@ -161,7 +162,7 @@ const Welcome = () => {
               theme={button_theme.BUTTON_THEME_LIGHT}
               leftIcon={"/img/icon_download.svg"}
               onClick={() => {
-                goNextRoute("/restore_account");
+                goNextRoute(WALLET_CREATE_TYPE.restore);
               }}
             >
               {i18n.t("restoreWallet")}

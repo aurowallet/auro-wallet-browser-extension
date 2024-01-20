@@ -1,3 +1,4 @@
+import { useCallback, useState } from "react";
 import styled, { css } from "styled-components";
 
 const clickAble = css`
@@ -39,13 +40,43 @@ const StyledMneItem = styled.span`
   color: var(--white);
   margin-left: 6px;
 `;
+const StyledInputContainer = styled.div`
+  width: 128px;
+  height: 30px;
+`;
+const StyledInput = styled.input`
+  background: none;
+  outline: none;
+  border: none;
+  padding: 0 12px;
+
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  color: #00142a;
+  flex: 1;
+  caret-color: var(--strong-black-80, rgba(0, 0, 0, 0.8));
+  height: 100%;
+  width: 100%;
+`;
 export const MneItemV2 = ({
   mne,
   index,
   canClick = false,
   onClick = () => {},
   colorStatus = false,
+  useInput = false,
+  onChange = () => {},
+  onPaste = () => {},
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+  }, []);
   return (
     <StyledMneItemContainer
       clickable={String(canClick)}
@@ -55,7 +86,24 @@ export const MneItemV2 = ({
       <StyledMneItemIndex colorstatus={String(colorStatus)}>
         {index + 1 + "."}
       </StyledMneItemIndex>
-      <StyledMneItem>{mne}</StyledMneItem>
+      {useInput ? (
+        <StyledInputContainer>
+          <StyledInput
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            value={mne}
+            onChange={(e) => onChange(e, index)}
+            type={isFocused ? "text" : "password"}
+            onPaste={(e) => {
+              e.preventDefault();
+              const data = e.clipboardData.getData("text");
+              onPaste(index, data);
+            }}
+          />
+        </StyledInputContainer>
+      ) : (
+        <StyledMneItem>{mne}</StyledMneItem>
+      )}
     </StyledMneItemContainer>
   );
 };

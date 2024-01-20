@@ -16,6 +16,9 @@ const SET_ACCOUNT_INFO = "SET_ACCOUNT_INFO"
 const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
 
 
+const SET_WELCOME_NEXT_TYPE = "SET_WELCOME_NEXT_TYPE"
+
+
 /**
  * Update Account Name page source
  */
@@ -104,6 +107,17 @@ export function setWelcomeNextRoute(nextRoute) {
     };
 }
 
+
+export function setWelcomeNextType(nextType) {
+    return {
+        type: SET_WELCOME_NEXT_TYPE,
+        nextType
+    };
+}
+
+
+
+
 export function updateAccoutType(fromType) {
     return {
         type: UPDATE_ACCOUNT_TYPE_FROM,
@@ -153,6 +167,7 @@ const initState = {
     accountCount: "",
     accountInfo: {},
     welcomeNextRoute: "",
+    welcomeNextType: "",
 
     changelog: "",
     changelog_app: "",
@@ -196,6 +211,12 @@ const cacheReducer = (state = initState, action) => {
             return {
                 ...state,
                 welcomeNextRoute: nextRoute
+            }
+        case SET_WELCOME_NEXT_TYPE:
+            let nextType = action.nextType
+            return {
+                ...state,
+                welcomeNextType: nextType
             }
         case UPDATE_ACCOUNT_TYPE_FROM:
             return {
