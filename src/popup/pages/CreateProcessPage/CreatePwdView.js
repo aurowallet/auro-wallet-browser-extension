@@ -4,11 +4,11 @@ import Input from "@/popup/component/Input";
 import { ReminderTip } from "@/popup/component/ReminderTip";
 import { sendMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { BackView } from ".";
-import { matchList as matchRuleList } from "../../../utils/validator";
+import { matchList } from "../../../utils/validator";
 
 const StyledPwdContainer = styled.div`
   margin-top: 20px;
@@ -46,19 +46,43 @@ const StyledBottomContainer = styled.div`
 `;
 export const CreatePwdView = ({ onClickNextTab }) => {
   const [inputPwd, setInputPwd] = useState("");
+
+  const [rulesMet, setRulesMet] = useState(
+    matchList.map((rule) => ({ ...rule, bool: false }))
+  );
+
   const [confirmPwd, setConfirmPwd] = useState("");
-  const [errorTip, setErrorTip] = useState(false);
-  const [btnClick, setBtnClick] = useState(false);
-  const [matchList, setMatchList] = useState(matchRuleList);
-  const [matchRenderList, setMatchRenderList] = useState([]);
+  const [passwordsMatch, setPasswordsMatch] = useState(true);
+
   const history = useHistory();
 
-  const onPwdInput = useCallback((e) => {
-    setInputPwd(e.target.value);
-  }, []);
-  const onPwdConfirmInput = useCallback((e) => {
-    setConfirmPwd(e.target.value);
-  }, []);
+  const onPwdInput = useCallback(
+    (e) => {
+      const newPassword = e.target.value;
+      setInputPwd(newPassword);
+
+      setRulesMet(
+        rulesMet.map((rule) => ({
+          ...rule,
+          bool: rule.expression.test(newPassword),
+        }))
+      );
+      if (confirmPwd.length > 0) {
+        setPasswordsMatch(confirmPwd === inputPwd);
+      }
+    },
+    [rulesMet, confirmPwd]
+  );
+
+  const onPwdConfirmInput = useCallback(
+    (e) => {
+      const newConfirmedPassword = e.target.value;
+      setConfirmPwd(newConfirmedPassword);
+
+      setPasswordsMatch(newConfirmedPassword === inputPwd);
+    },
+    [inputPwd]
+  );
 
   const onClickBack = useCallback(() => {
     history.goBack();
@@ -75,44 +99,28 @@ export const CreatePwdView = ({ onClickNextTab }) => {
     onClickNextTab();
   }, [confirmPwd, onClickNextTab]);
 
-  useEffect(() => {
-    let currentErrorStatus = errorTip;
-    if (confirmPwd.length > 0 && inputPwd !== confirmPwd) {
-      setErrorTip(true);
-      currentErrorStatus = true;
-    } else {
-      setErrorTip(false);
-      currentErrorStatus = false;
+  const isButtonEnabled = () => {
+    const allRulesMet = rulesMet.every((rule) => rule.bool);
+    return (
+      allRulesMet &&
+      passwordsMatch &&
+      inputPwd.length > 0 &&
+      confirmPwd.length > 0
+    );
+  };
+
+  const getFeedbackText = () => {
+    const unmetRules = rulesMet.filter((rule) => !rule.bool);
+    return unmetRules.map((rule) => i18n.t(rule.text)).join(" / ");
+  };
+
+  const getConfirmFeedbackText = () => {
+    let txt = "";
+    if (!passwordsMatch) {
+      txt = i18n.t("passwordDifferent");
     }
-
-    let errList = matchList.filter((v) => {
-      if (!v.bool) {
-        return v;
-      }
-    });
-    if (errList.length <= 0 && confirmPwd.length > 0 && !currentErrorStatus) {
-      setBtnClick(true);
-    } else {
-      setBtnClick(false);
-    }
-  }, [inputPwd, errorTip, matchList, confirmPwd]);
-
-  useEffect(() => {
-    let renderList = [];
-    let newMatchList = matchList.map((v) => {
-      if (v.expression.test(inputPwd)) {
-        v.bool = true;
-      } else {
-        v.bool = false;
-        renderList.push(v);
-      }
-      return v;
-    });
-
-    setMatchList(newMatchList);
-    setMatchRenderList(renderList);
-  }, [inputPwd]);
-
+    return txt;
+  };
   return (
     <StyledPwdContainer>
       <BackView onClickBack={onClickBack} />
@@ -127,22 +135,7 @@ export const CreatePwdView = ({ onClickNextTab }) => {
             inputType={"password"}
             showBottomTip={inputPwd.length > 0}
             bottomTip={
-              <div>
-                {matchRenderList.map((item, index) => {
-                  let extraStr = "";
-                  if (index !== matchRenderList.length - 1) {
-                    extraStr = " / ";
-                  }
-                  return (
-                    <StyledPwdCheckSpan
-                      key={index}
-                      showstatus={String(item.bool)}
-                    >
-                      {i18n.t(item.text) + extraStr}
-                    </StyledPwdCheckSpan>
-                  );
-                })}
-              </div>
+              <StyledPwdCheckSpan>{getFeedbackText()}</StyledPwdCheckSpan>
             }
           />
           <Input
@@ -150,19 +143,17 @@ export const CreatePwdView = ({ onClickNextTab }) => {
             onChange={onPwdConfirmInput}
             value={confirmPwd}
             inputType={"password"}
-            showBottomTip={errorTip}
+            showBottomTip={!passwordsMatch}
             bottomTip={
-              <>
-                <StyledPwdCheckSpan showstatus={String(!errorTip)}>
-                  {i18n.t("passwordDifferent")}
-                </StyledPwdCheckSpan>
-              </>
+              <StyledPwdCheckSpan>
+                {getConfirmFeedbackText()}
+              </StyledPwdCheckSpan>
             }
           />
         </StyledPwdInputContainer>
       </StyledPwdContentContainer>
       <StyledBottomContainer>
-        <Button disable={!btnClick} onClick={goToCreate}>
+        <Button disable={!isButtonEnabled()} onClick={goToCreate}>
           {i18n.t("next")}
         </Button>
       </StyledBottomContainer>
