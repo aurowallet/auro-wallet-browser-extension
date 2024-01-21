@@ -12,7 +12,7 @@
   "cancel": "Cancel",
   "reset": "Reset",
   "deleteTag": "delete",
-  "confirm_reset_tip": "Please enter 'delete' to confirm the wallet reset",
+  "confirm_reset_tip": "Please enter '{{deteleTag}}' to confirm the wallet reset",
   "resetWallet": "Reset Wallet",
   "welcomeBack": "Welcome Back!",
   "password": "Password",
@@ -29,7 +29,6 @@
   "atLeastOneNumber": "number",
   "backup_checkbox_1": "I understand that if the mnemonic phrase is lost, my funds will be lost forever.",
   "backup_checkbox_2": "I take full responsibility for protecting the mnemonic phrase.",
-  "backup_mne_title": "Please write down the following mnemonic phrase and keep it in a safe place.",
   "show_seed_button": "Confirmed Backup",
   "seed_error": "Incorrect mnemonic phrase",
   "confirmMneTip": "To ensure you have backed up the mnemonic phrase. Please select the 12 words in the correct order.",
@@ -278,5 +277,8 @@
   "stakedBalance": "Staked",
   "testnet": "testnet",
   "available": "Available",
-  "contributeLanguage": "Contribute language"
+  "contributeLanguage": "Contribute language",
+  "pinExtension": "Pin Auro Wallet Extension",
+  "clickBrowser": "Click<icon/> in your browser",
+  "clickButton": "and <icon/>  click the button"
 }

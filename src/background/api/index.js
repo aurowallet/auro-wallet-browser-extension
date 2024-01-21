@@ -11,6 +11,7 @@ import {
   getDaemonStatusBody,
   getDelegationInfoBody,
   getDeletionTotalBody,
+  getFetchAccountBody,
   getPartyBody,
   getPendingTxBody,
   getPendingZkAppTxBody,
@@ -39,7 +40,7 @@ export async function getBalance(address) {
   let account = result?.account || {
     publicKey: address
   }
-  await saveLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE, JSON.stringify({ [address]: account }))
+  saveLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE, JSON.stringify({ [address]: account }))
   if(result?.error){
     account.error = result.error
   }
@@ -125,7 +126,7 @@ export async function fetchDaemonStatus() {
   const query = getDaemonStatusBody()
   let res = await startFetchMyQuery(query, {});
   let daemonStatus = res.daemonStatus || {}
-  await saveLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS, JSON.stringify(daemonStatus))
+  saveLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS, JSON.stringify(daemonStatus))
   return daemonStatus;
 }
 /**
@@ -137,7 +138,7 @@ export async function fetchBlockInfo(stateHash) {
   const query = getBlockInfoBody()
   let res = await startFetchMyQuery(query, { stateHash });
   let block = res.block || {}
-  await saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO, JSON.stringify(block))
+  saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO, JSON.stringify(block))
   return block;
 }
 
@@ -150,7 +151,7 @@ export async function fetchDelegationInfo(publicKey) {
   const query = getDelegationInfoBody()
   let res = await startFetchMyQuery(query, { requestType: "extensionAccountInfo", publicKey });
   let account = res.account || {}
-  await saveLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO, JSON.stringify({ [publicKey]: account }))
+  saveLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO, JSON.stringify({ [publicKey]: account }))
   return account;
 }
 
@@ -266,7 +267,7 @@ export async function getCurrencyPrice(currency) {
   let priceUrl = BASE_INFO_URL + "/prices?currency=" + currency
   let data = await commonFetch(priceUrl).catch(() => { })
   let price = data?.data || 0
-  await saveLocal(LOCAL_CACHE_KEYS.COIN_PRICE, JSON.stringify({ price }))
+  saveLocal(LOCAL_CACHE_KEYS.COIN_PRICE, JSON.stringify({ price }))
   return price
 }
 
@@ -392,4 +393,23 @@ export async function getScamList() {
     saveLocal(SCAM_LIST, JSON.stringify(result))
   }
   return result
+}
+
+
+export async function getAccountInfo(address,tokenId){
+  let accountBody = getFetchAccountBody()
+  let queryParams = {
+    publicKey: address,
+  }
+  if(tokenId){
+    queryParams.tokenId = tokenId
+  }
+  let result = await startFetchMyQuery(
+    accountBody,
+    queryParams
+  ).catch((error) => error)
+  if(result?.error){
+    return { error:result.error };
+  }
+  return {account:result?.account}
 }

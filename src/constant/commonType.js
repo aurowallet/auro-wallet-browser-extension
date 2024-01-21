@@ -51,3 +51,8 @@ export const WALLET_CONNECT_TYPE = {
   WALLET_APP_CONNECT: "WALLET_APP_CONNECT",
   CONTENT_SCRIPT: "mina-contentscript",
 };
+
+export const WALLET_CREATE_TYPE = {
+  restore: "restore",
+  create: "create",
+};

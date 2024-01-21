@@ -1,6 +1,6 @@
 {
   "name": "auro-wallet",
-  "version": "2.2.10",
+  "version": "2.2.11",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",
@@ -35,11 +35,12 @@
     "safe-buffer": "5.2.1",
     "uuid": "8.3.2",
     "valid-url": "1.0.9",
-    "qrcode.react":"3.1.0"
+    "qrcode.react": "3.1.0",
+    "styled-components":"6.1.8"
   },
   "scripts": {
     "build": "rm -rf dist && webpack --mode production",
-    "postbuild":"rm -rf zip && node ./scripts/post-build.js",
+    "postbuild": "rm -rf zip && node ./scripts/post-build.js",
     "buildProd": "webpack --mode production",
     "dev": "node ./scripts/post-dev.js && webpack --mode development --progress --watch",
     "test": "mocha --timeout 5000 --require node_modules/@babel/register \"test/unit/**/*.js\"",
@@ -74,7 +75,7 @@
     "@babel/helper-string-parser": "7.19.4",
     "@babel/plugin-proposal-class-properties": "7.12.1",
     "@babel/plugin-transform-react-jsx": "7.12.12",
-    "@babel/plugin-transform-runtime": "^7.21.4",
+    "@babel/plugin-transform-runtime": "7.21.4",
     "@babel/preset-env": "7.12.7",
     "@babel/preset-react": "7.12.7",
     "@babel/runtime": "7.12.5",
@@ -101,9 +102,9 @@
     "url-loader": "4.1.1",
     "webpack": "5.75.0",
     "webpack-cli": "5.0.1",
-    "web-ext":"6.5.0",
-    "gulp":"4.0.2",
-    "gulp-zip":"5.1.0",
-    "deepmerge":"4.2.2"
+    "web-ext": "6.5.0",
+    "gulp": "4.0.2",
+    "gulp-zip": "5.1.0",
+    "deepmerge": "4.2.2"
   }
 }

@@ -110,11 +110,6 @@ const StakingTransfer = () => {
     setConfrimModalStatus(false)
   }, [])
 
-  const onLedgerInfoModalConfirm = useCallback((ledger)=>{
-    setLedgerApp(ledger.app)
-    setLedgerModalStatus(false)
-    onConfirm(true)
-  },[confrimModalStatus,clickNextStep,onConfirm])
 
   const onSubmitSuccess = useCallback((data, type) => {
     if (data.error) {
@@ -176,10 +171,10 @@ const StakingTransfer = () => {
     let fromAddress = currentAccount.address
     let toAddress = nodeAddress || trimSpace(blockAddress)
     let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
-    let memo = memo || ""
+    let realMemo = memo || ""
     let fee = trimSpace(feeAmount)
     let payload = {
-      fromAddress, toAddress, fee, nonce, memo
+      fromAddress, toAddress, fee, nonce, memo:realMemo
     }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       return ledgerTransfer(payload,preLedgerApp)
@@ -194,7 +189,6 @@ const StakingTransfer = () => {
       onSubmitSuccess(data)
     })
   }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus])
-
 
   const onConfirm = useCallback(async(ledgerReady=false) => {
     let realBlockAddress = nodeAddress || blockAddress
@@ -262,6 +256,11 @@ const StakingTransfer = () => {
   }, [nodeAddress, balance, feeAmount, inputNonce,currentAccount,
     clickNextStep, nodeName, nodeAddress, blockAddress, currentAccount, memo,ledgerStatus])
 
+    const onLedgerInfoModalConfirm = useCallback((ledger)=>{
+      setLedgerApp(ledger.app)
+      setLedgerModalStatus(false)
+      onConfirm(true)
+    },[confrimModalStatus,clickNextStep,onConfirm])
 
   const onClickBlockProducer = useCallback(() => {
     history.replace({

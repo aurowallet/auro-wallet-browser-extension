@@ -314,14 +314,6 @@ const SendPage = ({}) => {
     setConfrimModalStatus(false);
   }, []);
 
-  const onLedgerInfoModalConfirm = useCallback(
-    (ledger) => {
-      setLedgerApp(ledger.app);
-      setLedgerModalStatus(false);
-      onConfirm(true);
-    },
-    [confrimModalStatus, clickNextStep, onConfirm]
-  );
 
   const onConfirm = useCallback(
     async (ledgerReady = false) => {
@@ -413,6 +405,15 @@ const SendPage = ({}) => {
       clickNextStep,
       ledgerStatus,
     ]
+  );
+  
+  const onLedgerInfoModalConfirm = useCallback(
+    (ledger) => {
+      setLedgerApp(ledger.app);
+      setLedgerModalStatus(false);
+      onConfirm(true);
+    },
+    [confrimModalStatus, clickNextStep, onConfirm]
   );
 
   useEffect(() => {

@@ -396,6 +396,7 @@ const WalletInfo = () => {
 
 const WalletDetail = () => {
   const dispatch = useDispatch()
+  const isMounted = useRef(true);
 
   const netConfig = useSelector(state => state.network)
   const accountInfo = useSelector(state => state.accountInfo)
@@ -443,10 +444,12 @@ const WalletDetail = () => {
         dispatch(updateAccountTx(newList,txPendingList,zkApp,zkPendingList))
       }).catch((err) => {
       }).finally(() => {
-        setHistoryRefreshing(false)
-        isFirstRequest.current = false
-        dispatch(updateShouldRequest(false))
-        setLoadingStatus(false)
+        if (isMounted.current) {
+          setHistoryRefreshing(false)
+          isFirstRequest.current = false
+          dispatch(updateShouldRequest(false))
+          setLoadingStatus(false)
+        }
       })
     }
 
@@ -488,6 +491,13 @@ const WalletDetail = () => {
       requestHistory()
     }
   }, [shouldRefresh,netType])
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
 
   let childView =(<></>)
   if(loadingStatus){

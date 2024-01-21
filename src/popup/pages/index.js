@@ -16,6 +16,7 @@ import { LockPage } from "./Lock";
 import HomePage from "./Main";
 import SignTransaction from "./SignTransaction";
 import Welcome from "./Welcome";
+import styled, { keyframes } from "styled-components";
 
 const MainRouter = () => {
   const dispatch = useDispatch();
@@ -29,11 +30,11 @@ const MainRouter = () => {
   const initBaseInfo = useCallback(async () => {
     let baseInfo = await getBaseInfo().catch((err) => err);
     if (baseInfo) {
-      dispatch(updateExtensionBaseInfo(baseInfo));
+      dispatch(updateExtensionBaseInfo(baseInfo)); 
     }
   }, []);
 
-  useEffect(async() => {
+  useEffect(async () => {
     let lan = await languageInit();
     dispatch(setLanguage(lan));
     initBaseInfo();
@@ -44,9 +45,10 @@ const MainRouter = () => {
       const { type, action } = message;
       if (type === FROM_BACK_TO_RECORD && action === SET_LOCK) {
         dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
-        history.push("/");
+        history.push("/lock_page");
+        sendResponse()
       }
-      return true;
+      return false;
     };
     extension.runtime.onMessage.addListener(lockEvent);
   }, []);
@@ -54,7 +56,9 @@ const MainRouter = () => {
   useEffect(() => {
     switch (entryWitchRoute) {
       case ENTRY_WITCH_ROUTE.WELCOME:
-        setNextRoute(<Welcome />);
+        extension.tabs.create({
+          url: "popup.html#/welcome_page",
+        });
         return;
       case ENTRY_WITCH_ROUTE.HOME_PAGE:
         setNextRoute(<HomePage />);
@@ -69,7 +73,7 @@ const MainRouter = () => {
         setNextRoute(<SignTransaction />);
         return;
       default:
-        setNextRoute(<></>);
+        setNextRoute(<LoadingView />);
         return;
     }
   }, [entryWitchRoute]);
@@ -77,3 +81,33 @@ const MainRouter = () => {
   return nextRoute;
 };
 export default MainRouter;
+
+const rotate = keyframes`
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+`;
+const StyledLoadingWrapper = styled.div`
+  background: #ffffff;
+  box-shadow: 0px 0px 1px #00000030;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+`;
+const StyledLoadingImg = styled.img`
+  animation: ${rotate} 0.5s linear infinite;
+  height: 40px;
+`;
+const LoadingView = () => {
+  return (
+    <StyledLoadingWrapper>
+      <StyledLoadingImg src={"/img/loading_purple.svg"} />
+    </StyledLoadingWrapper>
+  );
+};

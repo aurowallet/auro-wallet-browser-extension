@@ -1,16 +1,17 @@
 import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
-import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_CLOSE_POPUP_WINDOW, FROM_BACK_TO_RECORD } from '../constant/msgTypes';
+import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN } from '../constant/msgTypes';
 import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
 import { checkNetworkUrlExist, getArrayDiff, getCurrentNetConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get } from './storageService';
-import { NET_CONFIG_MAP } from '@/constant/network';
+import { NET_CONFIG_MAP, NET_CONFIG_TYPE } from '@/constant/network';
 import { errorCodes } from '@/constant/dappError';
 import { zkCommondFormat } from '@/utils/zkUtils';
+import { getAccountInfo } from './api';
 
 let signRequests = [];
 let approveRequests = [];
@@ -129,6 +130,13 @@ class DappService {
             sendResponse
           )
           break;
+      case DAppActions.mina_fetchAccount:
+        this.requestCallback(
+          () => this.requestAccountNetInfo(params,site),
+          id,
+          sendResponse
+        )
+        break;
       default:
         this.requestCallback(
           async ()=>{
@@ -139,6 +147,32 @@ class DappService {
         )
         break;
     }
+  }
+  async requestAccountNetInfo(params,site){
+    return new Promise(async (resolve,reject) => {
+      const {publicKey,tokenId} = params
+      if(!publicKey || !addressValid(publicKey)){
+        reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
+        return 
+      }
+      const supportNetType = [NET_CONFIG_TYPE.Berkeley,NET_CONFIG_TYPE.Testworld2]
+      let netConfig = await getCurrentNetConfig()
+      if(supportNetType.indexOf(netConfig.netType)===-1){
+        reject({ code:errorCodes.unsupportMethod, message: getMessageFromCode(errorCodes.unsupportMethod)})
+      }
+      const tokenID = tokenId ? tokenId : "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf"
+      const accountInfo = await getAccountInfo(publicKey,tokenID)
+      if(accountInfo.error){
+        reject({ code:errorCodes.throwError, message: JSON.stringify(accountInfo.error)})
+      }
+      if (accountInfo.account === null) {
+        reject({
+          code: errorCodes.notFound,
+          message: `fetchAccount: Account with public key ${publicKey} does not exist.`,
+        })
+      }
+      resolve({account:accountInfo.account})
+    })
   }
   
   async signTransaction(id, params, site) {
@@ -247,7 +281,7 @@ class DappService {
           
           switch (action) {
             case DAPP_ACTION_SEND_TRANSACTION:
-                  if (payload.resultOrigin !== site.origin) {
+                  if (payload.resultOrigin !== currentSignParams.site.origin) {
                     nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                     return
                   }
@@ -278,7 +312,7 @@ class DappService {
                   sendResponse()
                 return true
             case DAPP_ACTION_SIGN_MESSAGE:
-                  if (payload.resultOrigin !== site.origin) {
+                  if (payload.resultOrigin !== currentSignParams.site.origin) {
                     nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                     return
                   }
@@ -306,7 +340,7 @@ class DappService {
                   sendResponse()
                 return true
             case DAPP_ACTION_SWITCH_CHAIN: 
-                if (payload.resultOrigin !== site.origin) {
+                if (payload.resultOrigin !== currentSignParams.site.origin) {
                   nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
@@ -337,7 +371,7 @@ class DappService {
                 sendResponse()
                 return true
               case DAPP_ACTION_CREATE_NULLIFIER:
-                if (payload.resultOrigin !== site.origin) {
+                if (payload.resultOrigin !== currentSignParams.site.origin) {
                   nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
@@ -395,10 +429,6 @@ class DappService {
     function removeListener (tabInfo, changeInfo) {
       if (popupWindowId === changeInfo.windowId) {
         extension.tabs.onRemoved.removeListener(removeListener)
-        extension.runtime.sendMessage({
-          type: FROM_BACK_TO_RECORD,
-          action: DAPP_CLOSE_POPUP_WINDOW,
-        });
         let requestList = [...signRequests,...approveRequests,...notificationRequests]
         requestList.map((item)=>{
           if(item.popupId === changeInfo.windowId){
@@ -473,10 +503,19 @@ class DappService {
         pendingApprove = { id, site}
         function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
+          
+          const approveId = payload?.id
+          const currentApproveParams = that.getApproveParamsByOpenId(approveId)
+          if(!currentApproveParams){
+            return
+          }
+          const nextReject = currentApproveParams.reject
+          const nextResolve = currentApproveParams.resolve
+
           switch (action) {
             case DAPP_ACTION_GET_ACCOUNT:
-                if (payload.resultOrigin !== site.origin) {
-                  reject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
+                if (payload.resultOrigin !== currentApproveParams.site.origin) {
+                  nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
                 closePopupWindow(windowId.approve_page)
@@ -492,19 +531,19 @@ class DappService {
                   that.dappStore.updateState({
                     accountApprovedUrlList
                   })
-                  resolve([account.address])
+                  nextResolve([account.address])
                 } else {
-                  reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
+                  nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                 }
                 sendResponse()
               return true
             case DAPP_ACTION_CLOSE_WINDOW:
-                if (payload.resultOrigin !== site.origin) {
-                  reject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
+                if (payload.resultOrigin !== currentApproveParams.site.origin) {
+                  nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
                 extension.runtime.onMessage.removeListener(onMessage)
-                resolve([payload.account])
+                nextResolve([payload.account])
                 closePopupWindow(payload.page)
                 that.setBadgeContent()
                 sendResponse()
@@ -516,7 +555,7 @@ class DappService {
         }
         extension.runtime.onMessage.addListener(onMessage)
         let siteUrl = site.origin
-        let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon }).toString()
+        let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon,id }).toString()
         this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page?' + openParams,
           windowId.approve_page, "dapp")
         approveRequests.push({ id, site,popupId:this.popupId,resolve,reject })
@@ -536,6 +575,19 @@ class DappService {
       chrome.action?.setBadgeText({ text: "" });
     }
   }
+  getApproveParamsByOpenId(openId){
+    let params = approveRequests.filter((item) => {
+      if (item.id === openId) {
+        return item
+      }
+    })
+    if (params.length > 0) {
+      return params[0];
+    } else {
+      return null;
+    }
+  }
+
   getSignParamsByOpenId(openId) {
     let params = [...signRequests,...notificationRequests].filter((item) => {
       if (item.id === openId) {

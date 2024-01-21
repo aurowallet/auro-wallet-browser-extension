@@ -1,3 +1,5 @@
+import { Terms_default } from "@/constant"
+
 /**
  * Change wallet name
  */
@@ -12,6 +14,9 @@ const SET_ACCOUNT_INFO = "SET_ACCOUNT_INFO"
  *  Update the next level routing of the welcome screen
  */
 const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE"
+
+
+const SET_WELCOME_NEXT_TYPE = "SET_WELCOME_NEXT_TYPE"
 
 
 /**
@@ -102,6 +107,17 @@ export function setWelcomeNextRoute(nextRoute) {
     };
 }
 
+
+export function setWelcomeNextType(nextType) {
+    return {
+        type: SET_WELCOME_NEXT_TYPE,
+        nextType
+    };
+}
+
+
+
+
 export function updateAccoutType(fromType) {
     return {
         type: UPDATE_ACCOUNT_TYPE_FROM,
@@ -151,18 +167,19 @@ const initState = {
     accountCount: "",
     accountInfo: {},
     welcomeNextRoute: "",
+    welcomeNextType: "",
 
     changelog: "",
     changelog_app: "",
     followus: [],
     gitReponame: "",
     gitReponame_app: "",
-    privacy_policy: "",
-    privacy_policy_cn: "",
+    privacy_policy: Terms_default.privacy_policy,
+    privacy_policy_cn: Terms_default.privacy_policy,
     staking_guide: "",
     staking_guide_cn: "",
-    terms_and_contions: "",
-    terms_and_contions_cn: "",
+    terms_and_contions: Terms_default.terms_and_contions,
+    terms_and_contions_cn: Terms_default.terms_and_contions,
 
     addressDetail: {},
     addressBookFrom: "",
@@ -194,6 +211,12 @@ const cacheReducer = (state = initState, action) => {
             return {
                 ...state,
                 welcomeNextRoute: nextRoute
+            }
+        case SET_WELCOME_NEXT_TYPE:
+            let nextType = action.nextType
+            return {
+                ...state,
+                welcomeNextType: nextType
             }
         case UPDATE_ACCOUNT_TYPE_FROM:
             return {

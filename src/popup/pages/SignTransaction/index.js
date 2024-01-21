@@ -100,6 +100,15 @@ const SignTransaction = () => {
     return getQueryStringArgs(url);
   }, [dappWindow]);
 
+  const fetchAccountInfo = useCallback(async () => {
+    let account = await getBalance(currentAddress);
+    if (account.publicKey) {
+      dispatch(updateNetAccount(account));
+    }
+    isFirstRequest.current = false;
+    Loading.hide();
+  }, [dispatch, currentAddress]);
+
   const onClickUnLock = useCallback(() => {
     setLockStatus(true);
   }, [currentAccount, params]);
@@ -160,14 +169,6 @@ const SignTransaction = () => {
       }
     );
   }, [dappWindow]);
-  const fetchAccountInfo = useCallback(async () => {
-    let account = await getBalance(currentAddress);
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account));
-    }
-    isFirstRequest.current = false;
-    Loading.hide();
-  }, [dispatch, currentAddress]);
 
   useEffect(() => {
     getSignParams();
@@ -222,6 +223,14 @@ const SignTransaction = () => {
     setCurrentSignIndex(nextIndex);
   }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
+  const goToHome = useCallback(() => {
+    let url = dappWindow?.url;
+    if (url) {
+      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
+    }
+    dispatch(updateDAppOpenWindow({}));
+  }, [dappWindow, showMultiView]);
+
   const onRemoveNotify = useCallback(() => {
     setNotifyData({});
     if (pendingSignList.length > 0) {
@@ -275,13 +284,6 @@ const SignTransaction = () => {
     },
     [pendingSignList, nextUseInferredNonce, goToHome, notifyData]
   );
-  const goToHome = useCallback(() => {
-    let url = dappWindow?.url;
-    if (url) {
-      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-    }
-    dispatch(updateDAppOpenWindow({}));
-  }, [dappWindow, showMultiView]);
   /** reject all tx */
   const onRejectAll = useCallback(() => {
     sendMsg(

@@ -107,7 +107,7 @@ const NodeItem = ({
 }) => {
   const delegationKey = useSelector(state => state.staking.delegationKey)
   const {
-    select, showName, showAddress,showTotalStake,showDelegations,isChecked
+    select, showName, showAddress,isChecked
   } = useMemo(() => {
     let select = nodeItem.nodeAddress === currentSelectAddress
 
@@ -118,7 +118,7 @@ const NodeItem = ({
     let showAddress = addressSlice(nodeItem.nodeAddress, 6)
     let isChecked = delegationKey === nodeItem.nodeAddress
     return {
-      select, showName, showAddress,showTotalStake,showDelegations,isChecked
+      select, showName, showAddress,isChecked
     }
   }, [nodeItem, currentSelectAddress,i18n,delegationKey])
   return(<div className={styles.rowContainer}>
