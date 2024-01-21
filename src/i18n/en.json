@@ -279,6 +279,6 @@
   "available": "Available",
   "contributeLanguage": "Contribute language",
   "pinExtension": "Pin Auro Wallet Extension",
-  "clickBrowser": "Click<icon/> in your browser",
-  "clickButton": "and <icon/>  click the button"
+  "clickBrowser": "Click <icon/> in your browser",
+  "clickButton": "and <icon/> click the button"
 }
