@@ -12,7 +12,7 @@
   "cancel": "Cancel",
   "reset": "Reset",
   "deleteTag": "delete",
-  "confirm_reset_tip": "Please enter 'delete' to confirm the wallet reset",
+  "confirm_reset_tip": "Please enter '{{deteleTag}}' to confirm the wallet reset",
   "resetWallet": "Reset Wallet",
   "welcomeBack": "Welcome Back!",
   "password": "Password",

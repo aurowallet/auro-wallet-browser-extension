@@ -124,7 +124,7 @@
   "addressQrTip": "QR kodunu tarayın ve MINA'yı ona aktarın",
   "createPassword": "Şifre Oluştur",
   "importAccount_2": "İçe aktarılan hesaplar, orijinal olarak oluşturduğunuz Auro Wallet ile ilişkilendirilmeyecektir.",
-  "confirm_reset_tip": "Cüzdan sıfırlama işlemini onaylamak için lütfen 'sil' yazın",
+  "confirm_reset_tip": "Cüzdan sıfırlama işlemini onaylamak için lütfen '{{deteleTag}}' yazın",
   "feeTooHigh": "Ücretler ortalamanın çok üstünde",
   "followUs": "Bizi Takip Edin",
   "createWallet": "Cüzdan Oluştur",

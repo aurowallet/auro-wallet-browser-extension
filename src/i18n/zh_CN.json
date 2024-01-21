@@ -12,7 +12,7 @@
   "cancel": "取消",
   "reset": "重置",
   "deleteTag": "删除",
-  "confirm_reset_tip": "请输入\"删除\"确定重置钱包",
+  "confirm_reset_tip": "请输入\"{{deteleTag}}\"确定重置钱包",
   "resetWallet": "重置钱包",
   "welcomeBack": "欢迎回来!",
   "password": "密码",

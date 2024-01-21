@@ -194,7 +194,7 @@ export const LockPage = ({
             />
 
             <PopupModal
-                title={i18n.t('confirm_reset_tip')}
+                title={i18n.t('confirm_reset_tip',{ deteleTag:i18n.t("deleteTag") })}
                 leftBtnContent={i18n.t('cancel')}
                 rightBtnContent={i18n.t("confirm")}
                 type={PopupModal_type.input}
