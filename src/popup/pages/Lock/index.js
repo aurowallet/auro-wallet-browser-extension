@@ -22,6 +22,7 @@ import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 import {extGetLocal, extSaveLocal} from "../../../background/extensionStorage";
+import extension from "extensionizer";
 
 export const LockPage = ({
     onClickUnLock = () => { },
@@ -122,7 +123,9 @@ export const LockPage = ({
             dispatch(updateCurrencyConfig(currencyList))
             saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList[0].key))
 
-            history.push("/welcome_page")
+            extension.tabs.create({
+                url: "popup.html#/welcome_page",
+            });
         })
     }, [])
 
