@@ -46,6 +46,7 @@ const MainRouter = () => {
       if (type === FROM_BACK_TO_RECORD && action === SET_LOCK) {
         dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
         history.push("/lock_page");
+        sendResponse()
       }
       return false;
     };
