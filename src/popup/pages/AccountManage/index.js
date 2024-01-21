@@ -1,6 +1,6 @@
 import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { MAIN_COIN_CONFIG } from "../../../constant";
@@ -21,6 +21,8 @@ import extension from 'extensionizer'
 const AccountManagePage = ({ }) => {
   const dispatch = useDispatch()
   const history = useHistory()
+  const isMounted = useRef(true);
+
   const accountBalanceMap = useSelector(state=>state.accountInfo.accountBalanceMap)
   const [accountList, setAccountList] = useState([])
   const [commonAccountList, setCommonAccountList] = useState([])
@@ -116,8 +118,9 @@ const AccountManagePage = ({ }) => {
   const fetchBalance = useCallback(async (addressList, commonAccountList, watchModeAccountList) => {
     let tempBalanceList = await getBalanceBatch(addressList)
     dispatch(updateAccountList(tempBalanceList))
-
-    setBalanceMap(commonAccountList,watchModeAccountList,tempBalanceList)
+    if (isMounted.current) {
+      setBalanceMap(commonAccountList,watchModeAccountList,tempBalanceList)
+    }
   }, [])
 
 
@@ -186,6 +189,12 @@ const AccountManagePage = ({ }) => {
       })
     }
   }, [currentAddress, balanceList])
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
 
   return (<CustomView
