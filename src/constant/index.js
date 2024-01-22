@@ -20,6 +20,7 @@ export const CURRENCY_UNIT = [
   { key: "eur", value: "EUR", symbol: "€" },
   { key: "gbp", value: "GBP", symbol: "£" },
   { key: "try", value: "TRY", symbol: "₺" },
+  { key: "uah", value: "UAH", symbol: "₴" },
 ];
 
 /** default lock time */

@@ -321,8 +321,7 @@ const WalletInfo = () => {
         Toast.info(i18n.t('nodeError'))
       }
     })
-    fetchPrice()
-  }, [i18n, currentAccount,netConfig])
+  }, [i18n, currentAccount])
 
   useEffect(() => {
     fetchAccountData()
