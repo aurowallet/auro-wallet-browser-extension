@@ -106,11 +106,9 @@ export const RestoreMneView = ({ onClickPre, onClickNext }) => {
 
   const handlePaste = useCallback(
     (index, value) => {
-      const words = value
-        .trim()
-        .split(" ")
-        .map((word) => word.trim())
-        .filter((word) => word.length > 0);
+      const wordsStr =
+        (value || "").trim().toLowerCase().match(/\w+/gu)?.join(" ") || "";
+      const words = wordsStr.split(" ");
       // Handling 12 words
       if (words.length === 12) {
         setMneInputList(words);

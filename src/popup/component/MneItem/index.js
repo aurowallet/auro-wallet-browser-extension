@@ -95,9 +95,11 @@ export const MneItemV2 = ({
             onChange={(e) => onChange(e, index)}
             type={isFocused ? "text" : "password"}
             onPaste={(e) => {
-              e.preventDefault();
               const data = e.clipboardData.getData("text");
-              onPaste(index, data);
+              if (data.trim().match(/\s/u)) {
+                e.preventDefault();
+                onPaste(index, data);
+              }
             }}
           />
         </StyledInputContainer>
