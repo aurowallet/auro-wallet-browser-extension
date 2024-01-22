@@ -242,7 +242,7 @@
   "ledgerCloseWarning": "<red>Do not close this window.</red>",
   "ledgerCloseTip": "Once the Ledger is complete, the page will redirect automatically.",
   "ledgerSuccess": "Congrats, You have Import a hardware account successfully!",
-  "ledgerReturnExtension": "Please return to the extension.",
+  "returnEx": "Please return to the extension.",
   "ledgerConnetTip": "Ledger device was not connected. Please check the Ledger status, click “Next” again and approve connection.",
   "ledgerConnetOpenTip": "Ledger device is connected, but Mina app is not open. Please open Mina app in ledger.",
   "auroLocked": "Wallet has been locked, please unlock the wallet first.",

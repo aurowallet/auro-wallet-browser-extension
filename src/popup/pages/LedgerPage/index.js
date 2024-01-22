@@ -416,7 +416,7 @@ const SuccessView = ({ onClickNext }) => {
       <img src="/img/backup_success.svg" />
       <p className={styles.importSuccess}>{i18n.t("success")}</p>
       <p className={styles.importContent}>{i18n.t("ledgerSuccess")}</p>
-      <p className={styles.importContent}>{i18n.t("ledgerReturnExtension")}</p>
+      <p className={styles.importContent}>{i18n.t("returnEx")}</p>
       <div className={cls(styles.bottomContainer)}>
         <Button onClick={onClickNext}>{i18n.t("done")}</Button>
       </div>

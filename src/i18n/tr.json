@@ -241,7 +241,7 @@
   "ledgerConentTip_1": "Lütfen takip işlemine Ledger donanım cüzdanının bildirimlerin göre devam edin.",
   "waitingLedgerConfirmTip_3": "<red>Bu pencereyi kapatmayınız.</red> Ledger tamamlandığında sayfa otomatik olarak yönlendirilecektir.",
   "getStarted": "Başla",
-  "ledgerReturnExtension": "Lütfen eklentiye geri dönün.",
+  "returnEx": "Lütfen eklentiye geri dönün.",
   "ledgerStartDesc": "Başlamadan önce Ledger cihazınızda en güncel ürün yazılımının bulunduğundan, Ledger’ın kurulu olduğundan ve Mina Uygulaması’nın Ledger cihazına kurulu olduğundan emin olun.",
   "ledgerConnetTip": "Ledger cihazı bağlanmadı. Lütfen Ledger durumunu kontrol edin, tekrar “İleri” ye tıklayın ve bağlantıyı onaylayın.",
   "ledgerConnect_1": "Ledger’i bilgisayara bağlayın.",
