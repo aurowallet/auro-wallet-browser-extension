@@ -124,7 +124,7 @@ export const LockPage = ({
             saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList[0].key))
 
             extension.tabs.create({
-                url: "popup.html#/welcome_page",
+                url: "popup.html#/register_page",
             });
         })
     }, [])

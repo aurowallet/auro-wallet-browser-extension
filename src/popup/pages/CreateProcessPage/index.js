@@ -1,27 +1,24 @@
 /**
  * the init wallet process , create pwd , show mne , backup mne , success
  */
+import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 import Tabs, { TAB_TYPE } from "@/popup/component/Tabs";
-import {
-  StyledPageInnerContent,
-  StyledPageOuterWrapper,
-} from "@/popup/style/common";
+import { StyledPageInnerContent } from "@/popup/style/common";
 import { useCallback, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { ConfirmMneView } from "./ConfirmMneView";
 import { CreatePwdView } from "./CreatePwdView";
 import { CreateResultView } from "./CreateResultView";
 import { MnemonicView } from "./MnemonicView";
 import { RestoreMneView } from "./RestoreMneView";
-import { useSelector } from "react-redux";
-import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 
 const StyledTabContent = styled.div`
   width: 100%;
   height: 100%;
 `;
 
-export const CreateProcessPage = () => {
+export const CreateProcessPage = ({onClickPre}) => {
   const welcomeNextType = useSelector((state) => state.cache.welcomeNextType);
   const [tabIndex, setTabIndex] = useState(0);
   const onClickNextTab = useCallback(() => {
@@ -36,42 +33,40 @@ export const CreateProcessPage = () => {
   }, []);
 
   return (
-    <StyledPageOuterWrapper>
-      <StyledPageInnerContent>
-        <Tabs selected={tabIndex} tabType={TAB_TYPE.STEP}>
-          <StyledTabContent id={1}>
-            <CreatePwdView onClickNextTab={onClickNextTab} />
+    <StyledPageInnerContent>
+      <Tabs selected={tabIndex} tabType={TAB_TYPE.STEP}>
+        <StyledTabContent id={1}>
+          <CreatePwdView onClickNextTab={onClickNextTab} onClickPre={onClickPre}/>
+        </StyledTabContent>
+        {!showRestore && (
+          <StyledTabContent id={2}>
+            <MnemonicView
+              onClickNext={onClickNextTab}
+              onClickPre={onClickPreTab}
+            />
           </StyledTabContent>
-          {!showRestore && (
-            <StyledTabContent id={2}>
-              <MnemonicView
-                onClickNext={onClickNextTab}
-                onClickPre={onClickPreTab}
-              />
-            </StyledTabContent>
-          )}
-          {!showRestore && (
-            <StyledTabContent id={3}>
-              <ConfirmMneView
-                onClickNext={onClickNextTab}
-                onClickPre={onClickPreTab}
-              />
-            </StyledTabContent>
-          )}
-          {showRestore && (
-            <StyledTabContent id={4}>
-              <RestoreMneView
-                onClickNext={onClickNextTab}
-                onClickPre={onClickPreTab}
-              />
-            </StyledTabContent>
-          )}
-          <StyledTabContent id={5}>
-            <CreateResultView />
+        )}
+        {!showRestore && (
+          <StyledTabContent id={3}>
+            <ConfirmMneView
+              onClickNext={onClickNextTab}
+              onClickPre={onClickPreTab}
+            />
           </StyledTabContent>
-        </Tabs>
-      </StyledPageInnerContent>
-    </StyledPageOuterWrapper>
+        )}
+        {showRestore && (
+          <StyledTabContent id={4}>
+            <RestoreMneView
+              onClickNext={onClickNextTab}
+              onClickPre={onClickPreTab}
+            />
+          </StyledTabContent>
+        )}
+        <StyledTabContent id={5}>
+          <CreateResultView />
+        </StyledTabContent>
+      </Tabs>
+    </StyledPageInnerContent>
   );
 };
 

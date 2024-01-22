@@ -44,7 +44,7 @@ const StyledBottomContainer = styled.div`
   left: 50%;
   transform: translate(-50%);
 `;
-export const CreatePwdView = ({ onClickNextTab }) => {
+export const CreatePwdView = ({ onClickNextTab, onClickPre }) => {
   const [inputPwd, setInputPwd] = useState("");
 
   const [rulesMet, setRulesMet] = useState(
@@ -123,7 +123,7 @@ export const CreatePwdView = ({ onClickNextTab }) => {
   };
   return (
     <StyledPwdContainer>
-      <BackView onClickBack={onClickBack} />
+      <BackView onClickBack={onClickPre} />
       <StyledPwdContentContainer>
         <StyledProcessTitle>{i18n.t("createPassword")}</StyledProcessTitle>
         <ReminderTip content={i18n.t("createPasswordTip")} />

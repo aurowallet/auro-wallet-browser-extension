@@ -57,7 +57,7 @@ const MainRouter = () => {
     switch (entryWitchRoute) {
       case ENTRY_WITCH_ROUTE.WELCOME:
         extension.tabs.create({
-          url: "popup.html#/welcome_page",
+          url: "popup.html#/register_page",
         });
         return;
       case ENTRY_WITCH_ROUTE.HOME_PAGE:

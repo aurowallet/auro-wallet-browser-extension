@@ -17,6 +17,7 @@ import {
   StyledPageOuterWrapper,
 } from "@/popup/style/common";
 import { WALLET_CREATE_TYPE } from "@/constant/commonType";
+import { CreateProcessPage } from "../CreateProcessPage";
 
 const type_conditions = "conditions";
 const type_policy = "policy";
@@ -81,6 +82,10 @@ const StyledModalTip = styled.span`
   cursor: pointer;
 `;
 
+const RegisterStep = {
+  welcome: "welcome",
+  process: "process",
+};
 const Welcome = () => {
   const cache = useSelector((state) => state.cache);
   const dispatch = useDispatch();
@@ -90,6 +95,7 @@ const Welcome = () => {
   const [popupModalStatus, setPopupModalStatus] = useState(false);
 
   const [nextRoute, setNextRoute] = useState("");
+  const [registeStep, setRegisteStep] = useState(RegisterStep.welcome);
 
   const onClickGuide = useCallback(
     (type) => {
@@ -126,7 +132,7 @@ const Welcome = () => {
       saveLocal(USER_AGREEMENT, "true");
     }
     dispatch(setWelcomeNextType(route));
-    history.push("/createprocess");
+    setRegisteStep(RegisterStep.process);
   }, []);
 
   const goNextRoute = useCallback(
@@ -154,77 +160,85 @@ const Welcome = () => {
   useEffect(() => {
     initLocal();
   }, []);
+  const onClickPre = useCallback(() => {
+    setRegisteStep(RegisterStep.welcome);
+  }, []);
 
   return (
     <StyledPageOuterWrapper>
-      <StyledPageInnerContent>
-        <StyledTopContainer>
-          <StyledLogoContainer>
-            <img src="/img/colorful_logo.svg" />
-          </StyledLogoContainer>
+      {registeStep === RegisterStep.welcome && (
+        <StyledPageInnerContent>
+          <StyledTopContainer>
+            <StyledLogoContainer>
+              <img src="/img/colorful_logo.svg" />
+            </StyledLogoContainer>
 
-          <StyledBtnContainer>
-            <Button
-              leftIcon={"/img/icon_add.svg"}
-              onClick={() => {
-                goNextRoute(WALLET_CREATE_TYPE.create);
-              }}
-            >
-              {i18n.t("createWallet")}
-            </Button>
+            <StyledBtnContainer>
+              <Button
+                leftIcon={"/img/icon_add.svg"}
+                onClick={() => {
+                  goNextRoute(WALLET_CREATE_TYPE.create);
+                }}
+              >
+                {i18n.t("createWallet")}
+              </Button>
 
-            <Button
-              theme={button_theme.BUTTON_THEME_LIGHT}
-              leftIcon={"/img/icon_download.svg"}
-              onClick={() => {
-                goNextRoute(WALLET_CREATE_TYPE.restore);
-              }}
-            >
-              {i18n.t("restoreWallet")}
-            </Button>
-          </StyledBtnContainer>
-        </StyledTopContainer>
-        <StyledBottomContainer>
-          <StyledLedgerTip>{i18n.t("ledgerUserTip")}</StyledLedgerTip>
-          <StyledPowerBy>{POWER_BY}</StyledPowerBy>
-        </StyledBottomContainer>
-        <PopupModalV2
-          title={i18n.t("termsAndPrivacy")}
-          leftBtnContent={i18n.t("refuse")}
-          rightBtnContent={i18n.t("agree")}
-          onLeftBtnClick={onCloseModal}
-          onRightBtnClick={() => {
-            onCloseModal();
-            goPage(nextRoute, "saveProtocol");
-          }}
-          componentContent={
-            <StyledModalWrapper>
-              <StyledModalContent>
-                {i18n.t("termsAndPrivacy_line1")}
-              </StyledModalContent>
-              <StyledModalContent>
-                <Trans
-                  i18nKey={i18n.t("termsAndPrivacy_line2")}
-                  components={{
-                    conditions: (
-                      <StyledModalTip
-                        onClick={() => onClickGuide(type_conditions)}
-                      />
-                    ),
-                    policy: (
-                      <StyledModalTip
-                        onClick={() => onClickGuide(type_policy)}
-                      />
-                    ),
-                  }}
-                />
-              </StyledModalContent>
-            </StyledModalWrapper>
-          }
-          modalVisable={popupModalStatus}
-          onCloseModal={onCloseModal}
-        />
-      </StyledPageInnerContent>
+              <Button
+                theme={button_theme.BUTTON_THEME_LIGHT}
+                leftIcon={"/img/icon_download.svg"}
+                onClick={() => {
+                  goNextRoute(WALLET_CREATE_TYPE.restore);
+                }}
+              >
+                {i18n.t("restoreWallet")}
+              </Button>
+            </StyledBtnContainer>
+          </StyledTopContainer>
+          <StyledBottomContainer>
+            <StyledLedgerTip>{i18n.t("ledgerUserTip")}</StyledLedgerTip>
+            <StyledPowerBy>{POWER_BY}</StyledPowerBy>
+          </StyledBottomContainer>
+          <PopupModalV2
+            title={i18n.t("termsAndPrivacy")}
+            leftBtnContent={i18n.t("refuse")}
+            rightBtnContent={i18n.t("agree")}
+            onLeftBtnClick={onCloseModal}
+            onRightBtnClick={() => {
+              onCloseModal();
+              goPage(nextRoute, "saveProtocol");
+            }}
+            componentContent={
+              <StyledModalWrapper>
+                <StyledModalContent>
+                  {i18n.t("termsAndPrivacy_line1")}
+                </StyledModalContent>
+                <StyledModalContent>
+                  <Trans
+                    i18nKey={i18n.t("termsAndPrivacy_line2")}
+                    components={{
+                      conditions: (
+                        <StyledModalTip
+                          onClick={() => onClickGuide(type_conditions)}
+                        />
+                      ),
+                      policy: (
+                        <StyledModalTip
+                          onClick={() => onClickGuide(type_policy)}
+                        />
+                      ),
+                    }}
+                  />
+                </StyledModalContent>
+              </StyledModalWrapper>
+            }
+            modalVisable={popupModalStatus}
+            onCloseModal={onCloseModal}
+          />
+        </StyledPageInnerContent>
+      )}
+      {registeStep === RegisterStep.process && (
+        <CreateProcessPage onClickPre={onClickPre} />
+      )}
     </StyledPageOuterWrapper>
   );
 };

@@ -88,7 +88,7 @@ export function getAllRouter() {
         <Route path="/setting" component={Setting} />
         <Route path="/address_book" component={AddressBook} />
         <Route path="/currency_unit" component={CurrencyUnit} />
-        <Route path="/welcome_page" component={Welcome} />
+        <Route path="/register_page" component={Welcome} />
 
         <Route path="/request_sign" component={SignTransaction} />
         <Route path="/approve_page" component={ApprovePage} />

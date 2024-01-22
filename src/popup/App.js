@@ -27,7 +27,7 @@ function App() {
   useEffect(()=>{
     const url = new URL(window.location.href); 
     const ledgerPageList= ['popup.html#/ledger_connect','popup.html#/ledger_page']
-    const initPageList = ['popup.html#/welcome_page','popup.html#/createprocess']
+    const initPageList = ['popup.html#/register_page','popup.html#/createprocess']
     let findIndex = false;
     [...ledgerPageList,...initPageList].map((path)=>{
       if(url.href.indexOf(path)!==-1){
