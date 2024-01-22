@@ -39,7 +39,7 @@
   "ledgerImportTip": "Lütfen [İçe Aktar] düğmesine tıklayın ve Ledger cüzdanınızdan onaylayın.",
   "connectLedger": "Ledger’a Bağlan",
   "amountError": "Lütfen geçerli bir işlem tutarı girin",
-  "inputSeed": "Lütfen her kelime bir boşlukla ayrılmış olacak şekilde 12 anımsatıcı ifadeyi sırayla girin.",
+  "inputSeed": "Lütfen 12 anımsatıcı ifadeyi, büyük harf ve noktalama işareti olmadan, sırayla girin.",
   "keystorePassword": "Anahtar Deposu Şifresi",
   "fee_fast": "Hızlı",
   "balanceNotEnough": "Yetersiz bakiye",
@@ -281,5 +281,8 @@
   "switch": "Değiştir",
   "newFee": "Yeni Ücret",
   "deleteAccount": "Hesabı Sil?",
-  "contributeLanguage": "Başka bir dile katkıda bulunun"
+  "contributeLanguage": "Başka bir dile katkıda bulunun",
+  "pinExtension": "Auro Wallet Pinle",
+  "clickButton": "ve <icon/> butonuna tıklayın",
+  "clickBrowser": "Tarayıcınızda <icon/>'a tıklayın"
 }

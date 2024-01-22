@@ -37,7 +37,7 @@
   "backup_success": "恭喜，已经成功创建钱包！",
   "backup_success_restore": "恭喜，已经成功导入钱包！",
   "ledgerSuccessTip": "恭喜，已经成功导入 Ledger 钱包！",
-  "inputSeed": "请按顺序输入12位助记词，每位单词使用空格隔开。",
+  "inputSeed": "请按顺序输入12位助记词，没有大写和标点符号。",
   "confirm": "确定",
   "feeTooHigh": "交易费用远高于平均值",
   "postFailed": "广播失败",
@@ -278,5 +278,8 @@
   "stakedBalance": "已委托",
   "testnet": "测试网",
   "available": "可用",
-  "contributeLanguage": "贡献语言"
+  "contributeLanguage": "贡献语言",
+  "pinExtension": "固定 Auro Wallet",
+  "clickBrowser": "点击<icon/>在浏览器中",
+  "clickButton": "然后<icon/>点击按钮"
 }

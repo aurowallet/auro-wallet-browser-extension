@@ -37,7 +37,7 @@
   "backup_success": "Congrats, You have successfully created a wallet!",
   "backup_success_restore": "Congrats, You have successfully restored a wallet!",
   "ledgerSuccessTip": "Congrats, You have successfully imported the Ledger wallet!",
-  "inputSeed": "Please enter 12 mnemonic phrases in order, with each word separated by a space.",
+  "inputSeed": "Please enter 12 mnemonic phrases in order, without capitalization, punctuation symbols.",
   "confirm": "Confirm",
   "feeTooHigh": "Fees are much higher than average",
   "postFailed": "Transaction broadcast failed",
