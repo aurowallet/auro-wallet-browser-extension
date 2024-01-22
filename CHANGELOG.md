@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.11]
+- Enhanced security process for wallet create and restore
+- Added Ukrainian language support
+- Optimized loading
+- Updated zkApp user interface (UI):
+- Fixed Origin mismatch issue
+- Fixed onMessage errors during lock
+
 ## [2.2.10]
 - Fix zkTx show status
 - UI enhancements
