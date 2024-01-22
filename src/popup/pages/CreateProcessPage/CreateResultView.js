@@ -1,8 +1,10 @@
 import { Default_Follow_Link } from "@/constant";
+import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 import Button from "@/popup/component/Button";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { Trans } from "react-i18next";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 
 const StyledPwdContainer = styled.div`
@@ -17,13 +19,13 @@ const StyledBackupTitle = styled.div`
   font-size: 22px;
   font-weight: 600;
   text-align: center;
+  margin-bottom: 20px;
 `;
 const StyledBackupContent = styled.div`
   color: var(--medium-black-50, #808080);
   text-align: center;
   font-size: 16px;
   font-weight: 500;
-  margin-top: 20px;
 `;
 const StyledFollowUs = styled.div`
   color: var(--medium-black-50, #808080);
@@ -140,23 +142,17 @@ const StyledExtPinContent = styled.div`
 `;
 
 export const CreateResultView = ({}) => {
-  const { showTip } = useMemo(() => {
-    let location = history.location;
-    // let type = location?.params?.type ?? "";
+  const welcomeNextType = useSelector((state) => state.cache.welcomeNextType);
 
+  const { showTip } = useMemo(() => { 
     let showTip = "backup_success";
-    // if (type === "restore") {
-    //   showTip = "backup_success_restore";
-    // } else if (type === "ledger") {
-    //   showTip = "ledgerSuccessTip";
-    // } else {
-    //   showTip = "backup_success";
-    // }
-
+    if(welcomeNextType === WALLET_CREATE_TYPE.restore){
+      showTip = "backup_success_restore";
+    }
     return {
       showTip,
     };
-  }, [history]);
+  }, [welcomeNextType]);
 
   const onClickNextTab = useCallback(() => {
     window.close();
@@ -169,6 +165,7 @@ export const CreateResultView = ({}) => {
         </StyldImgContainer>
         <StyledBackupTitle>{i18n.t("success")}</StyledBackupTitle>
         <StyledBackupContent>{i18n.t(showTip)}</StyledBackupContent>
+        <StyledBackupContent>{i18n.t("returnExt")}</StyledBackupContent>
         <StyledFollowUs>{i18n.t("followUs")}</StyledFollowUs>
         <StyledFollowContainer>
           {Default_Follow_Link.map((follow, index) => {
