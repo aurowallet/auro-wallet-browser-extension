@@ -12,7 +12,10 @@ import { openTab } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
 import styled from "styled-components";
 import { PopupModalV2 } from "@/popup/component/PopupModalV2";
-import { StyledPageInnerContent, StyledPageOuterWrapper } from "@/popup/style/common";
+import {
+  StyledPageInnerContent,
+  StyledPageOuterWrapper,
+} from "@/popup/style/common";
 import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 
 const type_conditions = "conditions";
@@ -43,13 +46,20 @@ const StyledLedgerTip = styled.p`
   color: #cccccc;
   padding: 0px 20px;
 `;
+const StyledBottomContainer = styled.div`
+  position: absolute;
+  width: 600px;
+  bottom: 20px;
+  left: 50%;
+  transform: translate(-50%);
+`;
 
 const StyledPowerBy = styled.p`
   font-size: 12px;
   line-height: 18px;
   color: var(--nobelGray);
   text-align: center;
-  margin: 0 auto 20px;
+  margin: 0 auto;
 `;
 const StyledModalWrapper = styled.div`
   > :not(:last-child) {
@@ -90,9 +100,14 @@ const Welcome = () => {
         privacy_policy_cn,
       } = cache;
       let lan = i18n.language;
-      let url = (lan === LANG_SUPPORT_LIST.zh_CN)
-        ? (type === type_conditions ? terms_and_contions_cn : privacy_policy_cn)
-        : (type === type_conditions ? terms_and_contions : privacy_policy);
+      let url =
+        lan === LANG_SUPPORT_LIST.zh_CN
+          ? type === type_conditions
+            ? terms_and_contions_cn
+            : privacy_policy_cn
+          : type === type_conditions
+          ? terms_and_contions
+          : privacy_policy;
 
       if (url) {
         openTab(url);
@@ -169,9 +184,10 @@ const Welcome = () => {
             </Button>
           </StyledBtnContainer>
         </StyledTopContainer>
-        <StyledLedgerTip>{i18n.t("ledgerUserTip")}</StyledLedgerTip>
-        <StyledPowerBy>{POWER_BY}</StyledPowerBy>
-
+        <StyledBottomContainer>
+          <StyledLedgerTip>{i18n.t("ledgerUserTip")}</StyledLedgerTip>
+          <StyledPowerBy>{POWER_BY}</StyledPowerBy>
+        </StyledBottomContainer>
         <PopupModalV2
           title={i18n.t("termsAndPrivacy")}
           leftBtnContent={i18n.t("refuse")}
@@ -190,7 +206,7 @@ const Welcome = () => {
                 <Trans
                   i18nKey={i18n.t("termsAndPrivacy_line2")}
                   components={{
-                    conditions: ( 
+                    conditions: (
                       <StyledModalTip
                         onClick={() => onClickGuide(type_conditions)}
                       />
