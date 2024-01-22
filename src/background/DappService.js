@@ -130,13 +130,13 @@ class DappService {
             sendResponse
           )
           break;
-      case DAppActions.mina_fetchAccount:
-        this.requestCallback(
-          () => this.requestAccountNetInfo(params,site),
-          id,
-          sendResponse
-        )
-        break;
+      // case DAppActions.mina_fetchAccount:
+      //   this.requestCallback(
+      //     () => this.requestAccountNetInfo(params,site),
+      //     id,
+      //     sendResponse
+      //   )
+      //   break;
       default:
         this.requestCallback(
           async ()=>{
