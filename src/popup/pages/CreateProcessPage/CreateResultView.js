@@ -165,7 +165,7 @@ export const CreateResultView = ({}) => {
         </StyldImgContainer>
         <StyledBackupTitle>{i18n.t("success")}</StyledBackupTitle>
         <StyledBackupContent>{i18n.t(showTip)}</StyledBackupContent>
-        <StyledBackupContent>{i18n.t("returnExt")}</StyledBackupContent>
+        <StyledBackupContent>{i18n.t("ledgerReturnExtension")}</StyledBackupContent>
         <StyledFollowUs>{i18n.t("followUs")}</StyledFollowUs>
         <StyledFollowContainer>
           {Default_Follow_Link.map((follow, index) => {
