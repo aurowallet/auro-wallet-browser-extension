@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.12]
+- Fix account init
+- Update aboutPage 
+
 ## [2.2.11]
 - Enhanced security process for wallet create and restore
 - Added Ukrainian language support
