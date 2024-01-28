@@ -197,7 +197,7 @@ async function getDappStatus(store){
 
 }
 
-async function getLocalAccountStatus(store) {
+async function initAccountInfo(store) {
   return new Promise((resolve)=>{
     sendMsg({
       action: WALLET_GET_CURRENT_ACCOUNT,
@@ -206,7 +206,6 @@ async function getLocalAccountStatus(store) {
       if (currentAccount?.localAccount?.keyringData) {
         if(currentAccount.isUnlocked){
           store.dispatch(initCurrentAccount(currentAccount))
-          nextRoute = await getDappStatus(store)
         }else{
           nextRoute = ENTRY_WITCH_ROUTE.LOCK_PAGE
         }
@@ -249,8 +248,11 @@ async function initNetworkFlag(){
 export const applicationEntry = {
   async run() {
     await languageInit()
+    let nextRoute = await initAccountInfo(store)
     this.render();
-    let nextRoute = await getLocalAccountStatus(store)
+    if(!nextRoute){
+      nextRoute = await getDappStatus(store)
+    }
     const isWalletInited = nextRoute !== ENTRY_WITCH_ROUTE.WELCOME
     if(!isWalletInited){
       store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.WELCOME))
