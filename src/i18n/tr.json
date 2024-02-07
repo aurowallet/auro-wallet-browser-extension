@@ -232,7 +232,6 @@
   "done": "Tamamlandı",
   "changePassword": "Şifreyi Değiştir",
   "walletConnected": "Auro Wallet bu web sitesine bağlandı.",
-  "ledgerAddressTip2": "Get Address > Generate > Approve",
   "ledgerConnetOpenTip": "Ledger cihazı bağlı ancak Mina uygulaması açık değil. Lütfen Mina uygulamasını ledger cihazında açın.",
   "ledgerCloseWarning": "<red>Bu pencereyi kapatmayınız.</red>",
   "ledgerSeletPathTip": "Aşağıdaki ayarın ne olduğunu bilmiyorsanız değiştirmenize gerek yoktur. Ayrıntılı <click>talimatları</click> görüntüleyin.",

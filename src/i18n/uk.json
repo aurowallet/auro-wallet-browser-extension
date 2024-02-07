@@ -241,7 +241,6 @@
   "selectHDPath": "Виберіть HD шлях",
   "ledgerSeletPathTip": "Якщо ви не знаєте, що це за налаштування нижче, вам не потрібно його змінювати. Перегляньте докладні <click>інструкції</click>.",
   "ledgerConentTip_1": "Продовжуйте подальшу операцію згідно з підказкою апаратного гаманця Ledger.",
-  "ledgerAddressTip2": "Get Address > Generate > Approve",
   "ledgerCloseWarning": "<red>Не закривайте це вікно.</red>",
   "ledgerCloseTip": "Щойно Ledger буде завершено, сторінка буде автоматично перенаправлена.",
   "ledgerSuccess": "Вітаємо! Ви успішно імпортували обліковий запис обладнання!",
