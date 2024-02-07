@@ -12945,10 +12945,10 @@ mina-ledger-js@1.0.6:
   dependencies:
     buffer "6.0.3"
 
-mina-signer@2.1.1:
-  version "2.1.1"
-  resolved "https://registry.npmjs.org/mina-signer/-/mina-signer-2.1.1.tgz"
-  integrity sha512-bfdNTQg0Ka0xMR+V3q56GxOzV4Q/c7NL6nhCHTY+akJkul0qt9QZdfeow+XByde2JbnM3ZI502q1foKLZKQgog==
+mina-signer@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/mina-signer/-/mina-signer-3.0.0.tgz#c3fcc14db81e2b69776200d53241506b534ecedd"
+  integrity sha512-WtpvKtgkWx0aTBXaeLg3JES8/sUyKiWbVLD8AzvtucenYNNQBtO0w48akUWrlKsjonDdffiKLu9ayY3riTGEng==
   dependencies:
     blakejs "^1.2.1"
     js-sha256 "^0.9.0"
