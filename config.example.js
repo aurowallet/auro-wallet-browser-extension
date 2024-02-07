@@ -30,11 +30,11 @@ export const BerkeleyUrlConfig = {
   tx: "",
 };
 /**testworld2.0 net url */
-export const Testworld2UrlConfig = {
-  gql: "",
-  explorer: "",
-  tx: "",
-};
+// export const Testworld2UrlConfig = {
+//   gql: "",
+//   explorer: "",
+//   tx: "",
+// };
 /**
  * The current network configuration version number. If cached locally, increase the current version.
  */

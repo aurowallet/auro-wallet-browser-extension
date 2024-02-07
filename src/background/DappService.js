@@ -155,7 +155,7 @@ class DappService {
         reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
         return 
       }
-      const supportNetType = [NET_CONFIG_TYPE.Berkeley,NET_CONFIG_TYPE.Testworld2]
+      const supportNetType = [NET_CONFIG_TYPE.Berkeley]
       let netConfig = await getCurrentNetConfig()
       if(supportNetType.indexOf(netConfig.netType)===-1){
         reject({ code:errorCodes.unsupportMethod, message: getMessageFromCode(errorCodes.unsupportMethod)})
