@@ -208,7 +208,7 @@ const StakingTransfer = () => {
     }
     let nonce = trimSpace(inputNonce)
     if (nonce.length > 0 && !isNaturalNumber(nonce)) {
-      Toast.info(i18n.t('inputNonceError'))
+      Toast.info(i18n.t("inputNonceError",{nonce:"Nonce"}));
       return
     }
 

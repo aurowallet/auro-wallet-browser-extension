@@ -45,7 +45,7 @@
   "amountError": "请输入有效的金额",
   "inputFeeError": "请输入有效的交易费",
   "balanceNotEnough": "余额不足",
-  "inputNonceError": "请输入有效的 Nonce",
+  "inputNonceError": "请输入有效的 {{nonce}}",
   "fee": "交易费",
   "send": "发送",
   "to": "接收",

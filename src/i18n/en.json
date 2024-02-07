@@ -45,7 +45,7 @@
   "amountError": "Please enter a valid amount",
   "inputFeeError": "Please enter a valid transaction fee",
   "balanceNotEnough": "Insufficient Balance",
-  "inputNonceError": "Please enter a valid nonce",
+  "inputNonceError": "Please enter a valid {{nonce}}",
   "fee": "Fee",
   "send": "Send",
   "to": "To",

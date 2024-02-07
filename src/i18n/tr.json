@@ -75,7 +75,7 @@
   "dappDisconnect": "Bağlı Değil",
   "edit": "Düzenle",
   "copy": "Kopyala",
-  "inputNonceError": "Lütfen geçerli bir nonce girin",
+  "inputNonceError": "Lütfen geçerli bir {{nonce}} girin",
   "importAccount_3": "İçe aktarılan hesaplar, hesap listesinde [İçe Aktarıldı] olarak işaretlenecektir.",
   "hdDerivedPath": "HD Yolu",
   "deleteTag": "sil",
