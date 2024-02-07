@@ -1,5 +1,3 @@
-import bs58check from "bs58check";
-
 export const matchList = [
   {
     text: ('passwordRequires'),
@@ -51,13 +49,5 @@ export function pwdConfirmValidate(pwd, confirmPwd) {
  * @param {*} address 
  */
 export function addressValid(address) {
-  try {
-    if (!address.toLowerCase().startsWith('b62')) {
-      return false;
-    }
-    const decodedAddress = bs58check.decode(address).toString('hex');
-    return !!decodedAddress && decodedAddress.length === 72;
-  } catch (ex) {
-    return false
-  }
+  return /^B62[1-9A-HJ-NP-Za-km-z]{52}$/.test(address);
 }
