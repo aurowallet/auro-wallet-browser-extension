@@ -11,6 +11,7 @@ import en from "./en.json";
 import zh from "./zh_CN.json";
 import tr from "./tr.json";
 import uk from "./uk.json";
+import ru from "./ru.json";
 
 /**
  * 2. add language code to support list
@@ -22,6 +23,7 @@ export const LANG_SUPPORT_LIST = {
   en: "en",
   tr: "tr",
   uk: "uk",
+  ru:"ru"
 };
 
 /**
@@ -32,6 +34,7 @@ export const languageOption = [
   { key: LANG_SUPPORT_LIST.zh_CN, value: "中文" },
   { key: LANG_SUPPORT_LIST.tr, value: "Türkçe" },
   { key: LANG_SUPPORT_LIST.uk, value: "Українська мова" },
+  { key: LANG_SUPPORT_LIST.ru, value: "Русский" },
 ];
 
 /**
@@ -51,6 +54,9 @@ function getResources() {
     },
     [LANG_SUPPORT_LIST.uk]: {
       translation: uk,
+    },
+    [LANG_SUPPORT_LIST.ru]: {
+      translation: ru,
     },
   };
   return resources;
