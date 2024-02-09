@@ -60,12 +60,17 @@ async function updateNetLocalConfig(netConfig){
   let currentConfig = {}
   let addList = []
   let currentUrlType = ""
+  const currentAllNetType = Object.values(NET_CONFIG_TYPE)
   localNetList.map((item,index)=>{
    
     let newItem = item
     if(item.type !== NET_CONFIG_DEFAULT){
       let id = item.url
       let preNetType = item.netType?.toLowerCase()||NET_CONFIG_TYPE.Mainnet
+      // for remove net
+      if(currentAllNetType.indexOf(preNetType) === -1 ){
+        preNetType = NET_CONFIG_TYPE.Unknown
+      }
       let nextConfig = NET_CONFIG_MAP[preNetType].config
       newItem =  {
         name:item.name||"Unknown",
