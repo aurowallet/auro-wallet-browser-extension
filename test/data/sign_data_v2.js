@@ -40,5 +40,35 @@ export const signDataV2 = {
         },
       },
     },
-  }
+  },
+  signStakeTransaction: {
+    testnet: {
+      signParams: {
+        sendAction: DAppActions.mina_sendStakeDelegation,
+        privateKey: "EKEfKdYoaCeGy4aZoCSam6DdGejrL121HSwFGrckzkLcLqPTMUxW",
+        fee: "0.0101",
+        fromAddress: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        memo: "",
+        nonce: "1",
+        toAddress: "B62qq3TQ8AP7MFYPVtMx5tZGF3kWLJukfwG1A1RGvaBW1jfTPTkDBW6",
+      },
+      signResult: {
+        signature: {
+          field:
+            "17483660890110438926466750737662918625669120723026518332424067073684081587587",
+          scalar:
+            "22012784960050638352505737214335769684778127445772268079256066240929149921687",
+        },
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        data: {
+          to: "B62qq3TQ8AP7MFYPVtMx5tZGF3kWLJukfwG1A1RGvaBW1jfTPTkDBW6",
+          from: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+          fee: "10100000",
+          nonce: "1",
+          memo: "",
+          validUntil: "4294967295",
+        },
+      },
+    },
+  },
 };

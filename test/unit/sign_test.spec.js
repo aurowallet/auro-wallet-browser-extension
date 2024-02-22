@@ -34,21 +34,32 @@ describe("Sign Util Test", function () {
       JSON.stringify(accountSignData.stakePayment.result)
     );
   });
-
 });
 
 describe("Sign Util Test 2.0", function () {
-    it("sign transaction v2", async function () {
-        let signResult = AccountSign.signTransaction( 
-            signDataV2.testAccount.privateKey,{
-                ...signDataV2.signPayment.testnet
-            }
-          
-        );
-        assert.strictEqual(
-          JSON.stringify(signResult),
-          JSON.stringify(signDataV2.signPayment.testnet.signResult)
-        );
-      });
+  it("sign transaction v2", async function () {
+    let signResult = AccountSign.signTransaction(
+      signDataV2.testAccount.privateKey,
+      {
+        ...signDataV2.signPayment.testnet,
+      }
+    );
+    assert.strictEqual(
+      JSON.stringify(signResult),
+      JSON.stringify(signDataV2.signPayment.testnet.signResult)
+    );
+  });
 
+  it("sign stake delegation v2", async function () {
+    let signResult = AccountSign.signTransaction(
+      signDataV2.testAccount.privateKey,
+      {
+        ...signDataV2.signStakeTransaction.testnet,
+      }
+    );
+    assert.strictEqual(
+      JSON.stringify(signResult),
+      JSON.stringify(signDataV2.signStakeTransaction.testnet.signResult)
+    );
+  });
 });
