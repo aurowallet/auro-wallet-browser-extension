@@ -2,7 +2,7 @@ import "../test_help";
 import assert from "assert";
 import * as AccountSign from "../../src/background/lib";
 import accountSignData from "../data/sign_test.json";
-import { signDataV2 } from "../data/sign_data_v2"; 
+import { signDataV2 } from "../data/sign_data_v2";
 const sinon = require("sinon");
 
 global.chrome = {
@@ -82,5 +82,49 @@ describe("Sign Util Test 2.0", function () {
       JSON.stringify(signResult),
       JSON.stringify(signDataV2.signZkTransaction.testnet.signResult)
     );
+  });
+
+  it("sign message mainnet v2", async function () {
+    const mainnetData = signDataV2.signMessageData.mainnet;
+    let signResult = AccountSign.signTransaction(
+      signDataV2.testAccount.privateKey,
+      {
+        ...mainnetData.signParams,
+      }
+    );
+    assert.strictEqual(
+      JSON.stringify(signResult),
+      JSON.stringify(mainnetData.signResult)
+    );
+
+    const verifyResultMain = AccountSign.verifyMessage({
+      publicKey: mainnetData.signParams.publicKey,
+      signature: mainnetData.signResult.signature,
+      verifyMessage: mainnetData.signResult.data,
+    });
+
+    assert.strictEqual(verifyResultMain, true);
+  });
+
+  it("sign message testnet v2", async function () {
+    const testnettData = signDataV2.signMessageData.testnet;
+    let signResult = AccountSign.signTransaction(
+      signDataV2.testAccount.privateKey,
+      {
+        ...testnettData.signParams,
+      }
+    );
+    assert.strictEqual(
+      JSON.stringify(signResult),
+      JSON.stringify(testnettData.signResult)
+    );
+
+    const verifyResultTest = AccountSign.verifyMessage({
+      publicKey: signResult.signParams.publicKey,
+      signature: signResult.signResult.signature,
+      verifyMessage: signResult.signResult.data,
+    });
+
+    assert.strictEqual(verifyResultTest, true);
   });
 });
