@@ -2,8 +2,16 @@ import "../test_help";
 import assert from "assert";
 import * as AccountSign from "../../src/background/lib";
 import accountSignData from "../data/sign_test.json";
-import { signDataV2 } from "../data/sign_data_v2";
+import { signDataV2 } from "../data/sign_data_v2"; 
+const sinon = require("sinon");
 
+global.chrome = {
+  storage: {
+    local: {
+      get: sinon.fake.yields({ netType: "mainnet" }), // Simulate async call with `sinon.fake.yields`
+    },
+  },
+};
 describe("Sign Util Test", function () {
   it("sign transaction payment", async function () {
     let signResult = AccountSign.signPayment(
@@ -41,7 +49,7 @@ describe("Sign Util Test 2.0", function () {
     let signResult = AccountSign.signTransaction(
       signDataV2.testAccount.privateKey,
       {
-        ...signDataV2.signPayment.testnet,
+        ...signDataV2.signPayment.testnet.signParams,
       }
     );
     assert.strictEqual(
@@ -54,12 +62,25 @@ describe("Sign Util Test 2.0", function () {
     let signResult = AccountSign.signTransaction(
       signDataV2.testAccount.privateKey,
       {
-        ...signDataV2.signStakeTransaction.testnet,
+        ...signDataV2.signStakeTransaction.testnet.signParams,
       }
     );
     assert.strictEqual(
       JSON.stringify(signResult),
       JSON.stringify(signDataV2.signStakeTransaction.testnet.signResult)
+    );
+  });
+
+  it("sign zk transaction v2", async function () {
+    let signResult = AccountSign.signTransaction(
+      signDataV2.testAccount.privateKey,
+      {
+        ...signDataV2.signZkTransaction.testnet.signParams,
+      }
+    );
+    assert.strictEqual(
+      JSON.stringify(signResult),
+      JSON.stringify(signDataV2.signZkTransaction.testnet.signResult)
     );
   });
 });
