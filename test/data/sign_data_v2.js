@@ -287,4 +287,32 @@ export const signDataV2 = {
       },
     },
   },
+  signFileds: {
+    mainnet: {
+      signParams: {
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        privateKey: "EKEfKdYoaCeGy4aZoCSam6DdGejrL121HSwFGrckzkLcLqPTMUxW",
+        message: [1, 2, 3],
+      },
+      signResult: {
+        data: [1, 2, 3],
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        signature:
+          "7mX3SaP7avNkz4wvH3R7TgL2GivgNWAH2MJh39tUko7iKgEqxdzQL4RwuKqJ7M2E2vASexVVTmSYMP6mEPkkfEdp5BUaNvxf",
+      },
+    },
+    testnet: {
+      signParams: {
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        privateKey: "EKEfKdYoaCeGy4aZoCSam6DdGejrL121HSwFGrckzkLcLqPTMUxW",
+        message: ["11223344", "55667788", "991010"],
+      },
+      signResult: {
+        data: ["11223344", "55667788", "991010"],
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        signature:
+          "7mX44DBwvrwuWddRH9CLFzYtSAVr5TS8QT4gyrakBtzShokLk5quvgx1P9mAue9qj2CFq9WmmJjdoiFpoqYzTJ6kzLmvvUnf",
+      },
+    },
+  },
 };

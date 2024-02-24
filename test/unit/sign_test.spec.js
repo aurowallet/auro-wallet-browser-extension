@@ -61,6 +61,20 @@ describe("Functionality on mainnet", function () {
       );
     });
   });
+  describe("signFeilds on mainnet", function () {
+    it("should correctly sign fields", async function () {
+      const signResult = await this.module.signFieldsMessage(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.signFileds.mainnet.signParams,
+        }
+      );
+      assert.strictEqual(
+        signResult.signature,
+        signDataV2.signFileds.mainnet.signResult.signature
+      );
+    });
+  });
 });
 
 describe("Functionality on testnet", function () {
@@ -127,6 +141,20 @@ describe("Functionality on testnet", function () {
       assert.strictEqual(
         JSON.stringify(signResult),
         JSON.stringify(signDataV2.signMessage.testnet.signResult)
+      );
+    });
+  });
+  describe("signFeilds on testnet", function () {
+    it("should correctly sign fields", async function () {
+      const signResult = await this.module.signFieldsMessage(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.signFileds.testnet.signParams,
+        }
+      );
+      assert.strictEqual(
+        signResult.signature,
+        signDataV2.signFileds.testnet.signResult.signature
       );
     });
   });
