@@ -75,6 +75,17 @@ describe("Functionality on mainnet", function () {
       );
     });
   });
+  describe("create nullifier on mainnet", function () {
+    it("should correctly create nullifier", async function () {
+      const signResult = await this.module.createNullifier(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.nullifierData.mainnet.signParams,
+        }
+      );
+      assert.strictEqual(!!signResult.private, true);
+    });
+  });
 });
 
 describe("Functionality on testnet", function () {
@@ -156,6 +167,17 @@ describe("Functionality on testnet", function () {
         signResult.signature,
         signDataV2.signFileds.testnet.signResult.signature
       );
+    });
+  });
+  describe("create nullifier on testnet", function () {
+    it("should correctly create nullifier", async function () {
+      const signResult = await this.module.createNullifier(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.nullifierData.testnet.signParams,
+        }
+      );
+      assert.strictEqual(!!signResult.private, true);
     });
   });
 });
