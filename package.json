@@ -108,6 +108,7 @@
     "gulp": "4.0.2",
     "gulp-zip": "5.1.0",
     "deepmerge": "4.2.2",
+    "babel-plugin-module-resolver":"5.0.0",
     "sinon":"17.0.1",
     "proxyquire":"2.1.3"
   }

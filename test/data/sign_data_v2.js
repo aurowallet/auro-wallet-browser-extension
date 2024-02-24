@@ -1,4 +1,4 @@
-import { DAppActions } from "@aurowallet/mina-provider";
+const {DAppActions} = require("@aurowallet/mina-provider")
 
 /**
  * data for runTransactionTest
@@ -10,6 +10,36 @@ export const signDataV2 = {
     publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
   },
   signPayment: {
+    mainnet: {
+      signParams: {
+        sendAction: DAppActions.mina_sendPayment,
+        privateKey: "EKEfKdYoaCeGy4aZoCSam6DdGejrL121HSwFGrckzkLcLqPTMUxW",
+        fromAddress: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        toAddress: "B62qk3FF1FxfFxfJ4CLSgu2YehPdRqcNZw7Jw3z1JMyH28cSNR6XYDW",
+        amount: 2,
+        fee: "0.0101",
+        nonce: 0,
+        memo: "test",
+      },
+      signResult: {
+        signature: {
+          field:
+            "20311706319359642986780891923520743692135877298935584691213957835956555795643",
+          scalar:
+            "13140592006985835984040193443421181226751048988610893490079171121434041489504",
+        },
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        data: {
+          to: "B62qk3FF1FxfFxfJ4CLSgu2YehPdRqcNZw7Jw3z1JMyH28cSNR6XYDW",
+          from: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+          fee: "10100000",
+          amount: "2000000000",
+          nonce: "0",
+          memo: "test",
+          validUntil: "4294967295",
+        },
+      },
+    },
     testnet: {
       signParams: {
         sendAction: DAppActions.mina_sendPayment,
