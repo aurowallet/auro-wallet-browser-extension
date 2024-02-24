@@ -91,5 +91,18 @@ describe("Functionality on testnet", function () {
         JSON.stringify(signDataV2.signStakeTransaction.testnet.signResult)
       );
     });
+
+    it("should correctly send zk transaction", async function () {
+      const signResult = await this.module.signTransaction(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.signZkTransaction.testnet.signParams,
+        }
+      );
+      assert.strictEqual(
+        JSON.stringify(signResult),
+        JSON.stringify(signDataV2.signZkTransaction.testnet.signResult)//.signature
+      );
+    });
   });
 });
