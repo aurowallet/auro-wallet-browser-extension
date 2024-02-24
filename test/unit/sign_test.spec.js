@@ -22,7 +22,7 @@ describe("Functionality on mainnet", function () {
   });
 
   describe("signTransaction on mainnet", function () {
-    it("should correctly handle transactions", async function () {
+    it("should correctly send payment", async function () {
       const signResult = await this.module.signTransaction(
         signDataV2.testAccount.privateKey,
         {
@@ -32,6 +32,19 @@ describe("Functionality on mainnet", function () {
       assert.strictEqual(
         JSON.stringify(signResult),
         JSON.stringify(signDataV2.signPayment.mainnet.signResult)
+      );
+    });
+
+    it("should correctly send stakeDelegation", async function () {
+      const signResult = await this.module.signTransaction(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.signStakeTransaction.mainnet.signParams,
+        }
+      );
+      assert.strictEqual(
+        JSON.stringify(signResult),
+        JSON.stringify(signDataV2.signStakeTransaction.mainnet.signResult)
       );
     });
   });
@@ -53,7 +66,7 @@ describe("Functionality on testnet", function () {
   });
 
   describe("signTransaction on testnet", function () {
-    it("should correctly handle transactions", async function () {
+    it("should correctly send payment", async function () {
       const signResult = await this.module.signTransaction(
         signDataV2.testAccount.privateKey,
         {
@@ -63,6 +76,19 @@ describe("Functionality on testnet", function () {
       assert.strictEqual(
         JSON.stringify(signResult),
         JSON.stringify(signDataV2.signPayment.testnet.signResult)
+      );
+    });
+
+    it("should correctly send stakeDelegation", async function () {
+      const signResult = await this.module.signTransaction(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.signStakeTransaction.testnet.signParams,
+        }
+      );
+      assert.strictEqual(
+        JSON.stringify(signResult),
+        JSON.stringify(signDataV2.signStakeTransaction.testnet.signResult)
       );
     });
   });
