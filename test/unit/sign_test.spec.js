@@ -47,6 +47,19 @@ describe("Functionality on mainnet", function () {
         JSON.stringify(signDataV2.signStakeTransaction.mainnet.signResult)
       );
     });
+
+    it("should correctly sign message & verify message", async function () {
+      const signResult = await this.module.signTransaction(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.signMessage.mainnet.signParams,
+        }
+      );
+      assert.strictEqual(
+        JSON.stringify(signResult),
+        JSON.stringify(signDataV2.signMessage.mainnet.signResult)
+      );
+    });
   });
 });
 
@@ -101,7 +114,19 @@ describe("Functionality on testnet", function () {
       );
       assert.strictEqual(
         JSON.stringify(signResult),
-        JSON.stringify(signDataV2.signZkTransaction.testnet.signResult)//.signature
+        JSON.stringify(signDataV2.signZkTransaction.testnet.signResult)
+      );
+    });
+    it("should correctly sign message & verify message", async function () {
+      const signResult = await this.module.signTransaction(
+        signDataV2.testAccount.privateKey,
+        {
+          ...signDataV2.signMessage.testnet.signParams,
+        }
+      );
+      assert.strictEqual(
+        JSON.stringify(signResult),
+        JSON.stringify(signDataV2.signMessage.testnet.signResult)
       );
     });
   });

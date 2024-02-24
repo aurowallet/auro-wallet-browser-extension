@@ -247,4 +247,44 @@ export const signDataV2 = {
       },
     },
   },
+  signMessage: {
+    mainnet: {
+      signParams: {
+        sendAction: DAppActions.mina_signMessage,
+        privateKey: "EKEfKdYoaCeGy4aZoCSam6DdGejrL121HSwFGrckzkLcLqPTMUxW",
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        message:
+          '[{"label":"Label:","value":"Sign Confirm"},{"label":"Message:","value":"Click to sign in and accept the Terms of Service"},{"label":"URI:","value":"window.location.href"},{"label":"Chain ID:","value":"mainnet"},{"label":"Chain Name:","value":"Mainnet"},{"label":"Issued At:","value":1708575769813},{"label":"Resources:","value":"https://docs.aurowallet.com/"}]',
+      },
+      signResult: {
+        signature: {
+          field:
+            "4168110674255824122600248282761075786695928946514892479299079270298201499324",
+          scalar:
+            "5731525055095038835713625889524439682412350951916438887878242152446557096092",
+        },
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        data:
+          '[{"label":"Label:","value":"Sign Confirm"},{"label":"Message:","value":"Click to sign in and accept the Terms of Service"},{"label":"URI:","value":"window.location.href"},{"label":"Chain ID:","value":"mainnet"},{"label":"Chain Name:","value":"Mainnet"},{"label":"Issued At:","value":1708575769813},{"label":"Resources:","value":"https://docs.aurowallet.com/"}]',
+      },
+    },
+    testnet: {
+      signParams: {
+        sendAction: DAppActions.mina_signMessage,
+        privateKey: "EKEfKdYoaCeGy4aZoCSam6DdGejrL121HSwFGrckzkLcLqPTMUxW",
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        message: "asdasd",
+      },
+      signResult: {
+        signature: {
+          field:
+            "21619146883788511269147658264410330030497606313135022242532013153049380209623",
+          scalar:
+            "2778019229189690147007810467550525783589233551000921159052890817593971064451",
+        },
+        publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
+        data: "asdasd",
+      },
+    },
+  },
 };
