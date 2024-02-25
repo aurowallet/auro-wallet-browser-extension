@@ -80,6 +80,13 @@ describe("Functionality on mainnet", function () {
         signResult.signature,
         signDataV2.signFileds.mainnet.signResult.signature
       );
+
+      const verifyResult = await this.module.verifyFieldsMessage(
+        signResult.publicKey,
+        signResult.signature,
+        signResult.data,
+      );
+      assert.strictEqual(verifyResult, true);
     });
   });
   describe("create nullifier on mainnet", function () {
@@ -181,6 +188,13 @@ describe("Functionality on testnet", function () {
         signResult.signature,
         signDataV2.signFileds.testnet.signResult.signature
       );
+      
+      const verifyResult = await this.module.verifyFieldsMessage(
+        signResult.publicKey,
+        signResult.signature,
+        signResult.data,
+      );
+      assert.strictEqual(verifyResult, true);
     });
   });
   describe("create nullifier on testnet", function () {
