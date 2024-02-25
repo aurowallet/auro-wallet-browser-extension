@@ -60,6 +60,7 @@ const SignTransaction = () => {
   const dispatch = useDispatch();
   const history = useHistory();
   const isFirstRequest = useRef(true);
+  const isShowLoading = useRef(false)
 
   const [pendingSignList, setPendingSignList] = useState([]);
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
@@ -101,6 +102,9 @@ const SignTransaction = () => {
   }, [dappWindow]);
 
   const fetchAccountInfo = useCallback(async () => {
+    if(isShowLoading.current){
+      Loading.show()
+    }
     let account = await getBalance(currentAddress);
     if (account.publicKey) {
       dispatch(updateNetAccount(account));
@@ -147,9 +151,8 @@ const SignTransaction = () => {
             const firstSignParams = signRequests[0];
             const sendAction = firstSignParams?.params?.action || "";
             if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-              Loading.show();
+              isShowLoading.current = true
             }
-            fetchAccountInfo();
           }
           if(currentSignIndex < (signRequests.length-1)){
             setRightArrowStatus(false)
@@ -157,7 +160,7 @@ const SignTransaction = () => {
         }
       }
     );
-  }, [params, pendingSignList, fetchAccountInfo,currentSignIndex]);
+  }, [params, pendingSignList,currentSignIndex]);
 
   useEffect(() => {
     sendMsg(
@@ -170,6 +173,12 @@ const SignTransaction = () => {
     );
   }, [dappWindow]);
 
+  useEffect(() => {
+    if(lockStatus){
+      fetchAccountInfo();
+    }
+  }, [fetchAccountInfo,lockStatus]);
+  
   useEffect(() => {
     getSignParams();
   }, [window.location?.href]);
