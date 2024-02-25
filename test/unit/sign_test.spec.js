@@ -59,6 +59,13 @@ describe("Functionality on mainnet", function () {
         JSON.stringify(signResult),
         JSON.stringify(signDataV2.signMessage.mainnet.signResult)
       );
+
+      const verifyResult = await this.module.verifyMessage(
+        signResult.publicKey,
+        signResult.signature,
+        signResult.data
+      );
+      assert.strictEqual(verifyResult, true);
     });
   });
   describe("signFeilds on mainnet", function () {
@@ -153,6 +160,13 @@ describe("Functionality on testnet", function () {
         JSON.stringify(signResult),
         JSON.stringify(signDataV2.signMessage.testnet.signResult)
       );
+
+      const verifyResult = await this.module.verifyMessage(
+        signResult.publicKey,
+        signResult.signature,
+        signResult.data
+      );
+      assert.strictEqual(verifyResult, true);
     });
   });
   describe("signFeilds on testnet", function () {
