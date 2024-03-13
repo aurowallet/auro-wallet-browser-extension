@@ -34,7 +34,8 @@ function App() {
         findIndex = true
       }
     })
-    if (url.pathname.indexOf('popup.html') !==-1 && !findIndex) {
+    if ((url.pathname.indexOf('popup.html') !==-1 && !findIndex)
+    ||url.pathname.indexOf('notification.html') !==-1) {
       setShowFullStatus(false)
     }else{
       setShowFullStatus(true)
