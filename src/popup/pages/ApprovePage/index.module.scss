@@ -32,22 +32,25 @@
             margin: 20px 0px;
             word-break: break-all;
         }
-        .warningTip {
-            font-size: 14px;
-            line-height: 20px;
-            color: rgba(0, 0, 0, 0.3);
-        }
-        
+    }
+    .warningTip {
+        font-size: 14px;
+        line-height: 20px;
+        color: rgba(0, 0, 0, 0.3);
+        padding: 0px 20px;
+        text-align: center;
     }
     .btnGroup {
-        position: absolute;
-        bottom: 0;
         justify-content: center;
         align-items: center;
         width: 100%;
         display: flex;
 
         gap: 15px;
-        padding: 12px 0px 20px;
+        padding: 12px 20px 20px;
+    }
+    .bottomView {
+        position: absolute;
+        bottom: 0;
     }
 }
