@@ -167,7 +167,7 @@
   "connect": "Connect",
   "connectionRequest": "Connection Request",
   "approveTip": "This website would like to view account",
-  "approveWaring": "For security only connect to trusted sites",
+  "approveWaring": "Make sure you only connect to trusted sites",
   "waitNonce": "Incorrect Nonce",
   "content": "Content",
   "siteSuggested": "Site suggested",
