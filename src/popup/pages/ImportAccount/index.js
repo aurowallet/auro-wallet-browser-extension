@@ -69,16 +69,15 @@ const ImportAccount = ({ }) => {
 
     <p className={styles.title}>{i18n.t('pleaseInputPriKey')}</p>
 
-    <div className={styles.textAreaContainer}>
+    <div className={styles.imTextAreaContainer}>
       <TextArea
         onChange={onInput}
         value={inputValue}
       />
 
     </div>
-
-    <span className={styles.desc}>{i18n.t('importAccount_2')}</span>
     <span className={styles.desc}>{i18n.t('importAccount_3')}</span>
+    <span className={styles.desc}>{i18n.t('importAccount_2')}</span>
 
     <div className={styles.hold} />
     <div className={styles.bottomContainer}>
