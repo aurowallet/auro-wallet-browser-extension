@@ -11,7 +11,10 @@ import {
   sendStakeTx,
   sendTx,
 } from "../../../../../background/api";
-import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../../../constant/commonType";
+import {
+  ACCOUNT_TYPE,
+  LEDGER_STATUS,
+} from "../../../../../constant/commonType";
 import {
   QA_SIGN_TRANSTRACTION,
   WALLET_CHECK_TX_STATUS,
@@ -67,7 +70,10 @@ const TxListView = ({
   const onGoExplorer = useCallback(() => {
     let currentConfig = netConfig.currentConfig;
     let url =
-      currentConfig.explorer + "/account/" + accountInfo.currentAccount.address + "/txs";
+      currentConfig.explorer +
+      "/account/" +
+      accountInfo.currentAccount.address +
+      "/txs";
     openTab(url);
   }, [netConfig, accountInfo]);
 
@@ -212,7 +218,7 @@ const TxListView = ({
 
   const ledgerTransfer = useCallback(
     async (nextPayload) => {
-      const nextAction = nextPayload.sendAction
+      const nextAction = nextPayload.sendAction;
       setWaitLedgerStatus(true);
       let ledgerNextPayload = nextPayload;
       if (modalType === TransactionModalType.cancel) {
@@ -226,7 +232,8 @@ const TxListView = ({
           memo: decodeMemo(nextPayload.memo),
         };
       }
-      const nextFunc = nextAction === DAppActions.mina_sendStakeDelegation
+      const nextFunc =
+        nextAction === DAppActions.mina_sendStakeDelegation
           ? requestSignDelegation
           : requestSignPayment;
       const { signature, payload, error, rejected } = await nextFunc(
@@ -241,9 +248,10 @@ const TxListView = ({
         Toast.info(error.message);
         return;
       }
-      const nextPostFunc = nextAction === DAppActions.mina_sendStakeDelegation
-        ? sendStakeTx
-        : sendTx;
+      const nextPostFunc =
+        nextAction === DAppActions.mina_sendStakeDelegation
+          ? sendStakeTx
+          : sendTx;
       let postRes = await nextPostFunc(payload, {
         rawSignature: signature,
       }).catch((error) => error);
@@ -271,7 +279,7 @@ const TxListView = ({
           toAddress: currentAddress,
           fromAddress: currentAddress,
           memo: "",
-          sendAction: DAppActions.mina_sendPayment
+          sendAction: DAppActions.mina_sendPayment,
         };
       } else {
         if (transactionModalData.kind) {
@@ -287,14 +295,14 @@ const TxListView = ({
                 toAddress: transactionModalData.to,
                 amount: amountDecimals(
                   transactionModalData.amount,
-                  MAIN_COIN_CONFIG
-                  .decimals
+                  MAIN_COIN_CONFIG.decimals
                 ),
                 isSpeedUp: true,
-                sendAction: DAppActions.mina_sendPayment
+                sendAction: DAppActions.mina_sendPayment,
               };
               break;
             case "stake_delegation":
+            case "delegation":
               nextction = QA_SIGN_TRANSTRACTION;
               nextPayload = {
                 ...transactionModalData,
@@ -303,7 +311,7 @@ const TxListView = ({
                 fromAddress: currentAddress,
                 toAddress: transactionModalData.to,
                 isSpeedUp: true,
-                sendAction: DAppActions.mina_sendStakeDelegation
+                sendAction: DAppActions.mina_sendStakeDelegation,
               };
               break;
             case "zkapp":
@@ -438,15 +446,15 @@ const TxItem = ({
       amount,
       statusText,
       statusStyle = "";
-
-    if (txData.kind?.toLowerCase() === "payment") {
+    const txKindLow = txData.kind?.toLowerCase();
+    if (txKindLow === "payment") {
       isReceive =
         txData.to.toLowerCase() === currentAccount.address.toLowerCase();
       statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
-    } else if (txData.kind?.toLowerCase() === "stake_delegation") {
+    } else if (txKindLow === "stake_delegation" || txKindLow === "delegation") {
       isReceive = false;
       statusIcon = "/img/tx_pending.svg";
-    } else if (txData.kind?.toLowerCase() === "zkapp") {
+    } else if (txKindLow === "zkapp") {
       isReceive = false;
       statusIcon = "/img/tx_history_zkapp.svg";
     } else {
@@ -463,7 +471,7 @@ const TxItem = ({
     amount = getDisplayAmount(amount, 2);
     amount = isReceive ? "+" + amount : "-" + amount;
 
-    if (txData.kind?.toLowerCase() === "zkapp") {
+    if (txKindLow === "zkapp") {
       amount = "0";
     }
 
@@ -550,9 +558,11 @@ const TxItem = ({
           [styles.paddingLine]: paddingLineStyle,
         })}
       />
-      <div className={cls(styles.itemContainer, {
-        [styles.pendingContent]: showPendTx,
-      })}>
+      <div
+        className={cls(styles.itemContainer, {
+          [styles.pendingContent]: showPendTx,
+        })}
+      >
         <div className={styles.itemLeftContainer}>
           <img src={statusIcon} />
           <div className={styles.itemAccount}>
@@ -574,13 +584,15 @@ const TxItem = ({
       </div>
       {showPendingAction && (
         <div className={styles.speedBtnGroup}>
-          {txData.showSpeedUp && <Button
-            onClick={onClickItemSpeedUp}
-            withEvent={true}
-            className={styles.speedBtn}
-          >
-            {i18n.t("speedUp")}
-          </Button>}
+          {txData.showSpeedUp && (
+            <Button
+              onClick={onClickItemSpeedUp}
+              withEvent={true}
+              className={styles.speedBtn}
+            >
+              {i18n.t("speedUp")}
+            </Button>
+          )}
           <Button
             onClick={onClickItemCancel}
             withEvent={true}
