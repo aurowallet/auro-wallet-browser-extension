@@ -5,9 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { getBalanceBatch } from "../../../background/api";
-import {
-  ACCOUNT_TYPE,
-} from "../../../constant/commonType";
+import { ACCOUNT_TYPE } from "../../../constant/commonType";
 import {
   DAPP_CHANGE_CONNECTING_ADDRESS,
   WALLET_CHANGE_CURRENT_ACCOUNT,
@@ -18,10 +16,7 @@ import {
   updateAccountList,
   updateCurrentAccount,
 } from "../../../reducers/accountReducer";
-import {
-  setAccountInfo,
-  updateAccoutTypeCount,
-} from "../../../reducers/cache";
+import { setAccountInfo, updateAccoutTypeCount } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice, amountDecimals, isNumber } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
@@ -34,41 +29,43 @@ const AccountManagePage = ({}) => {
   const history = useHistory();
   const isMounted = useRef(true);
 
-  const accountBalanceMap = useSelector(
-    (state) => state.accountInfo.accountBalanceMap
-  );
-  const [accountList, setAccountList] = useState([]);
   const [commonAccountList, setCommonAccountList] = useState([]);
   const [watchModeAccountList, setWatchModeAccountList] = useState([]);
-  const [balanceList, setBalanceList] = useState(accountBalanceMap || {});
 
   const [currentAddress, setCurrentAddress] = useState("");
-  useEffect(() => {
-    setBalanceList(accountBalanceMap);
-  }, [accountBalanceMap]);
+
+  const setBalance2Account = useCallback((accountList, accountBalanceMap) => {
+    if (accountBalanceMap && Object.keys(accountBalanceMap).length === 0) {
+      return accountList;
+    }
+    let nextAccountList = [...accountList];
+    for (let index = 0; index < nextAccountList.length; index++) {
+      const account = nextAccountList[index];
+      let accountBalance = accountBalanceMap[account.address];
+      if (accountBalance) {
+        let balance = accountBalance.balance.total;
+        balance = amountDecimals(balance, MAIN_COIN_CONFIG.decimals);
+        nextAccountList[index].balance = balance;
+      }
+    }
+    return nextAccountList;
+  }, []);
 
   const setBalanceMap = useCallback(
-    (commonAccountList, watchModeAccountList, balanceList) => {
+    (commonAccountList, watchModeAccountList, tempBalanceList) => {
       let tempCommonAccountList = setBalance2Account(
         commonAccountList,
-        balanceList
+        tempBalanceList
       );
       let tempWatchModeAccountList = setBalance2Account(
         watchModeAccountList,
-        balanceList
+        tempBalanceList
       );
       setCommonAccountList(tempCommonAccountList);
       setWatchModeAccountList(tempWatchModeAccountList);
     },
-    []
+    [setBalance2Account, commonAccountList, watchModeAccountList]
   );
-
-  useEffect(() => {
-    let keys = Object.keys(balanceList);
-    if (keys.length > 0) {
-      setBalanceMap(commonAccountList, watchModeAccountList, balanceList);
-    }
-  }, [balanceList, commonAccountList, watchModeAccountList]);
 
   const getAccountTypeIndex = useCallback((list) => {
     if (list.length === 0) {
@@ -78,35 +75,16 @@ const AccountManagePage = ({}) => {
     }
   }, []);
 
-
-  const setBalance2Account = useCallback((accountList, balanceList) => {
-    if (balanceList && Object.keys(balanceList).length === 0) {
-      return accountList;
-    }
-    for (let index = 0; index < accountList.length; index++) {
-      const account = accountList[index];
-      let accountBalance = balanceList[account.address];
-      if (accountBalance) {
-        let balance = accountBalance.balance.total;
-        balance = amountDecimals(balance, MAIN_COIN_CONFIG.decimals);
-        accountList[index].balance = balance;
-      }
-    }
-    return accountList;
-  }, []);
-
   const fetchBalance = useCallback(
     async (addressList, commonAccountList, watchModeAccountList) => {
       let tempBalanceList = await getBalanceBatch(addressList);
       dispatch(updateAccountList(tempBalanceList));
-      if (isMounted.current) {
-        setBalanceMap(commonAccountList, watchModeAccountList, tempBalanceList);
-      }
+      setBalanceMap(commonAccountList, watchModeAccountList, tempBalanceList);
     },
     []
   );
 
-  const onUpdateAccountTypeCount = useCallback((allAccountList)=>{
+  const onUpdateAccountTypeCount = useCallback((allAccountList) => {
     let createAccountTypeList = allAccountList.filter((item) => {
       return item.type === ACCOUNT_TYPE.WALLET_INSIDE;
     });
@@ -121,12 +99,14 @@ const AccountManagePage = ({}) => {
       return item.type === ACCOUNT_TYPE.WALLET_LEDGER;
     });
     let ledgerAccountCount = getAccountTypeIndex(ledgerAccountTypeList);
-    dispatch(updateAccoutTypeCount({
-      create:createAccountCount,
-      import:importAccountCount,
-      ledger:ledgerAccountCount,
-    }));
-  },[])
+    dispatch(
+      updateAccoutTypeCount({
+        create: createAccountCount,
+        import: importAccountCount,
+        ledger: ledgerAccountCount,
+      })
+    );
+  }, []);
   useEffect(() => {
     sendMsg(
       {
@@ -134,7 +114,6 @@ const AccountManagePage = ({}) => {
       },
       async (account) => {
         let listData = account.accounts;
-        setAccountList(listData.allList);
         onUpdateAccountTypeCount(listData.allList);
         setCommonAccountList(listData.commonList);
         setWatchModeAccountList(listData.watchList);
@@ -182,18 +161,6 @@ const AccountManagePage = ({}) => {
             let listData = account.accountList;
             if (listData.allList && listData.allList.length > 0) {
               dispatch(updateCurrentAccount(account.currentAccount));
-              let commonList = setBalance2Account(
-                listData.commonList,
-                balanceList
-              );
-              let watchList = setBalance2Account(
-                listData.watchList,
-                balanceList
-              );
-
-              setAccountList(listData.allList);
-              setCommonAccountList(commonList);
-              setWatchModeAccountList(watchList);
               setCurrentAddress(account.currentAddress);
               sendMsg(
                 {
@@ -210,7 +177,7 @@ const AccountManagePage = ({}) => {
         );
       }
     },
-    [currentAddress, balanceList]
+    [currentAddress]
   );
 
   useEffect(() => {
@@ -242,6 +209,7 @@ const AccountManagePage = ({}) => {
             />
           );
         })}
+        <AddRow />
         {watchModeAccountList.length > 0 && (
           <div className={styles.notSupportContainer}>
             <p className={styles.notSupportTitle}>{i18n.t("noSupported")}</p>
@@ -259,7 +227,6 @@ const AccountManagePage = ({}) => {
           </div>
         )}
       </div>
-      <AddRow />
     </CustomView>
   );
 };
@@ -269,7 +236,7 @@ const StyledAddRowWrapper = styled.div`
   font-size: 12px;
   font-weight: 500;
 
-  margin: 0px 20px;
+  margin-bottom: 20px;
   padding: 10px 0;
 
   border-radius: 10px;
