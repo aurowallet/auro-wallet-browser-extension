@@ -279,5 +279,8 @@
   "contributeLanguage": "Contribute language",
   "pinExtension": "Pin Auro Wallet Extension",
   "clickBrowser": "Click <icon/> in your browser",
-  "clickButton": "and <icon/> click the button"
+  "clickButton": "and <icon/> click the button",
+  "addAccount": "Add Account",
+  "createAccount":"Create Account",
+  "hardwareWallet":"Hardware Wallet"
 }

@@ -6,7 +6,6 @@ import { useHistory } from "react-router-dom";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { getBalanceBatch } from "../../../background/api";
 import {
-  ACCOUNT_NAME_FROM_TYPE,
   ACCOUNT_TYPE,
 } from "../../../constant/commonType";
 import {
@@ -21,20 +20,16 @@ import {
 } from "../../../reducers/accountReducer";
 import {
   setAccountInfo,
-  setChangeAccountName,
-  updateAccoutType,
+  updateAccoutTypeCount,
 } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice, amountDecimals, isNumber } from "../../../utils/utils";
-import Button, { button_size } from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Loading from "../../component/Loading";
-import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
-import extension from "extensionizer";
+import styled from "styled-components";
 
 const AccountManagePage = ({}) => {
-  // 更新一下 ui
   const dispatch = useDispatch();
   const history = useHistory();
   const isMounted = useRef(true);
@@ -83,51 +78,6 @@ const AccountManagePage = ({}) => {
     }
   }, []);
 
-  const goAddLedger = useCallback(() => {
-    const isLedgerCapable = !window || (window && !window.USB);
-    if (isLedgerCapable) {
-      Toast.info(i18n.t("ledgerNotSupport"));
-      return;
-    }
-    let accountTypeList = accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_LEDGER;
-    });
-    let accountCount = getAccountTypeIndex(accountTypeList);
-    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.LEDGER));
-    dispatch(
-      setChangeAccountName({
-        fromType: ACCOUNT_NAME_FROM_TYPE.LEDGER,
-        accountCount,
-      })
-    );
-    extension.tabs.create({
-      url: "popup.html#/ledger_page",
-    });
-  }, [i18n, accountList]);
-
-  const goImport = useCallback(() => {
-    let accountTypeList = accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE;
-    });
-    let accountCount = getAccountTypeIndex(accountTypeList);
-    dispatch(
-      setChangeAccountName({
-        accountCount,
-      })
-    );
-    history.push("import_page");
-  }, [accountList]);
-
-  const goToCreate = useCallback(() => {
-    let accountTypeList = accountList.filter((item, index) => {
-      return item.type === ACCOUNT_TYPE.WALLET_INSIDE;
-    });
-
-    let accountCount = getAccountTypeIndex(accountTypeList);
-    dispatch(setChangeAccountName({ accountCount }));
-    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.INSIDE));
-    history.push("/account_name");
-  }, [accountList]);
 
   const setBalance2Account = useCallback((accountList, balanceList) => {
     if (balanceList && Object.keys(balanceList).length === 0) {
@@ -156,6 +106,27 @@ const AccountManagePage = ({}) => {
     []
   );
 
+  const onUpdateAccountTypeCount = useCallback((allAccountList)=>{
+    let createAccountTypeList = allAccountList.filter((item) => {
+      return item.type === ACCOUNT_TYPE.WALLET_INSIDE;
+    });
+    let createAccountCount = getAccountTypeIndex(createAccountTypeList);
+
+    let importAccountTypeList = allAccountList.filter((item) => {
+      return item.type === ACCOUNT_TYPE.WALLET_OUTSIDE;
+    });
+    let importAccountCount = getAccountTypeIndex(importAccountTypeList);
+
+    let ledgerAccountTypeList = allAccountList.filter((item) => {
+      return item.type === ACCOUNT_TYPE.WALLET_LEDGER;
+    });
+    let ledgerAccountCount = getAccountTypeIndex(ledgerAccountTypeList);
+    dispatch(updateAccoutTypeCount({
+      create:createAccountCount,
+      import:importAccountCount,
+      ledger:ledgerAccountCount,
+    }));
+  },[])
   useEffect(() => {
     sendMsg(
       {
@@ -164,6 +135,7 @@ const AccountManagePage = ({}) => {
       async (account) => {
         let listData = account.accounts;
         setAccountList(listData.allList);
+        onUpdateAccountTypeCount(listData.allList);
         setCommonAccountList(listData.commonList);
         setWatchModeAccountList(listData.watchList);
         setCurrentAddress(account.currentAddress);
@@ -287,44 +259,38 @@ const AccountManagePage = ({}) => {
           </div>
         )}
       </div>
-      <div className={styles.btnGroup}>
-        <AccountBtn
-          onClick={goToCreate}
-          leftIcon={"/img/import.svg"}
-          title={i18n.t("create")}
-        />
-        <AccountBtn
-          onClick={goImport}
-          className={styles.whiteBtn}
-          leftIcon={"/img/create.svg"}
-          title={i18n.t("import")}
-        />
-        <AccountBtn
-          onClick={goAddLedger}
-          className={styles.whiteBtn}
-          leftIcon={"/img/ledger.svg"}
-          title={"Ledger"}
-        />
-      </div>
+      <AddRow />
     </CustomView>
   );
 };
 
-const AccountBtn = ({
-  leftIcon,
-  title,
-  onClick = () => {},
-  className = "",
-}) => {
+const StyledAddRowWrapper = styled.div`
+  color: var(--mainBlue, #594af1);
+  font-size: 12px;
+  font-weight: 500;
+
+  margin: 0px 20px;
+  padding: 10px 0;
+
+  border-radius: 10px;
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='10' ry='10' stroke='%2300000033' stroke-width='1' stroke-dasharray='4' stroke-dashoffset='0' stroke-linecap='butt'/%3e%3c/svg%3e");
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+`;
+
+const AddRow = ({}) => {
+  const history = useHistory();
+  const onGoAdd = useCallback(() => {
+    console.log("lsp==onGoAdd");
+    history.push("/addaccount");
+  }, []);
   return (
-    <Button
-      size={button_size.middle}
-      className={cls(styles.btnContainer, className)}
-      leftIcon={leftIcon}
-      onClick={onClick}
-    >
-      {title}
-    </Button>
+    <StyledAddRowWrapper onClick={onGoAdd}>
+      {i18n.t("addAccount")}
+    </StyledAddRowWrapper>
   );
 };
 

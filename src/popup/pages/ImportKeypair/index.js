@@ -1,5 +1,5 @@
 import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { WALLET_IMPORT_KEY_STORE } from "../../../constant/msgTypes";
@@ -21,9 +21,9 @@ const ImportKeypair = ({}) => {
   const history = useHistory();
   const dispatch = useDispatch();
 
-  const [accountName, setAccountName] = useState(() => {
+  const accountName = useMemo(()=>{
     return history.location?.params?.accountName ?? "";
-  });
+  },[history])
 
   useEffect(() => {
     if (keystoreValue.length > 0 && pwdValue.length > 0) {
@@ -65,8 +65,8 @@ const ImportKeypair = ({}) => {
           } else {
             dispatch(updateCurrentAccount(account));
             setTimeout(() => {
-              if (history.length >= 4) {
-                history.go(-3);
+              if (history.length >= 5) {
+                history.go(-4);
               } else {
                 history.replace("/");
               }
