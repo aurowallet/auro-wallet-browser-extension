@@ -73,10 +73,7 @@ function App() {
 
   const initNetData = useCallback(()=>{
     fetchFeeData()
-    const netType = netConfig?.netType
-    if(netType === NET_CONFIG_TYPE.Mainnet){
-        fetchScamList()  
-    }
+    fetchScamList()  
   },[netConfig])
 
   useEffect(()=>{
