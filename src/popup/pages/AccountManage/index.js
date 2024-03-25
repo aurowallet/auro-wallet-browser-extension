@@ -172,6 +172,7 @@ const AccountManagePage = ({}) => {
                 },
                 (status) => {}
               );
+              history.goBack();
             }
           }
         );
