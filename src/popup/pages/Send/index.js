@@ -95,7 +95,7 @@ const SendPage = ({}) => {
 
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value);
-    setToAddressName("")
+    setToAddressName("");
   }, []);
   const onAmountInput = useCallback((e) => {
     let value = e.target.value;
@@ -282,7 +282,7 @@ const SendPage = ({}) => {
         return ledgerTransfer(payload, preLedgerApp);
       }
 
-      payload.sendAction = DAppActions.mina_sendPayment
+      payload.sendAction = DAppActions.mina_sendPayment;
       setConfrimBtnStatus(true);
       sendMsg(
         {
@@ -313,7 +313,6 @@ const SendPage = ({}) => {
   const onClickClose = useCallback(() => {
     setConfrimModalStatus(false);
   }, []);
-
 
   const onConfirm = useCallback(
     async (ledgerReady = false) => {
@@ -348,7 +347,7 @@ const SendPage = ({}) => {
       }
       let nonce = trimSpace(inputNonce);
       if (nonce.length > 0 && !isNaturalNumber(nonce)) {
-        Toast.info(i18n.t("inputNonceError",{nonce:"Nonce"}));
+        Toast.info(i18n.t("inputNonceError", { nonce: "Nonce" }));
         return;
       }
       let list = [
@@ -406,7 +405,7 @@ const SendPage = ({}) => {
       ledgerStatus,
     ]
   );
-  
+
   const onLedgerInfoModalConfirm = useCallback(
     (ledger) => {
       setLedgerApp(ledger.app);
@@ -518,9 +517,9 @@ const SendPage = ({}) => {
             placeholder={0}
             rightComponent={
               <div className={styles.balance}>
-                {i18n.t("available") +
-                  ": " +
-                  getDisplayAmount(balance, MAIN_COIN_CONFIG.decimals)}
+                {getDisplayAmount(balance, MAIN_COIN_CONFIG.decimals) +
+                  " " +
+                  MAIN_COIN_CONFIG.symbol}
               </div>
             }
             rightStableComponent={
