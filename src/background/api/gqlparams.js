@@ -426,7 +426,10 @@ export function getPendingZkAppTxBody() {
                 receive
                 setDelegate
                 setPermissions
-                setVerificationKey
+                setVerificationKey {
+                  auth
+                  txnVersion
+                }
                 setZkappUri
                 editActionState
                 setTokenSymbol
