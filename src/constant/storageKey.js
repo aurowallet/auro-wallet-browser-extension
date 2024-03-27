@@ -125,3 +125,9 @@ export const SCAM_LIST= "SCAM_LIST"
  * Locally stored network changeflag
  */
 export const NET_WORK_CHANGE_FLAG = "NET_WORK_CHANGE_FLAG"
+
+
+/**
+ * wallet page show testnet list
+ */
+export const NETWORK_SHOW_TESTNET = "NETWORK_SHOW_TESTNET"

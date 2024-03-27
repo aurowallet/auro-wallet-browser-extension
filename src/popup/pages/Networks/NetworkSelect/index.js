@@ -1,6 +1,7 @@
 import { extSaveLocal } from "@/background/extensionStorage";
+import { getLocal, saveLocal } from "@/background/localStorage";
 import { NET_CONFIG_TYPE } from "@/constant/network";
-import { NET_WORK_CONFIG } from "@/constant/storageKey";
+import { NETWORK_SHOW_TESTNET, NET_WORK_CONFIG } from "@/constant/storageKey";
 import { NetworkIcon } from "@/popup/component/NetworkIcon";
 import IOSSwitch from "@/popup/component/Switch";
 import {
@@ -199,9 +200,13 @@ export const NetworkModal = ({
   onClose = () => {},
 }) => {
   const netConfig = useSelector((state) => state.network);
-  const [isChecked, setIsChecked] = useState(false);
 
-  const toggleSwitch = () => setIsChecked(!isChecked);
+  const [isChecked, setIsChecked] = useState(getLocal(NETWORK_SHOW_TESTNET));
+
+  const toggleSwitch = () => {
+    setIsChecked(!isChecked);
+    saveLocal(NETWORK_SHOW_TESTNET, !isChecked);
+  };
   const { topList, bottomList } = useMemo(() => {
     let topList = [];
     let bottomList = [];
