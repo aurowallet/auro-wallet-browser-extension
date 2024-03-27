@@ -24,6 +24,7 @@ import Toast from "../../component/Toast";
 import { LoadingView, NoBalanceDetail, UnknownInfoView } from './component/StatusView';
 import TxListView from './component/TxListView';
 import styles from "./index.module.scss";
+import NetworkSelect from '../Networks/NetworkSelect';
 
 const Wallet = ({ }) => {
 
@@ -96,11 +97,7 @@ const Wallet = ({ }) => {
     <div className={styles.toolbarContainer}>
       <div className={styles.toolBar}>
         <img src='/img/menu.svg' className={styles.menuIcon} onClick={toSetting} />
-        <Select
-          value={netConfig.currentConfig.url}
-          optionList={netConfig.netSelectList}
-          onChange={onChangeOption}
-        />
+        <NetworkSelect/>
         <img src="/img/wallet.svg" className={styles.walletIcon} onClick={toManagePage} />
       </div>
     </div>

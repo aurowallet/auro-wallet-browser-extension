@@ -282,5 +282,6 @@
   "clickButton": "and <icon/> click the button",
   "addAccount": "Add Account",
   "createAccount":"Create Account",
-  "hardwareWallet":"Hardware Wallet"
+  "hardwareWallet":"Hardware Wallet",
+  "showTestnet":"Show Testnet"
 }
