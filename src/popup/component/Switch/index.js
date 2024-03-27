@@ -51,7 +51,7 @@ const IOSSwitch = ({ isChecked, toggleSwitch }) => {
     <SwitchLabel>
       <SwitchInput
         type="checkbox"
-        checked={isChecked}
+        checked={isChecked == "true"}
         onChange={toggleSwitch}
       />
       <SliderSpan></SliderSpan>

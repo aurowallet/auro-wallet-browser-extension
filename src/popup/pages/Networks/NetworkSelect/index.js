@@ -253,7 +253,10 @@ export const NetworkModal = ({
               })}
               <StyledTestnetControl>
                 <StyledLeftName>{i18n.t("showTestnet")}</StyledLeftName>
-                <IOSSwitch isChecked={isChecked} toggleSwitch={toggleSwitch} />
+                <IOSSwitch
+                  isChecked={String(isChecked)}
+                  toggleSwitch={toggleSwitch}
+                />
               </StyledTestnetControl>
               {isChecked &&
                 bottomList.map((item, index) => {
@@ -292,7 +295,7 @@ const StyledNetworkItemWrapper = styled.div`
   &:hover {
     border: 0.5px solid #594af1;
   }
-  ${(props) => (props.select ? selectedCss : unSelectedCss)};
+  ${(props) => (props.select == "true" ? selectedCss : unSelectedCss)};
 `;
 
 const StyledNetworkTop = styled.div`
@@ -303,7 +306,7 @@ const StyledNetworkName = styled.div`
   font-weight: 500;
   font-size: 16px;
   line-height: 19px;
-  color: ${(props) => (props.select ? "#FFFFFF" : "#000000")};
+  color: ${(props) => (props.select == "true" ? "#FFFFFF" : "#000000")};
 
   max-width: 210px;
   word-break: break-all;
@@ -315,7 +318,9 @@ const StyledNetworkId = styled.div`
   line-height: 14px;
   color: rgba(0, 0, 0, 0.1);
   color: ${(props) =>
-    props.select ? "rgba(255, 255, 255, 0.50)" : "rgba(0, 0, 0, 0.10)"};
+    props.select == "true"
+      ? "rgba(255, 255, 255, 0.50)"
+      : "rgba(0, 0, 0, 0.10)"};
 `;
 const selectedTypeCss = css`
   color: white;
@@ -329,7 +334,7 @@ const StyledNetworkTypeWrapper = styled.div`
   margin-left: 10px;
   border-radius: 4px;
   padding: 1.5px 5px;
-  ${(props) => (props.select ? selectedTypeCss : unSelectedTypeCss)};
+  ${(props) => (props.select == "true" ? selectedTypeCss : unSelectedTypeCss)};
 `;
 const StyledNetworkType = styled.div`
   font-weight: 500;
@@ -351,19 +356,21 @@ const NetworkItem = ({ nodeItem, onClickItem }) => {
   return (
     <StyledNetworkItemWrapper
       onClick={() => onClickItem(nodeItem)}
-      select={select}
+      select={String(select)}
     >
       <NetworkIcon nodeItem={nodeItem} />
       <div>
         <StyledNetworkTop>
-          <StyledNetworkName select={select}>{nodeItem.name}</StyledNetworkName>
+          <StyledNetworkName select={String(select)}>
+            {nodeItem.name}
+          </StyledNetworkName>
           {showNetType && (
             <StyledNetworkTypeWrapper>
               <StyledNetworkType>{nodeItem.netType}</StyledNetworkType>
             </StyledNetworkTypeWrapper>
           )}
         </StyledNetworkTop>
-        <StyledNetworkId select={select}>
+        <StyledNetworkId select={String(select)}>
           {addressSlice(nodeItem.chainId, 6)}
         </StyledNetworkId>
       </div>
