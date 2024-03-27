@@ -305,10 +305,6 @@ const CommonAccountRow = ({
     let accountRightIcon = "";
     if (notSupport) {
       accountRightIcon = "/img/icon_warning.svg";
-    } else {
-      if (isSelect) {
-        accountRightIcon = "/img/icon_checked_white.svg";
-      }
     }
     let typeText = getAccountType(account);
     return {
