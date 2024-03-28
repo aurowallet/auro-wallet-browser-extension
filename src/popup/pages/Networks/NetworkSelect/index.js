@@ -15,7 +15,7 @@ import {
   sendNetworkChangeMsg,
 } from "@/utils/utils";
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { css, keyframes } from "styled-components";
 
@@ -201,7 +201,11 @@ export const NetworkModal = ({
 }) => {
   const netConfig = useSelector((state) => state.network);
 
-  const [isChecked, setIsChecked] = useState(getLocal(NETWORK_SHOW_TESTNET));
+  const [isChecked, setIsChecked] = useState();
+  useEffect(() => {
+    const localStatus = getLocal(NETWORK_SHOW_TESTNET);
+    setIsChecked(localStatus == "true");
+  }, []);
 
   const toggleSwitch = () => {
     setIsChecked(!isChecked);
