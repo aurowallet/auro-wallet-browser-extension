@@ -85,7 +85,7 @@ const StyledEntryOuter = styled.div`
   align-items: center;
   height: 30px;
   padding-left: 14px;
-  z-index: 12;
+  z-index: 11;
   cursor: pointer;
 
   &:hover {
@@ -127,7 +127,7 @@ const StyledModalOuter = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 10;
+  z-index: 15;
   background: rgba(0, 0, 0, 0.8);
   width: 100%;
   height: 100%;
