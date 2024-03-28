@@ -182,6 +182,14 @@ const StyledListWrapper = styled.div`
     margin-top: 10px;
   }
 `;
+const StyledTopList = styled.div`
+  max-height: 160px;
+  overflow-y: auto;
+  > :not(:first-of-type) {
+    margin-top: 10px;
+  }
+`;
+
 const StyledTestnetControl = styled.div`
   height: 25px;
   display: flex;
@@ -246,15 +254,17 @@ export const NetworkModal = ({
             </StyledTitleRow>
             <StyledDividedLine />
             <StyledListWrapper>
-              {topList.map((item, index) => {
-                return (
-                  <NetworkItem
-                    key={index}
-                    nodeItem={item}
-                    onClickItem={onClickItem}
-                  />
-                );
-              })}
+              <StyledTopList>
+                {topList.map((item, index) => {
+                  return (
+                    <NetworkItem
+                      key={index}
+                      nodeItem={item}
+                      onClickItem={onClickItem}
+                    />
+                  );
+                })}
+              </StyledTopList>
               <StyledTestnetControl>
                 <StyledLeftName>{i18n.t("showTestnet")}</StyledLeftName>
                 <IOSSwitch
