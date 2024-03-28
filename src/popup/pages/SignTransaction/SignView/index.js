@@ -33,7 +33,7 @@ import {
   trimSpace,
 } from "@/utils/utils";
 import { addressValid } from "@/utils/validator";
-import { getZkInfo, toPretty } from "@/utils/zkUtils";
+import { getZkFee, getZkInfo, toPretty } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -103,7 +103,9 @@ const SignView = ({
 
   const { sendAction, siteRecommendFee, currentAdvanceData,transactionTypeName } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
-    let siteFee = signParams?.feePayer?.fee || signParams?.params?.fee || "";
+    const body = signParams.params?.transaction;
+    const zkFee = getZkFee(body)
+    let siteFee = zkFee || signParams?.feePayer?.fee || signParams?.params?.fee || "";
     let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
     let id = signParams?.id || "";
     let currentAdvanceData = advanceData[id] || {};

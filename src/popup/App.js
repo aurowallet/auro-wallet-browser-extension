@@ -26,7 +26,7 @@ function App() {
   const [showFullStatus,setShowFullStatus] = useState(false)
   useEffect(()=>{
     const url = new URL(window.location.href); 
-    const ledgerPageList= ['popup.html#/ledger_connect','popup.html#/ledger_page']
+    const ledgerPageList= ['popup.html#/ledger_page']
     const initPageList = ['popup.html#/register_page','popup.html#/createprocess']
     let findIndex = false;
     [...ledgerPageList,...initPageList].map((path)=>{
@@ -34,7 +34,8 @@ function App() {
         findIndex = true
       }
     })
-    if (url.pathname.indexOf('popup.html') !==-1 && !findIndex) {
+    if ((url.pathname.indexOf('popup.html') !==-1 && !findIndex)
+    ||url.pathname.indexOf('notification.html') !==-1) {
       setShowFullStatus(false)
     }else{
       setShowFullStatus(true)
@@ -72,10 +73,7 @@ function App() {
 
   const initNetData = useCallback(()=>{
     fetchFeeData()
-    const netType = netConfig?.netType
-    if(netType === NET_CONFIG_TYPE.Mainnet){
-        fetchScamList()  
-    }
+    fetchScamList()  
   },[netConfig])
 
   useEffect(()=>{

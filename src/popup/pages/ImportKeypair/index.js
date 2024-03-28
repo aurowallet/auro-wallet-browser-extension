@@ -1,7 +1,7 @@
 import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useHistory } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
 import { WALLET_IMPORT_KEY_STORE } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -12,95 +12,94 @@ import Input from "../../component/Input";
 import TextArea from "../../component/TextArea";
 import styles from "./index.module.scss";
 
-const ImportKeypair = ({ }) => {
-  const [keystoreValue, setKeystoreValue] = useState("")
-  const [pwdValue, setPwdValue] = useState('')
-  const [btnStatus, setBtnStatus] = useState(false)
-  const [loading, setLoading] = useState(false)
+const ImportKeypair = ({}) => {
+  const [keystoreValue, setKeystoreValue] = useState("");
+  const [pwdValue, setPwdValue] = useState("");
+  const [btnStatus, setBtnStatus] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  const history = useHistory();
+  const dispatch = useDispatch();
 
-  const history = useHistory()
-  const dispatch = useDispatch()
-
-  const [accountName, setAccountName] = useState(() => {
+  const accountName = useMemo(()=>{
     return history.location?.params?.accountName ?? "";
-  })
+  },[history])
 
   useEffect(() => {
     if (keystoreValue.length > 0 && pwdValue.length > 0) {
-      setBtnStatus(true)
+      setBtnStatus(true);
     } else {
-      setBtnStatus(false)
+      setBtnStatus(false);
     }
-  }, [pwdValue, keystoreValue])
+  }, [pwdValue, keystoreValue]);
 
   const onInpuKeystore = useCallback((e) => {
-    setKeystoreValue(e.target.value)
-  }, [])
+    setKeystoreValue(e.target.value);
+  }, []);
 
   const onInpuPwd = useCallback((e) => {
-    setPwdValue(e.target.value)
-  }, [])
+    setPwdValue(e.target.value);
+  }, []);
 
-  const onConfirm = useCallback((e) => {
-    setLoading(true)
-    sendMsg({
-      action: WALLET_IMPORT_KEY_STORE,
-      payload: {
-        keypair: keystoreValue,
-        password: pwdValue,
-        accountName: accountName
-      }
-    }, 
-      async (account) => {
-        setLoading(false)
-        if (account.error) {
-          if (account.type === "local") {
-            Toast.info(i18n.t(account.error))
-          } else {
-            Toast.info(account.error)
-          }
-          return
-        } else {
-          dispatch(updateCurrentAccount(account))
-          setTimeout(() => {
-            if(history.length>=4){
-              history.go(-3)
-            }else{
-              history.replace("/")
+  const onConfirm = useCallback(
+    (e) => {
+      setLoading(true);
+      sendMsg(
+        {
+          action: WALLET_IMPORT_KEY_STORE,
+          payload: {
+            keypair: keystoreValue,
+            password: pwdValue,
+            accountName: accountName,
+          },
+        },
+        async (account) => {
+          setLoading(false);
+          if (account.error) {
+            if (account.type === "local") {
+              Toast.info(i18n.t(account.error));
+            } else {
+              Toast.info(account.error);
             }
-          }, 300);
+            return;
+          } else {
+            dispatch(updateCurrentAccount(account));
+            setTimeout(() => {
+              if (history.length >= 5) {
+                history.go(-4);
+              } else {
+                history.replace("/");
+              }
+            }, 300);
+          }
         }
-      })
-  }, [keystoreValue, pwdValue, accountName,history])
-  return (<CustomView title={i18n.t('importKeystone')} >
-    <p className={styles.title}>{i18n.t('pleaseInputKeyPair')}</p>
-    <div className={styles.textAreaContainer}>
-      <TextArea
-        onChange={onInpuKeystore}
-        value={keystoreValue}
+      );
+    },
+    [keystoreValue, pwdValue, accountName, history]
+  );
+  return (
+    <CustomView title={i18n.t("importKeystone")}>
+      <p className={styles.title}>{i18n.t("pleaseInputKeyPair")}</p>
+      <div className={styles.textAreaContainer}>
+        <TextArea onChange={onInpuKeystore} value={keystoreValue} />
+      </div>
+      <Input
+        label={i18n.t("keystorePassword")}
+        onChange={onInpuPwd}
+        value={pwdValue}
+        inputType={"password"}
       />
-    </div>
-    <Input
-      label={i18n.t('keystorePassword')}
-      onChange={onInpuPwd}
-      value={pwdValue}
-      inputType={'password'}
-    />
-    <div className={styles.descContainer}>
-      <p className={styles.desc}>{i18n.t('importAccount_2')}</p>
-      <p className={styles.desc}>{i18n.t('importAccount_3')}</p>
-    </div>
-    <div className={styles.hold} />
-    <div className={styles.bottomContainer}>
-      <Button
-        disable={!btnStatus}
-        loading={loading}
-        onClick={onConfirm}>
-        {i18n.t('confirm')}
-      </Button>
-    </div>
-  </CustomView>)
-
-}
-export default ImportKeypair
+      <div className={styles.descContainer}>
+        <p className={styles.desc}>{i18n.t("importAccount_3")}</p>
+        <p className={styles.desc}>{i18n.t("importAccount_2")}</p>
+      </div>
+      <div className={styles.hold} />
+      <div className={styles.bottomContainer}>
+        <Button disable={!btnStatus} loading={loading} onClick={onConfirm}>
+          {i18n.t("confirm")}
+        </Button>
+      </div>
+    </CustomView>
+  );
+};
+export default ImportKeypair;

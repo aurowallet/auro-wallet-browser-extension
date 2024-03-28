@@ -6,7 +6,7 @@ import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { errorCodes } from "@/constant/dappError";
 
-async function getSignClient(){
+export async function getSignClient(){
     let netConfig = await getCurrentNetConfig()
     let netType = ''
     const { default: Client } = await import('mina-signer')

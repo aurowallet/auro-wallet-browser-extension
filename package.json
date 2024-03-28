@@ -1,6 +1,6 @@
 {
   "name": "auro-wallet",
-  "version": "2.2.13",
+  "version": "2.2.14",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",
@@ -43,7 +43,7 @@
     "postbuild": "rm -rf zip && node ./scripts/post-build.js",
     "buildProd": "webpack --mode production",
     "dev": "node ./scripts/post-dev.js && webpack --mode development --progress --watch",
-    "test": "mocha --timeout 5000 --require node_modules/@babel/register \"test/unit/**/*.js\"",
+    "test": "mocha --timeout 5000 --require ./test/babel-register.js 'test/unit/**/*.js'",
     "storybook": "start-storybook -p 6006 -s public",
     "build-storybook": "build-storybook -s public"
   },
@@ -77,6 +77,8 @@
     "@babel/plugin-transform-react-jsx": "7.12.12",
     "@babel/plugin-transform-runtime": "7.23.7",
     "@babel/preset-env": "7.12.7",
+    "@babel/core":"7.23.9",
+    "@babel/register":"7.23.7",
     "@babel/preset-react": "7.12.7",
     "@babel/runtime": "7.12.5",
     "@storybook/addon-actions": "6.2.9",
@@ -105,6 +107,9 @@
     "web-ext": "6.5.0",
     "gulp": "4.0.2",
     "gulp-zip": "5.1.0",
-    "deepmerge": "4.2.2"
+    "deepmerge": "4.2.2",
+    "babel-plugin-module-resolver":"5.0.0",
+    "sinon":"17.0.1",
+    "proxyquire":"2.1.3"
   }
 }

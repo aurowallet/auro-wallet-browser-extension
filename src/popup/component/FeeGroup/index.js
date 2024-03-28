@@ -3,6 +3,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useMemo } from "react";
 import styles from "./index.module.scss";
+import { MAIN_COIN_CONFIG } from "@/constant";
 
 
 const FeeGroup = ({
@@ -40,7 +41,7 @@ const FeeGroup = ({
     return (<div className={styles.feeContainer}>
         <div className={styles.topContainer}>
             <p className={styles.feeTitle}>{i18n.t("fee")}</p>
-            <p className={styles.feeAmount}>{currentFee}</p>
+            <p className={styles.feeAmount}>{currentFee + " " + MAIN_COIN_CONFIG.symbol}</p>
         </div>
         <div className={styles.btnGroup}>
             {

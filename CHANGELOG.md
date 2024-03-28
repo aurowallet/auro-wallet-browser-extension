@@ -3,13 +3,12 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
-
+- Update zk fee 
 
 ## [2.2.13]
 - Upgrade mina-signer to 3.0.0
 - Update some i18n 
 - Add Russian language support
-- Add RUB support
 - Merge pull request [#21](https://github.com/aurowallet/auro-wallet-browser-extension/pull/21)
 
 ## [2.2.12]

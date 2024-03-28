@@ -22,6 +22,7 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import { NodeEditorType } from "./NodeEditor";
 import styles from "./index.module.scss";
+import { NetworkIcon } from "@/popup/component/NetworkIcon";
 
 const NetworkPage = ({}) => {
   const netConfigList = useSelector((state) => state.network.netList);
@@ -149,7 +150,7 @@ const NetworkPage = ({}) => {
               {showNetTitle && (
                 <div className={styles.networkTitleWrapper}>
                   <hr className={styles.hrDotted} />
-                  <p className={styles.nodeListTitle}>{i18n.t('testnet')}</p>
+                  <p className={styles.nodeListTitle}>{i18n.t("testnet")}</p>
                   <hr className={styles.hrDotted} />
                 </div>
               )}
@@ -175,12 +176,14 @@ const NetworkPage = ({}) => {
     </CustomView>
   );
 };
+
 const NodeItem = ({ nodeItem, onClickRow, onEditItem, editMode }) => {
   const currentConfig = useSelector((state) => state.network.currentConfig);
 
   const { showNetType, select } = useMemo(() => {
     let showNetType = nodeItem.type !== NET_CONFIG_DEFAULT;
     let select = currentConfig.url === nodeItem.url;
+
     return {
       showNetType,
       select,
@@ -195,27 +198,30 @@ const NodeItem = ({ nodeItem, onClickRow, onEditItem, editMode }) => {
         onClick={() => onClickRow(nodeItem)}
       >
         <div className={styles.rowleft}>
-          <div className={styles.rowTopContainer}>
-            <div className={styles.rowTopLeftContainer}>
-              <p
-                className={cls(styles.nodeName, {
-                  [styles.disableEdit]: editMode && !showNetType,
-                })}
-              >
-                {nodeItem.name}
-              </p>
-              {showNetType && (
-                <div className={styles.nodeTypeContainer}>
-                  <span className={styles.nodeType}>{nodeItem.netType}</span>
-                </div>
-              )}
+          <NetworkIcon nodeItem={nodeItem} />
+          <div>
+            <div className={styles.rowTopContainer}>
+              <div className={styles.rowTopLeftContainer}>
+                <p
+                  className={cls(styles.nodeName, {
+                    [styles.disableEdit]: editMode && !showNetType,
+                  })}
+                >
+                  {nodeItem.name}
+                </p>
+                {showNetType && (
+                  <div className={styles.nodeTypeContainer}>
+                    <span className={styles.nodeType}>{nodeItem.netType}</span>
+                  </div>
+                )}
+              </div>
             </div>
+            {nodeItem.chainId && (
+              <p className={styles.chainId}>
+                {addressSlice(nodeItem.chainId, 6)}
+              </p>
+            )}
           </div>
-          {nodeItem.chainId && (
-            <p className={styles.chainId}>
-              {addressSlice(nodeItem.chainId, 6)}
-            </p>
-          )}
         </div>
         {!editMode && (
           <div className={styles.rowRight}>

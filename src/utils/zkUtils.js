@@ -234,3 +234,18 @@ export function zkCommondFormat(zkAppCommand){
   // if zkAppCommand is object
   return JSON.stringify(zkAppCommand)
 }
+
+/** get fee from zk */
+export function getZkFee(zkappCommand){
+  try {
+    const nextZkCommond = JSON.parse(zkappCommand); 
+    let feePayer = nextZkCommond.feePayer;
+    let fee = feePayer.body.fee;
+    if(new BigNumber(fee).isGreaterThan(0)){
+      return amountDecimals(fee,MAIN_COIN_CONFIG.decimals)
+    }
+    return 0
+  } catch (error) {
+    return 0
+  }
+}

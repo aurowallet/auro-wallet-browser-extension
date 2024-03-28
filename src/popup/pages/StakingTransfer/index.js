@@ -188,7 +188,7 @@ const StakingTransfer = () => {
       setConfrimBtnStatus(false)
       onSubmitSuccess(data)
     })
-  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus])
+  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus,memo])
 
   const onConfirm = useCallback(async(ledgerReady=false) => {
     let realBlockAddress = nodeAddress || blockAddress

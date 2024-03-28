@@ -5,9 +5,8 @@ $bottomBtnGroupHeight: 80px;
     padding-right: 20px;
 }
 .contentClassName {
-    padding: 0px 0px;
+    padding: 0px 0px 20px;
     margin-top: 10px;
-    margin-bottom: $bottomBtnGroupHeight;
     overflow-y: auto;
 }
 .contentContainer {
@@ -15,12 +14,17 @@ $bottomBtnGroupHeight: 80px;
 }
 .rowCommomContainer {
     background: #f9fafc;
-    border: 0.5px solid rgba(0, 0, 0, 0.05);
     border-radius: 12px;
-
-    padding: 10px 6px 6px 16px;
+    padding: 10px;
     margin-bottom: 10px;
     border: 1px solid rgba(0, 0, 0, 0.1);
+    
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+   
     .accountRow {
         display: flex;
         align-items: center;
@@ -35,41 +39,36 @@ $bottomBtnGroupHeight: 80px;
 
     .accountName {
         font-size: 16px;
-        line-height: 19px;
-
+        font-weight: 600;
         color: rgba(0, 0, 0, 1);
-
         margin: 0;
     }
     .accountType {
-        font-weight: 600;
+        font-weight: 500;
         font-size: 12px;
         text-align: center;
         color: white;
 
-        font-weight: 500;
         background: rgba(0, 0, 0, 0.2);
         border-radius: 4px;
-        margin-left: 7px;
-        padding: 3px 5px;
+        margin-left: 4px;
+        padding: 2px 4px;
     }
     .address {
         font-size: 12px;
-        line-height: 17px;
-
-        color: rgba(0, 0, 0, 0.3);
-        margin: 0;
+        color: rgba(128, 128, 128, 1);
+        margin: 2px 0px 0px;
     }
     .accountBalanceRow {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 6px;
+        margin-top: 8px;
     }
     .accountBalance {
         font-size: 12px;
-        line-height: 17px;
-        color: rgba(0, 0, 0, 1);
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.8);
         margin: 0;
     }
     .pointMenuContainer {
@@ -88,7 +87,7 @@ $bottomBtnGroupHeight: 80px;
     .pointMenu {
         width: 13px;
     }
-    .iconContainer{
+    .iconContainer {
         height: 30px;
         width: 30px;
         display: flex;
@@ -97,7 +96,7 @@ $bottomBtnGroupHeight: 80px;
 .rowCanSelect {
     cursor: pointer;
     &:hover {
-        border: 1px solid #594AF1;
+        border: 1px solid #594af1;
     }
 }
 
@@ -142,31 +141,4 @@ $bottomBtnGroupHeight: 80px;
     color: #594af1;
     margin: 0;
     cursor: pointer;
-}
-
-.btnGroup {
-    box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
-
-    z-index: 1;
-    width: 100%;
-    max-width: 375px;
-
-    position: fixed;
-    bottom: 0;
-    height: $bottomBtnGroupHeight;
-    padding: 12px 20px;
-    
-    background-color: #ffffff;
-
-    .btnContainer {
-        width: 100px;
-        height: 48px;
-    }
-    .whiteBtn {
-        background-color: #ffffff;
-        color: rgba(89, 74, 241, 1);
-        border: 1px solid rgba(0, 0, 0, 0.15);
-    }
 }

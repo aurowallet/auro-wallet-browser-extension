@@ -167,7 +167,7 @@
   "connect": "Connect",
   "connectionRequest": "Connection Request",
   "approveTip": "This website would like to view account",
-  "approveWaring": "For security only connect to trusted sites",
+  "approveWaring": "Make sure you only connect to trusted sites",
   "waitNonce": "Incorrect Nonce",
   "content": "Content",
   "siteSuggested": "Site suggested",
@@ -279,5 +279,9 @@
   "contributeLanguage": "Contribute language",
   "pinExtension": "Pin Auro Wallet Extension",
   "clickBrowser": "Click <icon/> in your browser",
-  "clickButton": "and <icon/> click the button"
+  "clickButton": "and <icon/> click the button",
+  "addAccount": "Add Account",
+  "createAccount":"Create Account",
+  "hardwareWallet":"Hardware Wallet",
+  "showTestnet":"Show Testnet"
 }
