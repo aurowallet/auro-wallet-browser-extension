@@ -30,7 +30,7 @@ export const NetworkIcon = ({ nodeItem }) => {
     let iconSource =
       nodeItem.netType == NET_CONFIG_TYPE.Mainnet
         ? "img/mina_color.svg"
-        : "img/mina_gray.svg";
+        : "img/icon_mina_gray.svg";
     let holderIconName = nodeItem.name.slice(0, 1) || "";
     holderIconName = holderIconName.toUpperCase();
     return {
