@@ -123,45 +123,11 @@ const NetSelectEntry = ({ onClickEntry, showName }) => {
   );
 };
 
-const StyledModalOuter = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 15;
-  background: rgba(0, 0, 0, 0.8);
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-  justify-content: end;
-  flex-direction: column;
-`;
-const openModal = keyframes`
-  from {
-        bottom: -50%;
-    }
-    to {
-        bottom: 0;
-    }
-`;
-const StyledInnerContent = styled.div`
-  background: #ffffff;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  width: 100%;
-
-  position: absolute;
-  bottom: 0;
-  animation: ${openModal} 0.35s;
-  animation-fill-mode: forwards;
-`;
-
 const StyledTitleRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  padding: 8px 20px;
+  margin: 18px 20px 10px;
 `;
 const StyledRowTitle = styled.span`
   font-weight: 600;
@@ -172,9 +138,9 @@ const StyledRowTitle = styled.span`
   color: #222222;
 `;
 const StyledDividedLine = styled.div`
-  width: 100%;
+  width: calc(100%);
   height: 0.5px;
-  background-color: #f2f2f2;
+  background-color: rgba(0, 0, 0, 0.1);
 `;
 const StyledListWrapper = styled.div`
   padding: 20px 20px;
@@ -201,7 +167,60 @@ const StyledLeftName = styled.div`
   font-size: 12px;
   font-weight: 400;
 `;
-export const NetworkModal = ({
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const fadeOut = keyframes`
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+`;
+
+const ModalOverlay = styled.div`
+  display: ${(props) => (props.show == "true" ? "block" : "none")};
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 20;
+  animation: ${(props) =>
+      props.show == "true"
+        ? css`
+            ${fadeIn} 0.3s
+          `
+        : css`
+            ${fadeOut} 0.3s
+          `}
+    ease-out;
+  animation-fill-mode: forwards;
+`;
+
+const ModalContent = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  z-index: 21;
+  width: calc(375px - 40px);
+  border-radius: 12px;
+`;
+const StyledCloseIcon = styled.img`
+  display: block;
+  cursor: pointer;
+`;
+const NetworkModal = ({
   modalVisable = false,
   title = "",
   onClickItem = () => {},
@@ -241,52 +260,45 @@ export const NetworkModal = ({
     return { topList, bottomList };
   }, [netConfig]);
   return (
-    <>
-      {modalVisable && (
-        <StyledModalOuter onClick={onClose}>
-          <StyledInnerContent
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <StyledTitleRow>
-              <StyledRowTitle>{title}</StyledRowTitle>
-            </StyledTitleRow>
-            <StyledDividedLine />
-            <StyledListWrapper>
-              <StyledTopList>
-                {topList.map((item, index) => {
-                  return (
-                    <NetworkItem
-                      key={index}
-                      nodeItem={item}
-                      onClickItem={onClickItem}
-                    />
-                  );
-                })}
-              </StyledTopList>
-              <StyledTestnetControl>
-                <StyledLeftName>{i18n.t("showTestnet")}</StyledLeftName>
-                <IOSSwitch
-                  isChecked={String(isChecked)}
-                  toggleSwitch={toggleSwitch}
+    <ModalOverlay show={String(modalVisable)} onClick={onClose}>
+      <ModalContent onClick={(e) => e.stopPropagation()}>
+        <StyledTitleRow>
+          <StyledRowTitle>{title}</StyledRowTitle>
+          <StyledCloseIcon onClick={onClose} src="/img/icon_nav_close.svg" />
+        </StyledTitleRow>
+        <StyledDividedLine />
+        <StyledListWrapper>
+          <StyledTopList>
+            {topList.map((item, index) => {
+              return (
+                <NetworkItem
+                  key={index}
+                  nodeItem={item}
+                  onClickItem={onClickItem}
                 />
-              </StyledTestnetControl>
-              {isChecked &&
-                bottomList.map((item, index) => {
-                  return (
-                    <NetworkItem
-                      key={index}
-                      nodeItem={item}
-                      onClickItem={() => onClickItem(item)}
-                    />
-                  );
-                })}
-            </StyledListWrapper>
-          </StyledInnerContent>
-        </StyledModalOuter>
-      )}
-    </>
+              );
+            })}
+          </StyledTopList>
+          <StyledTestnetControl>
+            <StyledLeftName>{i18n.t("showTestnet")}</StyledLeftName>
+            <IOSSwitch
+              isChecked={String(isChecked)}
+              toggleSwitch={toggleSwitch}
+            />
+          </StyledTestnetControl>
+          {isChecked &&
+            bottomList.map((item, index) => {
+              return (
+                <NetworkItem
+                  key={index}
+                  nodeItem={item}
+                  onClickItem={() => onClickItem(item)}
+                />
+              );
+            })}
+        </StyledListWrapper>
+      </ModalContent>
+    </ModalOverlay>
   );
 };
 
