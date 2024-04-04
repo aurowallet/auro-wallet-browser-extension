@@ -23,6 +23,12 @@ import CustomView from "../../component/CustomView";
 import { NodeEditorType } from "./NodeEditor";
 import styles from "./index.module.scss";
 import { NetworkIcon } from "@/popup/component/NetworkIcon";
+import NetworkItem from "./NetworkItem";
+import styled from "styled-components";
+
+const StyledItemWrapper = styled.div`
+  margin-top: 10px;
+`;
 
 const NetworkPage = ({}) => {
   const netConfigList = useSelector((state) => state.network.netList);
@@ -68,16 +74,10 @@ const NetworkPage = ({}) => {
     };
   }, [netConfigList, i18n]);
 
-  const { rightBtcContent } = useMemo(() => {
-    let rightBtcContent = editMode ? i18n.t("done") : i18n.t("edit");
-    return {
-      rightBtcContent,
-    };
-  }, [i18n, editMode]);
 
   const onClickEdit = useCallback(() => {
     setEditMode((state) => !state);
-  }, [editMode]);
+  }, []);
 
   const onAddNode = useCallback(() => {
     history.push({
@@ -126,12 +126,12 @@ const NetworkPage = ({}) => {
     if (showEditBtn) {
       return (
         <p className={styles.editBtn} onClick={onClickEdit}>
-          {rightBtcContent}
+          {editMode ? i18n.t("done") : i18n.t("edit")}
         </p>
       );
     }
     return <></>;
-  }, [showEditBtn]);
+  }, [showEditBtn, editMode]);
 
   return (
     <CustomView
@@ -156,13 +156,14 @@ const NetworkPage = ({}) => {
               )}
               {netNode.list.map((nodeItem, j) => {
                 return (
-                  <NodeItem
-                    key={j}
-                    nodeItem={nodeItem}
-                    onClickRow={onClickRow}
-                    onEditItem={onEditItem}
-                    editMode={editMode}
-                  />
+                  <StyledItemWrapper key={j}>
+                    <NetworkItem
+                      nodeItem={nodeItem}
+                      onClickItem={onClickRow}
+                        onEditItem={onEditItem}
+                      editMode={editMode}
+                    />
+                  </StyledItemWrapper>
                 );
               })}
             </div>
@@ -174,69 +175,6 @@ const NetworkPage = ({}) => {
         <Button onClick={onAddNode}>{i18n.t("addNode")}</Button>
       </div>
     </CustomView>
-  );
-};
-
-const NodeItem = ({ nodeItem, onClickRow, onEditItem, editMode }) => {
-  const currentConfig = useSelector((state) => state.network.currentConfig);
-
-  const { showNetType, select } = useMemo(() => {
-    let showNetType = nodeItem.type !== NET_CONFIG_DEFAULT;
-    let select = currentConfig.url === nodeItem.url;
-
-    return {
-      showNetType,
-      select,
-    };
-  }, [nodeItem, currentConfig]);
-  return (
-    <div className={styles.rowContainer}>
-      <div
-        className={cls(styles.nodeItemContainer, {
-          [styles.editMode]: editMode,
-        })}
-        onClick={() => onClickRow(nodeItem)}
-      >
-        <div className={styles.rowleft}>
-          <NetworkIcon nodeItem={nodeItem} />
-          <div>
-            <div className={styles.rowTopContainer}>
-              <div className={styles.rowTopLeftContainer}>
-                <p
-                  className={cls(styles.nodeName, {
-                    [styles.disableEdit]: editMode && !showNetType,
-                  })}
-                >
-                  {nodeItem.name}
-                </p>
-                {showNetType && (
-                  <div className={styles.nodeTypeContainer}>
-                    <span className={styles.nodeType}>{nodeItem.netType}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            {nodeItem.chainId && (
-              <p className={styles.chainId}>
-                {addressSlice(nodeItem.chainId, 6)}
-              </p>
-            )}
-          </div>
-        </div>
-        {!editMode && (
-          <div className={styles.rowRight}>
-            {select && (
-              <img src="/img/icon_checked.svg" className={styles.checkedIcon} />
-            )}
-          </div>
-        )}
-        {editMode && showNetType && (
-          <div className={styles.rowRight} onClick={() => onEditItem(nodeItem)}>
-            <img src="/img/icon_edit.svg" className={styles.editIcon} />
-          </div>
-        )}
-      </div>
-    </div>
   );
 };
 
