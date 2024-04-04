@@ -3,15 +3,30 @@ import { NET_CONFIG_DEFAULT } from "@/reducers/network";
 import { useMemo } from "react";
 import styled from "styled-components";
 
+export const network_icon_size = {
+  middle: "icon_middle",
+  small: "icon_small",
+};
+const getSize = (size) => {
+  switch (size) {
+    case network_icon_size.small:
+      return "24px";
+    case network_icon_size.middle:
+    default:
+      return "30px";
+  }
+};
 const StyledNetIconWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  margin-right: 10px;
+  width: ${(props) => getSize(props.size)};
+  height: ${(props) => getSize(props.size)};
 `;
-const StyledNetIcon = styled.img``;
+const StyledNetIcon = styled.img`
+  width: 100%;
+  height: 100%;
+`;
 const StyledHolderIcon = styled.div`
   width: 100%;
   height: 100%;
@@ -24,15 +39,19 @@ const StyledHolderIcon = styled.div`
   font-size: 16px;
 `;
 
-export const NetworkIcon = ({ nodeItem }) => {
+export const NetworkIcon = ({ nodeItem, size }) => {
   const { isCustomNet, iconSource, holderIconName } = useMemo(() => {
     let isCustomNet = nodeItem.type !== NET_CONFIG_DEFAULT;
     let iconSource =
       nodeItem.netType == NET_CONFIG_TYPE.Mainnet
         ? "img/mina_color.svg"
         : "img/icon_mina_gray.svg";
-    let holderIconName = nodeItem.name.slice(0, 1) || "";
-    holderIconName = holderIconName.toUpperCase();
+    let holderIconName = "";
+    if (isCustomNet) {
+      holderIconName = nodeItem.name?.slice(0, 1) || "";
+      holderIconName = holderIconName.toUpperCase();
+    }
+
     return {
       isCustomNet,
       iconSource,
@@ -40,7 +59,7 @@ export const NetworkIcon = ({ nodeItem }) => {
     };
   }, [nodeItem]);
   return (
-    <StyledNetIconWrapper>
+    <StyledNetIconWrapper size={size}>
       {isCustomNet ? (
         <StyledHolderIcon>{holderIconName}</StyledHolderIcon>
       ) : (

@@ -22,7 +22,6 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import { NodeEditorType } from "./NodeEditor";
 import styles from "./index.module.scss";
-import { NetworkIcon } from "@/popup/component/NetworkIcon";
 import NetworkItem from "./NetworkItem";
 import styled from "styled-components";
 

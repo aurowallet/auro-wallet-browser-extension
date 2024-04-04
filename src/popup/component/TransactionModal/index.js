@@ -7,8 +7,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Trans } from "react-i18next";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { AdvancedModal } from "../AdvancedModal";
-import Button from "../Button";
-import LedgerStatusView from "../LedgerStatusView";
+import Button, { button_theme } from "../Button";
+import LedgerStatusView from "../StatusView/LedgerStatusView";
+import NetworkStatusView from "../StatusView/NetworkStatusView";
 import styles from "./index.module.scss";
 
 export const TransactionModalType = {
@@ -61,13 +62,8 @@ export const TransactionModal = ({
                 <span className={styles.rowTitle}>{title}</span>
                 <div className={styles.rightRow}>
                   <LedgerStatusView />
-                  <img
-                    onClick={() => {
-                      onClickClose();
-                    }}
-                    className={styles.rowClose}
-                    src="/img/icon_nav_close.svg"
-                  />
+                  <div style={{ marginRight: "6px" }} />
+                  <NetworkStatusView />
                 </div>
               </div>
             </div>
@@ -129,13 +125,19 @@ export const TransactionModal = ({
                       </div>
                     </div>
                   </div>
-                    <div className={styles.changeWrapper}>
-                      <div className={styles.changeCls} onClick={onClickAdvance}>
-                        {i18n.t("change")} 
-                      </div>
+                  <div className={styles.changeWrapper}>
+                    <div className={styles.changeCls} onClick={onClickAdvance}>
+                      {i18n.t("change")}
                     </div>
+                  </div>
                 </div>
-                <div className={cls(styles.bottomContainer)}>
+                <div className={styles.bottomContainer}>
+                  <Button
+                    onClick={onClickClose}
+                    theme={button_theme.BUTTON_THEME_LIGHT}
+                  >
+                    {i18n.t("cancel")}
+                  </Button>
                   <Button
                     loading={btnLoading}
                     onClick={() => {

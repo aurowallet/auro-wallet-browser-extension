@@ -2,7 +2,6 @@ import { extSaveLocal } from "@/background/extensionStorage";
 import { getLocal, saveLocal } from "@/background/localStorage";
 import { NET_CONFIG_TYPE } from "@/constant/network";
 import { NETWORK_SHOW_TESTNET, NET_WORK_CONFIG } from "@/constant/storageKey";
-import { NetworkIcon } from "@/popup/component/NetworkIcon";
 import IOSSwitch from "@/popup/component/Switch";
 import {
   updateShouldRequest,

@@ -283,5 +283,6 @@
   "addAccount": "Add Account",
   "createAccount":"Create Account",
   "hardwareWallet":"Hardware Wallet",
-  "showTestnet":"Show Testnet"
+  "showTestnet":"Show Testnet",
+  "transactionRequest": "Transaction Request"
 }

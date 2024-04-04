@@ -255,10 +255,6 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
     <section className={styles.sectionSwitch}>
       <div className={styles.titleRow}>
         <p className={styles.title}>{i18n.t(showTitle)}</p>
-        <div className={styles.netContainer}>
-          <div className={styles.dot} />
-          <p className={styles.netContent}>{currentConfig.name}</p>
-        </div>
       </div>
 
       {state.switchStatus && (

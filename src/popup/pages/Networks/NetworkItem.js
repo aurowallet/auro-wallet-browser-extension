@@ -90,6 +90,9 @@ const StyledEdit = styled.img`
       rgba(249, 250, 252, 1);
   }
 `;
+const StyledNetworkInfo = styled.div`
+  margin-left: 10px;
+`;
 const NetworkItem = ({
   nodeItem,
   onClickItem,
@@ -123,7 +126,7 @@ const NetworkItem = ({
     >
       <StyledNetworkLeft>
         <NetworkIcon nodeItem={nodeItem} />
-        <div>
+        <StyledNetworkInfo>
           <StyledNetworkTop>
             <StyledNetworkName color={getChainNameColor()}>
               {nodeItem.name}
@@ -143,7 +146,7 @@ const NetworkItem = ({
           >
             {addressSlice(nodeItem.chainId, 6)}
           </StyledNetworkId>
-        </div>
+        </StyledNetworkInfo>
       </StyledNetworkLeft>
       {editMode && isNotDefault && (
         <StyledEditWrapper onClick={() => onEditItem(nodeItem)}>

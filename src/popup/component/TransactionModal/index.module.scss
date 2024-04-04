@@ -64,7 +64,7 @@
     overflow-y: auto;
     background: #ffffff;
     max-height: 350px;
-    margin-bottom: 100px;
+    margin-bottom: 20px;
 }
 
 .rightRow {
@@ -73,14 +73,14 @@
 }
 
 .bottomContainer {
-    padding: 12px 38px 20px;
-    position: fixed;
-    bottom: 0;
+    padding: 12px 20px 20px;
     width: calc(100%);
-    background-color: white;
-
-    animation: openModal 0.35s;
-    animation-fill-mode: forwards;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    > :not(:first-of-type) {
+        margin-left: 15px;
+    }
 }
 
 .modalContentCls {
