@@ -52,7 +52,7 @@
   "amount": "Amount",
   "max": "Max",
   "memo": "Memo(Optional)",
-  "transactionDetails": "Transaction Details",
+  "transactionDetails": "Transaction Overview",
   "addressBook": "Address Book",
   "fee_slow": "Slow",
   "fee_default": "Default",
