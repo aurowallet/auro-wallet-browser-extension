@@ -230,7 +230,7 @@
   "PENDING": "PENDING",
   "inputAccountName": "Please enter your account name",
   "connectHardwareWallet": "Connect Hardware Wallet",
-  "selectHardware": "Select a hardware wallet you‘d like to use with Auro Wallet.",
+  "selectHardware": "Select a hardware wallet you'd like to use with Auro Wallet.",
   "getStarted": "Get Started",
   "ledgerStartDesc": "Before you start, ensure you have the most up-to-date firmware on your Ledger device. And the Mina App has been installed in the Ledger device.",
   "ledgerConnect_1": "Connect your Ledger to the computer.",
@@ -281,7 +281,7 @@
   "clickBrowser": "Click <icon/> in your browser",
   "clickButton": "and <icon/> click the button",
   "addAccount": "Add Account",
-  "createAccount":"Create Account",
-  "hardwareWallet":"Hardware Wallet",
-  "showTestnet":"Show Testnet"
+  "createAccount": "Create Account",
+  "hardwareWallet": "Hardware Wallet",
+  "showTestnet": "Show Testnet"
 }
