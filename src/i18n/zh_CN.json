@@ -231,7 +231,7 @@
   "PENDING": "等待",
   "inputAccountName": "请输入您的账户名称",
   "connectHardwareWallet": "连接硬件钱包",
-  "selectHardware": "选择您想要使用的硬件钱包。",
+  "selectHardware": "选择您想要与 Auro Wallet 连接的硬件钱包。",
   "getStarted": "开始",
   "ledgerStartDesc": "开始之前，请确保你的 Ledger 固件版本已经是最新，并且 Ledger 中已经安装好了 Mina 应用。",
   "ledgerConnect_1": "将 Ledger 与电脑连接。",
