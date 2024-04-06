@@ -8,7 +8,7 @@
   "backTips_3": "Cihazınız kaybolduğunda veya başka bir nedenden dolayı cüzdana erişilemiyorsa, varlıklarınızı geri almanın tek yolu anımsatıcı ifadeyi içe aktarmaktır.",
   "scanPay": "Kendinize ödeme yapmak için tarayın",
   "copyAnyway": "Yine de Kopyala",
-  "approveWaring": "Güvenliğiniz için yalnızca güvenilir sitelere bağlanın",
+  "approveWaring": "Yalnızca güvenilir sitelere bağlandığınızdan emin olun.",
   "accountDetails": "Hesap Detayları",
   "postFailed": "İşlem başarısız oldu",
   "receive": "Al",
@@ -283,5 +283,9 @@
   "contributeLanguage": "Başka bir dile katkıda bulunun",
   "pinExtension": "Auro Wallet Pinle",
   "clickButton": "ve <icon/> butonuna tıklayın",
-  "clickBrowser": "Tarayıcınızda <icon/>'a tıklayın"
+  "clickBrowser": "Tarayıcınızda <icon/>'a tıklayın",
+  "addAccount": "Hesap Ekle",
+  "createAccount": "Hesap Oluştur",
+  "hardwareWallet": "Donanım Cüzdanı",
+  "showTestnet": "Test Ağını Göster"
 }
