@@ -19,6 +19,7 @@ export const ConfirmModal = ({
   loadingStatus = false,
   onClickClose = () => {},
   waitingLedger = false,
+  showCloseIcon = false,
 }) => {
   return (
     <>
@@ -34,6 +35,15 @@ export const ConfirmModal = ({
                     <LedgerStatusView />
                     <div style={{ marginRight: "6px" }} />
                     <NetworkStatusView />
+                  </div>
+                )}
+                {showCloseIcon && (
+                  <div className={styles.rightRow}>
+                    <img
+                      onClick={onClickClose}
+                      className={styles.rowClose}
+                      src="/img/icon_nav_close.svg"
+                    />
                   </div>
                 )}
               </div>

@@ -17,6 +17,7 @@ import {
 } from "@/reducers/accountReducer";
 import {
   NET_CONFIG_ADD,
+  NET_CONFIG_DEFAULT,
   updateNetChainIdConfig,
   updateNetConfig,
 } from "@/reducers/network";
@@ -134,6 +135,7 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
       nextConfig = targetConfig || nextChainConfig;
       if (targetChainId) {
         nextConfig = NET_CONFIG_MAP[targetChainId].config;
+        nextConfig.type = NET_CONFIG_DEFAULT
       }
       let config = {
         ...currentNetConfig,

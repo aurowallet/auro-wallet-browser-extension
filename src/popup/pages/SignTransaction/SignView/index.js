@@ -1,6 +1,6 @@
 import { sendStakeTx, sendTx } from "@/background/api";
 import { MAIN_COIN_CONFIG } from "@/constant";
-import { ACCOUNT_TYPE } from "@/constant/commonType";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "@/constant/commonType";
 import {
   DAPP_ACTION_CREATE_NULLIFIER,
   DAPP_ACTION_SEND_TRANSACTION,
@@ -14,11 +14,15 @@ import Button, { button_size, button_theme } from "@/popup/component/Button";
 import { ConfirmModal } from "@/popup/component/ConfirmModal";
 import DAppAdvance from "@/popup/component/DAppAdvance";
 import DappWebsite from "@/popup/component/DappWebsite";
+import { LedgerInfoModal } from "@/popup/component/LedgerInfoModal";
+import LedgerStatusView from "@/popup/component/StatusView/LedgerStatusView";
+import NetworkStatusView from "@/popup/component/StatusView/NetworkStatusView";
 import Tabs from "@/popup/component/Tabs";
 import Toast from "@/popup/component/Toast";
+import { updateLedgerConnectStatus } from "@/reducers/ledger";
 import { sendMsg } from "@/utils/commonMsg";
 import {
-  checkLedgerConnect,
+  getLedgerStatus,
   requestSignDelegation,
   requestSignPayment,
 } from "@/utils/ledger";
@@ -33,13 +37,13 @@ import {
   trimSpace,
 } from "@/utils/utils";
 import { addressValid } from "@/utils/validator";
-import { getZkFee, getZkInfo, toPretty } from "@/utils/zkUtils";
+import { getZkFee, getZkInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
 
@@ -76,6 +80,7 @@ const SignView = ({
   advanceData,
   onUpdateAdvance,
 }) => {
+  const dispatch = useDispatch();
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -93,6 +98,10 @@ const SignView = ({
   const [feeErrorTip, setFeeErrorTip] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
+
+  const [confirmModalStatus, setConfirmModalStatus] = useState(false);
+  const [isLedgerAccount, setIsLedgerAccount] = useState(false);
+
   const [showRawData, setShowRawData] = useState(false);
   const [showRawDetail, setShowRawDetail] = useState(false);
 
@@ -100,25 +109,32 @@ const SignView = ({
 
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
+  const [ledgerApp, setLedgerApp] = useState();
 
-  const { sendAction, siteRecommendFee, currentAdvanceData,transactionTypeName } = useMemo(() => {
+  const {
+    sendAction,
+    siteRecommendFee,
+    currentAdvanceData,
+    transactionTypeName,
+  } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     const body = signParams.params?.transaction;
-    const zkFee = getZkFee(body)
-    let siteFee = zkFee || signParams?.feePayer?.fee || signParams?.params?.fee || "";
+    const zkFee = getZkFee(body);
+    let siteFee =
+      zkFee || signParams?.feePayer?.fee || signParams?.params?.fee || "";
     let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
     let id = signParams?.id || "";
     let currentAdvanceData = advanceData[id] || {};
-    let transactionTypeName = ""
+    let transactionTypeName = "";
     switch (sendAction) {
       case DAppActions.mina_sendPayment:
-        transactionTypeName = "Payment"
+        transactionTypeName = "Payment";
         break;
       case DAppActions.mina_sendStakeDelegation:
-        transactionTypeName = "Delegation"
+        transactionTypeName = "Delegation";
         break;
       case DAppActions.mina_sendTransaction:
-        transactionTypeName = "zkApp"
+        transactionTypeName = "zkApp";
         break;
       default:
         break;
@@ -127,7 +143,7 @@ const SignView = ({
       sendAction,
       siteRecommendFee,
       currentAdvanceData,
-      transactionTypeName
+      transactionTypeName,
     };
   }, [signParams, advanceData]);
 
@@ -140,6 +156,10 @@ const SignView = ({
       setNonceValue(currentAdvanceData.nonce);
     }
   }, [currentAdvanceData]);
+
+  useEffect(() => {
+    setIsLedgerAccount(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER);
+  }, [currentAccount]);
 
   const onSelectedTab = useCallback((tabIndex) => {
     setSelectedTabIndex(tabIndex);
@@ -155,7 +175,7 @@ const SignView = ({
         break;
       case DAppActions.mina_signMessage:
       case DAppActions.mina_signFields:
-      case DAppActions.mina_sign_JsonMessage: 
+      case DAppActions.mina_sign_JsonMessage:
         resultAction = DAPP_ACTION_SIGN_MESSAGE;
         break;
       case DAppActions.mina_createNullifier:
@@ -260,8 +280,8 @@ const SignView = ({
     if (isSendZk) {
       zkShowData = signParams.params?.transaction;
       try {
-        zkFormatData = getZkInfo(zkShowData,currentAccount.address);
-        zkSourceData = JSON.stringify(JSON.parse(zkShowData),null,2);
+        zkFormatData = getZkInfo(zkShowData, currentAccount.address);
+        zkSourceData = JSON.stringify(JSON.parse(zkShowData), null, 2);
       } catch (error) {}
     }
     return {
@@ -269,21 +289,19 @@ const SignView = ({
       zkSourceData,
       zkFormatData,
     };
-  }, [sendAction, signParams,currentAccount]);
+  }, [sendAction, signParams, currentAccount]);
   useEffect(() => {
-    setShowRawData(
-      isSendZk && selectedTabIndex === 0
-    );
+    setShowRawData(isSendZk && selectedTabIndex === 0);
   }, [isSendZk, selectedTabIndex]);
 
   const ledgerTransfer = useCallback(
-    async (params) => {
+    async (params, preLedgerApp) => {
       if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
-        Toast.info(i18n.t("ledgerNotSupportSign"));
+        Toast.info(i18n.t("notSupportNow"));
         sendMsg(
           {
             action: DAPP_ACTION_SIGN_MESSAGE,
-            payload: { error: "not support ledger sign message" },
+            payload: { error: "Not supported yet" },
           },
           async (params) => {}
         );
@@ -293,22 +311,20 @@ const SignView = ({
         Toast.info(i18n.t("notSupportNow"));
         return;
       }
-
-      const { ledgerApp } = await checkLedgerConnect();
-      if (ledgerApp) {
-        setLedgerModalStatus(true);
+      const nextLedgerApp = preLedgerApp || ledgerApp;
+      if (nextLedgerApp) {
         let signResult;
         let postRes;
+        setConfirmModalStatus(true);
         if (sendAction === DAppActions.mina_sendPayment) {
           signResult = await requestSignPayment(
-            ledgerApp,
+            nextLedgerApp,
             params,
             currentAccount.hdPath
           );
-
           const { signature, payload, error } = signResult;
           if (error) {
-            setLedgerModalStatus(false);
+            setConfirmModalStatus(false);
             Toast.info(error.message);
             return;
           }
@@ -317,14 +333,13 @@ const SignView = ({
           );
         } else if (sendAction === DAppActions.mina_sendStakeDelegation) {
           signResult = await requestSignDelegation(
-            ledgerApp,
+            nextLedgerApp,
             params,
             currentAccount.hdPath
           );
-
           const { signature, payload, error } = signResult;
           if (error) {
-            setLedgerModalStatus(false);
+            setConfirmModalStatus(false);
             Toast.info(error.message);
             return;
           }
@@ -333,135 +348,170 @@ const SignView = ({
           }).catch((error) => error);
         }
 
-        setLedgerModalStatus(false);
+        setConfirmModalStatus(false);
         onSubmitSuccess(postRes, params.nonce, "ledger");
       }
     },
     [signParams, currentAccount, sendAction]
   );
 
-  const clickNextStep = useCallback(() => {
-    let { params } = signParams;
-    let vaildNonce = nonceValue || inferredNonce;
-    let nonce = trimSpace(vaildNonce);
+  const clickNextStep = useCallback(
+    async (ledgerReady = false, preLedgerApp) => {
+      let ledgerTemp = preLedgerApp;
+      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+        if (!ledgerReady) {
+          const ledger = await getLedgerStatus();
+          ledgerTemp = ledger.app;
+          dispatch(updateLedgerConnectStatus(ledger.status));
+          if (ledger.status !== LEDGER_STATUS.READY) {
+            setLedgerModalStatus(true);
+            return;
+          }
+          setLedgerApp(ledger.app);
+        }
+      }
+      let { params } = signParams;
+      let vaildNonce = nonceValue || inferredNonce;
+      let nonce = trimSpace(vaildNonce);
 
-    let toAddress = "";
-    let fee = "";
-    let memo = "";
-    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-      toAddress = trimSpace(params.to);
-      fee = trimSpace(feeValue);
-      memo = params?.feePayer?.memo || params?.memo || "";
-    }
-    let fromAddress = currentAccount.address;
-    let payload = {
-      fromAddress,
-      toAddress,
-      nonce,
+      let toAddress = "";
+      let fee = "";
+      let memo = "";
+      if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
+        toAddress = trimSpace(params.to);
+        fee = trimSpace(feeValue);
+        memo = params?.feePayer?.memo || params?.memo || "";
+      }
+      let fromAddress = currentAccount.address;
+      let payload = {
+        fromAddress,
+        toAddress,
+        nonce,
+        currentAccount,
+        fee,
+        memo,
+      };
+      if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
+        payload.message = params.message;
+      }
+      if (sendAction === DAppActions.mina_sendPayment) {
+        let amount = trimSpace(params.amount);
+        amount = toNonExponential(new BigNumber(amount).toString());
+        payload.amount = amount;
+      }
+      if (isSendZk) {
+        payload.transaction = params.transaction;
+        memo = params.feePayer?.memo || "";
+      }
+      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+        return ledgerTransfer(payload, ledgerTemp);
+      }
+      setBtnLoading(true);
+      let connectAction = QA_SIGN_TRANSTRACTION;
+      if (sendAction === DAppActions.mina_signFields) {
+        connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION;
+      } else if (sendAction === DAppActions.mina_createNullifier) {
+        connectAction = WALLET_SEND_NULLIFIER;
+      }
+      if (sendAction === DAppActions.mina_sign_JsonMessage) {
+        payload.sendAction = DAppActions.mina_signMessage;
+        payload.message = JSON.stringify(payload.message);
+      } else {
+        payload.sendAction = sendAction;
+      }
+      sendMsg(
+        {
+          action: connectAction,
+          payload,
+        },
+        (data) => {
+          setBtnLoading(false);
+          onSubmitSuccess(data, payload.nonce);
+        }
+      );
+    },
+    [
       currentAccount,
-      fee,
-      memo,
-    };
-    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
-      payload.message = params.message;
-    }
-    if (sendAction === DAppActions.mina_sendPayment) {
-      let amount = trimSpace(params.amount);
-      amount = toNonExponential(new BigNumber(amount).toString());
-      payload.amount = amount;
-    }
-    if(isSendZk){
-      payload.transaction = params.transaction;
-      memo = params.feePayer?.memo || "";
-    }
-    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      return ledgerTransfer(payload);
-    }
-    setBtnLoading(true);
-    let connectAction = QA_SIGN_TRANSTRACTION;
-    if (sendAction === DAppActions.mina_signFields) {
-      connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION;
-    } else if (sendAction === DAppActions.mina_createNullifier) {
-      connectAction = WALLET_SEND_NULLIFIER;
-    }
-    if (sendAction === DAppActions.mina_sign_JsonMessage) {
-      payload.sendAction = DAppActions.mina_signMessage;
-      payload.message = JSON.stringify(payload.message);
-    } else {
-      payload.sendAction = sendAction;
-    }
-    sendMsg(
-      {
-        action: connectAction,
-        payload,
-      },
-      (data) => {
-        setBtnLoading(false);
-        onSubmitSuccess(data, payload.nonce);
-      }
-    );
-  }, [
-    currentAccount,
-    signParams,
-    nonceValue,
-    feeValue,
-    onSubmitSuccess,
-    // netAccount,
-    sendAction,
-    inferredNonce,
-    isSendZk
-  ]);
+      signParams,
+      nonceValue,
+      feeValue,
+      onSubmitSuccess,
+      sendAction,
+      inferredNonce,
+      isSendZk,
+    ]
+  );
 
-  const onConfirm = useCallback(() => {
-    let params = signParams.params;
-    if (
-      SIGN_MESSAGE_EVENT.indexOf(sendAction) == -1 &&
-      sendAction !== DAppActions.mina_sendTransaction
-    ) {
-      let toAddress = trimSpace(params.to);
-      if (!addressValid(toAddress)) {
-        Toast.info(i18n.t("sendAddressError"));
+  const onConfirm = useCallback(
+    async (ledgerReady = false) => {
+      let params = signParams.params;
+      if (
+        SIGN_MESSAGE_EVENT.indexOf(sendAction) == -1 &&
+        sendAction !== DAppActions.mina_sendTransaction
+      ) {
+        let toAddress = trimSpace(params.to);
+        if (!addressValid(toAddress)) {
+          Toast.info(i18n.t("sendAddressError"));
+          return;
+        }
+      }
+      if (sendAction == DAppActions.mina_sendPayment) {
+        let amount = trimSpace(params.amount);
+        if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
+          Toast.info(i18n.t("amountError"));
+          return;
+        }
+      }
+      let vaildNonce = nonceValue || inferredNonce;
+      let nonce = trimSpace(vaildNonce) || "";
+      if (nonce.length > 0 && !isNumber(nonce)) {
+        Toast.info(i18n.t("waitNonce"));
         return;
       }
-    }
-    if (sendAction == DAppActions.mina_sendPayment) {
-      let amount = trimSpace(params.amount);
-      if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
-        Toast.info(i18n.t("amountError"));
+      let fee = trimSpace(feeValue);
+      if (fee.length > 0 && !isNumber(fee)) {
+        Toast.info(i18n.t("inputFeeError"));
         return;
       }
-    }
-    let vaildNonce = nonceValue || inferredNonce;
-    let nonce = trimSpace(vaildNonce) || "";
-    if (nonce.length > 0 && !isNumber(nonce)) {
-      Toast.info(i18n.t("waitNonce"));
-      return;
-    }
-    let fee = trimSpace(feeValue);
-    if (fee.length > 0 && !isNumber(fee)) {
-      Toast.info(i18n.t("inputFeeError"));
-      return;
-    }
-    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-      let amount = trimSpace(params.amount) || 0;
-      let maxAmount = new BigNumber(amount).plus(fee).toString();
-      if (new BigNumber(maxAmount).gt(balance)) {
-        Toast.info(i18n.t("balanceNotEnough"));
-        return;
+      if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
+        let amount = trimSpace(params.amount) || 0;
+        let maxAmount = new BigNumber(amount).plus(fee).toString();
+        if (new BigNumber(maxAmount).gt(balance)) {
+          Toast.info(i18n.t("balanceNotEnough"));
+          return;
+        }
       }
-    }
-    clickNextStep();
-  }, [
-    i18n,
-    currentAccount,
-    signParams,
-    balance,
-    nonceValue,
-    feeValue,
-    clickNextStep,
-    sendAction,
-    inferredNonce,
-  ]);
+      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+        if (!ledgerReady) {
+          const ledger = await getLedgerStatus();
+          setLedgerApp(ledger.app);
+          dispatch(updateLedgerConnectStatus(ledger.status));
+
+          if (ledger.status == LEDGER_STATUS.READY) {
+            clickNextStep(true, ledger.app);
+          } else {
+            setLedgerModalStatus(true);
+          }
+        } else {
+          clickNextStep();
+        }
+      } else {
+        dispatch(updateLedgerConnectStatus(""));
+        clickNextStep();
+      }
+    },
+    [
+      i18n,
+      currentAccount,
+      signParams,
+      balance,
+      nonceValue,
+      feeValue,
+      clickNextStep,
+      sendAction,
+      inferredNonce,
+    ]
+  );
 
   const onClickAdvance = useCallback(() => {
     setAdvanceStatus((state) => !state);
@@ -469,7 +519,6 @@ const SignView = ({
   const onClickClose = useCallback(() => {
     setAdvanceStatus(false);
   }, []);
-
 
   const onFeeInput = useCallback(
     (e) => {
@@ -566,7 +615,7 @@ const SignView = ({
         label: i18n.t("content"),
         content: content,
       };
-      if(isSendZk){
+      if (isSendZk) {
         contentObj.isZkData = !showRawDetail;
         contentObj.content = showRawDetail ? zkSourceData : zkFormatData;
       } else if (sendAction === DAppActions.mina_sign_JsonMessage) {
@@ -581,7 +630,7 @@ const SignView = ({
         tabInitId = "tab2";
       }
     }
-    let pageTitle = i18n.t("confirmTransaction");
+    let pageTitle = i18n.t("transactionRequest");
     if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
       pageTitle = i18n.t("signatureRequest");
     }
@@ -602,7 +651,7 @@ const SignView = ({
     showRawDetail,
     zkSourceData,
     zkFormatData,
-    isSendZk
+    isSendZk,
   ]);
 
   useEffect(() => {
@@ -662,11 +711,11 @@ const SignView = ({
   const tabContentRef = useRef([]);
   useEffect(() => {
     const targetRef = tabContentRef.current[selectedTabIndex];
-    if(targetRef){
+    if (targetRef) {
       const showBtn = targetRef.scrollHeight > targetRef.clientHeight;
       setShowScrollBtn(showBtn);
     }
-  }, [tabContentRef, selectedTabIndex,showMultiView]);
+  }, [tabContentRef, selectedTabIndex, showMultiView]);
 
   const onClickScrollBtn = useCallback(() => {
     const targtRef = tabContentRef.current[selectedTabIndex];
@@ -678,29 +727,40 @@ const SignView = ({
     }
   }, [tabContentRef, selectedTabIndex]);
 
-  const nextBtnTxt = useMemo(()=>{
-    let title = 'confirm'
+  const nextBtnTxt = useMemo(() => {
+    let title = "confirm";
     switch (sendAction) {
       case DAppActions.mina_signMessage:
       case DAppActions.mina_sign_JsonMessage:
       case DAppActions.mina_signFields:
-        title = "sign"
+        title = "sign";
         break;
       case DAppActions.mina_createNullifier:
-        title = "create"
+        title = "create";
         break;
       default:
         break;
     }
-    return title
-  },[sendAction])
+    return title;
+  }, [sendAction]);
+
+  const onLedgerInfoModalConfirm = useCallback(
+    (ledger) => {
+      setLedgerApp(ledger.app);
+      setLedgerModalStatus(false);
+      onConfirm(true);
+    },
+    [onConfirm]
+  );
+
   return (
     <section className={styles.sectionSign}>
       <div className={styles.titleRow}>
         <p className={styles.title}>{pageTitle}</p>
-        <div className={styles.netContainer}>
-          <div className={styles.dot} />
-          <p className={styles.netContent}>{currentConfig.name}</p>
+        <div className={styles.titleRight}>
+          <LedgerStatusView />
+          <div style={{ marginRight: "6px" }} />
+          <NetworkStatusView />
         </div>
       </div>
       <div className={styles.content}>
@@ -857,9 +917,17 @@ const SignView = ({
         feeErrorTip={feeErrorTip}
       />
       <ConfirmModal
-        modalVisable={ledgerModalStatus}
+        modalVisable={confirmModalStatus}
         title={i18n.t("transactionDetails")}
-        waitingLedger={ledgerModalStatus}
+        waitingLedger={isLedgerAccount}
+        showCloseIcon={isLedgerAccount}
+        onClickClose={() => setConfirmModalStatus(false)}
+      />
+
+      <LedgerInfoModal
+        modalVisable={ledgerModalStatus}
+        onClickClose={() => setLedgerModalStatus(false)}
+        onConfirm={onLedgerInfoModalConfirm}
       />
     </section>
   );
@@ -874,7 +942,7 @@ const CommonRow = ({
   leftCopyContent = "",
   rightCopyContent = "",
   showArrow = false,
-  toTypeName=""
+  toTypeName = "",
 }) => {
   const { leftCopyAble, rightCopyAble } = useMemo(() => {
     const leftCopyAble = !!leftCopyContent;
@@ -922,7 +990,9 @@ const CommonRow = ({
       <div className={styles.rowRight}>
         <div className={styles.rightWrapper}>
           {toTypeName && <div className={styles.typeRow}>{toTypeName}</div>}
-          <p className={cls(styles.rowTitle, styles.rightTitle)}>{rightTitle}</p>
+          <p className={cls(styles.rowTitle, styles.rightTitle)}>
+            {rightTitle}
+          </p>
         </div>
         <p
           className={cls(styles.rowContent, {

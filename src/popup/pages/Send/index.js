@@ -82,7 +82,7 @@ const SendPage = ({}) => {
   const [confrimModalStatus, setConfrimModalStatus] = useState(false);
   const [confrimBtnStatus, setConfrimBtnStatus] = useState(false);
   const [realTransferAmount, setRealTransferAmount] = useState("");
-  const [waintLedgerStatus, setWaintLedgerStatus] = useState(false);
+  const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
 
   const [contentList, setContentList] = useState([]);
   const [btnDisableStatus, setBtnDisableStatus] = useState(true);
@@ -215,14 +215,14 @@ const SendPage = ({}) => {
 
   useEffect(() => {
     if (!confrimModalStatus) {
-      setWaintLedgerStatus(false);
+      setWaitLedgerStatus(false);
     }
   }, [confrimModalStatus]);
   const ledgerTransfer = useCallback(
     async (params, preLedgerApp) => {
       const nextLedgerApp = preLedgerApp || ledgerApp;
       if (nextLedgerApp) {
-        setWaintLedgerStatus(true);
+        setWaitLedgerStatus(true);
         const {
           signature,
           payload,
@@ -576,8 +576,9 @@ const SendPage = ({}) => {
         onConfirm={clickNextStep}
         loadingStatus={confrimBtnStatus}
         onClickClose={onClickClose}
-        waitingLedger={waintLedgerStatus}
+        waitingLedger={waitLedgerStatus}
         contentList={contentList}
+        showCloseIcon={waitLedgerStatus}
       />
       <LedgerInfoModal
         modalVisable={ledgerModalStatus}

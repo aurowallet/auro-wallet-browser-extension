@@ -8,6 +8,11 @@
         position: relative;
         justify-content: space-between;
     }
+    .titleRight{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     .title {
         font-weight: 600;
         font-size: 18px;

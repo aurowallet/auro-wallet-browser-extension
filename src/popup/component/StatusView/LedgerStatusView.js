@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { LEDGER_STATUS } from "../../../constant/commonType";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
+import Tooltip from "../ToolTip/Tooltip";
+import i18n from "i18next";
 
 const StyledIconWrapper = styled.div`
   display: flex;
@@ -13,27 +15,29 @@ const StyledLedgerIcon = styled.img``;
 
 const LedgerStatusView = () => {
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
-  const ledger = useSelector((state) => state.ledger);
-  const { showIcon } = useMemo(() => {
-    let showStatus = false;
-    let showColor = "#d65a5a";
+  const currentAccount = useSelector(
+    (state) => state.accountInfo.currentAccount
+  );
+  const { showIcon,toolTipContent } = useMemo(() => {
+    let toolTipContent = i18n.t('ledgerNotConnected')
     let showIcon = "/img/icon_ledger_disconnect.svg";
     if (ledgerStatus === LEDGER_STATUS.READY) {
-      showStatus = true;
-      showColor = "#0db27c";
       showIcon = "/img/icon_ledger_connect.svg";
+      toolTipContent = i18n.t('ledgerConnected')
     }
     return {
-      showIcon,
+      showIcon,toolTipContent
     };
-  }, [ledgerStatus]);
+  }, [ledgerStatus,i18n]);
 
-  if (!ledgerStatus) {
+  if (currentAccount.type !== ACCOUNT_TYPE.WALLET_LEDGER) {
     return <></>;
   }
   return (
     <StyledIconWrapper>
-      <StyledLedgerIcon src={showIcon} />
+      <Tooltip text={toolTipContent}>
+        <StyledLedgerIcon src={showIcon} />
+      </Tooltip>
     </StyledIconWrapper>
   );
 };

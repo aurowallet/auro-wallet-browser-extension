@@ -363,6 +363,7 @@ const StakingTransfer = () => {
       onClickClose={onClickClose}
       contentList={contentList}
       waitingLedger={waintLedgerStatus}
+      showCloseIcon={waintLedgerStatus}
     />
     <LedgerInfoModal
       modalVisable={ledgerModalStatus}
