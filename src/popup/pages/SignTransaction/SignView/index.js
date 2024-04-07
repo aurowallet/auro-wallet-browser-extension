@@ -630,7 +630,7 @@ const SignView = ({
         tabInitId = "tab2";
       }
     }
-    let pageTitle = i18n.t("transactionRequest");
+    let pageTitle = i18n.t("transactionDetails");
     if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
       pageTitle = i18n.t("signatureRequest");
     }
