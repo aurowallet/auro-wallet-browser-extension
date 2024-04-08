@@ -284,5 +284,7 @@
   "addAccount": "添加账户",
   "createAccount": "创建账户",
   "hardwareWallet": "硬件钱包",
-  "showTestnet": "显示测试网"
+  "showTestnet": "显示测试网",
+  "ledgerConnected": "Ledger 已连接。",
+  "ledgerNotConnected": "Ledger 没有连接。"
 }

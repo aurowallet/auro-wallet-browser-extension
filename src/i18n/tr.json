@@ -287,5 +287,7 @@
   "addAccount": "Hesap Ekle",
   "createAccount": "Hesap Oluştur",
   "hardwareWallet": "Donanım Cüzdanı",
-  "showTestnet": "Test Ağını Göster"
+  "showTestnet": "Test Ağını Göster",
+  "ledgerConnected": "Ledger bağlandı.",
+  "ledgerNotConnected": "Ledger cihazı bağlı değil."
 }
