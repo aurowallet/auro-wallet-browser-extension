@@ -138,7 +138,7 @@ function zkAppFormat(zkAppList,isPending=false){
         newList.push({
             "id": "",
             "hash": zkApp.hash,
-            "kind": "ZKAPP",
+            "kind": "zkApp",
             "dateTime": zkApp.dateTime||"",
             "from": zkApp.zkappCommand.feePayer.body.publicKey,
             "to": getZkOtherAccount(zkApp),

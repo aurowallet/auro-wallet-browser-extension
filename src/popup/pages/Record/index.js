@@ -26,10 +26,12 @@ const Record = ({ }) => {
 
   const netConfig = useSelector(state => state.network)
   const dispatch = useDispatch()
-
-
   const history = useHistory()
-  const [txDetail, setTxDetail] = useState(history.location.params?.txDetail || {})
+  
+  const txDetail = useMemo(()=>{
+    return history.location.params?.txDetail || {}
+  },[history])
+
   const {
     statusIcon, statusTitle, statusClass,
     contentList
@@ -60,9 +62,14 @@ const Record = ({ }) => {
     let txTime = txDetail.dateTime ? getShowTime(txDetail.dateTime) : ""
     let nonce = String(txDetail.nonce)
     let txHash = txDetail.hash
-
+    let typeCamelCase = txDetail.kind?.toLowerCase() !== "zkapp";
 
     let contentList = [
+      {
+        title: i18n.t('txType'),
+        content: txDetail.kind, 
+        isCamelCase:typeCamelCase
+      },
       {
         title: i18n.t('amount'),
         content: amount
@@ -153,7 +160,7 @@ const Record = ({ }) => {
     </div>
     <div className={styles.dividedLine} />
     {contentList.map((item, index) => {
-      return <DetailRow key={index} title={item.title} content={item.content} showScamTag={item.showScamTag}/>
+      return <DetailRow key={index} {...item} />
     }, [])}
     {showExplorer && 
     <div className={styles.explorerOuter}>
@@ -167,7 +174,7 @@ const Record = ({ }) => {
   </CustomView>)
 }
 
-const DetailRow = ({ title, content,showScamTag }) => {
+const DetailRow = ({ title, content,showScamTag, isCamelCase }) => {
   const onCopy = useCallback(() => {
     copyText(content).then(() => {
       Toast.info(i18n.t('copySuccess'))
@@ -177,9 +184,10 @@ const DetailRow = ({ title, content,showScamTag }) => {
   return (<div className={styles.rowContainer} onClick={onCopy}>
     <p className={styles.rowTitle}>
       {title}
-     
     </p>
-    <p className={styles.rowContent}>{content}
+    <p className={cls(styles.rowContent,{
+      [styles.camelCase] :isCamelCase
+    })}>{content}
     {showScamTag && <span className={styles.scamTag}>
         {i18n.t("scam")}
     </span>}
