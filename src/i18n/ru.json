@@ -284,6 +284,7 @@
   "createAccount": "Создать аккаунт",
   "hardwareWallet": "Аппаратный кошелёк",
   "showTestnet": "Показать Тестнеты",
-  "ledgerConnected": "Устройство Ledger подключено.",
-  "ledgerNotConnected": "Устройство Ledger не подключено."
+  "ledgerConnected": "Устройство Ledger подключено",
+  "ledgerNotConnected": "Устройство Ledger не подключено",
+  "txType":"Тип транзакции"
 }

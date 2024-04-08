@@ -285,5 +285,6 @@
   "hardwareWallet": "Hardware Wallet",
   "showTestnet": "Show Testnet",
   "ledgerConnected":"Ledger Connected",
-  "ledgerNotConnected":"Ledger not Connected"
+  "ledgerNotConnected":"Ledger not Connected",
+  "txType":"Transaction Type"
 }
