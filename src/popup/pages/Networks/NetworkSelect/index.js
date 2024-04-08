@@ -149,7 +149,7 @@ const StyledListWrapper = styled.div`
   }
 `;
 const StyledTopList = styled.div`
-  max-height: 160px;
+  max-height: ${(props) => (props.isShowFullHeight == "true" ? "350px" : "220px")};
   overflow-y: auto;
   > :not(:first-of-type) {
     margin-top: 10px;
@@ -268,7 +268,7 @@ const NetworkModal = ({
         </StyledTitleRow>
         <StyledDividedLine />
         <StyledListWrapper>
-          <StyledTopList>
+          <StyledTopList isShowFullHeight={String(!isChecked)}>
             {topList.map((item, index) => {
               return (
                 <NetworkItem

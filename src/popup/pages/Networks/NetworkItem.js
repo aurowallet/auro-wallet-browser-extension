@@ -16,8 +16,7 @@ const StyledNetworkItemWrapper = styled.div`
   align-items: center;
   justify-content: space-between;
   border-radius: 10px;
-  min-height: 64px;
-  padding: 16px 10px 16px 16px;
+  padding: 10px 16px;
   flex: 1;
   cursor: pointer;
   background: ${(props) => props.color};
