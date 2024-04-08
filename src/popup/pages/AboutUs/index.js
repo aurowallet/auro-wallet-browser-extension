@@ -52,8 +52,8 @@ const AboutUs = ({}) => {
         link: getFollowListLink("website"),
       },
       {
-        title: "Twitter",
-        icon: "/img/icon_twitter.svg",
+        title: "X",
+        icon: "/img/icon_x.svg",
         link: getFollowListLink("twitter"),
       },
       {
