@@ -7,11 +7,12 @@ import { checkNetworkUrlExist, getArrayDiff, getCurrentNetConfig, getLocalNetwor
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
-import { get } from './storageService';
+import { get, save } from './storageService';
 import { NET_CONFIG_MAP, NET_CONFIG_TYPE } from '@/constant/network';
 import { errorCodes } from '@/constant/dappError';
 import { zkCommondFormat } from '@/utils/zkUtils';
 import { getAccountInfo } from './api';
+import { ZKAPP_APPROVE_LIST } from '@/constant/storageKey';
 
 let signRequests = [];
 let approveRequests = [];
@@ -528,9 +529,7 @@ class DappService {
                     currentApprovedList.push(site.origin)
                   }
                   accountApprovedUrlList[account.address] = currentApprovedList
-                  that.dappStore.updateState({
-                    accountApprovedUrlList
-                  })
+                  that.updateApproveConnect(accountApprovedUrlList)
                   nextResolve([account.address])
                 } else {
                   nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
@@ -678,9 +677,7 @@ class DappService {
         this.notifyAccountChange([siteUrl])
 
         accountApprovedUrlList[address] = currentAccountApproved
-        this.dappStore.updateState({
-          accountApprovedUrlList
-        })
+        this.updateApproveConnect(accountApprovedUrlList)
 
       }
       return true
@@ -710,9 +707,7 @@ class DappService {
       let deletedAccountApproved = accountApprovedUrlList[deletedAddress]
       if (deletedAccountApproved) {
         delete accountApprovedUrlList[deletedAddress];
-        this.dappStore.updateState({
-          accountApprovedUrlList
-        })
+        this.updateApproveConnect(accountApprovedUrlList)
       }
     } else {
       let deletedAccountApproved = accountApprovedUrlList[deletedAddress] || []
@@ -848,6 +843,21 @@ class DappService {
      let networkList = await getLocalNetworkList()
       let exist = checkNetworkUrlExist(networkList, url);
       return exist
+  }
+  async initApproveConnect(){
+    let approveData = await get(ZKAPP_APPROVE_LIST)
+    if(approveData?.ZKAPP_APPROVE_LIST){
+      let approveMap = JSON.parse(approveData?.ZKAPP_APPROVE_LIST)
+      this.dappStore.updateState({
+        accountApprovedUrlList:approveMap
+      })
+    }
+  }
+   updateApproveConnect(approveMap){
+    this.dappStore.updateState({
+      accountApprovedUrlList:approveMap
+    })
+    save({ ZKAPP_APPROVE_LIST: JSON.stringify(approveMap) })
   }
 }
 const dappService = new DappService()

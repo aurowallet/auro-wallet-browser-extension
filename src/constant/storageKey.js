@@ -131,3 +131,7 @@ export const NET_WORK_CHANGE_FLAG = "NET_WORK_CHANGE_FLAG"
  * wallet page show testnet list
  */
 export const NETWORK_SHOW_TESTNET = "NETWORK_SHOW_TESTNET"
+
+
+
+export const ZKAPP_APPROVE_LIST = "ZKAPP_APPROVE_LIST"

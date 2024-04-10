@@ -9,7 +9,7 @@ import { getLocal, saveLocal } from "./background/localStorage";
 import { extGetLocal, extRemoveLocal, extSaveLocal } from "./background/extensionStorage";
 import { CURRENCY_UNIT } from "./constant";
 import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
-import { DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
+import { DAPP_ACTIONS, DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
 import { languageInit } from "./i18n";
 import App from "./popup/App";
 import rootReducer from "./reducers";
@@ -250,6 +250,12 @@ async function initNetworkFlag(){
   }
 }
 
+function initZkAppConnect(){
+  sendMsg({
+    action: DAPP_ACTIONS.INIT_APPROVE_LIST,
+  })
+}
+
 export const applicationEntry = {
   async run() {
     await languageInit()
@@ -265,6 +271,7 @@ export const applicationEntry = {
     if(isWalletInited){
       await this.appInit(store)
       store.dispatch(updateEntryWitchRoute(nextRoute))
+      initZkAppConnect();
     }
   },
 

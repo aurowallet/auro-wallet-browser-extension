@@ -69,7 +69,7 @@ export const LockPage = ({
                 } else {
                     dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
                     dispatch(initCurrentAccount(account))
-                    onClickUnLock()
+                    onClickUnLock(account)
                     if (!onDappConfirm) {
                         history.push("/homepage")
                     }

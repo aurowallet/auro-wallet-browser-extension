@@ -274,3 +274,9 @@ export const DAPP_ACTION_CREATE_NULLIFIER = "DAPP_ACTION_CREATE_NULLIFIER"
 
 /** extension createNullifier event */
 export const WALLET_SEND_NULLIFIER = "WALLET_SEND_NULLIFIER"
+
+
+
+export const DAPP_ACTIONS = {
+    INIT_APPROVE_LIST : "INIT_APPROVE_LIST"
+}

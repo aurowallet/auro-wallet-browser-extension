@@ -89,14 +89,15 @@ const ApprovePage = () => {
     );
   }, [goToHome, params, currentAccount]);
 
-  const onClickUnLock = useCallback(() => {
+  const onClickUnLock = useCallback((account) => {
     let siteUrl = params.siteUrl || "";
+    const address = account?.address||currentAccount.address
     sendMsg(
       {
         action: DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS,
         payload: {
           siteUrl: siteUrl,
-          currentAddress: currentAccount.address,
+          currentAddress: address,
         },
       },
       async (currentAccountConnectStatus) => {
@@ -106,7 +107,7 @@ const ApprovePage = () => {
               action: DAPP_ACTION_CLOSE_WINDOW,
               payload: {
                 page: "approve_page",
-                account: currentAccount.address,
+                account: address,
                 resultOrigin: siteUrl,
                 id: params.id,
               },
