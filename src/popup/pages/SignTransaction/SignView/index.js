@@ -118,7 +118,7 @@ const SignView = ({
     transactionTypeName,
   } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
-    const body = signParams.params?.transaction;
+    const body = signParams?.params?.transaction;
     const zkFee = getZkFee(body);
     let siteFee =
       zkFee || signParams?.feePayer?.fee || signParams?.params?.fee || "";
