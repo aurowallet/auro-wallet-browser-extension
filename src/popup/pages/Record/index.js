@@ -12,6 +12,10 @@ import { copyText, decodeMemo, getAmountDisplay, getShowTime, getTimeGMT } from 
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import IconPayment from "@/popup/component/SVG/icon_payment";
+import styled, { css } from "styled-components";
+import IconZkApp from "@/popup/component/SVG/icon_zkApp";
+import IconDelegation from "@/popup/component/SVG/icon_delegation";
 
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
@@ -33,26 +37,8 @@ const Record = ({ }) => {
   },[history])
 
   const {
-    statusIcon, statusTitle, statusClass,
     contentList
   } = useMemo(() => {
-    let statusIcon, statusTitle, statusClass = ''
-
-    if(txDetail.status === STATUS.TX_STATUS_PENDING){
-        statusIcon = "/img/detail_pending.svg"
-        statusTitle = i18n.t("PENDING");
-        statusClass = styles.txPending
-    }else{
-      if(txDetail.failureReason){
-        statusIcon = "/img/detail_failed.svg"
-        statusTitle = i18n.t("FAILED"); 
-        statusClass = styles.txFailed
-      }else{
-        statusIcon = "/img/detail_success.svg"
-        statusTitle = i18n.t('APPLIED')
-        statusClass = styles.txSuccess
-      }
-    }
 
     let amount = getAmountDisplay(txDetail.amount, MAIN_COIN_CONFIG.decimals, MAIN_COIN_CONFIG.decimals) + " " + MAIN_COIN_CONFIG.symbol
     let receiveAddress = txDetail.to 
@@ -110,7 +96,6 @@ const Record = ({ }) => {
       content: txHash
     })
     return {
-      statusIcon, statusTitle, statusClass,
       contentList,
     }
   }, [i18n, txDetail])
@@ -152,12 +137,7 @@ const Record = ({ }) => {
 
 
   return (<CustomView title={i18n.t('details')} contentClassName={styles.container}>
-    <div className={styles.statusContainer}>
-      <img src={statusIcon} />
-      <p className={cls(styles.detailTitle, statusClass)}>
-        {statusTitle}
-      </p>
-    </div>
+    <StatusRow txDetail={txDetail}/>
     <div className={styles.dividedLine} />
     {contentList.map((item, index) => {
       return <DetailRow key={index} {...item} />
@@ -194,6 +174,83 @@ const DetailRow = ({ title, content,showScamTag, isCamelCase }) => {
     </p>
   </div>)
 }
+const STATUS_COLOR = {
+  pending:"#E4B200",
+  applied:"#0DB27C",
+  failed:"#D65A5A"
+}
 
+const rotateCss = css`
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
+  `
+const StyledRowWrapper = styled.div`
+  display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 10px;
+`
+const StyledIconWrapper = styled.div`
+  ${(props) => props.rotate == "true" && rotateCss}
+`
+const StyledTitle = styled.div`
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 10px;
+`
+const StatusRow = ({txDetail})=>{
+  const currentAccount = useSelector((state) => state.accountInfo.currentAccount);
+  const {
+    statusTitle,StatusIcon,isReceive,icon_color} = useMemo(()=>{
+    let statusTitle = ''
+    let icon_color = ""
+    let StatusIcon = <></>
+    let isReceive = false;
+        
+
+    if(txDetail.status === STATUS.TX_STATUS_PENDING){
+        statusTitle = i18n.t("PENDING");
+        icon_color = STATUS_COLOR.pending
+    }else{
+      if(txDetail.failureReason){
+        statusTitle = i18n.t("FAILED"); 
+        icon_color = STATUS_COLOR.failed
+      }else{
+        statusTitle = i18n.t('APPLIED')
+        icon_color = STATUS_COLOR.applied
+      }
+    }
+
+
+    let typeCamelCase = txDetail.kind?.toLowerCase();
+    switch (typeCamelCase) {
+      case "payment":
+        StatusIcon = <IconPayment fill={icon_color}/>
+        isReceive = txDetail.to.toLowerCase() === currentAccount.address.toLowerCase();
+        break;
+      case "delegation":
+        StatusIcon = <IconDelegation fill={icon_color}/>
+        break;
+      case "zkapp":
+        StatusIcon = <IconZkApp fill={icon_color}/>
+        break;
+      default:
+        break;
+    }
+    return {
+      statusTitle,StatusIcon,isReceive,icon_color
+    }
+  },[txDetail,currentAccount])
+
+ return <StyledRowWrapper>
+  <StyledIconWrapper rotate={String(isReceive)}>
+  {StatusIcon}
+ </StyledIconWrapper>
+ <StyledTitle style={{color:icon_color}} color={icon_color}>{statusTitle}</StyledTitle>
+ </StyledRowWrapper>
+}
 
 export default Record

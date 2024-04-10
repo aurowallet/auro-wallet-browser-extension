@@ -1,30 +1,7 @@
 .container {
-    padding: 10px 20px 60px;
+    padding: 10px 20px;
     overflow-y: auto;
     position: relative;
-}
-.statusContainer {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    margin-bottom: 10px;
-}
-
-.detailTitle {
-    font-weight: 600;
-    font-size: 16px;
-    line-height: 22px;
-    margin: 10px 0 0;
-}
-
-.txSuccess {
-    color: rgba(13, 178, 124, 1);
-}
-.txFailed {
-    color: #d65a5a;
-}
-.txPending {
-    color: rgba(228, 178, 0, 1);
 }
 
 .dividedLine {
@@ -34,8 +11,7 @@
 }
 
 .rowContainer {
-    margin-top: 10px;
-    padding-bottom: 5px;
+    margin-top: 8px;
     cursor: pointer;
     .rowTitle {
         font-size: 12px;

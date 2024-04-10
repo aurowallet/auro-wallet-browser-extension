@@ -55,7 +55,6 @@ module.exports = (env, argv) => {
       filename: "./[name].js",
     },
     module: {
-      //加载器配置
       rules: [
         {
           test: cssRegex,
@@ -129,15 +128,8 @@ module.exports = (env, argv) => {
           ],
         },
         {
-          test: /\.(png|jpg|gif|svg)$/,
-          use: [
-            {
-              loader: "url-loader",
-              options: {
-                limit: 8192,
-              },
-            },
-          ],
+          test: /\.(png|jp(e*)g|svg|gif)$/,
+          type: "asset/resource",
         },
       ],
     },
