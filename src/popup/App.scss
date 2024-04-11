@@ -19,6 +19,10 @@
   min-height: 600px;
   min-width: 750px;
 }
+.AppAutoWidth {
+  height: auto !important;
+  width: auto !important;
+}
 body {
   margin: 0;
 

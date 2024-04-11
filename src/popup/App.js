@@ -24,10 +24,18 @@ function App() {
   const netConfig = useSelector(state => state.network.currentConfig)
 
   const [showFullStatus,setShowFullStatus] = useState(false)
+  const [autoWidthStatus,setAutoWidthStatus] = useState(false)
   useEffect(()=>{
     const url = new URL(window.location.href); 
     const ledgerPageList= ['popup.html#/ledger_page']
     const initPageList = ['popup.html#/register_page','popup.html#/createprocess']
+    const zkPage = ['popup.html#/approve_page','popup.html#/request_sign']
+
+    zkPage.map((path)=>{
+      if(url.href.indexOf(path)!==-1){
+        setAutoWidthStatus(true)
+      }
+    })
     let findIndex = false;
     [...ledgerPageList,...initPageList].map((path)=>{
       if(url.href.indexOf(path)!==-1){
@@ -93,7 +101,8 @@ function App() {
     <div className="App">
       <IdleTimer onAction={setLastActiveTime} throttle={1000}>
       <header className={cls("App-header",{
-          "App-header-full":showFullStatus
+          "App-header-full":showFullStatus,
+          "AppAutoWidth":autoWidthStatus
       })}>
         <AllRouter />
       </header>
