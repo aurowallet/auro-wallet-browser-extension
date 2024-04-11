@@ -65,6 +65,10 @@ const Record = ({}) => {
     let nonce = String(txDetail.nonce);
     let txHash = txDetail.hash;
     let typeCamelCase = txDetail.kind?.toLowerCase() !== "zkapp";
+    let txType = txDetail.kind
+    if(typeCamelCase == "stake_delegation"){
+      txType = "delegation"
+    }
 
     let contentList = [
       {
@@ -257,6 +261,7 @@ const StatusRow = ({ txDetail }) => {
           txDetail.to.toLowerCase() === currentAccount.address.toLowerCase();
         break;
       case "delegation":
+      case "stake_delegation":
         StatusIcon = <IconDelegation fill={icon_color} />;
         break;
       case "zkapp":
