@@ -3,7 +3,21 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
-- Update zk fee 
+
+## [2.2.14]
+- Enhancements
+    - Network Management
+    - Account Management
+    - Create & Restore process
+    - Windows UI
+    - zkApp approve
+    - zkApp fee 
+- Fixed
+    - Setting popup UI
+    - Ledger UI
+    - TxList delegation show address
+
+
 
 ## [2.2.13]
 - Upgrade mina-signer to 3.0.0
