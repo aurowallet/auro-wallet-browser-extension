@@ -147,6 +147,9 @@ module.exports = (env, argv) => {
         "@": path.resolve(__dirname, "src"),
       }
     },
+    experiments: {
+      topLevelAwait: true,
+    },
   };
   if (isDev) {
     config.devtool = 'cheap-module-source-map';
