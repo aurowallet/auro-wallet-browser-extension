@@ -64,16 +64,17 @@ const Record = ({}) => {
     let txTime = txDetail.dateTime ? getShowTime(txDetail.dateTime) : "";
     let nonce = String(txDetail.nonce);
     let txHash = txDetail.hash;
-    let typeCamelCase = txDetail.kind?.toLowerCase() !== "zkapp";
+    let kindLow = txDetail.kind?.toLowerCase();
+    let typeCamelCase = kindLow!== "zkapp";
     let txType = txDetail.kind
-    if(typeCamelCase == "stake_delegation"){
+    if(kindLow == "stake_delegation"){
       txType = "delegation"
     }
 
     let contentList = [
       {
         title: i18n.t("txType"),
-        content: txDetail.kind,
+        content: txType,
         isCamelCase: typeCamelCase,
       },
       {
