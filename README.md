@@ -19,9 +19,9 @@ Auro Wallet provide one-stop management for MINA assets, convenient staking, and
 ### Dependencies
 
 - `react 17.x.x` 
-- `npm 6.x.x` 
-- `yarn 1.22.10`
-- `node v10.18.x` 
+- `npm 10.5.0` 
+- `yarn 1.22.19`
+- `node v20.12.2`
 
 ### Build
 Auro Wallet extension repo uses git-secret to encrypt the endpoints and the api keys. So, you can't build this without creating your own config file. You should create your own `config.js` file in the folder. Refer to the `config.example.js` sample file to create your own configuration.
