@@ -40,7 +40,7 @@
     "o1js":"0.18.0"
   },
   "scripts": {
-    "build": "rm -rf dist && webpack --mode production",
+    "build": "export NODE_OPTIONS=--openssl-legacy-provider && rm -rf dist && webpack --mode production",
     "postbuild": "rm -rf zip && node ./scripts/post-build.js",
     "buildProd": "webpack --mode production",
     "dev": "node ./scripts/post-dev.js && webpack --mode development --progress --watch",
