@@ -99,4 +99,5 @@ export const NET_CONFIG_NOT_SUPPORT_STAKING = [
 /** the netType that support zkapp */
 export const NET_CONFIG_SUPPORT_ZKAPP = [
   NET_CONFIG_TYPE.Berkeley,
+  NET_CONFIG_TYPE.Devnet,
 ];

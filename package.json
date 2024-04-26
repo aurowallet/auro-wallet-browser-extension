@@ -1,6 +1,6 @@
 {
   "name": "auro-wallet",
-  "version": "2.2.14",
+  "version": "2.2.15",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",

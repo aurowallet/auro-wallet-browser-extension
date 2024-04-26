@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.2.15]
+- Enhancements
+    - Upgrade mina-signer to v3.0.6.
+    - Upgrade parts of devDependencies versions to be compatible with Node.js v20.
+    - Add zkApp transaction history to devnet.
+
 ## [2.2.14]
 - Enhancements
     - Network Management
