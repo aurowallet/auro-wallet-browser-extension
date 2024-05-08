@@ -20,7 +20,7 @@ export const Default = () => {
             onGoBack={() => {
                 console.log("go back")
             }}
-            rightComponen={() => { }}
+            rightComponent={() => { }}
             children={() => {
                 <div>Content</div>
             }}
