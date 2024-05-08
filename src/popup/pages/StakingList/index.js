@@ -125,7 +125,7 @@ const NodeItem = ({
      <div className={cls(styles.nodeItemContainer, {
       [styles.selectedBorder]:select
     })} onClick={() => onClickRow(nodeItem)}>
-      <div className={styles.rowleft}>
+      <div className={styles.rowLeft}>
           <NodeIcon nodeItem={nodeItem}/>
           <div className={styles.nodeInfoCon}>
             <p className={styles.nodeName}>{showName}</p>

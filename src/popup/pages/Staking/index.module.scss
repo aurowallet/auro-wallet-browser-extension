@@ -1,7 +1,7 @@
 .contentClassName {
   padding: 10px 20px 0px;
 }
-.customeTitleClass {
+.customTitleClass {
   left: 46px;
   transform: unset;
 }
@@ -232,11 +232,11 @@
   margin: 10px 0px 0px;
 }
 
-.unknowContainer {
+.unknownContainer {
   @extend .loadingContainer;
   margin-top: 20px;
 
-  .unknowTip {
+  .unknownTip {
     font-size: 12px;
     line-height: 17px;
     color: rgba(0, 0, 0, 0.3);

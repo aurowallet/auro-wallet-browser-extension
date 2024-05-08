@@ -36,8 +36,8 @@ const Staking = ({ }) => {
     setLoading(false)
     isFirstRequest.current = false
   },[])
-  const fetchData = useCallback((isSlient = false) => {
-    if (isFirstRequest.current && !isSlient) {
+  const fetchData = useCallback((isSilent = false) => {
+    if (isFirstRequest.current && !isSilent) {
       setLoading(true)
     }
     Promise.all([fetchDelegationInfo(currentAddress),fetchDaemonStatus()]).then((data)=>{
@@ -63,8 +63,8 @@ const Staking = ({ }) => {
   }, [currentAddress,block.protocolState])
 
 
-  const baseFetchData = useCallback((isSlient = false) => {
-    fetchData(isSlient)
+  const baseFetchData = useCallback((isSilent = false) => {
+    fetchData(isSilent)
     dispatch(getStakingList())
   }, [])
 
@@ -94,7 +94,7 @@ const Staking = ({ }) => {
 
   return (<CustomView
     title={i18n.t('staking')}
-    customeTitleClass={styles.customeTitleClass}
+    customTitleClass={styles.customTitleClass}
     contentClassName={styles.contentClassName}>
     <EpochInfo />
     {
@@ -103,23 +103,7 @@ const Staking = ({ }) => {
     <Clock schemeEvent={() => baseFetchData(true)} />
   </CustomView>)
 }
-const UnknownView = ({ onClickGuide }) => {
-  return (
-    <div className={styles.delegationContainer}>
-      <div className={styles.delegationRow}>
-        <div className={styles.rowTitleContainer}>
-          <img className={styles.rowIcon} src="/img/icon_Epoch.svg" />
-          <p className={styles.rowTitle}>{i18n.t('delegationInfo')}</p>
-        </div>
-        <p className={styles.rowHelp} onClick={onClickGuide}>{i18n.t("stakingGuide")}</p>
-      </div>
-      <div className={styles.unknowContainer}>
-        <img className={styles.unknowIcon} src="/img/icon_empty.svg" />
-        <p className={styles.unknowTip}>{i18n.t('unknownInfo')}</p>
-      </div>
-    </div>
-  )
-}
+
 const LoadingView = ({
   onClickGuide
 }) => {

@@ -1,10 +1,13 @@
 import BigNumber from "bignumber.js";
 import cls from "classnames";
+import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getBalance, sendStakeTx } from "../../../background/api";
-import i18n from "i18next";
 import { useHistory } from 'react-router-dom';
+import { getBalance, sendStakeTx } from "../../../background/api";
+import { updateNetAccount } from '../../../reducers/accountReducer';
+import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, trimSpace } from "../../../utils/utils";
+import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
 import Button from "../../component/Button";
 import { ConfirmModal } from "../../component/ConfirmModal";
@@ -12,21 +15,17 @@ import CustomView from "../../component/CustomView";
 import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
 import styles from "./index.module.scss";
-import { updateNetAccount } from '../../../reducers/accountReducer';
-import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
-import { addressValid } from "../../../utils/validator";
 
 import { MAIN_COIN_CONFIG } from "../../../constant";
-import { QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/msgTypes";
+import { QA_SIGN_TRANSACTION, WALLET_CHECK_TX_STATUS } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
-import Toast from "../../component/Toast";
 import { getLedgerStatus, requestSignDelegation } from "../../../utils/ledger";
-import extension from 'extensionizer'
+import Toast from "../../component/Toast";
 
-import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
-import { LedgerInfoModal } from "../../component/LedgerInfoModal";
-import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { DAppActions } from "@aurowallet/mina-provider";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
+import { updateLedgerConnectStatus } from "../../../reducers/ledger";
+import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
 const StakingTransfer = () => { 
   const dispatch = useDispatch()
@@ -35,7 +34,7 @@ const StakingTransfer = () => {
   const balance = useSelector(state => state.accountInfo.balance)
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
   const netAccount = useSelector(state => state.accountInfo.netAccount)
-  const netFeeList = useSelector(state => state.cache.feeRecom)
+  const netFeeList = useSelector(state => state.cache.feeRecommend)
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
 
   const {
@@ -58,15 +57,15 @@ const StakingTransfer = () => {
 
   const [memo, setMemo] = useState('')
   const [feeAmount, setFeeAmount] = useState(0.1)
-  const [inputedFee, setInputedFee] = useState("")
+  const [advanceInputFee, setAdvanceInputFee] = useState("")
   const [inputNonce, setInputNonce] = useState("")
   const [feeErrorTip, setFeeErrorTip] = useState("")
   const [isOpenAdvance, setIsOpenAdvance] = useState(false)
-  const [confrimModalStatus, setConfrimModalStatus] = useState(false)
-  const [confrimBtnStatus, setConfrimBtnStatus] = useState(false)
+  const [confirmModalStatus, setConfirmModalStatus] = useState(false)
+  const [confirmBtnStatus, setConfirmBtnStatus] = useState(false)
   const [contentList, setContentList] = useState([])
 
-  const [waintLedgerStatus, setWaintLedgerStatus] = useState(false)
+  const [waitLedgerStatus, setWaitLedgerStatus] = useState(false)
   const [btnDisableStatus,setBtnDisableStatus] = useState(()=>{
     if(menuAdd){
       return true
@@ -96,7 +95,7 @@ const StakingTransfer = () => {
 
   const onFeeInput = useCallback((e) => {
     setFeeAmount(e.target.value)
-    setInputedFee(e.target.value)
+    setAdvanceInputFee(e.target.value)
     if (BigNumber(e.target.value).gt(10)) {
       setFeeErrorTip(i18n.t('feeTooHigh'))
     } else {
@@ -107,7 +106,7 @@ const StakingTransfer = () => {
     setInputNonce(e.target.value)
   }, [])
   const onClickClose = useCallback(() => {
-    setConfrimModalStatus(false)
+    setConfirmModalStatus(false)
   }, [])
 
 
@@ -134,18 +133,18 @@ const StakingTransfer = () => {
 
 
   useEffect(()=>{
-    if(!confrimModalStatus){
-      setWaintLedgerStatus(false)
+    if(!confirmModalStatus){
+      setWaitLedgerStatus(false)
     }
-  },[confrimModalStatus])
+  },[confirmModalStatus])
 
   const ledgerTransfer = useCallback(async(params,preLedgerApp)=>{
     const nextLedgerApp = preLedgerApp || ledgerApp
     if (nextLedgerApp) {
-      setWaintLedgerStatus(true)
+      setWaitLedgerStatus(true)
       const { signature, payload, error,rejected } = await requestSignDelegation(nextLedgerApp, params, currentAccount.hdPath)
       if(rejected){
-        setConfrimModalStatus(false)
+        setConfirmModalStatus(false)
       }
       if (error) {
         Toast.info(error.message)
@@ -179,13 +178,13 @@ const StakingTransfer = () => {
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       return ledgerTransfer(payload,preLedgerApp)
     }
-    setConfrimBtnStatus(true)
+    setConfirmBtnStatus(true)
     payload.sendAction = DAppActions.mina_sendStakeDelegation
     sendMsg({
-      action: QA_SIGN_TRANSTRACTION,
+      action: QA_SIGN_TRANSACTION,
       payload
     }, (data) => {
-      setConfrimBtnStatus(false)
+      setConfirmBtnStatus(false)
       onSubmitSuccess(data)
     })
   }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus,memo])
@@ -247,10 +246,10 @@ const StakingTransfer = () => {
         dispatch(updateLedgerConnectStatus(ledger.status))
         nextLedgerStatus = ledger.status
       }
-      setConfrimModalStatus(true)
+      setConfirmModalStatus(true)
     }else{
       dispatch(updateLedgerConnectStatus(""))
-      setConfrimModalStatus(true)
+      setConfirmModalStatus(true)
     }
    
   }, [nodeAddress, balance, feeAmount, inputNonce,currentAccount,
@@ -260,7 +259,7 @@ const StakingTransfer = () => {
       setLedgerApp(ledger.app)
       setLedgerModalStatus(false)
       onConfirm(true)
-    },[confrimModalStatus,clickNextStep,onConfirm])
+    },[confirmModalStatus,clickNextStep,onConfirm])
 
   const onClickBlockProducer = useCallback(() => {
     history.replace({
@@ -334,7 +333,7 @@ const StakingTransfer = () => {
         <AdvanceMode
           onClickAdvance={onClickAdvance}
           isOpenAdvance={isOpenAdvance}
-          feeValue={inputedFee}
+          feeValue={advanceInputFee}
           feePlaceholder={feeAmount}
           onFeeInput={onFeeInput}
           feeErrorTip={feeErrorTip}
@@ -354,19 +353,19 @@ const StakingTransfer = () => {
     </div>
 
     <ConfirmModal
-      modalVisable={confrimModalStatus}
+      modalVisible={confirmModalStatus}
       title={i18n.t('transactionDetails')}
       highlightTitle={i18n.t(('blockProducerName'))}
       highlightContent={showNodeName || addressSlice(blockAddress, 8)}
       onConfirm={clickNextStep}
-      loadingStatus={confrimBtnStatus}
+      loadingStatus={confirmBtnStatus}
       onClickClose={onClickClose}
       contentList={contentList}
-      waitingLedger={waintLedgerStatus}
-      showCloseIcon={waintLedgerStatus}
+      waitingLedger={waitLedgerStatus}
+      showCloseIcon={waitLedgerStatus}
     />
     <LedgerInfoModal
-      modalVisable={ledgerModalStatus}
+      modalVisible={ledgerModalStatus}
       onClickClose={()=>setLedgerModalStatus(false)}
       onConfirm={onLedgerInfoModalConfirm}
       />
