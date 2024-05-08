@@ -336,9 +336,9 @@ export function getShowTime(time) {
 export function getArrayDiff(deletedAccountApproved, newAccountApproved) {
   let list = [];
   for (let index = 0; index < deletedAccountApproved.length; index++) {
-    const deletedConnetedUrl = deletedAccountApproved[index];
-    if (newAccountApproved.indexOf(deletedConnetedUrl) === -1) {
-      list.push(deletedConnetedUrl);
+    const deletedConnectedUrl = deletedAccountApproved[index];
+    if (newAccountApproved.indexOf(deletedConnectedUrl) === -1) {
+      list.push(deletedConnectedUrl);
     }
   }
   return list;

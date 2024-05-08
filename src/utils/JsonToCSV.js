@@ -10,7 +10,7 @@ export const JSonToCSV = {
         key:[], // 获取数据的Key
         formatter: function() // 自定义设置当前数据的 传入(key, value)
    */
-  setDataConver: function(obj) {
+  setDataConvert: function(obj) {
     let data = obj['data']
     let ShowLabel = typeof obj['showLabel'] === 'undefined' ? true : obj['showLabel']
     let fileName = (obj['fileName'] || 'UserExport') + '.csv'
@@ -50,11 +50,11 @@ export const JSonToCSV = {
   },
   SaveAs: function(fileName, csvData) {
     let alink = document.createElement("a")
-    let downloadurl = this.getDownloadUrl(csvData)
-    alink.id = "linkDwnldLink"
-    alink.href = downloadurl
+    let downloadUrl = this.getDownloadUrl(csvData)
+    alink.id =  "linkDownloadLink"
+    alink.href = downloadUrl
     document.body.appendChild(alink)
-    let linkDom = document.getElementById('linkDwnldLink')
+    let linkDom = document.getElementById('linkDownloadLink')
     linkDom.setAttribute('download', fileName)
     linkDom.click()
     document.body.removeChild(linkDom)

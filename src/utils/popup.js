@@ -2,7 +2,7 @@ import extension from 'extensionizer';
 
 const PopupSize = {
   width: 375,
-  height: 600 + 28,// 28px is tabbar height
+  height: 600 + 28,// 28px is tabBar height
 };
 
 let lastWindowIds = {};

@@ -112,17 +112,17 @@ export const LOCAL_CACHE_KEYS = {
 export const STORAGE_UPGRADE_STATUS = "STORAGE_UPGRADE_STATUS"
 
 /**
- * recommond fee list
+ * recommend fee list
  */
-export const RECOMMOND_FEE= "RECOMMOND_FEE"
+export const RECOMMEND_FEE= "RECOMMEND_FEE"
 
 /**
- * recommond fee list
+ * recommend fee list
  */
 export const SCAM_LIST= "SCAM_LIST"
 
 /**
- * Locally stored network changeflag
+ * Locally stored network change flag
  */
 export const NET_WORK_CHANGE_FLAG = "NET_WORK_CHANGE_FLAG"
 

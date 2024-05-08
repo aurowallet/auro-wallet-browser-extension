@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { AccountUpdate } from "../constant/zkAccountUpdateDoc";
 import { addressSlice, amountDecimals } from "./utils";
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKENID, ZK_EMPTY_PUBLICKEY } from "@/constant";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID, ZK_EMPTY_PUBLICKEY } from "@/constant";
 
 function short(s) {
   return ".." + s.slice(-4);
@@ -181,7 +181,7 @@ function getUpdateBody(zkappCommand) {
         amountDecimals(balanceChangeBody.magnitude, MAIN_COIN_CONFIG.decimals);
     let tokenSymbol;
     if (
-      accountItemBody.tokenId === ZK_DEFAULT_TOKENID
+      accountItemBody.tokenId === ZK_DEFAULT_TOKEN_ID
     ) {
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
     } else {

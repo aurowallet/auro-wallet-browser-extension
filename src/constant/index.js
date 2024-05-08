@@ -1,5 +1,4 @@
 export const POWER_BY = "aurowallet.com";
-import i18n from "i18next";
 
 /** coin config */
 export const MAIN_COIN_CONFIG = {
@@ -27,38 +26,38 @@ export const CURRENCY_UNIT = [
 export const LOCK_TIME_DEFAULT = 30 * 60 * 1000;
 
 export const lockDuration = {
-  dura_1: 5 * 60 * 1000,
-  dura_2: 10 * 60 * 1000,
-  dura_3: 30 * 60 * 1000,
-  dura_4: 1 * 60 * 60 * 1000,
-  dura_5: 8 * 60 * 60 * 1000,
-  dura_6: -1,
+  duration_1: 5 * 60 * 1000,
+  duration_2: 10 * 60 * 1000,
+  duration_3: 30 * 60 * 1000,
+  duration_4: 1 * 60 * 60 * 1000,
+  duration_5: 8 * 60 * 60 * 1000,
+  duration_6: -1,
 };
 
 export const AUTO_LOCK_TIME_LIST = [
   {
     label: "lockTime_5m",
-    value: lockDuration.dura_1,
+    value: lockDuration.duration_1,
   },
   {
     label: "lockTime_10m",
-    value: lockDuration.dura_2,
+    value: lockDuration.duration_2,
   },
   {
     label: "lockTime_30m",
-    value: lockDuration.dura_3,
+    value: lockDuration.duration_3,
   },
   {
     label: "lockTime_1h",
-    value: lockDuration.dura_4,
+    value: lockDuration.duration_4,
   },
   {
     label: "lockTime_8h",
-    value: lockDuration.dura_5,
+    value: lockDuration.duration_5,
   },
   {
     label: "lockTime_never",
-    value: lockDuration.dura_6,
+    value: lockDuration.duration_6,
   },
 ];
 
@@ -73,7 +72,7 @@ export const ZK_EMPTY_PUBLICKEY =
   "B62qiTKpEPjGTSHZrtM8uXiKgn8So916pLmNJKDhKeyBQL9TDb3nvBG";
 
 /** default token id , generate by Field(1) */
-export const ZK_DEFAULT_TOKENID =
+export const ZK_DEFAULT_TOKEN_ID =
   "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf";
 
 export const ContributeMoreLanguage =

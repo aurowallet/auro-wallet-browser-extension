@@ -77,23 +77,23 @@ export const WALLET_GET_CURRENT_PRIVATE_KEY = "WALLET_GET_CURRENT_PRIVATE_KEY"
 /**
  * send transaction
  */
-export const WALLET_SEND_TRANSTRACTION = "WALLET_SEND_TRANSTRACTION"
+export const WALLET_SEND_TRANSACTION = "WALLET_SEND_TRANSACTION"
 
 /**
  * send message transaction
  */
-export const WALLET_SEND_MESSAGE_TRANSTRACTION = "WALLET_SEND_MESSAGE_TRANSTRACTION"
+export const WALLET_SEND_MESSAGE_TRANSACTION = "WALLET_SEND_MESSAGE_TRANSACTION"
 
 
 /**
  * sign fields
  */
-export const WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION = "WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION"
+export const WALLET_SEND_FIELDS_MESSAGE_TRANSACTION = "WALLET_SEND_FIELDS_MESSAGE_TRANSACTION"
 
 /**
  * Send a stake transaction
  */
-export const WALLET_SEND_STAKE_TRANSTRACTION = "WALLET_SEND_STAKE_TRANSTRACTION"
+export const WALLET_SEND_STAKE_TRANSACTION = "WALLET_SEND_STAKE_TRANSACTION"
 
 /**
  * Query stake status
@@ -220,7 +220,7 @@ export const DAPP_DISCONNECT_SITE = "DAPP_DISCONNECT_SITE"
 
 
 /**
- * delect account all connect   / when delete account
+ * delete account all connect   / when delete account
  */
 export const DAPP_DELETE_ACCOUNT_CONNECT_HIS = "DAPP_DELETE_ACCOUNT_CONNECT_HIS"
 
@@ -253,7 +253,7 @@ export const DAPP_CLOSE_POPUP_WINDOW = "DAPP_CLOSE_POPUP_WINDOW"
 
 
  /** Berkeley qa net sign   */
-export const QA_SIGN_TRANSTRACTION = "QA_SIGN_TRANSTRACTION"
+export const QA_SIGN_TRANSACTION = "QA_SIGN_TRANSACTION"
 
 /** get app lock status */
 export const GET_WALLET_LOCK_STATUS = "GET_WALLET_LOCK_STATUS"

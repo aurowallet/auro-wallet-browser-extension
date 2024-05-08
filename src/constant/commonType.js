@@ -1,6 +1,6 @@
 /** error type */
 export const ERROR_TYPE = {
-  CanceRequest: "Cancel Request",
+  CancelRequest: "Cancel Request",
 };
 
 /**

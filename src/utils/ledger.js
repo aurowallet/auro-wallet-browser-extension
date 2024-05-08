@@ -13,7 +13,7 @@ import Toast from "../popup/component/Toast";
 import { closePopupWindow, openPopupWindow } from "./popup";
 import { getCurrentNetConfig } from "./utils";
 
-export const LEDGER_CONENCT_TYPE = {
+export const LEDGER_CONNECT_TYPE = {
   isPage: "isPage",
 };
 
@@ -59,7 +59,7 @@ export async function getApp(type) {
       portInstance = transport;
       appInstance = app;
     } else {
-      if (type !== LEDGER_CONENCT_TYPE.isPage) {
+      if (type !== LEDGER_CONNECT_TYPE.isPage) {
         await openLedgerWindow();
       }
       return { manualConnected: true, app: null };
@@ -85,7 +85,7 @@ export async function getApp(type) {
     portInstance.close();
     portInstance = null;
     appInstance = null;
-    if (type !== LEDGER_CONENCT_TYPE.isPage) {
+    if (type !== LEDGER_CONNECT_TYPE.isPage) {
       await openLedgerWindow();
     }
     let openApp = !!result.version;
@@ -120,8 +120,8 @@ export async function ensureUSBPermission() {
   }
 }
 
-export async function checkLedgerConnect(type, permissionisCheck) {
-  if (type === LEDGER_CONENCT_TYPE.isPage && permissionisCheck) {
+export async function checkLedgerConnect(type, permissionsCheck) {
+  if (type === LEDGER_CONNECT_TYPE.isPage && permissionsCheck) {
     let result = await ensureUSBPermission();
     if (result?.error) {
       return result;

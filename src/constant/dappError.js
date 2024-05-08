@@ -6,7 +6,7 @@ export const errorCodes = {
   invalidParams: 20003,
   notSupportChain: 20004,
   zkChainPending: 20005,
-  unsupportMethod: 20006,
+  unsupportedMethod: 20006,
   internal: 21001,
   throwError: 22001,
   originDismatch: 23001,
