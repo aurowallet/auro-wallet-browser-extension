@@ -162,7 +162,7 @@ function commonHistoryFormat(list){
     })
 }
 
-function matchScamAndTxList(scamList,txList,type){
+function matchScamAndTxList(scamList,txList){
     let nextTxList = txList.map((txData)=>{
         const nextTxData = {...txData}
         if(nextTxData.from){
@@ -207,7 +207,7 @@ const accountInfo = (state = initState, action) => {
                 })
             }
             if(state.scamList.length>0){
-                newList = matchScamAndTxList (state.scamList,newList,"txHistory")
+                newList = matchScamAndTxList (state.scamList,newList)
             }
             return {
                 ...state,
@@ -292,7 +292,7 @@ const accountInfo = (state = initState, action) => {
                 })
                 
                 if(state.txList.length>0){
-                    const newList = matchScamAndTxList(nextScamList,state.txList,"scamlist")
+                    const newList = matchScamAndTxList(nextScamList,state.txList)
                     return{
                         ...state,
                         scamList:nextScamList,

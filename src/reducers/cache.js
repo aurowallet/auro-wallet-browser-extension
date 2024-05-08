@@ -35,7 +35,7 @@ const UPDATE_ACCOUNT_BALANCE_LIST = "UPDATE_ACCOUNT_BALANCE_LIST";
 export const UPDATE_DAPP_CURRENT_OPEN_WINDOW =
   "UPDATE_DAPP_CURRENT_OPEN_WINDOW";
 
-const UPDATE_RECOMMOND_FEE_LIST = "UPDATE_RECOMMOND_FEE_LIST";
+const UPDATE_RECOMMEND_FEE_LIST = "UPDATE_RECOMMEND_FEE_LIST";
 
 const UPDATE_ACCOUNT_TYPE_COUNT = "UPDATE_ACCOUNT_TYPE_COUNT";
 
@@ -93,7 +93,7 @@ export function setWelcomeNextType(nextType) {
   };
 }
 
-export function updateAccoutType(fromType) {
+export function updateAccountType(fromType) {
   return {
     type: UPDATE_ACCOUNT_TYPE_FROM,
     fromType,
@@ -126,14 +126,14 @@ export function updateAccountBalanceList(accountDetail) {
   };
 }
 
-export function updateRecomFee(feeList) {
+export function updateRecommendFee(feeList) {
   return {
-    type: UPDATE_RECOMMOND_FEE_LIST,
-    feeRecom: feeList,
+    type: UPDATE_RECOMMEND_FEE_LIST,
+    feeRecommend: feeList,
   };
 }
 
-export function updateAccoutTypeCount(countMap) {
+export function updateAccountTypeCount(countMap) {
   return {
     type: UPDATE_ACCOUNT_TYPE_COUNT,
     countMap,
@@ -148,8 +148,6 @@ const initState = {
   changelog: "",
   changelog_app: "",
   followus: [],
-  gitReponame: "",
-  gitReponame_app: "",
   privacy_policy: Terms_default.privacy_policy,
   privacy_policy_cn: Terms_default.privacy_policy,
   staking_guide: "",
@@ -164,7 +162,7 @@ const initState = {
 
   dappWindow: {},
   accountBalanceList: {},
-  feeRecom: [],
+  feeRecommend: [],
 
   accountTypeCount: {
     create: 1,
@@ -205,8 +203,6 @@ const cacheReducer = (state = initState, action) => {
         changelog: action.data.changelog,
         changelog_app: action.data.changelog_app,
         followus: action.data.followus,
-        gitReponame: action.data.gitReponame,
-        gitReponame_app: action.data.gitReponame_app,
         privacy_policy: action.data.privacy_policy,
         privacy_policy_cn: action.data.privacy_policy_cn,
         staking_guide: action.data.staking_guide,
@@ -253,10 +249,10 @@ const cacheReducer = (state = initState, action) => {
         ...state,
         accountBalanceList: accountList,
       };
-    case UPDATE_RECOMMOND_FEE_LIST:
+    case UPDATE_RECOMMEND_FEE_LIST:
       return {
         ...state,
-        feeRecom: action.feeRecom,
+        feeRecommend: action.feeRecommend,
       };
     case UPDATE_ACCOUNT_TYPE_COUNT:
       let accountTypeCount = {

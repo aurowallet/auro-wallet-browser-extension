@@ -2,7 +2,7 @@
 import {NET_CONFIG_MAP, NET_CONFIG_TYPE} from '../constant/network'
 const UPDATE_NET_CONFIG = "UPDATE_NET_CONFIG"
 
-const UPDATE_NETWORK_CHAINID_CONFIG = "UPDATE_NETWORK_CHAINID_CONFIG"
+const UPDATE_NETWORK_CHAIN_ID_CONFIG = "UPDATE_NETWORK_CHAIN_ID_CONFIG"
 
 export const NET_CONFIG_DEFAULT = "DEFAULT"
 export const NET_CONFIG_ADD = "ADD"
@@ -25,7 +25,7 @@ export function updateNetConfig(data) {
  */
  export function updateNetChainIdConfig(data) {
     return {
-        type: UPDATE_NETWORK_CHAINID_CONFIG,
+        type: UPDATE_NETWORK_CHAIN_ID_CONFIG,
         data
     };
 }
@@ -96,7 +96,7 @@ const network = (state = initState, action) => {
                 currentNetName: data.currentNetName,
                 currentNetConfig: action.data,
             }
-        case UPDATE_NETWORK_CHAINID_CONFIG:
+        case UPDATE_NETWORK_CHAIN_ID_CONFIG:
             let chainIdList = action.data
             let netConfigList = state.netList
             let typeAndIdMap = {}
