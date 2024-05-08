@@ -1,6 +1,6 @@
 import { ACCOUNT_NAME_FROM_TYPE } from "@/constant/commonType";
 import Toast from "@/popup/component/Toast";
-import { updateAccoutType } from "@/reducers/cache";
+import { updateAccountType } from "@/reducers/cache";
 import extension from "extensionizer";
 import i18n from "i18next";
 import { useCallback } from "react";
@@ -15,7 +15,7 @@ const AddAccount = ({}) => {
 
   const accountTypeCount = useSelector((state) => state.cache.accountTypeCount);
   const goToCreate = useCallback(() => {
-    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.INSIDE));
+    dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.INSIDE));
     history.push("/account_name");
   }, [accountTypeCount]);
 
@@ -25,24 +25,24 @@ const AddAccount = ({}) => {
       Toast.info(i18n.t("ledgerNotSupport"));
       return;
     }
-    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.LEDGER));
+    dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.LEDGER));
     extension.tabs.create({
       url: "popup.html#/ledger_page",
     });
   }, [i18n]);
 
   const goImport = useCallback(() => {
-    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.INSIDE));
+    dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.INSIDE));
   }, []);
 
   const onPrivateKey = useCallback(() => {
     goImport();
-    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.OUTSIDE));
+    dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.OUTSIDE));
     history.push("account_name");
   }, []);
   const onKeystore = useCallback(() => {
     goImport();
-    dispatch(updateAccoutType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR));
+    dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR));
     history.push("account_name");
   }, []);
 

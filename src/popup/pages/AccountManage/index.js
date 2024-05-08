@@ -16,7 +16,7 @@ import {
   updateAccountList,
   updateCurrentAccount,
 } from "../../../reducers/accountReducer";
-import { setAccountInfo, updateAccoutTypeCount } from "../../../reducers/cache";
+import { setAccountInfo, updateAccountTypeCount } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice, amountDecimals, isNumber } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
@@ -100,7 +100,7 @@ const AccountManagePage = ({}) => {
     });
     let ledgerAccountCount = getAccountTypeIndex(ledgerAccountTypeList);
     dispatch(
-      updateAccoutTypeCount({
+      updateAccountTypeCount({
         create: createAccountCount,
         import: importAccountCount,
         ledger: ledgerAccountCount,
@@ -260,8 +260,7 @@ const StyledAddRowWrapper = styled.div`
 const AddRow = ({}) => {
   const history = useHistory();
   const onGoAdd = useCallback(() => {
-    console.log("lsp==onGoAdd");
-    history.push("/addaccount");
+    history.push("/add_account");
   }, []);
   return (
     <StyledAddRowWrapper onClick={onGoAdd}>
@@ -338,7 +337,7 @@ const CommonAccountRow = ({
   return (
     <div
       onClick={onClickItem}
-      className={cls(styles.rowCommomContainer, {
+      className={cls(styles.rowCommonContainer, {
         [styles.rowSelected]: isSelect,
         [styles.rowNotSupport]: notSupport,
         [styles.rowCanSelect]: !notSupport && !isSelect,

@@ -215,7 +215,7 @@ const AccountName = ({}) => {
             />
           </div>
         }
-        modalVisable={reminderModalStatus}
+        modalVisible={reminderModalStatus}
       />
     </CustomView>
   );
@@ -258,7 +258,7 @@ const InputNumber = ({
         step="1"
         onChange={onChange}
         value={value}
-        className={styles.customeInput}
+        className={styles.customInput}
       />
       <div className={styles.imgContainer}>
         <img

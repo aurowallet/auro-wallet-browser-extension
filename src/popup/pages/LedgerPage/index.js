@@ -13,7 +13,7 @@ import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
 import {
     checkLedgerConnect,
-    LEDGER_CONENCT_TYPE,
+    LEDGER_CONNECT_TYPE,
     requestAccount
 } from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
@@ -62,7 +62,7 @@ export const LedgerPage = ({}) => {
     });
   }, []);
 
-  const onClickConnect = useCallback(async (permissionisCheck = true) => {
+  const onClickConnect = useCallback(async (permissionsCheck = true) => {
     if(isShowSuccessTip){
       window.close();
       return 
@@ -80,8 +80,8 @@ export const LedgerPage = ({}) => {
         error,
         openApp,
       } = await checkLedgerConnect(
-        LEDGER_CONENCT_TYPE.isPage,
-        permissionisCheck
+        LEDGER_CONNECT_TYPE.isPage,
+        permissionsCheck
       );
       if (error) {
         setTipType(Tip_Type.openLedger);
@@ -90,7 +90,7 @@ export const LedgerPage = ({}) => {
       if (ledgerApp) {
         const result = await ledgerApp.getAppName();
         if (result.name === "Mina") {
-          if (permissionisCheck && !isLedgerPermission) {
+          if (permissionsCheck && !isLedgerPermission) {
             onClickNextTab();
           }
           if(isLedgerPermission){
@@ -238,7 +238,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
   }, [accountIndex, nextAccountIndex]);
   const [accountName, setAccountName] = useState("");
 
-  const [tipModalVisable, setTipModalVisable] = useState(false);
+  const [tipModalVisible, setTipModalVisible] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   useEffect(() => {
     setErrorMsg(tipContent);
@@ -251,13 +251,13 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     if (typeof ledgerApp === "boolean") {
       return;
     }
-    setTipModalVisable(true);
+    setTipModalVisible(true);
     if (ledgerApp) {
       const { publicKey, rejected } = await requestAccount(
         ledgerApp,
         accountIndex
       );
-      setTipModalVisable(false);
+      setTipModalVisible(false);
       if (rejected) {
         setErrorMsg(i18n.t("ledgerRejected"));
       } else {
@@ -352,7 +352,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
         {errorMsg && <div className={styles.accountWarningTip}>{errorMsg}</div>}
         <Button onClick={onConfirm}>{i18n.t("import")}</Button>
       </div>
-      <LedgerModal modalVisable={tipModalVisable} />
+      <LedgerModal modalVisible={tipModalVisible} />
     </div>
   );
 };
@@ -392,7 +392,7 @@ const InputNumber = ({
         step="1"
         onChange={onChange}
         value={value}
-        className={styles.customeInput}
+        className={styles.customInput}
       />
       <div className={styles.imgContainer}>
         <img
@@ -412,7 +412,7 @@ const InputNumber = ({
 
 const SuccessView = ({ onClickNext }) => {
   return (
-    <div className={cls(styles.viewOuter, styles.innterContent)}>
+    <div className={cls(styles.viewOuter, styles.innerContent)}>
       <img src="/img/backup_success.svg" />
       <p className={styles.importSuccess}>{i18n.t("success")}</p>
       <p className={styles.importContent}>{i18n.t("ledgerSuccess")}</p>

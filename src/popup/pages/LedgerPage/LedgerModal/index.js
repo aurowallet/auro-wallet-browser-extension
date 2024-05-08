@@ -2,10 +2,10 @@ import i18n from "i18next";
 import { Trans } from "react-i18next";
 import styles from "./index.module.scss";
 
-export const LedgerModal = ({ modalVisable }) => {
+export const LedgerModal = ({ modalVisible }) => {
   return (
     <>
-      {modalVisable && (
+      {modalVisible && (
         <div className={styles.outerContainer}>
           <div className={styles.contentContainer}>
             <div className={styles.tipTitle}>{i18n.t("tips")}</div>

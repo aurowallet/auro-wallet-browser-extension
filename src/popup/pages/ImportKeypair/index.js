@@ -33,11 +33,11 @@ const ImportKeypair = ({}) => {
     }
   }, [pwdValue, keystoreValue]);
 
-  const onInpuKeystore = useCallback((e) => {
+  const onInputKeystore = useCallback((e) => {
     setKeystoreValue(e.target.value);
   }, []);
 
-  const onInpuPwd = useCallback((e) => {
+  const onInputPwd = useCallback((e) => {
     setPwdValue(e.target.value);
   }, []);
 
@@ -81,11 +81,11 @@ const ImportKeypair = ({}) => {
     <CustomView title={i18n.t("importKeystone")}>
       <p className={styles.title}>{i18n.t("pleaseInputKeyPair")}</p>
       <div className={styles.textAreaContainer}>
-        <TextArea onChange={onInpuKeystore} value={keystoreValue} />
+        <TextArea onChange={onInputKeystore} value={keystoreValue} />
       </div>
       <Input
         label={i18n.t("keystorePassword")}
-        onChange={onInpuPwd}
+        onChange={onInputPwd}
         value={pwdValue}
         inputType={"password"}
       />

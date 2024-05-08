@@ -279,7 +279,7 @@ const AccountInfo = ({}) => {
         onLeftBtnClick={currentModal.onLeftBtnClick}
         onRightBtnClick={currentModal.onRightBtnClick}
         content={currentModal.content}
-        modalVisable={popupModalStatus}
+        modalVisible={popupModalStatus}
         onCloseModal={onCloseModal}
         inputPlaceholder={currentModal?.inputPlaceholder}
         bottomTipClass={styles.waringTip}
