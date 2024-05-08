@@ -13,6 +13,7 @@ import { errorCodes } from '@/constant/dappError';
 import { zkCommondFormat } from '@/utils/zkUtils';
 import { getAccountInfo } from './api';
 import { ZKAPP_APPROVE_LIST } from '@/constant/storageKey';
+import { ZK_DEFAULT_TOKEN_ID } from '../constant';
 
 let signRequests = [];
 let approveRequests = [];
@@ -141,7 +142,7 @@ class DappService {
       default:
         this.requestCallback(
           async ()=>{
-            return { code:errorCodes.unsupportMethod, message:getMessageFromCode(errorCodes.unsupportMethod)}
+            return { code:errorCodes.unsupportedMethod, message:getMessageFromCode(errorCodes.unsupportedMethod)}
           },
           id,
           sendResponse
@@ -159,9 +160,9 @@ class DappService {
       const supportNetType = [NET_CONFIG_TYPE.Berkeley]
       let netConfig = await getCurrentNetConfig()
       if(supportNetType.indexOf(netConfig.netType)===-1){
-        reject({ code:errorCodes.unsupportMethod, message: getMessageFromCode(errorCodes.unsupportMethod)})
+        reject({ code:errorCodes.unsupportedMethod, message: getMessageFromCode(errorCodes.unsupportedMethod)})
       }
-      const tokenID = tokenId ? tokenId : "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf"
+      const tokenID = tokenId ? tokenId : ZK_DEFAULT_TOKEN_ID
       const accountInfo = await getAccountInfo(publicKey,tokenID)
       if(accountInfo.error){
         reject({ code:errorCodes.throwError, message: JSON.stringify(accountInfo.error)})
@@ -653,7 +654,7 @@ class DappService {
     return currentAccountApproved.indexOf(siteUrl) !== -1
   }
 
-  getConncetStatus(siteUrl, address) {
+  getConnectStatus(siteUrl, address) {
     let accountApprovedUrlList = this.getDappStore().accountApprovedUrlList
     let currentAccountApproved = accountApprovedUrlList[address] || []
     if (currentAccountApproved.indexOf(siteUrl) !== -1) {

@@ -1,7 +1,9 @@
 import { BASE_INFO_URL } from "../../../config";
-import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, RECOMMOND_FEE, SCAM_LIST } from "../../constant/storageKey";
-import { NET_CONFIG_SUPPORT_ZKAPP, NET_CONFIG_TYPE } from "../../constant/network";
+import { DEFAULT_TX_REQUEST_LENGTH } from "../../constant";
+import { NET_CONFIG_TYPE } from "../../constant/network";
+import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, RECOMMEND_FEE, SCAM_LIST } from "../../constant/storageKey";
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
+import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
 import {
   getBalanceBatchBody,
@@ -22,8 +24,6 @@ import {
   getTxStatusBody,
   getZkAppTransactionListBody
 } from './gqlparams';
-import {saveLocal} from "../localStorage";
-import { DEFAULT_TX_REQUEST_LENGTH } from "../../constant";
 
 /**
 * get balance
@@ -167,13 +167,13 @@ export async function fetchStakingList() {
 }
 
 /**
-* get recommond fee
+* get recommend fee
 */
-export async function getFeeRecom() {
+export async function getRecommendFee() {
   let feeUrl = BASE_INFO_URL + "/minter_fee.json"
   const result = await commonFetch(feeUrl).catch(err => [])
   if (Array.isArray(result) && result.length>0) {
-    saveLocal(RECOMMOND_FEE, JSON.stringify(result))
+    saveLocal(RECOMMEND_FEE, JSON.stringify(result))
   }
   return result
 }
@@ -196,7 +196,7 @@ export async function getBaseInfo() {
 }
 
 /**
-* get pending transation in gql
+* get pending transaction in gql
 * @param {*} address
 * @returns
 */
@@ -305,7 +305,7 @@ export async function getGqlTxHistory(address,limit){
 
 
 /**
- * get vaildator detail by id
+ * get validator detail by id
  * @param {*} id 
  * @returns 
  */

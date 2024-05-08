@@ -95,7 +95,7 @@ const removeQueue = (config) => {
     for (let i = 0, size = queue.length; i < size; i++) {
         const task = queue[i];
         if (task && task.token === configSession) {
-            task.cancel({ message: ERROR_TYPE.CanceRequest, config: config });
+            task.cancel({ message: ERROR_TYPE.CancelRequest, config: config });
             queue.splice(i, 1);
         }
     }
