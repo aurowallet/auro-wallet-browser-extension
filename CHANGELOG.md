@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
+- Enhancements
+    - Add code-spell check.
 
 ## [2.2.15]
 - Enhancements

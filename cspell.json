@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en",
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": "wallet-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": [
+    "project-words","typescript"
+  ],
+  "caseSensitive":false,
+  "ignorePaths": [
+    "node_modules",
+    "src/i18n/*",
+    "/dist",
+    "wallet-words.txt"
+  ]
+}

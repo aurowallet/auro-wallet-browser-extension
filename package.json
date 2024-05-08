@@ -45,7 +45,8 @@
     "dev": "node ./scripts/post-dev.js && webpack --mode development --progress --watch",
     "test": "mocha --timeout 5000 --require ./test/babel-register.js 'test/unit/**/*.js'",
     "storybook": "start-storybook -p 6006 -s public",
-    "build-storybook": "build-storybook -s public"
+    "build-storybook": "build-storybook -s public",
+    "cspell":"cspell \"src/**\""
   },
   "eslintConfig": {
     "extends": [

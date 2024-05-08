@@ -13,7 +13,7 @@ const CustomView = ({
     rightComponent = "",
     customContainerClass = "",
     noBack = false,
-    customeTitleClass = '',
+    customTitleClass = '',
     onClickTitle=()=>{},
     rightIcon = '',
     onClickRightIcon = () => { },
@@ -41,7 +41,7 @@ const CustomView = ({
                 {!noBack && <div className={styles.backImgCon} onClick={goBack}>
                     <img src={"/img/icon_back.svg"} />
                 </div>}
-                <p onClick={onClickTitle} className={cls(styles.title, customeTitleClass)}>
+                <p onClick={onClickTitle} className={cls(styles.title, customTitleClass)}>
                     {title}
                 </p>
                 {rightComponent}

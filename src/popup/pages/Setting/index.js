@@ -66,16 +66,16 @@ const Setting = ({ }) => {
             return showNameSlice(currentConfig.name,10)
         }
         const getLanguage = () => {
-            let currentLangeuage = languageOption.filter((language) => {
+            let currentLanguage = languageOption.filter((language) => {
                 return language.key === i18n.language
             })
-            let show = currentLangeuage.length > 0 ? currentLangeuage[0].value : ""
+            let show = currentLanguage.length > 0 ? currentLanguage[0].value : ""
             return show
         }
         const getCurrency = () => {
             return currency.value
         }
-        const getAddressbook = () => {
+        const getAddressBook = () => {
             let list = getLocal(ADDRESS_BOOK_CONFIG)
 
             if (list) {
@@ -131,7 +131,7 @@ const Setting = ({ }) => {
                 icon: '/img/icon_addressBook.svg',
                 title: i18n.t('addressBook'),
                 targetRoute: "address_book",
-                rightContent: getAddressbook(),
+                rightContent: getAddressBook(),
                 action: addressBookAction
             }
         ]
@@ -183,9 +183,9 @@ const Setting = ({ }) => {
 
     return (<CustomView
         title={i18n.t('setting')}
-        customeTitleClass={styles.customeTitleClass}
+        customTitleClass={styles.customTitleClass}
         onClickTitle={onClickTitle}
-        rightIcon={showOpenTabStatus ? "/img/icon_popnewwindow.svg":""}
+        rightIcon={showOpenTabStatus ? "/img/icon_new_window.svg":""}
         onClickRightIcon={onClickRightIcon}
         rightHoverContent={i18n.t('popOutWindow')}
         contentClassName={styles.contentClassName}
