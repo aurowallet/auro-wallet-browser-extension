@@ -140,7 +140,7 @@ const ApprovePage = () => {
     );
   }
   return (
-    <div className={styles.conatiner}>
+    <div className={styles.container}>
       <div className={styles.titleRow}>
         <p className={styles.title}>{i18n.t("connectionRequest")}</p>
       </div>

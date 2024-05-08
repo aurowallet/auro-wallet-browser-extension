@@ -16,7 +16,7 @@ const AboutUs = ({}) => {
     changelog: "",
     followus: [],
   });
-  const fecthBaseInfo = useCallback(async () => {
+  const fetchBaseInfo = useCallback(async () => {
     let baseInfo = await getBaseInfo().catch((err) => err);
     if (baseInfo.error) {
       Toast.info(baseInfo.error);
@@ -34,7 +34,7 @@ const AboutUs = ({}) => {
   }, []);
 
   useEffect(() => {
-    fecthBaseInfo();
+    fetchBaseInfo();
   }, []);
 
   const { followList, linkInfoList } = useMemo(() => {
@@ -87,7 +87,7 @@ const AboutUs = ({}) => {
       },
       {
         title: i18n.t("privacyPolicy"),
-        link: getCurrentUrl("pricacy"),
+        link: getCurrentUrl("privacy"),
       },
       {
         title: i18n.t("checkOnGithub"),
@@ -106,7 +106,7 @@ const AboutUs = ({}) => {
       <p className={styles.walletName}>{i18n.t("walletName")}</p>
       <p className={styles.walletVersion}>{"V" + pkg.version}</p>
       <p className={styles.walletTip}>{i18n.t("walletAbout")}</p>
-      <div className={styles.linkContaienr}>
+      <div className={styles.linkContainer}>
         {linkInfoList.map((info, index) => {
           return (
             <LinkContent title={info.title} key={index} link={info.link} />

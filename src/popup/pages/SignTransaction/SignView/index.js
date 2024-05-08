@@ -5,9 +5,9 @@ import {
   DAPP_ACTION_CREATE_NULLIFIER,
   DAPP_ACTION_SEND_TRANSACTION,
   DAPP_ACTION_SIGN_MESSAGE,
-  QA_SIGN_TRANSTRACTION,
+  QA_SIGN_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
-  WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION,
+  WALLET_SEND_FIELDS_MESSAGE_TRANSACTION,
   WALLET_SEND_NULLIFIER,
 } from "@/constant/msgTypes";
 import Button, { button_size, button_theme } from "@/popup/component/Button";
@@ -48,9 +48,9 @@ import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
 
 const FeeTypeEnum = {
-  site: "FEE_RECOMMED_SITE",
-  default: "FEE_RECOMMED_DEFAULT",
-  custom: "FEE_RECOMMED_CUSTOM",
+  site: "FEE_RECOMMEND_SITE",
+  default: "FEE_RECOMMEND_DEFAULT",
+  custom: "FEE_RECOMMEND_CUSTOM",
 };
 
 /** page click event */
@@ -86,7 +86,7 @@ const SignView = ({
   );
   const balance = useSelector((state) => state.accountInfo.balance);
   const currentConfig = useSelector((state) => state.network.currentConfig);
-  const netFeeList = useSelector((state) => state.cache.feeRecom);
+  const netFeeList = useSelector((state) => state.cache.feeRecommend);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
   const [feeValue, setFeeValue] = useState("");
@@ -371,8 +371,8 @@ const SignView = ({
         }
       }
       let { params } = signParams;
-      let vaildNonce = nonceValue || inferredNonce;
-      let nonce = trimSpace(vaildNonce);
+      let validNonce = nonceValue || inferredNonce;
+      let nonce = trimSpace(validNonce);
 
       let toAddress = "";
       let fee = "";
@@ -407,9 +407,9 @@ const SignView = ({
         return ledgerTransfer(payload, ledgerTemp);
       }
       setBtnLoading(true);
-      let connectAction = QA_SIGN_TRANSTRACTION;
+      let connectAction = QA_SIGN_TRANSACTION;
       if (sendAction === DAppActions.mina_signFields) {
-        connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION;
+        connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSACTION;
       } else if (sendAction === DAppActions.mina_createNullifier) {
         connectAction = WALLET_SEND_NULLIFIER;
       }
@@ -462,8 +462,8 @@ const SignView = ({
           return;
         }
       }
-      let vaildNonce = nonceValue || inferredNonce;
-      let nonce = trimSpace(vaildNonce) || "";
+      let validNonce = nonceValue || inferredNonce;
+      let nonce = trimSpace(validNonce) || "";
       if (nonce.length > 0 && !isNumber(nonce)) {
         Toast.info(i18n.t("waitNonce"));
         return;
@@ -718,10 +718,10 @@ const SignView = ({
   }, [tabContentRef, selectedTabIndex, showMultiView]);
 
   const onClickScrollBtn = useCallback(() => {
-    const targtRef = tabContentRef.current[selectedTabIndex];
-    if (targtRef) {
-      targtRef.scrollTo({
-        top: targtRef.scrollHeight,
+    const targetRef = tabContentRef.current[selectedTabIndex];
+    if (targetRef) {
+      targetRef.scrollTo({
+        top: targetRef.scrollHeight,
         behavior: "smooth",
       });
     }
@@ -828,7 +828,7 @@ const SignView = ({
           <div className={styles.accountRow}>
             <Tabs
               selected={selectedTabIndex}
-              initedId={tabInitId}
+              initId={tabInitId}
               onSelect={onSelectedTab}
               customTabPanelCss={styles.customTabPanelCss}
               customBtnCss={styles.customBtnCss}
@@ -905,7 +905,7 @@ const SignView = ({
         </Button>
       </div>
       <DAppAdvance
-        modalVisable={advanceStatus}
+        modalVisible={advanceStatus}
         title={i18n.t("advanceMode")}
         onClickClose={onClickClose}
         feeValue={advanceFee}
@@ -917,7 +917,7 @@ const SignView = ({
         feeErrorTip={feeErrorTip}
       />
       <ConfirmModal
-        modalVisable={confirmModalStatus}
+        modalVisible={confirmModalStatus}
         title={i18n.t("transactionDetails")}
         waitingLedger={isLedgerAccount}
         showCloseIcon={isLedgerAccount}
@@ -925,7 +925,7 @@ const SignView = ({
       />
 
       <LedgerInfoModal
-        modalVisable={ledgerModalStatus}
+        modalVisible={ledgerModalStatus}
         onClickClose={() => setLedgerModalStatus(false)}
         onConfirm={onLedgerInfoModalConfirm}
       />

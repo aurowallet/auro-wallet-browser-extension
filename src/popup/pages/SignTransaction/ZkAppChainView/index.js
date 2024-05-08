@@ -242,13 +242,13 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
     }
   }, [onSwitchChain, onAddChain, isSwitch, state]);
 
-  const { showTagetName, showTargetId } = useMemo(() => {
-    const showTagetName =
+  const { showTargetName, showTargetId } = useMemo(() => {
+    const showTargetName =
       targetConfig?.name || nextChainConfig?.name || targetChainInfo.name;
     const showTargetId =
       targetConfig?.netType || nextChainConfig?.netType || targetChainId;
     return {
-      showTagetName,
+      showTargetName,
       showTargetId,
     };
   }, [targetConfig, nextChainConfig, targetChainInfo, targetChainId]);
@@ -264,7 +264,7 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
           notifyParams={notifyParams}
           currentChainName={currentConfig.name}
           currentChainId={currentConfig.netType}
-          targetChainName={showTagetName}
+          targetChainName={showTargetName}
           targetChainId={showTargetId}
         />
       )}

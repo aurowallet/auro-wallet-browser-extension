@@ -44,8 +44,8 @@ const SIGN_MESSAGE_EVENT = [
   DAppActions.mina_signFields,
   DAppActions.mina_sign_JsonMessage,
 ];
-/** mina sign event and broa */
-const SIGN_EVENT_WITH_BROADCASE = [
+/** mina sign event */
+const SIGN_EVENT_WITH_BROADCAST = [
   DAppActions.mina_sendTransaction,
   DAppActions.mina_sendPayment,
   DAppActions.mina_sendStakeDelegation,
@@ -282,7 +282,7 @@ const SignTransaction = () => {
       if (type === TX_CLICK_TYPE.CONFIRM) {
         const sendAction = tempSignParams?.params?.action || "";
         if (
-          SIGN_EVENT_WITH_BROADCASE.indexOf(sendAction) !== -1 &&
+          SIGN_EVENT_WITH_BROADCAST.indexOf(sendAction) !== -1 &&
           nextUseInferredNonce === nonce
         ) {
           setNextUseInferredNonce((state) =>
@@ -337,7 +337,7 @@ const SignTransaction = () => {
     );
   }
   return (
-    <div className={styles.conatiner}>
+    <div className={styles.container}>
       {showMultiView && state.signViewStatus && (
         <div className={styles.multiTitleRow}>
           <div className={styles.multiTitle}>

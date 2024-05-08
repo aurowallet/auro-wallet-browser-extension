@@ -58,7 +58,7 @@ const ContentRow = ({
   showInLine,
   withColon = false,
 }) => {
-  const marginleftValue = useMemo(() => {
+  const marginLeftValue = useMemo(() => {
     return 20 * (count - 1) + "px";
   }, [count]);
   const showContent = useMemo(() => {
@@ -79,7 +79,7 @@ const ContentRow = ({
         [styles.viewRow]: showInLine,
       })}
       style={{
-        marginLeft: marginleftValue,
+        marginLeft: marginLeftValue,
       }}
     >
       <div className={styles.rowTitle2}>{showTitle}</div>

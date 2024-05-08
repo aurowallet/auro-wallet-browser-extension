@@ -11,7 +11,7 @@ import Button from "../Button";
 import styles from "./index.module.scss";
 
 export const LedgerInfoModal = ({
-  modalVisable = false,
+  modalVisible = false,
   title = "",
   onConfirm = () => {},
   onClickClose = () => {},
@@ -55,7 +55,7 @@ export const LedgerInfoModal = ({
 
   return (
     <>
-      {modalVisable && (
+      {modalVisible && (
         <div className={styles.outerContainer}>
           <div className={styles.innerContent}>
             <div className={styles.contentContainer}>

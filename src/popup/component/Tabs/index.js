@@ -11,7 +11,7 @@ const Tabs = (props) => {
     selected,
     onSelect,
     children,
-    initedId,
+    initId,
     tabType = TAB_TYPE.TAB,
     btnRightComponent,
     customBtnCss,
@@ -46,10 +46,10 @@ const Tabs = (props) => {
       updateTabIndicator(
         tabButtonsRef.current,
         tabIndicatorRef.current,
-        initedId
+        initId
       );
     }
-  }, [initedId]);
+  }, [initId]);
   const buttons = React.Children.map(nextChildren, (child, index) => {
     const { id } = child.props;
     const isSelected = selected === index;

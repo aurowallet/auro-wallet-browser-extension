@@ -7,7 +7,7 @@ import Input from "../Input";
 import styles from "./index.module.scss";
 
 const DAppAdvance = ({
-    modalVisable = false,
+    modalVisible = false,
     title = '',
     onConfirm = () => { },
     onClickClose = () => { },
@@ -34,17 +34,17 @@ const DAppAdvance = ({
         e.stopPropagation();
     }, [onClickClose])
 
-    const [modalBg, setModalBg] = useState(modalVisable)
+    const [modalBg, setModalBg] = useState(modalVisible)
 
     useEffect(() => {
-        if (modalVisable) {
-            setModalBg(modalVisable)
+        if (modalVisible) {
+            setModalBg(modalVisible)
         } else {
             setTimeout(() => {
-                setModalBg(modalVisable)
+                setModalBg(modalVisible)
             }, 300);
         }
-    }, [modalVisable])
+    }, [modalVisible])
 
     return (
         <>
@@ -52,7 +52,7 @@ const DAppAdvance = ({
                 [styles.outerContainerShow]: modalBg
             })} onClick={onClickOuter}>
                 <div className={cls(styles.innerContent, {
-                    [styles.innerContentShow]: modalVisable
+                    [styles.innerContentShow]: modalVisible
                 })} onClick={onClickContent}>
                     <div className={styles.contentContainer}>
                         <div className={styles.titleRow}>
@@ -84,7 +84,7 @@ const DAppAdvance = ({
                     </div>
 
                     <div className={cls(styles.bottomContainer, {
-                        [styles.bottomContainerShow]: modalVisable
+                        [styles.bottomContainerShow]: modalVisible
                     })}>
                         <Button
                             onClick={onConfirm}>
