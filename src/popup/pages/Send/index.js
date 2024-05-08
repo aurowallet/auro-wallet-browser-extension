@@ -1,25 +1,26 @@
+import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { MAIN_COIN_CONFIG } from "../../../constant";
 import { getBalance, sendTx } from "../../../background/api";
+import { getLocal } from "../../../background/localStorage";
+import { MAIN_COIN_CONFIG } from "../../../constant";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import {
-  QA_SIGN_TRANSTRACTION,
+  QA_SIGN_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_GET_ALL_ACCOUNT,
-  WALLET_SEND_TRANSTRACTION,
 } from "../../../constant/msgTypes";
+import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
 import {
   updateNetAccount,
   updateShouldRequest,
 } from "../../../reducers/accountReducer";
-import {
-  updateAddressBookFrom,
-  updateAddressDetail,
-} from "../../../reducers/cache";
+import { updateAddressDetail } from "../../../reducers/cache";
+import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { sendMsg } from "../../../utils/commonMsg";
 import { getLedgerStatus, requestSignPayment } from "../../../utils/ledger";
 import {
@@ -37,17 +38,11 @@ import { ConfirmModal } from "../../component/ConfirmModal";
 import CustomView from "../../component/CustomView";
 import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
-import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
-import extension from "extensionizer";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
-import { updateLedgerConnectStatus } from "../../../reducers/ledger";
-import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
-import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
-import { getLocal } from "../../../background/localStorage";
 import ICON_Address from "../../component/SVG/ICON_Address";
 import ICON_Wallet from "../../component/SVG/ICON_Wallet";
-import { DAppActions } from "@aurowallet/mina-provider";
+import Toast from "../../component/Toast";
+import styles from "./index.module.scss";
 
 const SendPage = ({}) => {
   const dispatch = useDispatch();
@@ -61,7 +56,7 @@ const SendPage = ({}) => {
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
-  const netFeeList = useSelector((state) => state.cache.feeRecom);
+  const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
 
   useEffect(() => {
@@ -74,13 +69,13 @@ const SendPage = ({}) => {
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
   const [feeAmount, setFeeAmount] = useState(0.1);
-  const [inputedFee, setInputedFee] = useState("");
+  const [advanceInputFee, setAdvanceInputFee] = useState("");
   const [inputNonce, setInputNonce] = useState("");
   const [feeErrorTip, setFeeErrorTip] = useState("");
 
   const [isOpenAdvance, setIsOpenAdvance] = useState(false);
-  const [confrimModalStatus, setConfrimModalStatus] = useState(false);
-  const [confrimBtnStatus, setConfrimBtnStatus] = useState(false);
+  const [confirmModalStatus, setConfirmModalStatus] = useState(false);
+  const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
   const [realTransferAmount, setRealTransferAmount] = useState("");
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
 
@@ -110,11 +105,6 @@ const SendPage = ({}) => {
   }, []);
   const onMemoInput = useCallback((e) => {
     setMemo(e.target.value);
-  }, []);
-
-  const onClickAddressBook = useCallback(() => {
-    dispatch(updateAddressBookFrom("send"));
-    history.push("/address_book");
   }, []);
 
   const onClickAll = useCallback(() => {
@@ -151,7 +141,7 @@ const SendPage = ({}) => {
   const onFeeInput = useCallback(
     (e) => {
       setFeeAmount(e.target.value);
-      setInputedFee(e.target.value);
+      setAdvanceInputFee(e.target.value);
       if (BigNumber(e.target.value).gt(10)) {
         setFeeErrorTip(i18n.t("feeTooHigh"));
       } else {
@@ -207,17 +197,17 @@ const SendPage = ({}) => {
         );
       }
 
-      setConfrimModalStatus(false);
+      setConfirmModalStatus(false);
       history.goBack();
     },
     [i18n]
   );
 
   useEffect(() => {
-    if (!confrimModalStatus) {
+    if (!confirmModalStatus) {
       setWaitLedgerStatus(false);
     }
-  }, [confrimModalStatus]);
+  }, [confirmModalStatus]);
   const ledgerTransfer = useCallback(
     async (params, preLedgerApp) => {
       const nextLedgerApp = preLedgerApp || ledgerApp;
@@ -234,7 +224,7 @@ const SendPage = ({}) => {
           currentAccount.hdPath
         );
         if (rejected) {
-          setConfrimModalStatus(false);
+          setConfirmModalStatus(false);
         }
         if (error) {
           Toast.info(error.message);
@@ -243,7 +233,7 @@ const SendPage = ({}) => {
         let postRes = await sendTx(payload, { rawSignature: signature }).catch(
           (error) => error
         );
-        setConfrimModalStatus(false);
+        setConfirmModalStatus(false);
 
         onSubmitTx(postRes, "ledger");
       }
@@ -283,14 +273,14 @@ const SendPage = ({}) => {
       }
 
       payload.sendAction = DAppActions.mina_sendPayment;
-      setConfrimBtnStatus(true);
+      setConfirmBtnStatus(true);
       sendMsg(
         {
-          action: QA_SIGN_TRANSTRACTION,
+          action: QA_SIGN_TRANSACTION,
           payload,
         },
         (data) => {
-          setConfrimBtnStatus(false);
+          setConfirmBtnStatus(false);
           onSubmitTx(data);
         }
       );
@@ -311,7 +301,7 @@ const SendPage = ({}) => {
   );
 
   const onClickClose = useCallback(() => {
-    setConfrimModalStatus(false);
+    setConfirmModalStatus(false);
   }, []);
 
   const onConfirm = useCallback(
@@ -383,10 +373,10 @@ const SendPage = ({}) => {
           setLedgerApp(ledger.app);
           dispatch(updateLedgerConnectStatus(ledger.status));
         }
-        setConfrimModalStatus(true);
+        setConfirmModalStatus(true);
       } else {
         dispatch(updateLedgerConnectStatus(""));
-        setConfrimModalStatus(true);
+        setConfirmModalStatus(true);
       }
     },
     [
@@ -412,7 +402,7 @@ const SendPage = ({}) => {
       setLedgerModalStatus(false);
       onConfirm(true);
     },
-    [confrimModalStatus, clickNextStep, onConfirm]
+    [confirmModalStatus, clickNextStep, onConfirm]
   );
 
   useEffect(() => {
@@ -431,14 +421,14 @@ const SendPage = ({}) => {
       },
       async (account) => {
         let listData = account.accounts;
-        let addressbookList = getLocal(ADDRESS_BOOK_CONFIG);
-        if (addressbookList) {
-          addressbookList = JSON.parse(addressbookList);
+        let addressBookList = getLocal(ADDRESS_BOOK_CONFIG);
+        if (addressBookList) {
+          addressBookList = JSON.parse(addressBookList);
         } else {
-          addressbookList = [];
+          addressBookList = [];
         }
 
-        cacheList.push(...addressbookList);
+        cacheList.push(...addressBookList);
         cacheList.push(...listData.allList);
         cacheList = cacheList.filter((account) => {
           return account.address !== currentAddress;
@@ -551,7 +541,7 @@ const SendPage = ({}) => {
           <AdvanceMode
             onClickAdvance={onClickAdvance}
             isOpenAdvance={isOpenAdvance}
-            feeValue={inputedFee}
+            feeValue={advanceInputFee}
             feePlaceholder={feeAmount}
             onFeeInput={onFeeInput}
             feeErrorTip={feeErrorTip}
@@ -568,20 +558,20 @@ const SendPage = ({}) => {
       </div>
 
       <ConfirmModal
-        modalVisable={confrimModalStatus}
+        modalVisible={confirmModalStatus}
         title={i18n.t("transactionDetails")}
         highlightTitle={i18n.t("amount")}
         highlightContent={realTransferAmount}
         subHighlightContent={MAIN_COIN_CONFIG.symbol}
         onConfirm={clickNextStep}
-        loadingStatus={confrimBtnStatus}
+        loadingStatus={confirmBtnStatus}
         onClickClose={onClickClose}
         waitingLedger={waitLedgerStatus}
         contentList={contentList}
         showCloseIcon={waitLedgerStatus}
       />
       <LedgerInfoModal
-        modalVisable={ledgerModalStatus}
+        modalVisible={ledgerModalStatus}
         onClickClose={() => setLedgerModalStatus(false)}
         onConfirm={onLedgerInfoModalConfirm}
       />
