@@ -17,7 +17,7 @@
     "i18next": "19.8.4",
     "libsodium-wrappers": "0.7.9",
     "mina-ledger-js": "1.0.6",
-    "mina-signer": "3.0.6",
+    "mina-signer": "3.0.7",
     "obs-store": "4.0.3",
     "prop-types": "15.7.2",
     "qrcode-generator": "1.4.4",
