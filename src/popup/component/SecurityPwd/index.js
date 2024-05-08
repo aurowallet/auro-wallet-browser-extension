@@ -95,7 +95,7 @@ const SecurityPwd = ({
         rightBtnContent={i18n.t('ok')}
         onRightBtnClick={onCloseModal}
         contentList={modalContent}
-        modalVisable={reminderModalStatus} />
+        modalVisible={reminderModalStatus} />
     </>
   )
 }

@@ -345,7 +345,7 @@ const NodeEditor = ({ }) => {
             rightBtnContent={i18n.t('deleteTag')}
             onRightBtnClick={onConfirmDelete}
             rightBtnStyle={styles.modalDelete}
-            modalVisable={reminderModalStatus} />
+            modalVisible={reminderModalStatus} />
 
     </CustomView>)
 }

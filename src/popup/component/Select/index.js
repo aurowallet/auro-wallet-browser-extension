@@ -50,7 +50,7 @@ const Select = ({
                 <p className={styles.selectTitle}>
                     {showNameSlice(currentLabel,10)}
                 </p>
-                <div className={styles.arrowtIcon}>
+                <div className={styles.arrowIcon}>
                 <img src="/img/icon_arrow_unfold.svg"  />
                 </div>
             </div>

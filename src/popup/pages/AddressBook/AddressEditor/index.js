@@ -216,7 +216,7 @@ const AddressEditor = ({ }) => {
             rightBtnContent={i18n.t('deleteTag')}
             onRightBtnClick={onCloseModal}
             rightBtnStyle={styles.modalDelete}
-            modalVisable={reminderModalStatus} />
+            modalVisible={reminderModalStatus} />
 
     </CustomView>)
 }
