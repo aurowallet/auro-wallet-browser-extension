@@ -17,7 +17,7 @@ export const TransactionModalType = {
   cancel: "CANCEL",
 };
 export const TransactionModal = ({
-  modalVisable = false,
+  modalVisible = false,
   title = "",
   modalContent = "",
   onConfirm = () => {},
@@ -30,31 +30,31 @@ export const TransactionModal = ({
   btnLoading = false,
   waitingLedger = false,
 }) => {
-  const [advanceModalVisable, setAdvanceModalVisable] = useState(false);
+  const [advanceModalVisible, setAdvanceModalVisible] = useState(false);
   const [nextInputFee, setNextInputFee] = useState(nextFee);
 
   useEffect(() => {
-    if (modalVisable && nextFee) {
+    if (modalVisible && nextFee) {
       setNextInputFee(nextFee);
     }
-  }, [nextFee, modalVisable]);
+  }, [nextFee, modalVisible]);
 
   const onClickAdvance = useCallback(() => {
-    setAdvanceModalVisable(true);
+    setAdvanceModalVisible(true);
   }, []);
   const onAdvanceConfirm = useCallback((nextFee) => {
     if (nextFee) {
       setNextInputFee(nextFee);
     }
-    setAdvanceModalVisable(false);
+    setAdvanceModalVisible(false);
   }, []);
   const onClickAdvanceClose = useCallback(() => {
-    setAdvanceModalVisable(false);
+    setAdvanceModalVisible(false);
   }, []);
 
   return (
     <>
-      {modalVisable && (
+      {modalVisible && (
         <div className={styles.outerContainer}>
           <div className={styles.innerContent}>
             <div className={styles.contentContainer}>
@@ -154,7 +154,7 @@ export const TransactionModal = ({
       )}
 
       <AdvancedModal
-        modalVisable={advanceModalVisable}
+        modalVisible={advanceModalVisible}
         onConfirm={onAdvanceConfirm}
         onClickClose={onClickAdvanceClose}
         currentFee={currentFee}

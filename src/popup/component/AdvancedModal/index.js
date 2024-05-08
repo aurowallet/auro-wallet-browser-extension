@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import BigNumber from "bignumber.js";
 
 export const AdvancedModal = ({
-  modalVisable = false,
+  modalVisible = false,
   onConfirm = () => {},
   onClickClose = () => {},
   currentNonce = "",
@@ -19,12 +19,12 @@ export const AdvancedModal = ({
   const onClickAdvance = useCallback(() => {
     setIsOpenAdvance((state) => !state);
   }, []);
-  const [inputedFee, setInputedFee] = useState("");
+  const [inputFee, setInputFee] = useState("");
   const [feeErrorTip, setFeeErrorTip] = useState("");
 
   const onFeeInput = useCallback(
     (e) => {
-      setInputedFee(e.target.value);
+      setInputFee(e.target.value);
       if (BigNumber(e.target.value).gt(10)) {
         setFeeErrorTip(i18n.t("feeTooHigh"));
       } else {
@@ -34,15 +34,15 @@ export const AdvancedModal = ({
     [i18n]
   );
   useEffect(() => {
-    if (!modalVisable) {
-      setInputedFee("");
+    if (!modalVisible) {
+      setInputFee("");
       setFeeErrorTip("");
     }
-  }, [modalVisable]);
+  }, [modalVisible]);
 
   return (
     <>
-      {modalVisable && (
+      {modalVisible && (
         <div className={styles.outerContainer}>
           <div className={styles.innerContent}>
             <div className={styles.contentContainer}>
@@ -62,7 +62,7 @@ export const AdvancedModal = ({
               <AdvanceMode
                 onClickAdvance={onClickAdvance}
                 isOpenAdvance={true}
-                feeValue={inputedFee}
+                feeValue={inputFee}
                 feePlaceholder={currentFee}
                 onFeeInput={onFeeInput}
                 feeErrorTip={feeErrorTip}
@@ -71,7 +71,7 @@ export const AdvancedModal = ({
               />
             </div>
             <div className={cls(styles.bottomContainer)}>
-              <Button onClick={() => onConfirm(inputedFee)}>
+              <Button onClick={() => onConfirm(inputFee)}>
                 {i18n.t("confirm")}
               </Button>
             </div>

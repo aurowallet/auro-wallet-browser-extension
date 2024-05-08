@@ -7,7 +7,7 @@ import NetworkStatusView from "../StatusView/NetworkStatusView";
 import styles from "./index.module.scss";
 
 export const ConfirmModal = ({
-  modalVisable = false,
+  modalVisible = false,
   title = "",
   highlightTitle = "",
   highlightContent = "",
@@ -23,7 +23,7 @@ export const ConfirmModal = ({
 }) => {
   return (
     <>
-      {modalVisable && (
+      {modalVisible && (
         <div className={styles.outerContainer}>
           <div className={styles.innerContent}>
             <div className={styles.contentContainer}>
