@@ -39,9 +39,6 @@ $toolbarHeight: 58px;
     .walletIcon {
         @extend .baseIconHover;
     }
-    .arrowtIcon {
-        margin-left: 8px;
-    }
 }
 
 .walletContent {
@@ -125,12 +122,6 @@ $toolbarHeight: 58px;
         &:hover {
             color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
         }
-    }
-    .copyConatiner {
-        margin-left: 2px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
 }
 .dappConnectContainer {
@@ -255,7 +246,7 @@ $toolbarHeight: 58px;
     line-height: 22px;
     color: rgba(0, 0, 0, 0.5);
     margin: 0;
-    .tipsSpical {
+    .tipsSpecial {
         color: #d65a5a;
     }
 }

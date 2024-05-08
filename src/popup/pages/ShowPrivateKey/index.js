@@ -91,7 +91,7 @@ const ShowPrivateKeyPage = ({ }) => {
       onLeftBtnClick={onConfirmCopy}
       onRightBtnClick={onCloseModal}
       contentList={[i18n.t('copyTipContent'), i18n.t('confirmEnv')]}
-      modalVisable={confirmModalStatus} />
+      modalVisible={confirmModalStatus} />
   </CustomView>
   )
 }

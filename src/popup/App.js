@@ -5,11 +5,11 @@ import { sendMsg } from '../utils/commonMsg';
 import { WALLET_RESET_LAST_ACTIVE_TIME } from '../constant/msgTypes';
 import { useCallback, useEffect, useState } from 'react';
 import cls from "classnames"
-import { getFeeRecom, getScamList } from '../background/api';
-import { updateRecomFee } from '../reducers/cache';
+import { getRecommendFee, getScamList } from '../background/api';
+import { updateRecommendFee } from '../reducers/cache';
 import { useDispatch, useSelector } from 'react-redux';
 import { getLocal } from '../background/localStorage';
-import { RECOMMOND_FEE, SCAM_LIST } from '../constant/storageKey';
+import { RECOMMEND_FEE, SCAM_LIST } from '../constant/storageKey';
 import { updateScamList } from '../reducers/accountReducer';
 import { NET_CONFIG_TYPE } from '../constant/network';
 
@@ -51,18 +51,18 @@ function App() {
   },[window.location.href])
 
   const getLocalFeeList = useCallback(() => {
-    let localFeeList = getLocal(RECOMMOND_FEE)
+    let localFeeList = getLocal(RECOMMEND_FEE)
     if (localFeeList) {
       let feeList = JSON.parse(localFeeList)
-      dispatch(updateRecomFee(feeList))
+      dispatch(updateRecommendFee(feeList))
     }
   }, [])
 
   const fetchFeeData = useCallback(async () => {
     getLocalFeeList()
-    let feeRecom = await getFeeRecom()
-    if (feeRecom.length > 0) {
-      dispatch(updateRecomFee(feeRecom))
+    let feeRecommend = await getRecommendFee()
+    if (feeRecommend.length > 0) {
+      dispatch(updateRecommendFee(feeRecommend))
     }
   }, [])
   const getLocalScamList = useCallback(() => {

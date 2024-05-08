@@ -1,27 +1,25 @@
-import { configureStore, getDefaultMiddleware } from "@reduxjs/toolkit";
 import extension from 'extensionizer';
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { NET_CONFIG_VERSION } from "../config";
 import { windowId } from "./background/DappService";
-import { getLocal, saveLocal } from "./background/localStorage";
 import { extGetLocal, extRemoveLocal, extSaveLocal } from "./background/extensionStorage";
+import { getLocal, saveLocal } from "./background/localStorage";
 import { CURRENCY_UNIT } from "./constant";
-import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
+import { WALLET_CONNECT_TYPE } from "./constant/commonType";
 import { DAPP_ACTIONS, DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
+import { NETWORK_CONFIG_LIST, NET_CONFIG_MAP, NET_CONFIG_TYPE } from "./constant/network";
+import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
 import { languageInit } from "./i18n";
 import App from "./popup/App";
-import rootReducer from "./reducers";
 import { initCurrentAccount, updateShouldRequest } from "./reducers/accountReducer";
-import { updateDAppOpenWindow, updateExtensionBaseInfo } from "./reducers/cache";
+import { updateDAppOpenWindow } from "./reducers/cache";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
 import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
-import { WALLET_CONNECT_TYPE } from "./constant/commonType";
-import { NETWORK_CONFIG_LIST, NET_CONFIG_MAP, NET_CONFIG_TYPE } from "./constant/network";
 
 
 function getLocalNetConfig(store) {
@@ -243,8 +241,8 @@ async function upgradeStorageConfig(){
 }
 
 async function initNetworkFlag(){
-  let localFlage = await extGetLocal(NET_WORK_CHANGE_FLAG)
-  if(localFlage){
+  let localFlag = await extGetLocal(NET_WORK_CHANGE_FLAG)
+  if(localFlag){
     store.dispatch(updateShouldRequest(true))
     await extRemoveLocal(NET_WORK_CHANGE_FLAG)
   }
@@ -264,11 +262,11 @@ export const applicationEntry = {
     if(!nextRoute){
       nextRoute = await getDappStatus(store)
     }
-    const isWalletInited = nextRoute !== ENTRY_WITCH_ROUTE.WELCOME
-    if(!isWalletInited){
+    const isWalletInit = nextRoute !== ENTRY_WITCH_ROUTE.WELCOME
+    if(!isWalletInit){
       store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.WELCOME))
     }
-    if(isWalletInited){
+    if(isWalletInit){
       await this.appInit(store)
       store.dispatch(updateEntryWitchRoute(nextRoute))
       initZkAppConnect();

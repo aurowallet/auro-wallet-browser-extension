@@ -28,7 +28,7 @@ const HomePage = () => {
     let txList = []
     let pendingTxList = []
     let zkList = []
-    let zkPengingList = []
+    let zkPendingList = []
     if (localHistory) {
       let localHistoryJson = safeJsonParse(localHistory)
       txList = localHistoryJson ? localHistoryJson[address] : []
@@ -47,14 +47,14 @@ const HomePage = () => {
     let localZkAppPendingHistory = getLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST)
     if (localZkAppPendingHistory) {
       let localZkAppPendingHistoryJson = safeJsonParse(localZkAppPendingHistory)
-      zkPengingList = localZkAppPendingHistoryJson ? localZkAppPendingHistoryJson[address] : []
+      zkPendingList = localZkAppPendingHistoryJson ? localZkAppPendingHistoryJson[address] : []
     }
     
 
     let updateTxList = txList && Array.isArray(txList) ? txList : []
     let updatePendingTxList = pendingTxList && Array.isArray(pendingTxList) ? pendingTxList : []
     let updateZkList = zkList && Array.isArray(zkList) ? zkList : []
-    let updateZkPendingList = zkPengingList && Array.isArray(zkPengingList) ? zkPengingList : []
+    let updateZkPendingList = zkPendingList && Array.isArray(zkPendingList) ? zkPendingList : []
     
 
     dispatch(updateAccountTx(updateTxList, updatePendingTxList,updateZkList,updateZkPendingList))
@@ -131,7 +131,7 @@ const HomePage = () => {
     }
   }, [])
 
-  const getlocalCache = useCallback(() => {
+  const getLocalCache = useCallback(() => {
     const netType = netConfig.currentConfig?.netType
     let address = currentAccount?.address || ""
 
@@ -158,7 +158,7 @@ const HomePage = () => {
       }
     },[])
   useEffect(() => {
-    getlocalCache()
+    getLocalCache()
     getNetConfig()
   }, [])
 

@@ -5,21 +5,19 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { MAIN_COIN_CONFIG } from "../../../../../constant";
 import {
   getPendingTxList,
   sendStakeTx,
   sendTx,
 } from "../../../../../background/api";
+import { MAIN_COIN_CONFIG } from "../../../../../constant";
 import {
   ACCOUNT_TYPE,
   LEDGER_STATUS,
 } from "../../../../../constant/commonType";
 import {
-  QA_SIGN_TRANSTRACTION,
-  WALLET_CHECK_TX_STATUS,
-  WALLET_SEND_STAKE_TRANSTRACTION,
-  WALLET_SEND_TRANSTRACTION,
+  QA_SIGN_TRANSACTION,
+  WALLET_CHECK_TX_STATUS
 } from "../../../../../constant/msgTypes";
 import { updateShouldRequest } from "../../../../../reducers/accountReducer";
 import { updateLedgerConnectStatus } from "../../../../../reducers/ledger";
@@ -58,13 +56,13 @@ const TxListView = ({
   history = [],
   showHistoryStatus = false,
   historyRefreshing = false,
-  onClickRefesh = () => {},
+  onClickRefresh = () => {},
 }) => {
   const dispatch = useDispatch();
 
   const accountInfo = useSelector((state) => state.accountInfo);
   const netConfig = useSelector((state) => state.network);
-  const netFeeList = useSelector((state) => state.cache.feeRecom);
+  const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
 
   const onGoExplorer = useCallback(() => {
@@ -90,7 +88,7 @@ const TxListView = ({
 
   const [ledgerApp, setLedgerApp] = useState();
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
-  const [waintLedgerStatus, setWaitLedgerStatus] = useState(false);
+  const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
 
   const { nextNetFee } = useMemo(() => {
     let nextNetFee = "";
@@ -268,10 +266,10 @@ const TxListView = ({
       }
       setBtnLoading(true);
       const currentAddress = accountInfo.currentAccount.address;
-      let nextction = "";
+      let nextAction = "";
       let nextPayload = {};
       if (modalType === TransactionModalType.cancel) {
-        nextction = QA_SIGN_TRANSTRACTION;
+        nextAction = QA_SIGN_TRANSACTION;
         nextPayload = {
           amount: 0,
           fee: nextInputFee,
@@ -286,7 +284,7 @@ const TxListView = ({
           let kind_low = transactionModalData.kind.toLowerCase();
           switch (kind_low) {
             case "payment":
-              nextction = QA_SIGN_TRANSTRACTION;
+              nextAction = QA_SIGN_TRANSACTION;
               nextPayload = {
                 ...transactionModalData,
                 fee: nextInputFee,
@@ -303,7 +301,7 @@ const TxListView = ({
               break;
             case "stake_delegation":
             case "delegation":
-              nextction = QA_SIGN_TRANSTRACTION;
+              nextAction = QA_SIGN_TRANSACTION;
               nextPayload = {
                 ...transactionModalData,
                 fee: nextInputFee,
@@ -315,7 +313,7 @@ const TxListView = ({
               };
               break;
             case "zkapp":
-              nextction = QA_SIGN_TRANSTRACTION;
+              nextAction = QA_SIGN_TRANSACTION;
               nextPayload = {
                 ...transactionModalData,
                 fee: nextInputFee,
@@ -342,7 +340,7 @@ const TxListView = ({
 
       sendMsg(
         {
-          action: nextction,
+          action: nextAction,
           payload: nextPayload,
         },
         (data) => {
@@ -367,7 +365,7 @@ const TxListView = ({
       <HistoryHeader
         showHistoryStatus={showHistoryStatus}
         historyRefreshing={historyRefreshing}
-        onClickRefesh={onClickRefesh}
+        onClickRefresh={onClickRefresh}
       />
       <div className={styles.listContainer}>
         {history.map((item, index) => {
@@ -398,7 +396,7 @@ const TxListView = ({
       <TransactionModal
         title={modalTitle}
         modalContent={modalDesc}
-        modalVisable={transactionModalStatus}
+        modalVisible={transactionModalStatus}
         currentFee={currentFee}
         currentNonce={transactionModalData?.nonce}
         nextFee={nextFee}
@@ -406,10 +404,10 @@ const TxListView = ({
         onClickClose={onClickClose}
         onConfirm={onClickConfirm}
         btnLoading={btnLoading}
-        waitingLedger={waintLedgerStatus}
+        waitingLedger={waitLedgerStatus}
       />
       <LedgerInfoModal
-        modalVisable={ledgerModalStatus}
+        modalVisible={ledgerModalStatus}
         onClickClose={() => setLedgerModalStatus(false)}
         onConfirm={onLedgerInfoModalConfirm}
       />

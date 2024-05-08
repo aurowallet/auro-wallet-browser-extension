@@ -22,16 +22,16 @@ import NetworkItem from "../NetworkItem";
 const NetworkSelect = ({}) => {
   const dispatch = useDispatch();
   const netConfig = useSelector((state) => state.network);
-  const [modalVisable, setModalVisable] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const showName = useMemo(() => {
     return netConfig?.currentConfig?.name;
   }, [netConfig]);
   const onClickEntry = useCallback(() => {
-    setModalVisable(true);
+    setModalVisible(true);
   }, []);
   const onClickOuter = useCallback(() => {
-    setModalVisable(false);
+    setModalVisible(false);
   }, []);
 
   const onClickNetItem = useCallback(
@@ -66,7 +66,7 @@ const NetworkSelect = ({}) => {
     <>
       <NetSelectEntry onClickEntry={onClickEntry} showName={showName} />
       <NetworkModal
-        modalVisable={modalVisable}
+        modalVisible={modalVisible}
         title={i18n.t("network")}
         onClickItem={onClickNetItem}
         onClose={onClickOuter}
@@ -221,7 +221,7 @@ const StyledCloseIcon = styled.img`
   cursor: pointer;
 `;
 const NetworkModal = ({
-  modalVisable = false,
+  modalVisible = false,
   title = "",
   onClickItem = () => {},
   onClose = () => {},
@@ -260,7 +260,7 @@ const NetworkModal = ({
     return { topList, bottomList };
   }, [netConfig]);
   return (
-    <ModalOverlay show={String(modalVisable)} onClick={onClose}>
+    <ModalOverlay show={String(modalVisible)} onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <StyledTitleRow>
           <StyledRowTitle>{title}</StyledRowTitle>

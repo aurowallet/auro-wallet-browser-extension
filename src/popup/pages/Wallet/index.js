@@ -19,7 +19,6 @@ import { sendMsg } from '../../../utils/commonMsg';
 import { addressSlice, clearLocalCache, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, isNaturalNumber, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
 import Clock from '../../component/Clock';
 import { PopupModal } from '../../component/PopupModal';
-import Select from '../../component/Select';
 import Toast from "../../component/Toast";
 import { LoadingView, NoBalanceDetail, UnknownInfoView } from './component/StatusView';
 import TxListView from './component/TxListView';
@@ -117,12 +116,12 @@ const Wallet = ({ }) => {
           <Trans
             i18nKey={i18n.t('watchModeDeleteTip')}
             components={{
-              red: <span className={styles.tipsSpical} />,
+              red: <span className={styles.tipsSpecial} />,
             }}
           />
         </p>
       }
-      modalVisable={watchModalStatus} />
+      modalVisible={watchModalStatus} />
   </div>)
 }
 export default Wallet
@@ -384,7 +383,7 @@ const WalletInfo = () => {
         onLeftBtnClick={onCloseDappModal}
         onRightBtnClick={onClickDappConfirm}
         content={dappModalContent}
-        modalVisable={dappModalStatus} />
+        modalVisible={dappModalStatus} />
     </>
   )
 }
@@ -462,7 +461,7 @@ const WalletDetail = () => {
     setHistoryList(accountInfo.txList)
   }, [accountInfo.txList])
 
-  const onClickRefesh = useCallback(() => {
+  const onClickRefresh = useCallback(() => {
     setHistoryRefreshing(true)
     requestHistory(true)
   }, [requestHistory])
@@ -502,7 +501,7 @@ const WalletDetail = () => {
     if(historyList.length !== 0){
       childView = <TxListView
                     history={historyList}
-                    onClickRefesh={onClickRefesh}
+                    onClickRefresh={onClickRefresh}
                     historyRefreshing={historyRefreshing}
                     showHistoryStatus={showHistoryStatus}
                   />

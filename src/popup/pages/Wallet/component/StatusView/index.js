@@ -4,7 +4,7 @@ import styles from "./index.module.scss";
 
 export const HistoryHeader = ({
   historyRefreshing,
-  onClickRefesh,
+  onClickRefresh,
   showHistoryStatus,
 }) => { 
   return (
@@ -15,7 +15,7 @@ export const HistoryHeader = ({
           className={cls(styles.refreshContainer, {
             [styles.refresh]: historyRefreshing,
           })}
-          onClick={onClickRefesh}
+          onClick={onClickRefresh}
         >
           <img src="/img/refresh.svg" className={styles.refreshIcon} />
         </div>
