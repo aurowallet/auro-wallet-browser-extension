@@ -21,7 +21,7 @@ export const PopupModal = ({
     type = PopupModal_type.common,
     onLeftBtnClick = () => { },
     onRightBtnClick = () => { },
-    modalVisable,
+    modalVisible,
 
     inputType = "text",
     inputPlaceholder = "",
@@ -77,14 +77,14 @@ export const PopupModal = ({
 
 
     useEffect(()=>{
-        if(!modalVisable && clearWhenClose){
+        if(!modalVisible && clearWhenClose){
             setInputValue("")
         }
-    },[modalVisable,clearWhenClose])
+    },[modalVisible,clearWhenClose])
     return (
         <>
             {
-                modalVisable && <div className={styles.outerContainer}>
+                modalVisible && <div className={styles.outerContainer}>
                     <div className={styles.contentContainer}>
                         <div className={styles.topContainer}>
                             {modalTopIcon && <div className={styles.iconContainer}>
@@ -114,7 +114,7 @@ export const PopupModal = ({
                         </div>
                         {(leftBtnContent || rightBtnContent) && <div className={styles.bottomContainer}>
                             {leftBtnContent && <div className={styles.leftBtn} onClick={onLeftClick}>{leftBtnContent}</div>}
-                            {leftBtnContent && rightBtnContent && <div className={styles.dividLine} />}
+                            {leftBtnContent && rightBtnContent && <div className={styles.divideLine} />}
                             {rightBtnContent && <div className={cls(styles.rightBtn, rightBtnStyle,{
                                 [styles.rightBtnDisable]:rightBtnDisable
                             })} onClick={onRightClick}>{rightBtnContent}</div>}

@@ -157,7 +157,7 @@ export const LockPage = ({
                 <div className={styles.logoContainer}>
                     <img src="/img/colorful_logo.svg" className={styles.logo} />
                 </div>
-                <p className={styles.welcomBack}>
+                <p className={styles.welcomeBack}>
                     {i18n.t('welcomeBack')}
                 </p>
                 <FormView >
@@ -186,12 +186,12 @@ export const LockPage = ({
                 title={i18n.t('reset_tip_1')}
                 leftBtnContent={i18n.t('cancel')}
                 rightBtnContent={i18n.t("reset")}
-                rightBtnStyle={styles.rigntBtn}
+                rightBtnStyle={styles.rightBtn}
                 type={PopupModal_type.warning}
                 onLeftBtnClick={onCloseWarningModal}
                 onRightBtnClick={onConfirmResetClick}
                 content={i18n.t('reset_tip_2')}
-                modalVisable={waringModalStatus}
+                modalVisible={waringModalStatus}
                 onCloseModal={onCloseWarningModal}
             />
 
@@ -202,7 +202,7 @@ export const LockPage = ({
                 type={PopupModal_type.input}
                 onLeftBtnClick={onCloseResetModal}
                 onRightBtnClick={onConfirmDeleteClick}
-                modalVisable={resetModalStatus}
+                modalVisible={resetModalStatus}
                 onCloseModal={onCloseResetModal}
                 rightBtnDisable={resetModalBtnStatus}
                 onInputChange={onResetModalInput}

@@ -138,8 +138,8 @@ export const RestoreMneView = ({ onClickPre, onClickNext }) => {
     let mnemonic = mneInputList.join(" ").trim();
     mnemonic = mnemonic.toLowerCase();
 
-    let mnemonicVaild = validateMnemonic(mnemonic);
-    if (!mnemonicVaild) {
+    let mnemonicValid = validateMnemonic(mnemonic);
+    if (!mnemonicValid) {
       Toast.info(i18n.t("seed_error"));
       return;
     }

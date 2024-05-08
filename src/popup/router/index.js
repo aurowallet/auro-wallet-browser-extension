@@ -51,10 +51,10 @@ export function getAllRouter() {
     <HashRouter useHistory={useHistory} >
       <Switch>
         <Route path="/" exact component={MainRouter} />
-        <Route path="/createpassword" component={CreatePassword} />
-        <Route path="/showmnemonic" component={ShowMnemonic} />
-        <Route path="/backupmnemonic" component={BackupMnemonics} />
-        <Route path="/backupsuccess" component={BackupSuccess} />
+        <Route path="/create_password" component={CreatePassword} />
+        <Route path="/show_mnemonic" component={ShowMnemonic} />
+        <Route path="/backup_mnemonic" component={BackupMnemonics} />
+        <Route path="/backup_success" component={BackupSuccess} />
         <Route path="/homepage" component={HomePage} />
         <Route path="/send_page" component={SendPage} />
         <Route path="/receive_page" component={ReceivePage} />
@@ -101,7 +101,7 @@ export function getAllRouter() {
         <Route path={"/ledger_page"} component={LedgerPage}/>
 
         <Route path={"/createprocess"} component={CreateProcessPage}/>
-        <Route path={"/addaccount"} component={AddAccount}/>
+        <Route path={"/add_account"} component={AddAccount}/>
         
       </Switch>
     </HashRouter>

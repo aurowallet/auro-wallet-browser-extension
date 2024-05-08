@@ -26,7 +26,7 @@ export const ShowMnemonic = () => {
 
   let history = useHistory();
   const goToNext = useCallback(() => {
-    history.push("/backupmnemonic")
+    history.push("/backup_mnemonic")
   }, [])
 
   return (

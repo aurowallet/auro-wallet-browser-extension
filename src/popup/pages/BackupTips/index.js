@@ -9,7 +9,7 @@ import styles from "./index.module.scss";
 export const BackupTips = () => {
   let history = useHistory();
   const goToCreate = useCallback(() => {
-    history.push("/showmnemonic")
+    history.push("/show_mnemonic")
   }, [])
 
   const [btnClick, setBtnClick] = useState(false)

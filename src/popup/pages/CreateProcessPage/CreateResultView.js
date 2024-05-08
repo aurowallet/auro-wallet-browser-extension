@@ -42,7 +42,7 @@ const StyledBottomContainer = styled.div`
   left: 50%;
   transform: translate(-50%);
 `;
-const StyldImgContainer = styled.div`
+const StyledImgContainer = styled.div`
   margin: 20px auto 40px;
 
   display: flex;
@@ -160,9 +160,9 @@ export const CreateResultView = ({}) => {
   return (
     <StyledPwdContainer>
       <StyledPwdContentContainer>
-        <StyldImgContainer>
+        <StyledImgContainer>
           <StyledSuccessIcon src={"/img/backup_success.svg"} />
-        </StyldImgContainer>
+        </StyledImgContainer>
         <StyledBackupTitle>{i18n.t("success")}</StyledBackupTitle>
         <StyledBackupContent>{i18n.t(showTip)}</StyledBackupContent>
         <StyledBackupContent>{i18n.t("returnEx")}</StyledBackupContent>

@@ -97,7 +97,7 @@ const StyledRightBtnWrapper = styled(StyledBaseBtnWrapper)`
   }
 `;
 export const PopupModalV2 = ({
-  modalVisable = false,
+  modalVisible = false,
   modalTopIcon,
   title = "",
   contentList = [],
@@ -112,7 +112,7 @@ export const PopupModalV2 = ({
   onLeftBtnClick = () => {},
   onRightBtnClick = () => {},
 }) => {
-  if (!modalVisable) {
+  if (!modalVisible) {
     return <></>;
   }
   return (

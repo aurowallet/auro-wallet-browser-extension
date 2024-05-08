@@ -88,8 +88,8 @@ const RestoreAccount = () => {
     mnemonic = mnemonic.toLocaleLowerCase()
 
 
-    let mnemonicVaild = validateMnemonic(mnemonic)
-    if (!mnemonicVaild) {
+    let mnemonicValid = validateMnemonic(mnemonic)
+    if (!mnemonicValid) {
       setBottomTipError(i18n.t('seed_error'))
       return
     }
@@ -105,7 +105,7 @@ const RestoreAccount = () => {
         dispatch(updateCurrentAccount(currentAccount))
         dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
         history.push({
-          pathname: "/backupsuccess",
+          pathname: "/backup_success",
           params: { type: "restore" }
         })
       })

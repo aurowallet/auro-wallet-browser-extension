@@ -95,7 +95,7 @@ const Welcome = () => {
   const [popupModalStatus, setPopupModalStatus] = useState(false);
 
   const [nextRoute, setNextRoute] = useState("");
-  const [registeStep, setRegisteStep] = useState(RegisterStep.welcome);
+  const [registerStep, setRegisterStep] = useState(RegisterStep.welcome);
 
   const onClickGuide = useCallback(
     (type) => {
@@ -132,7 +132,7 @@ const Welcome = () => {
       saveLocal(USER_AGREEMENT, "true");
     }
     dispatch(setWelcomeNextType(route));
-    setRegisteStep(RegisterStep.process);
+    setRegisterStep(RegisterStep.process);
   }, []);
 
   const goNextRoute = useCallback(
@@ -161,12 +161,12 @@ const Welcome = () => {
     initLocal();
   }, []);
   const onClickPre = useCallback(() => {
-    setRegisteStep(RegisterStep.welcome);
+    setRegisterStep(RegisterStep.welcome);
   }, []);
 
   return (
     <StyledPageOuterWrapper>
-      {registeStep === RegisterStep.welcome && (
+      {registerStep === RegisterStep.welcome && (
         <StyledPageInnerContent>
           <StyledTopContainer>
             <StyledLogoContainer>
@@ -231,12 +231,12 @@ const Welcome = () => {
                 </StyledModalContent>
               </StyledModalWrapper>
             }
-            modalVisable={popupModalStatus}
+            modalVisible={popupModalStatus}
             onCloseModal={onCloseModal}
           />
         </StyledPageInnerContent>
       )}
-      {registeStep === RegisterStep.process && (
+      {registerStep === RegisterStep.process && (
         <CreateProcessPage onClickPre={onClickPre} />
       )}
     </StyledPageOuterWrapper>
