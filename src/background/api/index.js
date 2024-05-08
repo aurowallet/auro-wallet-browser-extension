@@ -337,7 +337,7 @@ export async function getZkAppTxHistory(address,limit){
   let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
 
-  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
+  if (!gqlTxUrl) {
     saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
@@ -360,7 +360,7 @@ export async function getZkAppTxHistory(address,limit){
 export async function getZkAppPendingTx(address,limit){
   let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.url
-  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
+  if (!gqlTxUrl) {
    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
