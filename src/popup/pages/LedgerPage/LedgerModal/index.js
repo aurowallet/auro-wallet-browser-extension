@@ -10,7 +10,7 @@ export const LedgerModal = ({ modalVisible }) => {
           <div className={styles.contentContainer}>
             <div className={styles.tipTitle}>{i18n.t("tips")}</div>
             <div className={styles.tipContent}>
-              {i18n.t("ledgerConentTip_1")}
+              {i18n.t("ledgerContentTip_1")}
             </div>
             <div className={styles.ledgerStep}>
               <span>{"Get Address > Generate > Approve"}</span>

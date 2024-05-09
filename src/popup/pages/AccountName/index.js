@@ -114,7 +114,7 @@ const AccountName = ({}) => {
         (account) => {
           setBtnLoadingStatus(false);
           if (account.error) {
-            if (account.error === "improtRepeat") {
+            if (account.error === "importRepeat") {
               setReminderModalStatus(true);
               setRepeatAccount(account.account);
             }

@@ -52,12 +52,4 @@ followus
 showstatus
 isshowfullheight
 
-
-ledgerConnetTip
-ledgerConnetOpenTip
-ledgerSeletPathTip
-ledgerConentTip_1
-deteleTag
-transationHash
 undelegated
-improtRepeat

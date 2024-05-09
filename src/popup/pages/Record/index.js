@@ -115,7 +115,7 @@ const Record = ({}) => {
         content: nonce,
       },
       {
-        title: i18n.t("transationHash"),
+        title: i18n.t("transactionHash"),
         content: txHash,
       }
     );

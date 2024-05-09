@@ -301,7 +301,7 @@ class APIService {
                     accountName:sameAccount.accountName,
                     address:sameAccount.address
                 }
-                let error = { "error": 'improtRepeat', type: "local",account:backAccount }
+                let error = { "error": 'importRepeat', type: "local",account:backAccount }
                 return error
             }
             
@@ -329,7 +329,7 @@ class APIService {
         for (let index = 0; index < accounts.length; index++) {
             const account = accounts[index];
             if (account.address === address) {
-                error = { "error": 'improtRepeat', type: "local" }
+                error = { "error": 'importRepeat', type: "local" }
                 break
             }
         }

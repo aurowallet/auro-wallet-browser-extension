@@ -126,10 +126,10 @@ export const LedgerPage = ({}) => {
     let msg = "";
     switch (tipType) {
       case Tip_Type.openLedger:
-        msg = i18n.t("ledgerConnetTip");
+        msg = i18n.t("ledgerConnectTip");
         break;
       case Tip_Type.openLedgerApp:
-        msg = i18n.t("ledgerConnetOpenTip");
+        msg = i18n.t("ledgerConnectOpenTip");
         break;
       case Tip_Type.openLockStatus:
         msg = i18n.t("auroLocked");
@@ -327,7 +327,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
       <div className={styles.viewTip}>{i18n.t("selectHDPath")}</div>
       <div className={styles.accountNameTip}>
         <Trans
-          i18nKey={"ledgerSeletPathTip"}
+          i18nKey={"ledgerSelectPathTip"}
           components={{
             click: (
               <span
