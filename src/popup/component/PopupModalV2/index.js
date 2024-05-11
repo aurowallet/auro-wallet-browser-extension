@@ -80,8 +80,7 @@ const StyledLeftBtnWrapper = styled(StyledBaseBtnWrapper)`
   border-bottom-left-radius: 12px;
 
   &:hover {
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)),
-      rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.05);
   }
 `;
 const StyledDividedLine = styled.div`
@@ -91,9 +90,10 @@ const StyledRightBtnWrapper = styled(StyledBaseBtnWrapper)`
   color: #594af1;
   border-bottom-right-radius: 12px;
   text-transform: capitalize;
+  ${(props) => props.$rightBtnStyle}
+
   &:hover {
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)),
-      rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.05);
   }
 `;
 export const PopupModalV2 = ({
@@ -111,6 +111,7 @@ export const PopupModalV2 = ({
   rightBtnContent = "",
   onLeftBtnClick = () => {},
   onRightBtnClick = () => {},
+  rightBtnStyle = {},
 }) => {
   if (!modalVisible) {
     return <></>;
@@ -150,7 +151,10 @@ export const PopupModalV2 = ({
             {leftBtnContent}
           </StyledLeftBtnWrapper>
           <StyledDividedLine />
-          <StyledRightBtnWrapper onClick={onRightBtnClick}>
+          <StyledRightBtnWrapper
+            $rightBtnStyle={rightBtnStyle}
+            onClick={onRightBtnClick}
+          >
             {rightBtnContent}
           </StyledRightBtnWrapper>
         </StyledBottomContainer>

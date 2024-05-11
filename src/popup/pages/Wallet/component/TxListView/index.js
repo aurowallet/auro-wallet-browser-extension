@@ -43,7 +43,6 @@ import {
   TransactionModal,
   TransactionModalType,
 } from "../../../../component/TransactionModal";
-import { HistoryHeader } from "../StatusView";
 import styles from "./index.module.scss";
 
 /**
@@ -54,9 +53,6 @@ import styles from "./index.module.scss";
  */
 const TxListView = ({
   history = [],
-  showHistoryStatus = false,
-  historyRefreshing = false,
-  onClickRefresh = () => {},
 }) => {
   const dispatch = useDispatch();
 
@@ -362,11 +358,6 @@ const TxListView = ({
   }, []);
   return (
     <div className={cls(styles.historyContainer, styles.holderContainer)}>
-      <HistoryHeader
-        showHistoryStatus={showHistoryStatus}
-        historyRefreshing={historyRefreshing}
-        onClickRefresh={onClickRefresh}
-      />
       <div className={styles.listContainer}>
         {history.map((item, index) => {
           if (item.showExplorer) {

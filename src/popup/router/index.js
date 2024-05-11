@@ -43,6 +43,7 @@ import StakingTransfer from '../pages/StakingTransfer';
 import Welcome from '../pages/Welcome';
 import { CreateProcessPage } from '../pages/CreateProcessPage';
 import AddAccount from '../pages/AddAccount';
+import TokenDetail from '../pages/TokenDetail';
 
 
 
@@ -103,6 +104,7 @@ export function getAllRouter() {
         <Route path={"/createprocess"} component={CreateProcessPage}/>
         <Route path={"/add_account"} component={AddAccount}/>
         
+        <Route path={"/token_detail"} component={TokenDetail}/>
       </Switch>
     </HashRouter>
   );

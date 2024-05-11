@@ -39,6 +39,8 @@ const UPDATE_RECOMMEND_FEE_LIST = "UPDATE_RECOMMEND_FEE_LIST";
 
 const UPDATE_ACCOUNT_TYPE_COUNT = "UPDATE_ACCOUNT_TYPE_COUNT";
 
+const UPDATE_NEXT_TOKEN_DETAIL = "UPDATE_NEXT_TOKEN_DETAIL";
+
 export function updateCurrentPrice(price) {
   return {
     type: UPDATE_CURRENT_PRICE,
@@ -139,6 +141,14 @@ export function updateAccountTypeCount(countMap) {
     countMap,
   };
 }
+
+export function updateNextTokenDetail(token) {
+  return {
+    type: UPDATE_NEXT_TOKEN_DETAIL,
+    token,
+  };
+}
+
 const initState = {
   fromType: "",
   accountInfo: {},
@@ -169,6 +179,7 @@ const initState = {
     import: 1,
     ledger: 1,
   },
+  nextTokenDetail: {},
 };
 
 const cacheReducer = (state = initState, action) => {
@@ -261,6 +272,11 @@ const cacheReducer = (state = initState, action) => {
       return {
         ...state,
         accountTypeCount: accountTypeCount,
+      };
+    case UPDATE_NEXT_TOKEN_DETAIL:
+      return {
+        ...state,
+        nextTokenDetail: action.token || {},
       };
     default:
       return state;

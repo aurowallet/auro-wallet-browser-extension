@@ -286,5 +286,12 @@
   "showTestnet": "Show Testnet",
   "ledgerConnected":"Ledger Connected",
   "ledgerNotConnected":"Ledger not Connected",
-  "txType":"Transaction Type"
+  "txType":"Transaction Type",
+  "selectAsset":"Select Asset",
+  "assetManagement":"Asset Management",
+  "newTokenFound":"{{count}} new tokens found",
+  "ignore":"Ignore",
+  "balance":"Balance",
+  "updateTokenInfo":"Update your token information?",
+  "tokens":"tokens"
 }

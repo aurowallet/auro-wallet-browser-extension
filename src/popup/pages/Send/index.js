@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { getBalance, sendTx } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
-import { MAIN_COIN_CONFIG } from "../../../constant";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import {
   QA_SIGN_TRANSACTION,
@@ -25,6 +25,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { getLedgerStatus, requestSignPayment } from "../../../utils/ledger";
 import {
   addressSlice,
+  amountDecimals,
   getDisplayAmount,
   getRealErrorMsg,
   isNaturalNumber,
@@ -58,6 +59,7 @@ const SendPage = ({}) => {
   );
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
+  const token = useSelector((state) => state.cache.nextTokenDetail);
 
   useEffect(() => {
     dispatch(updateAddressDetail(""));
@@ -87,6 +89,29 @@ const SendPage = ({}) => {
 
   const [addressOptionList, setAddressOptionList] = useState([]);
   const [addressOptionStatus, setAddressOptionStatus] = useState(false);
+
+  const { tokenSymbol, showBalanceTxt } = useMemo(() => {
+    const isFungibleToken = ZK_DEFAULT_TOKEN_ID !== token.tokenId;
+    let tokenSymbol = "";
+    let nextBalance = token?.balance?.total;
+    let tokenBalance = amountDecimals(nextBalance, MAIN_COIN_CONFIG.decimals);
+    let showBalanceTxt = "";
+    if (isFungibleToken) {
+      tokenSymbol = token.tokenSymbol;
+      tokenBalance = getDisplayAmount(tokenBalance, MAIN_COIN_CONFIG.decimals);
+      showBalanceTxt = tokenBalance + " " + tokenSymbol;
+    } else {
+      tokenSymbol = MAIN_COIN_CONFIG.symbol;
+      tokenBalance = getDisplayAmount(tokenBalance, MAIN_COIN_CONFIG.decimals);
+
+      showBalanceTxt = tokenBalance + " " + MAIN_COIN_CONFIG.symbol;
+    }
+    tokenSymbol = tokenSymbol ?? "";
+    return {
+      tokenSymbol,
+      showBalanceTxt,
+    };
+  }, [token]);
 
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value);
@@ -451,7 +476,10 @@ const SendPage = ({}) => {
   }, []);
 
   return (
-    <CustomView title={i18n.t("send")} contentClassName={styles.container}>
+    <CustomView
+      title={i18n.t("send") + " " + tokenSymbol}
+      contentClassName={styles.container}
+    >
       <div className={styles.contentContainer}>
         <div className={styles.inputContainer}>
           <Input
@@ -507,9 +535,7 @@ const SendPage = ({}) => {
             placeholder={0}
             rightComponent={
               <div className={styles.balance}>
-                {getDisplayAmount(balance, MAIN_COIN_CONFIG.decimals) +
-                  " " +
-                  MAIN_COIN_CONFIG.symbol}
+                {showBalanceTxt}
               </div>
             }
             rightStableComponent={

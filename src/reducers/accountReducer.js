@@ -97,8 +97,19 @@ const initState = {
     isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
     stakingLoadingRefresh: false,
     accountBalanceMap:{},
-    scamList:[]
+    scamList:[],
+    tokenList:tokenSort()
 };
+
+function tokenSort(){
+    const data = {
+        data: {
+          accounts: [
+          ],
+        },
+      };
+    return data.data.accounts;
+}
 
 function pendingTx(txList) {
     let newList = []
