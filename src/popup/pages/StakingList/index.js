@@ -4,9 +4,9 @@ import { useCallback, useMemo, useState } from "react";
 import 'react-circular-progressbar/dist/styles.css';
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { MAIN_COIN_CONFIG } from "../../../constant";
+import { ValidatorsLaunch } from "../../../constant";
 import { NET_CONFIG_TYPE } from "../../../constant/network";
-import { addressSlice, getAmountForUI, showNameSlice } from "../../../utils/utils";
+import { addressSlice, showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import styles from './index.module.scss';
@@ -90,7 +90,7 @@ const StakingList = ({ }) => {
       }
       <div className={styles.manualAddContainer} >
         <p onClick={onClickManual} className={styles.manualAddContent}>{i18n.t('manualAdd')}</p>
-        <a href={"https://github.com/aurowallet/launch/tree/master/validators"} 
+        <a href={ValidatorsLaunch} 
           target="_blank"
           className={styles.manualSubmit}>
           {i18n.t("submitNode")}
