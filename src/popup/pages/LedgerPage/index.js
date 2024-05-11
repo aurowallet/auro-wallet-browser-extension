@@ -186,7 +186,7 @@ const LedgerConnectView = ({ onClickNext, tipContent,isShowSuccessTip,isLedgerPe
     <div className={styles.viewOuter}>
       <div className={styles.viewTitle}>{viewTitle}</div>
       <div className={styles.viewTip}>{i18n.t("selectHardware")}</div>
-      <img src="/img/ledger-logo.svg" className={styles.ledgerIcon} />
+      <img src="/img/ledgerBorderLogo.svg" className={styles.ledgerIcon} />
       <div className={styles.viewTip}>{i18n.t("getStarted")}</div>
       <div className={styles.startDesc}>{i18n.t("ledgerStartDesc")}</div>
 
