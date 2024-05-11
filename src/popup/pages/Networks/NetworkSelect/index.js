@@ -149,7 +149,7 @@ const StyledListWrapper = styled.div`
   }
 `;
 const StyledTopList = styled.div`
-  max-height: ${(props) => (props.isshowfullheight == "true" ? "350px" : "220px")};
+  max-height: ${(props) => (props.$showFullHeight ? "350px" : "220px")};
   overflow-y: auto;
   > :not(:first-of-type) {
     margin-top: 10px;
@@ -186,7 +186,7 @@ const fadeOut = keyframes`
 `;
 
 const ModalOverlay = styled.div`
-  display: ${(props) => (props.show == "true" ? "block" : "none")};
+  display: ${(props) => (props.$showStatus ? "block" : "none")};
   position: fixed;
   top: 0;
   left: 0;
@@ -195,7 +195,7 @@ const ModalOverlay = styled.div`
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 20;
   animation: ${(props) =>
-      props.show == "true"
+      props.$showStatus
         ? css`
             ${fadeIn} 0.3s
           `
@@ -260,7 +260,7 @@ const NetworkModal = ({
     return { topList, bottomList };
   }, [netConfig]);
   return (
-    <ModalOverlay show={String(modalVisible)} onClick={onClose}>
+    <ModalOverlay $showStatus={modalVisible} onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <StyledTitleRow>
           <StyledRowTitle>{title}</StyledRowTitle>
@@ -268,7 +268,7 @@ const NetworkModal = ({
         </StyledTitleRow>
         <StyledDividedLine />
         <StyledListWrapper>
-          <StyledTopList isshowfullheight={String(!isChecked)}>
+          <StyledTopList $showFullHeight={!isChecked}>
             {topList.map((item, index) => {
               return (
                 <NetworkItem
