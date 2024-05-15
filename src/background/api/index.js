@@ -1,6 +1,6 @@
 import { BASE_INFO_URL } from "../../../config";
 import { DEFAULT_TX_REQUEST_LENGTH } from "../../constant";
-import { NET_CONFIG_TYPE } from "../../constant/network";
+import { NET_CONFIG_SUPPORT_ZKAPP, NET_CONFIG_TYPE } from "../../constant/network";
 import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, RECOMMEND_FEE, SCAM_LIST } from "../../constant/storageKey";
 import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
@@ -337,7 +337,7 @@ export async function getZkAppTxHistory(address,limit){
   let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
 
-  if (!gqlTxUrl) {
+  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
     saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
@@ -360,7 +360,7 @@ export async function getZkAppTxHistory(address,limit){
 export async function getZkAppPendingTx(address,limit){
   let netConfig = await getCurrentNetConfig()
   let gqlTxUrl = netConfig.url
-  if (!gqlTxUrl) {
+  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
