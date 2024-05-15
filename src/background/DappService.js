@@ -287,10 +287,16 @@ class DappService {
                     nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                     return
                   }
-                  if (payload && payload.hash) {
-                    nextResolve({
-                      hash: payload.hash
-                    })
+                  if (payload && (payload.hash || payload.signedData)) {
+                    if(payload.hash){
+                      nextResolve({
+                        hash: payload.hash
+                      })
+                    }else{
+                      nextResolve({
+                        signedData: payload.signedData
+                      })
+                    }
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && notificationRequests.length ===0){
                       closePopupWindow(windowId.request_sign)

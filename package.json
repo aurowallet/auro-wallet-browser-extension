@@ -6,7 +6,7 @@
     "@ledgerhq/hw-transport-webusb": "5.46.0",
     "@reduxjs/toolkit": "1.4.0",
     "@vespaiach/axios-fetch-adapter": "0.3.1",
-    "@aurowallet/mina-provider": "1.0.1",
+    "@aurowallet/mina-provider": "1.0.4",
     "axios": "0.21.1",
     "bignumber.js": "9.0.1",
     "bip32": "2.0.6",

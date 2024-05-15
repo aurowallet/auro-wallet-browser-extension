@@ -722,6 +722,9 @@ class APIService {
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
+            if(nextParams.zkOnlySign){
+                return signedTx.data
+            }
             const sendAction = params.sendAction
             switch (sendAction) {
                 case DAppActions.mina_signMessage:
