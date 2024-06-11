@@ -5,14 +5,14 @@ import { useHistory } from 'react-router-dom';
 import { clearLocalExcept, getLocal, saveLocal } from "../../../background/localStorage";
 import { clearStorage } from "../../../background/storageService";
 import { CURRENCY_UNIT, POWER_BY } from "../../../constant";
-import { CURRENCY_UNIT_CONFIG, LOCAL_BASE_INFO, NET_WORK_CONFIG } from "../../../constant/storageKey";
+import { CURRENCY_UNIT_CONFIG, LOCAL_BASE_INFO } from "../../../constant/storageKey";
 import { RESET_WALLET, WALLET_APP_SUBMIT_PWD } from "../../../constant/msgTypes";
 import { resetWallet } from "../../../reducers";
 import { initCurrentAccount } from "../../../reducers/accountReducer";
 import { updateExtensionBaseInfo } from "../../../reducers/cache";
 import { updateCurrencyConfig } from "../../../reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
-import { updateNetConfig } from "../../../reducers/network";
+import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/network";
 import { sendMsg } from "../../../utils/commonMsg";
 import { sendNetworkChangeMsg } from "../../../utils/utils";
 import Button from "../../component/Button";
@@ -23,6 +23,7 @@ import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 import {extGetLocal, extSaveLocal} from "../../../background/extensionStorage";
 import extension from "extensionizer";
+import { DefaultMainnetConfig } from "@/constant/network";
 
 export const LockPage = ({
     onClickUnLock = () => { },
@@ -102,16 +103,13 @@ export const LockPage = ({
         sendMsg({
             action: RESET_WALLET,
         }, async () => {
-            const localNetConfig = await extGetLocal(NET_WORK_CONFIG)
             clearStorage()
-            await extSaveLocal(NET_WORK_CONFIG,localNetConfig)
             let baseInfo = getLocal(LOCAL_BASE_INFO)
             clearLocalExcept()
             dispatch(resetWallet())
-            if (localNetConfig) {
-                dispatch(updateNetConfig(localNetConfig))
-                sendNetworkChangeMsg(localNetConfig.currentConfig)
-            }
+            dispatch(updateCurrentNode(DefaultMainnetConfig));
+            dispatch(updateCustomNodeList([]));
+            sendNetworkChangeMsg(DefaultMainnetConfig)
             if (baseInfo) {
                 baseInfo = JSON.parse(baseInfo)
                 dispatch(updateExtensionBaseInfo(baseInfo))

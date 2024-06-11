@@ -5,7 +5,6 @@ const UPDATE_STAKING_LIST = 'UPDATE_STAKING_LIST';
 const UPDATE_DAEMON_STATUS = 'UPDATE_DAEMON_STATUS';
 const UPDATE_BLOCK_INFO = 'UPDATE_BLOCK_INFO';
 const UPDATE_DELEGATION_INFO = 'UPDATE_DELEGATION_INFO';
-const UPDATE_VALIDATOR_DETAIL = 'UPDATE_VALIDATOR_DETAIL';
 
 
 const UPDATE_DELEGATION_PUBLICKEY = 'UPDATE_DELEGATION_PUBLICKEY';
@@ -51,14 +50,6 @@ export function updateDelegationInfo( account ) {
   };
 }
 
-
-export function updateValidatorDetail(validatorDetail ) {
-  return {
-    type: UPDATE_VALIDATOR_DETAIL,
-    validatorDetail,
-  };
-}
-
 export function updateDelegationKey(delegationKey) {
   return {
     type: UPDATE_DELEGATION_PUBLICKEY,
@@ -71,7 +62,6 @@ const initState = {
   daemonStatus: {},
   block: {},
   account:{},
-  validatorDetail:{}
 };
 
 const staking = (state = initState, action) => {
@@ -92,11 +82,6 @@ const staking = (state = initState, action) => {
         return {
           ...state,
           account: action.account
-        };
-      case UPDATE_VALIDATOR_DETAIL:
-        return {
-          ...state,
-          validatorDetail: action.validatorDetail
         };
       case UPDATE_DELEGATION_PUBLICKEY:
         return {

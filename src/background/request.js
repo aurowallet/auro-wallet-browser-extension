@@ -1,14 +1,14 @@
 import axios from "axios";
-import { NET_WORK_CONFIG } from "../constant/storageKey";
+import { NET_WORK_CONFIG_V2 } from "../constant/storageKey";
 import { getRealErrorMsg } from "../utils/utils";
 import "./api/axios";
 import {extGetLocal} from "./extensionStorage";
 
 async function getNowUrl() {
-  let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
+  let localNetConfig = await extGetLocal(NET_WORK_CONFIG_V2)
   let url = ""
   if (localNetConfig) {
-    url = localNetConfig.currentConfig?.url||""
+    url = localNetConfig.currentNode?.url||""
   }
   return url
 }

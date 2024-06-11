@@ -20,11 +20,11 @@ const StyledNetworkName = styled.div`
   color: #000000;
 `;
 const NetworkStatusView = () => {
-  const currentConfig = useSelector((state) => state.network.currentConfig);
+  const currentNode = useSelector((state) => state.network.currentNode);
   return (
     <StyledNetworkWrapper>
-      <NetworkIcon nodeItem={currentConfig} size={network_icon_size.small} />
-      <StyledNetworkName>{currentConfig.name}</StyledNetworkName>
+      <NetworkIcon nodeItem={currentNode} size={network_icon_size.small} />
+      <StyledNetworkName>{currentNode.name}</StyledNetworkName>
     </StyledNetworkWrapper>
   );
 };

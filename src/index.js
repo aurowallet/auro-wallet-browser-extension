@@ -9,114 +9,38 @@ import { getLocal, saveLocal } from "./background/localStorage";
 import { CURRENCY_UNIT } from "./constant";
 import { WALLET_CONNECT_TYPE } from "./constant/commonType";
 import { DAPP_ACTIONS, DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
-import { NETWORK_CONFIG_LIST, NET_CONFIG_MAP, NET_CONFIG_TYPE } from "./constant/network";
-import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
+import { DefaultMainnetConfig } from "./constant/network";
+import { CURRENCY_UNIT_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG_V2, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
 import { languageInit } from "./i18n";
 import App from "./popup/App";
 import { initCurrentAccount, updateShouldRequest } from "./reducers/accountReducer";
 import { updateDAppOpenWindow } from "./reducers/cache";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
-import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
+import { updateCurrentNode, updateCustomNodeList } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
 
 
 function getLocalNetConfig(store) {
   return new Promise(async (resolve)=>{
-    let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
+    let localNetConfig = await extGetLocal(NET_WORK_CONFIG_V2)
     let config
     if (!localNetConfig) {
-      let netList = NETWORK_CONFIG_LIST.map((item) => {
-        item.type = NET_CONFIG_DEFAULT
-        return item
-      })
       config = {
-        currentConfig: netList[0],
-        netList: netList,
-        netConfigVersion:NET_CONFIG_VERSION
+        currentNode: DefaultMainnetConfig,
+        customNodeList: [],
+        nodeConfigVersion:NET_CONFIG_VERSION
       }
-      store.dispatch(updateNetConfig(config))
-      await extSaveLocal(NET_WORK_CONFIG, config)
+      store.dispatch(updateCurrentNode(config))
+      await extSaveLocal(NET_WORK_CONFIG_V2, config)
       resolve(config)
     }else{
-      let newJson = await updateNetLocalConfig(localNetConfig)
-      store.dispatch(updateNetConfig(newJson))
-      resolve(newJson)
+      store.dispatch(updateCurrentNode(localNetConfig.currentNode))
+      store.dispatch(updateCustomNodeList(localNetConfig.customNodeList))
+      resolve(localNetConfig)
     }
   })
-}
-
-async function updateNetLocalConfig(netConfig){
-  let localVersion = netConfig.netConfigVersion || 0 
-
-  if(localVersion >= NET_CONFIG_VERSION){
-    return netConfig
-  }
-  let localNetList = netConfig.netList
-  let currentUrl = netConfig.currentUrl || netConfig.currentConfig.url
-  let currentConfig = {}
-  let addList = []
-  let currentUrlType = ""
-  const currentAllNetType = Object.values(NET_CONFIG_TYPE)
-  localNetList.map((item,index)=>{
-   
-    let newItem = item
-    if(item.type !== NET_CONFIG_DEFAULT){
-      let id = item.url
-      let preNetType = item.netType?.toLowerCase()||NET_CONFIG_TYPE.Mainnet
-      // for remove net
-      if(currentAllNetType.indexOf(preNetType) === -1 ){
-        preNetType = NET_CONFIG_TYPE.Unknown
-      }
-      let nextConfig = NET_CONFIG_MAP[preNetType].config
-      newItem =  {
-        name:item.name||"Unknown",
-        id,
-        ...item,
-        explorer :nextConfig.explorer||"",
-        gqlTxUrl :nextConfig.gqlTxUrl||"",
-        netType :preNetType,
-      }
-      addList.push(newItem)
-    }
-    if(newItem.url === currentUrl){
-      currentConfig = newItem
-      currentUrlType = newItem.type
-    }
-
-  })
-  let config
-  if(addList.length === 0){
-    let netList = NETWORK_CONFIG_LIST.map((item) => {
-      item.type = NET_CONFIG_DEFAULT
-      return item
-    })
-    config = {
-      currentConfig: netList[0],
-      netList: netList,
-      netConfigVersion:NET_CONFIG_VERSION
-    }
-  }else{
-    let newNetList = NETWORK_CONFIG_LIST.map((item) => {
-      item.type = NET_CONFIG_DEFAULT
-      return item
-    }) 
-    newNetList.push(...addList)
-    let newCurrentConfig = {}
-    if(currentUrlType === NET_CONFIG_DEFAULT){
-      newCurrentConfig = newNetList[0]
-    }else{
-      newCurrentConfig = currentConfig
-    }
-    config = {
-      currentConfig:newCurrentConfig,
-      netList: newNetList,
-      netConfigVersion:NET_CONFIG_VERSION
-    }
-  }
-  await extSaveLocal(NET_WORK_CONFIG, config) 
-  return config
 }
 /**
  * 
@@ -220,26 +144,6 @@ async function initAccountInfo(store) {
     })
   })
 }
-async function upgradeStorageConfig(){
-  const languageConfig = getLocal(LANGUAGE_CONFIG) 
-  const networkConfig = getLocal(NET_WORK_CONFIG) 
-  if(!languageConfig || !networkConfig){
-    return 
-  }
-  const storageUpgradeToV3Status = getLocal(STORAGE_UPGRADE_STATUS)
-  if(storageUpgradeToV3Status){
-    return
-  }
-
-  if(languageConfig){
-    await extSaveLocal(LANGUAGE_CONFIG, languageConfig)
-  }
-  if(networkConfig){
-    await extSaveLocal(NET_WORK_CONFIG, JSON.parse(networkConfig))
-  }
-  saveLocal(STORAGE_UPGRADE_STATUS,true)
-}
-
 async function initNetworkFlag(){
   let localFlag = await extGetLocal(NET_WORK_CHANGE_FLAG)
   if(localFlag){
@@ -276,7 +180,6 @@ export const applicationEntry = {
   async appInit(store) {
     extension.runtime.connect({ name: WALLET_CONNECT_TYPE.WALLET_APP_CONNECT });
 
-    await upgradeStorageConfig()
     // init netRequest
     await getLocalNetConfig(store)
 

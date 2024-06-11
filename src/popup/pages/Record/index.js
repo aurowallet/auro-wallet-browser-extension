@@ -125,8 +125,8 @@ const Record = ({}) => {
   }, [i18n, txDetail]);
 
   const getExplorerUrl = useCallback(() => {
-    let currentConfig = netConfig.currentConfig;
-    return currentConfig.explorer;
+    let currentNode = netConfig.currentNode;
+    return currentNode.explorer;
   }, [netConfig]);
 
   const [showExplorer, setShowExplorer] = useState(() => {
@@ -135,7 +135,7 @@ const Record = ({}) => {
 
   useEffect(() => {
     setShowExplorer(!!getExplorerUrl());
-  }, [netConfig.currentConfig]);
+  }, [netConfig.currentNode]);
 
   const onGoExplorer = useCallback(() => {
     let url = getExplorerUrl() + "/tx/" + txDetail.hash;

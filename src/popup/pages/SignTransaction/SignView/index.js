@@ -85,7 +85,6 @@ const SignView = ({
     (state) => state.accountInfo.currentAccount
   );
   const balance = useSelector((state) => state.accountInfo.balance);
-  const currentConfig = useSelector((state) => state.network.currentConfig);
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);

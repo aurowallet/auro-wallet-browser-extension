@@ -2,12 +2,8 @@ import BigNumber from "bignumber.js";
 import validUrl from "valid-url";
 import { MAIN_COIN_CONFIG } from "../constant";
 import { getLocal, removeLocal } from "../background/localStorage";
-import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../constant/storageKey";
+import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG_V2 } from "../constant/storageKey";
 import { DAPP_CHANGE_NETWORK } from "../constant/msgTypes";
-import {
-  NET_CONFIG_NOT_SUPPORT_STAKING,
-  NET_CONFIG_NOT_SUPPORT_TX_HISTORY,
-} from "../constant/network";
 import { sendMsg } from "./commonMsg";
 import bs58check from "bs58check";
 import { extGetLocal } from "../background/extensionStorage";
@@ -223,18 +219,18 @@ export function getQueryStringArgs(queryUrl = "") {
   return args;
 }
 
-export async function getCurrentNetConfig() {
-  let localNetConfig = await extGetLocal(NET_WORK_CONFIG);
+export async function getCurrentNodeConfig() {
+  let localNetConfig = await extGetLocal(NET_WORK_CONFIG_V2);
   if (localNetConfig) {
-    return localNetConfig.currentConfig;
+    return localNetConfig.currentNode;
   }
   return {};
 }
 /** get all network that contains custom add */
 export async function getLocalNetworkList() {
-  let localNetConfig = await extGetLocal(NET_WORK_CONFIG);
+  let localNetConfig = await extGetLocal(NET_WORK_CONFIG_V2);
   if (localNetConfig) {
-    return localNetConfig.netList;
+    return localNetConfig.customNodeList;
   }
   return [];
 }
@@ -289,7 +285,7 @@ export function parseStakingList(stakingListFromServer) {
  * @param {*} netConfig
  */
 export function sendNetworkChangeMsg(netConfig) {
-  if (netConfig.netType) {
+  if (netConfig.networkID) {
     sendMsg(
       {
         action: DAPP_CHANGE_NETWORK,
@@ -344,15 +340,6 @@ export function getArrayDiff(deletedAccountApproved, newAccountApproved) {
   return list;
 }
 
-/** not support transaction history */
-export function getNetTypeNotSupportHistory(netType) {
-  return NET_CONFIG_NOT_SUPPORT_TX_HISTORY.indexOf(netType) !== -1;
-}
-
-/** not support stake   */
-export function getNetTypeNotSupportStaking(netType) {
-  return NET_CONFIG_NOT_SUPPORT_STAKING.indexOf(netType) !== -1;
-}
 
 export function exportFile(data, fileName) {
   const streamData = new Blob([data], { type: "application/octet-stream" });
@@ -412,15 +399,14 @@ export function clearLocalCache() {
 }
 
 /** check url is exist in netConfig */
-export function checkNetworkUrlExist(netConfigList, url) {
-  let list = [...netConfigList];
+export function checkNodeExist(allNodeList, url) {
   let sameIndex = -1;
   let config;
-  for (let index = 0; index < list.length; index++) {
-    const net = list[index];
-    if (net.url === url) {
+  for (let index = 0; index < allNodeList.length; index++) {
+    const nodeItem = allNodeList[index];
+    if (nodeItem.url === url) {
       sameIndex = index;
-      config = net;
+      config = nodeItem;
       break;
     }
   }

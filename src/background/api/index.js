@@ -1,19 +1,19 @@
+import { NetworkID_MAP } from "@/constant/network";
 import { BASE_INFO_URL } from "../../../config";
 import { DEFAULT_TX_REQUEST_LENGTH } from "../../constant";
-import { NET_CONFIG_SUPPORT_ZKAPP, NET_CONFIG_TYPE } from "../../constant/network";
-import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, NETWORK_ID_AND_TYPE, RECOMMEND_FEE, SCAM_LIST } from "../../constant/storageKey";
-import { getCurrentNetConfig, parseStakingList } from "../../utils/utils";
+import { LOCAL_BASE_INFO, LOCAL_CACHE_KEYS, RECOMMEND_FEE, SCAM_LIST } from "../../constant/storageKey";
+import { getCurrentNodeConfig, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import { commonFetch, startFetchMyMutation, startFetchMyQuery } from "../request";
 import {
   getBalanceBatchBody,
   getBalanceBody,
   getBlockInfoBody,
-  getChainIdBody,
   getDaemonStatusBody,
   getDelegationInfoBody,
   getDeletionTotalBody,
   getFetchAccountBody,
+  getNetworkIDBody,
   getPartyBody,
   getPendingTxBody,
   getPendingZkAppTxBody,
@@ -156,8 +156,8 @@ export async function fetchDelegationInfo(publicKey) {
 }
 
 export async function fetchStakingList() {
-  let netConfig = await getCurrentNetConfig()
-  if(netConfig.netType !== NET_CONFIG_TYPE.Mainnet){
+  let netConfig = await getCurrentNodeConfig()
+  if(netConfig.networkID !== NetworkID_MAP.mainnet){
     return []
   }
   const data = await commonFetch(BASE_INFO_URL + '/validators').catch(() => [])
@@ -241,14 +241,14 @@ export async function getBalanceBatch(addressList) {
 }
 
 /**
- * get node chain id
+ * get node networkID
  * @param {*} gqlUrl 
  * @returns 
  */
-export async function getNodeChainId(gqlUrl) {
-  let txBody = getChainIdBody()
+export async function getNodeNetworkID(gqlUrl) {
+  let body = getNetworkIDBody()
   let result = await startFetchMyQuery(
-    txBody,
+    body,
     {},
     gqlUrl,
   ).catch((err) => err)
@@ -260,8 +260,8 @@ export async function getNodeChainId(gqlUrl) {
 * @returns 
 */
 export async function getCurrencyPrice(currency) {
-  let netConfig = await getCurrentNetConfig()
-  if(netConfig.netType !== NET_CONFIG_TYPE.Mainnet){
+  let netConfig = await getCurrentNodeConfig()
+  if(netConfig.networkID !== NetworkID_MAP.mainnet){
     return 0
   }
   let priceUrl = BASE_INFO_URL + "/prices?currency=" + currency
@@ -271,19 +271,9 @@ export async function getCurrencyPrice(currency) {
   return price
 }
 
-
-export async function getNetworkList() {
-  let networkUrl = BASE_INFO_URL + "/network_list.json"
-  let result = await commonFetch(networkUrl).catch(error => [])
-  if (result.length > 0) {
-    saveLocal(NETWORK_ID_AND_TYPE, JSON.stringify(result))
-  }
-  return result
-}
-
 /** request gql transaction */
 export async function getGqlTxHistory(address,limit){
-  let netConfig = await getCurrentNetConfig()
+  let netConfig = await getCurrentNodeConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
   if (!gqlTxUrl) {
     return []
@@ -303,41 +293,11 @@ export async function getGqlTxHistory(address,limit){
   return list
 }
 
-
-/**
- * get validator detail by id
- * @param {*} id 
- * @returns 
- */
- export async function fetchValidatorDetail(publicKey,epoch) {
-  let netConfig = await getCurrentNetConfig()
-  let gqlTxUrl = netConfig.gqlTxUrl
-  if (!gqlTxUrl) {
-    return {}
-  }
-  const query = getDeletionTotalBody()
-  let res = await startFetchMyQuery(query, 
-    { 
-      requestType: "extensionAccountInfo", 
-      publicKey,
-      epoch
-     },
-     gqlTxUrl
-     );
-  let validatorDetail = {}
-  if(res.stake){
-    validatorDetail = res.stake.delegationTotals || {}
-  }
-  saveLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL, JSON.stringify(validatorDetail))
-  return validatorDetail;
-}
-
 /** request gql transaction */
 export async function getZkAppTxHistory(address,limit){
-  let netConfig = await getCurrentNetConfig()
+  let netConfig = await getCurrentNodeConfig()
   let gqlTxUrl = netConfig.gqlTxUrl
-
-  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
+  if (!gqlTxUrl) {
     saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }
@@ -358,9 +318,9 @@ export async function getZkAppTxHistory(address,limit){
 
 
 export async function getZkAppPendingTx(address,limit){
-  let netConfig = await getCurrentNetConfig()
+  let netConfig = await getCurrentNodeConfig()
   let gqlTxUrl = netConfig.url
-  if (!gqlTxUrl || NET_CONFIG_SUPPORT_ZKAPP.indexOf(netConfig.netType)== -1) {
+  if (!gqlTxUrl) {
    saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: [] }))
     return []
   }

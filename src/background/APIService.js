@@ -6,7 +6,7 @@ import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, si
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
-import { decodeMemo, getCurrentNetConfig } from '../utils/utils';
+import { decodeMemo, getCurrentNodeConfig } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { changeLanguage } from '../i18n';
@@ -765,7 +765,7 @@ class APIService {
         return createResult
     }
     notification = async (hash) => {
-        let netConfig = await getCurrentNetConfig()
+        let netConfig = await getCurrentNodeConfig()
         let myNotificationID
         extension.notifications &&
             extension.notifications.onClicked.addListener(function (clickId) {

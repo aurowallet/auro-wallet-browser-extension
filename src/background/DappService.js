@@ -3,12 +3,12 @@ import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN } from '../constant/msgTypes';
 import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
-import { checkNetworkUrlExist, getArrayDiff, getCurrentNetConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
+import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get, save } from './storageService';
-import { NET_CONFIG_MAP, NET_CONFIG_TYPE } from '@/constant/network';
+import { Default_Network_List } from '@/constant/network';
 import { errorCodes } from '@/constant/dappError';
 import { zkCommondFormat } from '@/utils/zkUtils';
 import { getAccountInfo } from './api';
@@ -132,13 +132,6 @@ class DappService {
             sendResponse
           )
           break;
-      // case DAppActions.mina_fetchAccount:
-      //   this.requestCallback(
-      //     () => this.requestAccountNetInfo(params,site),
-      //     id,
-      //     sendResponse
-      //   )
-      //   break;
       default:
         this.requestCallback(
           async ()=>{
@@ -156,11 +149,6 @@ class DappService {
       if(!publicKey || !addressValid(publicKey)){
         reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
         return 
-      }
-      const supportNetType = [NET_CONFIG_TYPE.Berkeley]
-      let netConfig = await getCurrentNetConfig()
-      if(supportNetType.indexOf(netConfig.netType)===-1){
-        reject({ code:errorCodes.unsupportedMethod, message: getMessageFromCode(errorCodes.unsupportedMethod)})
       }
       const tokenID = tokenId ? tokenId : ZK_DEFAULT_TOKEN_ID
       const accountInfo = await getAccountInfo(publicKey,tokenID)
@@ -200,16 +188,19 @@ class DappService {
           currentChainInfo = await this.requestCurrentNetwork()
         }
         if(sendAction === DAppActions.mina_switchChain){
-          const currentSupportChainList = Object.keys(NET_CONFIG_MAP);
-          const nextChainIndex = currentSupportChainList.indexOf(params.chainId);
+          let customNodeList = getLocalNetworkList()
+          let allNodeList = [...Default_Network_List,...customNodeList]
+          let currentSupportChainList = allNodeList.map((node)=>{
+            return node.networkID;
+          })
+          const nextChainIndex = currentSupportChainList.indexOf(params.networkID);
           if (nextChainIndex === -1) {
             reject({ code:errorCodes.notSupportChain, message: getMessageFromCode(errorCodes.notSupportChain) })
             return
           }
-          if(currentChainInfo.netType === params.chainId){
+          if(currentChainInfo.networkID === params.networkID){
             resolve({
-              chainId:currentChainInfo.netType,
-              name:currentChainInfo.name
+              networkID:currentChainInfo.networkID,
             })
             return
           }
@@ -221,11 +212,10 @@ class DappService {
             return
           }
           let exist = await this.checkNetworkIsExist(realAddUrl)
-          if(exist.index!==-1){
+          if(exist.index !== -1){
             if(exist.config.url === currentChainInfo.url){
               resolve({
-                chainId:currentChainInfo.netType,
-                name:currentChainInfo.name
+                networkID:currentChainInfo.networkID,
               })
               return 
             }else{
@@ -774,12 +764,11 @@ class DappService {
     })
   }
   notifyNetworkChange(currentNet) {
-    let netType = currentNet.netType || ""
+    let networkID = currentNet.networkID || ""
     let message = {
       action: "chainChanged",
       result: {
-        chainId:netType,
-        name:currentNet.name,
+        networkID:networkID,
       }
     }
     this.tabNotify(message)
@@ -831,14 +820,14 @@ class DappService {
   }
   requestNetwork() {
     return new Promise(async (resolve) => {
-      let netConfig = await getCurrentNetConfig()
-      resolve({chainId:netConfig.netType,name:netConfig.name})
+      let netConfig = await getCurrentNodeConfig()
+      resolve({networkID:netConfig.networkID})
     })
   }
   requestCurrentNetwork() {
     return new Promise(async (resolve) => {
-      let currentNetConfig = await getCurrentNetConfig()
-      resolve(currentNetConfig)
+      let currentNodeConfig = await getCurrentNodeConfig()
+      resolve(currentNodeConfig)
     })
   }
   getAppConnectionList(address){
@@ -847,8 +836,9 @@ class DappService {
     return currentAccountApproved
   }
   async checkNetworkIsExist(url){
-     let networkList = await getLocalNetworkList()
-      let exist = checkNetworkUrlExist(networkList, url);
+     let customList = await getLocalNetworkList()
+     let allNodeList = [...Default_Network_List,...customList]
+      let exist = checkNodeExist(allNodeList, url);
       return exist
   }
   async initApproveConnect(){

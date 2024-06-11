@@ -1,9 +1,7 @@
 /**
  * Locally stored network configuration
  */
-export const NET_WORK_CONFIG = "NET_WORK_CONFIG"
-
-
+export const NET_WORK_CONFIG_V2 = "NET_WORK_CONFIG_V2"
 
 
 /**
@@ -35,12 +33,6 @@ export const CURRENCY_UNIT_CONFIG = "CURRENCY_UNIT_CONFIG"
  * The local storage watch wallet has shown the prompt
  */
 export const WATCH_MODE_TIP_SHOW = "WATCH_MODE_TIP_SHOW"
-
-
-/**
- * local net id config list
- */
-export const NETWORK_ID_AND_TYPE = "NETWORK_ID_AND_TYPE"
 
 
 /**
@@ -81,11 +73,6 @@ export const LOCAL_CACHE_KEYS = {
      * pledge information
      */
     "DELEGATION_INFO": "DELEGATION_INFO",
-
-    /**
-     * Node pledge information
-     */
-    "VALIDATOR_DETAIL": "VALIDATOR_DETAIL",
 
     /**
      * Validator list

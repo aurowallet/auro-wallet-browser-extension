@@ -1,5 +1,4 @@
-import { NET_CONFIG_TYPE } from "@/constant/network";
-import { NET_CONFIG_DEFAULT } from "@/reducers/network";
+import { NetworkID_MAP } from "@/constant/network";
 import { useMemo } from "react";
 import styled from "styled-components";
 
@@ -41,9 +40,9 @@ const StyledHolderIcon = styled.div`
 
 export const NetworkIcon = ({ nodeItem, size }) => {
   const { isCustomNet, iconSource, holderIconName } = useMemo(() => {
-    let isCustomNet = nodeItem.type !== NET_CONFIG_DEFAULT;
+    let isCustomNet = !nodeItem.isDefaultNode;
     let iconSource =
-      nodeItem.netType == NET_CONFIG_TYPE.Mainnet
+      nodeItem.networkID == NetworkID_MAP.mainnet
         ? "img/mina_color.svg"
         : "img/icon_mina_gray.svg";
     let holderIconName = "";

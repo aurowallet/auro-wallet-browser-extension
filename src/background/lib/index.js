@@ -1,20 +1,20 @@
 import BigNumber from "bignumber.js";
 import { MAIN_COIN_CONFIG } from "../../constant";
-import { getCurrentNetConfig, getMessageFromCode, getRealErrorMsg } from '../../utils/utils';
-import { NET_CONFIG_TYPE } from '../../constant/network';
+import { getCurrentNodeConfig, getMessageFromCode, getRealErrorMsg } from '../../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { errorCodes } from "@/constant/dappError";
+import { NetworkID_MAP } from "@/constant/network";
 
 export async function getSignClient(){
-    let netConfig = await getCurrentNetConfig()
-    let netType = ''
+    let netConfig = await getCurrentNodeConfig()
+    let networkID = ''
     const { default: Client } = await import('mina-signer')
-    if(netConfig.netType){
-      netType = netConfig.netType
+    if(netConfig.networkID){
+        networkID = netConfig.networkID
     }
     let client
-    if(netType === NET_CONFIG_TYPE.Mainnet){
+    if(networkID === NetworkID_MAP.mainnet){
         client = new Client({ network: "mainnet" });
     }else{
         client = new Client({ network: "testnet" });

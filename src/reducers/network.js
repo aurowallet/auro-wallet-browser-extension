@@ -1,127 +1,52 @@
+import { Default_Network_List } from "@/constant/network";
 
-import {NET_CONFIG_MAP, NET_CONFIG_TYPE} from '../constant/network'
-const UPDATE_NET_CONFIG = "UPDATE_NET_CONFIG"
+const UPDATE_CURRENT_NODE = "UPDATE_CURRENT_NODE";
 
-const UPDATE_NETWORK_CHAIN_ID_CONFIG = "UPDATE_NETWORK_CHAIN_ID_CONFIG"
-
-export const NET_CONFIG_DEFAULT = "DEFAULT"
-export const NET_CONFIG_ADD = "ADD"
+const UPDATE_CUSTOM_NODE_LIST = "UPDATE_CUSTOM_NODE_LIST";
 
 /**
- * update net config
- * @param {*} data 
+ * @param {*} data
  */
-export function updateNetConfig(data) {
-    return {
-        type: UPDATE_NET_CONFIG,
-        data
-    };
+export function updateCurrentNode(node) {
+  return {
+    type: UPDATE_CURRENT_NODE,
+    node,
+  };
 }
-
 
 /**
- * update net config
- * @param {*} data 
+ * @param {*} data
  */
- export function updateNetChainIdConfig(data) {
-    return {
-        type: UPDATE_NETWORK_CHAIN_ID_CONFIG,
-        data
-    };
-}
-
-function getNetConfigData(config) {
-    let netList = config.netList
-    let currentConfig = config.currentConfig
-    let selectList = []
-    let currentNetName = ""
-
-
-    currentNetName = currentConfig.name
-    let topList = []
-    let bottomList = []
-    let defaultMainConfig
-
-    for (let index = 0; index < netList.length; index++) {
-        const netConfig = netList[index];
-        let selectItem = {
-            "value": netConfig.url,
-            "label": netConfig.name,
-        }
-        if (netConfig.type === NET_CONFIG_DEFAULT) {
-            if (netConfig.netType !== NET_CONFIG_TYPE.Mainnet) {
-              bottomList.push(selectItem);
-            } else {
-              defaultMainConfig = selectItem;
-            }
-          } else {
-            topList.push(selectItem);
-          }
-    }
-    if (defaultMainConfig) {
-        topList.unshift(defaultMainConfig);
-      }
-      selectList = [
-        ...topList,
-        {
-            type:"dividedLine"
-        },
-        ...bottomList]
-    return {
-        netList,
-        currentConfig,
-        selectList,
-        currentNetName
-    }
+export function updateCustomNodeList(nodeList) {
+  return {
+    type: UPDATE_CUSTOM_NODE_LIST,
+    nodeList,
+  };
 }
 
 const initState = {
-    netList: [],
-    currentConfig: {},
-    currentNetConfig: {},
-    netSelectList: [],
-    currentNetName: "",
-    networkConfig:[]
+  currentNode: {},
+  customNodeList: [],
+  allNodeList:Default_Network_List,
 };
 
 const network = (state = initState, action) => {
-    switch (action.type) {
-        case UPDATE_NET_CONFIG:
-            let data = getNetConfigData(action.data)
-            return {
-                ...state,
-                netList: data.netList,
-                currentConfig: data.currentConfig,
-                netSelectList: data.selectList,
-                currentNetName: data.currentNetName,
-                currentNetConfig: action.data,
-            }
-        case UPDATE_NETWORK_CHAIN_ID_CONFIG:
-            let chainIdList = action.data
-            let netConfigList = state.netList
-            let typeAndIdMap = {}
-            for (let index = 0; index < chainIdList.length; index++) {
-                const chainItem = chainIdList[index];
-                typeAndIdMap[chainItem.type] = chainItem.chain_id
-            }
-           
-            let newNetConfigList = []
-            for (let index = 0; index < netConfigList.length; index++) {
-                let config = {...netConfigList[index]};
-                if(config.type === NET_CONFIG_DEFAULT){
-                    let type_id = NET_CONFIG_MAP[config.netType]?.type_id
-                    config.chainId = typeAndIdMap[type_id]||""
-                }
-                newNetConfigList.push(config)
-            }
-            return {
-                ...state,
-                networkConfig: action.data,
-                netList:newNetConfigList
-            }
-        default:
-            return state;
-    }
+  switch (action.type) {
+    case UPDATE_CURRENT_NODE: 
+      return {
+        ...state,
+        currentNode: action.node,
+      };
+    case UPDATE_CUSTOM_NODE_LIST:
+      let nextNodeList = Array.isArray(action.nodeList) ? action.nodeList:[]
+      return {
+        ...state,
+        customNodeList: action.nodeList,
+        allNodeList:[...Default_Network_List,...nextNodeList]
+      };
+    default:
+      return state;
+  }
 };
 
 export default network;

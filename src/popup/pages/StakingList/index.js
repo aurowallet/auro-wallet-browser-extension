@@ -4,20 +4,19 @@ import { useCallback, useMemo, useState } from "react";
 import 'react-circular-progressbar/dist/styles.css';
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { MAIN_COIN_CONFIG } from "../../../constant";
-import { NET_CONFIG_TYPE } from "../../../constant/network";
 import { addressSlice, getAmountForUI, showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import styles from './index.module.scss';
+import { NetworkID_MAP } from "@/constant/network";
 
 const StakingList = ({ }) => {
 
   const history = useHistory()
   const dispatch = useDispatch()
-  const netType = useSelector(state => state.network.currentConfig.netType)
+  const networkID = useSelector(state => state.network.currentNode.networkID)
   const stakingList = useSelector(state => {
-    if(netType === NET_CONFIG_TYPE.Mainnet){
+    if(networkID === NetworkID_MAP.mainnet){
       return state.staking.stakingList
     }
     return []

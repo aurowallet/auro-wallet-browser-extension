@@ -1,36 +1,34 @@
-import cls from "classnames";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NET_CONFIG_VERSION } from "../../../../config";
-import { NET_WORK_CONFIG } from "../../../constant/storageKey";
+import { NET_WORK_CONFIG_V2 } from "../../../constant/storageKey";
 import {
   updateShouldRequest,
   updateStakingRefresh,
 } from "../../../reducers/accountReducer";
-import { NET_CONFIG_DEFAULT, updateNetConfig } from "../../../reducers/network";
+import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/network";
 import {
   addressSlice,
   clearLocalCache,
   sendNetworkChangeMsg,
 } from "../../../utils/utils";
-
-import { NET_CONFIG_TYPE } from "@/constant/network";
 import i18n from "i18next";
 import { useHistory } from "react-router-dom";
 import { extSaveLocal } from "../../../background/extensionStorage";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
-import { NodeEditorType } from "./NodeEditor";
 import styles from "./index.module.scss";
 import NetworkItem from "./NetworkItem";
 import styled from "styled-components";
+import { NetworkID_MAP } from "@/constant/network";
 
 const StyledItemWrapper = styled.div`
   margin-top: 10px;
 `;
 
 const NetworkPage = ({}) => {
-  const netConfigList = useSelector((state) => state.network.netList);
+  const allNodeList = useSelector((state) => state.network.allNodeList);
+  const customNodeList = useSelector((state) => state.network.customNodeList);
 
   const [editMode, setEditMode] = useState(false);
 
@@ -41,9 +39,10 @@ const NetworkPage = ({}) => {
     let defaultMainConfig;
     let topList = [];
     let bottomList = [];
-    netConfigList.map((item) => {
-      if (item.type === NET_CONFIG_DEFAULT) {
-        if (item.netType !== NET_CONFIG_TYPE.Mainnet) {
+    
+    allNodeList.map((item) => {
+        if (item.isDefaultNode) {
+        if (item.networkID !== NetworkID_MAP.mainnet) {
           bottomList.push(item);
         } else {
           defaultMainConfig = item;
@@ -62,7 +61,7 @@ const NetworkPage = ({}) => {
         list: topList,
       },
       {
-        type: NET_CONFIG_DEFAULT,
+        isDefaultNodeList: true,
         list: bottomList,
       },
     ];
@@ -71,7 +70,7 @@ const NetworkPage = ({}) => {
       nodeList,
       showEditBtn,
     };
-  }, [netConfigList, i18n]);
+  }, [allNodeList, i18n]);
 
 
   const onClickEdit = useCallback(() => {
@@ -81,7 +80,6 @@ const NetworkPage = ({}) => {
   const onAddNode = useCallback(() => {
     history.push({
       pathname: "node_editor",
-      params: { editorType: NodeEditorType.add },
     });
   }, []);
 
@@ -90,22 +88,25 @@ const NetworkPage = ({}) => {
       if (editMode) {
         return;
       }
-      let config = {
-        netList: netConfigList,
-        currentConfig: nodeItem,
-        netConfigVersion: NET_CONFIG_VERSION,
+
+      let config = { 
+        currentNode: nodeItem,
+        customNodeList: customNodeList,
+        nodeConfigVersion:NET_CONFIG_VERSION
       };
-      await extSaveLocal(NET_WORK_CONFIG, config);
+      await extSaveLocal(NET_WORK_CONFIG_V2, config);
       clearLocalCache();
 
-      dispatch(updateNetConfig(config));
+
+      dispatch(updateCurrentNode(config.currentNode));
+      dispatch(updateCustomNodeList(config.customNodeList));
       dispatch(updateShouldRequest(true));
       dispatch(updateStakingRefresh(true));
 
-      sendNetworkChangeMsg(config.currentConfig);
+      sendNetworkChangeMsg(config.currentNode);
       history.goBack();
     },
-    [netConfigList, editMode]
+    [customNodeList, editMode]
   );
 
   const onEditItem = useCallback(
@@ -113,12 +114,12 @@ const NetworkPage = ({}) => {
       history.push({
         pathname: "node_editor",
         params: {
-          editorType: NodeEditorType.edit,
+          isEdit:true,
           editItem: nodeItem,
         },
       });
     },
-    [netConfigList]
+    []
   );
 
   const rightComponent = useMemo(() => {
@@ -143,7 +144,7 @@ const NetworkPage = ({}) => {
           if (netNode.list.length == 0) {
             return <div key={index} />;
           }
-          let showNetTitle = netNode.type === NET_CONFIG_DEFAULT;
+          let showNetTitle = netNode.isDefaultNodeList;
           return (
             <div key={index}>
               {showNetTitle && (

@@ -1,5 +1,4 @@
 import { NetworkIcon } from "@/popup/component/NetworkIcon";
-import { NET_CONFIG_DEFAULT } from "@/reducers/network";
 import { addressSlice } from "@/utils/utils";
 import { useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -66,7 +65,6 @@ const StyledNetworkType = styled.div`
   font-size: 12px;
   line-height: 14px;
   text-align: center;
-  text-transform: capitalize;
 `;
 
 const StyledNetworkLeft = styled.div`
@@ -98,15 +96,15 @@ const NetworkItem = ({
   editMode = false,
   onEditItem = () => {},
 }) => {
-  const currentConfig = useSelector((state) => state.network.currentConfig);
+  const currentNode = useSelector((state) => state.network.currentNode);
   const { isNotDefault, select } = useMemo(() => {
-    let isNotDefault = nodeItem.type !== NET_CONFIG_DEFAULT;
-    let select = currentConfig.url === nodeItem.url;
+    let isNotDefault = !nodeItem.isDefaultNode;
+    let select = currentNode.url === nodeItem.url;
     return {
       isNotDefault,
       select,
     };
-  }, [nodeItem, currentConfig]);
+  }, [nodeItem, currentNode]);
 
   const getChainNameColor = useCallback(() => {
     if (editMode) {
@@ -132,19 +130,10 @@ const NetworkItem = ({
             </StyledNetworkName>
             {isNotDefault && (
               <StyledNetworkTypeWrapper>
-                <StyledNetworkType>{nodeItem.netType}</StyledNetworkType>
+                <StyledNetworkType>{nodeItem.networkID}</StyledNetworkType>
               </StyledNetworkTypeWrapper>
             )}
           </StyledNetworkTop>
-          <StyledNetworkId
-            color={
-              select && !editMode
-                ? "rgba(255, 255, 255, 0.50)"
-                : "rgba(0, 0, 0, 0.10)"
-            }
-          >
-            {addressSlice(nodeItem.chainId, 6)}
-          </StyledNetworkId>
         </StyledNetworkInfo>
       </StyledNetworkLeft>
       {editMode && isNotDefault && (

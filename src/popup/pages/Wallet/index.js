@@ -9,14 +9,12 @@ import { useHistory } from 'react-router-dom';
 import { MAIN_COIN_CONFIG } from '../../../constant';
 import { getBalance, getCurrencyPrice, getGqlTxHistory, getPendingTxList, getZkAppPendingTx, getZkAppTxHistory } from "../../../background/api";
 import { extSaveLocal } from "../../../background/extensionStorage";
-import { NET_WORK_CONFIG } from '../../../constant/storageKey';
 import { DAPP_DISCONNECT_SITE, DAPP_GET_CONNECT_STATUS, WALLET_GET_ALL_ACCOUNT } from '../../../constant/msgTypes';
-import { NET_CONFIG_TYPE } from '../../../constant/network';
+import { NetworkID_MAP } from '../../../constant/network';
 import { ACCOUNT_BALANCE_CACHE_STATE, updateAccountTx, updateNetAccount, updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
 import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
-import { updateNetConfig } from "../../../reducers/network";
 import { sendMsg } from '../../../utils/commonMsg';
-import { addressSlice, clearLocalCache, copyText, getAmountForUI, getDisplayAmount, getNetTypeNotSupportHistory, getOriginFromUrl, isNaturalNumber, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
+import { addressSlice, clearLocalCache, copyText, getAmountForUI, getDisplayAmount, getOriginFromUrl, isNaturalNumber, isNumber, sendNetworkChangeMsg } from "../../../utils/utils";
 import Clock from '../../component/Clock';
 import { PopupModal } from '../../component/PopupModal';
 import Toast from "../../component/Toast";
@@ -60,33 +58,6 @@ const Wallet = ({ }) => {
       }
     })
   }, [])
-
-
-  const onChangeOption = useCallback(async (option) => {
-    const { currentConfig, currentNetConfig, netList } = netConfig
-    if (option.value !== currentConfig.url) {
-      let newConfig = {}
-      for (let index = 0; index < netList.length; index++) {
-        const config = netList[index];
-        if (config.url === option.value) {
-          newConfig = config
-          break
-        }
-      }
-      let config = {
-        ...currentNetConfig,
-        currentConfig: newConfig
-      }
-      await extSaveLocal(NET_WORK_CONFIG, config)
-      dispatch(updateNetConfig(config))
-      dispatch(updateStakingRefresh(true))
-
-      dispatch(updateShouldRequest(true))
-      sendNetworkChangeMsg(newConfig) 
-      clearLocalCache()
-    }
-
-  }, [netConfig])
 
   useEffect(() => {
     checkLocalWatchWallet()
@@ -191,8 +162,8 @@ const WalletInfo = () => {
     // format
     balance = new BigNumber(balance).toFormat()
 
-    const netType = netConfig.currentConfig?.netType
-    let showCurrency = netType == NET_CONFIG_TYPE.Mainnet
+    const networkID = netConfig.currentNode?.networkID
+    let showCurrency = networkID == NetworkID_MAP.mainnet
 
     let isCache = accountInfo.isAccountCache === ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE
  
@@ -295,8 +266,8 @@ const WalletInfo = () => {
 
 
   const fetchPrice = useCallback(async (currency) => {
-    let currentConfig = netConfig.currentConfig
-    if (currentConfig.netType == NET_CONFIG_TYPE.Mainnet) {
+    let currentNode = netConfig.currentNode
+    if (currentNode.networkID == NetworkID_MAP.mainnet) {
       let lastCurrency = currencyConfig.currentCurrency
       if (currency) {
         lastCurrency = currency
@@ -321,11 +292,11 @@ const WalletInfo = () => {
 
   useEffect(() => {
     fetchAccountData()
-  }, [netConfig.currentConfig.netType, fetchAccountData])
+  }, [netConfig.currentNode.networkID, fetchAccountData])
  
   useEffect(()=>{
     fetchPrice()
-  },[currencyConfig.currentCurrency,netConfig.currentConfig.netType])
+  },[currencyConfig.currentCurrency,netConfig.currentNode.networkID])
   return (
     <>
       <div className={styles.walletInfoContainer}>
@@ -388,31 +359,22 @@ const WalletInfo = () => {
   )
 }
 
-
 const WalletDetail = () => {
   const dispatch = useDispatch()
   const isMounted = useRef(true);
 
-  const netConfig = useSelector(state => state.network)
+  const currentNode = useSelector(state => state.network.currentNode)
   const accountInfo = useSelector(state => state.accountInfo)
   const shouldRefresh = useSelector(state => state.accountInfo.shouldRefresh)
   const inferredNonce = useSelector(
     (state) => state.accountInfo.netAccount.inferredNonce
   );
 
-  const netType = useMemo(()=>{
-    return netConfig?.currentConfig?.netType
-  },[netConfig])
 
   const [currentAccount, setCurrentAccount] = useState(accountInfo.currentAccount)
   const [historyList, setHistoryList] = useState(accountInfo.txList)
   const [showHistoryStatus, setShowHistoryStatus] = useState(()=>{
     let status
-    if (getNetTypeNotSupportHistory(netType)) {
-      status = false
-    } else {
-      status = true
-    }
     return status
   })
   const [historyRefreshing, setHistoryRefreshing] = useState(false)
@@ -422,7 +384,7 @@ const WalletDetail = () => {
   const isFirstRequest = useRef(historyList.length===0);
  
   const requestHistory = useCallback(async (silent = false, address = currentAccount.address) => {
-    if (!getNetTypeNotSupportHistory(netType)) {
+    if(currentNode.gqlTxUrl){
       if (isFirstRequest.current && !silent) {
         setLoadingStatus(true)
       }
@@ -448,7 +410,7 @@ const WalletDetail = () => {
       })
     }
 
-  }, [currentAccount.address, netType])
+  }, [currentAccount.address,currentNode])
 
 
   useEffect(() => {
@@ -469,23 +431,23 @@ const WalletDetail = () => {
 
 
   useEffect(() => {
-    if (getNetTypeNotSupportHistory(netType)) {
+    if (!currentNode.gqlTxUrl) {
       setShowHistoryStatus(false)
       setLoadingStatus(false)
       isFirstRequest.current = false
     } else {
       setShowHistoryStatus(true)
     }
-  }, [netType])
+  }, [currentNode])
 
 
   useEffect(() => {
-    if (shouldRefresh && !getNetTypeNotSupportHistory(netType)) {
+    if (shouldRefresh && !currentNode.gqlTxUrl) {
       setLoadingStatus(true)
       setShowHistoryStatus(true)
       requestHistory()
     }
-  }, [shouldRefresh,netType])
+  }, [shouldRefresh,currentNode])
 
   useEffect(() => {
     return () => {

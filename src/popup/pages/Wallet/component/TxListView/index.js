@@ -66,9 +66,9 @@ const TxListView = ({
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
 
   const onGoExplorer = useCallback(() => {
-    let currentConfig = netConfig.currentConfig;
+    let currentNode = netConfig.currentNode;
     let url =
-      currentConfig.explorer +
+    currentNode.explorer +
       "/account/" +
       accountInfo.currentAccount.address +
       "/txs";

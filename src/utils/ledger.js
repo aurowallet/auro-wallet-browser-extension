@@ -7,11 +7,11 @@ import { MinaLedgerJS, Networks, TxType } from "mina-ledger-js";
 import { MAIN_COIN_CONFIG } from "../constant";
 import { LEDGER_STATUS } from "../constant/commonType";
 import { LEDGER_CONNECTED_SUCCESSFULLY } from "../constant/msgTypes";
-import { NET_CONFIG_TYPE } from "../constant/network";
+import { NetworkID_MAP } from "../constant/network";
 import Loading from "../popup/component/Loading";
 import Toast from "../popup/component/Toast";
 import { closePopupWindow, openPopupWindow } from "./popup";
-import { getCurrentNetConfig } from "./utils";
+import { getCurrentNodeConfig } from "./utils";
 
 export const LEDGER_CONNECT_TYPE = {
   isPage: "isPage",
@@ -177,9 +177,9 @@ function reEncodeRawSignature(rawSignature) {
   return shuffleBytes(field) + shuffleBytes(scalar);
 }
 async function networkId() {
-  const networkConfig = await getCurrentNetConfig()
-  const netType = networkConfig.netType;
-  if (netType === NET_CONFIG_TYPE.Mainnet) {
+  const networkConfig = await getCurrentNodeConfig()
+  const networkID = networkConfig.networkID;
+  if (networkID === NetworkID_MAP.mainnet) {
     return Networks.MAINNET;
   } else {
     return Networks.DEVNET;
