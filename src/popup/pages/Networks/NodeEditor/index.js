@@ -155,7 +155,6 @@ const NodeEditor = () => {
 
       clearLocalCache();
 
-      updateCustomNodeList;
       dispatch(updateCurrentNode(newConfig.currentNode));
       dispatch(updateCustomNodeList(newConfig.customNodeList));
       dispatch(updateShouldRequest(true));

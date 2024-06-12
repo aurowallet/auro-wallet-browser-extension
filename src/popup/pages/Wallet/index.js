@@ -483,35 +483,31 @@ const WalletDetail = () => {
 
   const requestHistory = useCallback(
     async (address = accountInfo.currentAccount.address) => {
-      if (currentNode.gqlTxUrl) {
-        let pendingTxList = getPendingTxList(address);
-        let gqlTxList = getGqlTxHistory(address);
-        let zkAppTxList = getZkAppTxHistory(address);
-        let getZkAppPending = getZkAppPendingTx(address);
-        await Promise.all([
-          gqlTxList,
-          pendingTxList,
-          zkAppTxList,
-          getZkAppPending,
-        ])
-          .then((data) => {
-            let newList = data[0];
-            let txPendingData = data[1];
-            let zkApp = data[2];
-            let txPendingList = txPendingData.txList;
-            let zkPendingList = data[3];
-            dispatch(
-              updateAccountTx(newList, txPendingList, zkApp, zkPendingList)
-            );
-          })
-          .finally(() => {
-            if (isMounted.current) {
-              dispatch(updateShouldRequest(false));
-            }
-          });
-      } else {
-        console.log("can not find graphql url");
-      }
+      let pendingTxList = getPendingTxList(address);
+      let gqlTxList = getGqlTxHistory(address);
+      let zkAppTxList = getZkAppTxHistory(address);
+      let getZkAppPending = getZkAppPendingTx(address);
+      await Promise.all([
+        gqlTxList,
+        pendingTxList,
+        zkAppTxList,
+        getZkAppPending,
+      ])
+        .then((data) => {
+          let newList = data[0];
+          let txPendingData = data[1];
+          let zkApp = data[2];
+          let txPendingList = txPendingData.txList;
+          let zkPendingList = data[3];
+          dispatch(
+            updateAccountTx(newList, txPendingList, zkApp, zkPendingList)
+          );
+        })
+        .finally(() => {
+          if (isMounted.current) {
+            dispatch(updateShouldRequest(false));
+          }
+        });
     },
     [accountInfo.currentAccount, currentNode]
   );

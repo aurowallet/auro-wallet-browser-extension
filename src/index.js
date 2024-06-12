@@ -32,7 +32,7 @@ function getLocalNetConfig(store) {
         customNodeList: [],
         nodeConfigVersion:NET_CONFIG_VERSION
       }
-      store.dispatch(updateCurrentNode(config))
+      store.dispatch(updateCurrentNode(config.currentNode))
       await extSaveLocal(NET_WORK_CONFIG_V2, config)
       resolve(config)
     }else{
