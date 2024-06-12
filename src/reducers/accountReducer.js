@@ -92,7 +92,8 @@ const initState = {
     netAccount: {},
     balance: "0.0000",
     nonce: "",
-    shouldRefresh: false,
+    shouldRefresh: true,
+    isSilentRefresh:false,
     homeBottomType: "",
     isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
     stakingLoadingRefresh: false,
@@ -211,7 +212,8 @@ const accountInfo = (state = initState, action) => {
             }
             return {
                 ...state,
-                txList: newList
+                txList: newList,
+                isSilentRefresh:false,
             };
         case UPDATE_CURRENT_ACCOUNT:
             let account = action.account
@@ -257,6 +259,7 @@ const accountInfo = (state = initState, action) => {
                 return {
                     ...state,
                     shouldRefresh: shouldRefresh,
+                    isSilentRefresh:true
                 }
             }
             let newState = {}
@@ -271,6 +274,7 @@ const accountInfo = (state = initState, action) => {
             return {
                 ...state,
                 shouldRefresh: shouldRefresh,
+                isSilentRefresh:false,
                 ...newState
             }
         case UPDATE_STAKING_DATA:
@@ -283,26 +287,26 @@ const accountInfo = (state = initState, action) => {
                 ...state,
                 accountBalanceMap: action.list
             }
-            case UPDATE_SCAM_LIST:
-                const nextScamList = action.scamList.map((scamData)=>{
-                    return {
-                        ...scamData,
-                        address:scamData.address.toLowerCase()
-                    }
-                })
-                
-                if(state.txList.length>0){
-                    const newList = matchScamAndTxList(nextScamList,state.txList)
-                    return{
-                        ...state,
-                        scamList:nextScamList,
-                        txList:newList
-                    }
+        case UPDATE_SCAM_LIST:
+            const nextScamList = action.scamList.map((scamData)=>{
+                return {
+                    ...scamData,
+                    address:scamData.address.toLowerCase()
                 }
+            })
+            
+            if(state.txList.length>0){
+                const newList = matchScamAndTxList(nextScamList,state.txList)
                 return{
                     ...state,
                     scamList:nextScamList,
+                    txList:newList
                 }
+            }
+            return{
+                ...state,
+                scamList:nextScamList,
+            }
         default:
             return state;
     }

@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { clearLocalExcept, getLocal, saveLocal } from "../../../background/localStorage";
 import { clearStorage } from "../../../background/storageService";
 import { CURRENCY_UNIT, POWER_BY } from "../../../constant";
-import { CURRENCY_UNIT_CONFIG, LOCAL_BASE_INFO } from "../../../constant/storageKey";
+import { CURRENCY_UNIT_CONFIG, LOCAL_BASE_INFO, NET_WORK_CONFIG_V2 } from "../../../constant/storageKey";
 import { RESET_WALLET, WALLET_APP_SUBMIT_PWD } from "../../../constant/msgTypes";
 import { resetWallet } from "../../../reducers";
 import { initCurrentAccount } from "../../../reducers/accountReducer";
@@ -24,6 +24,7 @@ import styles from "./index.module.scss";
 import {extGetLocal, extSaveLocal} from "../../../background/extensionStorage";
 import extension from "extensionizer";
 import { DefaultMainnetConfig } from "@/constant/network";
+import { NET_CONFIG_VERSION } from "../../../../config";
 
 export const LockPage = ({
     onClickUnLock = () => { },
@@ -104,6 +105,11 @@ export const LockPage = ({
             action: RESET_WALLET,
         }, async () => {
             clearStorage()
+            await extSaveLocal(NET_WORK_CONFIG_V2,{
+                currentNode: DefaultMainnetConfig,
+                customNodeList: [],
+                nodeConfigVersion:NET_CONFIG_VERSION
+            })
             let baseInfo = getLocal(LOCAL_BASE_INFO)
             clearLocalExcept()
             dispatch(resetWallet())

@@ -188,7 +188,7 @@ class DappService {
           currentChainInfo = await this.requestCurrentNetwork()
         }
         if(sendAction === DAppActions.mina_switchChain){
-          let customNodeList = getLocalNetworkList()
+          let customNodeList = await getLocalNetworkList()
           let allNodeList = [...Default_Network_List,...customNodeList]
           let currentSupportChainList = allNodeList.map((node)=>{
             return node.networkID;

@@ -207,7 +207,10 @@ export async function getPendingTxList(address) {
     {
       requestType: "extensionAccountInfo",
       publicKey: address
-    }).catch(() => [])
+    }).catch(error=>error)
+  if(result.error){
+    throw new Error(String(result.error))
+  }
   let list = result.pooledUserCommands || []
   saveLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
   return { txList: list, address }
@@ -288,6 +291,9 @@ export async function getGqlTxHistory(address,limit){
     },
     gqlTxUrl,
   ).catch((error) => error)
+  if(result.error){
+    throw new Error(String(result.error))
+  }
   let list = result?.transactions  || []
   saveLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY, JSON.stringify({ [address]: list }))
   return list
@@ -311,6 +317,9 @@ export async function getZkAppTxHistory(address,limit){
     },
     gqlTxUrl,
   ).catch((error) => error)
+  if(result.error){
+    throw new Error(String(result.error))
+  }
   let list = result?.zkapps  || []
   saveLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST, JSON.stringify({ [address]: list }))
   return list
@@ -337,6 +346,9 @@ export async function getZkAppPendingTx(address,limit){
     },
     gqlTxUrl,
   ).catch((error) => error)
+  if(result.error){
+    throw new Error(String(result.error))
+  }
   let list = result.pooledZkappCommands  || []
   saveLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST, JSON.stringify({ [address]: list }))
   return list

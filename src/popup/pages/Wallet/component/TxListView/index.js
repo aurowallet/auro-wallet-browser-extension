@@ -55,7 +55,6 @@ import styles from "./index.module.scss";
 const TxListView = ({
   history = [],
   showHistoryStatus = false,
-  historyRefreshing = false,
   onClickRefresh = () => {},
 }) => {
   const dispatch = useDispatch();
@@ -64,6 +63,7 @@ const TxListView = ({
   const netConfig = useSelector((state) => state.network);
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
+  const shouldRefresh = useSelector(state => state.accountInfo.shouldRefresh)
 
   const onGoExplorer = useCallback(() => {
     let currentNode = netConfig.currentNode;
@@ -364,7 +364,7 @@ const TxListView = ({
     <div className={cls(styles.historyContainer, styles.holderContainer)}>
       <HistoryHeader
         showHistoryStatus={showHistoryStatus}
-        historyRefreshing={historyRefreshing}
+        historyRefreshing={shouldRefresh}
         onClickRefresh={onClickRefresh}
       />
       <div className={styles.listContainer}>

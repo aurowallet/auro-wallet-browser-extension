@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
+- Enhancements
+    - Upgrade network config
+    - Transaction history
+
 
 ## [2.2.16]
 - Enhancements

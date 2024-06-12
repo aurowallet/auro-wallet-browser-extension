@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS } from "../../../constant/storageKey";
-import { updateAccountTx, updateNetAccount } from "../../../reducers/accountReducer";
+import { updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateCurrentPrice } from "../../../reducers/cache";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
 import { isNumber } from "../../../utils/utils";
@@ -11,6 +11,8 @@ import Wallet from "../Wallet";
 const HomePage = () => {
 
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
+  const currentNode = useSelector(state => state.network.currentNode)
+
   const dispatch = useDispatch()
 
   const safeJsonParse = (data) => {
@@ -55,7 +57,12 @@ const HomePage = () => {
     
 
     dispatch(updateAccountTx(updateTxList, updatePendingTxList,updateZkList,updateZkPendingList))
-  }, [])
+
+    let totalList = [...updateTxList,...updatePendingTxList,...updateZkList,...updateZkPendingList]
+    if(totalList.length != 0 || !currentNode.gqlTxUrl){
+      dispatch(updateShouldRequest(false))
+    }
+  }, [currentNode])
 
   const updateLocalAccount = useCallback((address) => {
     let localAccount = getLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE)
