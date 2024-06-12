@@ -565,10 +565,12 @@ class DappService {
   }
   setBadgeContent() {
     const list = [...approveRequests,...signRequests,...notificationRequests]
+    let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
+    const action = isManifestV3 ? chrome.action : chrome.browserAction;
     if (list.length > 0) {
-      chrome.action?.setBadgeText({ text: list.length.toString() });
+      action.setBadgeText({ text: list.length.toString() });
     } else {
-      chrome.action?.setBadgeText({ text: "" });
+      action.setBadgeText({ text: "" });
     }
   }
   getApproveParamsByOpenId(openId){

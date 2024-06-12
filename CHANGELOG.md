@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 - Enhancements
     - Upgrade network config
     - Transaction history
+    - Icon lock status
 
 
 ## [2.2.16]
