@@ -120,7 +120,7 @@ const SignView = ({
     const body = signParams?.params?.transaction;
     const zkFee = getZkFee(body);
     let siteFee =
-      zkFee || signParams?.feePayer?.fee || signParams?.params?.fee || "";
+      zkFee || signParams?.params?.feePayer?.fee || signParams?.params?.fee || "";
     let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
     let id = signParams?.id || "";
     let currentAdvanceData = advanceData[id] || {};

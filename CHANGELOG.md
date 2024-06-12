@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
     - Upgrade network config
     - Transaction history
     - Icon lock status
+- Fixed
+    - zkApp recommend fee
 
 
 ## [2.2.16]
