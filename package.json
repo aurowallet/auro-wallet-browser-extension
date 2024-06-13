@@ -1,13 +1,13 @@
 {
   "name": "auro-wallet",
-  "version": "2.2.17",
+  "version": "2.3.0",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webusb": "5.46.0",
     "@reduxjs/toolkit": "1.4.0",
-    "@vespaiach/axios-fetch-adapter": "0.3.1",
     "@aurowallet/mina-provider": "1.0.5",
-    "axios": "0.21.1",
+    "axios": "1.7.2",
+    "axios-retry":"4.4.0",
     "bignumber.js": "9.0.1",
     "bip32": "2.0.6",
     "bip39": "3.0.2",

@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
+- Enhancements
+    - Upgrade axios config
 
 ## [2.2.17]
 - Enhancements
