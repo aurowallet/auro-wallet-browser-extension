@@ -4,8 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 - Enhancements
+    - Upgrade axios config
+
+## [2.2.17]
+- Enhancements
+    - Upgrade network config
+    - Transaction history
+    - Icon lock status
+- Fixed
+    - zkApp recommend fee
+
+
+## [2.2.16]
+- Enhancements
     - Add code-spell check.
     - Upgrade mina-signer to v3.0.7.
+    - Add support to return signed zk.
 
 ## [2.2.15]
 - Enhancements

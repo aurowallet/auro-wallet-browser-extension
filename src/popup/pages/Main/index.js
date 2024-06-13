@@ -1,19 +1,18 @@
 import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getNetworkList } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS } from "../../../constant/storageKey";
-import { updateAccountTx, updateNetAccount } from "../../../reducers/accountReducer";
+import { updateAccountTx, updateNetAccount, updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateCurrentPrice } from "../../../reducers/cache";
-import { updateNetChainIdConfig } from "../../../reducers/network";
-import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList, updateValidatorDetail } from "../../../reducers/stakingReducer";
-import { getNetTypeNotSupportHistory, isNumber } from "../../../utils/utils";
+import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
+import { isNumber } from "../../../utils/utils";
 import Wallet from "../Wallet";
 
 const HomePage = () => {
 
-  const netConfig = useSelector(state => state.network)
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
+  const currentNode = useSelector(state => state.network.currentNode)
+
   const dispatch = useDispatch()
 
   const safeJsonParse = (data) => {
@@ -58,7 +57,12 @@ const HomePage = () => {
     
 
     dispatch(updateAccountTx(updateTxList, updatePendingTxList,updateZkList,updateZkPendingList))
-  }, [])
+
+    let totalList = [...updateTxList,...updatePendingTxList,...updateZkList,...updateZkPendingList]
+    if(totalList.length != 0 || !currentNode.gqlTxUrl){
+      dispatch(updateShouldRequest(false))
+    }
+  }, [currentNode])
 
   const updateLocalAccount = useCallback((address) => {
     let localAccount = getLocal(LOCAL_CACHE_KEYS.ACCOUNT_BALANCE)
@@ -112,15 +116,6 @@ const HomePage = () => {
     }
   }, [])
 
-  const updateLocalValidator = useCallback(() => {
-    let localValidatorDetail = getLocal(LOCAL_CACHE_KEYS.VALIDATOR_DETAIL)
-    if (localValidatorDetail) {
-      let localValidatorDetailJson = safeJsonParse(localValidatorDetail)
-      if (localValidatorDetailJson) {
-        dispatch(updateValidatorDetail(localValidatorDetailJson))
-      }
-    }
-  }, [])
   const updateLocalStaking = useCallback(() => {
     let localStakingList = getLocal(LOCAL_CACHE_KEYS.STAKING_LIST)
     if (localStakingList) {
@@ -132,12 +127,8 @@ const HomePage = () => {
   }, [])
 
   const getLocalCache = useCallback(() => {
-    const netType = netConfig.currentConfig?.netType
     let address = currentAccount?.address || ""
-
-    if (!getNetTypeNotSupportHistory(netType)) {
-      shouldUpdateTxList(address)
-    }
+    shouldUpdateTxList(address)
     updateLocalAccount(address)
     updateLocalPrice()
 
@@ -145,21 +136,13 @@ const HomePage = () => {
     updateLocalDaemonStatus()
     updateLocalDelegation(address)
     updateLocalBlock()
-    updateLocalValidator()
     updateLocalStaking()
-  }, [netConfig, currentAccount,
+  }, [currentAccount,
     shouldUpdateTxList, updateLocalAccount, updateLocalPrice, updateLocalDaemonStatus,
-    updateLocalDelegation, updateLocalBlock, updateLocalValidator, updateLocalStaking])
+    updateLocalDelegation, updateLocalBlock, updateLocalStaking])
 
-    const getNetConfig = useCallback(async()=>{
-      let network = await getNetworkList()
-      if(Array.isArray(network) &&  network.length>0){
-        dispatch(updateNetChainIdConfig(network)) 
-      }
-    },[])
   useEffect(() => {
     getLocalCache()
-    getNetConfig()
   }, [])
 
   return (<div

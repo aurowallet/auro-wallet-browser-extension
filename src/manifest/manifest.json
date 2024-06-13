@@ -3,16 +3,13 @@
   "short_name": "__MSG_appName__",
   "description": "__MSG_appDescription__",
   "manifest_version": 3,
-  "version": "2.2.16",
+  "version": "2.3.0",
   "default_locale": "en",
   "icons": {
     "16": "img/logo/16.png",
-    "19": "img/logo/19.png",
     "32": "img/logo/32.png",
-    "38": "img/logo/38.png",
-    "64": "img/logo/64.png",
-    "128": "img/logo/128.png",
-    "512": "img/logo/512.png"
+    "48": "img/logo/48.png",
+    "128": "img/logo/128.png"
   },
   "permissions": [
     "storage",

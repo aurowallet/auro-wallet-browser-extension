@@ -1,12 +1,10 @@
-import { getNetworkList, getNodeChainId } from "@/background/api";
+import { getNetworkList, getNodeNetworkID } from "@/background/api";
 import { extSaveLocal } from "@/background/extensionStorage";
 import { getLocal } from "@/background/localStorage";
 import { DAPP_ACTION_SWITCH_CHAIN } from "@/constant/msgTypes";
-import { BASE_unknown_config, NET_CONFIG_MAP } from "@/constant/network";
 import {
-  NETWORK_ID_AND_TYPE,
   NET_WORK_CHANGE_FLAG,
-  NET_WORK_CONFIG,
+  NET_WORK_CONFIG_V2,
 } from "@/constant/storageKey";
 import Button, { button_size, button_theme } from "@/popup/component/Button";
 import DappWebsite from "@/popup/component/DappWebsite";
@@ -16,10 +14,8 @@ import {
   updateStakingRefresh,
 } from "@/reducers/accountReducer";
 import {
-  NET_CONFIG_ADD,
-  NET_CONFIG_DEFAULT,
-  updateNetChainIdConfig,
-  updateNetConfig,
+  updateCurrentNode,
+  updateCustomNodeList,
 } from "@/reducers/network";
 import { sendMsg } from "@/utils/commonMsg";
 import { clearLocalCache, sendNetworkChangeMsg } from "@/utils/utils";
@@ -30,15 +26,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NET_CONFIG_VERSION } from "../../../../../config";
 import styles from "./index.module.scss";
+import { Default_Network_List } from "@/constant/network";
 
 const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
   const dispatch = useDispatch();
-  const networkList = useSelector((state) => state.network.netList);
-  const currentConfig = useSelector((state) => state.network.currentConfig);
-  const currentNetConfig = useSelector(
-    (state) => state.network.currentNetConfig
-  );
-  const networkData = useSelector((state) => state.network);
+  const allNodeList = useSelector((state) => state.network.allNodeList);
+  const currentNode = useSelector((state) => state.network.currentNode);
+  const customNodeList = useSelector((state) => state.network.customNodeList);
+  
+  
   const [state, setState] = useState({
     switchStatus: false,
     addStatus: false,
@@ -46,17 +42,16 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
   const [btnLoadingStatus, setBtnLoadingStatus] = useState(false);
   const [nextChainConfig, setNextChainConfig] = useState();
 
-  const [networkApiConfig, setNetworkApiConfig] = useState([]);
   const [showTitle, setShowTitle] = useState("");
   const [showBtnTxt, setShowBtnTxt] = useState("");
-  const { targetChainId, isSwitch, targetConfig } = useMemo(() => {
+  const { targetNetworkID, isSwitch, targetConfig } = useMemo(() => {
     const params = notifyParams.params || {};
-    const targetChainId = params.chainId;
+    const targetNetworkID = params.networkID;
     const sendAction = params.action;
     const isSwitch = sendAction === DAppActions.mina_switchChain;
     const targetConfig = params.targetConfig;
     return {
-      targetChainId,
+      targetNetworkID,
       isSwitch,
       targetConfig,
     };
@@ -73,31 +68,15 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
   }, [state]);
 
   const targetChainInfo = useMemo(() => {
-    const config = networkList.filter((network) => {
-      return network.netType === targetChainId;
+    const config = allNodeList.filter((network) => {
+      return network.networkID === targetNetworkID;
     });
     return config[0] || {};
-  }, [targetChainId, networkList]);
+  }, [targetNetworkID, allNodeList]);
 
-  const fetchData = useCallback(async () => {
-    let network = await getNetworkList();
-    if (
-      !Array.isArray(network) ||
-      (Array.isArray(network) && network.length == 0)
-    ) {
-      let listJson = getLocal(NETWORK_ID_AND_TYPE);
-      let list = JSON.parse(listJson);
-      if (list.length > 0) {
-        network = list;
-      }
-    }
-    dispatch(updateNetChainIdConfig(network));
-    setNetworkApiConfig(network);
-  }, []);
 
   useEffect(() => {
     if (notifyParams.params?.action === DAppActions.mina_addChain) {
-      fetchData();
       setState({
         switchStatus: false,
         addStatus: true,
@@ -126,26 +105,34 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
   }, [notifyParams, onRemoveNotify]);
 
   const onSwitchChain = useCallback(async () => {
-    let nextConfig = currentConfig;
+    let nextConfig = currentNode;
     if (
-      targetChainId !== currentConfig.netType ||
+      targetNetworkID !== currentNode.networkID ||
       targetConfig ||
       nextChainConfig
     ) {
       nextConfig = targetConfig || nextChainConfig;
-      if (targetChainId) {
-        nextConfig = NET_CONFIG_MAP[targetChainId].config;
-        nextConfig.type = NET_CONFIG_DEFAULT
+      if (targetNetworkID) {
+        for (let index = 0; index < allNodeList.length; index++) {
+          const nodeItem = allNodeList[index];
+          if(nodeItem.networkID === targetNetworkID){
+            nextConfig = nodeItem
+            break;
+          }
+        }
       }
       let config = {
-        ...currentNetConfig,
-        currentConfig: nextConfig,
+        currentNode: nextConfig,
+        customNodeList: customNodeList,
+        nodeConfigVersion:NET_CONFIG_VERSION
       };
-      await extSaveLocal(NET_WORK_CONFIG, config);
-      dispatch(updateNetConfig(config));
-
+      await extSaveLocal(NET_WORK_CONFIG_V2, config);
+      dispatch(updateCurrentNode(config.currentNode));
+      dispatch(updateCustomNodeList(config.customNodeList));
+      dispatch(updateShouldRequest(true));
+      dispatch(updateStakingRefresh(true));
       await extSaveLocal(NET_WORK_CHANGE_FLAG, true);
-      sendNetworkChangeMsg(config.currentConfig);
+      sendNetworkChangeMsg(config.currentNode);
       clearLocalCache();
     }
     sendMsg(
@@ -153,8 +140,7 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
         action: DAPP_ACTION_SWITCH_CHAIN,
         payload: {
           nextConfig: {
-            chainId: nextConfig.netType,
-            name: nextConfig.name,
+            networkID: nextConfig.networkID,
           },
           resultOrigin: notifyParams.site?.origin,
           id: notifyParams.id,
@@ -165,62 +151,50 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
     onRemoveNotify(notifyParams.id);
   }, [
     notifyParams,
-    targetChainId,
-    currentConfig,
+    targetNetworkID,
+    currentNode,
     onRemoveNotify,
     targetConfig,
-    currentNetConfig,
     nextChainConfig,
+    customNodeList
   ]);
   const onAddChain = useCallback(async () => {
     setBtnLoadingStatus(true);
     const url = decodeURIComponent(notifyParams.params?.url);
     const name = notifyParams.params?.name;
-    let chainData = await getNodeChainId(url);
+    let chainData = await getNodeNetworkID(url)
     setBtnLoadingStatus(false);
-    let chainId = chainData?.daemonStatus?.chainId || "";
-    if (!chainId) {
+    let networkID = chainData?.networkID || "";
+    if (!networkID) {
       Toast.info(i18n.t("incorrectNodeAddress"));
       return;
     }
 
     let networkConfig = {};
-    for (let index = 0; index < networkApiConfig.length; index++) {
-      const network = networkApiConfig[index];
-      if (network.chain_id === chainId) {
+    for (let index = 0; index < Default_Network_List.length; index++) {
+      const network = Default_Network_List[index];
+      if (network.networkID === networkID) {
         networkConfig = network;
         break;
-      }
-    }
-    let config;
-    Object.keys(NET_CONFIG_MAP).forEach((key) => {
-      const item = NET_CONFIG_MAP[key];
-      if (item.type_id === networkConfig.type) {
-        config = item.config;
-      }
-    });
-    if (!config) {
-      config = BASE_unknown_config;
+      } 
     }
     let addItem = {
-      ...config,
-      name: name,
+      ...networkConfig,
       url: url,
-      id: url,
-      type: NET_CONFIG_ADD,
-      chainId,
+      name: name,
+      networkID: networkID,
+      isDefaultNode: false,
     };
-    let list = [...networkList];
+    let list = [...customNodeList];
     list.push(addItem);
 
     let newConfig = {
-      netList: list,
-      currentConfig: currentConfig,
+      customNodeList: list,
+      currentNode: currentNode,
       netConfigVersion: NET_CONFIG_VERSION,
     };
-    await extSaveLocal(NET_WORK_CONFIG, newConfig);
-    dispatch(updateNetConfig(newConfig));
-
+    await extSaveLocal(NET_WORK_CONFIG_V2, newConfig);
+    dispatch(updateCustomNodeList(newConfig.customNodeList));
     setNextChainConfig(addItem);
     setState({
       switchStatus: true,
@@ -228,10 +202,9 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
     });
   }, [
     notifyParams,
-    networkList,
+    allNodeList,
     nextChainConfig,
-    networkApiConfig,
-    currentConfig,
+    currentNode,
   ]);
 
   const onConfirm = useCallback(async () => {
@@ -246,12 +219,12 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
     const showTargetName =
       targetConfig?.name || nextChainConfig?.name || targetChainInfo.name;
     const showTargetId =
-      targetConfig?.netType || nextChainConfig?.netType || targetChainId;
+      targetConfig?.networkID || nextChainConfig?.networkID || targetNetworkID;
     return {
       showTargetName,
       showTargetId,
     };
-  }, [targetConfig, nextChainConfig, targetChainInfo, targetChainId]);
+  }, [targetConfig, nextChainConfig, targetChainInfo, targetNetworkID]);
 
   return (
     <section className={styles.sectionSwitch}>
@@ -262,10 +235,10 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
       {state.switchStatus && (
         <SwitchChainView
           notifyParams={notifyParams}
-          currentChainName={currentConfig.name}
-          currentChainId={currentConfig.netType}
+          currentChainName={currentNode.name}
+          currentNetworkID={currentNode.networkID}
           targetChainName={showTargetName}
-          targetChainId={showTargetId}
+          targetNetworkID={showTargetId}
         />
       )}
       {state.addStatus && <AddChainView notifyParams={notifyParams} />}
@@ -322,9 +295,9 @@ const AddChainView = ({ notifyParams }) => {
 
 const SwitchChainView = ({
   notifyParams,
-  currentChainId,
+  currentNetworkID,
   currentChainName,
-  targetChainId,
+  targetNetworkID,
   targetChainName,
 }) => {
   return (
@@ -340,7 +313,7 @@ const SwitchChainView = ({
         <div className={styles.rowLeft}>
           <p className={styles.rowTitle}>{i18n.t("current")}</p>
           <p className={styles.rowContent}>{currentChainName}</p>
-          <p className={styles.rowDesc}>{currentChainId}</p>
+          <p className={styles.rowDesc}>{currentNetworkID}</p>
         </div>
         <div className={styles.rowArrow}>
           <img src="/img/icon_arrow_purple.svg" />
@@ -350,7 +323,7 @@ const SwitchChainView = ({
             {i18n.t("target")}
           </p>
           <p className={styles.rowContent}>{targetChainName}</p>
-          <p className={styles.rowDesc}>{targetChainId}</p>
+          <p className={styles.rowDesc}>{targetNetworkID}</p>
         </div>
       </div>
     </div>

@@ -44,6 +44,7 @@ import {
   TransactionModalType,
 } from "../../../../component/TransactionModal";
 import styles from "./index.module.scss";
+import { HistoryHeader } from "../StatusView";
 
 /**
  *
@@ -53,6 +54,8 @@ import styles from "./index.module.scss";
  */
 const TxListView = ({
   history = [],
+  showHistoryStatus = false,
+  onClickRefresh = () => {},
 }) => {
   const dispatch = useDispatch();
 
@@ -60,11 +63,12 @@ const TxListView = ({
   const netConfig = useSelector((state) => state.network);
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
+  const shouldRefresh = useSelector(state => state.accountInfo.shouldRefresh)
 
   const onGoExplorer = useCallback(() => {
-    let currentConfig = netConfig.currentConfig;
+    let currentNode = netConfig.currentNode;
     let url =
-      currentConfig.explorer +
+    currentNode.explorer +
       "/account/" +
       accountInfo.currentAccount.address +
       "/txs";
@@ -358,6 +362,11 @@ const TxListView = ({
   }, []);
   return (
     <div className={cls(styles.historyContainer, styles.holderContainer)}>
+      <HistoryHeader
+        showHistoryStatus={showHistoryStatus}
+        historyRefreshing={shouldRefresh}
+        onClickRefresh={onClickRefresh}
+      />
       <div className={styles.listContainer}>
         {history.map((item, index) => {
           if (item.showExplorer) {

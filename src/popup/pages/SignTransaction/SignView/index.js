@@ -85,7 +85,6 @@ const SignView = ({
     (state) => state.accountInfo.currentAccount
   );
   const balance = useSelector((state) => state.accountInfo.balance);
-  const currentConfig = useSelector((state) => state.network.currentConfig);
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
@@ -121,7 +120,7 @@ const SignView = ({
     const body = signParams?.params?.transaction;
     const zkFee = getZkFee(body);
     let siteFee =
-      zkFee || signParams?.feePayer?.fee || signParams?.params?.fee || "";
+      zkFee || signParams?.params?.feePayer?.fee || signParams?.params?.fee || "";
     let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
     let id = signParams?.id || "";
     let currentAdvanceData = advanceData[id] || {};
@@ -146,6 +145,27 @@ const SignView = ({
       transactionTypeName,
     };
   }, [signParams, advanceData]);
+
+  const { isSendZk, zkSourceData, zkFormatData,zkOnlySign } = useMemo(() => {
+    const isSendZk = sendAction === DAppActions.mina_sendTransaction;
+    let zkShowData = "",
+      zkSourceData = "",
+      zkFormatData = [];
+    if (isSendZk) {
+      zkShowData = signParams.params?.transaction;
+      try {
+        zkFormatData = getZkInfo(zkShowData, currentAccount.address);
+        zkSourceData = JSON.stringify(JSON.parse(zkShowData), null, 2);
+      } catch (error) {}
+    }
+    let zkOnlySign = (signParams?.params?.onlySign && isSendZk);
+    return {
+      isSendZk,
+      zkSourceData,
+      zkFormatData,
+      zkOnlySign
+    };
+  }, [sendAction, signParams, currentAccount]);
 
   useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
@@ -234,7 +254,11 @@ const SignView = ({
             resultAction = DAPP_ACTION_SIGN_MESSAGE;
             break;
           case DAppActions.mina_sendTransaction:
-            payload.hash = data.hash;
+            if(zkOnlySign){
+              payload.signedData = JSON.stringify(data);
+            }else{
+              payload.hash = data.hash;
+            }
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
             break;
           case DAppActions.mina_createNullifier:
@@ -270,26 +294,8 @@ const SignView = ({
         );
       }
     },
-    [signParams, sendAction, onRemoveTx]
+    [signParams, sendAction, onRemoveTx,zkOnlySign]
   );
-  const { isSendZk, zkSourceData, zkFormatData } = useMemo(() => {
-    const isSendZk = sendAction === DAppActions.mina_sendTransaction;
-    let zkShowData = "",
-      zkSourceData = "",
-      zkFormatData = [];
-    if (isSendZk) {
-      zkShowData = signParams.params?.transaction;
-      try {
-        zkFormatData = getZkInfo(zkShowData, currentAccount.address);
-        zkSourceData = JSON.stringify(JSON.parse(zkShowData), null, 2);
-      } catch (error) {}
-    }
-    return {
-      isSendZk,
-      zkSourceData,
-      zkFormatData,
-    };
-  }, [sendAction, signParams, currentAccount]);
   useEffect(() => {
     setShowRawData(isSendZk && selectedTabIndex === 0);
   }, [isSendZk, selectedTabIndex]);
@@ -402,6 +408,7 @@ const SignView = ({
       if (isSendZk) {
         payload.transaction = params.transaction;
         memo = params.feePayer?.memo || "";
+        payload.zkOnlySign = zkOnlySign;
       }
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
         return ledgerTransfer(payload, ledgerTemp);
@@ -439,6 +446,7 @@ const SignView = ({
       sendAction,
       inferredNonce,
       isSendZk,
+      zkOnlySign
     ]
   );
 
@@ -631,7 +639,7 @@ const SignView = ({
       }
     }
     let pageTitle = i18n.t("transactionDetails");
-    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1 || zkOnlySign) {
       pageTitle = i18n.t("signatureRequest");
     }
     return {
@@ -652,6 +660,7 @@ const SignView = ({
     zkSourceData,
     zkFormatData,
     isSendZk,
+    zkOnlySign
   ]);
 
   useEffect(() => {
@@ -738,11 +747,16 @@ const SignView = ({
       case DAppActions.mina_createNullifier:
         title = "create";
         break;
+      case DAppActions.mina_sendTransaction:
+        if(zkOnlySign){
+          title = "sign";
+        }
+        break;
       default:
         break;
     }
     return title;
-  }, [sendAction]);
+  }, [sendAction,zkOnlySign]);
 
   const onLedgerInfoModalConfirm = useCallback(
     (ledger) => {

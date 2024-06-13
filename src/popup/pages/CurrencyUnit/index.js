@@ -43,7 +43,6 @@ const CurrencyUnit = ({ }) => {
         }
       })
       dispatch(updateCurrencyConfig(list));
-      dispatch(updateShouldRequest(true, true));
       saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(item.key))
       history.goBack()
     }

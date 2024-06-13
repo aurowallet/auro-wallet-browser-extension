@@ -269,19 +269,6 @@ export function getDelegationInfoBody(){
   `
 }
 
-/**
- * get chain ID body
- * @returns 
- */
-export function getChainIdBody() {
-  return `
-  query ChainId {
-    daemonStatus {
-      chainId
-    }
-  }
-  `
-}
 
 export function getPartyBody(){
   return `
@@ -604,4 +591,17 @@ export function getFetchAccountBody(){
   }
   
   `;
+}
+
+
+/**
+ * get networkID body
+ * @returns 
+ */
+export function getNetworkIDBody() {
+  return `
+  query myQuery {
+    networkID
+  }
+  `
 }

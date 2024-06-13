@@ -1,13 +1,12 @@
 import { extSaveLocal } from "@/background/extensionStorage";
 import { getLocal, saveLocal } from "@/background/localStorage";
-import { NET_CONFIG_TYPE } from "@/constant/network";
-import { NETWORK_SHOW_TESTNET, NET_WORK_CONFIG } from "@/constant/storageKey";
+import { NETWORK_SHOW_TESTNET, NET_WORK_CONFIG_V2 } from "@/constant/storageKey";
 import IOSSwitch from "@/popup/component/Switch";
 import {
   updateShouldRequest,
   updateStakingRefresh,
 } from "@/reducers/accountReducer";
-import { NET_CONFIG_DEFAULT, updateNetConfig } from "@/reducers/network";
+import { updateCurrentNode, updateCustomNodeList } from "@/reducers/network";
 import {
   addressSlice,
   clearLocalCache,
@@ -18,6 +17,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { css, keyframes } from "styled-components";
 import NetworkItem from "../NetworkItem";
+import { NetworkID_MAP } from "@/constant/network";
+import { NET_CONFIG_VERSION } from "../../../../../config";
 
 const NetworkSelect = ({}) => {
   const dispatch = useDispatch();
@@ -25,7 +26,7 @@ const NetworkSelect = ({}) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const showName = useMemo(() => {
-    return netConfig?.currentConfig?.name;
+    return netConfig?.currentNode?.name;
   }, [netConfig]);
   const onClickEntry = useCallback(() => {
     setModalVisible(true);
@@ -36,22 +37,25 @@ const NetworkSelect = ({}) => {
 
   const onClickNetItem = useCallback(
     async (data) => {
-      const { currentConfig, currentNetConfig, netList } = netConfig;
-      if (data.url !== currentConfig.url) {
+      const { currentNode, allNodeList,customNodeList } = netConfig;
+      if (data.url !== currentNode.url) {
         let newConfig = {};
-        for (let index = 0; index < netList.length; index++) {
-          const config = netList[index];
+        for (let index = 0; index < allNodeList.length; index++) {
+          const config = allNodeList[index];
           if (config.url === data.url) {
             newConfig = config;
             break;
           }
         }
         let config = {
-          ...currentNetConfig,
-          currentConfig: newConfig,
+            currentNode: newConfig,
+            customNodeList: customNodeList,
+            nodeConfigVersion:NET_CONFIG_VERSION
         };
-        await extSaveLocal(NET_WORK_CONFIG, config);
-        dispatch(updateNetConfig(config));
+        await extSaveLocal(NET_WORK_CONFIG_V2, config);
+        dispatch(updateCurrentNode(config.currentNode))
+        dispatch(updateCustomNodeList(config.customNodeList))
+
         dispatch(updateStakingRefresh(true));
 
         dispatch(updateShouldRequest(true));
@@ -242,10 +246,10 @@ const NetworkModal = ({
     let topList = [];
     let bottomList = [];
     let defaultMainConfig;
-    const netConfigList = netConfig.netList;
+    const netConfigList = netConfig.allNodeList;
     netConfigList.map((item) => {
-      if (item.type === NET_CONFIG_DEFAULT) {
-        if (item.netType !== NET_CONFIG_TYPE.Mainnet) {
+      if (item.isDefaultNode) {
+        if (item.networkID !== NetworkID_MAP.mainnet) {
           bottomList.push(item);
         } else {
           defaultMainConfig = item;

@@ -17,7 +17,7 @@ import styles from './index.module.scss';
 
 const Setting = ({ }) => {
 
-    const currentConfig = useSelector(state => state.network.currentConfig)
+    const currentNode = useSelector(state => state.network.currentNode)
     const currency = useSelector(state => state.currencyConfig.currentCurrency)
     const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
 
@@ -63,7 +63,7 @@ const Setting = ({ }) => {
             return autoLockTime
         }
         const getNetwork = () => {
-            return showNameSlice(currentConfig.name,10)
+            return showNameSlice(currentNode.name,10)
         }
         const getLanguage = () => {
             let currentLanguage = languageOption.filter((language) => {
@@ -144,7 +144,7 @@ const Setting = ({ }) => {
             routeList,
             rowAbout
         }
-    }, [i18n, currentConfig, currency, dispatch, connectCount, currentLockTime])
+    }, [i18n, currentNode, currency, dispatch, connectCount, currentLockTime])
 
     const [showOpenTabStatus,setShowOpenTabStatus] = useState(true)
     useEffect(()=>{

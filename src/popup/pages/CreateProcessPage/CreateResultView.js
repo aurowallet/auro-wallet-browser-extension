@@ -190,7 +190,7 @@ export const CreateResultView = ({}) => {
 
       <StyledExtTipWrapper>
         <StyledExtIconWrapper>
-          <img src="/img/logo/512.png" />
+          <img src="/img/logo/128.png" />
         </StyledExtIconWrapper>
         <StyledExtPinTitle>{i18n.t("pinExtension")}</StyledExtPinTitle>
         <StyledExtPinContent>

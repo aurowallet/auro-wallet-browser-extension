@@ -12,11 +12,11 @@ describe("Functionality on mainnet", function () {
   beforeEach(function () {
     getCurrentNetConfigStub = sinon
       .stub()
-      .returns(Promise.resolve({ netType: "mainnet" }));
+      .returns(Promise.resolve({ networkID: "mina:mainnet" }));
 
     this.module = proxyquire(pathToModule, {
       [utilsPath]: {
-        getCurrentNetConfig: getCurrentNetConfigStub,
+        getCurrentNodeConfig: getCurrentNetConfigStub,
       },
     });
   });
@@ -108,11 +108,11 @@ describe("Functionality on testnet", function () {
   beforeEach(function () {
     getCurrentNetConfigStub = sinon
       .stub()
-      .returns(Promise.resolve({ netType: "testnet" }));
+      .returns(Promise.resolve({ networkID: "mina:testnet" }));
 
     this.module = proxyquire(pathToModule, {
       [utilsPath]: {
-        getCurrentNetConfig: getCurrentNetConfigStub,
+        getCurrentNodeConfig: getCurrentNetConfigStub,
       },
     });
   });

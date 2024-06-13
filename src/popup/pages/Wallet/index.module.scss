@@ -1,0 +1,294 @@
+$toolbarHeight: 58px;
+
+.container {
+    background: #edeff2;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.toolbarContainer {
+    position: fixed;
+    width: 100%;
+    max-width: 375px;
+    z-index: 3;
+    background: #edeff2;
+}
+
+.baseIconHover {
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    padding: 3px;
+
+    &:hover {
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.05);
+    }
+}
+.toolBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: $toolbarHeight;
+
+    padding: 10px 20px 0px;
+
+    .menuIcon {
+        @extend .baseIconHover;
+    }
+    .walletIcon {
+        @extend .baseIconHover;
+    }
+}
+
+.walletContent {
+    margin-top: $toolbarHeight;
+    overflow-y: auto;
+}
+.walletInfoContainer {
+    box-sizing: border-box;
+    width: 335px;
+    height: 224px;
+    margin: 10px auto 20px;
+    border: 0.5px solid #bccdf3;
+    border-radius: 20px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+
+    position: relative;
+}
+.walletBg {
+    position: absolute;
+    top: 0;
+    z-index: 0;
+}
+.walletInfoTopContainer {
+    display: flex;
+    justify-content: space-between;
+    z-index: 1;
+}
+.walletInfoTopLeftContainer {
+    margin: 14px 0px 0px 20px;
+}
+.walletInfoLeftTop {
+    display: flex;
+    align-items: center;
+    .accountName {
+        font-size: 16px;
+        line-height: 18px;
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .accountStatus {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 29px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        padding: 3px 9px;
+        gap: 10px;
+
+        font-style: normal;
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 14px;
+        color: #ffffff;
+
+        flex: none;
+        order: 0;
+        flex-grow: 0;
+        margin: 0 8px;
+    }
+    .dappConnectIcon {
+        cursor: pointer;
+        height: 20px;
+    }
+}
+.walletInfoLeftBottom {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    cursor: pointer;
+
+    .accountAddress {
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 17px;
+        color: rgba(255, 255, 255, 0.5);
+        margin: 0px;
+
+        &:hover {
+            color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
+        }
+    }
+}
+.dappConnectContainer {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+
+    margin: 12px 10px 0 0;
+
+    cursor: pointer;
+}
+.assetsContainer {
+    flex: 1;
+    position: relative;
+    margin-top: 2px;
+    margin: 22px 20px 20px;
+
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+
+    .assetsIcon {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    .amountNumberContainer {
+        display: flex;
+        align-items: baseline;
+    }
+    .amountNumber {
+        font-size: 32px;
+        line-height: 39px;
+        color: #ffffff;
+        margin: 0;
+        margin-right: 4px;
+    }
+    .balanceSizeMine {
+        font-size: 28px;
+    }
+    .cacheBalance {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    .amountSymbol {
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 21px;
+        align-items: baseline;
+        color: #ffffff;
+    }
+    .amountValue {
+        font-style: normal;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 19px;
+        color: #ffffff;
+        opacity: 0.6;
+        margin: 0;
+        margin-top: 6px;
+    }
+    .fontHolder{
+        color: transparent !important;
+    }
+}
+
+.btnGroup {
+    margin: 0px 20px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 10px;
+    z-index: 1;
+
+    .btn {
+        font-weight: 500;
+        font-size: 14px;
+        text-align: center;
+        color: #594af1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 11px 0px;
+        flex: 1;
+        cursor: pointer;
+    }
+    .hr {
+        border: 0.5px solid #f2f2f2;
+        height: 24px;
+    }
+    .sendBtn {
+        &:hover {
+            background: #f2f2f2;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+    }
+   
+    .receiveBtn {
+        &:hover {
+            background: #f2f2f2;
+        }
+    }
+    .stakingBtn {
+        &:hover {
+            background: #f2f2f2;
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+    }
+}
+.confirmContent {
+    font-size: 14px;
+    line-height: 22px;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 0;
+    .tipsSpecial {
+        color: #d65a5a;
+    }
+}
+.watchModalRightBtn {
+    color: #d65a5a;
+}
+
+.dappContainer {
+    position: relative;
+}
+.baseTipContainer{
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    top: 25px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    min-width: 56px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    
+    .baseTip {
+        background: rgba(0, 0, 0, 0.8);
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 14px;
+    
+        color: #ffffff;
+    
+        text-align: center;
+        padding: 6px 10px;
+        border-radius: 6px;
+    
+       
+        min-width: 56px;
+        white-space:nowrap
+    }
+}
+.dappConnectIcon:hover + .baseTipContainer {
+    visibility: visible;
+}

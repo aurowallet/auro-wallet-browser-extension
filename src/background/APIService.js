@@ -6,7 +6,7 @@ import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, si
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
-import { decodeMemo, getCurrentNetConfig } from '../utils/utils';
+import { decodeMemo, getCurrentNodeConfig } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { changeLanguage } from '../i18n';
@@ -53,9 +53,27 @@ class APIService {
         if (this.activeTimer) {
             clearTimeout(this.activeTimer)
         }
+        this.setPopupIcon(true)
         this.memStore.putState(this.initLockedState())
         return
     }
+    setPopupIcon = (
+        isUnlocked,
+      ) => {
+        const icons = [16, 32, 48, 128].reduce((res, size) => {
+          if (!isUnlocked) {
+            res[size] = `img/logo/${size}_lock.png`;
+          } else {
+            res[size] = `img/logo/${size}.png`;
+          }
+          return res;
+        }, {});
+        let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
+        const action = isManifestV3 ? chrome.action : chrome.browserAction;
+        return action.setIcon({
+          path: icons,
+        });
+      };
     getCreateMnemonic = (isNewMne) => {
         if (isNewMne) {
             let mnemonic = generateMne()
@@ -93,6 +111,7 @@ class APIService {
                 currentAccount,
                 autoLockTime,
             })
+            this.setPopupIcon(true)
             return this.getAccountWithoutPrivate(currentAccount)
         } catch (error) {
             return { error: 'passwordError', type: "local" }
@@ -177,6 +196,7 @@ class APIService {
               });
         }
         this.memStore.updateState({ isUnlocked: status })
+        this.setPopupIcon(status)
     };
     getCurrentAccount = async () => {
         let localAccount = await get("keyringData")
@@ -722,6 +742,9 @@ class APIService {
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
+            if(nextParams.zkOnlySign){
+                return signedTx.data
+            }
             const sendAction = params.sendAction
             switch (sendAction) {
                 case DAppActions.mina_signMessage:
@@ -762,7 +785,7 @@ class APIService {
         return createResult
     }
     notification = async (hash) => {
-        let netConfig = await getCurrentNetConfig()
+        let netConfig = await getCurrentNodeConfig()
         let myNotificationID
         extension.notifications &&
             extension.notifications.onClicked.addListener(function (clickId) {
