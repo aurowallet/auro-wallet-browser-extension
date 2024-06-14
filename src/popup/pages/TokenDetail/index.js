@@ -16,7 +16,6 @@ import {
   amountDecimals,
   getAmountForUI,
   getDisplayAmount,
-  getNetTypeNotSupportHistory,
 } from "@/utils/utils";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
@@ -63,7 +62,7 @@ const TokenDetail = () => {
   const txList = useSelector((state) => state.accountInfo.txList);
   const cache = useSelector((state) => state.cache);
   const currencyConfig = useSelector((state) => state.currencyConfig);
-  const currentConfig = useSelector((state) => state.network.currentConfig);
+  const currentConfig = useSelector((state) => state.network.currentNode);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -75,7 +74,7 @@ const TokenDetail = () => {
   const [loadingStatus, setLoadingStatus] = useState(true);
 
   const [showHistoryStatus, setShowHistoryStatus] = useState(() => {
-    return !getNetTypeNotSupportHistory(netType);
+    return currentNode.gqlTxUrl;
   });
 
   const {
@@ -129,7 +128,6 @@ const TokenDetail = () => {
 
   const requestHistory = useCallback(
     async (address = currentAccount.address) => {
-      if (!getNetTypeNotSupportHistory(netType)) {
         let pendingTxList = getPendingTxList(address);
         let gqlTxList = getGqlTxHistory(address);
         let zkAppTxList = getZkAppTxHistory(address);
@@ -157,23 +155,12 @@ const TokenDetail = () => {
               setLoadingStatus(false);
             }
           });
-      }
     },
     [currentAccount.address, netType]
   );
 
-  useEffect(() => {
-    if (getNetTypeNotSupportHistory(netType)) {
-      setShowHistoryStatus(false);
-      setLoadingStatus(false);
-    } else {
-      setShowHistoryStatus(true);
-    }
-  }, [netType]);
-
   const onClickRefresh = useCallback(() => {
-    setTxRefreshStatus(true);
-    requestHistory();
+    // dispatch(updateShouldRequest(true, true));
   }, []);
 
   useEffect(() => {
