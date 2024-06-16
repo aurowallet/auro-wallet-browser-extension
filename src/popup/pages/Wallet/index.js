@@ -1,41 +1,43 @@
 import FooterPopup from "@/popup/component/FooterPopup";
 import { PopupModalV2 } from "@/popup/component/PopupModalV2";
 import Tooltip from "@/popup/component/ToolTip/Tooltip";
-import BigNumber from "bignumber.js";
 import extensionizer from "extensionizer";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
+import { getAllTokenAssets, getAllTokenInfoV2, getCurrencyPrice } from "../../../background/api";
+
+import { saveLocal } from "@/background/localStorage";
+import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
+import Clock from "@/popup/component/Clock";
 import styled, { css } from "styled-components";
-import { getBalance, getCurrencyPrice } from "../../../background/api";
 import {
   DAPP_DISCONNECT_SITE,
   DAPP_GET_CONNECT_STATUS,
   WALLET_GET_ALL_ACCOUNT,
 } from "../../../constant/msgTypes";
-import { NetworkID_MAP } from "../../../constant/network";
 import {
   ACCOUNT_BALANCE_CACHE_STATE,
-  updateNetAccount,
+  updateAccountLocalStorage,
+  updateCurrentPrice,
   updateShouldRequest,
+  updateTokenAssets,
 } from "../../../reducers/accountReducer";
-import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
+import { setAccountInfo } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import {
   addressSlice,
   copyText,
   getAmountForUI,
-  getDisplayAmount,
-  getOriginFromUrl,
-  isNumber,
+  getOriginFromUrl
 } from "../../../utils/utils";
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import NetworkSelect from "../Networks/NetworkSelect";
 import TokenListView from "./component/TokenListView";
- 
+
 const StyledPageWrapper = styled.div`
   background: #edeff2;
   height: 100vh;
@@ -297,10 +299,12 @@ const StyledZkConnectStatus = styled.img`
 `;
 const WalletInfo = () => {
   const accountInfo = useSelector((state) => state.accountInfo);
-  const cache = useSelector((state) => state.cache);
+  const tokenList = useSelector((state) => state.accountInfo.tokenList);
+  const tokenTotalAmount = useSelector((state) => state.accountInfo.tokenTotalAmount);
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const netConfig = useSelector((state) => state.network);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
+  const shouldUpdateAccountStorage = useSelector((state) => state.accountInfo.shouldUpdateAccountStorage);
 
   const dispatch = useDispatch();
   const history = useHistory();
@@ -339,23 +343,15 @@ const WalletInfo = () => {
     isCache,
     showTip,
   } = useMemo(() => {
-    let balance = accountInfo.balance || "0.00";
-    balance = getDisplayAmount(balance);
 
     let accountName = currentAccount?.accountName;
 
     let showAddress = addressSlice(currentAccount.address);
     let currency = currencyConfig.currentCurrency.symbol;
     let unitBalance = currency + " 0.00";
-
-    if (cache.currentPrice) {
-      // todo
-      unitBalance = new BigNumber(cache.currentPrice)
-        .multipliedBy(balance)
-        .toString();
-      unitBalance = currency + " " + getAmountForUI(unitBalance, 0, 2);
+    if (tokenTotalAmount) {
+      unitBalance = currency + " " + getAmountForUI(tokenTotalAmount, 0, 2);
     }
-    balance = new BigNumber(balance).toFormat();
 
     let isCache =
       accountInfo.isAccountCache === ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE;
@@ -373,7 +369,7 @@ const WalletInfo = () => {
   }, [
     currentAccount,
     i18n,
-    cache,
+    tokenTotalAmount,
     currencyConfig,
     netConfig,
     accountInfo,
@@ -472,17 +468,12 @@ const WalletInfo = () => {
 
   const fetchPrice = useCallback(
     async (currency) => {
-      let currentNode = netConfig.currentNode;
-      if (currentNode.networkID == NetworkID_MAP.mainnet) {
         let lastCurrency = currencyConfig.currentCurrency;
         if (currency) {
           lastCurrency = currency;
         }
-        let price = await getCurrencyPrice(lastCurrency.key);
-        if (isNumber(price)) {
-          dispatch(updateCurrentPrice(price));
-        }
-      }
+        let tokenPrice = await getCurrencyPrice(lastCurrency.key);
+        dispatch(updateCurrentPrice(tokenPrice));
     },
     [netConfig, currencyConfig]
   );
@@ -493,29 +484,48 @@ const WalletInfo = () => {
     }
     isRequest = true;
     let address = currentAccount.address;
-    getBalance(address)
-      .then((account) => {
-        if (account.publicKey) {
-          dispatch(updateNetAccount(account));
-        } else if (account.error) {
-          Toast.info(i18n.t("nodeError"));
+    getAllTokenAssets(address)
+      .then(async(account) => {
+        if (Array.isArray(account.accounts) && account.accounts.length >0) {
+          const tokenIds = account.accounts.map((token)=>{
+            return token.tokenId
+          })
+          const accountsWithTokenInfoV2 = await getAllTokenInfoV2(tokenIds);
+          if(accountsWithTokenInfoV2.error){
+            Toast.info(i18n.t("nodeError"));
+          }else{
+            const lastTokenList = account.accounts.map((token)=>{
+              return {
+                ...token,
+                tokenNetInfo:accountsWithTokenInfoV2[token.tokenId]
+              }
+            })
+            dispatch(updateTokenAssets(lastTokenList));
+          }
         }
       })
       .finally(() => {
         isRequest = false;
-        // dispatch(updateShouldRequest(false)); // need add
+        dispatch(updateShouldRequest(false));
       });
-  }, [i18n, currentAccount]);
+  }, [i18n, currentAccount,tokenList]);
 
   useEffect(() => {
-    if(shouldRefresh){
+    if (shouldRefresh) {
       fetchAccountData();
     }
-  }, [shouldRefresh,fetchAccountData]);
+  }, [shouldRefresh, fetchAccountData]);
 
   useEffect(() => {
     fetchPrice();
   }, [currencyConfig.currentCurrency, netConfig.currentNode.networkID]);
+
+  useEffect(()=>{
+    if(shouldUpdateAccountStorage){
+      dispatch(updateAccountLocalStorage());
+      saveLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS, JSON.stringify({ [currentAccount.address]: tokenList }))
+    }
+  },[shouldUpdateAccountStorage,tokenList,currentAccount.address])
   return (
     <>
       <StyledWalletInfoWrapper>
@@ -574,6 +584,7 @@ const WalletInfo = () => {
         content={dappModalContent}
         modalVisible={dappModalStatus}
       />
+      <Clock schemeEvent={() => dispatch(updateShouldRequest(true)) } />
     </>
   );
 };

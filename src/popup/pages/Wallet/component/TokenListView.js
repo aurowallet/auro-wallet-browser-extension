@@ -2,7 +2,7 @@ import FooterPopup from "@/popup/component/FooterPopup";
 import IconAdd from "@/popup/component/SVG/icon_add";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenItem from "./TokenItem";
@@ -45,7 +45,7 @@ const StyledIgnoreContent = styled(StyledTokenTip)`
 `;
 
 const TokenListView = ({ isInModal = false }) => {
-  const tokenList = useSelector((state) => state.accountInfo.tokenList);
+  const tokenShowList = useSelector((state) => state.accountInfo.tokenShowList);
 
   const [tokenManageStatus, setTokenManageStatus] = useState(false);
   const [tokenIgnoreStatus, setTokenIgnoreStatus] = useState(true);
@@ -74,7 +74,7 @@ const TokenListView = ({ isInModal = false }) => {
           />
         </StyledTokenHeaderRow>
       )}
-      {tokenList.map((token, index) => {
+      {tokenShowList.map((token, index) => {
         return <TokenItem key={index} token={token} isInModal={isInModal} />;
       })}
 

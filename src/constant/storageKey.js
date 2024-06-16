@@ -59,7 +59,7 @@ export const LOCAL_CACHE_KEYS = {
     /**
      * PRICE 
      */
-    "COIN_PRICE": "COIN_PRICE",
+    "COIN_PRICE": "COIN_PRICE_V2",
     /**
      * block information   
      */
@@ -89,6 +89,11 @@ export const LOCAL_CACHE_KEYS = {
      * zkapp transaction list 
      */
     "ZKAPP_PENDING_TX_LIST": "ZKAPP_PENDING_TX_LIST",
+
+    /**
+     * base token assets
+     */
+    "BASE_TOKEN_ASSETS": "BASE_TOKEN_ASSETS",
 
 }
 

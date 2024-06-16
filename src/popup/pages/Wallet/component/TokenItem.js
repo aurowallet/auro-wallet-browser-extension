@@ -1,11 +1,6 @@
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "@/constant";
+import { MAIN_COIN_CONFIG } from "@/constant";
 import { updateNextTokenDetail } from "@/reducers/cache";
-import {
-  addressSlice,
-  amountDecimals,
-  getAmountForUI,
-  getDisplayAmount,
-} from "@/utils/utils";
+import { addressSlice, getAmountForUI, getDisplayAmount } from "@/utils/utils";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
@@ -102,69 +97,57 @@ const TokenItem = ({ token, isInModal }) => {
   const history = useHistory();
 
   const currencyConfig = useSelector((state) => state.currencyConfig);
-  const cache = useSelector((state) => state.cache);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
-  const netAccount = useSelector((state) => state.accountInfo.netAccount);
 
   const dispatch = useDispatch();
   const {
-    tokenUrl,
+    tokenIconUrl,
     tokenSymbol,
     displayBalance,
     displayAmount,
     tokenName,
     isFungibleToken,
     delegationText,
-    delegationState,
   } = useMemo(() => {
-    const isFungibleToken = ZK_DEFAULT_TOKEN_ID !== token.tokenId;
 
-    let delegationState =
-      netAccount?.delegate && netAccount?.delegate !== currentAccount.address;
-    let delegationText = delegationState
+    const isFungibleToken = !token.tokenBaseInfo.isMainToken;
+
+    let delegationText = token.tokenBaseInfo.isDelegation
       ? i18n.t("delegated")
       : i18n.t("undelegated");
 
-    let tokenUrl;
-    let tokenSymbol = "xx";
-    let tokenName = "aaa";
+    let tokenIconUrl;
+    let tokenSymbol;
+    let tokenName;
     if (isFungibleToken) {
+      tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
       tokenName = addressSlice(token.tokenId, 6);
     } else {
-      tokenUrl = "img/mina_color.svg";
+      tokenIconUrl = "img/mina_color.svg";
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
-
-    let amount = amountDecimals(
-      token.balance?.total || 0,
-      MAIN_COIN_CONFIG.decimals
-    );
-    let displayBalance = getDisplayAmount(amount);
+    let displayBalance = getDisplayAmount(token.tokenBaseInfo.showBalance);
 
     let displayAmount = "";
-    if (cache.currentPrice) {
-      displayAmount = new BigNumber(cache.currentPrice)
-        .multipliedBy(amount)
-        .toString();
+    if (token.tokenBaseInfo.showAmount) {
       displayAmount =
         currencyConfig.currentCurrency.symbol +
         " " +
-        getAmountForUI(displayAmount, 0, 2);
+        getAmountForUI(token.tokenBaseInfo.showAmount, 0, 2);
     }
     return {
-      tokenUrl,
+      tokenIconUrl,
       tokenSymbol,
       displayBalance,
       displayAmount,
       tokenName,
       isFungibleToken,
       delegationText,
-      delegationState,
     };
-  }, [token, currencyConfig, cache, currentAccount, netAccount]);
+  }, [token, currencyConfig, currentAccount]);
 
   const onClickToken = useCallback(() => {
     dispatch(updateNextTokenDetail(token));
@@ -178,13 +161,15 @@ const TokenItem = ({ token, isInModal }) => {
     <StyledTokenItemWrapper onClick={onClickToken}>
       <StyledTokenLeft>
         <StyledTokenWrapper>
-          <TokenIcon iconUrl={tokenUrl} tokenName={tokenName} />
+          <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} />
         </StyledTokenWrapper>
         <StyledTokenInfo>
           <StyledTokenSymbolWrapper>
             <StyledTokenSymbol>{tokenSymbol}</StyledTokenSymbol>
             {!isFungibleToken && !isInModal && (
-              <StyledDelegateStatus $isChecked={delegationState}>
+              <StyledDelegateStatus
+                $isChecked={token.tokenBaseInfo.isDelegation}
+              >
                 {delegationText}
               </StyledDelegateStatus>
             )}

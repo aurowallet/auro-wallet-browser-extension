@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 
 const StyledNetIconWrapper = styled.div`
@@ -24,13 +24,16 @@ const StyledHolderIcon = styled.div`
   font-size: 12px;
 `;
 
-export const TokenIcon = ({ iconUrl, tokenName, size = "30px" }) => {
-  const [showHolderIcon, setShowHolderIcon] = useState(!iconUrl);
+export const TokenIcon = ({ iconUrl, tokenSymbol, size = "30px" }) => { 
+  const [showHolderIcon, setShowHolderIcon] = useState(false);
+  useEffect(()=>{
+    setShowHolderIcon(!iconUrl)
+  },[iconUrl])
   const holderIconName = useMemo(() => {
-    let showIdentityName = tokenName?.slice(0, 3) || "";
+    let showIdentityName = tokenSymbol?.slice(0, 3) || "";
     showIdentityName = showIdentityName.toUpperCase();
     return showIdentityName;
-  }, [tokenName]);
+  }, [tokenSymbol]);
 
   const onLoadError = useCallback(() => {
     setShowHolderIcon(true);

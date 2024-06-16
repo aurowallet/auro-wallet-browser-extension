@@ -5,7 +5,12 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { getBalance, sendTx } from "../../../background/api";
+import {
+  buildTokenBody,
+  getBalance,
+  sendParty,
+  sendTx,
+} from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
 import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
@@ -16,7 +21,6 @@ import {
 } from "../../../constant/msgTypes";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
 import {
-  updateNetAccount,
   updateShouldRequest,
 } from "../../../reducers/accountReducer";
 import { updateAddressDetail } from "../../../reducers/cache";
@@ -50,7 +54,7 @@ const SendPage = ({}) => {
   const history = useHistory();
 
   const balance = useSelector((state) => state.accountInfo.balance);
-  const netAccount = useSelector((state) => state.accountInfo.netAccount);
+  const mainTokenNetInfo = useSelector((state) => state.accountInfo.mainTokenNetInfo);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -149,10 +153,7 @@ const SendPage = ({}) => {
   }, [feeAmount, netFeeList]);
 
   const fetchAccountInfo = useCallback(async () => {
-    let account = await getBalance(currentAddress);
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account));
-    }
+    dispatch(updateShouldRequest(true)); // todo
   }, [dispatch, currentAddress]);
 
   useEffect(() => {
@@ -282,7 +283,7 @@ const SendPage = ({}) => {
       let fromAddress = currentAddress;
       let toAddressValue = trimSpace(toAddress);
       let amount = getRealTransferAmount();
-      let nonce = trimSpace(inputNonce) || netAccount.inferredNonce;
+      let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce;// todo
       let realMemo = memo || "";
       let fee = trimSpace(feeAmount);
       let payload = {
@@ -317,7 +318,7 @@ const SendPage = ({}) => {
       ledgerStatus,
       currentAccount,
       currentAddress,
-      netAccount,
+      mainTokenNetInfo,
       toAddress,
       inputNonce,
       memo,
@@ -534,9 +535,7 @@ const SendPage = ({}) => {
             inputType={"numric"}
             placeholder={0}
             rightComponent={
-              <div className={styles.balance}>
-                {showBalanceTxt}
-              </div>
+              <div className={styles.balance}>{showBalanceTxt}</div>
             }
             rightStableComponent={
               <div onClick={onClickAll} className={styles.max}>

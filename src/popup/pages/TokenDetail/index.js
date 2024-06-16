@@ -60,63 +60,55 @@ const StyledHistoryWrapper = styled.div``;
 const TokenDetail = () => {
   const token = useSelector((state) => state.cache.nextTokenDetail);
   const txList = useSelector((state) => state.accountInfo.txList);
-  const cache = useSelector((state) => state.cache);
   const currencyConfig = useSelector((state) => state.currencyConfig);
-  const currentConfig = useSelector((state) => state.network.currentNode);
+  const currentNode = useSelector((state) => state.network.currentNode);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
-  const netType = currentConfig?.netType;
   const dispatch = useDispatch();
   const isMounted = useRef(true);
+  const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
+  
+  const isSilentRefresh = useSelector(
+    (state) => state.accountInfo.isSilentRefresh
+  );
 
-  const [txRefreshStatus, setTxRefreshStatus] = useState(false);
-  const [loadingStatus, setLoadingStatus] = useState(true);
-
-  const [showHistoryStatus, setShowHistoryStatus] = useState(() => {
-    return currentNode.gqlTxUrl;
-  });
+  let isRequest = false
 
   const {
-    tokenUrl,
+    tokenIconUrl,
     tokenSymbol,
     displayBalance,
     displayAmount,
     tokenName,
     isFungibleToken,
   } = useMemo(() => {
-    const isFungibleToken = ZK_DEFAULT_TOKEN_ID !== token.tokenId;
+    const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
-    let tokenUrl;
-    let tokenSymbol = "xx";
-    let tokenName = "aaa";
+    let tokenIconUrl;
+    let tokenSymbol;
+    let tokenName;
     if (isFungibleToken) {
+      tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
       tokenName = addressSlice(token.tokenId, 6);
     } else {
-      tokenUrl = "img/mina_color.svg";
+      tokenIconUrl = "img/mina_color.svg";
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
-    let amount = amountDecimals(
-      token?.balance?.total || 0,
-      MAIN_COIN_CONFIG.decimals
-    );
-    let displayBalance = getDisplayAmount(amount) + " " + tokenSymbol;
 
-    let displayAmount = "";
-    if (cache.currentPrice) {
-      displayAmount = new BigNumber(cache.currentPrice)
-        .multipliedBy(amount)
-        .toString();
+    let displayBalance = getDisplayAmount(token.tokenBaseInfo.showBalance);
 
+    let displayAmount = token.tokenBaseInfo.showAmount||"";// 这里不从 cache 中拿，要封装在列表中，统一处理 等token 有价格之后在处理
+    if (token.tokenBaseInfo.showAmount) {
       displayAmount =
-        "≈ " +
         currencyConfig.currentCurrency.symbol +
+        " " +
         getAmountForUI(displayAmount, 0, 2);
     }
 
     return {
-      tokenUrl,
+      tokenIconUrl,
       token,
       isFungibleToken,
       tokenSymbol,
@@ -128,44 +120,53 @@ const TokenDetail = () => {
 
   const requestHistory = useCallback(
     async (address = currentAccount.address) => {
-        let pendingTxList = getPendingTxList(address);
-        let gqlTxList = getGqlTxHistory(address);
-        let zkAppTxList = getZkAppTxHistory(address);
-        let getZkAppPending = getZkAppPendingTx(address);
-        await Promise.all([
-          gqlTxList,
-          pendingTxList,
-          zkAppTxList,
-          getZkAppPending,
-        ])
-          .then((data) => {
-            let newList = data[0];
-            let txPendingData = data[1];
-            let zkApp = data[2];
-            let txPendingList = txPendingData.txList;
-            let zkPendingList = data[3];
-            dispatch(
-              updateAccountTx(newList, txPendingList, zkApp, zkPendingList)
-            );
-          })
-          .finally(() => {
-            if (isMounted.current) {
-              setTxRefreshStatus(false);
-              dispatch(updateShouldRequest(false));
-              setLoadingStatus(false);
-            }
-          });
+      if(isRequest){
+        return 
+      }
+      isRequest = true
+      let pendingTxList = getPendingTxList(address);
+      let gqlTxList = getGqlTxHistory(address);
+      let zkAppTxList = getZkAppTxHistory(address);
+      let getZkAppPending = getZkAppPendingTx(address);
+      await Promise.all([
+        gqlTxList,
+        pendingTxList,
+        zkAppTxList,
+        getZkAppPending,
+      ])
+        .then((data) => {
+          let newList = data[0];
+          let txPendingData = data[1];
+          let zkApp = data[2];
+          let txPendingList = txPendingData.txList;
+          let zkPendingList = data[3];
+          dispatch(
+            updateAccountTx(newList, txPendingList, zkApp, zkPendingList)
+          );
+        })
+        .finally(() => {
+          isRequest = false
+          if (isMounted.current) {
+            dispatch(updateShouldRequest(false));
+          }
+        });
     },
-    [currentAccount.address, netType]
+    [currentAccount.address]
   );
 
   const onClickRefresh = useCallback(() => {
-    // dispatch(updateShouldRequest(true, true));
-  }, []);
+    dispatch(updateShouldRequest(true, true));
+  }, [requestHistory]);
 
   useEffect(() => {
     requestHistory();
   }, []);
+
+  useEffect(() => {
+    if (shouldRefresh) {
+      requestHistory();
+    }
+  }, [shouldRefresh, requestHistory]);
 
   useEffect(() => {
     return () => {
@@ -176,7 +177,7 @@ const TokenDetail = () => {
   return (
     <CustomViewV2 title={tokenSymbol} subTitle={tokenName}>
       <StyledTopWrapper>
-        <TokenIcon iconUrl={tokenUrl} tokenName={tokenName} size={"50px"} />
+        <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} size={"50px"} />
         <StyledBalanceRow>{displayBalance}</StyledBalanceRow>
         <StyledAmountRow>{displayAmount}</StyledAmountRow>
         <StyledActionRow>
@@ -189,11 +190,11 @@ const TokenDetail = () => {
       </StyledTopWrapper>
       <StyledHistoryWrapper>
         <HistoryHeader
-          showRefresh={showHistoryStatus}
-          isRefresh={txRefreshStatus}
+          showRefresh={!!currentNode.gqlTxUrl}
+          isRefresh={shouldRefresh}
           onClickRefresh={onClickRefresh}
         />
-        {loadingStatus ? <LoadingView /> : <TxListView history={txList} />}
+        {shouldRefresh && !isSilentRefresh ? <LoadingView /> : <TxListView history={txList} />}
       </StyledHistoryWrapper>
 
       <Clock

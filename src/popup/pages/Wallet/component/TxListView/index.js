@@ -362,11 +362,6 @@ const TxListView = ({
   }, []);
   return (
     <div className={cls(styles.historyContainer, styles.holderContainer)}>
-      <HistoryHeader
-        showHistoryStatus={showHistoryStatus}
-        historyRefreshing={shouldRefresh}
-        onClickRefresh={onClickRefresh}
-      />
       <div className={styles.listContainer}>
         {history.map((item, index) => {
           if (item.showExplorer) {

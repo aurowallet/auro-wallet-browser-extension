@@ -427,3 +427,27 @@ export function checkValidStrInList(list) {
     return typeof element === "string" && element.trim() !== "";
   });
 }
+
+/**
+ * @param {*} netToken 
+ * @param {*} localToken 
+ */
+export function mergeLocalConfigToNetToken(newTokens,localTokens){
+  const tokenMap = new Map();
+
+  localTokens.forEach(token => {
+    tokenMap.set(token.tokenId, token);
+  });
+
+  return newTokens.map((token)=>{
+    const localToken = tokenMap.get(token.tokenId);
+    if (localToken) {
+      return {
+        ...token,
+        localConfig:localToken.localConfig??{}
+      }
+    } else {
+      return token
+    }
+  })
+}

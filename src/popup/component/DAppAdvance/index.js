@@ -21,10 +21,10 @@ const DAppAdvance = ({
     onNonceInput = () => { },
 }) => {
 
-    const netAccount = useSelector(state => state.accountInfo.netAccount)
+    const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
     const nonceHolder = useMemo(() => {
-        return netAccount.inferredNonce ? netAccount.inferredNonce : ""
-    }, [netAccount])
+        return mainTokenNetInfo.inferredNonce ? mainTokenNetInfo.inferredNonce : ""
+    }, [mainTokenNetInfo])
 
     const onClickOuter = useCallback((e) => {
         onClickClose()

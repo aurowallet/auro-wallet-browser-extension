@@ -22,13 +22,13 @@ import { MAIN_COIN_CONFIG } from "@/constant";
 
 const Staking = ({ }) => {
 
-  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
   const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
   const block = useSelector(state => state.staking.block)
   const daemonStatus = useSelector(state => state.staking.daemonStatus)
   const dispatch = useDispatch()
 
-  const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === netAccount.delegate ? "" : netAccount.delegate)
+  const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === mainTokenNetInfo?.delegateAccount?.publicKey ? "" : mainTokenNetInfo?.delegateAccount?.publicKey)
   const [loading, setLoading] = useState(false)
   const isFirstRequest = useRef(!isNumber(daemonStatus?.consensusConfiguration?.slotsPerEpoch));
 

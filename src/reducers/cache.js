@@ -26,7 +26,6 @@ const UPDATE_ADDRESS_DETAIL = "UPDATE_ADDRESS_DETAIL";
 
 const UPDATE_ADDRESS_BOOK_FROM = "UPDATE_ADDRESS_BOOK_FROM";
 
-const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE";
 
 const UPDATE_DAPP_ACCOUNT_LIST = "UPDATE_DAPP_ACCOUNT_LIST";
 
@@ -40,13 +39,6 @@ const UPDATE_RECOMMEND_FEE_LIST = "UPDATE_RECOMMEND_FEE_LIST";
 const UPDATE_ACCOUNT_TYPE_COUNT = "UPDATE_ACCOUNT_TYPE_COUNT";
 
 const UPDATE_NEXT_TOKEN_DETAIL = "UPDATE_NEXT_TOKEN_DETAIL";
-
-export function updateCurrentPrice(price) {
-  return {
-    type: UPDATE_CURRENT_PRICE,
-    price,
-  };
-}
 
 export function updateAddressDetail(addressDetail) {
   return {
@@ -167,7 +159,6 @@ const initState = {
 
   addressDetail: {},
   addressBookFrom: "",
-  currentPrice: "",
   dappAccountList: [],
 
   dappWindow: {},
@@ -183,7 +174,7 @@ const initState = {
 };
 
 const cacheReducer = (state = initState, action) => {
-  switch (action.type) {
+  switch (action.type) { 
     case SET_ACCOUNT_INFO:
       let accountInfo = action.info;
       return {
@@ -232,11 +223,6 @@ const cacheReducer = (state = initState, action) => {
         addressBookFrom: action.from,
       };
 
-    case UPDATE_CURRENT_PRICE:
-      return {
-        ...state,
-        currentPrice: action.price,
-      };
     case UPDATE_DAPP_ACCOUNT_LIST:
       return {
         ...state,

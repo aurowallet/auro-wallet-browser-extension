@@ -18,10 +18,10 @@ const AdvanceMode = ({
 
     type ="",
 }) => {
-    const netAccount = useSelector(state => state.accountInfo.netAccount)
+    const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
     const nonceHolder = useMemo(() => {
-        return netAccount?.inferredNonce || ""
-    }, [netAccount])
+        return mainTokenNetInfo?.inferredNonce || ""
+    }, [mainTokenNetInfo])
 
     return (
         <div className={styles.advanceContainer}>

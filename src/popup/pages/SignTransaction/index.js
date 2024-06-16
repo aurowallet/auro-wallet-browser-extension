@@ -6,7 +6,6 @@ import {
 } from "@/constant/msgTypes";
 import Loading from "@/popup/component/Loading";
 import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
-import { updateNetAccount } from "@/reducers/accountReducer";
 import { updateDAppOpenWindow } from "@/reducers/cache";
 import {
   ENTRY_WITCH_ROUTE,
@@ -76,7 +75,7 @@ const SignTransaction = () => {
 
   const dappWindow = useSelector((state) => state.cache.dappWindow);
   const inferredNonce = useSelector(
-    (state) => state.accountInfo.netAccount.inferredNonce
+    (state) => state.accountInfo.mainTokenNetInfo.inferredNonce
   );
   const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
     inferredNonce
@@ -104,11 +103,7 @@ const SignTransaction = () => {
   const fetchAccountInfo = useCallback(async () => {
     if(isShowLoading.current){
       Loading.show()
-    }
-    let account = await getBalance(currentAddress);
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account));
-    }
+    }// todo
     isFirstRequest.current = false;
     Loading.hide();
   }, [dispatch, currentAddress]);

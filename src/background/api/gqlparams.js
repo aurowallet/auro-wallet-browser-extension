@@ -14,20 +14,19 @@ export function getBalanceBody() {
     }
   }
   
-  `
+  `;
 }
-
 
 export function getTxStatusBody() {
   return `
   query txStatus($paymentId:ID! ) {
     transactionStatus(payment: $paymentId)
   }
-  `
+  `;
 }
 
 function getStakeTxSendWithRawSignature() {
-  return (`
+  return `
 mutation stakeTx($fee:UInt64!, 
 $to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
 $validUntil: UInt32,$rawSignature: String) {
@@ -56,11 +55,11 @@ $validUntil: UInt32,$rawSignature: String) {
     }
   }
 }
-`)
+`;
 }
 
 function getStakeTxSendWithScalarField() {
-  return (`
+  return `
 mutation stakeTx($fee:UInt64!,
 $to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
 $validUntil: UInt32, $scalar: String, $field: String) {
@@ -91,19 +90,19 @@ $validUntil: UInt32, $scalar: String, $field: String) {
     }
   }
 }
-`)
+`;
 }
 
 export function getStakeTxSend(isRawSignature) {
   if (isRawSignature) {
-    return getStakeTxSendWithRawSignature()
+    return getStakeTxSendWithRawSignature();
   } else {
-    return getStakeTxSendWithScalarField()
+    return getStakeTxSendWithScalarField();
   }
 }
 
 function getTxSendWithRawSignature() {
-  return (`
+  return `
 mutation sendTx($fee:UInt64!, $amount:UInt64!,
 $to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
 $validUntil: UInt32,$rawSignature: String!
@@ -136,10 +135,10 @@ $validUntil: UInt32,$rawSignature: String!
     }
   }
 }
-`)
+`;
 }
 function getTxSendWithScalarField() {
-  return (`
+  return `
 mutation sendTx($fee:UInt64!, $amount:UInt64!,
 $to: PublicKey!, $from: PublicKey!, $nonce:UInt32, $memo: String,
 $validUntil: UInt32,$scalar: String!, $field: String!
@@ -172,7 +171,7 @@ $validUntil: UInt32,$scalar: String!, $field: String!
     }
   }
 }
-`)
+`;
 }
 /**
  *
@@ -180,12 +179,11 @@ $validUntil: UInt32,$scalar: String!, $field: String!
  */
 export function getTxSend(isRawSignature) {
   if (isRawSignature) {
-    return getTxSendWithRawSignature()
+    return getTxSendWithRawSignature();
   } else {
-    return getTxSendWithScalarField()
+    return getTxSendWithScalarField();
   }
 }
-
 
 export function getPendingTxBody() {
   return `
@@ -204,10 +202,10 @@ export function getPendingTxBody() {
       to
     }
   }
-  `
+  `;
 }
 
-function balanceBodyBase(index){
+function balanceBodyBase(index) {
   return `
   account${index}: account (publicKey: $account${index}) {
     balance {
@@ -215,21 +213,25 @@ function balanceBodyBase(index){
     }
     publicKey
   }
-  `
+  `;
 }
 
-export function getBalanceBatchBody(addressArrayLength){
-  const variablesDeclare = new Array(addressArrayLength).fill(null).map((_, i)=>`$account${i}:PublicKey!`).join(',')
-  const addressesQueryContent = new Array(addressArrayLength).fill(null).map((address, index)=>balanceBodyBase(index))
-  return`
+export function getBalanceBatchBody(addressArrayLength) {
+  const variablesDeclare = new Array(addressArrayLength)
+    .fill(null)
+    .map((_, i) => `$account${i}:PublicKey!`)
+    .join(",");
+  const addressesQueryContent = new Array(addressArrayLength)
+    .fill(null)
+    .map((address, index) => balanceBodyBase(index));
+  return `
   query batchBalance(${variablesDeclare}) {
     ${addressesQueryContent}
   }
-  `
+  `;
 }
 
-
-export function getDaemonStatusBody(){
+export function getDaemonStatusBody() {
   return `
   query daemonStatus {
     daemonStatus {
@@ -242,9 +244,9 @@ export function getDaemonStatusBody(){
       }
     }
   }
-  `
+  `;
 }
-export function  getBlockInfoBody(){
+export function getBlockInfoBody() {
   return `
   query blockInfo($stateHash: String) {
     block(stateHash: $stateHash) {
@@ -256,21 +258,20 @@ export function  getBlockInfoBody(){
       }
     }
   }
-  `
+  `;
 }
 
-export function getDelegationInfoBody(){
+export function getDelegationInfoBody() {
   return `
   query delegationInfo($publicKey: PublicKey!) {
     account(publicKey: $publicKey) {
         delegate
       }
     }
-  `
+  `;
 }
 
-
-export function getPartyBody(){
+export function getPartyBody() {
   return `
   mutation sendZkapp($zkappCommandInput:ZkappCommandInput!){
     sendZkapp(input: {
@@ -285,13 +286,13 @@ export function getPartyBody(){
       }
     }
   }
-  `
+  `;
 }
 
 /**
  * return tx history
  */
- export function getTxHistoryBody() {
+export function getTxHistoryBody() {
   return `query txHistory($publicKey: String,$limit:Int) {
     transactions(limit: $limit, sortBy: DATETIME_DESC, query: {
       canonical: true,
@@ -313,15 +314,13 @@ export function getPartyBody(){
       failureReason
     }
   }
-  `
+  `;
 }
-
-
 
 /**
  * return deletion total
  */
- export function getDeletionTotalBody() {
+export function getDeletionTotalBody() {
   return `query delegationTotals($publicKey: String,$epoch:Int) {
     stake(query: {epoch: $epoch, public_key: $publicKey}) {
       delegationTotals {
@@ -331,7 +330,7 @@ export function getPartyBody(){
     }
   }
   
-  `
+  `;
 }
 
 export function getQATxStatusBody() {
@@ -339,9 +338,8 @@ export function getQATxStatusBody() {
   query txStatus($zkappTransaction:ID) {
     transactionStatus(zkappTransaction: $zkappTransaction)
   }
-  `
+  `;
 }
-
 
 export function getZkAppTransactionListBody() {
   return `
@@ -373,7 +371,7 @@ export function getZkAppTransactionListBody() {
     }
     }
   }
-  `
+  `;
 }
 
 export function getPendingZkAppTxBody() {
@@ -538,10 +536,10 @@ export function getPendingZkAppTxBody() {
       }
     }
   }
-  `
+  `;
 }
- 
-export function getFetchAccountBody(){
+
+export function getFetchAccountBody() {
   return `
   query account($publicKey: PublicKey!,$tokenId:TokenId) {
     account(publicKey: $publicKey, token: $tokenId) {
@@ -593,15 +591,64 @@ export function getFetchAccountBody(){
   `;
 }
 
-
 /**
  * get networkID body
- * @returns 
+ * @returns
  */
 export function getNetworkIDBody() {
   return `
   query myQuery {
     networkID
   }
-  `
+  `;
+}
+export function getTokenQueryBody() {
+  return `
+  query tokenQueryBody($publicKey: PublicKey!) {
+    accounts(publicKey: $publicKey) {
+      balance {
+        total
+        liquid
+      }
+      inferredNonce
+      delegateAccount {
+        publicKey
+      }
+      tokenId
+      publicKey
+    }
+  }
+  `;
+}
+
+export function getTokenInfoBody() {
+  return `
+  query tokenInfoBody($tokenId: TokenId!) {
+    tokenOwner(tokenId: $tokenId) {
+      publicKey
+      tokenSymbol
+      zkappState
+    }
+  }
+  `;
+}
+
+export function getTokenInfoBodyV2(tokenIds) {
+  let queryFields = tokenIds
+    .map((tokenId) => {
+      return `
+      ${tokenId}: tokenOwner(tokenId: "${tokenId}") {
+        publicKey
+        tokenSymbol
+        zkappState
+      }
+    `;
+    })
+    .join("\n");
+
+  return `
+    query {
+      ${queryFields}
+    }
+  `;
 }

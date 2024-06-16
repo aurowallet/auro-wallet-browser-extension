@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { getBalance, sendStakeTx } from "../../../background/api";
-import { updateNetAccount } from '../../../reducers/accountReducer';
 import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
@@ -26,6 +25,7 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
+import { updateShouldRequest } from "@/reducers/accountReducer";
 
 const StakingTransfer = () => { 
   const dispatch = useDispatch()
@@ -33,7 +33,7 @@ const StakingTransfer = () => {
 
   const balance = useSelector(state => state.accountInfo.balance)
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
-  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
   const netFeeList = useSelector(state => state.cache.feeRecommend)
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
 
@@ -169,7 +169,7 @@ const StakingTransfer = () => {
     }
     let fromAddress = currentAccount.address
     let toAddress = nodeAddress || trimSpace(blockAddress)
-    let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
+    let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce
     let realMemo = memo || ""
     let fee = trimSpace(feeAmount)
     let payload = {
@@ -187,7 +187,7 @@ const StakingTransfer = () => {
       setConfirmBtnStatus(false)
       onSubmitSuccess(data)
     })
-  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus,memo])
+  }, [currentAccount, mainTokenNetInfo, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus,memo])
 
   const onConfirm = useCallback(async(ledgerReady=false) => {
     let realBlockAddress = nodeAddress || blockAddress
@@ -273,10 +273,7 @@ const StakingTransfer = () => {
 
 
   const fetchAccountData = useCallback(async () => {
-    let account = await getBalance(currentAccount.address)
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account))
-    }
+    dispatch(updateShouldRequest(true));// todo
   }, [currentAccount])
 
 

@@ -1,8 +1,9 @@
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "@/constant";
+import { MAIN_COIN_CONFIG } from "@/constant";
 import IconAdd from "@/popup/component/SVG/icon_add";
-import { addressSlice, amountDecimals, getDisplayAmount } from "@/utils/utils";
+import { updateTokenShowStatus } from "@/reducers/accountReducer";
+import { addressSlice, getDisplayAmount } from "@/utils/utils";
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenIcon from "./TokenIcon";
@@ -56,58 +57,68 @@ const StyledTokenRight = styled.div`
 `;
 const StyledTokenAmount = styled.div`
   color: #808080;
-  text-align: center;
+  text-align: left;
   font-size: 12px;
   font-weight: 400;
 `;
-
 const TokenManageItem = ({ token }) => {
   const currencyConfig = useSelector((state) => state.currencyConfig);
-  const cache = useSelector((state) => state.cache);
+  const tokenList = useSelector((state) => state.accountInfo.tokenList);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
-  const netAccount = useSelector((state) => state.accountInfo.netAccount);
   const dispatch = useDispatch();
+  const {
+    tokenIconUrl,
+    tokenSymbol,
+    showBalanceText,
+    tokenName,
+  } = useMemo(() => {
+    const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
-  const [tokenShowStatus, setTokenShowStatus] = useState(false);
-  const { tokenUrl, tokenSymbol, showBalanceText, tokenName } = useMemo(() => {
-    const isFungibleToken = ZK_DEFAULT_TOKEN_ID !== token.tokenId;
-
-    let tokenUrl;
-    let tokenSymbol = "xx";
-    let tokenName = "aaa";
+    let tokenIconUrl;
+    let tokenSymbol;
+    let tokenName;
     if (isFungibleToken) {
+      tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
       tokenName = addressSlice(token.tokenId, 6);
     } else {
-      tokenUrl = "img/mina_color.svg";
+      tokenIconUrl = "img/mina_color.svg";
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
 
-    let amount = amountDecimals(
-      token.balance?.total || 0,
-      MAIN_COIN_CONFIG.decimals
-    );
-    let displayBalance = getDisplayAmount(amount);
+    let displayBalance = getDisplayAmount(token.tokenBaseInfo.showBalance);
     let showBalanceText = i18n.t("balance") + ": " + displayBalance;
 
     return {
-      tokenUrl,
+      tokenIconUrl,
       tokenSymbol,
       showBalanceText,
       tokenName,
     };
-  }, [token, currencyConfig, cache, currentAccount, netAccount]);
+  }, [token, currencyConfig]);
 
   const onClickManage = useCallback(() => {
-    setTokenShowStatus((state) => !state);
-  }, [dispatch, token]);
+    const nextTokenList = tokenList.map((tokenItem) =>
+      tokenItem.tokenId === token.tokenId
+        ? {
+            ...tokenItem,
+            localConfig: {
+              ...tokenItem.localConfig,
+              hideToken: !tokenItem.localConfig?.hideToken,
+            },
+          }
+        : tokenItem
+    );
+    dispatch(updateTokenShowStatus(nextTokenList));
+  }, [token, tokenList, currentAccount]);
+
   return (
     <StyledTokenItemWrapper>
       <StyledTokenLeft>
         <StyledTokenWrapper>
-          <TokenIcon iconUrl={tokenUrl} tokenName={tokenName} />
+          <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} />
         </StyledTokenWrapper>
         <StyledTokenInfo>
           <StyledTokenSymbolWrapper>
@@ -118,7 +129,7 @@ const TokenManageItem = ({ token }) => {
         </StyledTokenInfo>
       </StyledTokenLeft>
       <StyledTokenRight onClick={onClickManage}>
-        {tokenShowStatus ? (
+        {token.localConfig?.hideToken ? (
           <IconAdd fill={"rgba(0, 0, 0, 0.8)"} />
         ) : (
           <img src="img/icon_hide.svg" />
