@@ -1,7 +1,7 @@
 import { MAIN_COIN_CONFIG } from "@/constant";
 import IconAdd from "@/popup/component/SVG/icon_add";
 import { updateLocalTokenConfig } from "@/reducers/accountReducer";
-import { addressSlice, getDisplayAmount } from "@/utils/utils";
+import { addressSlice, getBalanceForUI } from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -93,7 +93,7 @@ const TokenManageItem = ({ token }) => {
       tokenName = MAIN_COIN_CONFIG.name;
     }
 
-    let displayBalance = getDisplayAmount(token.tokenBaseInfo.showBalance);
+    let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
     let showBalanceText = i18n.t("balance") + ": " + displayBalance;
 
     return {

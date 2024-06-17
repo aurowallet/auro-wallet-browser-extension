@@ -53,22 +53,15 @@ export function amountDecimals(amount, decimal = 0) {
   return realBalance;
 }
 
-/**
- * Impression amount conversion. 4 decimal places by default
- * @param {*} number
- * @param {*} fixed
- */
-export function getDisplayAmount(number, fixed = 4) {
-  if (isNaN(parseFloat(number)) || number === 0) {
+export function getBalanceForUI(balance, decimal = 0, fixed = 4) {
+  let nextBalance = amountDecimals(balance, decimal)
+  if (isNaN(parseFloat(nextBalance)) || nextBalance === 0) {
     return "0.00";
   }
-  let showAmount = new BigNumber(number).toFixed(fixed, 1).toString();
-  return toNonExponential(showAmount);
+  let showBalance = new BigNumber(nextBalance).toFixed(fixed, 1).toString();
+  return toNonExponential(showBalance);
 }
 
-export function getAmountDisplay(amount, decimal = 0, fixed = 4) {
-  return getDisplayAmount(amountDecimals(amount, decimal), fixed);
-}
 export function getAmountForUI(
   rawAmount,
   decimal = MAIN_COIN_CONFIG.decimals,

@@ -1,7 +1,6 @@
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { updateNextTokenDetail } from "@/reducers/cache";
-import { addressSlice, getAmountForUI, getDisplayAmount } from "@/utils/utils";
-import BigNumber from "bignumber.js";
+import { addressSlice, getAmountForUI, getBalanceForUI } from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -129,7 +128,7 @@ const TokenItem = ({ token, isInModal }) => {
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
-    let displayBalance = getDisplayAmount(token.tokenBaseInfo.showBalance);
+    let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
 
     let displayAmount = "";
     if (token.tokenBaseInfo.showAmount) {

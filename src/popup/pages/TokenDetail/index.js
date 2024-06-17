@@ -13,9 +13,8 @@ import {
 } from "@/reducers/accountReducer";
 import {
   addressSlice,
-  amountDecimals,
   getAmountForUI,
-  getDisplayAmount,
+  getBalanceForUI,
 } from "@/utils/utils";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
@@ -97,9 +96,9 @@ const TokenDetail = () => {
       tokenName = MAIN_COIN_CONFIG.name;
     }
 
-    let displayBalance = getDisplayAmount(token.tokenBaseInfo.showBalance);
+    let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
 
-    let displayAmount = token.tokenBaseInfo.showAmount||"";// 这里不从 cache 中拿，要封装在列表中，统一处理 等token 有价格之后在处理
+    let displayAmount = token.tokenBaseInfo.showAmount||"";
     if (token.tokenBaseInfo.showAmount) {
       displayAmount =
         currencyConfig.currentCurrency.symbol +

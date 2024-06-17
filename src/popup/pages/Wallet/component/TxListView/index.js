@@ -31,7 +31,7 @@ import {
   addressSlice,
   amountDecimals,
   decodeMemo,
-  getDisplayAmount,
+  getBalanceForUI,
   getRealErrorMsg,
   getShowTime,
   isNumber,
@@ -460,8 +460,7 @@ const TxItem = ({
         ? "Nonce " + txData.nonce
         : getShowTime(txData.dateTime);
 
-    amount = amountDecimals(txData.amount, MAIN_COIN_CONFIG.decimals);
-    amount = getDisplayAmount(amount, 2);
+    amount = getBalanceForUI(txData.amount,MAIN_COIN_CONFIG.decimals, 2);
     amount = isReceive ? "+" + amount : "-" + amount;
 
     if (txKindLow === "zkapp") {

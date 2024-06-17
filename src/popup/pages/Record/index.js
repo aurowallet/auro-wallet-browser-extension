@@ -15,7 +15,7 @@ import { openTab } from "../../../utils/commonMsg";
 import {
   copyText,
   decodeMemo,
-  getAmountDisplay,
+  getBalanceForUI,
   getShowTime,
   getTimeGMT,
 } from "../../../utils/utils";
@@ -43,7 +43,7 @@ const Record = ({}) => {
 
   const { contentList } = useMemo(() => {
     let amount =
-      getAmountDisplay(
+    getBalanceForUI(
         txDetail.amount,
         MAIN_COIN_CONFIG.decimals,
         MAIN_COIN_CONFIG.decimals
@@ -54,7 +54,7 @@ const Record = ({}) => {
     let sendAddress = txDetail.from;
     let memo = txDetail.memo || "";
     let fee =
-      getAmountDisplay(
+    getBalanceForUI(
         txDetail.fee,
         MAIN_COIN_CONFIG.decimals,
         MAIN_COIN_CONFIG.decimals
