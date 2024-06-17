@@ -157,8 +157,11 @@ const NodeEditor = () => {
 
       dispatch(updateCurrentNode(newConfig.currentNode));
       dispatch(updateCustomNodeList(newConfig.customNodeList));
-      dispatch(updateShouldRequest(true));
-      dispatch(updateStakingRefresh(true));
+
+      if(addItem.networkID !== currentNode.networkID){
+        dispatch(updateStakingRefresh(true));
+        dispatch(updateShouldRequest(true));
+      }
 
       sendNetworkChangeMsg(newConfig.currentNode);
 
@@ -198,9 +201,10 @@ const NodeEditor = () => {
         dispatch(updateCurrentNode(newConfig.currentNode));
         dispatch(updateCustomNodeList(newConfig.customNodeList));
 
-        dispatch(updateShouldRequest(true));
-        dispatch(updateStakingRefresh(true));
-
+        if(newConfig.currentNode.networkID !== currentNode.networkID){
+          dispatch(updateStakingRefresh(true));
+          dispatch(updateShouldRequest(true));
+        }
         sendNetworkChangeMsg(newConfig.currentNode);
       }
 
@@ -266,8 +270,11 @@ const NodeEditor = () => {
     if (isDeleteCurrentNode) {
       clearLocalCache();
       dispatch(updateCurrentNode(newConfig.currentNode));
-      dispatch(updateShouldRequest(true));
-      dispatch(updateStakingRefresh(true));
+      
+      if(editItem.networkID !== currentNode.networkID){
+        dispatch(updateStakingRefresh(true));
+        dispatch(updateShouldRequest(true));
+      }
       sendNetworkChangeMsg(newConfig.currentNode);
     }
     setReminderModalStatus(false);

@@ -129,8 +129,12 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
       await extSaveLocal(NET_WORK_CONFIG_V2, config);
       dispatch(updateCurrentNode(config.currentNode));
       dispatch(updateCustomNodeList(config.customNodeList));
-      dispatch(updateShouldRequest(true));
-      dispatch(updateStakingRefresh(true));
+      
+      if(config.currentNode.networkID !== currentNode.networkID){
+        dispatch(updateStakingRefresh(true));
+        dispatch(updateShouldRequest(true));
+      }
+
       await extSaveLocal(NET_WORK_CHANGE_FLAG, true);
       sendNetworkChangeMsg(config.currentNode);
       clearLocalCache();

@@ -56,9 +56,11 @@ const NetworkSelect = ({}) => {
         dispatch(updateCurrentNode(config.currentNode))
         dispatch(updateCustomNodeList(config.customNodeList))
 
-        dispatch(updateStakingRefresh(true));
+        if(newConfig.networkID !== currentNode.networkID){
+          dispatch(updateStakingRefresh(true));
+          dispatch(updateShouldRequest(true));
+        }
 
-        dispatch(updateShouldRequest(true));
         sendNetworkChangeMsg(newConfig);
         clearLocalCache();
         onClickOuter();

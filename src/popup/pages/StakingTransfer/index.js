@@ -4,7 +4,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { getBalance, sendStakeTx } from "../../../background/api";
+import { sendStakeTx } from "../../../background/api";
 import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
@@ -273,7 +273,7 @@ const StakingTransfer = () => {
 
 
   const fetchAccountData = useCallback(async () => {
-    dispatch(updateShouldRequest(true));// todo
+    dispatch(updateShouldRequest(true,true));
   }, [currentAccount])
 
 
