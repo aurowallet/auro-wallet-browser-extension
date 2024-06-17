@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenItem from "./TokenItem";
 import TokenManageList from "./TokenManageList";
+import { LoadingView } from "./StatusView";
 
 const StyledTokenWrapper = styled.div`
   background-color: white;
@@ -46,6 +47,10 @@ const StyledIgnoreContent = styled(StyledTokenTip)`
 
 const TokenListView = ({ isInModal = false }) => {
   const tokenShowList = useSelector((state) => state.accountInfo.tokenShowList);
+  const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
+  const isSilentRefresh = useSelector(
+    (state) => state.accountInfo.isSilentRefresh
+  );
 
   const [tokenManageStatus, setTokenManageStatus] = useState(false);
   const [tokenIgnoreStatus, setTokenIgnoreStatus] = useState(true);
@@ -67,16 +72,22 @@ const TokenListView = ({ isInModal = false }) => {
       {!isInModal && (
         <StyledTokenHeaderRow>
           <StyledTokenRowTitle>{i18n.t("tokens")}</StyledTokenRowTitle>
-          <TokenManageIcon
-            onClickManage={onClickManage}
-            showCount={showCount}
-            showTokenTip={showTokenTip}
-          />
+          {!(shouldRefresh && !isSilentRefresh) && (
+            <TokenManageIcon
+              onClickManage={onClickManage}
+              showCount={showCount}
+              showTokenTip={showTokenTip}
+            />
+          )}
         </StyledTokenHeaderRow>
       )}
-      {tokenShowList.map((token, index) => {
-        return <TokenItem key={index} token={token} isInModal={isInModal} />;
-      })}
+      {shouldRefresh && !isSilentRefresh && !isInModal ? (
+        <LoadingView />
+      ) : (
+        tokenShowList.map((token, index) => {
+          return <TokenItem key={index} token={token} isInModal={isInModal} />;
+        })
+      )}
 
       <FooterPopup
         isOpen={tokenManageStatus}
