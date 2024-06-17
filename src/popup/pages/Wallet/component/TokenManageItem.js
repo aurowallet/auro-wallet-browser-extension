@@ -1,12 +1,14 @@
 import { MAIN_COIN_CONFIG } from "@/constant";
 import IconAdd from "@/popup/component/SVG/icon_add";
-import { updateTokenShowStatus } from "@/reducers/accountReducer";
+import { updateLocalTokenConfig } from "@/reducers/accountReducer";
 import { addressSlice, getDisplayAmount } from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenIcon from "./TokenIcon";
+import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
+import { saveLocal } from "@/background/localStorage";
 
 const StyledTokenItemWrapper = styled.div`
   display: flex;
@@ -64,6 +66,9 @@ const StyledTokenAmount = styled.div`
 const TokenManageItem = ({ token }) => {
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
+  const localTokenConfig = useSelector((state) => state.accountInfo.localTokenConfig);
+
+  
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -100,19 +105,29 @@ const TokenManageItem = ({ token }) => {
   }, [token, currencyConfig]);
 
   const onClickManage = useCallback(() => {
-    const nextTokenList = tokenList.map((tokenItem) =>
-      tokenItem.tokenId === token.tokenId
-        ? {
-            ...tokenItem,
-            localConfig: {
-              ...tokenItem.localConfig,
-              hideToken: !tokenItem.localConfig?.hideToken,
-            },
-          }
-        : tokenItem
-    );
-    dispatch(updateTokenShowStatus(nextTokenList));
-  }, [token, tokenList, currentAccount]);
+    // {
+    //   [tokenId]:{
+    //     config
+    //   }
+    // }
+    let tempConfig = {
+      ...localTokenConfig
+    }
+    let currentTokenConfig = tempConfig[token.tokenId]
+    if(currentTokenConfig){
+      let lastTokenConfig = {
+        ...currentTokenConfig,
+        hideToken:!currentTokenConfig.hideToken
+      }
+      tempConfig[token.tokenId] = lastTokenConfig
+    }else{
+      tempConfig[token.tokenId] = {
+        hideToken:true
+      }
+    }
+    saveLocal(LOCAL_CACHE_KEYS.TOKEN_CONFIG, JSON.stringify({ [currentAccount.address]: tempConfig }))
+    dispatch(updateLocalTokenConfig(tempConfig))
+  }, [token, tokenList, currentAccount,localTokenConfig]);
 
   return (
     <StyledTokenItemWrapper>

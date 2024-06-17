@@ -95,6 +95,8 @@ export const LOCAL_CACHE_KEYS = {
      */
     "BASE_TOKEN_ASSETS": "BASE_TOKEN_ASSETS",
 
+
+    "TOKEN_CONFIG": "TOKEN_CONFIG",
 }
 
 

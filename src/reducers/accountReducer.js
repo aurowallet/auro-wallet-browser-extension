@@ -25,20 +25,20 @@ const UPDATE_TOKEN_ASSETS = "UPDATE_TOKEN_ASSETS";
 // token price
 const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE";
 
-const UPDATE_TOKEN_SHOW_STATUS = "UPDATE_TOKEN_SHOW_STATUS";
-
 const UPDATE_ACCOUNT_LOCAL_STORAGE = "UPDATE_ACCOUNT_LOCAL_STORAGE";
+
+const UPDATE_LOCAL_TOKEN_CONFIG = "UPDATE_LOCAL_TOKEN_CONFIG";
+
+export function updateLocalTokenConfig(tokenConfig) {
+  return {
+    type: UPDATE_LOCAL_TOKEN_CONFIG,
+    tokenConfig,
+  };
+}
 
 export function updateAccountLocalStorage() {
   return {
     type: UPDATE_ACCOUNT_LOCAL_STORAGE,
-  };
-}
-
-export function updateTokenShowStatus(tokenList) {
-  return {
-    type: UPDATE_TOKEN_SHOW_STATUS,
-    tokenList,
   };
 }
 
@@ -157,6 +157,7 @@ const initState = {
   tokenPrice: {},
   tokenTotalAmount: "0",
   shouldUpdateAccountStorage: false,
+  localTokenConfig: {},
 };
 
 function compareTokens(a, b) {
@@ -274,19 +275,35 @@ function processTokenList(tokenAssetsList, prices) {
     mainTokenNetInfo,
   };
 }
-function processTokenShowStatus(tokenAssetsList) {
+function processTokenShowStatus(tokenAssetsList, tokenConfig) {
   let tokenShowList = [];
   let totalShowAmount = 0;
-  tokenAssetsList.map((tokenItem) => {
-    if (!tokenItem.localConfig?.hideToken) {
+
+  const nextTokenList = tokenAssetsList.map((tokenItem) => {
+    let tokenId = tokenItem.tokenId;
+    if (tokenConfig[tokenId]) {
+      let tempLocalConfig = tokenConfig[tokenId];
+      if (!tempLocalConfig?.hideToken) {
+        tokenShowList.push(tokenItem);
+        let tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
+        totalShowAmount = new BigNumber(totalShowAmount)
+          .plus(tokenAmount)
+          .toString();
+      }
+      return {
+        ...tokenItem,
+        localConfig: tempLocalConfig,
+      };
+    } else {
       tokenShowList.push(tokenItem);
       let tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
       totalShowAmount = new BigNumber(totalShowAmount)
         .plus(tokenAmount)
         .toString();
+      return tokenItem;
     }
   });
-  return { tokenList: tokenAssetsList, tokenShowList, totalShowAmount };
+  return { tokenList: nextTokenList, tokenShowList, totalShowAmount };
 }
 
 function pendingTx(txList) {
@@ -514,20 +531,23 @@ const accountInfo = (state = initState, action) => {
         tokenShowList: priceUpdate.tokenShowList,
         shouldUpdateAccountStorage: !action.isCache,
       };
-
-    case UPDATE_TOKEN_SHOW_STATUS:
-      const statusUpdate = processTokenShowStatus(action.tokenList);
-      return {
-        ...state,
-        tokenList: statusUpdate.tokenList,
-        tokenShowList: statusUpdate.tokenShowList,
-        tokenTotalAmount: statusUpdate.totalShowAmount,
-        shouldUpdateAccountStorage: true,
-      };
     case UPDATE_ACCOUNT_LOCAL_STORAGE:
       return {
         ...state,
         shouldUpdateAccountStorage: false,
+      };
+    case UPDATE_LOCAL_TOKEN_CONFIG:
+      const statusUpdate = processTokenShowStatus(
+        state.tokenList,
+        action.tokenConfig
+      );
+      return {
+        ...state,
+        localTokenConfig: action.tokenConfig,
+        tokenList: statusUpdate.tokenList,
+        tokenShowList: statusUpdate.tokenShowList,
+        tokenTotalAmount: statusUpdate.totalShowAmount,
+        shouldUpdateAccountStorage: true,
       };
     default:
       return state;

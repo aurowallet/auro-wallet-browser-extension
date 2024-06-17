@@ -7,9 +7,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { getAllTokenAssets, getAllTokenInfoV2, getCurrencyPrice } from "../../../background/api";
+import {
+  getAllTokenAssets,
+  getAllTokenInfoV2,
+  getCurrencyPrice,
+} from "../../../background/api";
 
-import { saveLocal } from "@/background/localStorage";
+import { getLocal, saveLocal } from "@/background/localStorage";
 import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
 import Clock from "@/popup/component/Clock";
 import styled, { css } from "styled-components";
@@ -22,6 +26,7 @@ import {
   ACCOUNT_BALANCE_CACHE_STATE,
   updateAccountLocalStorage,
   updateCurrentPrice,
+  updateLocalTokenConfig,
   updateShouldRequest,
   updateTokenAssets,
 } from "../../../reducers/accountReducer";
@@ -31,7 +36,7 @@ import {
   addressSlice,
   copyText,
   getAmountForUI,
-  getOriginFromUrl
+  getOriginFromUrl,
 } from "../../../utils/utils";
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
@@ -300,11 +305,15 @@ const StyledZkConnectStatus = styled.img`
 const WalletInfo = () => {
   const accountInfo = useSelector((state) => state.accountInfo);
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
-  const tokenTotalAmount = useSelector((state) => state.accountInfo.tokenTotalAmount);
+  const tokenTotalAmount = useSelector(
+    (state) => state.accountInfo.tokenTotalAmount
+  );
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const netConfig = useSelector((state) => state.network);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
-  const shouldUpdateAccountStorage = useSelector((state) => state.accountInfo.shouldUpdateAccountStorage);
+  const shouldUpdateAccountStorage = useSelector(
+    (state) => state.accountInfo.shouldUpdateAccountStorage
+  );
 
   const dispatch = useDispatch();
   const history = useHistory();
@@ -343,7 +352,6 @@ const WalletInfo = () => {
     isCache,
     showTip,
   } = useMemo(() => {
-
     let accountName = currentAccount?.accountName;
 
     let showAddress = addressSlice(currentAccount.address);
@@ -468,12 +476,12 @@ const WalletInfo = () => {
 
   const fetchPrice = useCallback(
     async (currency) => {
-        let lastCurrency = currencyConfig.currentCurrency;
-        if (currency) {
-          lastCurrency = currency;
-        }
-        let tokenPrice = await getCurrencyPrice(lastCurrency.key);
-        dispatch(updateCurrentPrice(tokenPrice));
+      let lastCurrency = currencyConfig.currentCurrency;
+      if (currency) {
+        lastCurrency = currency;
+      }
+      let tokenPrice = await getCurrencyPrice(lastCurrency.key);
+      dispatch(updateCurrentPrice(tokenPrice));
     },
     [netConfig, currencyConfig]
   );
@@ -485,21 +493,30 @@ const WalletInfo = () => {
     isRequest = true;
     let address = currentAccount.address;
     getAllTokenAssets(address)
-      .then(async(account) => {
-        if (Array.isArray(account.accounts) && account.accounts.length >0) {
-          const tokenIds = account.accounts.map((token)=>{
-            return token.tokenId
-          })
+      .then(async (account) => {
+        if (Array.isArray(account.accounts) && account.accounts.length > 0) {
+          const tokenIds = account.accounts.map((token) => {
+            return token.tokenId;
+          });
           const accountsWithTokenInfoV2 = await getAllTokenInfoV2(tokenIds);
-          if(accountsWithTokenInfoV2.error){
+          if (accountsWithTokenInfoV2.error) {
             Toast.info(i18n.t("nodeError"));
-          }else{
-            const lastTokenList = account.accounts.map((token)=>{
+          } else {
+            const lastTokenList = account.accounts.map((token) => {
               return {
                 ...token,
-                tokenNetInfo:accountsWithTokenInfoV2[token.tokenId]
+                tokenNetInfo: accountsWithTokenInfoV2[token.tokenId],
+              };
+            });
+
+            let localTokenConfig = getLocal(LOCAL_CACHE_KEYS.TOKEN_CONFIG);
+            if (localTokenConfig) {
+              let tokenConfigMap = JSON.parse(localTokenConfig);
+              if(tokenConfigMap && tokenConfigMap[address]){
+                let tokenConfig = tokenConfigMap[address]
+                dispatch(updateLocalTokenConfig(tokenConfig))
               }
-            })
+            }
             dispatch(updateTokenAssets(lastTokenList));
           }
         }
@@ -508,7 +525,7 @@ const WalletInfo = () => {
         isRequest = false;
         dispatch(updateShouldRequest(false));
       });
-  }, [i18n, currentAccount,tokenList]);
+  }, [i18n, currentAccount, tokenList]);
 
   useEffect(() => {
     if (shouldRefresh) {
@@ -520,12 +537,15 @@ const WalletInfo = () => {
     fetchPrice();
   }, [currencyConfig.currentCurrency, netConfig.currentNode.networkID]);
 
-  useEffect(()=>{
-    if(shouldUpdateAccountStorage){
+  useEffect(() => {
+    if (shouldUpdateAccountStorage) {
       dispatch(updateAccountLocalStorage());
-      saveLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS, JSON.stringify({ [currentAccount.address]: tokenList }))
+      saveLocal(
+        LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
+        JSON.stringify({ [currentAccount.address]: tokenList })
+      );
     }
-  },[shouldUpdateAccountStorage,tokenList,currentAccount.address])
+  }, [shouldUpdateAccountStorage, tokenList, currentAccount.address]);
   return (
     <>
       <StyledWalletInfoWrapper>
@@ -584,7 +604,7 @@ const WalletInfo = () => {
         content={dappModalContent}
         modalVisible={dappModalStatus}
       />
-      <Clock schemeEvent={() => dispatch(updateShouldRequest(true)) } />
+      <Clock schemeEvent={() => dispatch(updateShouldRequest(true, true))} />
     </>
   );
 };
