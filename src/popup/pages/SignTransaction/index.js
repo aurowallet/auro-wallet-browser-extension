@@ -1,4 +1,3 @@
-import { getBalance } from "@/background/api";
 import {
   DAPP_ACTION_CANCEL_ALL,
   GET_SIGN_PARAMS,
@@ -25,6 +24,7 @@ import { LockPage } from "../Lock";
 import SignView from "./SignView";
 import styles from "./index.module.scss";
 import ZkAppChainView from "./ZkAppChainView";
+import { updateShouldRequest } from "@/reducers/accountReducer";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
@@ -104,6 +104,7 @@ const SignTransaction = () => {
     if(isShowLoading.current){
       Loading.show()
     }// todo
+    dispatch(updateShouldRequest(true,true));
     isFirstRequest.current = false;
     Loading.hide();
   }, [dispatch, currentAddress]);

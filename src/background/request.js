@@ -92,14 +92,14 @@ export async function commonFetch(url) {
     return { error };
   }
 }
-export async function postRequest(url, data) {
+export async function postRequest(url, data, timeout) {
   try {
     const response = await axios.post(url, data, {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      timeout: TIMEOUT_DURATION, 
+      timeout: timeout || TIMEOUT_DURATION,
     });
     return response.data;
   } catch (error) {

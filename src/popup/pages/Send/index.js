@@ -5,14 +5,9 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import {
-  buildTokenBody,
-  getBalance,
-  sendParty,
-  sendTx,
-} from "../../../background/api";
+import { buildTokenBody, sendTx } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
+import { MAIN_COIN_CONFIG } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import {
   QA_SIGN_TRANSACTION,
@@ -20,17 +15,13 @@ import {
   WALLET_GET_ALL_ACCOUNT,
 } from "../../../constant/msgTypes";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
-import {
-  updateShouldRequest,
-} from "../../../reducers/accountReducer";
+import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateAddressDetail } from "../../../reducers/cache";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { sendMsg } from "../../../utils/commonMsg";
 import { getLedgerStatus, requestSignPayment } from "../../../utils/ledger";
 import {
   addressSlice,
-  amountDecimals,
-  getDisplayAmount,
   getRealErrorMsg,
   isNaturalNumber,
   isNumber,
@@ -53,8 +44,11 @@ const SendPage = ({}) => {
   const dispatch = useDispatch();
   const history = useHistory();
 
-  const balance = useSelector((state) => state.accountInfo.balance);
-  const mainTokenNetInfo = useSelector((state) => state.accountInfo.mainTokenNetInfo);
+  const currentNode = useSelector((state) => state.network.currentNode);
+  const tokenList = useSelector((state) => state.accountInfo.tokenList);
+  const mainTokenNetInfo = useSelector(
+    (state) => state.accountInfo.mainTokenNetInfo
+  );
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -64,6 +58,48 @@ const SendPage = ({}) => {
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
   const token = useSelector((state) => state.cache.nextTokenDetail);
+
+  const {
+    tokenSymbol,
+    isSendMainToken,
+    availableBalance,
+    mainTokenBalance,
+    availableDecimals,
+    tokenPublicKey,
+  } = useMemo(() => {
+    let mainTokenInfo = tokenList.find(
+      (tokenItem) => tokenItem.tokenBaseInfo.isMainToken
+    );
+    let fungibleTokenInfo = {};
+
+    const isSendMainToken = token.tokenBaseInfo.isMainToken;
+    let tokenSymbol = "";
+    let availableBalance = "";
+    let availableDecimals = 0;
+    let mainTokenBalance = mainTokenInfo.tokenBaseInfo.showBalance;
+    let tokenPublicKey = "";
+    if (isSendMainToken) {
+      tokenSymbol = MAIN_COIN_CONFIG.symbol;
+      availableBalance = mainTokenInfo.tokenBaseInfo.showBalance;
+      availableDecimals = mainTokenInfo.tokenBaseInfo.decimals;
+    } else {
+      tokenSymbol = token.tokenNetInfo.tokenSymbol ?? "UNKNOWN";
+      fungibleTokenInfo = tokenList.find(
+        (tokenItem) => tokenItem.tokenId === token.tokenId
+      );
+      availableBalance = fungibleTokenInfo.tokenBaseInfo.showBalance;
+      availableDecimals = fungibleTokenInfo.tokenBaseInfo.decimals;
+      tokenPublicKey = fungibleTokenInfo.tokenNetInfo.publicKey;
+    }
+    return {
+      tokenSymbol,
+      isSendMainToken,
+      availableBalance,
+      mainTokenBalance,
+      availableDecimals,
+      tokenPublicKey,
+    };
+  }, [token, tokenList]);
 
   useEffect(() => {
     dispatch(updateAddressDetail(""));
@@ -82,7 +118,6 @@ const SendPage = ({}) => {
   const [isOpenAdvance, setIsOpenAdvance] = useState(false);
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
-  const [realTransferAmount, setRealTransferAmount] = useState("");
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
 
   const [contentList, setContentList] = useState([]);
@@ -94,51 +129,31 @@ const SendPage = ({}) => {
   const [addressOptionList, setAddressOptionList] = useState([]);
   const [addressOptionStatus, setAddressOptionStatus] = useState(false);
 
-  const { tokenSymbol, showBalanceTxt } = useMemo(() => {
-    const isFungibleToken = ZK_DEFAULT_TOKEN_ID !== token.tokenId;
-    let tokenSymbol = "";
-    let nextBalance = token?.balance?.total;
-    let tokenBalance = amountDecimals(nextBalance, MAIN_COIN_CONFIG.decimals);
-    let showBalanceTxt = "";
-    if (isFungibleToken) {
-      tokenSymbol = token.tokenSymbol;
-      tokenBalance = getDisplayAmount(tokenBalance, MAIN_COIN_CONFIG.decimals);
-      showBalanceTxt = tokenBalance + " " + tokenSymbol;
-    } else {
-      tokenSymbol = MAIN_COIN_CONFIG.symbol;
-      tokenBalance = getDisplayAmount(tokenBalance, MAIN_COIN_CONFIG.decimals);
-
-      showBalanceTxt = tokenBalance + " " + MAIN_COIN_CONFIG.symbol;
-    }
-    tokenSymbol = tokenSymbol ?? "";
-    return {
-      tokenSymbol,
-      showBalanceTxt,
-    };
-  }, [token]);
-
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value);
     setToAddressName("");
   }, []);
-  const onAmountInput = useCallback((e) => {
-    let value = e.target.value;
-    if (value.indexOf(".") !== -1) {
-      let splitList = value.split(".");
-      if (splitList[splitList.length - 1].length <= MAIN_COIN_CONFIG.decimals) {
+  const onAmountInput = useCallback(
+    (e) => {
+      let value = e.target.value;
+      if (value.indexOf(".") !== -1) {
+        let splitList = value.split(".");
+        if (splitList[splitList.length - 1].length <= availableDecimals) {
+          setAmount(e.target.value);
+        }
+      } else {
         setAmount(e.target.value);
       }
-    } else {
-      setAmount(e.target.value);
-    }
-  }, []);
+    },
+    [availableDecimals]
+  );
   const onMemoInput = useCallback((e) => {
     setMemo(e.target.value);
   }, []);
 
   const onClickAll = useCallback(() => {
-    setAmount(balance);
-  }, [balance]);
+    setAmount(availableBalance);
+  }, [availableBalance]);
 
   const onClickFeeGroup = useCallback((item) => {
     setFeeAmount(item.fee);
@@ -153,8 +168,8 @@ const SendPage = ({}) => {
   }, [feeAmount, netFeeList]);
 
   const fetchAccountInfo = useCallback(async () => {
-    dispatch(updateShouldRequest(true)); // todo
-  }, [dispatch, currentAddress]);
+    dispatch(updateShouldRequest(true, true));
+  }, []);
 
   useEffect(() => {
     fetchAccountInfo();
@@ -181,23 +196,19 @@ const SendPage = ({}) => {
   }, []);
 
   const isAllTransfer = useCallback(() => {
-    return new BigNumber(amount).isEqualTo(balance);
-  }, [amount, balance]);
+    return new BigNumber(amount).isEqualTo(availableBalance);
+  }, [amount, availableBalance]);
 
   const getRealTransferAmount = useCallback(() => {
     let fee = trimSpace(feeAmount);
     let realAmount = 0;
-    if (isAllTransfer()) {
+    if (isAllTransfer() && isSendMainToken) {
       realAmount = new BigNumber(amount).minus(fee).toNumber();
     } else {
       realAmount = new BigNumber(amount).toNumber();
     }
     return realAmount;
-  }, [feeAmount, amount]);
-
-  useEffect(() => {
-    setRealTransferAmount(getRealTransferAmount());
-  }, [feeAmount, amount, getRealTransferAmount]);
+  }, [feeAmount, amount, isSendMainToken]);
 
   const onSubmitTx = useCallback(
     (data, type) => {
@@ -267,6 +278,35 @@ const SendPage = ({}) => {
     [currentAccount, onSubmitTx, ledgerApp]
   );
 
+  const getTokenBody = useCallback(
+    async (payload) => {
+      let decimal = new BigNumber(10).pow(availableDecimals);
+      let sendFee = new BigNumber(payload.fee).multipliedBy(decimal).toNumber();
+      let sendAmount = new BigNumber(payload.amount)
+        .multipliedBy(decimal)
+        .toNumber();
+      const buildTokenData = {
+        sender: payload.fromAddress,
+        receiver: payload.toAddress,
+        tokenAddress: tokenPublicKey,
+        amount: sendAmount,
+        memo: payload.memo,
+        fee: sendFee,
+        isNewAccount: false, // todo
+        gqlUrl: currentNode.url,
+      };
+      const buildData = await buildTokenBody(buildTokenData);
+      if (buildData.unSignTx) {
+        return buildData.unSignTx;
+      } else {
+        Toast.info(buildData.error || String(buildData));
+        setConfirmBtnStatus(false);
+        return;
+      }
+    },
+    [tokenPublicKey, availableDecimals, currentNode]
+  );
+
   const clickNextStep = useCallback(
     async (ledgerReady = false, preLedgerApp) => {
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
@@ -283,7 +323,7 @@ const SendPage = ({}) => {
       let fromAddress = currentAddress;
       let toAddressValue = trimSpace(toAddress);
       let amount = getRealTransferAmount();
-      let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce;// todo
+      let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce;
       let realMemo = memo || "";
       let fee = trimSpace(feeAmount);
       let payload = {
@@ -297,9 +337,18 @@ const SendPage = ({}) => {
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
         return ledgerTransfer(payload, preLedgerApp);
       }
-
-      payload.sendAction = DAppActions.mina_sendPayment;
       setConfirmBtnStatus(true);
+      if (!isSendMainToken) {
+        payload.sendAction = DAppActions.mina_sendTransaction;
+        const tokenBody = await getTokenBody(payload);
+        if (!tokenBody) {
+          return;
+        }
+        payload.transaction = tokenBody;
+      } else {
+        payload.sendAction = DAppActions.mina_sendPayment;
+      }
+
       sendMsg(
         {
           action: QA_SIGN_TRANSACTION,
@@ -323,6 +372,8 @@ const SendPage = ({}) => {
       inputNonce,
       memo,
       feeAmount,
+      isSendMainToken,
+      getTokenBody,
     ]
   );
 
@@ -347,7 +398,10 @@ const SendPage = ({}) => {
         Toast.info(i18n.t("inputFeeError"));
         return;
       }
-
+      if (!isSendMainToken && new BigNumber(inputFee).gt(mainTokenBalance)) {
+        Toast.info(i18n.t("balanceNotEnough"));
+        return;
+      }
       if (isAllTransfer()) {
         let maxAmount = getRealTransferAmount();
         if (new BigNumber(maxAmount).lt(0)) {
@@ -355,8 +409,10 @@ const SendPage = ({}) => {
           return;
         }
       } else {
-        let maxAmount = new BigNumber(amount).plus(inputFee).toString();
-        if (new BigNumber(maxAmount).gt(balance)) {
+        let maxAmount = isSendMainToken
+          ? new BigNumber(amount).plus(inputFee).toString()
+          : new BigNumber(amount).toString();
+        if (new BigNumber(maxAmount).gt(availableBalance)) {
           Toast.info(i18n.t("balanceNotEnough"));
           return;
         }
@@ -394,6 +450,11 @@ const SendPage = ({}) => {
       }
       setContentList(list);
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+        if (!isSendMainToken) {
+          Toast.info(i18n.t("notSupportNow"));
+          return;
+        }
+
         if (!ledgerReady) {
           const ledger = await getLedgerStatus();
           setLedgerApp(ledger.app);
@@ -410,7 +471,6 @@ const SendPage = ({}) => {
       toAddress,
       amount,
       feeAmount,
-      balance,
       inputNonce,
       currentAddress,
       memo,
@@ -419,6 +479,8 @@ const SendPage = ({}) => {
       getRealTransferAmount,
       clickNextStep,
       ledgerStatus,
+      availableBalance,
+      mainTokenBalance,
     ]
   );
 
@@ -535,7 +597,9 @@ const SendPage = ({}) => {
             inputType={"numric"}
             placeholder={0}
             rightComponent={
-              <div className={styles.balance}>{showBalanceTxt}</div>
+              <div className={styles.balance}>
+                {availableBalance + " " + tokenSymbol}
+              </div>
             }
             rightStableComponent={
               <div onClick={onClickAll} className={styles.max}>
@@ -586,8 +650,8 @@ const SendPage = ({}) => {
         modalVisible={confirmModalStatus}
         title={i18n.t("transactionDetails")}
         highlightTitle={i18n.t("amount")}
-        highlightContent={realTransferAmount}
-        subHighlightContent={MAIN_COIN_CONFIG.symbol}
+        highlightContent={getRealTransferAmount()}
+        subHighlightContent={tokenSymbol}
         onConfirm={clickNextStep}
         loadingStatus={confirmBtnStatus}
         onClickClose={onClickClose}

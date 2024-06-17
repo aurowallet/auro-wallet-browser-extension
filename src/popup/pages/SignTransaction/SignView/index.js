@@ -84,7 +84,7 @@ const SignView = ({
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
-  const balance = useSelector((state) => state.accountInfo.balance);
+  const mainTokenNetInfo = useSelector((state) => state.accountInfo.mainTokenNetInfo);
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
@@ -484,7 +484,7 @@ const SignView = ({
       if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
         let amount = trimSpace(params.amount) || 0;
         let maxAmount = new BigNumber(amount).plus(fee).toString();
-        if (new BigNumber(maxAmount).gt(balance)) {
+        if (new BigNumber(maxAmount).gt(mainTokenNetInfo.tokenBaseInfo.showBalance)) {
           Toast.info(i18n.t("balanceNotEnough"));
           return;
         }
@@ -512,7 +512,7 @@ const SignView = ({
       i18n,
       currentAccount,
       signParams,
-      balance,
+      mainTokenNetInfo,
       nonceValue,
       feeValue,
       clickNextStep,
@@ -790,7 +790,7 @@ const SignView = ({
             leftContent={showAccountAddress}
             leftCopyContent={currentAccount.address}
             rightTitle={i18n.t("amount")}
-            rightContent={balance + " " + MAIN_COIN_CONFIG.symbol}
+            rightContent={mainTokenNetInfo.tokenBaseInfo.showBalance + " " + MAIN_COIN_CONFIG.symbol}
           />
         ) : (
           <>

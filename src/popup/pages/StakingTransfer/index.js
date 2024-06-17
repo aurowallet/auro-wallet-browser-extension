@@ -31,7 +31,6 @@ const StakingTransfer = () => {
   const dispatch = useDispatch()
   const history = useHistory()
 
-  const balance = useSelector(state => state.accountInfo.balance)
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
   const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
   const netFeeList = useSelector(state => state.cache.feeRecommend)
@@ -201,7 +200,7 @@ const StakingTransfer = () => {
       return
     }
 
-    if (new BigNumber(inputFee).gt(balance)) {
+    if (new BigNumber(inputFee).gt(mainTokenNetInfo.tokenBaseInfo.showBalance)) {
       Toast.info(i18n.t('balanceNotEnough'));
       return;
     }
@@ -252,7 +251,7 @@ const StakingTransfer = () => {
       setConfirmModalStatus(true)
     }
    
-  }, [nodeAddress, balance, feeAmount, inputNonce,currentAccount,
+  }, [nodeAddress, mainTokenNetInfo, feeAmount, inputNonce,currentAccount,
     clickNextStep, nodeName, nodeAddress, blockAddress, currentAccount, memo,ledgerStatus])
 
     const onLedgerInfoModalConfirm = useCallback((ledger)=>{

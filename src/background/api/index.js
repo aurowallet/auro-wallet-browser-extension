@@ -279,9 +279,9 @@ export async function getNodeNetworkID(gqlUrl) {
  * @returns
  */
 export async function getCurrencyPrice(currency) {
-  let netConfig = await getCurrentNodeConfig()
-  if(netConfig.networkID !== NetworkID_MAP.mainnet){
-    return {}
+  let netConfig = await getCurrentNodeConfig();
+  if (netConfig.networkID !== NetworkID_MAP.mainnet) {
+    return {};
   }
   let priceUrl = BASE_INFO_URL + "/prices?currency=" + currency;
   let data = await commonFetch(priceUrl).catch(() => {});
@@ -409,6 +409,14 @@ export async function getAccountInfo(address, tokenId) {
   if (result?.error) {
     return { error: result.error };
   }
+}
+export async function buildTokenBody(params) {
+  const requestUrl = "";
+  const timeout = 3 * 60 * 1000;
+  const result = await postRequest(requestUrl, params, timeout).catch(
+    (err) => err
+  );
+  return result;
 }
 export async function getAllTokenAssets(address) {
   let txBody = getTokenQueryBody();

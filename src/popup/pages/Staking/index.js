@@ -160,7 +160,7 @@ const DelegationInfo = ({
 
   const history = useHistory()
   const stakingList = useSelector(state => state.staking.stakingList)
-  const accountInfo = useSelector(state => state.accountInfo)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
 
   const onChangeNode = useCallback(() => {
     history.push({
@@ -183,12 +183,12 @@ const DelegationInfo = ({
         nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress, 8);
       }
     }
-    let stakedBalance = accountInfo.balance || "0.00"
+    let stakedBalance = mainTokenNetInfo.tokenBaseInfo.showBalance || "0.00"
     stakedBalance = stakedBalance + " "+ MAIN_COIN_CONFIG.symbol
     return {
       showNodeAddress, nodeName,stakedBalance
     }
-  }, [delegatePublicKey, stakingList,accountInfo])
+  }, [delegatePublicKey, stakingList,mainTokenNetInfo])
  
   return (<div className={styles.delegationContainer}>
     <div className={styles.delegationRow}>
