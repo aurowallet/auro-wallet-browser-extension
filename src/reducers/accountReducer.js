@@ -220,7 +220,7 @@ function processTokenList(tokenAssetsList, prices) {
       if (tokenItem.tokenId === ZK_DEFAULT_TOKEN_ID) {
         tokenBaseInfo.isMainToken = true;
         const delegateAccount = tokenItem.delegateAccount?.publicKey;
-        tokenBaseInfo.isDelegation = delegateAccount == tokenItem.publicKey;
+        tokenBaseInfo.isDelegation = delegateAccount !== tokenItem.publicKey;
         tokenBaseInfo.decimals = MAIN_COIN_CONFIG.decimals;
         tokenBaseInfo.showBalance = amountDecimals(
           tokenItem.balance.total,
