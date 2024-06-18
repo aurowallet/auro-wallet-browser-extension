@@ -208,6 +208,7 @@ class APIService {
             }
         }
         currentAccount.isUnlocked = isUnlocked
+        this.setPopupIcon(isUnlocked)
         return this.getAccountWithoutPrivate(currentAccount)
     };
     
