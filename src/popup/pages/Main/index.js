@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS } from "../../../constant/storageKey";
-import { updateAccountTx, updateCurrentPrice, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
+import { updateAccountTx, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
 import { isNumber } from "../../../utils/utils";
 import Wallet from "../Wallet";
@@ -64,6 +64,13 @@ const HomePage = () => {
   }, [currentNode])
 
   const updateLocalAccount = useCallback((address) => {
+     let localShowedTokenIds = getLocal(LOCAL_CACHE_KEYS.SHOWED_TOKEN)
+     if (localShowedTokenIds) {
+       let tokenIdsMap = safeJsonParse(localShowedTokenIds)
+       let tokenIds = tokenIdsMap ? tokenIdsMap[address] : ""
+       dispatch(updateLocalShowedTokenId(tokenIds));
+     }
+
     let localTokenAssets = getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS)
     if (localTokenAssets) {
       let tokenAssetsMap = safeJsonParse(localTokenAssets)

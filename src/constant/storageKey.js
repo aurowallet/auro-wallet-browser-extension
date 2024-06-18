@@ -97,6 +97,8 @@ export const LOCAL_CACHE_KEYS = {
 
 
     "TOKEN_CONFIG": "TOKEN_CONFIG",
+
+    "SHOWED_TOKEN": "SHOWED_TOKEN",
 }
 
 

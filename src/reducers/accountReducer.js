@@ -29,6 +29,15 @@ const UPDATE_ACCOUNT_LOCAL_STORAGE = "UPDATE_ACCOUNT_LOCAL_STORAGE";
 
 const UPDATE_LOCAL_TOKEN_CONFIG = "UPDATE_LOCAL_TOKEN_CONFIG";
 
+const UPDATE_LOCAL_SHOWED_TOKEN_IDS = "UPDATE_LOCAL_SHOWED_TOKEN_IDS";
+
+export function updateLocalShowedTokenId(tokenIds) {
+  return {
+    type: UPDATE_LOCAL_SHOWED_TOKEN_IDS,
+    tokenIds,
+  };
+}
+
 export function updateLocalTokenConfig(tokenConfig) {
   return {
     type: UPDATE_LOCAL_TOKEN_CONFIG,
@@ -158,6 +167,8 @@ const initState = {
   tokenTotalAmount: "0",
   shouldUpdateAccountStorage: false,
   localTokenConfig: {},
+  localShowedTokenIds: [],
+  newTokenCount: 0,
 };
 
 function compareTokens(a, b) {
@@ -194,7 +205,8 @@ function compareTokens(a, b) {
   }
 }
 
-function processTokenList(tokenAssetsList, prices) {
+function processTokenList(tokenAssetsList, prices, localShowedTokenIds) {
+  let newTokenCount = 0;
   const sourceTokenList = tokenAssetsList || initialTokenList;
   let totalShowAmount = 0;
   const nextTokenList = sourceTokenList.map((tokenItem) => {
@@ -246,7 +258,12 @@ function processTokenList(tokenAssetsList, prices) {
           .toString();
       }
     }
-
+    tempToken.tokenBaseInfo.tokenShowed = localShowedTokenIds.includes(
+      tempToken.tokenId
+    );
+    if (!tempToken.tokenBaseInfo.tokenShowed) {
+      newTokenCount = newTokenCount + 1;
+    }
     return tempToken;
   });
 
@@ -273,6 +290,7 @@ function processTokenList(tokenAssetsList, prices) {
     tokenTotalAmount: totalShowAmount,
     tokenShowList,
     mainTokenNetInfo,
+    newTokenCount,
   };
 }
 function processTokenShowStatus(tokenAssetsList, tokenConfig) {
@@ -304,6 +322,25 @@ function processTokenShowStatus(tokenAssetsList, tokenConfig) {
     }
   });
   return { tokenList: nextTokenList, tokenShowList, totalShowAmount };
+}
+
+function processNowTokenStatus(tokenAssetsList) {
+  const nextTokenList = tokenAssetsList.map((tokenItem) => {
+    return {
+      ...tokenItem,
+      tokenBaseInfo:{
+        ...tokenItem.tokenBaseInfo,
+        tokenShowed:true
+      }
+    };
+  });
+  const tokenShowList = nextTokenList.filter(
+    (tokenItem) => !tokenItem.localConfig?.hideToken
+  );
+  let mainTokenNetInfo = nextTokenList.find(
+    (token) => token.tokenId === ZK_DEFAULT_TOKEN_ID
+  );
+  return { tokenList: nextTokenList, tokenShowList, mainTokenNetInfo };
 }
 
 function pendingTx(txList) {
@@ -501,17 +538,26 @@ const accountInfo = (state = initState, action) => {
       const nextList = action.isCache
         ? action.tokenList
         : mergeLocalConfigToNetToken(action.tokenList, state.tokenList);
-      const result = processTokenList(nextList, state.tokenPrice);
+      const result = processTokenList(
+        nextList,
+        state.tokenPrice,
+        state.localShowedTokenIds
+      );
       return {
         ...state,
         tokenList: result.tokenList,
         tokenTotalAmount: result.tokenTotalAmount,
         tokenShowList: result.tokenShowList,
         mainTokenNetInfo: result.mainTokenNetInfo,
+        newTokenCount: result.newTokenCount,
         shouldUpdateAccountStorage: !action.isCache,
       };
     case UPDATE_CURRENT_PRICE:
-      const priceUpdate = processTokenList(state.tokenList, action.tokenPrice);
+      const priceUpdate = processTokenList(
+        state.tokenList,
+        action.tokenPrice,
+        state.localShowedTokenIds
+      );
       let isAccountCache;
       let cacheState = state.isAccountCache;
       if (
@@ -548,6 +594,16 @@ const accountInfo = (state = initState, action) => {
         tokenShowList: statusUpdate.tokenShowList,
         tokenTotalAmount: statusUpdate.totalShowAmount,
         shouldUpdateAccountStorage: true,
+      };
+    case UPDATE_LOCAL_SHOWED_TOKEN_IDS:
+      const tokenShowedUpdate = processNowTokenStatus(state.tokenList);
+      return {
+        ...state,
+        localShowedTokenIds: action.tokenIds,
+        newTokenCount: 0,
+        tokenList: tokenShowedUpdate.tokenList,
+        tokenShowList: tokenShowedUpdate.tokenShowList,
+        mainTokenNetInfo: tokenShowedUpdate.mainTokenNetInfo,
       };
     default:
       return state;
