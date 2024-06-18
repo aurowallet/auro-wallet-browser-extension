@@ -15,6 +15,7 @@ import {
   addressSlice,
   getAmountForUI,
   getBalanceForUI,
+  isNaturalNumber,
 } from "@/utils/utils";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
@@ -22,7 +23,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled, { css } from "styled-components";
-import { HistoryHeader, LoadingView } from "../Wallet/component/StatusView";
+import {
+  EmptyTxListView,
+  HistoryHeader,
+  LoadingView,
+  TxNotSupportView,
+} from "../Wallet/component/StatusView";
 import TokenIcon from "../Wallet/component/TokenIcon";
 import TxListView from "../Wallet/component/TxListView";
 
@@ -67,12 +73,12 @@ const TokenDetail = () => {
   const dispatch = useDispatch();
   const isMounted = useRef(true);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
-  
+
   const isSilentRefresh = useSelector(
     (state) => state.accountInfo.isSilentRefresh
   );
 
-  let isRequest = false
+  let isRequest = false;
 
   const {
     tokenIconUrl,
@@ -98,7 +104,7 @@ const TokenDetail = () => {
 
     let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
 
-    let displayAmount = token.tokenBaseInfo.showAmount||"";
+    let displayAmount = token.tokenBaseInfo.showAmount || "";
     if (token.tokenBaseInfo.showAmount) {
       displayAmount =
         currencyConfig.currentCurrency.symbol +
@@ -119,10 +125,10 @@ const TokenDetail = () => {
 
   const requestHistory = useCallback(
     async (address = currentAccount.address) => {
-      if(isRequest){
-        return 
+      if (isRequest) {
+        return;
       }
-      isRequest = true
+      isRequest = true;
       let pendingTxList = getPendingTxList(address);
       let gqlTxList = getGqlTxHistory(address);
       let zkAppTxList = getZkAppTxHistory(address);
@@ -144,7 +150,7 @@ const TokenDetail = () => {
           );
         })
         .finally(() => {
-          isRequest = false
+          isRequest = false;
           if (isMounted.current) {
             dispatch(updateShouldRequest(false));
           }
@@ -176,7 +182,11 @@ const TokenDetail = () => {
   return (
     <CustomViewV2 title={tokenSymbol} subTitle={tokenName}>
       <StyledTopWrapper>
-        <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} size={"50px"} />
+        <TokenIcon
+          iconUrl={tokenIconUrl}
+          tokenSymbol={tokenSymbol}
+          size={"50px"}
+        />
         <StyledBalanceRow>{displayBalance}</StyledBalanceRow>
         <StyledAmountRow>{displayAmount}</StyledAmountRow>
         <StyledActionRow>
@@ -193,7 +203,15 @@ const TokenDetail = () => {
           isRefresh={shouldRefresh}
           onClickRefresh={onClickRefresh}
         />
-        {shouldRefresh && !isSilentRefresh ? <LoadingView /> : <TxListView history={txList} />}
+        {shouldRefresh && !isSilentRefresh ? (
+          <LoadingView />
+        ) : txList.length !== 0 ? (
+          <TxListView history={txList} />
+        ) : isNaturalNumber(inferredNonce) ? (
+          <TxNotSupportView />
+        ) : (
+          <EmptyTxListView />
+        )}
       </StyledHistoryWrapper>
 
       <Clock

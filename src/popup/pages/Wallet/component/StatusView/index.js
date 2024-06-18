@@ -92,5 +92,18 @@ export const TxNotSupportView = () => {
         <span className={styles.emptyContent}>{i18n.t("txHistoryTip")}</span>
       </div>
     </StyledHistoryHeadWrapper>
-  );
+  ); 
+};
+
+
+export const EmptyTxListView = () => {
+  return (
+    <StyledHistoryHeadWrapper>
+      <StyledHistoryTitle>{i18n.t("history")}</StyledHistoryTitle>
+      <div className={styles.emptyContainer}>
+        <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
+        <span className={styles.emptyContent}>{i18n.t("noTxHistory")}</span>
+      </div>
+    </StyledHistoryHeadWrapper>
+  ); 
 };

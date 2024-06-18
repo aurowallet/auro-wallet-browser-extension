@@ -94,7 +94,7 @@ const TokenListView = ({ isInModal = false }) => {
           )}
         </StyledTokenHeaderRow>
       )}
-      {shouldRefresh && !isSilentRefresh && !isInModal ? (
+      {shouldRefresh && !isSilentRefresh && tokenList.length==0  && !isInModal ? (
         <LoadingView />
       ) : (
         tokenShowList.map((token, index) => {

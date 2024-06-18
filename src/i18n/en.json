@@ -293,5 +293,6 @@
   "ignore":"Ignore",
   "balance":"Balance",
   "updateTokenInfo":"Update your token information?",
-  "tokens":"tokens"
+  "tokens":"tokens",
+  "noTxHistory":"No transaction history"
 }
