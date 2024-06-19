@@ -42,6 +42,7 @@ import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import NetworkSelect from "../Networks/NetworkSelect";
 import TokenListView from "./component/TokenListView";
+import { NetworkID_MAP } from "@/constant/network";
 
 const StyledPageWrapper = styled.div`
   background: #edeff2;
@@ -171,7 +172,7 @@ export default Wallet;
 
 const StyledWalletInfoWrapper = styled.div`
   border-radius: 20px;
-  background: #594af1;
+  background: ${(props)=>props.netcolor?props.netcolor:"rgba(0, 0, 0, 0.30)"};
   margin: 0px 20px 20px;
   padding: 20px;
   position: relative;
@@ -244,7 +245,7 @@ const StyledBaseBtn = styled.div`
   font-weight: 500;
   font-size: 14px;
   text-align: center;
-  color: #594af1;
+  color: ${(props)=>props.netcolor?props.netcolor:"rgba(0, 0, 0, 0.30)"};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -546,9 +547,17 @@ const WalletInfo = () => {
       );
     }
   }, [shouldUpdateAccountStorage, tokenList, currentAccount.address]);
+
+  const netcolor = useMemo(()=>{
+    const networkID = netConfig.currentNode.networkID
+    if(networkID === NetworkID_MAP.mainnet){
+      return "#594AF1"
+    }
+    return "rgba(0, 0, 0, 0.30)"
+  },[netConfig.currentNode.networkID])
   return (
     <>
-      <StyledWalletInfoWrapper>
+      <StyledWalletInfoWrapper netcolor={netcolor}>
         <StyledWalletBaseRow>
           <StyledWalletBaseLeft>
             <StyledWalletName>{accountName}</StyledWalletName>
@@ -570,17 +579,17 @@ const WalletInfo = () => {
         </StyledWalletAddress>
         <StyledCurrencyRow $isCache={isCache}>{unitBalance}</StyledCurrencyRow>
         <StyledWalletBaseAction>
-          <StyledSendBtn onClick={toSend}>{i18n.t("send")}</StyledSendBtn>
+          <StyledSendBtn netcolor={netcolor} onClick={toSend}>{i18n.t("send")}</StyledSendBtn>
           <StyledDivideColumnWrapper>
             <StyledDivideColumn />
           </StyledDivideColumnWrapper>
-          <StyledReceiveBtn onClick={toReceive}>
+          <StyledReceiveBtn netcolor={netcolor} onClick={toReceive}>
             {i18n.t("receive")}
           </StyledReceiveBtn>
           <StyledDivideColumnWrapper>
             <StyledDivideColumn />
           </StyledDivideColumnWrapper>
-          <StyledStakeBtn onClick={toStaking}>
+          <StyledStakeBtn netcolor={netcolor} onClick={toStaking}>
             {i18n.t("staking")}
           </StyledStakeBtn>
         </StyledWalletBaseAction>
