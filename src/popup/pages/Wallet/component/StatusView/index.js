@@ -57,6 +57,19 @@ const StyledRefreshIcon = styled.img`
   height: 100%;
   padding: 4px;
 `;
+
+const StyledEmptyWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 240px;
+
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.3);
+`;
 export const HistoryHeader = ({ isRefresh, onClickRefresh, showRefresh }) => {
   return (
     <StyledHistoryHeadWrapper>
@@ -85,25 +98,18 @@ export const LoadingView = () => {
 
 export const TxNotSupportView = () => {
   return (
-    <StyledHistoryHeadWrapper>
-      <StyledHistoryTitle>{i18n.t("history")}</StyledHistoryTitle>
-      <div className={styles.emptyContainer}>
-        <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
-        <span className={styles.emptyContent}>{i18n.t("txHistoryTip")}</span>
-      </div>
-    </StyledHistoryHeadWrapper>
-  ); 
+    <StyledEmptyWrapper>
+      <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
+      <div className={styles.emptyContent}>{i18n.t("txHistoryTip")}</div>
+    </StyledEmptyWrapper>
+  );
 };
-
 
 export const EmptyTxListView = () => {
   return (
-    <StyledHistoryHeadWrapper>
-      <StyledHistoryTitle>{i18n.t("history")}</StyledHistoryTitle>
-      <div className={styles.emptyContainer}>
+    <StyledEmptyWrapper>
         <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
         <span className={styles.emptyContent}>{i18n.t("noTxHistory")}</span>
-      </div>
-    </StyledHistoryHeadWrapper>
-  ); 
+    </StyledEmptyWrapper>
+  );
 };

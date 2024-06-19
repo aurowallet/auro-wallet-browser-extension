@@ -4,7 +4,7 @@ import {
   getZkAppPendingTx,
   getZkAppTxHistory,
 } from "@/background/api";
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "@/constant";
+import { MAIN_COIN_CONFIG } from "@/constant";
 import Clock from "@/popup/component/Clock";
 import CustomViewV2 from "@/popup/component/CustomViewV2";
 import {
@@ -17,9 +17,8 @@ import {
   getBalanceForUI,
   isNaturalNumber,
 } from "@/utils/utils";
-import BigNumber from "bignumber.js";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled, { css } from "styled-components";
@@ -69,6 +68,9 @@ const TokenDetail = () => {
   const currentNode = useSelector((state) => state.network.currentNode);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
+  );
+  const mainTokenNetInfo = useSelector(
+    (state) => state.accountInfo.mainTokenNetInfo
   );
   const dispatch = useDispatch();
   const isMounted = useRef(true);
@@ -125,6 +127,9 @@ const TokenDetail = () => {
 
   const requestHistory = useCallback(
     async (address = currentAccount.address) => {
+      if (isFungibleToken) {
+        return;
+      }
       if (isRequest) {
         return;
       }
@@ -156,7 +161,7 @@ const TokenDetail = () => {
           }
         });
     },
-    [currentAccount.address]
+    [currentAccount.address, isFungibleToken]
   );
 
   const onClickRefresh = useCallback(() => {
@@ -180,7 +185,11 @@ const TokenDetail = () => {
   }, []);
 
   return (
-    <CustomViewV2 title={tokenSymbol} subTitle={tokenName} copyContent={isFungibleToken ? token.tokenId:""}>
+    <CustomViewV2
+      title={tokenSymbol}
+      subTitle={tokenName}
+      copyContent={isFungibleToken ? token.tokenId : ""}
+    >
       <StyledTopWrapper>
         <TokenIcon
           iconUrl={tokenIconUrl}
@@ -203,11 +212,13 @@ const TokenDetail = () => {
           isRefresh={shouldRefresh}
           onClickRefresh={onClickRefresh}
         />
-        {shouldRefresh && !isSilentRefresh ? (
+        {isFungibleToken ? (
+          <TxNotSupportView />
+        ) : shouldRefresh && !isSilentRefresh ? (
           <LoadingView />
         ) : txList.length !== 0 ? (
           <TxListView history={txList} />
-        ) : isNaturalNumber(inferredNonce) ? (
+        ) : isNaturalNumber(mainTokenNetInfo.inferredNonce) ? (
           <TxNotSupportView />
         ) : (
           <EmptyTxListView />
