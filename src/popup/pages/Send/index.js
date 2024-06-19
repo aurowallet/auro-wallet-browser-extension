@@ -5,7 +5,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { buildTokenBody, sendTx } from "../../../background/api";
+import { buildTokenBody, getTokenState, sendTx } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
@@ -235,6 +235,7 @@ const SendPage = ({}) => {
       }
 
       setConfirmModalStatus(false);
+      // fetchAccountData()
       history.goBack();
     },
     [i18n]
@@ -275,13 +276,21 @@ const SendPage = ({}) => {
         onSubmitTx(postRes, "ledger");
       }
     },
-    [currentAccount, onSubmitTx, ledgerApp]
+    [currentAccount, onSubmitTx, ledgerApp,fetchAccountData]
   );
 
   const getTokenBody = useCallback(
     async (payload) => {
+      const tokenState = await getTokenState(payload.toAddress ,token.tokenId).catch(err=>err)
+      if(tokenState.err){
+        Toast.info(String(tokenState.err))
+        setConfirmBtnStatus(false);
+        return 
+      }
+      let fundNewAccountStatus = tokenState.account == null
       let decimal = new BigNumber(10).pow(availableDecimals);
-      let sendFee = new BigNumber(payload.fee).multipliedBy(decimal).toNumber();
+      let mainCoinDecimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
+      let sendFee = new BigNumber(payload.fee).multipliedBy(mainCoinDecimal).toNumber();
       let sendAmount = new BigNumber(payload.amount)
         .multipliedBy(decimal)
         .toNumber();
@@ -292,21 +301,20 @@ const SendPage = ({}) => {
         amount: sendAmount,
         memo: payload.memo,
         fee: sendFee,
-        isNewAccount: false, // todo
+        isNewAccount: fundNewAccountStatus,
         gqlUrl: currentNode.url,
       };
       const buildData = await buildTokenBody(buildTokenData);
       if (buildData.unSignTx) {
         return buildData.unSignTx;
       } else {
-        Toast.info(buildData.error || String(buildData));
         setConfirmBtnStatus(false);
+        Toast.info(buildData.error || String(buildData));
         return;
       }
     },
     [tokenPublicKey, availableDecimals, currentNode]
   );
-
   const clickNextStep = useCallback(
     async (ledgerReady = false, preLedgerApp) => {
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
@@ -381,6 +389,11 @@ const SendPage = ({}) => {
     setConfirmModalStatus(false);
   }, []);
 
+  useEffect(()=>{
+    if(!confirmModalStatus){
+      setConfirmBtnStatus(false);
+    }
+  },[confirmModalStatus])
   const onConfirm = useCallback(
     async (ledgerReady = false) => {
       let toAddressValue = trimSpace(toAddress);

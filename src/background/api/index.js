@@ -31,6 +31,7 @@ import {
   getTokenInfoBody,
   getTokenInfoBodyV2,
   getTokenQueryBody,
+  getTokenStateBody,
   getTxHistoryBody,
   getTxSend,
   getTxStatusBody,
@@ -470,4 +471,13 @@ export async function getAllTokenInfoV2(tokenIds) {
     console.error("Error fetching token info:", error);
     return { error: error.message };
   }
+}
+
+export async function getTokenState(address,tokenId) {
+  let txBody = getTokenStateBody();
+  let result = await startFetchMyQuery(txBody, {
+    publicKey: address,
+    tokenId,
+  }).catch((error) => error);
+  return result;
 }

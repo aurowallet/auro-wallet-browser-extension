@@ -652,3 +652,15 @@ export function getTokenInfoBodyV2(tokenIds) {
     }
   `;
 }
+
+export function getTokenStateBody() {
+  return `
+  query tokenState($publicKey: PublicKey!,$tokenId: TokenId!) {
+    account(publicKey: $publicKey, token: $tokenId) {
+      balance {
+        total
+      }
+    }
+  }
+  `;
+}
