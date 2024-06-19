@@ -217,11 +217,11 @@ function processTokenList(tokenAssetsList, prices, localShowedTokenIds) {
     const tokenBaseInfo = tempToken.tokenBaseInfo;
 
     tokenBaseInfo.isScam = false;
-    let decimals = 1;
+    let decimals = 0;
     if (tokenItem.tokenNetInfo?.publicKey) {
       const zkappState = tokenItem.tokenNetInfo.zkappState || [];
       if (Array.isArray(zkappState)) {
-        decimals = zkappState[0] || 1;
+        decimals = zkappState[0] || 0;
       }
       tokenBaseInfo.decimals = decimals;
       tokenBaseInfo.showBalance = amountDecimals(
