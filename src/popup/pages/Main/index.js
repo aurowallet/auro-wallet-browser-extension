@@ -68,7 +68,9 @@ const HomePage = () => {
      if (localShowedTokenIds) {
        let tokenIdsMap = safeJsonParse(localShowedTokenIds)
        let tokenIds = tokenIdsMap ? tokenIdsMap[address] : ""
-       dispatch(updateLocalShowedTokenId(tokenIds));
+       if(Array.isArray(tokenIds) && tokenIds.length> 0){
+        dispatch(updateLocalShowedTokenId(tokenIds));
+       }
      }
 
     let localTokenAssets = getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS)
