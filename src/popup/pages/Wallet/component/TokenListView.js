@@ -1,16 +1,16 @@
+import { saveLocal } from "@/background/localStorage";
+import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import FooterPopup from "@/popup/component/FooterPopup";
 import IconAdd from "@/popup/component/SVG/icon_add";
+import { updateLocalShowedTokenId } from "@/reducers/accountReducer";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import { LoadingView } from "./StatusView";
 import TokenItem from "./TokenItem";
 import TokenManageList from "./TokenManageList";
-import { LoadingView } from "./StatusView";
-import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
-import { saveLocal } from "@/background/localStorage";
-import { updateLocalShowedTokenId } from "@/reducers/accountReducer";
 
 const StyledTokenWrapper = styled.div`
   background-color: white;
@@ -49,12 +49,14 @@ const StyledIgnoreContent = styled(StyledTokenTip)`
 `;
 
 const TokenListView = ({ isInModal = false }) => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
   const tokenShowList = useSelector((state) => state.accountInfo.tokenShowList);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
   const newTokenCount = useSelector((state) => state.accountInfo.newTokenCount);
-  const localShowedTokenIds = useSelector((state) => state.accountInfo.localShowedTokenIds);
+  const localShowedTokenIds = useSelector(
+    (state) => state.accountInfo.localShowedTokenIds
+  );
   const isSilentRefresh = useSelector(
     (state) => state.accountInfo.isSilentRefresh
   );
@@ -76,10 +78,15 @@ const TokenListView = ({ isInModal = false }) => {
     const showedTokenIdList = tokenList.map((item) => {
       return item.tokenId;
     });
-    const newIdList = [...new Set([...showedTokenIdList, ...localShowedTokenIds])];
-    saveLocal(LOCAL_CACHE_KEYS.SHOWED_TOKEN, JSON.stringify({ [currentAccount.address]: newIdList }))
+    const newIdList = [
+      ...new Set([...showedTokenIdList, ...localShowedTokenIds]),
+    ];
+    saveLocal(
+      STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN,
+      JSON.stringify({ [currentAccount.address]: newIdList })
+    );
     dispatch(updateLocalShowedTokenId(newIdList));
-  }, [tokenList,currentAccount,localShowedTokenIds]);
+  }, [tokenList, currentAccount, localShowedTokenIds]);
   return (
     <StyledTokenWrapper>
       {!isInModal && (
@@ -94,7 +101,10 @@ const TokenListView = ({ isInModal = false }) => {
           )}
         </StyledTokenHeaderRow>
       )}
-      {shouldRefresh && !isSilentRefresh && tokenList.length==0  && !isInModal ? (
+      {shouldRefresh &&
+      !isSilentRefresh &&
+      tokenList.length == 0 &&
+      !isInModal ? (
         <LoadingView />
       ) : (
         tokenShowList.map((token, index) => {

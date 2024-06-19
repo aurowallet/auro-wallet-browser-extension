@@ -7,7 +7,7 @@ import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenIcon from "./TokenIcon";
-import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
+import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import { saveLocal } from "@/background/localStorage";
 
 const StyledTokenItemWrapper = styled.div`
@@ -66,9 +66,10 @@ const StyledTokenAmount = styled.div`
 const TokenManageItem = ({ token }) => {
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
-  const localTokenConfig = useSelector((state) => state.accountInfo.localTokenConfig);
+  const localTokenConfig = useSelector(
+    (state) => state.accountInfo.localTokenConfig
+  );
 
-  
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -111,23 +112,26 @@ const TokenManageItem = ({ token }) => {
     //   }
     // }
     let tempConfig = {
-      ...localTokenConfig
-    }
-    let currentTokenConfig = tempConfig[token.tokenId]
-    if(currentTokenConfig){
+      ...localTokenConfig,
+    };
+    let currentTokenConfig = tempConfig[token.tokenId];
+    if (currentTokenConfig) {
       let lastTokenConfig = {
         ...currentTokenConfig,
-        hideToken:!currentTokenConfig.hideToken
-      }
-      tempConfig[token.tokenId] = lastTokenConfig
-    }else{
+        hideToken: !currentTokenConfig.hideToken,
+      };
+      tempConfig[token.tokenId] = lastTokenConfig;
+    } else {
       tempConfig[token.tokenId] = {
-        hideToken:true
-      }
+        hideToken: true,
+      };
     }
-    saveLocal(LOCAL_CACHE_KEYS.TOKEN_CONFIG, JSON.stringify({ [currentAccount.address]: tempConfig }))
-    dispatch(updateLocalTokenConfig(tempConfig))
-  }, [token, tokenList, currentAccount,localTokenConfig]);
+    saveLocal(
+      STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG,
+      JSON.stringify({ [currentAccount.address]: tempConfig })
+    );
+    dispatch(updateLocalTokenConfig(tempConfig));
+  }, [token, tokenList, currentAccount, localTokenConfig]);
 
   return (
     <StyledTokenItemWrapper>

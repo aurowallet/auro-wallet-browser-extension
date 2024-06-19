@@ -14,7 +14,7 @@ import {
 } from "../../../background/api";
 
 import { getLocal, saveLocal } from "@/background/localStorage";
-import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
+import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import Clock from "@/popup/component/Clock";
 import styled, { css } from "styled-components";
 import {
@@ -510,7 +510,7 @@ const WalletInfo = () => {
               };
             });
 
-            let localTokenConfig = getLocal(LOCAL_CACHE_KEYS.TOKEN_CONFIG);
+            let localTokenConfig = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG);
             if (localTokenConfig) {
               let tokenConfigMap = JSON.parse(localTokenConfig);
               if(tokenConfigMap && tokenConfigMap[address]){
@@ -520,6 +520,8 @@ const WalletInfo = () => {
             }
             dispatch(updateTokenAssets(lastTokenList));
           }
+        }else{
+          dispatch(updateTokenAssets([]));
         }
       })
       .finally(() => {

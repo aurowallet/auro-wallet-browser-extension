@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../../../background/localStorage";
-import { LOCAL_CACHE_KEYS } from "../../../constant/storageKey";
+import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "../../../constant/storageKey";
 import { updateAccountTx, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
 import { isNumber } from "../../../utils/utils";
@@ -64,7 +64,7 @@ const HomePage = () => {
   }, [currentNode])
 
   const updateLocalAccount = useCallback((address) => {
-     let localShowedTokenIds = getLocal(LOCAL_CACHE_KEYS.SHOWED_TOKEN)
+     let localShowedTokenIds = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN)
      if (localShowedTokenIds) {
        let tokenIdsMap = safeJsonParse(localShowedTokenIds)
        let tokenIds = tokenIdsMap ? tokenIdsMap[address] : ""
@@ -80,7 +80,7 @@ const HomePage = () => {
       if (tokenAssets) {
         dispatch(updateTokenAssets(tokenAssets,true));
 
-        let localTokenConfig = getLocal(LOCAL_CACHE_KEYS.TOKEN_CONFIG)
+        let localTokenConfig = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG)
         if(localTokenConfig){
           let tokenConfigMap = safeJsonParse(localTokenConfig)
           if(tokenConfigMap && tokenConfigMap[address]){

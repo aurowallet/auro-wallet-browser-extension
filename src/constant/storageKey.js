@@ -94,8 +94,12 @@ export const LOCAL_CACHE_KEYS = {
      * base token assets
      */
     "BASE_TOKEN_ASSETS": "BASE_TOKEN_ASSETS",
+}
 
-
+/**
+ * stable account storge, do not clear when change account or network
+ */
+export const STABLE_LOCAL_ACCOUNT_CACHE_KEYS = {
     "TOKEN_CONFIG": "TOKEN_CONFIG",
 
     "SHOWED_TOKEN": "SHOWED_TOKEN",

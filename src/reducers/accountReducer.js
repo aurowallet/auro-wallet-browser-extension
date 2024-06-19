@@ -160,9 +160,9 @@ const initState = {
   stakingLoadingRefresh: false,
   accountBalanceMap: {},
   scamList: [],
-  tokenList: [defaultMinaAssets],
+  tokenList: [],
   mainTokenNetInfo: {},
-  tokenShowList: [defaultMinaAssets],
+  tokenShowList: [],
   tokenPrice: {},
   tokenTotalAmount: "0",
   shouldUpdateAccountStorage: false,
@@ -328,10 +328,10 @@ function processNowTokenStatus(tokenAssetsList) {
   const nextTokenList = tokenAssetsList.map((tokenItem) => {
     return {
       ...tokenItem,
-      tokenBaseInfo:{
+      tokenBaseInfo: {
         ...tokenItem.tokenBaseInfo,
-        tokenShowed:true
-      }
+        tokenShowed: true,
+      },
     };
   });
   const tokenShowList = nextTokenList.filter(
@@ -466,9 +466,9 @@ const accountInfo = (state = initState, action) => {
         txList: [],
         shouldRefresh: true,
 
-        tokenList: [defaultMinaAssets],
+        tokenList: [],
         mainTokenNetInfo: {},
-        tokenShowList: [defaultMinaAssets],
+        tokenShowList: [],
         tokenPrice: {},
         tokenTotalAmount: "0",
       };
@@ -491,9 +491,9 @@ const accountInfo = (state = initState, action) => {
       if (shouldRefresh) {
         newState = {
           txList: [],
-          tokenList: [defaultMinaAssets],
+          tokenList: [],
           mainTokenNetInfo: {},
-          tokenShowList: [defaultMinaAssets],
+          tokenShowList: [],
           tokenPrice: {},
           tokenTotalAmount: "0",
         };
@@ -553,11 +553,6 @@ const accountInfo = (state = initState, action) => {
         shouldUpdateAccountStorage: !action.isCache,
       };
     case UPDATE_CURRENT_PRICE:
-      const priceUpdate = processTokenList(
-        state.tokenList,
-        action.tokenPrice,
-        state.localShowedTokenIds
-      );
       let isAccountCache;
       let cacheState = state.isAccountCache;
       if (
@@ -568,6 +563,21 @@ const accountInfo = (state = initState, action) => {
       } else {
         isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE;
       }
+
+      if (state.tokenList.length == 0) {
+        return {
+          ...state,
+          tokenPrice: action.tokenPrice,
+          isAccountCache: isAccountCache,
+          shouldUpdateAccountStorage: !action.isCache,
+        };
+      }
+      const priceUpdate = processTokenList(
+        state.tokenList,
+        action.tokenPrice,
+        state.localShowedTokenIds,
+      );
+      
       return {
         ...state,
         tokenPrice: action.tokenPrice,
