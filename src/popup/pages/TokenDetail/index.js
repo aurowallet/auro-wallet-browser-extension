@@ -208,7 +208,7 @@ const TokenDetail = () => {
       </StyledTopWrapper>
       <StyledHistoryWrapper>
         <HistoryHeader
-          showRefresh={!!currentNode.gqlTxUrl}
+          showRefresh={!!currentNode.gqlTxUrl && !isFungibleToken}
           isRefresh={shouldRefresh}
           onClickRefresh={onClickRefresh}
         />
