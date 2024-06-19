@@ -21,11 +21,11 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { getLedgerStatus, requestSignDelegation } from "../../../utils/ledger";
 import Toast from "../../component/Toast";
 
+import useFetchAccountData from "@/hooks/useUpdateAccount";
 import { DAppActions } from "@aurowallet/mina-provider";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
-import { updateShouldRequest } from "@/reducers/accountReducer";
 
 const StakingTransfer = () => { 
   const dispatch = useDispatch()
@@ -35,6 +35,7 @@ const StakingTransfer = () => {
   const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
   const netFeeList = useSelector(state => state.cache.feeRecommend)
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const {
     menuAdd, nodeName, nodeAddress, showNodeName
@@ -269,11 +270,6 @@ const StakingTransfer = () => {
       }
     });
   }, [nodeAddress])
-
-
-  const fetchAccountData = useCallback(async () => {
-    dispatch(updateShouldRequest(true,true));
-  }, [currentAccount])
 
 
   useEffect(()=>{

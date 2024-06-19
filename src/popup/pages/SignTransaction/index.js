@@ -3,8 +3,10 @@ import {
   GET_SIGN_PARAMS,
   WALLET_GET_CURRENT_ACCOUNT,
 } from "@/constant/msgTypes";
+import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Loading from "@/popup/component/Loading";
 import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
+import { updateShouldRequest } from "@/reducers/accountReducer";
 import { updateDAppOpenWindow } from "@/reducers/cache";
 import {
   ENTRY_WITCH_ROUTE,
@@ -22,9 +24,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { LockPage } from "../Lock";
 import SignView from "./SignView";
-import styles from "./index.module.scss";
 import ZkAppChainView from "./ZkAppChainView";
-import { updateShouldRequest } from "@/reducers/accountReducer";
+import styles from "./index.module.scss";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
@@ -59,7 +60,7 @@ const SignTransaction = () => {
   const dispatch = useDispatch();
   const history = useHistory();
   const isFirstRequest = useRef(true);
-  const isShowLoading = useRef(false)
+  const isShowLoading = useRef(false);
 
   const [pendingSignList, setPendingSignList] = useState([]);
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
@@ -89,6 +90,9 @@ const SignTransaction = () => {
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
+
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
+
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -101,10 +105,11 @@ const SignTransaction = () => {
   }, [dappWindow]);
 
   const fetchAccountInfo = useCallback(async () => {
-    if(isShowLoading.current){
-      Loading.show()
-    }// todo
-    dispatch(updateShouldRequest(true,true));
+    if (isShowLoading.current) {
+      Loading.show();
+    }
+    dispatch(updateShouldRequest(true, true));
+    await fetchAccountData();
     isFirstRequest.current = false;
     Loading.hide();
   }, [dispatch, currentAddress]);
@@ -147,16 +152,16 @@ const SignTransaction = () => {
             const firstSignParams = signRequests[0];
             const sendAction = firstSignParams?.params?.action || "";
             if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-              isShowLoading.current = true
+              isShowLoading.current = true;
             }
           }
-          if(currentSignIndex < (signRequests.length-1)){
-            setRightArrowStatus(false)
+          if (currentSignIndex < signRequests.length - 1) {
+            setRightArrowStatus(false);
           }
         }
       }
     );
-  }, [params, pendingSignList,currentSignIndex]);
+  }, [params, pendingSignList, currentSignIndex]);
 
   useEffect(() => {
     sendMsg(
@@ -170,11 +175,11 @@ const SignTransaction = () => {
   }, [dappWindow]);
 
   useEffect(() => {
-    if(lockStatus){
+    if (lockStatus) {
       fetchAccountInfo();
     }
-  }, [fetchAccountInfo,lockStatus]);
-  
+  }, [fetchAccountInfo, lockStatus]);
+
   useEffect(() => {
     getSignParams();
   }, [window.location?.href]);

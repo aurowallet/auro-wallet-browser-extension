@@ -1,3 +1,4 @@
+import useFetchAccountData from "@/hooks/useUpdateAccount";
 import { verifyTokenCommand } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
@@ -6,11 +7,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import {
-  buildTokenBody,
-  getTokenState,
-  sendTx
-} from "../../../background/api";
+import { buildTokenBody, getTokenState, sendTx } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
@@ -19,12 +16,8 @@ import {
   WALLET_CHECK_TX_STATUS,
   WALLET_GET_ALL_ACCOUNT,
 } from "../../../constant/msgTypes";
-import {
-  ADDRESS_BOOK_CONFIG
-} from "../../../constant/storageKey";
-import {
-  updateShouldRequest
-} from "../../../reducers/accountReducer";
+import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
+import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateAddressDetail } from "../../../reducers/cache";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -67,6 +60,8 @@ const SendPage = ({}) => {
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
   const token = useSelector((state) => state.cache.nextTokenDetail);
+
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const {
     tokenSymbol,
@@ -244,7 +239,7 @@ const SendPage = ({}) => {
       }
 
       setConfirmModalStatus(false);
-      // fetchAccountData()
+      fetchAccountData();
       history.goBack();
     },
     [i18n]

@@ -7,14 +7,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import {
-  getAllTokenAssets,
-  getAllTokenInfoV2,
-  getCurrencyPrice,
-} from "../../../background/api";
+import { getCurrencyPrice } from "../../../background/api";
 
-import { getLocal, saveLocal } from "@/background/localStorage";
-import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
+import { saveLocal } from "@/background/localStorage";
+import { NetworkID_MAP } from "@/constant/network";
+import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
+import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Clock from "@/popup/component/Clock";
 import styled, { css } from "styled-components";
 import {
@@ -26,9 +24,7 @@ import {
   ACCOUNT_BALANCE_CACHE_STATE,
   updateAccountLocalStorage,
   updateCurrentPrice,
-  updateLocalTokenConfig,
   updateShouldRequest,
-  updateTokenAssets,
 } from "../../../reducers/accountReducer";
 import { setAccountInfo } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -42,7 +38,6 @@ import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import NetworkSelect from "../Networks/NetworkSelect";
 import TokenListView from "./component/TokenListView";
-import { NetworkID_MAP } from "@/constant/network";
 
 const StyledPageWrapper = styled.div`
   background: #edeff2;
@@ -172,7 +167,8 @@ export default Wallet;
 
 const StyledWalletInfoWrapper = styled.div`
   border-radius: 20px;
-  background: ${(props)=>props.netcolor?props.netcolor:"rgba(0, 0, 0, 0.30)"};
+  background: ${(props) =>
+    props.netcolor ? props.netcolor : "rgba(0, 0, 0, 0.30)"};
   margin: 0px 20px 20px;
   padding: 20px;
   position: relative;
@@ -245,7 +241,8 @@ const StyledBaseBtn = styled.div`
   font-weight: 500;
   font-size: 14px;
   text-align: center;
-  color: ${(props)=>props.netcolor?props.netcolor:"rgba(0, 0, 0, 0.30)"};
+  color: ${(props) =>
+    props.netcolor ? props.netcolor : "rgba(0, 0, 0, 0.30)"};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -322,6 +319,8 @@ const WalletInfo = () => {
   const [currentAccount, setCurrentAccount] = useState(
     accountInfo.currentAccount
   );
+
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
   const [dappConnectStatus, setDappConnectStatus] = useState(false);
   const [dappIcon, setDappIcon] = useState("/img/dappUnConnect.svg");
 
@@ -487,49 +486,6 @@ const WalletInfo = () => {
     [netConfig, currencyConfig]
   );
 
-  const fetchAccountData = useCallback(() => {
-    if (isRequest) {
-      return;
-    }
-    isRequest = true;
-    let address = currentAccount.address;
-    getAllTokenAssets(address)
-      .then(async (account) => {
-        if (Array.isArray(account.accounts) && account.accounts.length > 0) {
-          const tokenIds = account.accounts.map((token) => {
-            return token.tokenId;
-          });
-          const accountsWithTokenInfoV2 = await getAllTokenInfoV2(tokenIds);
-          if (accountsWithTokenInfoV2.error) {
-            Toast.info(i18n.t("nodeError"));
-          } else {
-            const lastTokenList = account.accounts.map((token) => {
-              return {
-                ...token,
-                tokenNetInfo: accountsWithTokenInfoV2[token.tokenId],
-              };
-            });
-
-            let localTokenConfig = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG);
-            if (localTokenConfig) {
-              let tokenConfigMap = JSON.parse(localTokenConfig);
-              if(tokenConfigMap && tokenConfigMap[address]){
-                let tokenConfig = tokenConfigMap[address]
-                dispatch(updateLocalTokenConfig(tokenConfig))
-              }
-            }
-            dispatch(updateTokenAssets(lastTokenList));
-          }
-        }else{
-          dispatch(updateTokenAssets([]));
-        }
-      })
-      .finally(() => {
-        isRequest = false;
-        dispatch(updateShouldRequest(false));
-      });
-  }, [i18n, currentAccount, tokenList]);
-
   useEffect(() => {
     if (shouldRefresh) {
       fetchAccountData();
@@ -550,13 +506,13 @@ const WalletInfo = () => {
     }
   }, [shouldUpdateAccountStorage, tokenList, currentAccount.address]);
 
-  const netcolor = useMemo(()=>{
-    const networkID = netConfig.currentNode.networkID
-    if(networkID === NetworkID_MAP.mainnet){
-      return "#594AF1"
+  const netcolor = useMemo(() => {
+    const networkID = netConfig.currentNode.networkID;
+    if (networkID === NetworkID_MAP.mainnet) {
+      return "#594AF1";
     }
-    return "rgba(0, 0, 0, 0.30)"
-  },[netConfig.currentNode.networkID])
+    return "rgba(0, 0, 0, 0.30)";
+  }, [netConfig.currentNode.networkID]);
   return (
     <>
       <StyledWalletInfoWrapper netcolor={netcolor}>
@@ -581,7 +537,9 @@ const WalletInfo = () => {
         </StyledWalletAddress>
         <StyledCurrencyRow $isCache={isCache}>{unitBalance}</StyledCurrencyRow>
         <StyledWalletBaseAction>
-          <StyledSendBtn netcolor={netcolor} onClick={toSend}>{i18n.t("send")}</StyledSendBtn>
+          <StyledSendBtn netcolor={netcolor} onClick={toSend}>
+            {i18n.t("send")}
+          </StyledSendBtn>
           <StyledDivideColumnWrapper>
             <StyledDivideColumn />
           </StyledDivideColumnWrapper>
