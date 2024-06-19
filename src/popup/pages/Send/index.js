@@ -1,3 +1,4 @@
+import { verifyTokenCommand } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -5,7 +6,11 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { buildTokenBody, getTokenState, sendTx } from "../../../background/api";
+import {
+  buildTokenBody,
+  getTokenState,
+  sendTx
+} from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
@@ -14,8 +19,12 @@ import {
   WALLET_CHECK_TX_STATUS,
   WALLET_GET_ALL_ACCOUNT,
 } from "../../../constant/msgTypes";
-import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
-import { updateShouldRequest } from "../../../reducers/accountReducer";
+import {
+  ADDRESS_BOOK_CONFIG
+} from "../../../constant/storageKey";
+import {
+  updateShouldRequest
+} from "../../../reducers/accountReducer";
 import { updateAddressDetail } from "../../../reducers/cache";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -276,21 +285,26 @@ const SendPage = ({}) => {
         onSubmitTx(postRes, "ledger");
       }
     },
-    [currentAccount, onSubmitTx, ledgerApp,fetchAccountData]
+    [currentAccount, onSubmitTx, ledgerApp, fetchAccountData]
   );
 
   const getTokenBody = useCallback(
     async (payload) => {
-      const tokenState = await getTokenState(payload.toAddress ,token.tokenId).catch(err=>err)
-      if(tokenState.err){
-        Toast.info(String(tokenState.err))
+      const tokenState = await getTokenState(
+        payload.toAddress,
+        token.tokenId
+      ).catch((err) => err);
+      if (tokenState.err) {
+        Toast.info(String(tokenState.err));
         setConfirmBtnStatus(false);
-        return 
+        return;
       }
-      let fundNewAccountStatus = tokenState.account == null
+      let fundNewAccountStatus = tokenState.account == null;
       let decimal = new BigNumber(10).pow(availableDecimals);
       let mainCoinDecimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
-      let sendFee = new BigNumber(payload.fee).multipliedBy(mainCoinDecimal).toNumber();
+      let sendFee = new BigNumber(payload.fee)
+        .multipliedBy(mainCoinDecimal)
+        .toNumber();
       let sendAmount = new BigNumber(payload.amount)
         .multipliedBy(decimal)
         .toNumber();
@@ -306,6 +320,16 @@ const SendPage = ({}) => {
       };
       const buildData = await buildTokenBody(buildTokenData);
       if (buildData.unSignTx) {
+        const checkChangeStatus = verifyTokenCommand(
+          buildTokenData,
+          token.tokenId,
+          buildData.unSignTx
+        );
+        if (!checkChangeStatus) {
+          setConfirmBtnStatus(false);
+          Toast.info(i18n.t("buildFailed"));
+          return;
+        }
         return buildData.unSignTx;
       } else {
         setConfirmBtnStatus(false);
@@ -389,11 +413,11 @@ const SendPage = ({}) => {
     setConfirmModalStatus(false);
   }, []);
 
-  useEffect(()=>{
-    if(!confirmModalStatus){
+  useEffect(() => {
+    if (!confirmModalStatus) {
       setConfirmBtnStatus(false);
     }
-  },[confirmModalStatus])
+  }, [confirmModalStatus]);
   const onConfirm = useCallback(
     async (ledgerReady = false) => {
       let toAddressValue = trimSpace(toAddress);

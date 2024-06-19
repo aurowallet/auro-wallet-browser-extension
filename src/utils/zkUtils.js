@@ -1,7 +1,11 @@
 import BigNumber from "bignumber.js";
 import { AccountUpdate } from "../constant/zkAccountUpdateDoc";
 import { addressSlice, amountDecimals } from "./utils";
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID, ZK_EMPTY_PUBLICKEY } from "@/constant";
+import {
+  MAIN_COIN_CONFIG,
+  ZK_DEFAULT_TOKEN_ID,
+  ZK_EMPTY_PUBLICKEY,
+} from "@/constant";
 
 function short(s) {
   return ".." + s.slice(-4);
@@ -139,11 +143,11 @@ export function toPretty(zkappCommand) {
   ];
 }
 
-function getFormatFeePayerV2(zkappCommand,currentAddress) {
+function getFormatFeePayerV2(zkappCommand, currentAddress) {
   let feePayer = zkappCommand.feePayer;
-  let feePayerKey = feePayer.body.publicKey; // todo
-  if(feePayerKey.toLowerCase() === ZK_EMPTY_PUBLICKEY.toLocaleLowerCase()){
-    feePayerKey = currentAddress
+  let feePayerKey = feePayer.body.publicKey;
+  if (feePayerKey.toLowerCase() === ZK_EMPTY_PUBLICKEY.toLocaleLowerCase()) {
+    feePayerKey = currentAddress;
   }
   let fee = feePayer.body.fee;
   if (fee) {
@@ -180,9 +184,7 @@ function getUpdateBody(zkappCommand) {
       : balanceChangeOperator +
         amountDecimals(balanceChangeBody.magnitude, MAIN_COIN_CONFIG.decimals);
     let tokenSymbol;
-    if (
-      accountItemBody.tokenId === ZK_DEFAULT_TOKEN_ID
-    ) {
+    if (accountItemBody.tokenId === ZK_DEFAULT_TOKEN_ID) {
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
     } else {
       const bodyTokenSymbol = accountItemBody.update.tokenSymbol;
@@ -209,43 +211,84 @@ function getUpdateBody(zkappCommand) {
   }
   return updateInfo;
 }
-export function getZkInfo(zkappCommand,currentAddress) {
+export function getZkInfo(zkappCommand, currentAddress) {
   try {
-    const nextZkCommond = JSON.parse(zkappCommand); 
-    const feePayerBody = getFormatFeePayerV2(nextZkCommond,currentAddress);
+    const nextZkCommond = JSON.parse(zkappCommand);
+    const feePayerBody = getFormatFeePayerV2(nextZkCommond, currentAddress);
     const accountUpdateBody = getUpdateBody(nextZkCommond);
     return [feePayerBody, accountUpdateBody];
   } catch (error) {
     return [
       {
         label: "Error",
-        value:String(error)
-      }
-    ]
+        value: String(error),
+      },
+    ];
   }
- 
 }
 
 /** format zkAppCommand to string */
-export function zkCommondFormat(zkAppCommand){
-  if(typeof zkAppCommand === "string"){ // if zkAppCommand is string
-    return zkAppCommand
+export function zkCommondFormat(zkAppCommand) {
+  if (typeof zkAppCommand === "string") {
+    // if zkAppCommand is string
+    return zkAppCommand;
   }
   // if zkAppCommand is object
-  return JSON.stringify(zkAppCommand)
+  return JSON.stringify(zkAppCommand);
 }
 
 /** get fee from zk */
-export function getZkFee(zkappCommand){
+export function getZkFee(zkappCommand) {
   try {
-    const nextZkCommond = JSON.parse(zkappCommand); 
+    const nextZkCommond = JSON.parse(zkappCommand);
     let feePayer = nextZkCommond.feePayer;
     let fee = feePayer.body.fee;
-    if(new BigNumber(fee).isGreaterThan(0)){
-      return amountDecimals(fee,MAIN_COIN_CONFIG.decimals)
+    if (new BigNumber(fee).isGreaterThan(0)) {
+      return amountDecimals(fee, MAIN_COIN_CONFIG.decimals);
     }
-    return 0
+    return 0;
   } catch (error) {
-    return 0
+    return 0;
   }
+}
+
+/**
+ * verifyTokenCommand from server 
+ * @param {*} sourceData 
+ * @param {*} sendTokenId 
+ * @param {*} buildZkCommand 
+ * @returns 
+ */
+export function verifyTokenCommand(sourceData, sendTokenId, buildZkCommand) {
+  const { sender, receiver, amount } = sourceData;
+  const nextBuildZkCommand = JSON.parse(buildZkCommand);
+
+  let senderVerified = false;
+  let receiverVerified = false;
+
+  nextBuildZkCommand.accountUpdates.forEach((accountUpdate) => {
+    const { publicKey, balanceChange, tokenId } = accountUpdate.body;
+
+    if (tokenId === sendTokenId) {
+      if (publicKey === sender) {
+        if (
+          balanceChange.magnitude === amount.toString() &&
+          balanceChange.sgn === "Negative"
+        ) {
+          senderVerified = true;
+        }
+      }
+
+      if (publicKey === receiver) {
+        if (
+          balanceChange.magnitude === amount.toString() &&
+          balanceChange.sgn === "Positive"
+        ) {
+          receiverVerified = true;
+        }
+      }
+    }
+  });
+
+  return senderVerified && receiverVerified;
 }
