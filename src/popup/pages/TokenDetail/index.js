@@ -180,7 +180,7 @@ const TokenDetail = () => {
   }, []);
 
   return (
-    <CustomViewV2 title={tokenSymbol} subTitle={tokenName}>
+    <CustomViewV2 title={tokenSymbol} subTitle={tokenName} copyContent={isFungibleToken ? token.tokenId:""}>
       <StyledTopWrapper>
         <TokenIcon
           iconUrl={tokenIconUrl}

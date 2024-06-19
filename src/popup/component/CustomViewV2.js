@@ -1,6 +1,9 @@
+import { copyText } from "@/utils/utils";
+import i18n from "i18next";
 import { useCallback } from "react";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
+import Toast from "./Toast";
 
 const StyledCustomView = styled.div`
   display: flex;
@@ -44,18 +47,37 @@ const StyledSubTitle = styled.div`
   text-align: center;
   color: rgba(0, 0, 0, 0.8);
 `;
+const StyledSubTitleWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  cursor: ${(props) => (props.cancopy ? "pointer" : "initial")};
+`;
+const StyledCopyImg = styled.img`
+  margin-left: 4px;
+`;
 const StyledChildrenWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
 `;
-const CustomViewV2 = ({ children, title = "", subTitle = "" }) => {
+const CustomViewV2 = ({
+  children,
+  title = "",
+  subTitle = "",
+  copyContent = "",
+}) => {
   let history = useHistory();
   const goBack = useCallback(() => {
     history.goBack();
   }, []);
-
+  const onCopySubTitle = useCallback(() => {
+    if (copyContent) {
+      copyText(copyContent).then(() => {
+        Toast.info(i18n.t("copySuccess"));
+      });
+    }
+  }, [copyContent]);
   return (
     <>
       <StyledCustomView>
@@ -64,7 +86,13 @@ const CustomViewV2 = ({ children, title = "", subTitle = "" }) => {
         </StyledBackArrow>
         <StyledTitleWrapper>
           <StyledTitle>{title}</StyledTitle>
-          <StyledSubTitle>{subTitle}</StyledSubTitle>
+          <StyledSubTitleWrapper
+            cancopy={!!copyContent}
+            onClick={onCopySubTitle}
+          >
+            <StyledSubTitle>{subTitle}</StyledSubTitle>
+            {copyContent && <StyledCopyImg src="/img/icon_copy_black.svg" />}
+          </StyledSubTitleWrapper>
         </StyledTitleWrapper>
       </StyledCustomView>
       <StyledChildrenWrapper>{children}</StyledChildrenWrapper>
