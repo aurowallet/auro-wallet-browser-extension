@@ -24,11 +24,11 @@ export const DevnetUrlConfig = {
 };
 
 /**berkeley net url */
-export const BerkeleyUrlConfig = {
-  gql: "",
-  explorer: "",
-  tx: "",
-};
+// export const BerkeleyUrlConfig = {
+//   gql: "",
+//   explorer: "",
+//   tx: "",
+// };
 /**testworld2.0 net url */
 // export const Testworld2UrlConfig = {
 //   gql: "",
