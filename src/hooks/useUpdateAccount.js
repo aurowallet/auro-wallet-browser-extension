@@ -25,39 +25,37 @@ const useFetchAccountData = (currentAccount) => {
     isRequest = true;
     try {
       const account = await getAllTokenAssets(address);
-      if (Array.isArray(account.accounts) && account.accounts.length > 0) {
-        const tokenIds = account.accounts.map((token) => token.tokenId);
-        const accountsWithTokenInfoV2 = await getAllTokenInfoV2(tokenIds);
-
-        if (accountsWithTokenInfoV2.error) {
-          Toast.info(i18n.t("nodeError"));
-        } else {
-          const lastTokenList = account.accounts.map((token) => ({
-            ...token,
-            tokenNetInfo: accountsWithTokenInfoV2[token.tokenId],
-          }));
-
-          let localTokenConfig = getLocal(
-            STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG
-          );
-          if (localTokenConfig) {
-            let tokenConfigMap = JSON.parse(localTokenConfig);
-            if (tokenConfigMap && tokenConfigMap[address]) {
-              let tokenConfig = tokenConfigMap[address];
-              dispatch(updateLocalTokenConfig(tokenConfig));
+      if (Array.isArray(account.accounts)) {
+        if (account.accounts.length > 0) {
+          const tokenIds = account.accounts.map((token) => token.tokenId);
+          const accountsWithTokenInfoV2 = await getAllTokenInfoV2(tokenIds);
+          if (accountsWithTokenInfoV2.error) {
+            Toast.info(i18n.t("nodeError"));
+          } else {
+            const lastTokenList = account.accounts.map((token) => ({
+              ...token,
+              tokenNetInfo: accountsWithTokenInfoV2[token.tokenId],
+            }));
+            let localTokenConfig = getLocal(
+              STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG
+            );
+            if (localTokenConfig) {
+              let tokenConfigMap = JSON.parse(localTokenConfig);
+              if (tokenConfigMap && tokenConfigMap[address]) {
+                let tokenConfig = tokenConfigMap[address];
+                dispatch(updateLocalTokenConfig(tokenConfig));
+              }
             }
+            dispatch(updateTokenAssets(lastTokenList));
+            setResult(lastTokenList);
           }
-          dispatch(updateTokenAssets(lastTokenList));
-          setResult(lastTokenList);
+        } else {
+          dispatch(updateTokenAssets([]));
+          setResult([]);
         }
-      } else {
-        dispatch(updateTokenAssets([]));
-        setResult([]);
       }
     } catch (error) {
       console.error(error);
-      dispatch(updateTokenAssets([]));
-      setResult([]);
     } finally {
       dispatch(updateShouldRequest(false));
       setIsLoading(false);
