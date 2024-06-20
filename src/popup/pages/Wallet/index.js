@@ -277,7 +277,7 @@ const StyledDivideColumnWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 1px;
+  padding: 0 0px;
 `;
 const StyledDivideColumn = styled.div`
   border: 0.5px solid #f2f2f2;
