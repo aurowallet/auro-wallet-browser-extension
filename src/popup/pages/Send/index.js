@@ -41,6 +41,8 @@ import ICON_Address from "../../component/SVG/ICON_Address";
 import ICON_Wallet from "../../component/SVG/ICON_Wallet";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import { decryptData, encryptData } from "@/utils/fore";
+import { node_public_keys, react_private_keys } from "../../../../config";
 
 const SendPage = ({}) => {
   const dispatch = useDispatch();
@@ -313,19 +315,22 @@ const SendPage = ({}) => {
         isNewAccount: fundNewAccountStatus,
         gqlUrl: currentNode.url,
       };
-      const buildData = await buildTokenBody(buildTokenData);
+      const data = encryptData(JSON.stringify(buildTokenData),node_public_keys);// 这里用测试的
+      const buildData = await buildTokenBody(data);
       if (buildData.unSignTx) {
+        let realUnSignTxStr = decryptData(buildData.unSignTx.encryptedData,buildData.unSignTx.encryptedAESKey,buildData.unSignTx.iv,react_private_keys);
+        let realUnSignTx = JSON.stringify(realUnSignTxStr)
         const checkChangeStatus = verifyTokenCommand(
           buildTokenData,
           token.tokenId,
-          buildData.unSignTx
+          realUnSignTx
         );
         if (!checkChangeStatus) {
           setConfirmBtnStatus(false);
           Toast.info(i18n.t("buildFailed"));
           return;
         }
-        return buildData.unSignTx;
+        return realUnSignTx;
       } else {
         setConfirmBtnStatus(false);
         Toast.info(buildData.error || String(buildData));
