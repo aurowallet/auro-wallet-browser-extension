@@ -294,7 +294,7 @@ const TokenDetail = () => {
         {showLoading ? (
           <LoadingView />
         ) : showTxHistory.length !== 0 ? (
-          <TxListView history={showTxHistory} />
+          <TxListView history={showTxHistory} tokenInfo={token}/>
         ) : isNaturalNumber(mainTokenNetInfo.inferredNonce) ? (
           <TxNotSupportView />
         ) : (

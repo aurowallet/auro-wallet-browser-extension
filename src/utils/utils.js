@@ -58,7 +58,7 @@ export function getBalanceForUI(balance, decimal = 0, fixed = 4) {
   if (isNaN(parseFloat(nextBalance)) || nextBalance === 0) {
     return "0.00";
   }
-  let showBalance = new BigNumber(nextBalance).toFixed(fixed, 1).toString();
+  let showBalance = new BigNumber(nextBalance).toFixed(Number(fixed), 1).toString();
   return toNonExponential(showBalance);
 }
 

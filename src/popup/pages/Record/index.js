@@ -34,27 +34,62 @@ const STATUS = {
 
 const Record = ({}) => {
   const netConfig = useSelector((state) => state.network);
+  const currentAccount = useSelector(
+    (state) => state.accountInfo.currentAccount
+  );
   const dispatch = useDispatch();
   const history = useHistory();
 
-  const txDetail = useMemo(() => {
-    return history.location.params?.txDetail || {};
+  const { txDetail, tokenInfo } = useMemo(() => {
+    let params = history.location.params || {};
+    let txDetail = params?.txDetail || {};
+    let tokenInfo = params?.tokenInfo || {};
+    return {
+      txDetail,
+      tokenInfo,
+    };
   }, [history]);
 
   const { contentList } = useMemo(() => {
-    let amount =
-    getBalanceForUI(
-        txDetail.amount,
-        MAIN_COIN_CONFIG.decimals,
-        MAIN_COIN_CONFIG.decimals
-      ) +
-      " " +
-      MAIN_COIN_CONFIG.symbol;
-    let receiveAddress = txDetail.to;
-    let sendAddress = txDetail.from;
+    let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
+    let showAmount = 0;
+    let showFrom = txDetail.from;
+    let showTo;
+    if (isMainCoin) {
+      showAmount =
+        getBalanceForUI(
+          txDetail.amount,
+          MAIN_COIN_CONFIG.decimals,
+          MAIN_COIN_CONFIG.decimals
+        ) +
+        " " +
+        MAIN_COIN_CONFIG.symbol;
+      showTo = txDetail.to;
+    } else {
+      const accountUpdates = txDetail.body.zkappCommand.accountUpdates; // []
+      const positiveUpdate = accountUpdates.filter((item) => {
+        const updateBody = item.body;
+        return (
+          updateBody.tokenId == tokenInfo.tokenId &&
+          updateBody.balanceChange.sgn === "Positive"
+        );
+      });
+      if (positiveUpdate.length > 0) {
+        const positiveItem = positiveUpdate[0];
+        const balance = positiveItem.body.balanceChange.magnitude;
+        const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
+        const tokenSymbol = tokenInfo?.tokenNetInfo?.tokenSymbol;
+        showAmount =
+          getBalanceForUI(balance, tokenDecimal, tokenDecimal) +
+          " " +
+          tokenSymbol;
+        showTo = positiveItem.body.publicKey
+      }
+    }
+
     let memo = txDetail.memo || "";
     let fee =
-    getBalanceForUI(
+      getBalanceForUI(
         txDetail.fee,
         MAIN_COIN_CONFIG.decimals,
         MAIN_COIN_CONFIG.decimals
@@ -65,10 +100,10 @@ const Record = ({}) => {
     let nonce = String(txDetail.nonce);
     let txHash = txDetail.hash;
     let kindLow = txDetail.kind?.toLowerCase();
-    let typeCamelCase = kindLow!== "zkapp";
-    let txType = txDetail.kind
-    if(kindLow == "stake_delegation"){
-      txType = "delegation"
+    let typeCamelCase = kindLow !== "zkapp";
+    let txType = txDetail.kind;
+    if (kindLow == "stake_delegation") {
+      txType = "delegation";
     }
 
     let contentList = [
@@ -79,15 +114,15 @@ const Record = ({}) => {
       },
       {
         title: i18n.t("amount"),
-        content: amount,
+        content: showAmount,
       },
       {
         title: i18n.t("to"),
-        content: receiveAddress,
+        content: showTo,
       },
       {
         title: i18n.t("from"),
-        content: sendAddress,
+        content: showFrom,
         showScamTag: txDetail.isFromAddressScam,
       },
     ];
@@ -122,7 +157,7 @@ const Record = ({}) => {
     return {
       contentList,
     };
-  }, [i18n, txDetail]);
+  }, [i18n, txDetail, tokenInfo,currentAccount]);
 
   const getExplorerUrl = useCallback(() => {
     let currentNode = netConfig.currentNode;

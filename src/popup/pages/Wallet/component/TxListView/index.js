@@ -54,8 +54,7 @@ import { HistoryHeader } from "../StatusView";
  */
 const TxListView = ({
   history = [],
-  showHistoryStatus = false,
-  onClickRefresh = () => {},
+  tokenInfo = {}
 }) => {
   const dispatch = useDispatch();
 
@@ -63,7 +62,6 @@ const TxListView = ({
   const netConfig = useSelector((state) => state.network);
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
-  const shouldRefresh = useSelector(state => state.accountInfo.shouldRefresh)
 
   const onGoExplorer = useCallback(() => {
     let currentNode = netConfig.currentNode;
@@ -384,6 +382,7 @@ const TxListView = ({
               currentAccount={accountInfo.currentAccount}
               onClickSpeedUp={onClickSpeedUp}
               onClickCancel={onClickCancel}
+              tokenInfo={tokenInfo}
             />
           );
         })}
@@ -422,6 +421,7 @@ const TxItem = ({
   index,
   onClickSpeedUp,
   onClickCancel,
+  tokenInfo
 }) => {
   const {
     statusIcon,
@@ -440,6 +440,7 @@ const TxItem = ({
       statusText,
       statusStyle = "";
     const txKindLow = txData.kind?.toLowerCase();
+    let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
     if (txKindLow === "payment") {
       isReceive =
         txData.to.toLowerCase() === currentAccount.address.toLowerCase();
@@ -453,19 +454,51 @@ const TxItem = ({
     } else {
       statusIcon = "/img/tx_pending.svg";
     }
-    showAddress = addressSlice(isReceive ? txData.from : txData.to, 8);
-    showAddress = !showAddress ? txData.kind.toUpperCase() : showAddress;
+    if(!isMainCoin){
+      const accountUpdates = txData.body.zkappCommand.accountUpdates; // []
+      const positiveUpdate = accountUpdates.filter((item) => {
+        const updateBody = item.body;
+        return (
+          updateBody.tokenId == tokenInfo.tokenId &&
+          updateBody.balanceChange.sgn === "Positive"
+        );
+      });
+      const negativeUpdate = accountUpdates.filter((item) => {
+        const updateBody = item.body;
+        return (
+          updateBody.tokenId == tokenInfo.tokenId &&
+          updateBody.balanceChange.sgn === "Negative"
+        );
+      });
+      if (positiveUpdate.length > 0 && negativeUpdate.length > 0) {
+        const positiveItem = positiveUpdate[0];
+        const negativeItem = negativeUpdate[0];
+        const balance = positiveItem.body.balanceChange.magnitude;
+        const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
+        let isZkReceive = positiveItem.body.publicKey == currentAccount.address
+        showAddress = isZkReceive ?addressSlice(negativeItem.body.publicKey,8):addressSlice(positiveItem.body.publicKey,8)
+        amount = getBalanceForUI(balance,tokenDecimal, 2);
+        amount = (isZkReceive ? "+" : "-") + amount
+      }
+    }
+    if(!showAddress){
+      showAddress = addressSlice(isReceive ? txData.from : txData.to, 8);
+      showAddress = !showAddress ? txData.kind.toUpperCase() : showAddress;
+    }
+    if(!amount){
+      amount = getBalanceForUI(txData.amount,MAIN_COIN_CONFIG.decimals, 2);
+      amount = isReceive ? "+" + amount : "-" + amount;
+      if (txKindLow === "zkapp") {
+        amount = "0";
+      }
+    }
+    
     timeInfo =
       txData.status === TX_STATUS.PENDING
         ? "Nonce " + txData.nonce
         : getShowTime(txData.dateTime);
 
-    amount = getBalanceForUI(txData.amount,MAIN_COIN_CONFIG.decimals, 2);
-    amount = isReceive ? "+" + amount : "-" + amount;
 
-    if (txKindLow === "zkapp") {
-      amount = "0";
-    }
 
     let showPendTx = false;
 
@@ -492,7 +525,7 @@ const TxItem = ({
       statusStyle,
       showPendTx,
     };
-  }, [txData, i18n]);
+  }, [txData, i18n,tokenInfo]);
   const [showPendingAction, setShowPendingAction] = useState(false);
 
   useEffect(() => {
@@ -517,9 +550,9 @@ const TxItem = ({
   const onToDetail = useCallback(() => {
     history.push({
       pathname: "/record_page",
-      params: { txDetail: txData },
+      params: { txDetail: txData,tokenInfo },
     });
-  }, [txData]);
+  }, [txData,tokenInfo]);
   const paddingLineStyle = useMemo(() => {
     return index !== 0;
   }, [index]);
