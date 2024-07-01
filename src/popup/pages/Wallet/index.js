@@ -260,17 +260,21 @@ const StyledSendBtn = styled(StyledBaseBtn)`
   }
 `;
 
+const borderCss = css`
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+`
 const StyledReceiveBtn = styled(StyledBaseBtn)`
   &:hover {
     background: #f2f2f2;
+    ${(props) => props.showStaking ? "" : borderCss};
   }
 `;
 
 const StyledStakeBtn = styled(StyledBaseBtn)`
   &:hover {
     background: #f2f2f2;
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
+    ${borderCss};
   }
 `;
 const StyledDivideColumnWrapper = styled.div`
@@ -506,12 +510,17 @@ const WalletInfo = () => {
     }
   }, [shouldUpdateAccountStorage, tokenList, currentAccount.address]);
 
-  const netcolor = useMemo(() => {
+  const {netcolor,showStaking} = useMemo(() => {
     const networkID = netConfig.currentNode.networkID;
+    let netcolor = "rgba(0, 0, 0, 0.30)"
     if (networkID === NetworkID_MAP.mainnet) {
-      return "#594AF1";
+      netcolor = "#594AF1";
     }
-    return "rgba(0, 0, 0, 0.30)";
+    let showStaking = networkID.startsWith("mina");
+    return {
+      netcolor,
+      showStaking
+    }
   }, [netConfig.currentNode.networkID]);
   return (
     <>
@@ -543,15 +552,18 @@ const WalletInfo = () => {
           <StyledDivideColumnWrapper>
             <StyledDivideColumn />
           </StyledDivideColumnWrapper>
-          <StyledReceiveBtn netcolor={netcolor} onClick={toReceive}>
+          <StyledReceiveBtn netcolor={netcolor} onClick={toReceive} showStaking={showStaking}>
             {i18n.t("receive")}
           </StyledReceiveBtn>
-          <StyledDivideColumnWrapper>
-            <StyledDivideColumn />
-          </StyledDivideColumnWrapper>
-          <StyledStakeBtn netcolor={netcolor} onClick={toStaking}>
-            {i18n.t("staking")}
-          </StyledStakeBtn>
+          {showStaking && <>
+            <StyledDivideColumnWrapper>
+              <StyledDivideColumn />
+            </StyledDivideColumnWrapper>
+            <StyledStakeBtn netcolor={netcolor} onClick={toStaking}>
+              {i18n.t("staking")}
+            </StyledStakeBtn>
+          </>}
+          
         </StyledWalletBaseAction>
         <StyledIconBackground>
           <img src="/img/icon_mina.svg" />

@@ -63,7 +63,7 @@ const Setting = ({ }) => {
             return autoLockTime
         }
         const getNetwork = () => {
-            return showNameSlice(currentNode.name,10)
+            return showNameSlice(currentNode.name,12)
         }
         const getLanguage = () => {
             let currentLanguage = languageOption.filter((language) => {

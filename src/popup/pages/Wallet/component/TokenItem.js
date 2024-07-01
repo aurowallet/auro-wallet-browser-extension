@@ -99,6 +99,7 @@ const TokenItem = ({ token, isInModal }) => {
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
+  const currentNode = useSelector((state) => state.network.currentNode);
 
   const dispatch = useDispatch();
   const {
@@ -156,6 +157,14 @@ const TokenItem = ({ token, isInModal }) => {
       history.push("token_detail");
     }
   }, [dispatch, token, isInModal]);
+
+  const {showStaking} = useMemo(() => {
+    const networkID = currentNode.networkID;
+    let showStaking = networkID.startsWith("mina");
+    return {
+      showStaking
+    }
+  }, [currentNode.networkID]);
   return (
     <StyledTokenItemWrapper onClick={onClickToken}>
       <StyledTokenLeft>
@@ -165,7 +174,7 @@ const TokenItem = ({ token, isInModal }) => {
         <StyledTokenInfo>
           <StyledTokenSymbolWrapper>
             <StyledTokenSymbol>{tokenSymbol}</StyledTokenSymbol>
-            {!isFungibleToken && !isInModal && (
+            {!isFungibleToken && !isInModal && showStaking && (
               <StyledDelegateStatus
                 $isChecked={token.tokenBaseInfo.isDelegation}
               >
