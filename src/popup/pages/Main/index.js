@@ -42,9 +42,7 @@ const HomePage = () => {
      if (localShowedTokenIds) {
        let tokenIdsMap = safeJsonParse(localShowedTokenIds)
        let tokenIds = tokenIdsMap ? tokenIdsMap[address] : ""
-       if(Array.isArray(tokenIds) && tokenIds.length> 0){
-        dispatch(updateLocalShowedTokenId(tokenIds));
-       }
+        dispatch(updateLocalShowedTokenId(Array.isArray(tokenIds) ? tokenIds:[]));
      }
 
     let localTokenAssets = getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS)
@@ -121,7 +119,6 @@ const HomePage = () => {
   const getLocalCache = useCallback(() => {
     let address = currentAccount?.address || ""
     shouldUpdateTxList(address)
-    updateLocalAccount(address)
     updateLocalPrice()
 
 
@@ -136,6 +133,10 @@ const HomePage = () => {
   useEffect(() => {
     getLocalCache()
   }, [])
+
+  useEffect(()=>{
+    updateLocalAccount(currentAccount?.address)
+  },[currentAccount?.address])
 
   return (<div
     style={{

@@ -1,4 +1,4 @@
-import { formatAllTxHistroy, processNowTokenStatus, processTokenList, processTokenShowStatus, setScamAndTxList } from "@/utils/reducer";
+import { formatAllTxHistroy, processNewTokenStatus, processTokenList, processTokenShowStatus, setScamAndTxList } from "@/utils/reducer";
 import {
   mergeLocalConfigToNetToken
 } from "../utils/utils";
@@ -326,11 +326,11 @@ const accountInfo = (state = initState, action) => {
         shouldUpdateAccountStorage: true,
       };
     case UPDATE_LOCAL_SHOWED_TOKEN_IDS:
-      const tokenShowedUpdate = processNowTokenStatus(state.tokenList);
+    const tokenShowedUpdate = processNewTokenStatus(state.tokenList,action.tokenIds);
       return {
         ...state,
-        localShowedTokenIds: action.tokenIds,
-        newTokenCount: 0,
+        localShowedTokenIds: action.tokenIds, 
+        newTokenCount: tokenShowedUpdate.newTokenCount,
         tokenList: tokenShowedUpdate.tokenList,
         tokenShowList: tokenShowedUpdate.tokenShowList,
         mainTokenNetInfo: tokenShowedUpdate.mainTokenNetInfo,

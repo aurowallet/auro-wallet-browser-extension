@@ -188,13 +188,18 @@ export function processTokenShowStatus(tokenAssetsList, tokenConfig) {
   return { tokenList: nextTokenList, tokenShowList, totalShowAmount };
 }
 
-export function processNowTokenStatus(tokenAssetsList) {
+export function processNewTokenStatus(tokenAssetsList,showedTokenIdList) {
+  let newTokenCount = 0
   const nextTokenList = tokenAssetsList.map((tokenItem) => {
+    const tokenNew = showedTokenIdList.indexOf(tokenItem.tokenId)===-1  // -1 证明没展示过
+    if(tokenNew){
+      newTokenCount = newTokenCount + 1
+    }
     return {
       ...tokenItem,
       tokenBaseInfo: {
         ...tokenItem.tokenBaseInfo,
-        tokenShowed: true,
+        tokenShowed: !tokenNew,
       },
     };
   });
@@ -204,7 +209,7 @@ export function processNowTokenStatus(tokenAssetsList) {
   let mainTokenNetInfo = nextTokenList.find(
     (token) => token.tokenId === ZK_DEFAULT_TOKEN_ID
   );
-  return { tokenList: nextTokenList, tokenShowList, mainTokenNetInfo };
+  return { tokenList: nextTokenList, tokenShowList, mainTokenNetInfo,newTokenCount };
 }
 
 // ============================tx action================================

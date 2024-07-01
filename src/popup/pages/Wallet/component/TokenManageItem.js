@@ -19,7 +19,7 @@ const StyledTokenItemWrapper = styled.div`
   border-top: 0.5px solid rgba(0, 0, 0, 0.1);
 
   background: ${(props) =>
-    props.$isMainCoin ? "rgba(0, 0, 0, 0.05)" : "white"};
+    props.$isMainCoin || props.$newToken ? "rgba(0, 0, 0, 0.05)" : "white"};
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
@@ -81,7 +81,8 @@ const TokenManageItem = ({ token }) => {
     tokenSymbol,
     showBalanceText,
     tokenName,
-    isFungibleToken
+    isFungibleToken,
+    tokenShowed
   } = useMemo(() => {
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
@@ -99,13 +100,14 @@ const TokenManageItem = ({ token }) => {
 
     let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
     let showBalanceText = i18n.t("balance") + ": " + displayBalance;
-
+    const tokenShowed = token.tokenBaseInfo.tokenShowed
     return {
       tokenIconUrl,
       tokenSymbol,
       showBalanceText,
       tokenName,
-      isFungibleToken
+      isFungibleToken,
+      tokenShowed
     };
   }, [token, currencyConfig,]);
 
@@ -138,7 +140,7 @@ const TokenManageItem = ({ token }) => {
   }, [token, tokenList, currentAccount, localTokenConfig]);
 
   return (
-    <StyledTokenItemWrapper $isMainCoin={!isFungibleToken}>
+    <StyledTokenItemWrapper $isMainCoin={!isFungibleToken} $newToken={!tokenShowed}>
       <StyledTokenLeft>
         <StyledTokenWrapper>
           <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} />
