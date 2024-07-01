@@ -1,4 +1,4 @@
-import { formatAllTxHistroy, processNewTokenStatus, processTokenList, processTokenShowStatus, setScamAndTxList } from "@/utils/reducer";
+import { formatAllTxHistory, processNewTokenStatus, processTokenList, processTokenShowStatus, setScamAndTxList } from "@/utils/reducer";
 import {
   mergeLocalConfigToNetToken
 } from "../utils/utils";
@@ -156,7 +156,7 @@ const accountInfo = (state = initState, action) => {
   switch (action.type) {
     case CHANGE_ACCOUNT_TX_HISTORY_V2:
       let tokenId = action.tokenId
-      let newList = formatAllTxHistroy(action);
+      let newList = formatAllTxHistory(action);
       if (state.scamList.length > 0) {
         newList = setScamAndTxList(state.scamList, newList);
       }

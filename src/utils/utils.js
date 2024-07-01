@@ -47,7 +47,7 @@ export function toNonExponential(ExpNumber) {
  * @param {*} decimal
  */
 export function amountDecimals(amount, decimal = 0) {
-  // if decimal biggner than 100 , use 0
+  // if decimal bigger than 100 , use 0
   let nextDecimals = decimal
   if(BigNumber(nextDecimals).gt(100)){
     nextDecimals = 0
@@ -66,7 +66,7 @@ export function getBalanceForUI(balance, decimal = 0, fixed = 4) {
     }
     let showBalance = new BigNumber(nextBalance).toFixed(Number(fixed), 1).toString();
     return toNonExponential(showBalance);
-  } catch (error) {// for dicimal error
+  } catch (error) {// for decimal error
     return balance
   }
 }

@@ -83,7 +83,7 @@ export const LOCAL_CACHE_KEYS = {
 }
 
 /**
- * stable account storge, do not clear when change account or network
+ * stable account storage, do not clear when change account or network
  */
 export const STABLE_LOCAL_ACCOUNT_CACHE_KEYS = {
     "TOKEN_CONFIG": "TOKEN_CONFIG",

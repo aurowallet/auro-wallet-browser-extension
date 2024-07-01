@@ -50,7 +50,7 @@ const StyledSubTitle = styled.div`
 const StyledSubTitleWrapper = styled.div`
   display: flex;
   align-items: center;
-  cursor: ${(props) => (props.$cancopy ? "pointer" : "initial")};
+  cursor: ${(props) => (props.$canCopy ? "pointer" : "initial")};
 `;
 const StyledCopyImg = styled.img`
   margin-left: 4px;
@@ -87,7 +87,7 @@ const CustomViewV2 = ({
         <StyledTitleWrapper>
           <StyledTitle>{title}</StyledTitle>
           <StyledSubTitleWrapper
-            $cancopy={!!copyContent}
+            $canCopy={!!copyContent}
             onClick={onCopySubTitle}
           >
             <StyledSubTitle>{subTitle}</StyledSubTitle>

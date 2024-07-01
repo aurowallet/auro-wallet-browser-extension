@@ -248,7 +248,7 @@ function getZkOtherAccount(zkApp) {
   return "";
 }
 
-export function fortmatZkTx(zkAppList, isPending = false) {
+function formatZkTx(zkAppList, isPending = false) {
   let newList = [];
   for (let index = 0; index < zkAppList.length; index++) {
     const zkApp = zkAppList[index];
@@ -315,7 +315,7 @@ function tokenHistoryFilter(list,tokenId){
   return newList
 }
 
-export function formatAllTxHistroy(action) {
+export function formatAllTxHistory(action) {
   let txList = action.txList||[];
   let txPendingList = action.txPendingList || [];
   let zkAppList = action.zkAppList || [];
@@ -325,8 +325,8 @@ export function formatAllTxHistroy(action) {
 
   txPendingList = txPendingList.reverse();
   txPendingList = formatPendingTx(txPendingList);
-  zkAppList = fortmatZkTx(zkAppList);
-  zkPendingList = fortmatZkTx(zkPendingList, true);
+  zkAppList = formatZkTx(zkAppList);
+  zkPendingList = formatZkTx(zkPendingList, true);
 
   txList = formatTxTime(txList);
 

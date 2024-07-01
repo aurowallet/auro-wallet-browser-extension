@@ -313,7 +313,7 @@ export async function getTxHistory(address, limit) {
 }
 
 /** request gql transaction */
-export async function getZkAppTxHistory(address,tokenId, limit) {// 请求zk 交易记录，这个需要改一下，需要加tokenId
+export async function getZkAppTxHistory(address,tokenId, limit) {
   let netConfig = await getCurrentNodeConfig();
   let gqlTxUrl = netConfig.gqlTxUrl;
   if (!gqlTxUrl) {
