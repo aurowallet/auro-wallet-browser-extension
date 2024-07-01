@@ -237,6 +237,7 @@ const TokenDetail = () => {
         dispatch(updateAccountTxV2(history, token.tokenId));
         saveToLocal(history);
       }
+      dispatch(updateShouldRequest(false));
       isFirstRequest.current = false;
       setShowLoading(false);
     },
