@@ -133,7 +133,7 @@ export const ACCOUNT_BALANCE_CACHE_STATE = {
 
 const initState = {
   txList: [],
-  txHistoryMap:[],
+  txHistoryMap:{},
   currentAccount: {},
   shouldRefresh: true,
   isSilentRefresh: false,
@@ -241,7 +241,7 @@ const accountInfo = (state = initState, action) => {
           const tokenId = tokenIdList[index];
           newTxMap = {
             ...newTxMap,
-            tokenId:setScamAndTxList(nextScamList, allTxMap[tokenId])
+            [tokenId]:setScamAndTxList(nextScamList, allTxMap[tokenId])
           }
         }
         return {
