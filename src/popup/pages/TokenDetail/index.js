@@ -1,14 +1,16 @@
 import {
-  getGqlTxHistory,
   getPendingTxList,
+  getTxHistory,
   getZkAppPendingTx,
   getZkAppTxHistory,
 } from "@/background/api";
+import { getLocal, saveLocal } from "@/background/localStorage";
 import { MAIN_COIN_CONFIG } from "@/constant";
+import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
 import Clock from "@/popup/component/Clock";
 import CustomViewV2 from "@/popup/component/CustomViewV2";
 import {
-  updateAccountTx,
+  updateAccountTxV2,
   updateShouldRequest,
 } from "@/reducers/accountReducer";
 import {
@@ -18,7 +20,7 @@ import {
   isNaturalNumber,
 } from "@/utils/utils";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled, { css } from "styled-components";
@@ -63,7 +65,7 @@ const StyledHistoryWrapper = styled.div``;
 
 const TokenDetail = () => {
   const token = useSelector((state) => state.cache.nextTokenDetail);
-  const txList = useSelector((state) => state.accountInfo.txList);
+  const txHistoryMap = useSelector((state) => state.accountInfo.txHistoryMap);
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const currentNode = useSelector((state) => state.network.currentNode);
   const currentAccount = useSelector(
@@ -76,9 +78,12 @@ const TokenDetail = () => {
   const isMounted = useRef(true);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
 
+  const [showLoading, setShowLoading] = useState(true);
+
   const isSilentRefresh = useSelector(
     (state) => state.accountInfo.isSilentRefresh
   );
+  let isFirstRequest = useRef(false);
 
   let isRequest = false;
 
@@ -125,43 +130,117 @@ const TokenDetail = () => {
     };
   }, [token]);
 
+  const showTxHistory = useMemo(() => {
+    let list = txHistoryMap[token.tokenId] || [];
+    return list;
+  }, [txHistoryMap, token.tokenId]);
+
+  useEffect(() => {
+    if (showTxHistory.length == 0 && isFirstRequest.current) {
+      setShowLoading(true);
+    } else if (showTxHistory.length > 0) {
+      setShowLoading(false);
+    }
+  }, [showTxHistory]);
+
+  const saveToLocal = useCallback(
+    (newHistory) => {
+      const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY);
+      const currentHistory = JSON.parse(txHistory);
+      if (currentHistory?.[currentAccount.address]) {
+        let newSaveHistory = {
+          ...currentHistory[currentAccount.address],
+          [token.tokenId]: newHistory,
+        };
+        saveLocal(
+          LOCAL_CACHE_KEYS.ALL_TX_HISTORY,
+          JSON.stringify({
+            [currentAccount.address]: newSaveHistory,
+          })
+        );
+      } else {
+        saveLocal(
+          LOCAL_CACHE_KEYS.ALL_TX_HISTORY,
+          JSON.stringify({
+            [currentAccount.address]: {
+              [token.tokenId]: newHistory,
+            },
+          })
+        );
+      }
+    },
+    [currentAccount.address, token.tokenId]
+  );
   const requestHistory = useCallback(
     async (address = currentAccount.address) => {
-      if (isFungibleToken) {
-        return;
-      }
       if (isRequest) {
         return;
       }
       isRequest = true;
-      let pendingTxList = getPendingTxList(address);
-      let gqlTxList = getGqlTxHistory(address);
-      let zkAppTxList = getZkAppTxHistory(address);
-      let getZkAppPending = getZkAppPendingTx(address);
-      await Promise.all([
-        gqlTxList,
-        pendingTxList,
-        zkAppTxList,
-        getZkAppPending,
-      ])
-        .then((data) => {
-          let newList = data[0];
-          let txPendingData = data[1];
-          let zkApp = data[2];
-          let txPendingList = txPendingData.txList;
-          let zkPendingList = data[3];
-          dispatch(
-            updateAccountTx(newList, txPendingList, zkApp, zkPendingList)
-          );
-        })
-        .finally(() => {
-          isRequest = false;
-          if (isMounted.current) {
-            dispatch(updateShouldRequest(false));
-          }
-        });
+
+      let zkAppTxList = getZkAppTxHistory(address, token.tokenId).catch(
+        (err) => err
+      );
+      let getZkAppPending = getZkAppPendingTx(address, token.tokenId).catch(
+        (err) => err
+      );
+      let txResponse;
+      if (isFungibleToken) {
+        txResponse = await Promise.all([zkAppTxList, getZkAppPending]); //.catch(err=>err);
+        let zkStatus = txResponse[0]?.address == currentAccount.address;
+        let zkPendingStatus = txResponse[1]?.address == currentAccount.address;
+        let zkAppList = zkStatus ? txResponse[0].txList : [];
+        let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
+
+        let history = {};
+        if (zkStatus) {
+          history.zkAppList = zkAppList;
+        }
+        if (zkPendingStatus) {
+          history.zkPendingList = zkPendingList;
+        }
+        dispatch(updateAccountTxV2(history, token.tokenId));
+        saveToLocal(history);
+      } else {
+        let pendingTxList = getPendingTxList(address);
+        let gqlTxList = getTxHistory(address);
+        txResponse = await Promise.all([
+          gqlTxList,
+          pendingTxList,
+          zkAppTxList,
+          getZkAppPending,
+        ]).catch((err) => err);
+        let dataStatus_tx = txResponse[0]?.address == currentAccount.address;
+        let dataStatus_txPending =
+          txResponse[1]?.address == currentAccount.address;
+
+        let zkStatus = txResponse[2]?.address == currentAccount.address;
+        let zkPendingStatus = txResponse[3]?.address == currentAccount.address;
+
+        let txList = dataStatus_tx ? txResponse[0].txList : [];
+        let txPendingList = dataStatus_txPending ? txResponse[1].txList : [];
+        let zkAppList = zkStatus ? txResponse[2].txList : [];
+        let zkPendingList = zkPendingStatus ? txResponse[3].txList : [];
+        let history = {};
+        if (dataStatus_tx) {
+          history.txList = txList;
+        }
+        if (dataStatus_txPending) {
+          history.txPendingList = txPendingList;
+        }
+        if (zkStatus) {
+          history.zkAppList = zkAppList;
+        }
+        if (zkPendingStatus) {
+          history.zkPendingList = zkPendingList;
+        }
+        dispatch(updateAccountTxV2(history, token.tokenId));
+        saveToLocal(history);
+      }
+      isFirstRequest.current = false;
+      setShowLoading(false);
     },
-    [currentAccount.address, isFungibleToken]
+    [currentAccount.address, isFungibleToken, token.tokenId, saveToLocal]
   );
 
   const onClickRefresh = useCallback(() => {
@@ -208,16 +287,14 @@ const TokenDetail = () => {
       </StyledTopWrapper>
       <StyledHistoryWrapper>
         <HistoryHeader
-          showRefresh={!!currentNode.gqlTxUrl && !isFungibleToken && txList.length>0}
+          showRefresh={!!currentNode.gqlTxUrl && showTxHistory.length > 0}
           isRefresh={shouldRefresh}
           onClickRefresh={onClickRefresh}
         />
-        {isFungibleToken ? (
-          <TxNotSupportView />
-        ) : shouldRefresh && !isSilentRefresh ? (
+        {showLoading ? (
           <LoadingView />
-        ) : txList.length !== 0 ? (
-          <TxListView history={txList} />
+        ) : showTxHistory.length !== 0 ? (
+          <TxListView history={showTxHistory} />
         ) : isNaturalNumber(mainTokenNetInfo.inferredNonce) ? (
           <TxNotSupportView />
         ) : (

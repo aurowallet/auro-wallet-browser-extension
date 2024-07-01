@@ -343,18 +343,17 @@ export function getQATxStatusBody() {
 
 export function getZkAppTransactionListBody() {
   return `
-  query zkApps($publicKey: String,$limit:Int) {
+  query zkApps($publicKey: String,$limit:Int,$tokenId: String) {
     zkapps(limit: $limit, query: {
-      zkappCommand: {feePayer: 
-      {body: {publicKey: $publicKey}}}}, sortBy: DATETIME_DESC) {
+      publicKey: $publicKey,tokenId:$tokenId}, sortBy: DATETIME_DESC) {
         hash
     dateTime
     failureReason {
+      index
       failures
     }
     zkappCommand {
       feePayer {
-        authorization
         body {
           nonce
           publicKey
@@ -365,7 +364,15 @@ export function getZkAppTransactionListBody() {
       accountUpdates {
         body {
           publicKey
-          
+         	tokenId 
+          balanceChange{
+            magnitude
+            sgn
+          }
+          update{
+            appState
+            tokenSymbol
+          }
         }
       }
     }

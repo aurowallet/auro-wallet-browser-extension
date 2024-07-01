@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "../../../constant/storageKey";
-import { updateAccountTx, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
+import { updateAccountTx, updateAccountTxV2, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
 import { isNumber } from "../../../utils/utils";
 import Wallet from "../Wallet";
@@ -22,44 +22,18 @@ const HomePage = () => {
     }
   }
   const shouldUpdateTxList = useCallback((address) => {
-    let localHistory = getLocal(LOCAL_CACHE_KEYS.TRANSACTION_HISTORY)
-    let txList = []
-    let pendingTxList = []
-    let zkList = []
-    let zkPendingList = []
-    if (localHistory) {
-      let localHistoryJson = safeJsonParse(localHistory)
-      txList = localHistoryJson ? localHistoryJson[address] : []
-    }
-    let localPendingHistory = getLocal(LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY)
-    if (localPendingHistory) {
-      let localPendingJson = safeJsonParse(localPendingHistory)
-      pendingTxList = localPendingJson ? localPendingJson[address] : []
-    }
-
-    let localZkAppHistory = getLocal(LOCAL_CACHE_KEYS.ZKAPP_TX_LIST)
-    if (localZkAppHistory) {
-      let localZkAppHistoryJson = safeJsonParse(localZkAppHistory)
-      zkList = localZkAppHistoryJson ? localZkAppHistoryJson[address] : []
-    }
-    let localZkAppPendingHistory = getLocal(LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST)
-    if (localZkAppPendingHistory) {
-      let localZkAppPendingHistoryJson = safeJsonParse(localZkAppPendingHistory)
-      zkPendingList = localZkAppPendingHistoryJson ? localZkAppPendingHistoryJson[address] : []
-    }
-    
-
-    let updateTxList = txList && Array.isArray(txList) ? txList : []
-    let updatePendingTxList = pendingTxList && Array.isArray(pendingTxList) ? pendingTxList : []
-    let updateZkList = zkList && Array.isArray(zkList) ? zkList : []
-    let updateZkPendingList = zkPendingList && Array.isArray(zkPendingList) ? zkPendingList : []
-    
-
-    dispatch(updateAccountTx(updateTxList, updatePendingTxList,updateZkList,updateZkPendingList))
-
-    let totalList = [...updateTxList,...updatePendingTxList,...updateZkList,...updateZkPendingList]
-    if(totalList.length != 0 || !currentNode.gqlTxUrl){
-      dispatch(updateShouldRequest(false))
+    const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY);
+    const currentHistory = JSON.parse(txHistory);
+    if (currentHistory?.[address]) {
+      const targetHistory = currentHistory?.[address]
+      const tokenIdList = Object.keys(targetHistory)
+      for (let index = 0; index < tokenIdList.length; index++) {
+        const tokenId = tokenIdList[index]
+        const tokenTxHistory = targetHistory[tokenId];
+        dispatch(
+          updateAccountTxV2(tokenTxHistory, tokenId)
+        );
+      }
     }
   }, [currentNode])
 

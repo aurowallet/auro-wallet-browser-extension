@@ -230,10 +230,6 @@ export async function getPendingTxList(address) {
     throw new Error(String(result.error));
   }
   let list = result.pooledUserCommands || [];
-  saveLocal(
-    LOCAL_CACHE_KEYS.PENDING_TRANSACTION_HISTORY,
-    JSON.stringify({ [address]: list })
-  );
   return { txList: list, address };
 }
 
@@ -294,7 +290,7 @@ export async function getCurrencyPrice(currency) {
 }
 
 /** request gql transaction */
-export async function getGqlTxHistory(address, limit) {
+export async function getTxHistory(address, limit) {
   let netConfig = await getCurrentNodeConfig();
   let gqlTxUrl = netConfig.gqlTxUrl;
   if (!gqlTxUrl) {
@@ -312,30 +308,25 @@ export async function getGqlTxHistory(address, limit) {
   if (result.error) {
     throw new Error(String(result.error));
   }
-  let list = result?.transactions || [];
-  saveLocal(
-    LOCAL_CACHE_KEYS.TRANSACTION_HISTORY,
-    JSON.stringify({ [address]: list })
-  );
-  return list;
+  let txList = result?.transactions || [];
+  return {txList,address};
 }
 
 /** request gql transaction */
-export async function getZkAppTxHistory(address, limit) {
+export async function getZkAppTxHistory(address,tokenId, limit) {// 请求zk 交易记录，这个需要改一下，需要加tokenId
   let netConfig = await getCurrentNodeConfig();
   let gqlTxUrl = netConfig.gqlTxUrl;
   if (!gqlTxUrl) {
-    saveLocal(
-      LOCAL_CACHE_KEYS.ZKAPP_TX_LIST,
-      JSON.stringify({ [address]: [] })
-    );
     return [];
   }
+  const nextTokenId =
+        tokenId == ZK_DEFAULT_TOKEN_ID ? "" : tokenId;
   let txBody = getZkAppTransactionListBody();
   let result = await startFetchMyQuery(
     txBody,
     {
       publicKey: address,
+      tokenId:nextTokenId,
       limit: limit || DEFAULT_TX_REQUEST_LENGTH,
     },
     gqlTxUrl
@@ -343,22 +334,14 @@ export async function getZkAppTxHistory(address, limit) {
   if (result.error) {
     throw new Error(String(result.error));
   }
-  let list = result?.zkapps || [];
-  saveLocal(
-    LOCAL_CACHE_KEYS.ZKAPP_TX_LIST,
-    JSON.stringify({ [address]: list })
-  );
-  return list;
+  let txList = result?.zkapps || [];
+  return {txList,address,tokenId};
 }
 
 export async function getZkAppPendingTx(address, limit) {
   let netConfig = await getCurrentNodeConfig();
   let gqlTxUrl = netConfig.url;
   if (!gqlTxUrl) {
-    saveLocal(
-      LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST,
-      JSON.stringify({ [address]: [] })
-    );
     return [];
   }
   if (gqlTxUrl.indexOf("graphql") !== -1) {
@@ -376,12 +359,8 @@ export async function getZkAppPendingTx(address, limit) {
   if (result.error) {
     throw new Error(String(result.error));
   }
-  let list = result.pooledZkappCommands || [];
-  saveLocal(
-    LOCAL_CACHE_KEYS.ZKAPP_PENDING_TX_LIST,
-    JSON.stringify({ [address]: list })
-  );
-  return list;
+  let txList = result.pooledZkappCommands || [];
+  return {txList,address};
 }
 
 /**

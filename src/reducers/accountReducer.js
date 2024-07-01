@@ -1,12 +1,9 @@
-import BigNumber from "bignumber.js";
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../constant";
+import { formatAllTxHistroy, processNowTokenStatus, processTokenList, processTokenShowStatus, setScamAndTxList } from "@/utils/reducer";
 import {
-  amountDecimals,
-  mergeLocalConfigToNetToken,
-  txSort,
+  mergeLocalConfigToNetToken
 } from "../utils/utils";
 
-const CHANGE_ACCOUNT_TX_HISTORY = "CHANGE_ACCOUNT_TX_HISTORY";
+const CHANGE_ACCOUNT_TX_HISTORY_V2 = "CHANGE_ACCOUNT_TX_HISTORY_V2";
 
 const UPDATE_CURRENT_ACCOUNT = "UPDATE_CURRENT_ACCOUNT";
 
@@ -59,20 +56,23 @@ export function updateCurrentPrice(tokenPrice, isCachePrice) {
   };
 }
 
-export function updateAccountTx(
+export function updateAccountTxV2({
   txList,
   txPendingList,
   zkAppList,
   zkPendingList
+},tokenId,
 ) {
   return {
-    type: CHANGE_ACCOUNT_TX_HISTORY,
+    type: CHANGE_ACCOUNT_TX_HISTORY_V2,
     txList,
     txPendingList,
     zkAppList,
     zkPendingList,
+    tokenId,
   };
 }
+
 export function updateCurrentAccount(account) {
   return {
     type: UPDATE_CURRENT_ACCOUNT,
@@ -129,30 +129,11 @@ export const ACCOUNT_BALANCE_CACHE_STATE = {
   NEW_STATE: "NEW_STATE",
 };
 
-const defaultMinaAssets = {
-  balance: {
-    total: "0",
-    liquid: "0",
-  },
-  inferredNonce: 0,
-  delegateAccount: null,
-  tokenId: ZK_DEFAULT_TOKEN_ID,
-  publicKey: "",
-  tokenNetInfo: null,
-  tokenBaseInfo: {
-    isScam: false,
-    decimals: MAIN_COIN_CONFIG.decimals,
-    isMainToken: true,
-    showBalance: "0",
-    showAmount: "0",
-  },
-  localConfig: {
-    hideToken: false,
-  },
-};
+
 
 const initState = {
   txList: [],
+  txHistoryMap:[],
   currentAccount: {},
   shouldRefresh: true,
   isSilentRefresh: false,
@@ -171,291 +152,22 @@ const initState = {
   newTokenCount: 0,
 };
 
-function compareTokens(a, b) {
-  const amountA = a.tokenBaseInfo.showAmount
-    ? parseFloat(a.tokenBaseInfo.showAmount)
-    : null;
-  const amountB = b.tokenBaseInfo.showAmount
-    ? parseFloat(b.tokenBaseInfo.showAmount)
-    : null;
-
-  if (amountA !== null && amountB !== null) {
-    if (amountA > amountB) {
-      return -1;
-    } else if (amountA < amountB) {
-      return 1;
-    }
-  } else if (amountA !== null) {
-    return -1;
-  } else if (amountB !== null) {
-    return 1;
-  }
-
-  const balanceA = parseFloat(a.tokenBaseInfo.showBalance);
-  const balanceB = parseFloat(b.tokenBaseInfo.showBalance);
-
-  if (balanceA > balanceB) {
-    return -1;
-  } else if (balanceA < balanceB) {
-    return 1;
-  } else {
-    const symbolA = a.tokenNetInfo?.tokenSymbol || "";
-    const symbolB = b.tokenNetInfo?.tokenSymbol || "";
-    return symbolA.localeCompare(symbolB);
-  }
-}
-
-function processTokenList(tokenAssetsList, prices, localShowedTokenIds) {
-  let newTokenCount = 0;
-  const sourceTokenList = tokenAssetsList || initialTokenList;
-  let totalShowAmount = 0;
-  const nextTokenList = sourceTokenList.map((tokenItem) => {
-    const tempToken = {
-      ...tokenItem,
-      tokenBaseInfo: { ...tokenItem.tokenBaseInfo },
-    };
-    const tokenBaseInfo = tempToken.tokenBaseInfo;
-
-    tokenBaseInfo.isScam = false;
-    let decimals = 0;
-    if (tokenItem.tokenNetInfo?.publicKey) {
-      const zkappState = tokenItem.tokenNetInfo.zkappState || [];
-      if (Array.isArray(zkappState)) {
-        decimals = zkappState[0] || 0;
-      }
-      tokenBaseInfo.decimals = decimals;
-      tokenBaseInfo.showBalance = amountDecimals(
-        tokenItem.balance.total,
-        decimals
-      );
-    } else {
-      if (tokenItem.tokenId === ZK_DEFAULT_TOKEN_ID) {
-        tokenBaseInfo.isMainToken = true;
-        const delegateAccount = tokenItem.delegateAccount?.publicKey;
-        tokenBaseInfo.isDelegation = delegateAccount && (delegateAccount !== tokenItem.publicKey);
-        tokenBaseInfo.decimals = MAIN_COIN_CONFIG.decimals;
-        tokenBaseInfo.showBalance = amountDecimals(
-          tokenItem.balance.total,
-          tokenBaseInfo.decimals
-        );
-      } else {
-        tokenBaseInfo.decimals = decimals;
-        tokenBaseInfo.showBalance = amountDecimals(
-          tokenItem.balance.total,
-          decimals
-        );
-      }
-    }
-
-    const tokenPrice = prices[tokenItem.tokenId];
-    if (tokenPrice) {
-      tokenBaseInfo.showAmount = new BigNumber(tokenBaseInfo.showBalance)
-        .multipliedBy(tokenPrice)
-        .toString();
-      if (!tokenItem.localConfig?.hideToken) {
-        totalShowAmount = new BigNumber(totalShowAmount)
-          .plus(tokenBaseInfo.showAmount)
-          .toString();
-      }
-    }
-    tempToken.tokenBaseInfo.tokenShowed = localShowedTokenIds.includes(
-      tempToken.tokenId
-    );
-    if (!tempToken.tokenBaseInfo.tokenShowed && !tempToken.tokenBaseInfo.isMainToken) {
-      newTokenCount = newTokenCount + 1;
-    }
-    return tempToken;
-  });
-
-  nextTokenList.sort(compareTokens);
-
-  const defaultTokenIndex = nextTokenList.findIndex(
-    (token) => token.tokenId === ZK_DEFAULT_TOKEN_ID
-  );
-
-  let mainTokenNetInfo = defaultMinaAssets.tokenNetInfo;
-  if (defaultTokenIndex !== -1) {
-    const [defaultToken] = nextTokenList.splice(defaultTokenIndex, 1);
-    nextTokenList.unshift(defaultToken);
-    mainTokenNetInfo = defaultToken;
-  } else {
-    nextTokenList.unshift(defaultMinaAssets);
-  }
-
-  const tokenShowList = nextTokenList.filter(
-    (tokenItem) => !tokenItem.localConfig?.hideToken
-  );
-  return {
-    tokenList: nextTokenList,
-    tokenTotalAmount: totalShowAmount,
-    tokenShowList,
-    mainTokenNetInfo,
-    newTokenCount,
-  };
-}
-function processTokenShowStatus(tokenAssetsList, tokenConfig) {
-  let tokenShowList = [];
-  let totalShowAmount = 0;
-
-  const nextTokenList = tokenAssetsList.map((tokenItem) => {
-    let tokenId = tokenItem.tokenId;
-    if (tokenConfig[tokenId]) {
-      let tempLocalConfig = tokenConfig[tokenId];
-      if (!tempLocalConfig?.hideToken) {
-        tokenShowList.push(tokenItem);
-        let tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
-        totalShowAmount = new BigNumber(totalShowAmount)
-          .plus(tokenAmount)
-          .toString();
-      }
-      return {
-        ...tokenItem,
-        localConfig: tempLocalConfig,
-      };
-    } else {
-      tokenShowList.push(tokenItem);
-      let tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
-      totalShowAmount = new BigNumber(totalShowAmount)
-        .plus(tokenAmount)
-        .toString();
-      return tokenItem;
-    }
-  });
-  return { tokenList: nextTokenList, tokenShowList, totalShowAmount };
-}
-
-function processNowTokenStatus(tokenAssetsList) {
-  const nextTokenList = tokenAssetsList.map((tokenItem) => {
-    return {
-      ...tokenItem,
-      tokenBaseInfo: {
-        ...tokenItem.tokenBaseInfo,
-        tokenShowed: true,
-      },
-    };
-  });
-  const tokenShowList = nextTokenList.filter(
-    (tokenItem) => !tokenItem.localConfig?.hideToken
-  );
-  let mainTokenNetInfo = nextTokenList.find(
-    (token) => token.tokenId === ZK_DEFAULT_TOKEN_ID
-  );
-  return { tokenList: nextTokenList, tokenShowList, mainTokenNetInfo };
-}
-
-function pendingTx(txList) {
-  let newList = [];
-  for (let index = 0; index < txList.length; index++) {
-    const detail = txList[index];
-    newList.push({
-      id: detail.id,
-      hash: detail.hash,
-      kind: detail.kind,
-      dateTime: detail.time,
-      from: detail.from,
-      to: detail.to,
-      amount: detail.amount,
-      fee: detail.fee,
-      nonce: detail.nonce,
-      memo: detail.memo,
-      status: "PENDING",
-      timestamp: new Date(detail.time).getTime(),
-    });
-  }
-  return newList;
-}
-
-function getZkOtherAccount(zkApp) {
-  let accountUpdates = zkApp.zkappCommand.accountUpdates;
-  if (Array.isArray(accountUpdates) && accountUpdates.length > 0) {
-    return accountUpdates[0]?.body?.publicKey;
-  }
-  return "";
-}
-function zkAppFormat(zkAppList, isPending = false) {
-  let newList = [];
-  for (let index = 0; index < zkAppList.length; index++) {
-    const zkApp = zkAppList[index];
-    let isFailed =
-      Array.isArray(zkApp.failureReason) && zkApp.failureReason.length > 0;
-    let status = isPending ? "PENDING" : isFailed ? "failed" : "applied";
-    newList.push({
-      id: "",
-      hash: zkApp.hash,
-      kind: "zkApp",
-      dateTime: zkApp.dateTime || "",
-      from: zkApp.zkappCommand.feePayer.body.publicKey,
-      to: getZkOtherAccount(zkApp),
-      amount: "0",
-      fee: zkApp.zkappCommand.feePayer.body.fee,
-      nonce: zkApp.zkappCommand.feePayer.body.nonce,
-      memo: zkApp.zkappCommand.memo,
-      status: status,
-      type: "zkApp",
-      body: zkApp,
-      timestamp: isPending ? "" : new Date(zkApp.dateTime).getTime(),
-      failureReason: isFailed ? zkApp.failureReason : "",
-    });
-  }
-  return newList;
-}
-function commonHistoryFormat(list) {
-  return list.map((item) => {
-    item.timestamp = new Date(item.dateTime).getTime();
-    return item;
-  });
-}
-
-function matchScamAndTxList(scamList, txList) {
-  let nextTxList = txList.map((txData) => {
-    const nextTxData = { ...txData };
-    if (nextTxData.from) {
-      const address = nextTxData.from.toLowerCase();
-      const scamInfo = scamList.filter((scam) => {
-        return scam.address === address;
-      });
-      nextTxData.isFromAddressScam = scamInfo.length > 0;
-    }
-    return nextTxData;
-  });
-  return nextTxList;
-}
-
 const accountInfo = (state = initState, action) => {
   switch (action.type) {
-    case CHANGE_ACCOUNT_TX_HISTORY:
-      let txList = action.txList;
-      let txPendingList = action.txPendingList || [];
-      let zkAppList = action.zkAppList || [];
-      let zkPendingList = action.zkPendingList || [];
-
-      txPendingList = txPendingList.reverse();
-      txPendingList = pendingTx(txPendingList);
-      zkAppList = zkAppFormat(zkAppList);
-      zkPendingList = zkAppFormat(zkPendingList, true);
-
-      txList = commonHistoryFormat(txList);
-
-      const commonList = [...txList, ...zkAppList];
-      commonList.sort(txSort);
-
-      const commonPendingList = [...txPendingList, ...zkPendingList];
-      commonPendingList.sort((a, b) => b.nonce - a.nonce);
-      if (commonPendingList.length > 0) {
-        commonPendingList[commonPendingList.length - 1].showSpeedUp = true;
-      }
-      let newList = [...commonPendingList, ...commonList];
-      if (newList.length > 0) {
-        newList.push({
-          showExplorer: true,
-        });
-      }
+    case CHANGE_ACCOUNT_TX_HISTORY_V2:
+      let tokenId = action.tokenId
+      let newList = formatAllTxHistroy(action);
       if (state.scamList.length > 0) {
-        newList = matchScamAndTxList(state.scamList, newList);
+        newList = setScamAndTxList(state.scamList, newList);
       }
+
+      let newTxHistoryMap = {
+        ...state.txHistoryMap,
+        [tokenId]:newList
+      } 
       return {
         ...state,
-        txList: newList,
+        txHistoryMap:newTxHistoryMap,
         isSilentRefresh: false,
       };
     case UPDATE_CURRENT_ACCOUNT:
@@ -463,7 +175,7 @@ const accountInfo = (state = initState, action) => {
       return {
         ...state,
         currentAccount: account,
-        txList: [],
+        txHistoryMap: {},
         shouldRefresh: true,
 
         tokenList: [],
@@ -490,7 +202,7 @@ const accountInfo = (state = initState, action) => {
       let newState = {};
       if (shouldRefresh) {
         newState = {
-          txList: [],
+          txHistoryMap: {},
           tokenList: [],
           mainTokenNetInfo: {},
           tokenShowList: [],
@@ -521,13 +233,21 @@ const accountInfo = (state = initState, action) => {
           address: scamData.address.toLowerCase(),
         };
       });
-
-      if (state.txList.length > 0) {
-        const newList = matchScamAndTxList(nextScamList, state.txList);
+      const allTxMap =  state.txHistoryMap;
+      const tokenIdList = Object.keys(allTxMap)
+      if(tokenIdList.length>0){
+        let newTxMap = {}
+        for (let index = 0; index < tokenIdList.length; index++) {
+          const tokenId = tokenIdList[index];
+          newTxMap = {
+            ...newTxMap,
+            tokenId:setScamAndTxList(nextScamList, allTxMap[tokenId])
+          }
+        }
         return {
           ...state,
           scamList: nextScamList,
-          txList: newList,
+          txHistoryMap: newTxMap,
         };
       }
       return {

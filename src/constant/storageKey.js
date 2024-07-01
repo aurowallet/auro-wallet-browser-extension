@@ -45,14 +45,6 @@ export const LOCAL_BASE_INFO = "LOCAL_BASE_INFO"
  */
 export const LOCAL_CACHE_KEYS = {
     /**
-     * Transaction Record
-     */
-    "TRANSACTION_HISTORY": "TRANSACTION_HISTORY",
-    /**
-     * pending history
-     */
-    "PENDING_TRANSACTION_HISTORY": "PENDING_TRANSACTION_HISTORY",
-    /**
      * balance 
      */
     "ACCOUNT_BALANCE": "ACCOUNT_BALANCE",
@@ -79,21 +71,15 @@ export const LOCAL_CACHE_KEYS = {
      */
     "STAKING_LIST": "STAKING_LIST",
 
-
-    /**
-     * zkapp transaction list 
-     */
-    "ZKAPP_TX_LIST": "ZKAPP_TX_LIST",
-
-    /**
-     * zkapp transaction list 
-     */
-    "ZKAPP_PENDING_TX_LIST": "ZKAPP_PENDING_TX_LIST",
-
     /**
      * base token assets
      */
     "BASE_TOKEN_ASSETS": "BASE_TOKEN_ASSETS",
+
+    /**
+     * save all token tx history
+     */
+    "ALL_TX_HISTORY":"ALL_TX_HISTORY"
 }
 
 /**
