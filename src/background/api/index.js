@@ -1,5 +1,5 @@
 import { NetworkID_MAP } from "@/constant/network";
-import { BASE_INFO_URL } from "../../../config";
+import { BASE_INFO_URL, TokenBuildUrl } from "../../../config";
 import { DEFAULT_TX_REQUEST_LENGTH, ZK_DEFAULT_TOKEN_ID } from "../../constant";
 import {
   LOCAL_BASE_INFO,
@@ -391,11 +391,9 @@ export async function getAccountInfo(address, tokenId) {
   }
 }
 export async function buildTokenBody(params) {
-  const requestUrl = "";
-  const timeout = 3 * 60 * 1000;
-  const result = await postRequest(requestUrl, params, timeout).catch(
-    (err) => err
-  );
+  const requestUrl = TokenBuildUrl + "/tokenbuild"
+  const timeout = 3 * 60 * 1000
+  const result = await postRequest(requestUrl, params,timeout).catch((err) => err);
   return result;
 }
 export async function getAllTokenAssets(address) {
