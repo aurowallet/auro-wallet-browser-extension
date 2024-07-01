@@ -44,7 +44,6 @@ import {
   TransactionModalType,
 } from "../../../../component/TransactionModal";
 import styles from "./index.module.scss";
-import { HistoryHeader } from "../StatusView";
 
 /**
  *

@@ -169,7 +169,7 @@ const StyledWalletInfoWrapper = styled.div`
   border-radius: 20px;
   background: ${(props) =>
     props.netcolor ? props.netcolor : "rgba(0, 0, 0, 0.30)"};
-  margin: 0px 20px 20px;
+  margin: 10px 20px 20px;
   padding: 20px;
   position: relative;
 `;
