@@ -40,7 +40,7 @@ import NetworkSelect from "../Networks/NetworkSelect";
 import TokenListView from "./component/TokenListView";
 
 const StyledPageWrapper = styled.div`
-  background: #edeff2;
+  background: white;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -75,6 +75,7 @@ const StyledHeaderBarIcon = styled.img`
 const StyledPageContent = styled.div`
   margin-top: 58px;
   overflow-y: auto;
+  background: #edeff2;
 `;
 const rightBtnStyle = css`
   color: #d65a5a;
