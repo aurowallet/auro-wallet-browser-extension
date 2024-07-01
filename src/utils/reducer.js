@@ -330,7 +330,7 @@ export function formatAllTxHistroy(action) {
 
   const commonPendingList = [...txPendingList, ...zkPendingList];
   commonPendingList.sort((a, b) => b.nonce - a.nonce);
-  if (commonPendingList.length > 0) {// todo 
+  if (commonPendingList.length > 0) {
     commonPendingList[commonPendingList.length - 1].showSpeedUp = true;
   }
   

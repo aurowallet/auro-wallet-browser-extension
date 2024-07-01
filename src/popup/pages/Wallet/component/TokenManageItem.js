@@ -19,7 +19,7 @@ const StyledTokenItemWrapper = styled.div`
   border-top: 0.5px solid rgba(0, 0, 0, 0.1);
 
   background: ${(props) =>
-    props.isMainCoin ? "rgba(0, 0, 0, 0.05)" : "white"};
+    props.$isMainCoin ? "rgba(0, 0, 0, 0.05)" : "white"};
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
@@ -138,7 +138,7 @@ const TokenManageItem = ({ token }) => {
   }, [token, tokenList, currentAccount, localTokenConfig]);
 
   return (
-    <StyledTokenItemWrapper isMainCoin={!isFungibleToken}>
+    <StyledTokenItemWrapper $isMainCoin={!isFungibleToken}>
       <StyledTokenLeft>
         <StyledTokenWrapper>
           <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} />

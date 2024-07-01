@@ -31,9 +31,9 @@ const TokenManageList = ({}) => {
         return <TokenManageItem key={index} token={token} />;
       })}
       <StyledTokenInfoRow>
-        <StyledTokenInfo href={TokenLaunch} target="_blank">
+        {/* <StyledTokenInfo href={TokenLaunch} target="_blank">
           {i18n.t("updateTokenInfo")}
-        </StyledTokenInfo>
+        </StyledTokenInfo> */}
       </StyledTokenInfoRow>
     </StyledTokenWrapper>
   );

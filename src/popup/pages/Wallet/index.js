@@ -268,7 +268,7 @@ const borderCss = css`
 const StyledReceiveBtn = styled(StyledBaseBtn)`
   &:hover {
     background: #f2f2f2;
-    ${(props) => props.showStaking ? "" : borderCss};
+    ${(props) => props.$showStaking ? "" : borderCss};
   }
 `;
 
@@ -511,16 +511,19 @@ const WalletInfo = () => {
     }
   }, [shouldUpdateAccountStorage, tokenList, currentAccount.address]);
 
-  const {netcolor,showStaking} = useMemo(() => {
+  const {netcolor,showStaking,nextChainIcon} = useMemo(() => {
     const networkID = netConfig.currentNode.networkID;
     let netcolor = "rgba(0, 0, 0, 0.30)"
     if (networkID === NetworkID_MAP.mainnet) {
       netcolor = "#594AF1";
     }
     let showStaking = networkID.startsWith("mina");
+    let isZeko = networkID.startsWith("zeko");
+    let nextChainIcon = isZeko? "/img/icon_zeko.svg":"/img/icon_mina.svg"
     return {
       netcolor,
-      showStaking
+      showStaking,
+      nextChainIcon
     }
   }, [netConfig.currentNode.networkID]);
   return (
@@ -553,7 +556,7 @@ const WalletInfo = () => {
           <StyledDivideColumnWrapper>
             <StyledDivideColumn />
           </StyledDivideColumnWrapper>
-          <StyledReceiveBtn netcolor={netcolor} onClick={toReceive} showStaking={showStaking}>
+          <StyledReceiveBtn netcolor={netcolor} onClick={toReceive} $showStaking={showStaking}>
             {i18n.t("receive")}
           </StyledReceiveBtn>
           {showStaking && <>
@@ -567,7 +570,7 @@ const WalletInfo = () => {
           
         </StyledWalletBaseAction>
         <StyledIconBackground>
-          <img src="/img/icon_mina.svg" />
+          <img src={nextChainIcon} />
         </StyledIconBackground>
       </StyledWalletInfoWrapper>
       <FooterPopup

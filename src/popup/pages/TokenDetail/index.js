@@ -61,7 +61,9 @@ const StyledActionRow = styled.div`
     margin-left: 10px;
   }
 `;
-const StyledHistoryWrapper = styled.div``;
+const StyledHistoryWrapper = styled.div`
+  box-sizing: content-box;
+`;
 
 const TokenDetail = () => {
   const token = useSelector((state) => state.cache.nextTokenDetail);
@@ -200,6 +202,7 @@ const TokenDetail = () => {
           history.zkPendingList = zkPendingList;
         }
         dispatch(updateAccountTxV2(history, token.tokenId));
+        dispatch(updateShouldRequest(false));
         saveToLocal(history);
       } else {
         let pendingTxList = getPendingTxList(address);
@@ -235,11 +238,13 @@ const TokenDetail = () => {
           history.zkPendingList = zkPendingList;
         }
         dispatch(updateAccountTxV2(history, token.tokenId));
+        dispatch(updateShouldRequest(false));
         saveToLocal(history);
       }
-      dispatch(updateShouldRequest(false));
+      
       isFirstRequest.current = false;
       setShowLoading(false);
+      isRequest = false
     },
     [currentAccount.address, isFungibleToken, token.tokenId, saveToLocal]
   );
@@ -296,7 +301,7 @@ const TokenDetail = () => {
           <LoadingView />
         ) : showTxHistory.length !== 0 ? (
           <TxListView history={showTxHistory} tokenInfo={token}/>
-        ) : isNaturalNumber(mainTokenNetInfo.inferredNonce) ? (
+        ) : isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? (
           <TxNotSupportView />
         ) : (
           <EmptyTxListView />

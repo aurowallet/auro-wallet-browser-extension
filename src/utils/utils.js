@@ -47,19 +47,28 @@ export function toNonExponential(ExpNumber) {
  * @param {*} decimal
  */
 export function amountDecimals(amount, decimal = 0) {
+  // if decimal biggner than 100 , use 0
+  let nextDecimals = decimal
+  if(BigNumber(nextDecimals).gt(100)){
+    nextDecimals = 0
+  }
   let realBalance = new BigNumber(amount)
-    .dividedBy(new BigNumber(10).pow(decimal))
+    .dividedBy(new BigNumber(10).pow(nextDecimals))
     .toString();
   return realBalance;
 }
 
 export function getBalanceForUI(balance, decimal = 0, fixed = 4) {
-  let nextBalance = amountDecimals(balance, decimal)
-  if (isNaN(parseFloat(nextBalance)) || nextBalance === 0) {
-    return "0.00";
+  try {
+    let nextBalance = amountDecimals(balance, decimal)
+    if (isNaN(parseFloat(nextBalance)) || nextBalance === 0) {
+      return "0.00";
+    }
+    let showBalance = new BigNumber(nextBalance).toFixed(Number(fixed), 1).toString();
+    return toNonExponential(showBalance);
+  } catch (error) {// for dicimal error
+    return balance
   }
-  let showBalance = new BigNumber(nextBalance).toFixed(Number(fixed), 1).toString();
-  return toNonExponential(showBalance);
 }
 
 export function getAmountForUI(

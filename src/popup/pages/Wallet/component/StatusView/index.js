@@ -17,6 +17,7 @@ const StyledHistoryRow = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 0px 20px;
+  min-height: 22px;
 `;
 
 const StyledHistoryTitle = styled.div`

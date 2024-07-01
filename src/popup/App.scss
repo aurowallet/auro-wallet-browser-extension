@@ -1,3 +1,11 @@
+.App {
+  -webkit-user-drag: none;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
 
 .App-header {
   display: flex;
