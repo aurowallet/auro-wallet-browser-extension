@@ -144,7 +144,8 @@ const StyledManageTip = styled.div`
   border-radius: 8px;
   background: #d65a5a;
   padding: 2px 4px;
-
+  min-width: 18px;
+  text-align: center;
   color: #fff;
   font-size: 12px;
   font-weight: 400;

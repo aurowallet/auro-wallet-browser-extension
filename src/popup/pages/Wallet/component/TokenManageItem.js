@@ -10,7 +10,7 @@ import TokenIcon from "./TokenIcon";
 import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import { saveLocal } from "@/background/localStorage";
 
-const StyledTokenItemWrapper = styled.div`
+const StyledTokenItemWrapper = styled.div`  
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,6 +18,8 @@ const StyledTokenItemWrapper = styled.div`
   padding: 10px 20px;
   border-top: 0.5px solid rgba(0, 0, 0, 0.1);
 
+  background: ${(props) =>
+    props.isMainCoin ? "rgba(0, 0, 0, 0.05)" : "white"};
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
@@ -79,6 +81,7 @@ const TokenManageItem = ({ token }) => {
     tokenSymbol,
     showBalanceText,
     tokenName,
+    isFungibleToken
   } = useMemo(() => {
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
@@ -102,8 +105,9 @@ const TokenManageItem = ({ token }) => {
       tokenSymbol,
       showBalanceText,
       tokenName,
+      isFungibleToken
     };
-  }, [token, currencyConfig]);
+  }, [token, currencyConfig,]);
 
   const onClickManage = useCallback(() => {
     // {
@@ -134,7 +138,7 @@ const TokenManageItem = ({ token }) => {
   }, [token, tokenList, currentAccount, localTokenConfig]);
 
   return (
-    <StyledTokenItemWrapper>
+    <StyledTokenItemWrapper isMainCoin={!isFungibleToken}>
       <StyledTokenLeft>
         <StyledTokenWrapper>
           <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} />
@@ -147,13 +151,13 @@ const TokenManageItem = ({ token }) => {
           <StyledTokenAmount>{showBalanceText}</StyledTokenAmount>
         </StyledTokenInfo>
       </StyledTokenLeft>
-      <StyledTokenRight onClick={onClickManage}>
+      {isFungibleToken && <StyledTokenRight onClick={onClickManage}>
         {token.localConfig?.hideToken ? (
           <IconAdd fill={"rgba(0, 0, 0, 0.8)"} />
         ) : (
           <img src="img/icon_hide.svg" />
         )}
-      </StyledTokenRight>
+      </StyledTokenRight>}
     </StyledTokenItemWrapper>
   );
 };
