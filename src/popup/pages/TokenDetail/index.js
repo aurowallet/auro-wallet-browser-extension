@@ -316,18 +316,6 @@ const token_action_type = {
   receive: "receive",
   delegation: "delegation",
 };
-const StyledActionItemWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  min-width: 50px;
-  padding: 4px 0px;
-  cursor: pointer;
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
-`;
 const StyledActionTitle = styled.div`
   color: #594af1;
   text-align: center;
@@ -348,6 +336,27 @@ const StyledIconWrapper = styled.div`
   justify-content: center;
   ${(props) => props.rotate == "true" && rotateCss}
 `;
+
+const StyledActionItemWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  min-width: 50px;
+  padding: 4px 0px;
+  cursor: pointer;
+  &:hover {
+    ${StyledIconWrapper} {
+      border-radius: 100%;
+      filter: brightness(95%); // Darkens the image by 5%
+    }
+
+    ${StyledActionTitle} {
+      color: #5045c7;  // Darkened #594af1 by 5%
+    }
+  }
+`;
+
 export const TokenAction = ({ type }) => {
   const history = useHistory();
   const { title, nextRouter, actionIconUrl, isReceive } = useMemo(() => {
