@@ -65,7 +65,7 @@ function compareTokens(a, b) {
   }
 }
 
-export function processTokenList(tokenAssetsList, prices, localShowedTokenIds) {
+export function processTokenList(tokenAssetsList, prices, localShowedTokenIds,localTokenConfig) {
   let newTokenCount = 0;
   const sourceTokenList = tokenAssetsList;
   let totalShowAmount = 0;
@@ -146,9 +146,9 @@ export function processTokenList(tokenAssetsList, prices, localShowedTokenIds) {
     nextTokenList.unshift(defaultMinaAssets);
   }
 
-  const tokenShowList = nextTokenList.filter(
-    (tokenItem) => !tokenItem.localConfig?.hideToken
-  );
+  const tokenShowList = nextTokenList.filter((tokenItem)=>{
+    return (!localTokenConfig[tokenItem.tokenId]) || (!localTokenConfig[tokenItem.tokenId]?.hideToken)
+  })
   return {
     tokenList: nextTokenList,
     tokenTotalAmount: totalShowAmount,

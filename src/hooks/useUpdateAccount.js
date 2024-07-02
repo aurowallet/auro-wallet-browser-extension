@@ -1,6 +1,9 @@
 import { getAllTokenAssets, getAllTokenInfoV2 } from "@/background/api";
-import { getLocal } from "@/background/localStorage";
-import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
+import { getLocal, saveLocal } from "@/background/localStorage";
+import {
+  LOCAL_CACHE_KEYS,
+  STABLE_LOCAL_ACCOUNT_CACHE_KEYS,
+} from "@/constant/storageKey";
 import Toast from "@/popup/component/Toast";
 import {
   updateLocalTokenConfig,
@@ -48,10 +51,18 @@ const useFetchAccountData = (currentAccount) => {
             }
             dispatch(updateTokenAssets(lastTokenList));
             setResult(lastTokenList);
+            saveLocal(
+              LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
+              JSON.stringify({ [currentAccount.address]: lastTokenList })
+            );
           }
         } else {
           dispatch(updateTokenAssets([]));
           setResult([]);
+          saveLocal(
+            LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
+            JSON.stringify({ [currentAccount.address]: [] })
+          );
         }
       }
     } catch (error) {

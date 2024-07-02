@@ -22,7 +22,6 @@ import {
 } from "../../../constant/msgTypes";
 import {
   ACCOUNT_BALANCE_CACHE_STATE,
-  updateAccountLocalStorage,
   updateCurrentPrice,
   updateShouldRequest,
 } from "../../../reducers/accountReducer";
@@ -314,9 +313,6 @@ const WalletInfo = () => {
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const netConfig = useSelector((state) => state.network);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
-  const shouldUpdateAccountStorage = useSelector(
-    (state) => state.accountInfo.shouldUpdateAccountStorage
-  );
 
   const dispatch = useDispatch();
   const history = useHistory();
@@ -500,16 +496,6 @@ const WalletInfo = () => {
   useEffect(() => {
     fetchPrice();
   }, [currencyConfig.currentCurrency, netConfig.currentNode.networkID]);
-
-  useEffect(() => {
-    if (shouldUpdateAccountStorage) {
-      dispatch(updateAccountLocalStorage());
-      saveLocal(
-        LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
-        JSON.stringify({ [currentAccount.address]: tokenList })
-      );
-    }
-  }, [shouldUpdateAccountStorage, tokenList, currentAccount.address]);
 
   const {netcolor,showStaking,nextChainIcon} = useMemo(() => {
     const networkID = netConfig.currentNode.networkID;

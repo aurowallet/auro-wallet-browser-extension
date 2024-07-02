@@ -22,7 +22,6 @@ const UPDATE_TOKEN_ASSETS = "UPDATE_TOKEN_ASSETS";
 // token price
 const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE";
 
-const UPDATE_ACCOUNT_LOCAL_STORAGE = "UPDATE_ACCOUNT_LOCAL_STORAGE";
 
 const UPDATE_LOCAL_TOKEN_CONFIG = "UPDATE_LOCAL_TOKEN_CONFIG";
 
@@ -39,12 +38,6 @@ export function updateLocalTokenConfig(tokenConfig) {
   return {
     type: UPDATE_LOCAL_TOKEN_CONFIG,
     tokenConfig,
-  };
-}
-
-export function updateAccountLocalStorage() {
-  return {
-    type: UPDATE_ACCOUNT_LOCAL_STORAGE,
   };
 }
 
@@ -146,7 +139,6 @@ const initState = {
   tokenShowList: [],
   tokenPrice: {},
   tokenTotalAmount: "0",
-  shouldUpdateAccountStorage: false,
   localTokenConfig: {},
   localShowedTokenIds: [],
   newTokenCount: 0,
@@ -261,7 +253,8 @@ const accountInfo = (state = initState, action) => {
       const result = processTokenList(
         nextList,
         state.tokenPrice,
-        state.localShowedTokenIds
+        state.localShowedTokenIds,
+        state.localTokenConfig
       );
       return {
         ...state,
@@ -270,7 +263,6 @@ const accountInfo = (state = initState, action) => {
         tokenShowList: result.tokenShowList,
         mainTokenNetInfo: result.mainTokenNetInfo,
         newTokenCount: result.newTokenCount,
-        shouldUpdateAccountStorage: !action.isCache,
       };
     case UPDATE_CURRENT_PRICE:
       let isAccountCache;
@@ -289,15 +281,14 @@ const accountInfo = (state = initState, action) => {
           ...state,
           tokenPrice: action.tokenPrice,
           isAccountCache: isAccountCache,
-          shouldUpdateAccountStorage: !action.isCache,
         };
       }
       const priceUpdate = processTokenList(
         state.tokenList,
         action.tokenPrice,
         state.localShowedTokenIds,
+        state.localTokenConfig
       );
-      
       return {
         ...state,
         tokenPrice: action.tokenPrice,
@@ -305,12 +296,6 @@ const accountInfo = (state = initState, action) => {
         tokenList: priceUpdate.tokenList,
         tokenTotalAmount: priceUpdate.tokenTotalAmount,
         tokenShowList: priceUpdate.tokenShowList,
-        shouldUpdateAccountStorage: !action.isCache,
-      };
-    case UPDATE_ACCOUNT_LOCAL_STORAGE:
-      return {
-        ...state,
-        shouldUpdateAccountStorage: false,
       };
     case UPDATE_LOCAL_TOKEN_CONFIG:
       const statusUpdate = processTokenShowStatus(
@@ -323,7 +308,6 @@ const accountInfo = (state = initState, action) => {
         tokenList: statusUpdate.tokenList,
         tokenShowList: statusUpdate.tokenShowList,
         tokenTotalAmount: statusUpdate.totalShowAmount,
-        shouldUpdateAccountStorage: true,
       };
     case UPDATE_LOCAL_SHOWED_TOKEN_IDS:
     const tokenShowedUpdate = processNewTokenStatus(state.tokenList,action.tokenIds);
