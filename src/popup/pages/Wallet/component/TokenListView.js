@@ -92,13 +92,11 @@ const TokenListView = ({ isInModal = false }) => {
       {!isInModal && (
         <StyledTokenHeaderRow>
           <StyledTokenRowTitle>{i18n.t("tokens")}</StyledTokenRowTitle>
-          {!(shouldRefresh && !isSilentRefresh) && (
             <TokenManageIcon
               onClickManage={onClickManage}
               showCount={showCount}
               showTokenTip={showTokenTip}
             />
-          )}
         </StyledTokenHeaderRow>
       )}
       {shouldRefresh &&
