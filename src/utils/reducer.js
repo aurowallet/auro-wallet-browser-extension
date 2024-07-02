@@ -67,7 +67,7 @@ function compareTokens(a, b) {
 
 export function processTokenList(tokenAssetsList, prices, localShowedTokenIds) {
   let newTokenCount = 0;
-  const sourceTokenList = tokenAssetsList || initialTokenList;
+  const sourceTokenList = tokenAssetsList;
   let totalShowAmount = 0;
   const nextTokenList = sourceTokenList.map((tokenItem) => {
     const tempToken = {
@@ -137,7 +137,7 @@ export function processTokenList(tokenAssetsList, prices, localShowedTokenIds) {
     (token) => token.tokenId === ZK_DEFAULT_TOKEN_ID
   );
 
-  let mainTokenNetInfo = defaultMinaAssets.tokenNetInfo;
+  let mainTokenNetInfo = defaultMinaAssets;
   if (defaultTokenIndex !== -1) {
     const [defaultToken] = nextTokenList.splice(defaultTokenIndex, 1);
     nextTokenList.unshift(defaultToken);

@@ -183,7 +183,7 @@ const DelegationInfo = ({
         nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress, 8);
       }
     }
-    let stakedBalance = mainTokenNetInfo.tokenBaseInfo.showBalance || "0.00"
+    let stakedBalance = mainTokenNetInfo?.tokenBaseInfo?.showBalance || "0.00"
     stakedBalance = stakedBalance + " "+ MAIN_COIN_CONFIG.symbol
     return {
       showNodeAddress, nodeName,stakedBalance

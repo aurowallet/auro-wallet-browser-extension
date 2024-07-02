@@ -484,7 +484,7 @@ const SignView = ({
       if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
         let amount = trimSpace(params.amount) || 0;
         let maxAmount = new BigNumber(amount).plus(fee).toString();
-        if (new BigNumber(maxAmount).gt(mainTokenNetInfo.tokenBaseInfo.showBalance)) {
+        if (new BigNumber(maxAmount).gt(mainTokenNetInfo?.tokenBaseInfo.showBalance)) {
           Toast.info(i18n.t("balanceNotEnough"));
           return;
         }
@@ -790,7 +790,7 @@ const SignView = ({
             leftContent={showAccountAddress}
             leftCopyContent={currentAccount.address}
             rightTitle={i18n.t("amount")}
-            rightContent={mainTokenNetInfo.tokenBaseInfo.showBalance + " " + MAIN_COIN_CONFIG.symbol}
+            rightContent={mainTokenNetInfo?.tokenBaseInfo?.showBalance + " " + MAIN_COIN_CONFIG.symbol}
           />
         ) : (
           <>

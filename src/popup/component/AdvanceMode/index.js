@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import i18n from "i18next";
 import Input from "../../component/Input";
 import styles from "./index.module.scss";
+import { isNaturalNumber } from "@/utils/utils";
 
 const AdvanceMode = ({
     isOpenAdvance = false,
@@ -20,7 +21,7 @@ const AdvanceMode = ({
 }) => {
     const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
     const nonceHolder = useMemo(() => {
-        return mainTokenNetInfo?.inferredNonce || ""
+        return isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? mainTokenNetInfo?.inferredNonce : ""
     }, [mainTokenNetInfo])
 
     return (

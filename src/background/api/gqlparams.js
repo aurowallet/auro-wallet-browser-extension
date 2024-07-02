@@ -372,6 +372,7 @@ export function getZkAppTransactionListBody() {
           update{
             appState
             tokenSymbol
+            zkappUri
           }
         }
       }
@@ -623,6 +624,7 @@ export function getTokenQueryBody() {
       }
       tokenId
       publicKey
+      zkappUri
     }
   }
   `;

@@ -76,15 +76,13 @@ const SignTransaction = () => {
 
   const dappWindow = useSelector((state) => state.cache.dappWindow);
   const inferredNonce = useSelector(
-    (state) => state.accountInfo.mainTokenNetInfo.inferredNonce
+    (state) => state.accountInfo.mainTokenNetInfo?.inferredNonce
   );
   const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
     inferredNonce
   );
   useEffect(() => {
-    if (inferredNonce) {
       setNextUseInferredNonce(inferredNonce);
-    }
   }, [inferredNonce]);
 
   const currentAccount = useSelector(

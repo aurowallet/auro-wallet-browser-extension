@@ -314,8 +314,9 @@ const SendPage = ({}) => {
         fee: sendFee,
         isNewAccount: fundNewAccountStatus,
         gqlUrl: currentNode.url,
+        zkAppUri:token.zkappUri
       };
-      const data = encryptData(JSON.stringify(buildTokenData),node_public_keys);// 这里用测试的
+      const data = encryptData(JSON.stringify(buildTokenData),node_public_keys);
       const buildData = await buildTokenBody(data);
       if (buildData.unSignTx) {
         let realUnSignTxStr = decryptData(buildData.unSignTx.encryptedData,buildData.unSignTx.encryptedAESKey,buildData.unSignTx.iv,react_private_keys);
@@ -337,7 +338,7 @@ const SendPage = ({}) => {
         return;
       }
     },
-    [tokenPublicKey, availableDecimals, currentNode]
+    [tokenPublicKey, availableDecimals, currentNode,token]
   );
   const clickNextStep = useCallback(
     async (ledgerReady = false, preLedgerApp) => {
@@ -355,7 +356,7 @@ const SendPage = ({}) => {
       let fromAddress = currentAddress;
       let toAddressValue = trimSpace(toAddress);
       let amount = getRealTransferAmount();
-      let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce;
+      let nonce = trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce;
       let realMemo = memo || "";
       let fee = trimSpace(feeAmount);
       let payload = {
