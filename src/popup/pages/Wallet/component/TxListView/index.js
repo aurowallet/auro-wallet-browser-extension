@@ -478,6 +478,7 @@ const TxItem = ({
         showAddress = isZkReceive ?addressSlice(negativeItem.body.publicKey,8):addressSlice(positiveItem.body.publicKey,8)
         amount = getBalanceForUI(balance,tokenDecimal, 2);
         amount = (isZkReceive ? "+" : "-") + amount
+        statusIcon = isZkReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
       }
     }
     if(!showAddress){
