@@ -43,7 +43,7 @@ const StyledTitle = styled.div`
 `;
 const StyledSubTitle = styled.div`
   font-weight: 400;
-  font-size: 14px;
+  font-size: 12px;
   text-align: center;
   color: rgba(0, 0, 0, 0.8);
 `;
