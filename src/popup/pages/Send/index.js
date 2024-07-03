@@ -65,6 +65,13 @@ const SendPage = ({}) => {
 
   const { fetchAccountData } = useFetchAccountData(currentAccount);
 
+  const { isFromModal } = useMemo(() => {
+    let params = history.location.params || {};
+    let isFromModal = params?.isFromModal
+    return {
+      isFromModal,
+    };
+  }, [history]);
   const {
     tokenSymbol,
     isSendMainToken,
@@ -242,9 +249,15 @@ const SendPage = ({}) => {
 
       setConfirmModalStatus(false);
       fetchAccountData();
-      history.goBack();
+      if(isFromModal){
+        history.replace({
+          pathname: "token_detail",
+        });
+      }else{
+        history.goBack();
+      }
     },
-    [i18n]
+    [i18n,isFromModal]
   );
 
   useEffect(() => {

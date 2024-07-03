@@ -152,7 +152,10 @@ const TokenItem = ({ token, isInModal }) => {
   const onClickToken = useCallback(() => {
     dispatch(updateNextTokenDetail(token));
     if (isInModal) {
-      history.push("send_page");
+      history.push({
+        pathname: "send_page",
+        params: { isFromModal: true },
+      });
     } else {
       history.push("token_detail");
     }
