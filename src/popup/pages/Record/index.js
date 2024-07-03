@@ -50,11 +50,12 @@ const Record = ({}) => {
     };
   }, [history]);
 
-  const { contentList } = useMemo(() => {
+  const { contentList, isZkReceive, isMainCoin } = useMemo(() => {
     let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
     let showAmount = 0;
     let showFrom = txDetail.from;
     let showTo;
+    let isZkReceive;
     if (isMainCoin) {
       showAmount =
         getBalanceForUI(
@@ -83,7 +84,8 @@ const Record = ({}) => {
           getBalanceForUI(balance, tokenDecimal, tokenDecimal) +
           " " +
           tokenSymbol;
-        showTo = positiveItem.body.publicKey
+        showTo = positiveItem.body.publicKey;
+        isZkReceive = positiveItem.body.publicKey == currentAccount.address;
       }
     }
 
@@ -156,8 +158,10 @@ const Record = ({}) => {
     );
     return {
       contentList,
+      isZkReceive,
+      isMainCoin,
     };
-  }, [i18n, txDetail, tokenInfo,currentAccount]);
+  }, [i18n, txDetail, tokenInfo, currentAccount]);
 
   const getExplorerUrl = useCallback(() => {
     let currentNode = netConfig.currentNode;
@@ -199,7 +203,11 @@ const Record = ({}) => {
 
   return (
     <CustomView title={i18n.t("details")} contentClassName={styles.container}>
-      <StatusRow txDetail={txDetail} />
+      <StatusRow
+        txDetail={txDetail}
+        isZkReceive={isZkReceive}
+        isMainCoin={isMainCoin}
+      />
       <div className={styles.dividedLine} />
       {contentList.map((item, index) => {
         return <DetailRow key={index} {...item} />;
@@ -266,7 +274,7 @@ const StyledTitle = styled.div`
   font-size: 14px;
   margin-top: 10px;
 `;
-const StatusRow = ({ txDetail }) => {
+const StatusRow = ({ txDetail, isMainCoin, isZkReceive }) => {
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -302,6 +310,10 @@ const StatusRow = ({ txDetail }) => {
         break;
       case "zkapp":
         StatusIcon = <IconZkApp fill={icon_color} />;
+        if (!isMainCoin) {
+          StatusIcon = <IconPayment fill={icon_color} />;
+          isReceive = isZkReceive;
+        }
         break;
       default:
         break;
@@ -312,7 +324,7 @@ const StatusRow = ({ txDetail }) => {
       isReceive,
       icon_color,
     };
-  }, [txDetail, currentAccount]);
+  }, [txDetail, currentAccount, isMainCoin, isZkReceive]);
 
   return (
     <StyledRowWrapper>
