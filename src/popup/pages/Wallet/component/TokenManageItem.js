@@ -10,7 +10,7 @@ import TokenIcon from "./TokenIcon";
 import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import { saveLocal } from "@/background/localStorage";
 
-const StyledTokenItemWrapper = styled.div`  
+const StyledTokenItemWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,8 +18,7 @@ const StyledTokenItemWrapper = styled.div`
   padding: 10px 20px;
   border-top: 0.5px solid rgba(0, 0, 0, 0.1);
 
-  background: ${(props) =>
-    props.$isMainCoin || props.$newToken ? "rgba(0, 0, 0, 0.05)" : "white"};
+  background: ${(props) => (props.$newToken ? "rgba(0, 0, 0, 0.05)" : "white")};
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
@@ -82,7 +81,7 @@ const TokenManageItem = ({ token }) => {
     showBalanceText,
     tokenName,
     isFungibleToken,
-    tokenShowed
+    tokenShowed,
   } = useMemo(() => {
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
@@ -100,16 +99,16 @@ const TokenManageItem = ({ token }) => {
 
     let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
     let showBalanceText = i18n.t("balance") + ": " + displayBalance;
-    const tokenShowed = token.tokenBaseInfo.tokenShowed
+    const tokenShowed = token.tokenBaseInfo.tokenShowed;
     return {
       tokenIconUrl,
       tokenSymbol,
       showBalanceText,
       tokenName,
       isFungibleToken,
-      tokenShowed
+      tokenShowed,
     };
-  }, [token, currencyConfig,]);
+  }, [token, currencyConfig]);
 
   const onClickManage = useCallback(() => {
     // {
@@ -140,7 +139,7 @@ const TokenManageItem = ({ token }) => {
   }, [token, tokenList, currentAccount, localTokenConfig]);
 
   return (
-    <StyledTokenItemWrapper $isMainCoin={!isFungibleToken} $newToken={!tokenShowed}>
+    <StyledTokenItemWrapper $newToken={!tokenShowed}>
       <StyledTokenLeft>
         <StyledTokenWrapper>
           <TokenIcon iconUrl={tokenIconUrl} tokenSymbol={tokenSymbol} />
@@ -153,13 +152,15 @@ const TokenManageItem = ({ token }) => {
           <StyledTokenAmount>{showBalanceText}</StyledTokenAmount>
         </StyledTokenInfo>
       </StyledTokenLeft>
-      {isFungibleToken && <StyledTokenRight onClick={onClickManage}>
-        {token.localConfig?.hideToken ? (
-          <IconAdd fill={"rgba(0, 0, 0, 0.8)"} />
-        ) : (
-          <img src="img/icon_hide.svg" />
-        )}
-      </StyledTokenRight>}
+      {isFungibleToken && (
+        <StyledTokenRight onClick={onClickManage}>
+          {token.localConfig?.hideToken ? (
+            <IconAdd fill={"rgba(0, 0, 0, 0.8)"} />
+          ) : (
+            <img src="img/icon_hide.svg" />
+          )}
+        </StyledTokenRight>
+      )}
     </StyledTokenItemWrapper>
   );
 };

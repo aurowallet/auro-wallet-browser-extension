@@ -1,5 +1,4 @@
-import { TokenLaunch } from "@/constant";
-import i18n from "i18next";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenManageItem from "./TokenManageItem";
@@ -25,9 +24,14 @@ const StyledTokenInfo = styled.a`
 
 const TokenManageList = ({}) => {
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
+  const manageTokenList = useMemo(()=>{
+    return tokenList.filter((tokenItem)=>{
+      return !tokenItem?.tokenBaseInfo?.isMainToken
+    },[])
+  },[tokenList])
   return (
     <StyledTokenWrapper>
-      {tokenList.map((token, index) => {
+      {manageTokenList.map((token, index) => {
         return <TokenManageItem key={index} token={token} />;
       })}
       <StyledTokenInfoRow>

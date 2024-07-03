@@ -70,6 +70,9 @@ const TokenListView = ({ isInModal = false }) => {
     return { showCount, showTokenTip };
   }, [newTokenCount]);
 
+  const showTokenManageIcon = useMemo(()=>{
+    return tokenList.length > 1 // main token do not show icon 
+  },[tokenList])
   const onClickManage = useCallback(() => {
     setTokenManageStatus(true);
   }, []);
@@ -92,11 +95,11 @@ const TokenListView = ({ isInModal = false }) => {
       {!isInModal && (
         <StyledTokenHeaderRow>
           <StyledTokenRowTitle>{i18n.t("tokens")}</StyledTokenRowTitle>
-            <TokenManageIcon
+            {showTokenManageIcon  && <TokenManageIcon
               onClickManage={onClickManage}
               showCount={showCount}
               showTokenTip={showTokenTip}
-            />
+            />}
         </StyledTokenHeaderRow>
       )}
       {shouldRefresh &&
