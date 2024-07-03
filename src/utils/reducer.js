@@ -69,7 +69,17 @@ export function processTokenList(tokenAssetsList, prices, localShowedTokenIds,lo
   let newTokenCount = 0;
   const sourceTokenList = tokenAssetsList;
   let totalShowAmount = 0;
-  const nextTokenList = sourceTokenList.map((tokenItem) => {
+  const tokenListWithLocalConfig = sourceTokenList.map((tokenItem)=>{
+    let localConfig = tokenItem.localConfig || {}
+    return {
+      ...tokenItem,
+      localConfig:{
+        ...localConfig,
+        hideToken:localTokenConfig[tokenItem.tokenId] && localTokenConfig[tokenItem.tokenId].hideToken
+      }
+    }
+  })
+  const nextTokenList = tokenListWithLocalConfig.map((tokenItem) => {
     const tempToken = {
       ...tokenItem,
       tokenBaseInfo: { ...tokenItem.tokenBaseInfo },
@@ -145,10 +155,10 @@ export function processTokenList(tokenAssetsList, prices, localShowedTokenIds,lo
   } else {
     nextTokenList.unshift(defaultMinaAssets);
   }
-
-  const tokenShowList = nextTokenList.filter((tokenItem)=>{
-    return (!localTokenConfig[tokenItem.tokenId]) || (!localTokenConfig[tokenItem.tokenId]?.hideToken)
-  })
+  
+  const tokenShowList = nextTokenList.filter(
+    (tokenItem) => !tokenItem.localConfig?.hideToken
+  );
   return {
     tokenList: nextTokenList,
     tokenTotalAmount: totalShowAmount,
