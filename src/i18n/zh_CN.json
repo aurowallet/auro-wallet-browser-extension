@@ -287,5 +287,5 @@
   "showTestnet": "显示测试网",
   "ledgerConnected": "Ledger 已连接",
   "ledgerNotConnected": "Ledger 未连接",
-  "txType":"交易类型"
+  "txType": "交易类型"
 }
