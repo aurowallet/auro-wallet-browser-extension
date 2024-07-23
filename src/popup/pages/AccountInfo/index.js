@@ -10,7 +10,6 @@ import {
 import { ACCOUNT_TYPE, SEC_FROM_TYPE } from "../../../constant/commonType";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { JSonToCSV } from "../../../utils/JsonToCSV";
 import {
   amountDecimals,
   copyText,
