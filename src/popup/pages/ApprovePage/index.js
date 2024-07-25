@@ -6,6 +6,7 @@ import {
   DAPP_ACTION_CLOSE_WINDOW,
   DAPP_ACTION_GET_ACCOUNT,
   DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS,
+  GET_APPROVE_PARAMS,
   WALLET_GET_CURRENT_ACCOUNT,
 } from "../../../constant/msgTypes";
 import { updateDAppOpenWindow } from "../../../reducers/cache";
@@ -14,7 +15,7 @@ import {
   updateEntryWitchRoute,
 } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { addressSlice, getQueryStringArgs } from "../../../utils/utils";
+import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
 import { LockPage } from "../Lock";
@@ -30,11 +31,18 @@ const ApprovePage = () => {
   );
 
   const [lockStatus, setLockStatus] = useState(false);
+  const [params, setParams] = useState({});
 
-  const [params, setParams] = useState(() => {
-    let url = dappWindow.url || window.location?.href || "";
-    return getQueryStringArgs(url);
-  });
+  useEffect(() => {
+    sendMsg(
+      {
+        action: GET_APPROVE_PARAMS,
+      },
+      (data) => {
+        setParams(data)
+      }
+    );
+  }, []);
 
   const goToHome = useCallback(() => {
     let url = dappWindow?.url;
@@ -62,8 +70,8 @@ const ApprovePage = () => {
         payload: {
           selectAccount: [],
           currentAddress: currentAccount.address,
-          resultOrigin: params.siteUrl,
-          id: params.id,
+          resultOrigin: params?.site?.origin,
+          id: params?.id,
         },
       },
       async () => {
@@ -79,7 +87,7 @@ const ApprovePage = () => {
         action: DAPP_ACTION_GET_ACCOUNT,
         payload: {
           selectAccount,
-          resultOrigin: params.siteUrl,
+          resultOrigin: params?.site?.origin,
           id: params.id,
         },
       },
@@ -90,7 +98,7 @@ const ApprovePage = () => {
   }, [goToHome, params, currentAccount]);
 
   const onClickUnLock = useCallback((account) => {
-    let siteUrl = params.siteUrl || "";
+    let siteUrl = params?.site?.origin || "";
     const address = account?.address||currentAccount.address
     sendMsg(
       {
@@ -112,7 +120,7 @@ const ApprovePage = () => {
                 id: params.id,
               },
             },
-            (params) => {}
+            () => {}
           );
         } else {
           setLockStatus(true);
@@ -146,7 +154,7 @@ const ApprovePage = () => {
       </div>
       <div className={styles.content}>
         <div className={styles.websiteContainer}>
-          <DappWebsite siteIcon={params.siteIcon} siteUrl={params.siteUrl} />
+          <DappWebsite siteIcon={params?.site?.webIcon} siteUrl={params?.site?.origin} />
         </div>
         <p className={styles.accountTip}>{i18n.t("approveTip") + ":"}</p>
         <p className={styles.accountAddress}>{showAccountInfo}</p>

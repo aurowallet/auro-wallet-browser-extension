@@ -97,10 +97,6 @@ const SignTransaction = () => {
 
   const [lockStatus, setLockStatus] = useState(false);
 
-  const params = useMemo(() => {
-    let url = dappWindow.url || window.location?.href || "";
-    return getQueryStringArgs(url);
-  }, [dappWindow]);
 
   const fetchAccountInfo = useCallback(async () => {
     if (isShowLoading.current) {
@@ -114,15 +110,12 @@ const SignTransaction = () => {
 
   const onClickUnLock = useCallback(() => {
     setLockStatus(true);
-  }, [currentAccount, params]);
+  }, [currentAccount]);
 
   const getSignParams = useCallback(() => {
     sendMsg(
       {
         action: GET_SIGN_PARAMS,
-        payload: {
-          openId: params.openId,
-        },
       },
       (res) => {
         const { signRequests, notificationRequests, topItem } = res;
@@ -159,7 +152,7 @@ const SignTransaction = () => {
         }
       }
     );
-  }, [params, pendingSignList, currentSignIndex]);
+  }, [pendingSignList, currentSignIndex]);
 
   useEffect(() => {
     sendMsg(

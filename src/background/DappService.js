@@ -402,10 +402,7 @@ class DappService {
         if(!that.signEventListener){
           that.signEventListener = extension.runtime.onMessage.addListener(onMessage)
         }
-        let siteUrl = site.origin
-        let openId = id
-        let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon, openId }).toString()
-        this.popupId = await this.dappOpenPopWindow('./popup.html#/request_sign?' + openParams, windowId.request_sign, "dapp")
+        this.popupId = await this.dappOpenPopWindow('./popup.html#/request_sign', windowId.request_sign, "dapp")
         let time = new Date().getTime()
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1){
           notificationRequests.push({ id, params:nextParams, site,popupId:this.popupId,resolve,reject,time })
@@ -550,9 +547,7 @@ class DappService {
           return false
         }
         extension.runtime.onMessage.addListener(onMessage)
-        let siteUrl = site.origin
-        let openParams = new URLSearchParams({ siteUrl, siteIcon: site.webIcon,id }).toString()
-        this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page?' + openParams,
+        this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page',
           windowId.approve_page, "dapp")
         approveRequests.push({ id, site,popupId:this.popupId,resolve,reject })
         pendingApprove=undefined
@@ -609,6 +604,12 @@ class DappService {
       signRequests,
       notificationRequests,
       topItem
+    }
+  }
+  getApproveParams() {
+    let list = [...approveRequests]
+    if(list.length > 0){
+      return list[0];
     }
   }
   removeSignParamsByOpenId(openId){
