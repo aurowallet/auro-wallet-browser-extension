@@ -4,9 +4,126 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+
+## [2.3.0]
+- Enhancements
+    - Add token support
+    - Add support for Zeko testnet
+    - Upgrade request config
+    - Remove support for Berkeley network
+    - Update lock icon
+
+## [2.2.17]
+- Enhancements
+    - Upgrade network config
+    - Transaction history
+    - Icon lock status
+- Fixed
+    - zkApp recommend fee
+
+
+## [2.2.16]
+- Enhancements
+    - Add code-spell check.
+    - Upgrade mina-signer to v3.0.7.
+    - Add support to return signed zk.
+
+## [2.2.15]
+- Enhancements
+    - Upgrade mina-signer to v3.0.6.
+    - Upgrade parts of devDependencies versions to be compatible with Node.js v20.
+    - Add zkApp transaction history to devnet.
+
+## [2.2.14]
+- Enhancements
+    - Network Management
+    - Account Management
+    - Create & Restore process
+    - Windows UI
+    - zkApp approve
+    - zkApp fee 
+- Fixed
+    - Setting popup UI
+    - Ledger UI
+    - TxList delegation show address
+
+
+
+## [2.2.13]
+- Upgrade mina-signer to 3.0.0
+- Update some i18n 
+- Add Russian language support
+- Merge pull request [#21](https://github.com/aurowallet/auro-wallet-browser-extension/pull/21)
+
+## [2.2.12]
+- Fix account init
+- Update aboutPage 
+
+## [2.2.11]
+- Enhanced security process for wallet create and restore
+- Added Ukrainian language support
+- Optimized loading
+- Updated zkApp user interface (UI):
+- Fixed Origin mismatch issue
+- Fixed onMessage errors during lock
+
+## [2.2.10]
+- Fix zkTx show status
+- UI enhancements
+- add language:Turkish
+
+## [2.2.9]
+- Logo enhancements
+- Update tx history source
+- UI enhancements
+- Fix zkApp switch chain refresh issue
+
+## [2.2.8]
+- Deprecated legacy method
+- UI enhancements
+
+## [2.2.7]
+- New features:
+    - Add advance in cancel tx
+    - Add zkApp multiple transactions at the same time
+    - Add zkApp switch chain
+    - Add zkApp add chain
+    - Add zkApp sign json messgae
+    - Add nullifier support
+    - Add zk-commond parse
+- Network config enhancements 
+
+
+## [2.2.6]
+- Add support for Testworld2.0 network
+
+## [2.2.5]
+- Add transaction speed-up and cancel
+- Ledger enhancements
+
+## [2.2.4]
+- Upgrade mina-signer to 2.1.1
+- Add internal transfer
+- Bug fixes
+
+## [2.2.3]
+- Firefox manifest version to V2
+- Staking page optimization under unknown network
+
+## [2.2.2]
+- Upgrade mina-provider to 0.2.1
+- Recover Auto Lock feature
+- Bug fixes
+
+## [2.2.1]
+- Add scam-address match
+- Ledger enhancements
+- UI enhancements
+- Bug fixes
+
 ## [2.2.0]
 - Upgrade to manifest v3
-- Upgrade mina-provider to 0.1.8
+- Upgrade mina-provider to 0.2.0
 - Bug fixes
 
 ## [2.1.10]
@@ -103,4 +220,3 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Bug fix
-

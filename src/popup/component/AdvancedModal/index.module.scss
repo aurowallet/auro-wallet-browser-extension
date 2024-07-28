@@ -1,0 +1,85 @@
+.outerContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: end;
+    flex-direction: column;
+}
+
+@keyframes openModal {
+    from {
+        bottom: -50%;
+    }
+    to {
+        bottom: 0;
+    }
+}
+
+.innerContent {
+    background: #ffffff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    width: 100%;
+
+    position: absolute;
+    bottom: 0;
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 8px 20px;
+
+    .rowTitle {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        color: #222222;
+    }
+    .rowClose {
+        display: block;
+        cursor: pointer;
+    }
+}
+
+.dividedLine {
+    width: 100%;
+    height: 0.5px;
+    background-color: #f2f2f2;
+}
+
+.bottomContent {
+    padding: 0px 20px;
+    overflow-y: auto;
+    background: #ffffff;
+    max-height: 350px;
+    margin-bottom: 100px;
+}
+
+.rightRow {
+    display: flex;
+    align-items: center;
+}
+
+.bottomContainer {
+    padding: 12px 38px 20px;
+    position: fixed;
+    bottom: 0;
+    width: calc(100%);
+    background-color: white;
+
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}

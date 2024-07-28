@@ -28,20 +28,20 @@ export const Default = () => {
 
   return (
     <Tabs currentActiveIndex={activeIndex} onChangeIndex={onChangeActiveIndex}>
-      <div lable={text("title1", 'wallet')}
+      <div label={text("title1", 'wallet')}
         activeSource={home_active}
         commonSource={home_common}
       >
         <div>Wallet</div>
       </div>
-      <div lable={text("title2", 'staking')}
+      <div label={text("title2", 'staking')}
         activeSource={staking_active}
         commonSource={staking_common}
       >
         <div>Staking</div>
       </div>
       <div
-        lable={text("title3", 'setting')}
+        label={text("title3", 'setting')}
         activeSource={setting_active}
         commonSource={setting_common}
       >

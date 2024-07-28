@@ -41,7 +41,9 @@ import Staking from '../pages/Staking';
 import StakingList from '../pages/StakingList';
 import StakingTransfer from '../pages/StakingTransfer';
 import Welcome from '../pages/Welcome';
-
+import { CreateProcessPage } from '../pages/CreateProcessPage';
+import AddAccount from '../pages/AddAccount';
+import TokenDetail from '../pages/TokenDetail';
 
 
 
@@ -50,10 +52,10 @@ export function getAllRouter() {
     <HashRouter useHistory={useHistory} >
       <Switch>
         <Route path="/" exact component={MainRouter} />
-        <Route path="/createpassword" component={CreatePassword} />
-        <Route path="/showmnemonic" component={ShowMnemonic} />
-        <Route path="/backupmnemonic" component={BackupMnemonics} />
-        <Route path="/backupsuccess" component={BackupSuccess} />
+        <Route path="/create_password" component={CreatePassword} />
+        <Route path="/show_mnemonic" component={ShowMnemonic} />
+        <Route path="/backup_mnemonic" component={BackupMnemonics} />
+        <Route path="/backup_success" component={BackupSuccess} />
         <Route path="/homepage" component={HomePage} />
         <Route path="/send_page" component={SendPage} />
         <Route path="/receive_page" component={ReceivePage} />
@@ -88,7 +90,7 @@ export function getAllRouter() {
         <Route path="/setting" component={Setting} />
         <Route path="/address_book" component={AddressBook} />
         <Route path="/currency_unit" component={CurrencyUnit} />
-        <Route path="/welcome_page" component={Welcome} />
+        <Route path="/register_page" component={Welcome} />
 
         <Route path="/request_sign" component={SignTransaction} />
         <Route path="/approve_page" component={ApprovePage} />
@@ -98,6 +100,11 @@ export function getAllRouter() {
         <Route path={"/address_editor"} component={AddressEditor}/>
         <Route path={"/node_editor"} component={NodeEditor}/>
         <Route path={"/ledger_page"} component={LedgerPage}/>
+
+        <Route path={"/createprocess"} component={CreateProcessPage}/>
+        <Route path={"/add_account"} component={AddAccount}/>
+        
+        <Route path={"/token_detail"} component={TokenDetail}/>
       </Switch>
     </HashRouter>
   );

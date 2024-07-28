@@ -1,9 +1,7 @@
 /**
  * Locally stored network configuration
  */
-export const NET_WORK_CONFIG = "NET_WORK_CONFIG"
-
-
+export const NET_WORK_CONFIG_V2 = "NET_WORK_CONFIG_V2"
 
 
 /**
@@ -38,12 +36,6 @@ export const WATCH_MODE_TIP_SHOW = "WATCH_MODE_TIP_SHOW"
 
 
 /**
- * local net id config list
- */
-export const NETWORK_ID_AND_TYPE = "NETWORK_ID_AND_TYPE"
-
-
-/**
  * local base info 
  */
 export const LOCAL_BASE_INFO = "LOCAL_BASE_INFO"
@@ -53,21 +45,13 @@ export const LOCAL_BASE_INFO = "LOCAL_BASE_INFO"
  */
 export const LOCAL_CACHE_KEYS = {
     /**
-     * Transaction Record
-     */
-    "TRANSACTION_HISTORY": "TRANSACTION_HISTORY",
-    /**
-     * pending history
-     */
-    "PENDING_TRANSACTION_HISTORY": "PENDING_TRANSACTION_HISTORY",
-    /**
      * balance 
      */
     "ACCOUNT_BALANCE": "ACCOUNT_BALANCE",
     /**
      * PRICE 
      */
-    "COIN_PRICE": "COIN_PRICE",
+    "COIN_PRICE": "COIN_PRICE_V2",
     /**
      * block information   
      */
@@ -83,26 +67,28 @@ export const LOCAL_CACHE_KEYS = {
     "DELEGATION_INFO": "DELEGATION_INFO",
 
     /**
-     * Node pledge information
-     */
-    "VALIDATOR_DETAIL": "VALIDATOR_DETAIL",
-
-    /**
      * Validator list
      */
     "STAKING_LIST": "STAKING_LIST",
 
+    /**
+     * base token assets
+     */
+    "BASE_TOKEN_ASSETS": "BASE_TOKEN_ASSETS",
 
     /**
-     * zkapp transaction list 
+     * save all token tx history
      */
-    "ZKAPP_TX_LIST": "ZKAPP_TX_LIST",
+    "ALL_TX_HISTORY":"ALL_TX_HISTORY"
+}
 
-    /**
-     * zkapp transaction list 
-     */
-    "ZKAPP_PENDING_TX_LIST": "ZKAPP_PENDING_TX_LIST",
+/**
+ * stable account storage, do not clear when change account or network
+ */
+export const STABLE_LOCAL_ACCOUNT_CACHE_KEYS = {
+    "TOKEN_CONFIG": "TOKEN_CONFIG",
 
+    "SHOWED_TOKEN": "SHOWED_TOKEN",
 }
 
 
@@ -110,3 +96,28 @@ export const LOCAL_CACHE_KEYS = {
  * STORAGE_UPGRADE from v2->v3
  */
 export const STORAGE_UPGRADE_STATUS = "STORAGE_UPGRADE_STATUS"
+
+/**
+ * recommend fee list
+ */
+export const RECOMMEND_FEE= "RECOMMEND_FEE"
+
+/**
+ * recommend fee list
+ */
+export const SCAM_LIST= "SCAM_LIST"
+
+/**
+ * Locally stored network change flag
+ */
+export const NET_WORK_CHANGE_FLAG = "NET_WORK_CHANGE_FLAG"
+
+
+/**
+ * wallet page show testnet list
+ */
+export const NETWORK_SHOW_TESTNET = "NETWORK_SHOW_TESTNET"
+
+
+
+export const ZKAPP_APPROVE_LIST = "ZKAPP_APPROVE_LIST"

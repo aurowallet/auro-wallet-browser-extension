@@ -1,15 +1,13 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
-import { cointypes } from "../../../../config";
-import { SEC_DELETE_ACCOUNT } from "../../../constant/secTypes";
 import {
   DAPP_DELETE_ACCOUNT_CONNECT_HIS,
   WALLET_CHANGE_ACCOUNT_NAME,
   WALLET_CHANGE_DELETE_ACCOUNT,
   WALLET_DELETE_WATCH_ACCOUNT,
-} from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
+} from "../../../constant/msgTypes";
+import { ACCOUNT_TYPE, SEC_FROM_TYPE } from "../../../constant/commonType";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { JSonToCSV } from "../../../utils/JsonToCSV";
@@ -41,6 +39,7 @@ const AccountInfo = ({}) => {
 
   const [currentModal, setCurrentModal] = useState({});
   const [showSecurity, setShowSecurity] = useState(false);
+  const [resetModalBtnStatus,setResetModalBtnStatus] = useState(true)
 
   const onCloseModal = useCallback(() => {
     setPopupModalStatus(false);
@@ -85,6 +84,7 @@ const AccountInfo = ({}) => {
       content: "",
       inputPlaceholder: i18n.t("accountNameLimit"),
       maxInputLength: 16,
+      rightBtnStyle:""
     });
     setPopupModalStatus(true);
   }, [i18n]);
@@ -96,33 +96,51 @@ const AccountInfo = ({}) => {
     });
   }, []);
 
-  const deleteAccount = useCallback(() => {
-    if (account.type === ACCOUNT_TYPE.WALLET_WATCH) {
-      Loading.show();
-      sendMsg(
-        {
-          action: WALLET_DELETE_WATCH_ACCOUNT,
-          payload: {
-            address: account.address,
-          },
+  const onConfirmDeleteLedger = useCallback(()=>{
+    setPopupModalStatus(false);
+    Loading.show();
+    sendMsg(
+      {
+        action: WALLET_DELETE_WATCH_ACCOUNT,
+        payload: {
+          address: account.address,
         },
-        async (currentAccount) => {
-          Loading.hide();
-          if (currentAccount.error) {
-            if (currentAccount.type === "local") {
-              Toast.info(i18n.t(currentAccount.error));
-            } else {
-              Toast.info(currentAccount.error);
-            }
+      },
+      async (currentAccount) => {
+        Loading.hide();
+        if (currentAccount.error) {
+          if (currentAccount.type === "local") {
+            Toast.info(i18n.t(currentAccount.error));
           } else {
-            dispatch(updateCurrentAccount(currentAccount));
-
-            setTimeout(() => {
-              history.goBack();
-            }, 300);
+            Toast.info(currentAccount.error);
           }
+        } else {
+          dispatch(updateCurrentAccount(currentAccount));
+
+          setTimeout(() => {
+            history.goBack();
+          }, 300);
         }
-      );
+      }
+    );
+  },[account])
+  const onClickDeleteLedger = useCallback(()=>{
+    setResetModalBtnStatus(false)
+    setCurrentModal({
+      title: i18n.t('deleteAccount'),
+      leftBtnContent: i18n.t("cancel"), 
+      rightBtnContent: i18n.t("deleteTag"),
+      type: PopupModal_type.common,
+      onLeftBtnClick: onCloseModal,
+      onRightBtnClick: onConfirmDeleteLedger,
+      content: "",
+      rightBtnStyle:styles.modalDelete
+    });
+    setPopupModalStatus(true);
+  },[i18n])
+  const deleteAccount = useCallback(() => {
+    if (account.type === ACCOUNT_TYPE.WALLET_WATCH||account.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      onClickDeleteLedger()
     } else {
       setShowSecurity(true);
     }
@@ -165,7 +183,7 @@ const AccountInfo = ({}) => {
           if (currentAccount.error) {
             if (currentAccount.type === "local") {
               if (currentAccount.error === "passwordError") {
-                Toast.info(i18n.t("incorrectSecurityPassword"));
+                Toast.info(i18n.t("passwordError"));
               } else {
                 Toast.info(i18n.t(currentAccount.error));
               }
@@ -193,7 +211,6 @@ const AccountInfo = ({}) => {
     [currentAccount, account, i18n]
   );
 
-  const [resetModalBtnStatus,setResetModalBtnStatus] = useState(true)
   const onResetModalInput = useCallback((e)=>{
     let checkStatus = e.target.value.length > 0 
     if (checkStatus) {
@@ -205,7 +222,7 @@ const AccountInfo = ({}) => {
 
   if (showSecurity) {
     return (
-      <SecurityPwd onClickCheck={onClickCheck} action={SEC_DELETE_ACCOUNT} btnTxt={i18n.t("confirm")}/>
+      <SecurityPwd onClickCheck={onClickCheck} action={SEC_FROM_TYPE.SEC_DELETE_ACCOUNT} btnTxt={i18n.t("confirm")}/>
     );
   }
   return (
@@ -219,18 +236,18 @@ const AccountInfo = ({}) => {
           <span className={styles.rowAddressContent}>{account.address}</span>
         </div>
         <div className={styles.rowInfoContainer}>
-          {isLedger && (
+          <AccountInfoRow
+            title={i18n.t("accountName")}
+            desc={account.accountName}
+            onClick={onClickAccountName}
+          />
+           {isLedger && (
             <AccountInfoRow
               title={i18n.t("hdDerivedPath")}
               desc={hdPath}
               noArrow={true}
             />
           )}
-          <AccountInfoRow
-            title={i18n.t("accountName")}
-            desc={account.accountName}
-            onClick={onClickAccountName}
-          />
           {!hideExport && (
             <AccountInfoRow
               title={i18n.t("exportPrivateKey")}
@@ -246,7 +263,7 @@ const AccountInfo = ({}) => {
                 className={cls(styles.rowTitle, styles.deleteTitle)}
                 onClick={deleteAccount}
               >
-                {i18n.t("delete")}
+                {i18n.t("deleteTag")} 
               </p>
             </div>
           </>
@@ -262,7 +279,7 @@ const AccountInfo = ({}) => {
         onLeftBtnClick={currentModal.onLeftBtnClick}
         onRightBtnClick={currentModal.onRightBtnClick}
         content={currentModal.content}
-        modalVisable={popupModalStatus}
+        modalVisible={popupModalStatus}
         onCloseModal={onCloseModal}
         inputPlaceholder={currentModal?.inputPlaceholder}
         bottomTipClass={styles.waringTip}

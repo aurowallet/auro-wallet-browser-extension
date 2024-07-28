@@ -75,6 +75,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    text-transform: capitalize;
 }
 
 .dividedLine {
@@ -86,4 +87,7 @@
 }
 .waringTip {
     color: rgba(228, 178, 0, 1);
+}
+.modalDelete {
+    color: #d65a5a;
 }

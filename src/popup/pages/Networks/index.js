@@ -1,192 +1,185 @@
-import cls from "classnames";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NET_CONFIG_VERSION } from "../../../../config";
-import { removeLocal, saveLocal } from "../../../background/localStorage";
-import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG } from "../../../constant/storageKey";
-import { updateShouldRequest, updateStakingRefresh } from "../../../reducers/accountReducer";
-import { NET_CONFIG_ADD, NET_CONFIG_DEFAULT, updateNetConfig } from "../../../reducers/network";
-import { addressSlice, sendNetworkChangeMsg } from "../../../utils/utils";
-
+import { NET_WORK_CONFIG_V2 } from "../../../constant/storageKey";
+import {
+  updateShouldRequest,
+  updateStakingRefresh,
+} from "../../../reducers/accountReducer";
+import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/network";
+import {
+  addressSlice,
+  clearLocalCache,
+  sendNetworkChangeMsg,
+} from "../../../utils/utils";
 import i18n from "i18next";
-import { useHistory } from 'react-router-dom';
+import { useHistory } from "react-router-dom";
+import { extSaveLocal } from "../../../background/extensionStorage";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
-import { NodeEditorType } from "./NodeEditor";
-import {extSaveLocal} from "../../../background/extensionStorage";
+import NetworkItem from "./NetworkItem";
+import styled from "styled-components";
+import { NetworkID_MAP } from "@/constant/network";
 
+const StyledItemWrapper = styled.div`
+  margin-top: 10px;
+`;
 
-const NetworkPage = ({ }) => {
+const NetworkPage = ({}) => {
+  const allNodeList = useSelector((state) => state.network.allNodeList);
+  const customNodeList = useSelector((state) => state.network.customNodeList);
+  const currentNode = useSelector((state) => state.network.currentNode);
 
-    const netConfigList = useSelector(state => state.network.netList)
-    const currentConfig = useSelector(state => state.network.currentConfig)
+  const [editMode, setEditMode] = useState(false);
 
-    const [editMode, setEditMode] = useState(false)
+  const dispatch = useDispatch();
+  const history = useHistory();
 
-    const dispatch = useDispatch()
-    const history = useHistory()
-
-    const { nodeList,showEditBtn } = useMemo(() => {
-
-        let defaultList = []
-        let customList = []
-        netConfigList.map((item) => {
-            if (item.type === NET_CONFIG_DEFAULT) {
-                defaultList.push(item)
-            } else {
-                customList.push(item)
-            }
-        })
-
-        let showEditBtn = customList.length > 0
-        let nodeList = [
-            {
-                title: i18n.t('defaultNode'),
-                type: NET_CONFIG_DEFAULT,
-                list: defaultList
-            },
-            {
-                title: i18n.t('customNode'),
-                type: NET_CONFIG_ADD,
-                list: customList
-            }
-        ]
-
-
-        return {
-            nodeList,showEditBtn
+  const { nodeList, showEditBtn } = useMemo(() => {
+    let defaultMainConfig;
+    let topList = [];
+    let bottomList = [];
+    
+    allNodeList.map((item) => {
+        if (item.isDefaultNode) {
+        if (item.networkID !== NetworkID_MAP.mainnet) {
+          bottomList.push(item);
+        } else {
+          defaultMainConfig = item;
         }
-    }, [netConfigList, i18n])
+      } else {
+        topList.push(item);
+      }
+    });
+    if (defaultMainConfig) {
+      topList.unshift(defaultMainConfig);
+    }
 
-    const {
-        rightBtcContent
-    } = useMemo(() => {
-        let rightBtcContent = editMode ? i18n.t('done') : i18n.t('edit')
-        return {
-            rightBtcContent
-        }
-    }, [i18n, editMode])
+    let showEditBtn = topList.length > 1;
+    let nodeList = [
+      {
+        list: topList,
+      },
+      {
+        isDefaultNodeList: true,
+        list: bottomList,
+      },
+    ];
 
-
-    const onClickEdit = useCallback(() => {
-        setEditMode(state => !state)
-    }, [editMode])
-
-    const onAddNode = useCallback(() => {
-        history.push({
-            pathname: "node_editor",
-            params: { editorType: NodeEditorType.add }
-        })
-    }, [])
-    const clearLocalCache = useCallback(() => {
-        let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS)
-        for (let index = 0; index < localCacheKeys.length; index++) {
-            const keys = localCacheKeys[index];
-            let localKey = LOCAL_CACHE_KEYS[keys]
-            removeLocal(localKey)
-        }
-    }, [])
-
-    const onClickRow = useCallback(async (nodeItem) => {
-        if (editMode) {
-            return
-        }
-        let config = {
-            netList: netConfigList,
-            currentConfig: nodeItem,
-            netConfigVersion: NET_CONFIG_VERSION
-        }
-        await extSaveLocal(NET_WORK_CONFIG, config)
-        clearLocalCache()
-
-        dispatch(updateNetConfig(config))
-        dispatch(updateShouldRequest(true))
-        dispatch(updateStakingRefresh(true))
-
-        sendNetworkChangeMsg(config.currentConfig)
-        history.goBack()
-
-    }, [netConfigList, editMode])
+    return {
+      nodeList,
+      showEditBtn,
+    };
+  }, [allNodeList, i18n]);
 
 
+  const onClickEdit = useCallback(() => {
+    setEditMode((state) => !state);
+  }, []);
 
-    const onEditItem = useCallback((nodeItem) => {
-        history.push({
-            pathname: "node_editor",
-            params: {
-                editorType: NodeEditorType.edit,
-                editItem: nodeItem
-            }
-        })
-    }, [netConfigList])
+  const onAddNode = useCallback(() => {
+    history.push({
+      pathname: "node_editor",
+    });
+  }, []);
 
-    const rightComponent = useMemo(()=>{
-        if(showEditBtn){
-            return(<p className={styles.editBtn}
-                onClick={onClickEdit}>
-                {rightBtcContent}
-            </p>)
-        }
-        return <></>
-    },[showEditBtn])
+  const onClickRow = useCallback(
+    async (nodeItem) => {
+      if (editMode) {
+        return;
+      }
 
-    return (
-        <CustomView
-            title={i18n.t('network')}
-            contentClassName={styles.contentClassName}
-            rightComponent={rightComponent}>
-            <div className={styles.innerContent}>
-                {
-                    nodeList.map((netNode, index) => {
-                        if (netNode.list.length == 0) {
-                            return <div key={index} />
-                        }
-                        let showNetType = netNode.type !== NET_CONFIG_DEFAULT
-                        return (<div key={index}>
-                            <p className={styles.nodeListTitle}>{netNode.title}</p>
-                            {
-                                netNode.list.map((nodeItem, j) => {
-                                    let select = currentConfig.url === nodeItem.url
-                                    return <div key={j} className={styles.rowContainer}>
-                                        <div className={cls(styles.nodeItemContainer, {
-                                            [styles.editMode]: editMode
-                                        })} onClick={() => onClickRow(nodeItem)}>
-                                            <div className={styles.rowleft}>
-                                                <div className={styles.rowTopContainer}>
-                                                    <div className={styles.rowTopLeftContainer}>
-                                                        <p className={styles.nodeName}>{nodeItem.name}</p>
-                                                        {showNetType && <div className={styles.nodeTypeContainer}>
-                                                            <span className={styles.nodeType}>{nodeItem.netType}</span>
-                                                        </div>}
-                                                    </div>
-                                                    {nodeItem.chainId && <p className={styles.chainId}>{addressSlice(nodeItem.chainId,6)}</p>}
-                                                </div>
-                                                <p className={styles.nodeUrl}>{nodeItem.url}</p>
-                                            </div>
-                                            {!editMode && <div className={styles.rowRight}>
-                                                {select && <img src="/img/icon_checked.svg" className={styles.checkedIcon} />}
-                                            </div>}
-                                            {editMode && showNetType && <div className={styles.rowRight} onClick={() => onEditItem(nodeItem)}>
-                                                <img src="/img/icon_edit.svg" className={styles.editIcon} />
-                                            </div>}
-                                        </div>
-                                    </div>
-                                })
-                            }
-                        </div>)
-                    })
-                }
+      let config = { 
+        currentNode: nodeItem,
+        customNodeList: customNodeList,
+        nodeConfigVersion:NET_CONFIG_VERSION
+      };
+      await extSaveLocal(NET_WORK_CONFIG_V2, config);
+      clearLocalCache();
+
+
+      dispatch(updateCurrentNode(config.currentNode));
+      dispatch(updateCustomNodeList(config.customNodeList));
+      
+      if(nodeItem.networkID !== currentNode.networkID){
+        dispatch(updateStakingRefresh(true));
+        dispatch(updateShouldRequest(true));
+      }
+
+      sendNetworkChangeMsg(config.currentNode);
+      history.goBack();
+    },
+    [customNodeList, editMode,currentNode]
+  );
+
+  const onEditItem = useCallback(
+    (nodeItem) => {
+      history.push({
+        pathname: "node_editor",
+        params: {
+          isEdit:true,
+          editItem: nodeItem,
+        },
+      });
+    },
+    []
+  );
+
+  const rightComponent = useMemo(() => {
+    if (showEditBtn) {
+      return (
+        <p className={styles.editBtn} onClick={onClickEdit}>
+          {editMode ? i18n.t("done") : i18n.t("edit")}
+        </p>
+      );
+    }
+    return <></>;
+  }, [showEditBtn, editMode]);
+
+  return (
+    <CustomView
+      title={i18n.t("network")}
+      contentClassName={styles.contentClassName}
+      rightComponent={rightComponent}
+    >
+      <div className={styles.innerContent}>
+        {nodeList.map((netNode, index) => {
+          if (netNode.list.length == 0) {
+            return <div key={index} />;
+          }
+          let showNetTitle = netNode.isDefaultNodeList;
+          return (
+            <div key={index}>
+              {showNetTitle && (
+                <div className={styles.networkTitleWrapper}>
+                  <hr className={styles.hrDotted} />
+                  <p className={styles.nodeListTitle}>{i18n.t("testnet")}</p>
+                  <hr className={styles.hrDotted} />
+                </div>
+              )}
+              {netNode.list.map((nodeItem, j) => {
+                return (
+                  <StyledItemWrapper key={j}>
+                    <NetworkItem
+                      nodeItem={nodeItem}
+                      onClickItem={onClickRow}
+                        onEditItem={onEditItem}
+                      editMode={editMode}
+                    />
+                  </StyledItemWrapper>
+                );
+              })}
             </div>
+          );
+        })}
+      </div>
 
-            <div className={styles.bottomContainer}>
-                <Button
-                    onClick={onAddNode}>
-                    {i18n.t('addNode')}
-                </Button>
-            </div>
-        </CustomView >
-    )
-}
+      <div className={styles.bottomContainer}>
+        <Button onClick={onAddNode}>{i18n.t("addNode")}</Button>
+      </div>
+    </CustomView>
+  );
+};
 
-export default NetworkPage
+export default NetworkPage;

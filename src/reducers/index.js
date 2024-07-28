@@ -7,6 +7,7 @@ import network from './network';
 import staking from "./stakingReducer";
 import tabRouteConfig from './tabRouteReducer';
 import currencyConfig from './currency';
+import ledger from './ledger'
 
 
 export const RESET_DATA = "RESET_DATA"
@@ -29,7 +30,8 @@ const appRootReducer = combineReducers({
   accountInfo,
   cache: cacheReducer,
   staking,
-  currencyConfig
+  currencyConfig,
+  ledger
 });
 
 const rootReducer = (state, action) => {

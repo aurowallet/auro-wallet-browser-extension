@@ -8,89 +8,63 @@ import 'react-circular-progressbar/dist/styles.css';
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { cointypes } from "../../../../config";
-import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo, fetchValidatorDetail } from "../../../background/api";
+import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo } from "../../../background/api";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
-import { getStakingList, updateBlockInfo, updateDaemonStatus, updateValidatorDetail } from "../../../reducers/stakingReducer";
+import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationKey } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, copyText, getAmountForUI, getNetTypeNotSupportStaking, isNumber } from "../../../utils/utils";
+import { addressSlice, copyText, isNumber } from "../../../utils/utils";
 import Button, { button_size } from "../../component/Button";
 import Clock from "../../component/Clock";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from './index.module.scss';
+import { MAIN_COIN_CONFIG } from "@/constant";
 
 const Staking = ({ }) => {
 
-  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
   const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
-  const netType = useSelector(state => state.network.currentConfig.netType)
   const block = useSelector(state => state.staking.block)
-  const validatorDetail = useSelector(state => state.staking.validatorDetail)
+  const daemonStatus = useSelector(state => state.staking.daemonStatus)
   const dispatch = useDispatch()
 
-  const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === netAccount.delegate ? "" : netAccount.delegate)
+  const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === mainTokenNetInfo?.delegateAccount?.publicKey ? "" : mainTokenNetInfo?.delegateAccount?.publicKey)
   const [loading, setLoading] = useState(false)
-  const [isUnknow, setIsUnknow] = useState(getNetTypeNotSupportStaking(netType))
-  const isFirstRequest = useRef(!isNumber(validatorDetail.totalDelegated));
+  const isFirstRequest = useRef(!isNumber(daemonStatus?.consensusConfiguration?.slotsPerEpoch));
 
   const closeLoading = useCallback(()=>{
     setLoading(false)
     isFirstRequest.current = false
   },[])
-  const fetchData = useCallback((isSlient = false) => {
-    if (isUnknow) {
-      return
-    }
-    if (isFirstRequest.current && !isSlient) {
+  const fetchData = useCallback((isSilent = false) => {
+    if (isFirstRequest.current && !isSilent) {
       setLoading(true)
     }
     Promise.all([fetchDelegationInfo(currentAddress),fetchDaemonStatus()]).then((data)=>{
       let account = data[0]
       let delegateKey = currentAddress === account.delegate ? "" : account.delegate;
       setDelegatePublicKey(delegateKey)
-      
+      dispatch(updateDelegationKey(delegateKey));
       let daemonStatus = data[1]
       if (daemonStatus.stateHash) {
         dispatch(updateDaemonStatus(daemonStatus));
         fetchBlockInfo(daemonStatus.stateHash).then((block) => {
           if (block.protocolState) {
             dispatch(updateBlockInfo(block));
-            if (delegateKey && isNumber(block.protocolState?.consensusState?.epoch)) {
-              fetchValidatorDetail(delegateKey,block.protocolState.consensusState.epoch).then((validatorDetail) => {
-                if(isNumber(validatorDetail.countDelegates)){
-                  dispatch(updateValidatorDetail(validatorDetail));
-                }
-              }).finally(() => {
-                closeLoading()
-              })
-            }else{
-              closeLoading()
-            }
-          }else{
-            closeLoading()
           }
-        }).finally(()=>{
           closeLoading()
-        });
+        })
       }else{
         closeLoading()
       }
     }).catch(()=>{
-      setLoading(false)
+      closeLoading()
     })
-  }, [currentAddress, isUnknow,block.protocolState])
+  }, [currentAddress,block.protocolState])
 
 
-  useEffect(() => {
-    setIsUnknow(getNetTypeNotSupportStaking(netType))
-  }, [netType])
-
-
-
-
-  const baseFetchData = useCallback((isSlient = false) => {
-    fetchData(isSlient)
+  const baseFetchData = useCallback((isSilent = false) => {
+    fetchData(isSilent)
     dispatch(getStakingList())
   }, [])
 
@@ -106,10 +80,10 @@ const Staking = ({ }) => {
     const { staking_guide, staking_guide_cn } = cache
     let lan = i18n.language
     let url = ""
-    if (lan === LANG_SUPPORT_LIST.EN) {
-      url = staking_guide
-    } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
+    if (lan === LANG_SUPPORT_LIST.zh_CN) {
       url = staking_guide_cn
+    } else {
+      url = staking_guide
     }
     if (url) {
       openTab(url)
@@ -120,33 +94,16 @@ const Staking = ({ }) => {
 
   return (<CustomView
     title={i18n.t('staking')}
-    customeTitleClass={styles.customeTitleClass}
+    customTitleClass={styles.customTitleClass}
     contentClassName={styles.contentClassName}>
     <EpochInfo />
     {
-      // isUnknow ? <UnknownView onClickGuide={onClickGuide} />: 
         loading ? <LoadingView onClickGuide={onClickGuide} /> : (delegatePublicKey ? <DelegationInfo delegatePublicKey={delegatePublicKey} onClickGuide={onClickGuide}/> : <EmptyView onClickGuide={onClickGuide} />)
     }
     <Clock schemeEvent={() => baseFetchData(true)} />
   </CustomView>)
 }
-const UnknownView = ({ onClickGuide }) => {
-  return (
-    <div className={styles.delegationContainer}>
-      <div className={styles.delegationRow}>
-        <div className={styles.rowTitleContainer}>
-          <img className={styles.rowIcon} src="/img/icon_Epoch.svg" />
-          <p className={styles.rowTitle}>{i18n.t('delegationInfo')}</p>
-        </div>
-        <p className={styles.rowHelp} onClick={onClickGuide}>{i18n.t("stakingGuide")}</p>
-      </div>
-      <div className={styles.unknowContainer}>
-        <img className={styles.unknowIcon} src="/img/icon_empty.svg" />
-        <p className={styles.unknowTip}>{i18n.t('unknownInfo')}</p>
-      </div>
-    </div>
-  )
-}
+
 const LoadingView = ({
   onClickGuide
 }) => {
@@ -203,7 +160,7 @@ const DelegationInfo = ({
 
   const history = useHistory()
   const stakingList = useSelector(state => state.staking.stakingList)
-  const validatorDetail = useSelector(state => state.staking.validatorDetail)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
 
   const onChangeNode = useCallback(() => {
     history.push({
@@ -215,20 +172,9 @@ const DelegationInfo = ({
   }, [delegatePublicKey])
 
   const {
-    showNodeAddress, showtotalStake, nodeName,showDelegations
+    showNodeAddress, nodeName,stakedBalance
   } = useMemo(() => {
     let showNodeAddress = addressSlice(delegatePublicKey)
-    let showtotalStake = "0"  
-    if(isNumber(validatorDetail.totalDelegated)){
-      showtotalStake = getAmountForUI(validatorDetail.totalDelegated,0,0)
-    }
-    showtotalStake = showtotalStake + " " + cointypes.symbol
-    let showDelegations = validatorDetail.countDelegates
-    if(isNumber(validatorDetail.countDelegates)){
-      showDelegations = getAmountForUI(validatorDetail.countDelegates,0,0) 
-    }else{
-      showDelegations = "0"
-    }
     
     let nodeName = showNodeAddress
     if (delegatePublicKey) {
@@ -237,10 +183,12 @@ const DelegationInfo = ({
         nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress, 8);
       }
     }
+    let stakedBalance = mainTokenNetInfo?.tokenBaseInfo?.showBalance || "0.00"
+    stakedBalance = stakedBalance + " "+ MAIN_COIN_CONFIG.symbol
     return {
-      showNodeAddress, showtotalStake, nodeName,showDelegations
+      showNodeAddress, nodeName,stakedBalance
     }
-  }, [delegatePublicKey, validatorDetail, stakingList])
+  }, [delegatePublicKey, stakingList,mainTokenNetInfo])
  
   return (<div className={styles.delegationContainer}>
     <div className={styles.delegationRow}>
@@ -255,8 +203,7 @@ const DelegationInfo = ({
       <div className={styles.rowLeft}>
         <RowItem title={i18n.t('blockProducerName')} content={nodeName} />
         <RowItem title={i18n.t('blockProducerAddress')} content={showNodeAddress} copyContent={delegatePublicKey} isMargin={true}/>
-        {showtotalStake &&<RowItem title={i18n.t('totalStake')} content={showtotalStake} isMargin={true} />}
-        {showDelegations && <RowItem title={i18n.t('totalDelegators')} content={showDelegations} isMargin={true} />}
+        <RowItem title={i18n.t('stakedBalance')} content={stakedBalance} isMargin={true} />
       </div>
       <div className={styles.rowRight}>
         <Button
@@ -346,7 +293,7 @@ const EpochInfo = ({ }) => {
 
         <div className={cls(styles.rowItem, styles.mgtM10)}>
           <p className={styles.label}>Slot</p>
-          <span className={styles.highlightContent}>{epochData.slot} / <span className={styles.content}>{epochData.slotsPerEpoch}</span></span>
+          <span className={styles.highlightContent}>{epochData.slot} <span className={styles.content}>/ {epochData.slotsPerEpoch}</span></span>
         </div>
 
         <div className={cls(styles.rowItem, styles.mgtM10)}>

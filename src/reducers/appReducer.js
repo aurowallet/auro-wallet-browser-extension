@@ -1,4 +1,4 @@
-import { DEFAULT_LANGUAGE } from "../../config";
+import { DEFAULT_LANGUAGE } from "../constant";
 
 const SET_LANGUAGE = "SET_LANGUAGE"
 

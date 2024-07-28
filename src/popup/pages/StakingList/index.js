@@ -1,26 +1,23 @@
 import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import 'react-circular-progressbar/dist/styles.css';
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { getStakingList } from "../../../reducers/stakingReducer";
-import { addressSlice, getAmountForUI, showNameSlice } from "../../../utils/utils";
-import Toast from "../../component/Toast";
-import Button from "../../component/Button";
+import { ValidatorsLaunch } from "../../../constant";
+import { addressSlice, showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
-import styles from './index.module.scss';
 import Input from "../../component/Input";
-import { NET_CONFIG_TYPE } from "../../../constant/walletType";
-import { cointypes } from "../../../../config";
+import styles from './index.module.scss';
+import { NetworkID_MAP } from "@/constant/network";
 
 const StakingList = ({ }) => {
 
   const history = useHistory()
   const dispatch = useDispatch()
-  const netType = useSelector(state => state.network.currentConfig.netType)
+  const networkID = useSelector(state => state.network.currentNode.networkID)
   const stakingList = useSelector(state => {
-    if(netType === NET_CONFIG_TYPE.Mainnet){
+    if(networkID === NetworkID_MAP.mainnet){
       return state.staking.stakingList
     }
     return []
@@ -41,16 +38,14 @@ const StakingList = ({ }) => {
 
   const onClickRow = useCallback((nodeItem) => {
     setCurrentSelectAddress(nodeItem.nodeAddress)
+    let nextParams = {
+      pathname: "/staking_transfer",
+      params: nodeItem
+    }
     if (fromPage === 'stakingTransfer') {
-      history.replace({
-        pathname: "/staking_transfer",
-        params: nodeItem
-      });
+      history.replace(nextParams);
     } else {
-      history.push({
-        pathname: "/staking_transfer",
-        params: nodeItem
-      });
+      history.push(nextParams);
     }
   }, [fromPage])
 
@@ -95,7 +90,7 @@ const StakingList = ({ }) => {
       }
       <div className={styles.manualAddContainer} >
         <p onClick={onClickManual} className={styles.manualAddContent}>{i18n.t('manualAdd')}</p>
-        <a href={"https://github.com/aurowallet/launch/tree/master/validators"} 
+        <a href={ValidatorsLaunch} 
           target="_blank"
           className={styles.manualSubmit}>
           {i18n.t("submitNode")}
@@ -110,41 +105,36 @@ const NodeItem = ({
   nodeItem,
   currentSelectAddress,
 }) => {
+  const delegationKey = useSelector(state => state.staking.delegationKey)
   const {
-    select, showName, showAddress,showTotalStake,showDelegations
+    select, showName, showAddress,isChecked
   } = useMemo(() => {
     let select = nodeItem.nodeAddress === currentSelectAddress
 
     let showName = nodeItem.nodeName
     if(showName.length>=16){
-      showName = showNameSlice(nodeItem.nodeName,13)
+      showName = showNameSlice(nodeItem.nodeName,16)
     }
     let showAddress = addressSlice(nodeItem.nodeAddress, 6)
-    const showTotalStake = nodeItem.totalStake + " " + cointypes.symbol
-    const showDelegations = getAmountForUI(nodeItem.delegations,0,0) + " " + i18n.t('delegators')
+    let isChecked = delegationKey === nodeItem.nodeAddress
     return {
-      select, showName, showAddress,showTotalStake,showDelegations
+      select, showName, showAddress,isChecked
     }
-  }, [nodeItem, currentSelectAddress,i18n])
+  }, [nodeItem, currentSelectAddress,i18n,delegationKey])
   return(<div className={styles.rowContainer}>
      <div className={cls(styles.nodeItemContainer, {
       [styles.selectedBorder]:select
     })} onClick={() => onClickRow(nodeItem)}>
-      <div className={styles.rowleft}>
+      <div className={styles.rowLeft}>
           <NodeIcon nodeItem={nodeItem}/>
           <div className={styles.nodeInfoCon}>
             <p className={styles.nodeName}>{showName}</p>
             <p className={styles.nodeAddress}>{showAddress}</p>
           </div>
       </div>
-      <div className={styles.rowRight}>
-        <p className={styles.numberTitle}>
-        {showTotalStake}
-        </p>
-        <p className={cls(styles.nodeAddress,styles.rightTxt)}>
-            {showDelegations}
-        </p>
-      </div>
+      {isChecked && <div className={styles.rowRight}> 
+         <img src="/img/icon_checked.svg" />
+      </div>}
     </div>
   </div>)
 }

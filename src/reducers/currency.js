@@ -23,14 +23,14 @@ const currency = (state = initState, action) => {
     switch (action.type) {
         case CHANGE_CURRENCY_SELECT:
             let list = action.list
-            let currenct = list.filter((item)=>{
+            let currency = list.filter((item)=>{
                 return item.isSelect
             })
-            currenct = currenct.length >0 ? currenct[0] :{}
+            currency = currency.length >0 ? currency[0] :{}
             return {
                 ...state,
                 currencyList: action.list,
-                currentCurrency: currenct,
+                currentCurrency: currency,
             };
         default:
             return state;

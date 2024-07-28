@@ -79,12 +79,13 @@
     @extend .baseBtn;
     color: #594af1;
     border-bottom-right-radius: 12px;
+    text-transform: capitalize;
     &:hover {
         background: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(0, 0, 0, 0.05);
     }
 }
 
-.dividLine {
+.divideLine {
     border: 0.5px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -93,6 +94,7 @@
 }
 .rightBtnDisable{
     color: rgba(0, 0, 0, 0.3) !important;
+    cursor: not-allowed;
     &:hover {
         background: transparent;
     }

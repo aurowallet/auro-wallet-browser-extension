@@ -1,7 +1,7 @@
 .contentClassName {
   padding: 10px 20px 0px;
 }
-.customeTitleClass {
+.customTitleClass {
   left: 46px;
   transform: unset;
 }
@@ -150,7 +150,6 @@
   flex: 1;
   display: flex;
   justify-content: flex-end;
-  align-items: flex-end;
 }
 
 .rowItem {
@@ -190,7 +189,7 @@
     margin-bottom: 12px;
   }
   .emptyContent {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 18px;
     color: rgba(0, 0, 0, 0.5);
     margin: 12px 0px 20px;
@@ -233,11 +232,11 @@
   margin: 10px 0px 0px;
 }
 
-.unknowContainer {
+.unknownContainer {
   @extend .loadingContainer;
   margin-top: 20px;
 
-  .unknowTip {
+  .unknownTip {
     font-size: 12px;
     line-height: 17px;
     color: rgba(0, 0, 0, 0.3);

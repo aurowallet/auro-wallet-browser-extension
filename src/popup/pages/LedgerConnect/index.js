@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import Transport from "@ledgerhq/hw-transport-webusb";
 import { MinaLedgerJS } from "mina-ledger-js";
-import { LEDGER_CONNECTED_SUCCESSFULLY } from "../../../constant/types";
+import { LEDGER_CONNECTED_SUCCESSFULLY } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 
 import styles from "./index.module.scss";

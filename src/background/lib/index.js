@@ -1,19 +1,20 @@
 import BigNumber from "bignumber.js";
-import { cointypes } from '../../../config';
-import { getCurrentNetConfig, getRealErrorMsg } from '../../utils/utils';
-import { NET_CONFIG_TYPE } from '../../constant/walletType';
+import { MAIN_COIN_CONFIG } from "../../constant";
+import { getCurrentNodeConfig, getMessageFromCode, getRealErrorMsg } from '../../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
+import { errorCodes } from "@/constant/dappError";
+import { NetworkID_MAP } from "@/constant/network";
 
-async function getSignClient(){
-    let netConfig = await getCurrentNetConfig()
-    let netType = ''
+export async function getSignClient(){
+    let netConfig = await getCurrentNodeConfig()
+    let networkID = ''
     const { default: Client } = await import('mina-signer')
-    if(netConfig.netType){
-      netType = netConfig.netType
+    if(netConfig.networkID){
+        networkID = netConfig.networkID
     }
     let client
-    if(netType === NET_CONFIG_TYPE.Mainnet){
+    if(networkID === NetworkID_MAP.mainnet){
         client = new Client({ network: "mainnet" });
     }else{
         client = new Client({ network: "testnet" });
@@ -36,7 +37,7 @@ export async  function signPayment(privateKey, fromAddress, toAddress, amount, f
     try {
         let signClient = await getSignClient()
 
-        let decimal = new BigNumber(10).pow(cointypes.decimals)
+        let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
         let sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber()
         let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber()
         signedPayment = signClient.signPayment({
@@ -58,7 +59,7 @@ export async function stakePayment(privateKey, fromAddress, toAddress, fee, nonc
     let signedStakingPayment
     try {
         let signClient = await getSignClient()
-        let decimal = new BigNumber(10).pow(cointypes.decimals)
+        let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
         let sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber()
         signedStakingPayment = signClient.signStakeDelegation({
             to: toAddress,
@@ -81,16 +82,11 @@ export async function stakePayment(privateKey, fromAddress, toAddress, fee, nonc
  * @param {*} message
  * @returns
  */
-export async function signMessagePayment(privateKey, fromAddress, message) {
+export async function signMessagePayment(privateKey, message) {
     let signedResult
     try {
-        let keys = {
-            privateKey: privateKey,
-            publicKey: fromAddress
-        }
         let signClient = await getSignClient()
-        signedResult = signClient.signMessage(message, keys)
-        signedResult = signedResult.signature
+        signedResult = signClient.signMessage(message, privateKey)
     } catch (error) {
         signedResult = { error: { message: i18n.t("buildFailed") } }
     }
@@ -110,11 +106,29 @@ export async function verifyMessage(publicKey,signature,verifyMessage) {
         }
         verifyResult = signClient.verifyMessage(verifyBody)
     } catch (error) {
-        verifyResult = { error: { message: "verify failed" } }
+        verifyResult = { message: getMessageFromCode(errorCodes.verifyFailed),code:errorCodes.verifyFailed } 
     }
     return verifyResult
 }
 
+/** build payment and delegation tx body */
+function buildSignTxBody(params){
+    const sendAction = params.sendAction
+    let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
+    let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
+    let signBody = {
+            to: params.toAddress,
+            from: params.fromAddress,
+            fee: sendFee,
+            nonce: params.nonce,
+            memo:params.memo||""
+        }
+    if(sendAction === DAppActions.mina_sendPayment){
+        let sendAmount = new BigNumber(params.amount).multipliedBy(decimal).toNumber()
+        signBody.amount = sendAmount
+    }
+    return signBody
+}
 
 /** QA net sign */
 export async function signTransaction(privateKey,params){
@@ -126,7 +140,7 @@ export async function signTransaction(privateKey,params){
         if(params.sendAction === DAppActions.mina_signMessage){
             signBody = params.message
         }else if (params.sendAction === DAppActions.mina_sendTransaction){
-            let decimal = new BigNumber(10).pow(cointypes.decimals)
+            let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
             let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
             signBody={
                 zkappCommand: JSON.parse(params.transaction),
@@ -138,20 +152,7 @@ export async function signTransaction(privateKey,params){
                 },
             }
         }else{
-            let decimal = new BigNumber(10).pow(cointypes.decimals)
-            let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
-            signBody = {
-                to: params.toAddress,
-                from: params.fromAddress,
-                fee: sendFee,
-                nonce: params.nonce,
-                memo:params.memo||""
-            }
-
-            if(params.sendAction === DAppActions.mina_sendPayment){
-                let sendAmount = new BigNumber(params.amount).multipliedBy(decimal).toNumber()
-                signBody.amount = sendAmount
-            }
+            signBody = buildSignTxBody(params)
         }
         signResult = signClient.signTransaction(signBody, privateKey)
     } catch (err) {
@@ -192,7 +193,22 @@ export async function verifyFieldsMessage(publicKey,signature,fields) {
         }
         verifyResult = signClient.verifyFields(verifyBody)
     } catch (error) {
-        verifyResult = { error: { message: "verify failed" } }
+        verifyResult = { message: getMessageFromCode(errorCodes.verifyFailed),code:errorCodes.verifyFailed }
     }
     return verifyResult
+}
+
+export async function createNullifier(privateKey,params){
+    let createResult
+    try {
+        let fields = params.message
+        const nextFields = fields.map(BigInt)
+        let signClient = await getSignClient()
+        createResult = signClient.createNullifier(nextFields, privateKey)
+        createResult.data = fields
+    } catch (err) {
+        let errorMessage = getRealErrorMsg(err)||i18n.t("buildFailed")
+        createResult = { error: { message: errorMessage } }
+    }
+    return createResult
 }

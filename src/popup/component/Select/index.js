@@ -2,6 +2,7 @@ import cls from "classnames";
 import { useCallback, useEffect, useState } from "react";
 import { showNameSlice } from "../../../utils/utils";
 import styles from "./index.module.scss";
+import i18n from "i18next";
 
 const Select = ({
     value = "",
@@ -47,9 +48,9 @@ const Select = ({
                 onClick={onClickEntry}
             >
                 <p className={styles.selectTitle}>
-                    {showNameSlice(currentLabel)}
+                    {showNameSlice(currentLabel,10)}
                 </p>
-                <div className={styles.arrowtIcon}>
+                <div className={styles.arrowIcon}>
                 <img src="/img/icon_arrow_unfold.svg"  />
                 </div>
             </div>
@@ -58,6 +59,13 @@ const Select = ({
                 <div className={styles.optionsContainer}>
                     {
                         optionList.map((option, index) => {
+                            if(option.type === 'dividedLine'){
+                                return  <div key={index} className={styles.networkTitleWrapper}>
+                                <hr className={styles.hrDotted} />
+                                <p className={styles.nodeListTitle}>{i18n.t('testnet')}</p>
+                                <hr className={styles.hrDotted} />
+                              </div>
+                            }
                             let isSelect = value == option.value
                             return <Option onClick={() => onClickOption(option)} isSelect={isSelect} key={index} label={option.label} value={option.value} />
                         })
@@ -76,7 +84,7 @@ const Option = ({ label, value, isSelect, onClick }) => {
         className={cls(styles.optionContainer, {
             [styles.selectedOption]: isSelect
         })}>
-        {showNameSlice(label)}
+        {showNameSlice(label,10)}
     </div>)
 }
 

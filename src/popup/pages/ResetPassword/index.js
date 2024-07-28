@@ -2,7 +2,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory } from 'react-router-dom';
-import { WALLET_CHANGE_SEC_PASSWORD } from "../../../constant/types";
+import { WALLET_CHANGE_SEC_PASSWORD } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import { matchList } from "../../../utils/validator";
 import Button from "../../component/Button";
@@ -88,7 +88,7 @@ const Reset = ({ }) => {
         })
     }, [oldPassword, confirmPassword, newPassword, history, i18n])
 
-    return (<CustomView title={i18n.t('changeSecurityPassword')} >
+    return (<CustomView title={i18n.t('changePassword')} >
         <div className={cls(styles.inputContainer, {
         })}>
             <Input

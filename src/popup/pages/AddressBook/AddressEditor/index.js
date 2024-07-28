@@ -25,6 +25,8 @@ const AddressEditor = ({ }) => {
     const [reminderModalStatus, setReminderModalStatus] = useState(false)
 
     const [btnStatus,setBtnStatus] = useState(true)
+    const [errorTip, setErrorTip] = useState('')
+
     const {
         editorType, editIndex, editItem
     } = useMemo(() => {
@@ -51,7 +53,6 @@ const AddressEditor = ({ }) => {
             return ""
         }
     })
-    const [errorTip, setErrorTip] = useState('')
 
 
     const {
@@ -116,8 +117,8 @@ const AddressEditor = ({ }) => {
             }
 
             let currentAddress = list[editIndex]
-            currentAddress.address = addressValue
-            currentAddress.name = addressName
+            currentAddress.address = address
+            currentAddress.name = name
             list[editIndex] = currentAddress
 
             saveLocal(ADDRESS_BOOK_CONFIG, JSON.stringify(list))
@@ -178,7 +179,7 @@ const AddressEditor = ({ }) => {
             editorType === AddressEditorType.edit &&
             <p className={styles.deleteBtn}
                 onClick={onClickDelete}>
-                {i18n.t('delete')}
+                {i18n.t('deleteTag')}
             </p>
         }
     >
@@ -212,10 +213,10 @@ const AddressEditor = ({ }) => {
             title={i18n.t('deleteAddress')}
             leftBtnContent={i18n.t('cancel')}
             onLeftBtnClick={onCancel}
-            rightBtnContent={i18n.t('delete')}
+            rightBtnContent={i18n.t('deleteTag')}
             onRightBtnClick={onCloseModal}
             rightBtnStyle={styles.modalDelete}
-            modalVisable={reminderModalStatus} />
+            modalVisible={reminderModalStatus} />
 
     </CustomView>)
 }

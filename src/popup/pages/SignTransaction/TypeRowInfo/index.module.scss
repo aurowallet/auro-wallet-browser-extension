@@ -1,0 +1,29 @@
+.container {
+    > :not(:first-child) {
+        margin-top: 10px;
+    }
+    .rowTitle2 {
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .rowContent {
+        font-weight: 400;
+        color: rgba(0, 0, 0, 0.8);
+    }
+    .mt10 {
+        margin-top: 10px;
+    }
+    .loopWrapper {
+        > :not(:first-child) {
+            margin-top: 6px;
+        }
+    }
+
+    .viewRow {
+        display: flex;
+    }
+    .rowContentContainer {
+        white-space: pre;
+    }
+}

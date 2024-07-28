@@ -4,16 +4,15 @@ import { useDispatch } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { clearLocalExcept, getLocal, saveLocal } from "../../../background/localStorage";
 import { clearStorage } from "../../../background/storageService";
-import { POWER_BY } from "../../../constant";
-import { CURRENCY_UNIT } from "../../../constant/pageType";
-import { CURRENCY_UNIT_CONFIG, LOCAL_BASE_INFO, NET_WORK_CONFIG } from "../../../constant/storageKey";
-import { RESET_WALLET, WALLET_APP_SUBMIT_PWD } from "../../../constant/types";
+import { CURRENCY_UNIT, POWER_BY } from "../../../constant";
+import { CURRENCY_UNIT_CONFIG, LOCAL_BASE_INFO, NET_WORK_CONFIG_V2 } from "../../../constant/storageKey";
+import { RESET_WALLET, WALLET_APP_SUBMIT_PWD } from "../../../constant/msgTypes";
 import { resetWallet } from "../../../reducers";
 import { initCurrentAccount } from "../../../reducers/accountReducer";
 import { updateExtensionBaseInfo } from "../../../reducers/cache";
 import { updateCurrencyConfig } from "../../../reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
-import { updateNetConfig } from "../../../reducers/network";
+import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/network";
 import { sendMsg } from "../../../utils/commonMsg";
 import { sendNetworkChangeMsg } from "../../../utils/utils";
 import Button from "../../component/Button";
@@ -23,6 +22,9 @@ import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 import {extGetLocal, extSaveLocal} from "../../../background/extensionStorage";
+import extension from "extensionizer";
+import { DefaultMainnetConfig } from "@/constant/network";
+import { NET_CONFIG_VERSION } from "../../../../config";
 
 export const LockPage = ({
     onClickUnLock = () => { },
@@ -40,7 +42,6 @@ export const LockPage = ({
 
     const onPwdInput = useCallback((e) => {
         let value = e.target.value
-        value = value.trim()
         setPwdValue(value)
     }, [])
 
@@ -70,7 +71,7 @@ export const LockPage = ({
                 } else {
                     dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
                     dispatch(initCurrentAccount(account))
-                    onClickUnLock()
+                    onClickUnLock(account)
                     if (!onDappConfirm) {
                         history.push("/homepage")
                     }
@@ -103,16 +104,18 @@ export const LockPage = ({
         sendMsg({
             action: RESET_WALLET,
         }, async () => {
-            const localNetConfig = await extGetLocal(NET_WORK_CONFIG)
             clearStorage()
-            await extSaveLocal(NET_WORK_CONFIG,localNetConfig)
+            await extSaveLocal(NET_WORK_CONFIG_V2,{
+                currentNode: DefaultMainnetConfig,
+                customNodeList: [],
+                nodeConfigVersion:NET_CONFIG_VERSION
+            })
             let baseInfo = getLocal(LOCAL_BASE_INFO)
             clearLocalExcept()
             dispatch(resetWallet())
-            if (localNetConfig) {
-                dispatch(updateNetConfig(localNetConfig))
-                sendNetworkChangeMsg(localNetConfig.currentConfig)
-            }
+            dispatch(updateCurrentNode(DefaultMainnetConfig));
+            dispatch(updateCustomNodeList([]));
+            sendNetworkChangeMsg(DefaultMainnetConfig)
             if (baseInfo) {
                 baseInfo = JSON.parse(baseInfo)
                 dispatch(updateExtensionBaseInfo(baseInfo))
@@ -123,7 +126,9 @@ export const LockPage = ({
             dispatch(updateCurrencyConfig(currencyList))
             saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList[0].key))
 
-            history.push("/welcome_page")
+            extension.tabs.create({
+                url: "popup.html#/register_page",
+            });
         })
     }, [])
 
@@ -156,14 +161,14 @@ export const LockPage = ({
                 <div className={styles.logoContainer}>
                     <img src="/img/colorful_logo.svg" className={styles.logo} />
                 </div>
-                <p className={styles.welcomBack}>
+                <p className={styles.welcomeBack}>
                     {i18n.t('welcomeBack')}
                 </p>
                 <FormView >
                     <div className={styles.pwdInputContainer}>
                         <Input
                             label={i18n.t('password')}
-                            placeholder={i18n.t('enterSecurityPwd')}
+                            placeholder={i18n.t('enterPwd')}
                             onChange={onPwdInput}
                             value={pwdValue}
                             inputType={'password'}
@@ -185,23 +190,23 @@ export const LockPage = ({
                 title={i18n.t('reset_tip_1')}
                 leftBtnContent={i18n.t('cancel')}
                 rightBtnContent={i18n.t("reset")}
-                rightBtnStyle={styles.rigntBtn}
+                rightBtnStyle={styles.rightBtn}
                 type={PopupModal_type.warning}
                 onLeftBtnClick={onCloseWarningModal}
                 onRightBtnClick={onConfirmResetClick}
                 content={i18n.t('reset_tip_2')}
-                modalVisable={waringModalStatus}
+                modalVisible={waringModalStatus}
                 onCloseModal={onCloseWarningModal}
             />
 
             <PopupModal
-                title={i18n.t('confirm_reset_tip')}
+                title={i18n.t('confirm_reset_tip',{ deleteTag:i18n.t("deleteTag") })}
                 leftBtnContent={i18n.t('cancel')}
                 rightBtnContent={i18n.t("confirm")}
                 type={PopupModal_type.input}
                 onLeftBtnClick={onCloseResetModal}
                 onRightBtnClick={onConfirmDeleteClick}
-                modalVisable={resetModalStatus}
+                modalVisible={resetModalStatus}
                 onCloseModal={onCloseResetModal}
                 rightBtnDisable={resetModalBtnStatus}
                 onInputChange={onResetModalInput}

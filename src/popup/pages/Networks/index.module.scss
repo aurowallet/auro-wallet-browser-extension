@@ -11,7 +11,7 @@
     cursor: pointer;
 }
 
-.innerContent{
+.innerContent {
     flex: 1;
     padding: 0px 20px;
 }
@@ -24,98 +24,29 @@
     background-color: white;
 }
 
+.networkTitleWrapper {
+    margin: 10px 0px;
+    display: flex;
+    justify-content: center;
+}
 .nodeListTitle {
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 17px;
-    color: #000000;
-    margin: 20px 0px 0px;
+    font-weight: 400;
+    font-size: 12px;
+    color: #808080;
+    padding: 0 10px;
+    text-transform: capitalize;
+    white-space:nowrap; 
+}
+.hrDotted {
+    width: 100%;
+    height: 0;
+    border: 0.5px dashed #808080;
 }
 .rowContainer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-top: 10px;
-}
-.nodeItemContainer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    background: #f9fafc;
-    border: 0.5px solid rgba(0, 0, 0, 0.05);
-    border-radius: 10px;
-    min-height: 80px;
-    padding: 16px 10px 16px 16px;
-    flex: 1;
-    cursor: pointer;
-    &:hover {
-        border: 0.5px solid #594af1;
-    }
-
-    .checkedIcon {
-        display: block;
-    }
-    .editIcon {
-        display: block;
-        cursor: pointer;
-        &:hover {
-            background-color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), rgba(249, 250, 252, 1);
-        }
-    }
-    .rowRight {
-        width: 30px;
-        height: 30px;
-    }
-    .rowTopContainer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        .rowTopLeftContainer{
-            display: flex;
-        align-items: center;
-        }
-        .nodeName {
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 19px;
-            color: #000000;
-
-            max-width: 210px;
-            word-break: break-all;
-        }
-        .nodeTypeContainer {
-            margin-left: 10px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-            padding: 1.5px 5px;
-
-            .nodeType {
-                font-weight: 500;
-                font-size: 12px;
-                line-height: 14px;
-                text-align: center;
-                color: rgba(0, 0, 0, 0.3);
-            }
-        }
-        .chainId{
-            margin: 0;
-            font-weight: 400;
-            font-size: 12px;
-            line-height: 14px;
-            color: rgba(0, 0, 0, 0.1);
-        }
-    }
-    .nodeUrl {
-        font-size: 12px;
-        line-height: 100%;
-        color: rgba(0, 0, 0, 0.5);
-        margin: 5px 0px 0px;
-
-        // width: 216px;
-        word-break: break-all;
-    }
 }
 
 .editMode {
@@ -124,6 +55,9 @@
     &:hover {
         border: 0.5px solid rgba(0, 0, 0, 0.05);
     }
+}
+.disableEdit {
+    opacity: 0.4;
 }
 
 .deleteIconContainer {
@@ -137,11 +71,6 @@
     }
 }
 
-
 .modalDelete {
     color: #d65a5a;
-}
-
-.rowleft{
-    width: 260px;
 }

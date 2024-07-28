@@ -10,11 +10,10 @@ const CustomView = ({
     backRoute = "",
     onGoBack,
     contentClassName = "",
-    isReceive = false,
     rightComponent = "",
     customContainerClass = "",
     noBack = false,
-    customeTitleClass = '',
+    customTitleClass = '',
     onClickTitle=()=>{},
     rightIcon = '',
     onClickRightIcon = () => { },
@@ -33,26 +32,16 @@ const CustomView = ({
         }
     }, [backRoute, onGoBack])
 
-    const { backIcon } = useMemo(() => {
-        const backIcon = isReceive ? "/img/icon_back_white.svg" : "/img/icon_back.svg"
-        return {
-            backIcon
-        }
-    }, [isReceive])
 
     return (
         <>
             <div className={cls(styles.rowContainer, customContainerClass, {
-                [styles.receiveClass]: isReceive,
                 [styles.rightIconClass]: rightIcon
             })}>
-                {isReceive && <img src={'/img/receivePageBg.svg'} className={styles.fullPageImg} />}
                 {!noBack && <div className={styles.backImgCon} onClick={goBack}>
-                    <img src={backIcon} />
+                    <img src={"/img/icon_back.svg"} />
                 </div>}
-                <p onClick={onClickTitle} className={cls(styles.title, customeTitleClass, {
-                    [styles.receiveTitle]: isReceive
-                })}>
+                <p onClick={onClickTitle} className={cls(styles.title, customTitleClass)}>
                     {title}
                 </p>
                 {rightComponent}

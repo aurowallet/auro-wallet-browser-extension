@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { validateMnemonic } from "../../../background/accountService";
-import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -88,9 +88,9 @@ const RestoreAccount = () => {
     mnemonic = mnemonic.toLocaleLowerCase()
 
 
-    let mnemonicVaild = validateMnemonic(mnemonic)
-    if (!mnemonicVaild) {
-      setBottomTipError(i18n.t('inputVaildSeed'))
+    let mnemonicValid = validateMnemonic(mnemonic)
+    if (!mnemonicValid) {
+      setBottomTipError(i18n.t('seed_error'))
       return
     }
     setBtnLoading(true)
@@ -105,7 +105,7 @@ const RestoreAccount = () => {
         dispatch(updateCurrentAccount(currentAccount))
         dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
         history.push({
-          pathname: "/backupsuccess",
+          pathname: "/backup_success",
           params: { type: "restore" }
         })
       })

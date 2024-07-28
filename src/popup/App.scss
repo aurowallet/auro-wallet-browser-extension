@@ -1,10 +1,9 @@
 .App {
-  // user-select: none;
   -webkit-user-drag: none;
   *,
   *::before,
   *::after {
-    box-sizing: border-box; // 1
+    box-sizing: border-box;
   }
 }
 
@@ -14,33 +13,35 @@
   width: 375px;
   height: 600px;
 }
-.App-header-full{
-  height:auto !important;
-  width:auto !important;
+.App-header-full {
+  height: auto !important;
+  width: auto !important;
+  min-height: 600px;
+  min-width: 750px;
+}
+.AppAutoWidth {
+  height: auto !important;
+  width: auto !important;
 }
 body {
   margin: 0;
 
-  --mainBlue:#594AF1;
-  --mainBlack:rgba(0, 0, 0, 0.85);
-  --secondaryRed:#d65a5a;
-  --secondaryGreen:#0DB27C;
-  --secondaryYellow:#e4b200;
+  --mainBlue: #594af1;
+  --mainBlack: rgba(0, 0, 0, 0.85);
+  --secondaryRed: #d65a5a;
+  --secondaryGreen: #0db27c;
+  --secondaryYellow: #e4b200;
 
-  --white:rgba(255, 255, 255, 1);
-  --whiteLilac:rgba(249, 250, 252, 1);
-  --mediumGray:rgba(0, 0, 0, 0.1);
-  --nobelGray:rgba(0, 0, 0, 0.3);
-  --mediumBlack:rgba(0, 0, 0, 0.5);
-  --mineBlack:rgba(0, 0, 0, 0.85);
+  --white: rgba(255, 255, 255, 1);
+  --whiteLilac: rgba(249, 250, 252, 1);
+  --mediumGray: rgba(0, 0, 0, 0.1);
+  --nobelGray: rgba(0, 0, 0, 0.3);
+  --mediumBlack: rgba(0, 0, 0, 0.5);
+  --mineBlack: rgba(0, 0, 0, 0.85);
 }
 p {
   margin: 0;
   padding: 0;
-  // -webkit-user-select: none;
-  // -moz-user-select: none;
-  // -o-user-select: none;
-  // -ms-user-select: none;
 }
 
 input,
@@ -55,5 +56,9 @@ textarea {
 }
 
 ::-webkit-scrollbar-track {
+  display: none;
+}
+
+::-webkit-scrollbar {
   display: none;
 }

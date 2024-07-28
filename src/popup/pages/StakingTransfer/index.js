@@ -1,10 +1,12 @@
 import BigNumber from "bignumber.js";
 import cls from "classnames";
+import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getBalance, getFeeRecom, sendStakeTx } from "../../../background/api";
-import i18n from "i18next";
 import { useHistory } from 'react-router-dom';
+import { sendStakeTx } from "../../../background/api";
+import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, trimSpace } from "../../../utils/utils";
+import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
 import Button from "../../component/Button";
 import { ConfirmModal } from "../../component/ConfirmModal";
@@ -12,26 +14,28 @@ import CustomView from "../../component/CustomView";
 import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
 import styles from "./index.module.scss";
-import { updateNetAccount } from '../../../reducers/accountReducer';
-import { addressSlice, getRealErrorMsg, isNumber, isTrueNumber, trimSpace } from "../../../utils/utils";
-import { addressValid } from "../../../utils/validator";
 
-import { cointypes } from "../../../../config";
-import { WALLET_CHECK_TX_STATUS, WALLET_SEND_STAKE_TRANSTRACTION } from "../../../constant/types";
+import { MAIN_COIN_CONFIG } from "../../../constant";
+import { QA_SIGN_TRANSACTION, WALLET_CHECK_TX_STATUS } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
+import { getLedgerStatus, requestSignDelegation } from "../../../utils/ledger";
 import Toast from "../../component/Toast";
-import { getLedgerStatus, LEDGER_STATUS, requestSignDelegation } from "../../../utils/ledger";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
-import extension from 'extensionizer'
-import { LEDGER_PAGE_TYPE } from "../LedgerPage";
+
+import useFetchAccountData from "@/hooks/useUpdateAccount";
+import { DAppActions } from "@aurowallet/mina-provider";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
+import { updateLedgerConnectStatus } from "../../../reducers/ledger";
+import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
 const StakingTransfer = () => { 
   const dispatch = useDispatch()
   const history = useHistory()
 
-  const balance = useSelector(state => state.accountInfo.balance)
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
-  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
+  const netFeeList = useSelector(state => state.cache.feeRecommend)
+  const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const {
     menuAdd, nodeName, nodeAddress, showNodeName
@@ -53,16 +57,15 @@ const StakingTransfer = () => {
 
   const [memo, setMemo] = useState('')
   const [feeAmount, setFeeAmount] = useState(0.1)
-  const [inputedFee, setInputedFee] = useState("")
+  const [advanceInputFee, setAdvanceInputFee] = useState("")
   const [inputNonce, setInputNonce] = useState("")
   const [feeErrorTip, setFeeErrorTip] = useState("")
-  const [netFeeList, setNetFeeList] = useState([])
   const [isOpenAdvance, setIsOpenAdvance] = useState(false)
-  const [confrimModalStatus, setConfrimModalStatus] = useState(false)
-  const [confrimBtnStatus, setConfrimBtnStatus] = useState(false)
+  const [confirmModalStatus, setConfirmModalStatus] = useState(false)
+  const [confirmBtnStatus, setConfirmBtnStatus] = useState(false)
   const [contentList, setContentList] = useState([])
 
-  const [waintLedgerStatus, setWaintLedgerStatus] = useState(false)
+  const [waitLedgerStatus, setWaitLedgerStatus] = useState(false)
   const [btnDisableStatus,setBtnDisableStatus] = useState(()=>{
     if(menuAdd){
       return true
@@ -70,8 +73,9 @@ const StakingTransfer = () => {
     return false
   })
 
-  const [ledgerStatus,setLedgerStatus] = useState("")
   const [ledgerApp,setLedgerApp] = useState()
+
+  const [ledgerModalStatus,setLedgerModalStatus] = useState(false)
 
 
   const onBlockAddressInput = useCallback((e) => {
@@ -91,7 +95,7 @@ const StakingTransfer = () => {
 
   const onFeeInput = useCallback((e) => {
     setFeeAmount(e.target.value)
-    setInputedFee(e.target.value)
+    setAdvanceInputFee(e.target.value)
     if (BigNumber(e.target.value).gt(10)) {
       setFeeErrorTip(i18n.t('feeTooHigh'))
     } else {
@@ -102,8 +106,9 @@ const StakingTransfer = () => {
     setInputNonce(e.target.value)
   }, [])
   const onClickClose = useCallback(() => {
-    setConfrimModalStatus(false)
+    setConfirmModalStatus(false)
   }, [])
+
 
   const onSubmitSuccess = useCallback((data, type) => {
     if (data.error) {
@@ -128,17 +133,18 @@ const StakingTransfer = () => {
 
 
   useEffect(()=>{
-    if(!confrimModalStatus){
-      setWaintLedgerStatus(false)
+    if(!confirmModalStatus){
+      setWaitLedgerStatus(false)
     }
-  },[confrimModalStatus])
+  },[confirmModalStatus])
 
-  const ledgerTransfer = useCallback(async(params)=>{
-    if (ledgerApp) {
-      setWaintLedgerStatus(true)
-      const { signature, payload, error,rejected } = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
+  const ledgerTransfer = useCallback(async(params,preLedgerApp)=>{
+    const nextLedgerApp = preLedgerApp || ledgerApp
+    if (nextLedgerApp) {
+      setWaitLedgerStatus(true)
+      const { signature, payload, error,rejected } = await requestSignDelegation(nextLedgerApp, params, currentAccount.hdPath)
       if(rejected){
-        setConfrimModalStatus(false)
+        setConfirmModalStatus(false)
       }
       if (error) {
         Toast.info(error.message)
@@ -149,38 +155,41 @@ const StakingTransfer = () => {
     }
   },[currentAccount,onSubmitSuccess,ledgerApp])
 
-  const clickNextStep = useCallback(async() => {
-    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER && ledgerStatus!==LEDGER_STATUS.READY){
-      const ledger = await getLedgerStatus()
-      setLedgerStatus(ledger.status)
-      if(ledger.status!==LEDGER_STATUS.READY){
-        return 
+  const clickNextStep = useCallback(async(ledgerReady=false,preLedgerApp) => {
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
+      if(!ledgerReady){
+        const ledger = await getLedgerStatus()
+        dispatch(updateLedgerConnectStatus(ledger.status))
+        if(ledger.status!==LEDGER_STATUS.READY){
+          setLedgerModalStatus(true)
+          return 
+        }
+        setLedgerApp(ledger.app)
       }
-      setLedgerApp(ledger.app)
     }
     let fromAddress = currentAccount.address
     let toAddress = nodeAddress || trimSpace(blockAddress)
-    let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
-    let memo = memo || ""
+    let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce
+    let realMemo = memo || ""
     let fee = trimSpace(feeAmount)
-    const payload = {
-      fromAddress, toAddress, fee, nonce, memo
+    let payload = {
+      fromAddress, toAddress, fee, nonce, memo:realMemo
     }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      return ledgerTransfer(payload)
+      return ledgerTransfer(payload,preLedgerApp)
     }
-    setConfrimBtnStatus(true)
+    setConfirmBtnStatus(true)
+    payload.sendAction = DAppActions.mina_sendStakeDelegation
     sendMsg({
-      action: WALLET_SEND_STAKE_TRANSTRACTION,
+      action: QA_SIGN_TRANSACTION,
       payload
     }, (data) => {
-      setConfrimBtnStatus(false)
+      setConfirmBtnStatus(false)
       onSubmitSuccess(data)
     })
-  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus])
+  }, [currentAccount, mainTokenNetInfo, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus,memo])
 
-
-  const onConfirm = useCallback(async() => {
+  const onConfirm = useCallback(async(ledgerReady=false) => {
     let realBlockAddress = nodeAddress || blockAddress
     if (!addressValid(realBlockAddress)) {
       Toast.info(i18n.t('sendAddressError'))
@@ -192,13 +201,13 @@ const StakingTransfer = () => {
       return
     }
 
-    if (new BigNumber(inputFee).gt(balance)) {
+    if (new BigNumber(inputFee).gt(mainTokenNetInfo.tokenBaseInfo.showBalance)) {
       Toast.info(i18n.t('balanceNotEnough'));
       return;
     }
     let nonce = trimSpace(inputNonce)
-    if (nonce.length > 0 && !isTrueNumber(nonce)) {
-      Toast.info(i18n.t('inputNonceError'))
+    if (nonce.length > 0 && !isNaturalNumber(nonce)) {
+      Toast.info(i18n.t("inputNonceError",{nonce:"Nonce"}));
       return
     }
 
@@ -213,10 +222,10 @@ const StakingTransfer = () => {
       },
       {
         label: i18n.t('fee'),
-        value: inputFee +" "+ cointypes.symbol,
+        value: inputFee +" "+ MAIN_COIN_CONFIG.symbol,
       }
     ]
-    if (isTrueNumber(nonce)) {
+    if (isNaturalNumber(nonce)) {
       list.push({
         label: "Nonce",
         value: nonce,
@@ -228,18 +237,29 @@ const StakingTransfer = () => {
         value: memo,
       })
     }
-    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
-      const ledger = await getLedgerStatus()
-      setLedgerApp(ledger.app) 
-      setLedgerStatus(ledger.status)
-    }else{
-      setLedgerStatus("")
-    }
     setContentList(list)
-    setConfrimModalStatus(true)
-  }, [nodeAddress, balance, feeAmount, inputNonce,currentAccount,
-    clickNextStep, nodeName, nodeAddress, blockAddress, currentAccount, memo])
+    if(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER){
+      let nextLedgerStatus = ledgerStatus
+      if(!ledgerReady){
+        const ledger = await getLedgerStatus()
+        setLedgerApp(ledger.app)
+        dispatch(updateLedgerConnectStatus(ledger.status))
+        nextLedgerStatus = ledger.status
+      }
+      setConfirmModalStatus(true)
+    }else{
+      dispatch(updateLedgerConnectStatus(""))
+      setConfirmModalStatus(true)
+    }
+   
+  }, [nodeAddress, mainTokenNetInfo, feeAmount, inputNonce,currentAccount,
+    clickNextStep, nodeName, nodeAddress, blockAddress, currentAccount, memo,ledgerStatus])
 
+    const onLedgerInfoModalConfirm = useCallback((ledger)=>{
+      setLedgerApp(ledger.app)
+      setLedgerModalStatus(false)
+      onConfirm(true)
+    },[confirmModalStatus,clickNextStep,onConfirm])
 
   const onClickBlockProducer = useCallback(() => {
     history.replace({
@@ -251,24 +271,16 @@ const StakingTransfer = () => {
     });
   }, [nodeAddress])
 
-  const fetchFeeData = useCallback(async () => {
-    let feeRecom = await getFeeRecom()
-    if (feeRecom.length > 0) {
-      setNetFeeList(feeRecom)
-      setFeeAmount(feeRecom[1].value)
-    }
-  }, [])
 
-  const fetchAccountData = useCallback(async () => {
-    let account = await getBalance(currentAccount.address)
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account))
+  useEffect(()=>{
+    if(feeAmount === 0.1){
+      if(netFeeList.length>0){
+        setFeeAmount(netFeeList[1].value)
+      }
     }
-  }, [currentAccount])
-
+  },[feeAmount,netFeeList])
 
   useEffect(() => {
-    fetchFeeData()
     fetchAccountData()
   }, [])
 
@@ -280,13 +292,6 @@ const StakingTransfer = () => {
     }
   },[menuAdd,blockAddress])
 
-  const onClickReminder = useCallback(()=>{
-    const ledgerPageType = LEDGER_PAGE_TYPE.permissionGrant
-    let openParams = new URLSearchParams({ ledgerPageType }).toString()
-    extension.tabs.create({
-      url: "popup.html#/ledger_page?"+openParams,
-    });
-  },[ledgerStatus])
 
   return (<CustomView title={i18n.t('staking')} contentClassName={styles.container}>
     <div className={styles.contentContainer}>
@@ -320,7 +325,7 @@ const StakingTransfer = () => {
         <AdvanceMode
           onClickAdvance={onClickAdvance}
           isOpenAdvance={isOpenAdvance}
-          feeValue={inputedFee}
+          feeValue={advanceInputFee}
           feePlaceholder={feeAmount}
           onFeeInput={onFeeInput}
           feeErrorTip={feeErrorTip}
@@ -340,18 +345,22 @@ const StakingTransfer = () => {
     </div>
 
     <ConfirmModal
-      modalVisable={confrimModalStatus}
+      modalVisible={confirmModalStatus}
       title={i18n.t('transactionDetails')}
       highlightTitle={i18n.t(('blockProducerName'))}
       highlightContent={showNodeName || addressSlice(blockAddress, 8)}
       onConfirm={clickNextStep}
-      loadingStatus={confrimBtnStatus}
+      loadingStatus={confirmBtnStatus}
       onClickClose={onClickClose}
       contentList={contentList}
-      waitingLedger={waintLedgerStatus}
-      ledgerStatus={ledgerStatus}
-      onClickReminder={onClickReminder}
+      waitingLedger={waitLedgerStatus}
+      showCloseIcon={waitLedgerStatus}
     />
+    <LedgerInfoModal
+      modalVisible={ledgerModalStatus}
+      onClickClose={()=>setLedgerModalStatus(false)}
+      onConfirm={onLedgerInfoModalConfirm}
+      />
   </CustomView>)
 }
 

@@ -1,0 +1,186 @@
+.outerContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: end;
+    flex-direction: column;
+}
+
+@keyframes openModal {
+    from {
+        bottom: -50%;
+    }
+    to {
+        bottom: 0;
+    }
+}
+
+.innerContent {
+    background: #ffffff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    width: 100%;
+
+    position: absolute;
+    bottom: 0;
+    animation: openModal 0.35s;
+    animation-fill-mode: forwards;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 8px 20px;
+
+    .rowTitle {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        color: #222222;
+    }
+    .rowClose {
+        display: block;
+        cursor: pointer;
+    }
+}
+
+.dividedLine {
+    width: 100%;
+    height: 0.5px;
+    background-color: #f2f2f2;
+}
+
+.bottomContent {
+    overflow-y: auto;
+    background: #ffffff;
+    max-height: 350px;
+    margin-bottom: 20px;
+}
+
+.rightRow {
+    display: flex;
+    align-items: center;
+}
+
+.bottomContainer {
+    padding: 12px 20px 20px;
+    width: calc(100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    > :not(:first-of-type) {
+        margin-left: 15px;
+    }
+}
+
+.modalContentCls {
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+
+    margin: 20px 20px;
+    .lightFont {
+        color: rgba(0, 0, 0, 0.8);
+    }
+}
+
+.feeContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0px 20px;
+
+    .feeTitle {
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .feeContent {
+        color: rgba(0, 0, 0, 0.8);
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 4px;
+    }
+    .rightFee {
+        text-align: right;
+    }
+    .feeArrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        .arrowCls {
+            width: 10px;
+        }
+    }
+}
+.feeItem {
+    flex: 1;
+}
+
+.changeWrapper{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+.changeCls {
+    margin-right: 20px;
+    color: #594af1;
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+    text-align: right;
+}
+
+.ledgerContent {
+    padding: 48px 20px 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    .waitingIcon {
+        width: 58px;
+    }
+    .waitingTitle {
+        font-size: 20px;
+        line-height: 16px;
+        color: #000000;
+        margin: 30px 0 10px;
+        font-weight: 700;
+    }
+    .waitingContent {
+        font-size: 14px;
+        line-height: 16px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.5);
+        margin: 0;
+        font-weight: 500;
+    }
+    .waitingTip {
+        @extend .waitingContent;
+        font-weight: 400;
+        color: rgba(0, 0, 0, 0.5);
+        margin: 20px 10px;
+    }
+    .accountRepeatName {
+        font-weight: 700;
+    }
+    .redFont {
+        color: #d65a5a;
+    }
+}

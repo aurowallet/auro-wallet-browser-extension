@@ -1,0 +1,63 @@
+.historyContainer {
+    background: #ffffff;
+    height: 100%;
+    
+    .emptyContainer {
+        padding-top: 45px;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        height: 255px;
+        overflow: hidden;
+    }
+    .emptyIcon {
+        margin-bottom: 10px;
+        width: 100px;
+        height: 100px;
+    }
+    .emptyContent {
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 17px;
+        color: rgba(0, 0, 0, 0.3);
+    }
+    .refreshLoading {
+        animation: spin 0.5s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+}
+@keyframes refreshAni {
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingCon {
+    height: 100%;
+    padding-top: 80px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    height: 255px;
+    overflow: hidden;
+    .loadingContent {
+        font-size: 12px;
+        line-height: 17px;
+        margin: 10px 0px 0px;
+        color: rgba(0, 0, 0, 0.3);
+    }
+}

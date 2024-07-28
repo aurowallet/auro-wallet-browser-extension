@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "browser_action": {
+    "default_icon": {
+      "16": "img/logo/16.png",
+      "32": "img/logo/32.png",
+      "48": "img/logo/48.png",
+      "128": "img/logo/128.png"
+		},
+    "default_title": "Auro Wallet",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{e0ee8d7f-537c-4c5f-b1cc-bd66d61e4306}"
+    }
+  },
+  "web_accessible_resources": [
+    "webhook.js"
+  ]
+}

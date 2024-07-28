@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import i18n from "i18next";
 import Input from "../../component/Input";
 import styles from "./index.module.scss";
+import { isNaturalNumber } from "@/utils/utils";
 
 const AdvanceMode = ({
     isOpenAdvance = false,
@@ -16,18 +17,19 @@ const AdvanceMode = ({
     nonceValue = "",
     onNonceInput = () => { },
 
+    type ="",
 }) => {
-    const netAccount = useSelector(state => state.accountInfo.netAccount)
+    const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
     const nonceHolder = useMemo(() => {
-        return netAccount.inferredNonce ? "Nonce " + netAccount.inferredNonce : "Nonce "
-    }, [netAccount])
+        return isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? mainTokenNetInfo?.inferredNonce : ""
+    }, [mainTokenNetInfo])
 
     return (
         <div className={styles.advanceContainer}>
-            <div className={styles.advanceEntry} onClick={onClickAdvance}>
+            {!type && <div className={styles.advanceEntry} onClick={onClickAdvance}>
                 <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
                 <img className={isOpenAdvance ? styles.openAdvance : styles.closeAdvance} src="/img/icon_unfold_Default.svg" />
-            </div>
+            </div>}
             {isOpenAdvance && <div className={styles.advanceInput}>
                 <Input
                     label={i18n.t('transactionFee')}
@@ -45,6 +47,7 @@ const AdvanceMode = ({
                     value={nonceValue}
                     inputType={'numric'}
                     placeholder={nonceHolder}
+                    inputDisable={!!type}
                 />
             </div>}
         </div>

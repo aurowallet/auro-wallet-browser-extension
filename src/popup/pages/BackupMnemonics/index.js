@@ -3,7 +3,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { WALLET_GET_CREATE_MNEMONIC, WALLET_NEW_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_GET_CREATE_MNEMONIC, WALLET_NEW_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -16,9 +16,9 @@ import styles from "./index.module.scss";
 
 export const BackupMnemonics = () => {
 
-  const [currentMnelength, setCurrentMnelength] = useState(12)
+  const [currentMneLength, setCurrentMneLength] = useState(12)
   const [mnemonicRandomList, setMnemonicRandomList] = useState([])
-  const [mneSelectList, setMneSelectList] = useState(Array(currentMnelength).fill(''))
+  const [mneSelectList, setMneSelectList] = useState(Array(currentMneLength).fill(''))
 
   const [sourceMne, setSourceMne] = useState("")
   const [btnClick, setBtnClick] = useState(false)
@@ -47,49 +47,49 @@ export const BackupMnemonics = () => {
       })
       setSourceMne(mnemonic)
       setMnemonicRandomList(list)
-      setCurrentMnelength(list.length)
+      setCurrentMneLength(list.length)
     })
   }, [])
 
 
   const onClickTopItem = useCallback((v, i) => {
     let tempMnemonicRandomList = [...mnemonicRandomList]
-    let tempSelectlist = [...mneSelectList]
+    let tempSelectList = [...mneSelectList]
     const bool = v.selected;
     if (bool) {
       const index = tempMnemonicRandomList.findIndex((item) => item.name == v.name);
       tempMnemonicRandomList[index].selected = !bool;
-      tempSelectlist.splice(i, 1);
+      tempSelectList.splice(i, 1);
       setMnemonicRandomList(tempMnemonicRandomList)
-      setMneSelectList(setMneListFill(tempSelectlist))
+      setMneSelectList(setMneListFill(tempSelectList))
     }
   }, [mnemonicRandomList, mneSelectList])
 
 
   const setMneListFill = useCallback((list = []) => {
-    let targetLength = currentMnelength
+    let targetLength = currentMneLength
     let newList = list.filter(Boolean)
     let length = targetLength - newList.length
     let newFillList = Array(length).fill('')
     return [...newList, ...newFillList]
-  }, [currentMnelength])
+  }, [currentMneLength])
 
   const onClickBottomItem = useCallback((v, i) => {
     let tempMnemonicRandomList = [...mnemonicRandomList]
-    let tempSelectlist = mneSelectList.filter(Boolean)
+    let tempSelectList = mneSelectList.filter(Boolean)
     const bool = v.selected;
     if (!bool) {
       tempMnemonicRandomList[i].selected = !bool;
-      tempSelectlist.push(v);
+      tempSelectList.push(v);
       setMnemonicRandomList(tempMnemonicRandomList)
-      setMneSelectList(setMneListFill(tempSelectlist))
+      setMneSelectList(setMneListFill(tempSelectList))
     }
   }, [mnemonicRandomList, mneSelectList])
 
 
   useEffect(() => {
-    let tempSelectlist = mneSelectList.filter(Boolean)
-    if (tempSelectlist.length === currentMnelength) {
+    let tempSelectList = mneSelectList.filter(Boolean)
+    if (tempSelectList.length === currentMneLength) {
       setBtnClick(true)
     }
   }, [mneSelectList])
@@ -113,7 +113,7 @@ export const BackupMnemonics = () => {
           setLoadingStatus(false)
           dispatch(updateCurrentAccount(currentAccount))
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
-          history.push("/backupsuccess")
+          history.push("/backup_success")
         })
     } else {
       Toast.info(i18n.t("seed_error"))

@@ -12,6 +12,9 @@ export function sendMsg(message, sendResponse) {
     },
     async (params) => {
       sendResponse && sendResponse(params)
+      if (extension.runtime.lastError) {
+        console.error("send message error",extension.runtime.lastError);
+      }
     }
   );
 }

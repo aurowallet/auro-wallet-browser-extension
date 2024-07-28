@@ -2,7 +2,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useHistory } from 'react-router-dom';
-import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/types";
+import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
@@ -26,13 +26,13 @@ export const ShowMnemonic = () => {
 
   let history = useHistory();
   const goToNext = useCallback(() => {
-    history.push("/backupmnemonic")
+    history.push("/backup_mnemonic")
   }, [])
 
   return (
     <CustomView title={i18n.t('backupMnemonicPhrase')}>
       <p className={styles.backTitle}>
-        {i18n.t('backup_mne_title')}
+        {i18n.t('revealMneTip')}
       </p>
       <div className={styles.mne_container}>
         {mneList.map((mne, index) => {

@@ -1,8 +1,8 @@
 import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { WALLET_IMPORT_HD_ACCOUNT } from "../../../constant/types";
+import { WALLET_IMPORT_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
@@ -20,9 +20,9 @@ const ImportAccount = ({ }) => {
   const history = useHistory()
 
   const dispatch = useDispatch()
-  const [accountName, setAccountName] = useState(() => {
+  const accountName = useMemo(()=>{
     return history.location?.params?.accountName ?? "";
-  })
+  },[history])
 
   const onInput = useCallback((e) => {
     let privateKey = e.target.value;
@@ -56,8 +56,8 @@ const ImportAccount = ({ }) => {
       } else {
         dispatch(updateCurrentAccount(account))
         setTimeout(() => {
-          if(history.length>=4){
-            history.go(-3)
+          if(history.length>=5){
+            history.go(-4)
           }else{
             history.replace("/")
           }
@@ -69,16 +69,15 @@ const ImportAccount = ({ }) => {
 
     <p className={styles.title}>{i18n.t('pleaseInputPriKey')}</p>
 
-    <div className={styles.textAreaContainer}>
+    <div className={styles.imTextAreaContainer}>
       <TextArea
         onChange={onInput}
         value={inputValue}
       />
 
     </div>
-
-    <span className={styles.desc}>{i18n.t('importAccount_2')}</span>
     <span className={styles.desc}>{i18n.t('importAccount_3')}</span>
+    <span className={styles.desc}>{i18n.t('importAccount_2')}</span>
 
     <div className={styles.hold} />
     <div className={styles.bottomContainer}>

@@ -2,9 +2,6 @@
     a {
         text-decoration: none;
         color: inherit;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        user-select: none;
         -webkit-appearance: none;
         -webkit-text-size-adjust: none;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -47,7 +44,7 @@
     margin: 10px 7px 30px;
 }
 
-.linkContaienr {
+.linkContainer {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -56,7 +53,7 @@
     .linkContent {
         font-weight: 500;
         font-size: 14px;
-        line-height: 17px;
+        height: 20px;
         text-align: center;
         color: #594af1;
         margin: 0px;
@@ -72,8 +69,8 @@
     font-size: 12px;
     line-height: 17px;
     text-align: center;
-    color: rgba(0, 0, 0, 0.5);
-    margin: 30px 0px 20px;
+    color: #808080;
+    margin: 30px 0px 10px;
 }
 
 .followListContainer {
@@ -90,14 +87,12 @@
     cursor: pointer;
 
     &:hover .iconContainer {
-        background: rgba(196, 196, 196, 0.2);
-        border: 0.5px solid rgba(0, 0, 0, 0.2);
+        background: rgba(89, 74, 241, 0.2);
     }
     .iconContainer {
-        width: 44px;
-        height: 44px;
-        background: rgba(196, 196, 196, 0.1);
-        border: 0.5px solid rgba(0, 0, 0, 0.1);
+        width: 48px;
+        height: 48px;
+        background: rgba(89, 74, 241, 0.1);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -107,7 +102,7 @@
         font-size: 12px;
         line-height: 14px;
         text-align: center;
-        color: rgba(0, 0, 0, 0.5);
+        color: #808080;
         margin: 4px 0px 0px;
     }
 }

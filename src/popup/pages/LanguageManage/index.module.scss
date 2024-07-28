@@ -1,8 +1,38 @@
-.contentClassName{
+.contentClassName {
     padding: 10px 0px 0px;
+    .bottomCon{
+        padding: 20px;
+        position: fixed;
+        bottom: 0;
+        width: calc(100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tipContainer {
+      
+        width: fit-content;
+        padding: 10px;
+        text-decoration: none;
+        color: inherit;
+        -webkit-appearance: none;
+        -webkit-text-size-adjust: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-touch-callout: none;
+        border-bottom: none;
+        display: block;
+
+        color: #594af1;
+        font-size: 14px;
+        font-weight: 500;
+
+        cursor: pointer;
+        &:hover {
+            color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), #594af1;
+        }
+    }
 }
 .rowContainer {
-
     width: 100%;
     display: flex;
     align-items: center;
@@ -10,19 +40,17 @@
     height: 54px;
     cursor: pointer;
     padding: 0px 20px;
-    span{
+    span {
         font-weight: 600;
         font-size: 16px;
         line-height: 100%;
         color: #000000;
     }
 
-    &:hover{
+    &:hover {
         background-color: rgba(0, 0, 0, 0.05);
     }
-   
 }
-
 
 .hold {
     flex: 1;

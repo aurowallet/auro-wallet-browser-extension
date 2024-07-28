@@ -1,13 +1,5 @@
-.container {
-    padding: 20px 20px 0px;
-    position: relative;
-}
-.bgImg {
-    position: absolute;
-    top: 20px;
-    z-index: 0;
-}
 .content {
+    margin: 20px 20px 0px;
     height: 450px;
     z-index: 1;
     display: flex;
@@ -83,10 +75,10 @@
 .bottomTip {
     position: absolute;
     bottom: 20px;
+    left: 20px;
     z-index: 0;
     width: calc(100% - 40px);
-    text-align: center;
-
+    left: 20px;
     font-size: 12px;
     line-height: 14px;
     text-align: center;

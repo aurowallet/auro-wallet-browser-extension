@@ -1,649 +1,402 @@
-
-import { DAppActions } from '@aurowallet/mina-provider';
+import {
+  DAPP_ACTION_CANCEL_ALL,
+  GET_SIGN_PARAMS,
+  WALLET_GET_CURRENT_ACCOUNT,
+} from "@/constant/msgTypes";
+import useFetchAccountData from "@/hooks/useUpdateAccount";
+import Loading from "@/popup/component/Loading";
+import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
+import { updateShouldRequest } from "@/reducers/accountReducer";
+import { updateDAppOpenWindow } from "@/reducers/cache";
+import {
+  ENTRY_WITCH_ROUTE,
+  updateEntryWitchRoute,
+} from "@/reducers/entryRouteReducer";
+import { sendMsg } from "@/utils/commonMsg";
+import { getQueryStringArgs } from "@/utils/utils";
+import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from 'react-router-dom';
-import { cointypes } from "../../../../config";
-import { getBalance, getFeeRecom, sendStakeTx, sendTx } from "../../../background/api";
-import { DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, GET_SIGN_PARAMS,QA_SIGN_TRANSTRACTION, WALLET_CHECK_TX_STATUS, WALLET_GET_CURRENT_ACCOUNT, WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION, WALLET_SEND_MESSAGE_TRANSTRACTION, WALLET_SEND_STAKE_TRANSTRACTION, WALLET_SEND_TRANSTRACTION } from "../../../constant/types";
-import { ACCOUNT_TYPE } from "../../../constant/walletType";
-import { updateNetAccount } from "../../../reducers/accountReducer";
-import { updateDAppOpenWindow } from "../../../reducers/cache";
-import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
-import { sendMsg } from "../../../utils/commonMsg";
-import { checkLedgerConnect, requestSignDelegation, requestSignPayment } from '../../../utils/ledger';
-import { addressSlice, copyText,exportFile, getQueryStringArgs, getRealErrorMsg, isNumber, toNonExponential, trimSpace } from "../../../utils/utils";
-import { addressValid } from "../../../utils/validator";
-import Button, { button_size, button_theme } from "../../component/Button";
-import { ConfirmModal } from '../../component/ConfirmModal';
-import DAppAdvance from "../../component/DAppAdvance";
-import DappWebsite from "../../component/DappWebsite";
-import Loading from "../../component/Loading";
-import Tabs from "../../component/Tabs";
-import Toast from "../../component/Toast";
+import { useHistory } from "react-router-dom";
 import { LockPage } from "../Lock";
+import SignView from "./SignView";
+import ZkAppChainView from "./ZkAppChainView";
 import styles from "./index.module.scss";
- 
-const FeeTypeEnum = {
-  site: "FEE_RECOMMED_SITE",
-  default: "FEE_RECOMMED_DEFAULT",
-  custom: "FEE_RECOMMED_CUSTOM",
-}
 
- 
+const ICON_COLOR = {
+  black: "rgba(0, 0, 0, 1)",
+  gray: "rgba(0, 0, 0, 0.5)",
+};
+
+/** page click event */
+const TX_CLICK_TYPE = {
+  CONFIRM: "TX_CLICK_TYPE_CONFIRM",
+  CANCEL: "TX_CLICK_TYPE_CANCEL",
+};
+
+/** mina sign event */
+const SIGN_MESSAGE_EVENT = [
+  DAppActions.mina_signMessage,
+  DAppActions.mina_signFields,
+  DAppActions.mina_sign_JsonMessage,
+];
+/** mina sign event */
+const SIGN_EVENT_WITH_BROADCAST = [
+  DAppActions.mina_sendTransaction,
+  DAppActions.mina_sendPayment,
+  DAppActions.mina_sendStakeDelegation,
+];
+
+const ZKAPP_CHAIN_ACTION = [
+  DAppActions.mina_addChain,
+  DAppActions.mina_switchChain,
+];
+
 const SignTransaction = () => {
-  const dispatch = useDispatch()
-  const history = useHistory()
+  const dispatch = useDispatch();
+  const history = useHistory();
+  const isFirstRequest = useRef(true);
+  const isShowLoading = useRef(false);
 
-  const dappWindow = useSelector(state => state.cache.dappWindow)
-  const currentAccount = useSelector(state => state.accountInfo.currentAccount)
-  const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
-  const balance = useSelector(state => state.accountInfo.balance)
-  const netAccount = useSelector(state => state.accountInfo.netAccount)
-  const currentConfig = useSelector(state => state.network.currentConfig)
+  const [pendingSignList, setPendingSignList] = useState([]);
+  const [currentSignIndex, setCurrentSignIndex] = useState(0);
+  const [showMultiView, setShowMultiView] = useState(false);
+  const [leftArrowStatus, setLeftArrowStatus] = useState(true);
+  const [rightArrowStatus, setRightArrowStatus] = useState(false);
+  const [advanceData, setAdvanceData] = useState({});
+  const [notifyData, setNotifyData] = useState({});
+  const [state, setState] = useState({
+    signViewStatus: true,
+    notifyViewStatus: false,
+  });
 
+  const dappWindow = useSelector((state) => state.cache.dappWindow);
+  const inferredNonce = useSelector(
+    (state) => state.accountInfo.mainTokenNetInfo?.inferredNonce
+  );
+  const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
+    inferredNonce
+  );
+  useEffect(() => {
+      setNextUseInferredNonce(inferredNonce);
+  }, [inferredNonce]);
 
-  const [lockStatus, setLockStatus] = useState(false)
-  const [advanceStatus, setAdvanceStatus] = useState(false)
+  const currentAccount = useSelector(
+    (state) => state.accountInfo.currentAccount
+  );
 
-  const [feeValue, setFeeValue] = useState("")
-  const [feeDefault, setFeeDefault] = useState("")
-  const [customFeeStatus, setCustomFeeStatus] = useState(false)
-  const [feeType, setFeeType] = useState("")
-  const [nonceValue, setNonceValue] = useState("")
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
 
-  const [selectedTabIndex, setSelectedTabIndex] = useState(0)
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
 
-  const [signParams, setSignParams] = useState({})
-  const [feeErrorTip, setFeeErrorTip] = useState("")
+  const [lockStatus, setLockStatus] = useState(false);
 
-  const [btnLoading, setBtnLoading] = useState(false)
-
-
-  const [ledgerModalStatus, setLedgerModalStatus] = useState(false)
-
-  const onSelectedTab = useCallback((tabIndex) => {
-    setSelectedTabIndex(tabIndex)
-  }, [])
-
-  const [params, setParams] = useState(() => {
-    let url = dappWindow.url || window.location?.href || ""
-    return getQueryStringArgs(url)
-  })
-
-
-  const goToHome = useCallback(() => {
-    let url = dappWindow?.url
-    if (url) {
-      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
-    }
-    dispatch(updateDAppOpenWindow({}))
-  }, [dappWindow])
-
-  const onCancel = useCallback(() => {
-    sendMsg({
-      action: DAPP_ACTION_SEND_TRANSACTION,
-      payload: {
-        cancel: true,
-        resultOrigin: signParams.site?.origin
-      },
-    }, async (params) => {
-      goToHome()
-    })
-  }, [currentAccount, goToHome, signParams])
-
-  const onSubmitSuccess = useCallback((data, type) => {
-    if (data.error) {
-      let errorMessage = i18n.t('postFailed')
-      let realMsg = getRealErrorMsg(data.error)
-      errorMessage = realMsg ? realMsg : errorMessage
-      Toast.info(errorMessage, 5 * 1000)
-      return
-    } else {
-      let resultAction = ""
-      let payload = {}
-      let id = ""
-      payload.resultOrigin = signParams?.site?.origin
-      switch (signParams.sendAction) {
-        case DAppActions.mina_sendStakeDelegation:
-          payload.hash = data.sendDelegation.delegation.hash
-          id = data.sendDelegation.delegation.id
-          resultAction = DAPP_ACTION_SEND_TRANSACTION
-          break;
-        case DAppActions.mina_sendPayment:
-          payload.hash = data.sendPayment.payment.hash
-          id = data.sendPayment.payment.id
-          resultAction = DAPP_ACTION_SEND_TRANSACTION
-          break;
-        case DAppActions.mina_signMessage:
-        case DAppActions.mina_signFields:
-          payload.signature = data.signature
-          payload.data = data.data
-          resultAction = DAPP_ACTION_SIGN_MESSAGE
-          break;
-        case DAppActions.mina_sendTransaction:
-          payload.hash = data.hash
-          resultAction = DAPP_ACTION_SEND_TRANSACTION
-          break;
-        default:
-          break;
-      }
-      if (type === "ledger" && id && payload.hash) {
-        sendMsg({
-          action: WALLET_CHECK_TX_STATUS,
-          payload: {
-            paymentId: id,
-            hash: payload.hash,
-          }
-        }, () => { })
-      }
-      sendMsg({
-        action: resultAction,
-        payload: payload,
-      }, async (params) => { })
-    }
-    goToHome()
-  }, [signParams, goToHome])
-
-
-  const ledgerTransfer = useCallback(async (params) => {
-    let { sendAction } = signParams
-    if (sendAction === DAppActions.mina_signMessage || sendAction === DAppActions.mina_signFields) {
-      Toast.info(i18n.t('ledgerNotSupportSign'))
-      sendMsg({
-        action: resultAction,
-        payload: { error: "not support ledger sign message" },
-      }, async (params) => { })
-      return
-    }
-
-    const { ledgerApp } = await checkLedgerConnect()
-    if (ledgerApp) {
-      setLedgerModalStatus(true)
-      let signResult
-      let postRes
-      if (sendAction === DAppActions.mina_sendPayment) {
-        signResult = await requestSignPayment(ledgerApp, params, currentAccount.hdPath)
-
-        const { signature, payload, error } = signResult
-        if (error) {
-          setLedgerModalStatus(false)
-          Toast.info(error.message)
-          return
-        }
-        postRes = await sendTx(payload, { rawSignature: signature }).catch(error => error)
-
-      } else if (sendAction === DAppActions.mina_sendStakeDelegation) {
-        signResult = await requestSignDelegation(ledgerApp, params, currentAccount.hdPath)
-
-        const { signature, payload, error } = signResult
-        if (error) {
-          setLedgerModalStatus(false)
-          Toast.info(error.message)
-          return
-        }
-        postRes = await sendStakeTx(payload, { rawSignature: signature }).catch(error => error)
-      } else {
-        Toast.info(i18n.t('notSupportNow'))
-        return
-      }
-
-      setLedgerModalStatus(false)
-      onSubmitSuccess(postRes, "ledger")
-    }
-  }, [signParams, currentAccount])
-
-  const clickNextStep = useCallback(() => {
-    let { params } = signParams
-    let vaildNonce = nonceValue || netAccount.inferredNonce
-    let nonce = trimSpace(vaildNonce)
-
-    let toAddress = ''
-    let fee = ""
-    let memo = ""
-    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields) {
-      toAddress = trimSpace(params.to)
-      fee = trimSpace(feeValue)
-      memo =  params?.feePayer?.memo || params?.memo || ""
-    }
-
-    let fromAddress = currentAccount.address
-    let payload = {
-      fromAddress, toAddress, nonce, currentAccount, fee, memo
-    }
-    if (signParams.sendAction === DAppActions.mina_signMessage || signParams.sendAction === DAppActions.mina_signFields) {
-      payload.message = params.message
-    }
-    if (signParams.sendAction === DAppActions.mina_sendPayment) {
-      let amount = trimSpace(params.amount)
-      amount = toNonExponential(new BigNumber(amount).toString())
-      payload.amount = amount
-    }
-    if(signParams.sendAction === DAppActions.mina_sendTransaction){
-      payload.transaction = params.transaction
-      memo = params.feePayer?.memo || ""
-    }
-    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      return ledgerTransfer(payload)
-    }
-    setBtnLoading(true)
-    let sendAction = ""
-    let connectAction = QA_SIGN_TRANSTRACTION
-    switch (signParams.sendAction) {
-      case DAppActions.mina_sendStakeDelegation:
-        sendAction = WALLET_SEND_STAKE_TRANSTRACTION
-        break;
-      case DAppActions.mina_sendPayment:
-        sendAction = WALLET_SEND_TRANSTRACTION
-        break;
-      case DAppActions.mina_signMessage:
-        sendAction = WALLET_SEND_MESSAGE_TRANSTRACTION
-        break;
-      case DAppActions.mina_signFields:
-        sendAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
-        connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
-        break;
-      default:
-        break;
-    }
-    payload.sendAction = signParams.sendAction
-    sendMsg({
-      action: connectAction,
-      payload
-    }, (data) => {
-      setBtnLoading(false)
-      onSubmitSuccess(data)
-    })
-
-  }, [currentAccount, signParams, nonceValue, feeValue, onSubmitSuccess, netAccount])
-
-  const onConfirm = useCallback(() => {
-    let params = signParams.params
-    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields  && signParams.sendAction !== DAppActions.mina_sendTransaction) {
-      let toAddress = trimSpace(params.to)
-      if (!addressValid(toAddress)) {
-        Toast.info(i18n.t('sendAddressError'))
-        return
-      }
-    }
-    if (signParams.sendAction === DAppActions.mina_sendPayment) {
-      let amount = trimSpace(params.amount)
-      if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
-        Toast.info(i18n.t('amountError'))
-        return
-      }
-    }
-    let vaildNonce = nonceValue || netAccount.inferredNonce
-    let nonce = trimSpace(vaildNonce) || ""
-    if (nonce.length > 0 && !isNumber(nonce)) {
-      Toast.info(i18n.t('waitNonce'))
-      return
-    }
-    let fee = trimSpace(feeValue)
-    if (fee.length > 0 && !isNumber(fee)) {
-      Toast.info(i18n.t('inputFeeError'))
-      return
-    }
-    if (signParams.sendAction !== DAppActions.mina_signMessage && signParams.sendAction !== DAppActions.mina_signFields) {
-      let amount = trimSpace(params.amount)
-      let maxAmount = new BigNumber(amount).plus(fee).toString()
-      if (new BigNumber(maxAmount).gt(balance)) {
-        Toast.info(i18n.t('balanceNotEnough'))
-        return
-      }
-    }
-    clickNextStep()
-  }, [i18n, currentAccount, signParams, balance, nonceValue, netAccount, feeValue, clickNextStep, goToHome])
-
-  const onClickUnLock = useCallback(() => {
-    setLockStatus(true)
-  }, [currentAccount, params])
-
-  const onClickAdvance = useCallback(() => {
-    setAdvanceStatus(state => !state)
-  }, [])
-  const onClickClose = useCallback(() => {
-    setAdvanceStatus(false)
-  }, [])
-
-  const [advanceFee, setAdvanceFee] = useState("")
-  const [advanceNonce, setAdvanceNonce] = useState("")
-
-
-  const onFeeInput = useCallback((e) => {
-    setAdvanceFee(e.target.value)
-    if (BigNumber(e.target.value).gt(10)) {
-      setFeeErrorTip(i18n.t('feeTooHigh'))
-    } else {
-      setFeeErrorTip("")
-    }
-  }, [i18n])
-  const onNonceInput = useCallback((e) => {
-    setAdvanceNonce(e.target.value)
-  }, [])
-
-
-
-  const onConfirmAdvance = useCallback(() => {
-    if (advanceFee) {
-      setCustomFeeStatus(true)
-      setFeeValue(advanceFee)
-    }
-    if (advanceNonce) {
-      setNonceValue(advanceNonce)
-    }
-    setAdvanceStatus(false)
-  }, [advanceFee, advanceNonce])
+  const params = useMemo(() => {
+    let url = dappWindow.url || window.location?.href || "";
+    return getQueryStringArgs(url);
+  }, [dappWindow]);
 
   const fetchAccountInfo = useCallback(async () => {
-    let account = await getBalance(currentAddress)
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account))
+    if (isShowLoading.current) {
+      Loading.show();
     }
-    Loading.hide()
-  }, [dispatch, currentAddress])
+    dispatch(updateShouldRequest(true, true));
+    await fetchAccountData();
+    isFirstRequest.current = false;
+    Loading.hide();
+  }, [dispatch, currentAddress]);
 
-  const fetchFeeData = useCallback(async () => {
-    let feeRecom = await getFeeRecom()
-    if (feeRecom.length >= 1) {
-      setFeeDefault(feeRecom[1].value)
-    }
-  }, [])
+  const onClickUnLock = useCallback(() => {
+    setLockStatus(true);
+  }, [currentAccount, params]);
 
   const getSignParams = useCallback(() => {
-    sendMsg({
-      action: GET_SIGN_PARAMS,
-      payload: {
-        openId: params.openId
-      }
-    }, (res) => {
-      if(res.params?.action !== DAppActions.mina_signMessage && res.params?.action !== DAppActions.mina_signFields){
-        Loading.show()
-      }
-      let siteFee = res.params?.feePayer?.fee || res.params?.fee || ""
-      let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : ""
+    sendMsg(
+      {
+        action: GET_SIGN_PARAMS,
+        payload: {
+          openId: params.openId,
+        },
+      },
+      (res) => {
+        const { signRequests, notificationRequests, topItem } = res;
+        setPendingSignList(signRequests);
 
-      checkFeeHigh()
+        if (notificationRequests.length > 0) {
+          // current support 1 event
+          setNotifyData(notificationRequests[0]);
+        }
 
-      setSignParams({
-        site: res.site,
-        params: res.params,
-        sendAction: res.params.action,
-        siteRecommendFee: siteRecommendFee,
-      })
-
-      fetchFeeData()
-      fetchAccountInfo()
-    })
-  }, [params, fetchAccountInfo, fetchFeeData])
-
-  useEffect(() => {
-    sendMsg({
-      action: WALLET_GET_CURRENT_ACCOUNT,
-    }, async (currentAccount) => {
-      setLockStatus(currentAccount.isUnlocked)
-    })
-
-    getSignParams()
-  }, [])
-
-  const getContractAddress = useCallback((tx)=>{
-    try {
-      let address
-      if(tx){
-        let realTx = JSON.parse(tx)
-        let firstZKapp = realTx?.accountUpdates.find(update=>update.authorization.proof!==undefined)
-        if(firstZKapp === undefined){
-        }else{
-          address = firstZKapp.body.publicKey
+        if (
+          topItem &&
+          ZKAPP_CHAIN_ACTION.indexOf(topItem.params?.action) !== -1
+        ) {
+          setState({
+            notifyViewStatus: true,
+            signViewStatus: false,
+          });
+        } else {
+          setState({
+            notifyViewStatus: false,
+            signViewStatus: true,
+          });
+          if (isFirstRequest.current) {
+            const firstSignParams = signRequests[0];
+            const sendAction = firstSignParams?.params?.action || "";
+            if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
+              isShowLoading.current = true;
+            }
+          }
+          if (currentSignIndex < signRequests.length - 1) {
+            setRightArrowStatus(false);
+          }
         }
       }
-      return address
-    } catch (error) {
-        return ""
-    }
-   
-  },[])
+    );
+  }, [params, pendingSignList, currentSignIndex]);
 
-
-  const {
-    showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList,pageTitle
-  } = useMemo(() => {
-    let showAccountAddress = "(" + addressSlice(currentAccount.address, 0, 6) + ")"
-    let params = signParams?.params
-    let toAmount = params?.amount || ""
-    toAmount = toAmount +" "+ cointypes.symbol
-
-    let partyContractAddress = getContractAddress(params?.transaction)
-    let realToAddress = partyContractAddress||params?.to || ""
-    let showToAddress = addressSlice(realToAddress, 6)
-
-    let memo =  params?.feePayer?.memo || params?.memo || ""
-    let content = params?.message || ""
-    if(signParams.sendAction === DAppActions.mina_sendTransaction){
-      content = i18n.t('exportZkAppCommand')
-    }else if(signParams.sendAction === DAppActions.mina_signFields){
-      content = JSON.stringify(content)
-    }
-
-    let tabList = []
-    let tabInitId = ""
-    if (content) {
-      let contentObj = { id: "tab1", label: i18n.t('content'), content: content }
-      if(signParams.sendAction === DAppActions.mina_sendTransaction){
-        contentObj.contentClick = true
+  useEffect(() => {
+    sendMsg(
+      {
+        action: WALLET_GET_CURRENT_ACCOUNT,
+      },
+      async (currentAccount) => {
+        setLockStatus(currentAccount.isUnlocked);
       }
-      tabList.push(contentObj)
-      tabInitId = "tab1"
-    }
-    if (memo) {
-      tabList.push({ id: "tab2", label: "Memo", content: memo })
-      if (!content) {
-        tabInitId = "tab2"
-      }
-    }
-    let pageTitle = i18n.t('confirmTransaction')
-    if(signParams.sendAction === DAppActions.mina_signMessage || signParams.sendAction === DAppActions.mina_signFields){
-      pageTitle = i18n.t('signatureRequest')
-    }
+    );
+  }, [dappWindow]);
 
+  useEffect(() => {
+    if (lockStatus) {
+      fetchAccountInfo();
+    }
+  }, [fetchAccountInfo, lockStatus]);
+
+  useEffect(() => {
+    getSignParams();
+  }, [window.location?.href]);
+
+  const { leftArrowColor, rightArrowColor } = useMemo(() => {
+    let leftArrowColor =
+      currentSignIndex === 0 ? ICON_COLOR.gray : ICON_COLOR.black;
+    const total = pendingSignList.length;
+    let rightArrowColor =
+      currentSignIndex === total - 1 ? ICON_COLOR.gray : ICON_COLOR.black;
     return {
-      showAccountAddress, toAmount, realToAddress,showToAddress, memo, content, tabInitId, tabList,pageTitle
-    }
-  }, [currentAccount, signParams, i18n])
-
-
-
+      leftArrowColor,
+      rightArrowColor,
+    };
+  }, [currentSignIndex, pendingSignList]);
 
   useEffect(() => {
-    if (customFeeStatus) {
-      setFeeType(FeeTypeEnum.custom)
-      return
-    }
-    if (signParams?.siteRecommendFee) {
-      setFeeType(FeeTypeEnum.site)
-      setFeeValue(signParams.siteRecommendFee)
-      return
-    }
-    if (feeDefault) {
-      setFeeType(FeeTypeEnum.default)
-      setFeeValue(feeDefault)
-    }
-  }, [signParams, feeDefault, feeValue, customFeeStatus])
+    setShowMultiView(pendingSignList.length > 1);
+  }, [pendingSignList]);
 
-  const checkFeeHigh = useCallback(() => {
-    let checkFee = ""
-    if (customFeeStatus) {
-      checkFee = feeValue
+  const onClickLeftBtn = useCallback(() => {
+    if (leftArrowStatus) {
+      return;
+    }
+    setRightArrowStatus(false);
+    let nextIndex = currentSignIndex - 1;
+    if (nextIndex <= 0) {
+      nextIndex = 0;
+      setLeftArrowStatus(true);
     } else {
-      checkFee = signParams.siteRecommendFee
+      setLeftArrowStatus(false);
     }
-    if (BigNumber(checkFee).gt(10)) {
-      setFeeErrorTip(i18n.t('feeTooHigh'))
+    setCurrentSignIndex(nextIndex);
+  }, [currentSignIndex, leftArrowStatus, pendingSignList]);
+
+  const onClickRightBtn = useCallback(() => {
+    if (rightArrowStatus) {
+      return;
+    }
+    setLeftArrowStatus(false);
+    const total = pendingSignList.length;
+    let nextIndex = currentSignIndex + 1;
+
+    if (nextIndex >= total - 1) {
+      nextIndex = total - 1;
+      setRightArrowStatus(true);
     } else {
-      setFeeErrorTip("")
+      setRightArrowStatus(false);
     }
-  }, [feeValue, i18n, signParams, customFeeStatus])
 
-  useEffect(() => {
-    checkFeeHigh()
-  }, [feeValue])
+    setCurrentSignIndex(nextIndex);
+  }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
-    const onClickContent = useCallback((clickAble)=>{
-      if(clickAble){
-        let data = signParams?.params?.transaction
-        if(data){
-          let res = JSON.parse(data)
-          exportFile(JSON.stringify(res,null,2),"zkapp_command.json")
+  const goToHome = useCallback(() => {
+    let url = dappWindow?.url;
+    if (url) {
+      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
+    }
+    dispatch(updateDAppOpenWindow({}));
+  }, [dappWindow, showMultiView]);
+
+  const onRemoveNotify = useCallback(() => {
+    setNotifyData({});
+    if (pendingSignList.length > 0) {
+      setState({
+        signViewStatus: true,
+        notifyViewStatus: false,
+      });
+    } else {
+      goToHome();
+    }
+  }, [pendingSignList]);
+  const onRemoveTx = useCallback(
+    (openId, type, nonce) => {
+      let signList = [...pendingSignList];
+      let tempSignParams;
+      signList = signList.filter((item) => {
+        let checkStatus = item.id !== openId;
+        if (!checkStatus) {
+          tempSignParams = item;
+        }
+        return checkStatus;
+      });
+
+      if (signList.length === 0) {
+        if (notifyData.id) {
+          setState({
+            signViewStatus: false,
+            notifyViewStatus: true,
+          });
+          setPendingSignList(signList);
+          setCurrentSignIndex(0);
+        } else {
+          goToHome();
+        }
+        return;
+      }
+      setPendingSignList(signList);
+      setCurrentSignIndex(0);
+      // if the zk tx is confirmed and the nonce is same with nextUseInferredNonce , then + 1
+      if (type === TX_CLICK_TYPE.CONFIRM) {
+        const sendAction = tempSignParams?.params?.action || "";
+        if (
+          SIGN_EVENT_WITH_BROADCAST.indexOf(sendAction) !== -1 &&
+          nextUseInferredNonce === nonce
+        ) {
+          setNextUseInferredNonce((state) =>
+            BigNumber(state).plus(1).toNumber()
+          );
         }
       }
-  },[signParams])
+    },
+    [pendingSignList, nextUseInferredNonce, goToHome, notifyData]
+  );
+  /** reject all tx */
+  const onRejectAll = useCallback(() => {
+    sendMsg(
+      {
+        action: DAPP_ACTION_CANCEL_ALL,
+        payload: {
+          cancel: true,
+        },
+      },
+      async (params) => {}
+    );
+    if (notifyData.id) {
+      setPendingSignList([]);
+      setState({
+        signViewStatus: false,
+        notifyViewStatus: true,
+      });
+    } else {
+      goToHome();
+    }
+  }, [pendingSignList, notifyData]);
+
+  const onUpdateAdvance = useCallback(
+    ({ id, fee, nonce }) => {
+      let preAdvanceData = { ...advanceData };
+      preAdvanceData[id] = {
+        fee,
+        nonce,
+      };
+      setAdvanceData(preAdvanceData);
+    },
+    [advanceData]
+  );
+
   if (!lockStatus) {
-    return <LockPage onDappConfirm={true} onClickUnLock={onClickUnLock} history={history} />;
+    return (
+      <LockPage
+        onDappConfirm={true}
+        onClickUnLock={onClickUnLock}
+        history={history}
+      />
+    );
   }
-  return (<div className={styles.conatiner}>
-    <div className={styles.titleRow}>
-      <p className={styles.title}>
-        {pageTitle}
-      </p>
-      <div className={styles.netContainer}>
-        <div className={styles.dot} />
-        <p className={styles.netContent}>{currentConfig.name}</p>
-      </div>
-    </div>
-    <div className={styles.content}>
-      <div className={styles.websiteContainer}>
-        <DappWebsite siteIcon={signParams?.site?.webIcon} siteUrl={signParams?.site?.origin} />
-      </div>
-      {signParams?.sendAction === DAppActions.mina_signMessage || signParams?.sendAction === DAppActions.mina_signFields ?
-        <CommonRow 
-          leftTitle={i18n.t('account')} 
-          leftContent={currentAccount.accountName} 
-          leftDescContent={showAccountAddress} 
-          leftCopyContent= {currentAccount.address}
-          rightContent={balance + " " + cointypes.symbol} />
-        :
-        <>
-          <CommonRow 
-          leftTitle={i18n.t('from')} 
-          leftContent={currentAccount.accountName} 
-          leftDescContent={showAccountAddress} 
-          rightTitle={i18n.t('to')} 
-          rightContent={showToAddress}
-          leftCopyContent= {currentAccount.address}
-          rightCopyContent ={realToAddress}
-           />
-          {signParams?.sendAction === DAppActions.mina_sendPayment && <CommonRow leftTitle={i18n.t('amount')} leftContent={toAmount} />}
-          <div className={styles.accountRow}>
-            <div className={styles.rowLeft}>
-              <p className={styles.rowTitle}>{i18n.t('transactionFee')}</p>
-              <div className={styles.feeCon}>
-                <p className={cls(styles.rowContent, styles.feeContent)}>{feeValue + " " + cointypes.symbol}</p>
-                {feeType !== FeeTypeEnum.custom && <span className={cls(feeType === FeeTypeEnum.site ? styles.feeTypeSite : styles.feeTypeDefault)}>{feeType === FeeTypeEnum.site ? i18n.t('siteSuggested') : i18n.t('fee_default')}</span>}
-              </div>
+  return (
+    <div className={styles.container}>
+      {showMultiView && state.signViewStatus && (
+        <div className={styles.multiTitleRow}>
+          <div className={styles.multiTitle}>
+            <Trans
+              i18nKey={"pendingZkTx"}
+              values={{
+                current: currentSignIndex + 1,
+                total: pendingSignList.length,
+              }}
+              components={{
+                bold: <span className={styles.multiTitleBold} />,
+              }}
+            />
+          </div>
+          <div className={styles.multiTitleRowRight}>
+            <div
+              className={cls(styles.multiRowArrow, {
+                [styles.multiRowArrowDisable]: leftArrowStatus,
+              })}
+              onClick={onClickLeftBtn}
+            >
+              <ICON_Arrow stroke={leftArrowColor} />
             </div>
-            <div className={styles.rowRight}>
-              <p className={cls(styles.rowTitle, styles.rightTitle)} />
-              <p className={styles.rowPurpleContent} onClick={onClickAdvance}>{i18n.t('advanceMode')}</p>
+            <div
+              className={cls(styles.multiRowArrow, styles.rightArrow, {
+                [styles.multiRowArrowDisable]: rightArrowStatus,
+              })}
+              onClick={onClickRightBtn}
+            >
+              <ICON_Arrow stroke={rightArrowColor} />
             </div>
           </div>
-          <div className={styles.highFeeTip}>{feeErrorTip}</div>
-        </>}
-      {(tabList.length > 0) && <div className={styles.accountRow}>
-        <Tabs selected={selectedTabIndex} initedId={tabInitId} onSelect={onSelectedTab}>
-        {tabList.map((tab) => {
-            const clickAble = tab.contentClick
-            return (<div key={tab.id} id={tab.id} label={tab.label}>
-              <p onClick={()=>onClickContent(clickAble)} className={cls(styles.tabContent,{
-                [styles.clickCss]:clickAble
-              })}>
-                {tab.content}
-              </p>
-            </div>)
-          })}
-        </Tabs>
-      </div>}
+        </div>
+      )}
+      {state.signViewStatus && (
+        <SignView
+          signParams={pendingSignList[currentSignIndex]}
+          showMultiView={showMultiView}
+          onRemoveTx={onRemoveTx}
+          inferredNonce={nextUseInferredNonce}
+          advanceData={advanceData}
+          onUpdateAdvance={onUpdateAdvance}
+          key={pendingSignList[currentSignIndex]?.id}
+        />
+      )}
+      {state.notifyViewStatus && (
+        <ZkAppChainView
+          notifyParams={notifyData}
+          onRemoveNotify={onRemoveNotify}
+        />
+      )}
+      {showMultiView && state.signViewStatus && (
+        <div className={styles.multiBottomWrapper}>
+          <div className={styles.multiBottom} onClick={onRejectAll}>
+            {i18n.t("rejectAllTx", { total: pendingSignList.length })}
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
 
-
-    <div className={styles.btnGroup}>
-      <Button
-        onClick={onCancel}
-        theme={button_theme.BUTTON_THEME_LIGHT}
-        size={button_size.middle}>{i18n.t('cancel')}</Button>
-      <Button
-        loading={btnLoading}
-        size={button_size.middle}
-        onClick={onConfirm}
-      >{i18n.t('confirm')}</Button>
-    </div>
-    <DAppAdvance
-      modalVisable={advanceStatus}
-      title={i18n.t('advanceMode')}
-      onClickClose={onClickClose}
-      feeValue={advanceFee}
-      feePlaceHolder={feeValue}
-      onFeeInput={onFeeInput}
-      nonceValue={advanceNonce}
-      onNonceInput={onNonceInput}
-      onConfirm={onConfirmAdvance}
-      feeErrorTip={feeErrorTip}
-    />
-    <ConfirmModal
-      modalVisable={ledgerModalStatus}
-      title={i18n.t('transactionDetails')}
-      waitingLedger={ledgerModalStatus} />
-  </div>)
-}
-
-const CommonRow = ({
-  leftTitle = "",
-  leftContent = "",
-  leftDescContent = "",
-  rightTitle = " ",
-  rightContent = "",
-  leftCopyContent="",
-  rightCopyContent=""
-}) => {
-  const {leftCopyAble,rightCopyAble} = useMemo(()=>{
-    const leftCopyAble = !!leftCopyContent
-    const rightCopyAble = !!rightCopyContent
-    return {
-      leftCopyAble,rightCopyAble
-    }
-  },[leftCopyContent,rightCopyContent])
-
-  const onClickLeft = useCallback(()=>{
-    if(leftCopyAble){
-      copyText(leftCopyContent).then(() => {
-        Toast.info(i18n.t('copySuccess'))
-      })
-    }
-  },[leftCopyAble,leftCopyContent,i18n])
-  const onClickRight = useCallback(()=>{
-    if(rightCopyAble){
-      copyText(rightCopyContent).then(() => {
-        Toast.info(i18n.t('copySuccess'))
-      })
-    }
-  },[rightCopyAble,rightCopyContent,i18n])
-
-  return (<div className={styles.accountRow}>
-    <div className={styles.rowLeft}>
-      <p className={styles.rowTitle}>{leftTitle}</p>
-      <p className={cls(styles.rowContent,{
-        [styles.copyCss]:leftCopyAble
-      })} onClick={onClickLeft}>{leftContent}<span className={styles.rowDescContent}>{leftDescContent}</span></p>
-    </div>
-    <div className={styles.rowRight}>
-      <p className={cls(styles.rowTitle, styles.rightTitle)}>{rightTitle}</p>
-      <p className={cls(styles.rowContent,{
-        [styles.copyCss]:rightCopyAble
-      })} onClick={onClickRight}>{rightContent}</p>
-    </div>
-  </div>)
-}
-export default SignTransaction
+export default SignTransaction;

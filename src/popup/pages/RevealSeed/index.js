@@ -1,5 +1,5 @@
-import { SEC_SHOW_MNEMONIC } from "../../../constant/secTypes";
-import { WALLET_GET_MNE } from "../../../constant/types";
+import { SEC_FROM_TYPE } from "../../../constant/commonType";
+import { WALLET_GET_MNE } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
@@ -42,7 +42,7 @@ const RevealSeedPage = ({ }) => {
     history.goBack()
   }, [])
   if (showSecurity) { 
-    return <SecurityPwd onClickCheck={onClickCheck} action={SEC_SHOW_MNEMONIC} />
+    return <SecurityPwd onClickCheck={onClickCheck} action={SEC_FROM_TYPE.SEC_SHOW_MNEMONIC} />
   }
   return <CustomView title={i18n.t('backupMnemonicPhrase')} >
     <p className={styles.backTitle}>

@@ -23,6 +23,7 @@ const Button = ({
     loading = false,
     children,
     className = "",
+    withEvent = false
 }) => {
     const [btnDisable, setBtnDisable] = useState(disable)
     useEffect(() => {
@@ -30,9 +31,13 @@ const Button = ({
     }, [loading])
 
 
-    const onRealClick = () => {
+    const onRealClick = (e) => {
         if (!loading && !disable) {
-            onClick()
+            if(withEvent){
+                onClick(e)
+            }else{
+                onClick()
+            }
         }
     }
 

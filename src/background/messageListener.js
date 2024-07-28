@@ -15,8 +15,8 @@ import {
   WALLET_GET_PRIVATE_KEY,
   WALLET_CHANGE_SEC_PASSWORD,
   WALLET_GET_CURRENT_PRIVATE_KEY,
-  WALLET_SEND_TRANSTRACTION,
-  WALLET_SEND_STAKE_TRANSTRACTION,
+  WALLET_SEND_TRANSACTION,
+  WALLET_SEND_STAKE_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_IMPORT_LEDGER,
   WALLET_IMPORT_KEY_STORE,
@@ -24,13 +24,13 @@ import {
   WALLET_RESET_LAST_ACTIVE_TIME,
   WALLET_DELETE_WATCH_ACCOUNT,
   RESET_WALLET,
-  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, DAPP_GET_CURRENT_OPEN_WINDOW, GET_SIGN_PARAMS, WALLET_SEND_MESSAGE_TRANSTRACTION, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSTRACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION
-} from "../constant/types";
+  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, DAPP_GET_CURRENT_OPEN_WINDOW, GET_SIGN_PARAMS_BY_ID, WALLET_SEND_MESSAGE_TRANSACTION, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSACTION, GET_SIGN_PARAMS, WALLET_SEND_NULLIFIER, DAPP_ACTIONS
+} from "../constant/msgTypes";
 import apiService from "./APIService";
 import * as storage from "./storageService";
 import dappService from "./DappService";
 import extension from 'extensionizer'
-import { WALLET_CONNECT_TYPE } from "../constant/walletType";
+import { WALLET_CONNECT_TYPE } from "../constant/commonType";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
@@ -122,13 +122,13 @@ function internalMessageListener(message, sender, sendResponse) {
         sendResponse(privateKey);
       })
       break;
-    case WALLET_SEND_TRANSTRACTION:
-      apiService.sendTransaction(payload).then((result) => {
+    case WALLET_SEND_TRANSACTION:
+      apiService.sendLegacyPayment(payload).then((result) => {
         sendResponse(result);
       })
       break;
-    case WALLET_SEND_STAKE_TRANSTRACTION:
-      apiService.sendStakTransaction(payload).then((result) => {
+    case WALLET_SEND_STAKE_TRANSACTION:
+      apiService.sendLegacyStakeDelegation(payload).then((result) => {
         sendResponse(result);
       })
       break;
@@ -165,6 +165,9 @@ function internalMessageListener(message, sender, sendResponse) {
     case RESET_WALLET:
       sendResponse(apiService.resetWallet())
       break
+    case GET_SIGN_PARAMS_BY_ID:
+      sendResponse(dappService.getSignParamsByOpenId(payload.openId))
+      break
     case GET_SIGN_PARAMS:
       sendResponse(dappService.getSignParams(payload.openId))
       break
@@ -172,7 +175,7 @@ function internalMessageListener(message, sender, sendResponse) {
       sendResponse(dappService.getCurrentAccountConnectStatus(payload.siteUrl, payload.currentAddress))
       break
     case DAPP_GET_CONNECT_STATUS:
-      sendResponse(dappService.getConncetStatus(payload.siteUrl, payload.address))
+      sendResponse(dappService.getConnectStatus(payload.siteUrl, payload.address))
       break
     case DAPP_DISCONNECT_SITE:
       sendResponse(dappService.disconnectDapp(payload.siteUrl, payload.address))
@@ -189,18 +192,23 @@ function internalMessageListener(message, sender, sendResponse) {
     case DAPP_CHANGE_NETWORK:
       sendResponse(dappService.notifyNetworkChange(payload.netConfig))
       break
-    case WALLET_SEND_MESSAGE_TRANSTRACTION:
+    case WALLET_SEND_MESSAGE_TRANSACTION:
       apiService.signMessage(payload).then((result) => {
         sendResponse(result);
       })
       break;
-    case WALLET_SEND_FIELDS_MESSAGE_TRANSTRACTION:
+    case WALLET_SEND_FIELDS_MESSAGE_TRANSACTION:
       apiService.signFields(payload).then((result) => {
         sendResponse(result);
       })
       break;
-    case QA_SIGN_TRANSTRACTION:
-      apiService.sendQATransaction(payload).then((result) => {
+    case WALLET_SEND_NULLIFIER:
+      apiService.createNullifierByApi(payload).then((result) => {
+        sendResponse(result);
+      })
+      break;
+    case QA_SIGN_TRANSACTION:
+      apiService.sendTransaction(payload).then((result) => {
         sendResponse(result);
       })
       break;
@@ -212,6 +220,9 @@ function internalMessageListener(message, sender, sendResponse) {
       break
     case GET_LEDGER_ACCOUNT_NUMBER:
       sendResponse(apiService.getLedgerAccountIndex())
+      break
+    case DAPP_ACTIONS.INIT_APPROVE_LIST:
+      sendResponse(dappService.initApproveConnect())
       break
     default:
       break;
@@ -241,3 +252,16 @@ export function setupMessageListeners() {
   extension.runtime.onMessage.addListener(internalMessageListener);
   extension.runtime.onConnect.addListener(onConnectListener);
 }
+
+async function createOffscreen() {
+  if(chrome.offscreen){
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['BLOBS'],
+      justification: 'keep service worker running',
+    }).catch(() => {});
+  }
+}
+chrome.runtime.onStartup.addListener(createOffscreen);
+self.onmessage = e => {};
+createOffscreen();

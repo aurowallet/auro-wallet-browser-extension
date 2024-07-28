@@ -11,8 +11,11 @@ const Tabs = (props) => {
     selected,
     onSelect,
     children,
-    initedId,
+    initId,
     tabType = TAB_TYPE.TAB,
+    btnRightComponent,
+    customBtnCss,
+    customTabPanelCss
   } = props;
   const nextChildren = useMemo(()=>{
     return children.filter((child)=>{
@@ -43,10 +46,10 @@ const Tabs = (props) => {
       updateTabIndicator(
         tabButtonsRef.current,
         tabIndicatorRef.current,
-        initedId
+        initId
       );
     }
-  }, [initedId]);
+  }, [initId]);
   const buttons = React.Children.map(nextChildren, (child, index) => {
     const { id } = child.props;
     const isSelected = selected === index;
@@ -55,7 +58,7 @@ const Tabs = (props) => {
       return <></>;
     }
     return (
-      <TabButton id={id} selected={isSelected} onClick={handleClick}>
+      <TabButton id={id} selected={isSelected} onClick={handleClick} customBtnCss={customBtnCss}>
         {child.props.label}
       </TabButton>
     );
@@ -65,7 +68,7 @@ const Tabs = (props) => {
     const id = child.props.id;
     const isSelected = selected === index;
     return (
-      <TabPanel id={id} selected={isSelected}>
+      <TabPanel id={id} selected={isSelected} customTabPanelCss={customTabPanelCss}>
         {child.props.children}
       </TabPanel>
     );
@@ -82,7 +85,14 @@ const Tabs = (props) => {
         })}
         ref={tabButtonsRef}
       >
-        {buttons}
+        <div className={styles.btnRow}>
+        <div>
+          {buttons}
+        </div>
+        {btnRightComponent && <div>
+          {btnRightComponent}
+        </div>}
+        </div>
         <span
           ref={tabIndicatorRef}
           className={cls(styles.tabIndicator, {
@@ -104,11 +114,11 @@ const Tabs = (props) => {
 export default Tabs;
 
 const TabButton = (props) => {
-  const { id, selected, onClick, children } = props;
+  const { id, selected, onClick, children,customBtnCss } = props;
   return (
     <button
       data-id={id}
-      className={cls(styles.tabBtn, {
+      className={cls(styles.tabBtn,customBtnCss,{
         [styles.tabBtnActive]: selected,
       })}
       onClick={onClick}
@@ -119,11 +129,11 @@ const TabButton = (props) => {
 };
 
 const TabPanel = (props) => {
-  const { id, selected, children } = props;
+  const { id, selected, children,customTabPanelCss } = props;
   return (
     <div
       data-id={id}
-      className={cls(styles.tabPanel, {
+      className={cls(styles.tabPanel,customTabPanelCss,{
         [styles.tabPanelActive]: selected,
       })}
     >

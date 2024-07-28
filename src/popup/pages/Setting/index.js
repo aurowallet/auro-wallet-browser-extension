@@ -5,18 +5,19 @@ import { useHistory } from 'react-router-dom';
 import { getLocal } from "../../../background/localStorage";
 import { AUTO_LOCK_TIME_LIST } from "../../../constant";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
-import { DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/types";
+import { DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/msgTypes";
 import { languageOption } from "../../../i18n";
 import { updateAddressBookFrom } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
-import { fitPopupWindow, openPopupWindow } from "../../../utils/popup";
+import { fitPopupWindow } from "../../../utils/pageUtils";
+import { openPopupWindow } from "../../../utils/popup";
 import { showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import styles from './index.module.scss';
 
 const Setting = ({ }) => {
 
-    const currentConfig = useSelector(state => state.network.currentConfig)
+    const currentNode = useSelector(state => state.network.currentNode)
     const currency = useSelector(state => state.currencyConfig.currentCurrency)
     const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
 
@@ -62,19 +63,19 @@ const Setting = ({ }) => {
             return autoLockTime
         }
         const getNetwork = () => {
-            return showNameSlice(currentConfig.name)
+            return showNameSlice(currentNode.name,12)
         }
         const getLanguage = () => {
-            let currentLangeuage = languageOption.filter((language) => {
+            let currentLanguage = languageOption.filter((language) => {
                 return language.key === i18n.language
             })
-            let show = currentLangeuage.length > 0 ? currentLangeuage[0].value : ""
+            let show = currentLanguage.length > 0 ? currentLanguage[0].value : ""
             return show
         }
         const getCurrency = () => {
             return currency.value
         }
-        const getAddressbook = () => {
+        const getAddressBook = () => {
             let list = getLocal(ADDRESS_BOOK_CONFIG)
 
             if (list) {
@@ -102,12 +103,12 @@ const Setting = ({ }) => {
                 targetRoute: "app_connection",
                 rightContent: connectCount
             },
-            // {
-            //     icon: '/img/icon_autoLock.svg',
-            //     title: i18n.t('autoLock'),
-            //     targetRoute: "auto_lock",
-            //     rightContent: getAutoLockTime()
-            // },
+            {
+                icon: '/img/icon_autoLock.svg',
+                title: i18n.t('autoLock'),
+                targetRoute: "auto_lock",
+                rightContent: getAutoLockTime()
+            },
             {
                 icon: '/img/icon_network.svg',
                 title: i18n.t('network'),
@@ -130,7 +131,7 @@ const Setting = ({ }) => {
                 icon: '/img/icon_addressBook.svg',
                 title: i18n.t('addressBook'),
                 targetRoute: "address_book",
-                rightContent: getAddressbook(),
+                rightContent: getAddressBook(),
                 action: addressBookAction
             }
         ]
@@ -143,7 +144,7 @@ const Setting = ({ }) => {
             routeList,
             rowAbout
         }
-    }, [i18n, currentConfig, currency, dispatch, connectCount, currentLockTime])
+    }, [i18n, currentNode, currency, dispatch, connectCount, currentLockTime])
 
     const [showOpenTabStatus,setShowOpenTabStatus] = useState(true)
     useEffect(()=>{
@@ -182,9 +183,9 @@ const Setting = ({ }) => {
 
     return (<CustomView
         title={i18n.t('setting')}
-        customeTitleClass={styles.customeTitleClass}
+        customTitleClass={styles.customTitleClass}
         onClickTitle={onClickTitle}
-        rightIcon={showOpenTabStatus ? "/img/icon_popnewwindow.svg":""}
+        rightIcon={showOpenTabStatus ? "/img/icon_new_window.svg":""}
         onClickRightIcon={onClickRightIcon}
         rightHoverContent={i18n.t('popOutWindow')}
         contentClassName={styles.contentClassName}

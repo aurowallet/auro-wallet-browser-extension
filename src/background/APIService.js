@@ -1,15 +1,15 @@
-import { LOCK_TIME } from '../../config';
-import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/types';
+import { LOCK_TIME_DEFAULT } from '../constant';
+import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/msgTypes';
 import '../i18n';
 import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
-import { signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
+import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
-import { ACCOUNT_TYPE } from "../constant/walletType"
+import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
-import { getCurrentNetConfig } from '../utils/utils';
+import { decodeMemo, getCurrentNodeConfig } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
-import { changeLanguage, getCurrentLang } from '../i18n';
+import { changeLanguage } from '../i18n';
 import { extGetLocal } from './extensionStorage';
 import { LANGUAGE_CONFIG } from '../constant/storageKey';
 
@@ -38,21 +38,42 @@ class APIService {
           password: '',
           currentAccount: {},
           mne: "",
-          autoLockTime:LOCK_TIME
+          autoLockTime:LOCK_TIME_DEFAULT
         };
       }
     initAppLocalConfig=async()=>{
         const {autoLockTime} = await get("autoLockTime")
-        return autoLockTime||LOCK_TIME
+        return autoLockTime||LOCK_TIME_DEFAULT
     }
 
     getStore = () => {
         return this.memStore.getState()
     };
     resetWallet=()=>{
+        if (this.activeTimer) {
+            clearTimeout(this.activeTimer)
+        }
+        this.setPopupIcon(true)
         this.memStore.putState(this.initLockedState())
         return
-      }
+    }
+    setPopupIcon = (
+        isUnlocked,
+      ) => {
+        const icons = [16, 32, 48, 128].reduce((res, size) => {
+          if (!isUnlocked) {
+            res[size] = `img/logo/${size}_lock.png`;
+          } else {
+            res[size] = `img/logo/${size}.png`;
+          }
+          return res;
+        }, {});
+        let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
+        const action = isManifestV3 ? chrome.action : chrome.browserAction;
+        return action.setIcon({
+          path: icons,
+        });
+      };
     getCreateMnemonic = (isNewMne) => {
         if (isNewMne) {
             let mnemonic = generateMne()
@@ -63,9 +84,7 @@ class APIService {
             if (mne) {
                 return mne
             } else {
-                let mnemonic = generateMne()
-                this.memStore.updateState({ mne: mnemonic })
-                return mnemonic
+                return ""
             }
         }
     }
@@ -92,6 +111,7 @@ class APIService {
                 currentAccount,
                 autoLockTime,
             })
+            this.setPopupIcon(true)
             return this.getAccountWithoutPrivate(currentAccount)
         } catch (error) {
             return { error: 'passwordError', type: "local" }
@@ -146,7 +166,7 @@ class APIService {
             if (!timeoutMinutes) {
                 return
             }
-
+            
             this.activeTimer = setTimeout(() => {
                 this.setUnlockedStatus(false)
             }, timeoutMinutes)
@@ -159,18 +179,24 @@ class APIService {
     }
     getCurrentAutoLockTime(){
         return this.getStore().autoLockTime
-    }
+    } 
     setUnlockedStatus(status) {
         if (!status) {
             let nextState = this.initLockedState()
             nextState.autoLockTime = this.getStore().autoLockTime
+            nextState.currentAccount.address = this.getCurrentAccountAddress()
             this.memStore.updateState(nextState)
             extension.runtime.sendMessage({
                 type: FROM_BACK_TO_RECORD,
                 action: SET_LOCK,
-            });
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error("set lock error",extension.runtime.lastError);
+                }
+              });
         }
         this.memStore.updateState({ isUnlocked: status })
+        this.setPopupIcon(status)
     };
     getCurrentAccount = async () => {
         let localAccount = await get("keyringData")
@@ -182,6 +208,7 @@ class APIService {
             }
         }
         currentAccount.isUnlocked = isUnlocked
+        this.setPopupIcon(isUnlocked)
         return this.getAccountWithoutPrivate(currentAccount)
     };
     
@@ -228,7 +255,7 @@ class APIService {
     getAllAccount = () => {
         let data = this.getStore().data
         let accountList = this.accountSort(data[0].accounts)
-     
+
         let currentAccount = this.getStore().currentAccount
         return {
             accounts: accountList,
@@ -295,7 +322,7 @@ class APIService {
                     accountName:sameAccount.accountName,
                     address:sameAccount.address
                 }
-                let error = { "error": 'improtRepeat', type: "local",account:backAccount }
+                let error = { "error": 'importRepeat', type: "local",account:backAccount }
                 return error
             }
             
@@ -323,7 +350,7 @@ class APIService {
         for (let index = 0; index < accounts.length; index++) {
             const account = accounts[index];
             if (account.address === address) {
-                error = { "error": 'improtRepeat', type: "local" }
+                error = { "error": 'importRepeat', type: "local" }
                 break
             }
         }
@@ -503,7 +530,7 @@ class APIService {
         })
         deleteAccount = deleteAccount.length>0 ?deleteAccount[0]:{}
         let canDelete = false
-        if(deleteAccount && deleteAccount.type === ACCOUNT_TYPE.WALLET_WATCH){
+        if(deleteAccount && (deleteAccount.type === ACCOUNT_TYPE.WALLET_WATCH||deleteAccount.type === ACCOUNT_TYPE.WALLET_LEDGER)){
             canDelete = true
         }else{
             let isCorrect = this.checkPassword(password)
@@ -614,7 +641,7 @@ class APIService {
         delete newAccount.privateKey;
         return newAccount
     }
-    sendTransaction = async (params) => {
+    sendLegacyPayment = async (params) => {
         try {
             let fromAddress = params.fromAddress
             let toAddress = params.toAddress
@@ -622,6 +649,10 @@ class APIService {
             let fee = params.fee
             let nonce = params.nonce
             let memo = params.memo
+            const isSpeedUp = params.isSpeedUp
+            if(isSpeedUp){
+                memo = decodeMemo(params.memo)
+            }
             const privateKey = await this.getCurrentPrivateKey()
             let signedTx = await signPayment(privateKey, fromAddress, toAddress, amount, fee, nonce, memo)
             if (signedTx.error) {
@@ -639,10 +670,9 @@ class APIService {
     }
     signMessage = async(params) => {
         try {
-            let fromAddress = params.fromAddress
             let message = params.message
             const privateKey = await this.getCurrentPrivateKey()
-            let signedTx = await signMessagePayment(privateKey, fromAddress,message)
+            let signedTx = await signMessagePayment(privateKey,message)
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
@@ -651,9 +681,13 @@ class APIService {
             return { error: err }
         }
     }
-    sendStakTransaction = async (params) => {
+    sendLegacyStakeDelegation = async (params) => {
         try {
-            let { fromAddress, toAddress, fee, nonce, memo } = params;
+            let { fromAddress, toAddress, fee, nonce,isSpeedUp } = params;
+            let memo = params.memo
+            if(isSpeedUp){
+                memo = decodeMemo(params.memo)
+            }
             const privateKey = await this.getCurrentPrivateKey()
             let signedTx = await stakePayment(privateKey, fromAddress, toAddress, fee, nonce, memo)
             if (signedTx.error) {
@@ -669,42 +703,62 @@ class APIService {
             return { error: err }
         }
     }
+    postStakeTx = async(data,signature)=>{
+        let stakeRes = await sendStakeTx(data, signature).catch(error =>  error )
+        let delegation = stakeRes.sendDelegation && stakeRes.sendDelegation.delegation || {}
+        if (delegation.hash && delegation.id) {
+            this.checkTxStatus(delegation.id,delegation.hash)
+        }
+        return { ...stakeRes }
+    }
+    postPaymentTx = async(data,signature)=>{
+        let sendRes = await sendTx(data, signature).catch(error => error )
+        let payment = sendRes.sendPayment && sendRes.sendPayment.payment || {}
+        if (payment.hash && payment.id) {
+            this.checkTxStatus(payment.id,payment.hash)
+        }
+        return { ...sendRes }
+    }
+    postZkTx = async (signedTx)=>{
+        let sendPartyRes = await sendParty(signedTx.data.zkappCommand, signedTx.signature).catch(error =>  error )
+        if(!sendPartyRes.error){
+            let partyRes = sendPartyRes?.sendZkapp?.zkapp || {}
+            if ( partyRes.id && partyRes.hash ) {
+                this.checkTxStatus(partyRes.id,partyRes.hash,FETCH_TYPE_QA)
+            }
+            return { ...partyRes }
+        }else{
+            return sendPartyRes
+        }
+    }
 
-    sendQATransaction= async (params) => {
+    sendTransaction= async (params) => {
         try {
+            let nextParams = { ...params }
             const privateKey = await this.getCurrentPrivateKey()
-            let signedTx = await signTransaction(privateKey,params)
+            if(params.isSpeedUp){
+                nextParams.memo = decodeMemo(params.memo)
+            }
+            let signedTx = await signTransaction(privateKey,nextParams)
             if (signedTx.error) {
                 return { error: signedTx.error }
             }
-            switch (params.sendAction) {
-                case DAppActions.mina_sendStakeDelegation:
-                    let stakeRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error =>  error )
-                    let delegation = stakeRes.sendDelegation && stakeRes.sendDelegation.delegation || {}
-                    if (delegation.hash && delegation.id) {
-                        this.checkTxStatus(delegation.id,delegation.hash)
-                    }
-                    return { ...stakeRes }
-                case DAppActions.mina_sendPayment:
-                    let sendRes = await sendTx(signedTx.data, signedTx.signature).catch(error => error )
-                    let payment = sendRes.sendPayment && sendRes.sendPayment.payment || {}
-                    if (payment.hash && payment.id) {
-                        this.checkTxStatus(payment.id,payment.hash)
-                    }
-                    return { ...sendRes }
-                case DAppActions.mina_sendTransaction:
-                    let sendPartyRes = await sendParty(signedTx.data.zkappCommand, signedTx.signature).catch(error =>  error )
-                    if(!sendPartyRes.error){
-                        let partyRes = sendPartyRes?.sendZkapp?.zkapp || {}
-                        if ( partyRes.id && partyRes.hash ) {
-                            this.checkTxStatus(partyRes.id,partyRes.hash,FETCH_TYPE_QA)
-                        }
-                        return { ...partyRes }
-                    }else{
-                        return sendPartyRes
-                    }
+            if(nextParams.zkOnlySign){
+                return signedTx.data
+            }
+            const sendAction = params.sendAction
+            switch (sendAction) {
                 case DAppActions.mina_signMessage:
-                    return signedTx
+                    return signedTx;
+                case DAppActions.mina_sendPayment:
+                    const sendRes = await this.postPaymentTx(signedTx.data, signedTx.signature)
+                    return sendRes
+                case DAppActions.mina_sendStakeDelegation:
+                    const stakeRes = await this.postStakeTx(signedTx.data, signedTx.signature)
+                    return stakeRes
+                case DAppActions.mina_sendTransaction:
+                    const sendPartyRes = await this.postZkTx(signedTx)
+                    return sendPartyRes
                 default:
                     return {error:"not support"}
             }
@@ -723,17 +777,25 @@ class APIService {
         return signedResult
     }
 
+    createNullifierByApi=async(params)=>{
+        const privateKey = await this.getCurrentPrivateKey()
+        let createResult = await createNullifier(privateKey,params)
+        if (createResult.error) {
+            return { error: createResult.error }
+        }
+        return createResult
+    }
     notification = async (hash) => {
-        let netConfig = await getCurrentNetConfig()
+        let netConfig = await getCurrentNodeConfig()
         let myNotificationID
         extension.notifications &&
             extension.notifications.onClicked.addListener(function (clickId) {
                 if(myNotificationID === clickId){
-                    let url = netConfig.explorer +"/transaction/"+ clickId
+                    let url = netConfig.explorer +"/tx/"+ clickId
                     extension.tabs.create({ url: url });
                 }
             });
-        const i18nLanguage = getCurrentLang()
+        const i18nLanguage = i18n.language
         const localLanguage = await extGetLocal(LANGUAGE_CONFIG)
         if(localLanguage !== i18nLanguage){
             changeLanguage(localLanguage)
@@ -767,8 +829,7 @@ class APIService {
     baseTransactionStatus= (method,paymentId, hash) => {
         method(paymentId).then((data) => {
             if (data && data.transactionStatus && (
-                (data.transactionStatus === STATUS.TX_STATUS_INCLUDED
-                    || data.transactionStatus === STATUS.TX_STATUS_UNKNOWN)
+                (data.transactionStatus === STATUS.TX_STATUS_INCLUDED)
             )) {
                 extension.runtime.sendMessage({
                     type: FROM_BACK_TO_RECORD,
@@ -780,7 +841,13 @@ class APIService {
                     clearTimeout(this.timer);
                     this.timer = null;
                 }
-            } else {
+            } else if(data && data.transactionStatus && (
+                (data.transactionStatus === STATUS.TX_STATUS_UNKNOWN))){
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+            }else {
                 this.timer = setTimeout(() => {
                     this.baseTransactionStatus(method,paymentId, hash);
                 }, 5000);

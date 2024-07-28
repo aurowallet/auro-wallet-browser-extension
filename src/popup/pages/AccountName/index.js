@@ -1,10 +1,10 @@
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
-import { useDispatch, useSelector } from 'react-redux';
-import { useHistory } from 'react-router-dom';
-import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/pageType";
-import { WALLET_CREATE_HD_ACCOUNT } from "../../../constant/types";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
+import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/commonType";
+import { WALLET_CREATE_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { checkLedgerConnect } from "../../../utils/ledger";
@@ -16,236 +16,263 @@ import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 
-const AccountName = ({ }) => {
-  const cache = useSelector(state => state.cache)
+const AccountName = ({}) => {
+  const cache = useSelector((state) => state.cache);
 
-  const dispatch = useDispatch()
-  const history = useHistory()
+  const dispatch = useDispatch();
+  const history = useHistory();
 
-  const [accountName, setAccountName] = useState("")
-  const [reminderModalStatus, setReminderModalStatus] = useState(false)
-  const [accountIndex, setAccountIndex] = useState(0)
-  const [repeatAccount, setRepeatAccount] = useState({})
-  const [btnLoadingStatus,setBtnLoadingStatus] = useState(false)
-  const [isOpenAdvance,setIsOpenAdvance] = useState(false)
+  const [accountName, setAccountName] = useState("");
+  const [reminderModalStatus, setReminderModalStatus] = useState(false);
+  const [accountIndex, setAccountIndex] = useState(0);
+  const [repeatAccount, setRepeatAccount] = useState({});
+  const [btnLoadingStatus, setBtnLoadingStatus] = useState(false);
+  const [isOpenAdvance, setIsOpenAdvance] = useState(false);
 
   const onSubmit = (event) => {
     event.preventDefault();
-  }
+  };
   const onNameInput = useCallback((e) => {
-    let value = e.target.value
+    let value = e.target.value;
     if (value.length <= 16) {
-      setAccountName(value)
+      setAccountName(value);
     }
-  }, [])
+  }, []);
 
+  const { buttonText, placeholderText, fromType, isLedger } = useMemo(() => {
+    let buttonText = i18n.t("next");
+    let fromType = cache.fromType;
 
-
-
-  const {
-    buttonText, placeholderText, fromType, isLedger
-  } = useMemo(() => {
-    let buttonText = i18n.t('next')
-    let fromType = cache.fromType
-
-    let accountCount = cache.accountCount
-    let placeholderText = ""
-    let isLedger = false
+    let accountCount = 1;
+    let placeholderText = "";
+    let isLedger = false;
     switch (fromType) {
       case ACCOUNT_NAME_FROM_TYPE.OUTSIDE:
-        placeholderText = "Import Account "
+      case ACCOUNT_NAME_FROM_TYPE.KEYPAIR:
+        placeholderText = "Import Account ";
+        accountCount = cache.accountTypeCount.import;
         break;
       case ACCOUNT_NAME_FROM_TYPE.LEDGER:
-        placeholderText = "Ledger Account "
-        isLedger = true
+        placeholderText = "Ledger Account ";
+        isLedger = true;
+        accountCount = cache.accountTypeCount.ledger;
         break;
-      case ACCOUNT_NAME_FROM_TYPE.KEYPAIR:
-        placeholderText = "Import Account "
-        break;
-
       case ACCOUNT_NAME_FROM_TYPE.INSIDE:
       default:
-        placeholderText = "Account "
-        buttonText = i18n.t('confirm')
+        placeholderText = "Account ";
+        buttonText = i18n.t("confirm");
+        accountCount = cache.accountTypeCount.create;
         break;
     }
-    placeholderText = placeholderText + accountCount
+    placeholderText = placeholderText + accountCount;
 
     return {
-      buttonText, placeholderText, fromType, isLedger
-    }
-  }, [cache, i18n])
-
+      buttonText,
+      placeholderText,
+      fromType,
+      isLedger,
+    };
+  }, [cache, i18n]);
 
   const onConfirm = useCallback(async () => {
-    let accountText = ""
+    let accountText = "";
     if (accountName.length <= 0) {
-      accountText = placeholderText
+      accountText = placeholderText;
     } else {
-      accountText = accountName
+      accountText = accountName;
     }
     if (fromType === ACCOUNT_NAME_FROM_TYPE.OUTSIDE) {
       history.push({
         pathname: "import_account",
-        params: { accountName: accountText }
-      })
+        params: { accountName: accountText },
+      });
     } else if (fromType === ACCOUNT_NAME_FROM_TYPE.LEDGER) {
       if (isNumber(accountIndex) && accountIndex >= 0) {
-        await checkLedgerConnect()
+        await checkLedgerConnect();
         history.replace({
           pathname: "ledger_import",
           params: {
             accountName: accountText,
-            accountIndex: accountIndex
-          }
-        })
+            accountIndex: accountIndex,
+          },
+        });
       } else {
-        Toast.info(i18n.t('pathError'))
+        Toast.info(i18n.t("pathError"));
       }
     } else if (fromType === ACCOUNT_NAME_FROM_TYPE.KEYPAIR) {
       history.push({
         pathname: "import_keypair",
-        params: { accountName: accountText }
-      })
+        params: { accountName: accountText },
+      });
     } else {
-      setBtnLoadingStatus(true)
-      sendMsg({
-        action: WALLET_CREATE_HD_ACCOUNT,
-        payload: { accountName: accountText }
-      }, (account) => {
-        setBtnLoadingStatus(false)
-        if (account.error) {
-          if (account.error === "improtRepeat") {
-            setReminderModalStatus(true)
-            setRepeatAccount(account.account)
+      setBtnLoadingStatus(true);
+      sendMsg(
+        {
+          action: WALLET_CREATE_HD_ACCOUNT,
+          payload: { accountName: accountText },
+        },
+        (account) => {
+          setBtnLoadingStatus(false);
+          if (account.error) {
+            if (account.error === "importRepeat") {
+              setReminderModalStatus(true);
+              setRepeatAccount(account.account);
+            }
+          } else {
+            dispatch(updateCurrentAccount(account));
+            if (history.length >= 3) {
+              history.go(-2);
+            } else {
+              history.replace("/");
+            }
           }
-        } else {
-          dispatch(updateCurrentAccount(account))
-          history.goBack()
         }
-      })
+      );
     }
-
-
-  }, [accountName, placeholderText, fromType, accountIndex])
+  }, [accountName, placeholderText, fromType, accountIndex, history]);
 
   const onCloseModal = useCallback(() => {
-    setReminderModalStatus(false)
-  }, [])
-
-
-
-
+    setReminderModalStatus(false);
+  }, []);
 
   const onAccountIndexChange = useCallback((e) => {
-    let value = e.target.value
-    value = value.replace(/[^\d]/g, '')
-    let accountIndex = parseFloat(value)
+    let value = e.target.value;
+    value = value.replace(/[^\d]/g, "");
+    let accountIndex = parseFloat(value);
     if (accountIndex < 0) {
-      accountIndex = 0
+      accountIndex = 0;
     }
-    setAccountIndex(accountIndex)
-  }, [])
+    setAccountIndex(accountIndex);
+  }, []);
 
   const onAdd = useCallback(() => {
-    setAccountIndex(accountIndex + 1)
-  }, [accountIndex])
+    setAccountIndex(accountIndex + 1);
+  }, [accountIndex]);
   const onMinus = useCallback(() => {
     if (accountIndex <= 0) {
-      return
+      return;
     }
-    setAccountIndex(accountIndex - 1)
-  }, [accountIndex])
+    setAccountIndex(accountIndex - 1);
+  }, [accountIndex]);
 
-  const onClickAdvance = useCallback(()=>{
-    setIsOpenAdvance(state=>!state)
-  },[])
+  const onClickAdvance = useCallback(() => {
+    setIsOpenAdvance((state) => !state);
+  }, []);
 
   return (
-    <CustomView title={i18n.t('accountName')} >
+    <CustomView title={i18n.t("accountName")}>
       <form onSubmit={onSubmit} className={styles.container}>
-        <div >
+        <div>
           <Input
-            label={i18n.t('inputAccountName')}
+            label={i18n.t("inputAccountName")}
             onChange={onNameInput}
             value={accountName}
-            inputType={'text'}
+            inputType={"text"}
             placeholder={placeholderText}
           />
         </div>
-        {isLedger && <div className={styles.advanceEntry} onClick={onClickAdvance}>
-              <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
-              <img className={isOpenAdvance ? styles.openAdvance : styles.closeAdvance} src="/img/icon_unfold_Default.svg" />
-          </div>}
-        {isLedger && isOpenAdvance && <LedgerAdvance value={accountIndex} onChange={onAccountIndexChange} onAdd={onAdd} onMinus={onMinus} />}
+        {isLedger && (
+          <div className={styles.advanceEntry} onClick={onClickAdvance}>
+            <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
+            <img
+              className={
+                isOpenAdvance ? styles.openAdvance : styles.closeAdvance
+              }
+              src="/img/icon_unfold_Default.svg"
+            />
+          </div>
+        )}
+        {isLedger && isOpenAdvance && (
+          <LedgerAdvance
+            value={accountIndex}
+            onChange={onAccountIndexChange}
+            onAdd={onAdd}
+            onMinus={onMinus}
+          />
+        )}
         <div className={styles.hold} />
         <div className={styles.bottomContainer}>
-          <Button
-            loading={btnLoadingStatus}
-            onClick={onConfirm}>
+          <Button loading={btnLoadingStatus} onClick={onConfirm}>
             {buttonText}
           </Button>
         </div>
       </form>
       <PopupModal
-        title={i18n.t('tips')}
-        rightBtnContent={i18n.t('ok')}
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
         onRightBtnClick={onCloseModal}
         componentContent={
           <div className={styles.tipContainer}>
-            <p className={styles.tip}>{i18n.t('importSameAccount_1')}</p>
+            <p className={styles.tip}>{i18n.t("importSameAccount_1")}</p>
             <p className={styles.address}>{repeatAccount?.address}</p>
             <Trans
               i18nKey={"importSameAccount_2"}
               values={{ accountName: repeatAccount?.accountName }}
               components={{
                 b: <span className={styles.accountRepeatName} />,
-                click: <span className={styles.accountRepeatClick} />
+                click: <span className={styles.accountRepeatClick} />,
               }}
             />
           </div>
         }
-        modalVisable={reminderModalStatus} />
+        modalVisible={reminderModalStatus}
+      />
     </CustomView>
-  )
-}
+  );
+};
 
 const LedgerAdvance = ({
   value,
-  onChange = () => { },
-  onAdd = () => { },
-  onMinus = () => { }
+  onChange = () => {},
+  onAdd = () => {},
+  onMinus = () => {},
 }) => {
-  return (<div className={styles.ledgerContainer}>
-    <p className={styles.ledgerTitle}>{i18n.t('hdDerivedPath')}</p>
-    <div className={styles.ledgerPath}>m / 44' / 12586' /
-      <InputNumber value={value} onChange={onChange} onAdd={onAdd} onMinus={onMinus} />
-      ' / 0 / 0</div>
-  </div>)
-}
-
-
+  return (
+    <div className={styles.ledgerContainer}>
+      <p className={styles.ledgerTitle}>{i18n.t("hdDerivedPath")}</p>
+      <div className={styles.ledgerPath}>
+        m / 44' / 12586' /
+        <InputNumber
+          value={value}
+          onChange={onChange}
+          onAdd={onAdd}
+          onMinus={onMinus}
+        />
+        ' / 0 / 0
+      </div>
+    </div>
+  );
+};
 
 const InputNumber = ({
   value,
-  onChange = () => { },
-  onAdd = () => { },
-  onMinus = () => { }
+  onChange = () => {},
+  onAdd = () => {},
+  onMinus = () => {},
 }) => {
-
-  return (<div className={styles.inputNumberContainer}>
-    <input
-      type='number'
-      min="0"
-      step="1"
-      onChange={onChange}
-      value={value}
-      className={styles.customeInput}
-    />
-    <div className={styles.imgContainer}>
-      <img src="/img/icon_fold_Default.svg" className={styles.topArrow} onClick={onAdd} />
-      <img src="/img/icon_fold_Default.svg" className={styles.bottomArrow} onClick={onMinus} />
+  return (
+    <div className={styles.inputNumberContainer}>
+      <input
+        type="number"
+        min="0"
+        step="1"
+        onChange={onChange}
+        value={value}
+        className={styles.customInput}
+      />
+      <div className={styles.imgContainer}>
+        <img
+          src="/img/icon_fold_Default.svg"
+          className={styles.topArrow}
+          onClick={onAdd}
+        />
+        <img
+          src="/img/icon_fold_Default.svg"
+          className={styles.bottomArrow}
+          onClick={onMinus}
+        />
+      </div>
     </div>
-  </div>)
-}
-export default AccountName
+  );
+};
+export default AccountName;

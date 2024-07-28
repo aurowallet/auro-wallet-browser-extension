@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import {
   DAPP_CONNECTION_LIST,
   DAPP_DISCONNECT_SITE,
-} from "../../../constant/types";
+} from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";

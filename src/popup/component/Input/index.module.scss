@@ -12,6 +12,12 @@
         border: 0.5px solid #594af1;
     }
 }
+.disableCls{
+    
+    &:hover {
+        border: 0.5px solid rgba(0, 0, 0, 0.1);
+    }
+}
 .input {
     background: none;
     outline: none;
@@ -29,7 +35,10 @@
     border-radius:6px ;
     width: 100%;
 }
-
+.disableInput{
+    color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.05);
+}
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -50,7 +59,6 @@ input::-webkit-input-placeholder {
 }
 input[type="text"] {
     letter-spacing: normal;
-    font-family: caption;
 }
 
 .label {

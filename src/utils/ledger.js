@@ -4,23 +4,18 @@ import BigNumber from "bignumber.js";
 import extension from "extensionizer";
 import i18n from "i18next";
 import { MinaLedgerJS, Networks, TxType } from "mina-ledger-js";
-import { cointypes } from "../../config";
-import { LEDGER_CONNECTED_SUCCESSFULLY } from "../constant/types";
-import { NET_CONFIG_TYPE } from "../constant/walletType";
+import { MAIN_COIN_CONFIG } from "../constant";
+import { LEDGER_STATUS } from "../constant/commonType";
+import { LEDGER_CONNECTED_SUCCESSFULLY } from "../constant/msgTypes";
+import { NetworkID_MAP } from "../constant/network";
 import Loading from "../popup/component/Loading";
 import Toast from "../popup/component/Toast";
 import { closePopupWindow, openPopupWindow } from "./popup";
-import { getCurrentNetConfig } from "./utils";
+import { getCurrentNodeConfig } from "./utils";
 
-export const LEDGER_CONENCT_TYPE = {
+export const LEDGER_CONNECT_TYPE = {
   isPage: "isPage",
 };
-
-export const LEDGER_STATUS ={
-  "READY":"READY",
-  "LEDGER_DISCONNECT":"LEDGER_DISCONNECT",
-  "LEDGER_CONNECT_APP_NOT_OPEN":"LEDGER_CONNECT_APP_NOT_OPEN"
-}
 
 const status = {
   rejected: "CONDITIONS_OF_USE_NOT_SATISFIED",
@@ -36,6 +31,7 @@ function initLedgerWindowListener() {
           sendResponse && sendResponse();
           break;
       }
+      return true;
     }
     extension.runtime.onMessage.addListener(onMessage);
   });
@@ -63,7 +59,7 @@ export async function getApp(type) {
       portInstance = transport;
       appInstance = app;
     } else {
-      if (type !== LEDGER_CONENCT_TYPE.isPage) {
+      if (type !== LEDGER_CONNECT_TYPE.isPage) {
         await openLedgerWindow();
       }
       return { manualConnected: true, app: null };
@@ -89,7 +85,7 @@ export async function getApp(type) {
     portInstance.close();
     portInstance = null;
     appInstance = null;
-    if (type !== LEDGER_CONENCT_TYPE.isPage) {
+    if (type !== LEDGER_CONNECT_TYPE.isPage) {
       await openLedgerWindow();
     }
     let openApp = !!result.version;
@@ -124,8 +120,8 @@ export async function ensureUSBPermission() {
   }
 }
 
-export async function checkLedgerConnect(type, permissionisCheck) {
-  if (type === LEDGER_CONENCT_TYPE.isPage && permissionisCheck) {
+export async function checkLedgerConnect(type, permissionsCheck) {
+  if (type === LEDGER_CONNECT_TYPE.isPage && permissionsCheck) {
     let result = await ensureUSBPermission();
     if (result?.error) {
       return result;
@@ -181,9 +177,9 @@ function reEncodeRawSignature(rawSignature) {
   return shuffleBytes(field) + shuffleBytes(scalar);
 }
 async function networkId() {
-  const networkConfig = await getCurrentNetConfig()
-  const netType = networkConfig.netType;
-  if (netType === NET_CONFIG_TYPE.Mainnet) {
+  const networkConfig = await getCurrentNodeConfig()
+  const networkID = networkConfig.networkID;
+  if (networkID === NetworkID_MAP.mainnet) {
     return Networks.MAINNET;
   } else {
     return Networks.DEVNET;
@@ -191,7 +187,7 @@ async function networkId() {
 }
 async function requestSign(app, body, type, ledgerAccountIndex) {
   let amount = body.amount || 0;
-  let decimal = new BigNumber(10).pow(cointypes.decimals);
+  let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
   let sendFee = new BigNumber(body.fee).multipliedBy(decimal).toNumber();
   let sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber();
   let payload = {

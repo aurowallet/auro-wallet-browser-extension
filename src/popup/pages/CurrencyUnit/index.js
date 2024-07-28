@@ -1,10 +1,9 @@
 import i18n from "i18next";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { saveLocal } from "../../../background/localStorage";
 import { CURRENCY_UNIT_CONFIG } from "../../../constant/storageKey";
-import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateCurrencyConfig } from "../../../reducers/currency";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
@@ -14,12 +13,12 @@ const CurrencyUnit = ({ }) => {
 
   let history = useHistory();
   const currencyList = useSelector(state => state.currencyConfig.currencyList)
-  const [oldCurrency, setOldCurrency] = useState(() => {
+  const oldCurrency = useMemo(()=>{
     let list = currencyList.filter((item) => {
       return item.isSelect
     })
     return list[0]
-  })
+  },[currencyList])
   const [currentCurrency, setCurrentCurrency] = useState(() => {
     let list = currencyList.filter((item) => {
       return item.isSelect
@@ -43,7 +42,6 @@ const CurrencyUnit = ({ }) => {
         }
       })
       dispatch(updateCurrencyConfig(list));
-      dispatch(updateShouldRequest(true, true));
       saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(item.key))
       history.goBack()
     }

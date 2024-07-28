@@ -15,9 +15,8 @@ const AboutUs = ({}) => {
     privacy_policy_cn: "",
     changelog: "",
     followus: [],
-    graphql_api:""
   });
-  const fecthBaseInfo = useCallback(async () => {
+  const fetchBaseInfo = useCallback(async () => {
     let baseInfo = await getBaseInfo().catch((err) => err);
     if (baseInfo.error) {
       Toast.info(baseInfo.error);
@@ -31,12 +30,11 @@ const AboutUs = ({}) => {
       privacy_policy_cn: baseInfo.privacy_policy_cn,
       changelog: baseInfo.changelog,
       followus: baseInfo.followus,
-      graphql_api:baseInfo.graphql_api,
     });
   }, []);
 
   useEffect(() => {
-    fecthBaseInfo();
+    fetchBaseInfo();
   }, []);
 
   const { followList, linkInfoList } = useMemo(() => {
@@ -54,8 +52,8 @@ const AboutUs = ({}) => {
         link: getFollowListLink("website"),
       },
       {
-        title: "Twitter",
-        icon: "/img/icon_twitter.svg",
+        title: "X",
+        icon: "/img/icon_x.svg",
         link: getFollowListLink("twitter"),
       },
       {
@@ -68,16 +66,16 @@ const AboutUs = ({}) => {
     const getCurrentUrl = (type) => {
       let lan = i18n.language;
       let url = "";
-      if (lan === LANG_SUPPORT_LIST.EN) {
-        url =
-          type == "terms"
-            ? baseAboutInfo.terms_and_contions
-            : baseAboutInfo.privacy_policy;
-      } else if (lan === LANG_SUPPORT_LIST.ZH_CN) {
+       if (lan === LANG_SUPPORT_LIST.zh_CN) {
         url =
           type == "terms"
             ? baseAboutInfo.terms_and_contions_cn
             : baseAboutInfo.privacy_policy_cn;
+      }else{
+        url =
+        type == "terms"
+          ? baseAboutInfo.terms_and_contions
+          : baseAboutInfo.privacy_policy;
       }
       return url;
     };
@@ -89,15 +87,11 @@ const AboutUs = ({}) => {
       },
       {
         title: i18n.t("privacyPolicy"),
-        link: getCurrentUrl("pricacy"),
+        link: getCurrentUrl("privacy"),
       },
       {
         title: i18n.t("checkOnGithub"),
         link: baseAboutInfo.changelog,
-      },
-      {
-        title: i18n.t("serviceSupport"),
-        link: baseAboutInfo.graphql_api,
       },
     ];
     return { followList, linkInfoList };
@@ -112,7 +106,7 @@ const AboutUs = ({}) => {
       <p className={styles.walletName}>{i18n.t("walletName")}</p>
       <p className={styles.walletVersion}>{"V" + pkg.version}</p>
       <p className={styles.walletTip}>{i18n.t("walletAbout")}</p>
-      <div className={styles.linkContaienr}>
+      <div className={styles.linkContainer}>
         {linkInfoList.map((info, index) => {
           return (
             <LinkContent title={info.title} key={index} link={info.link} />

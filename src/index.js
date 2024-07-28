@@ -1,118 +1,46 @@
-import { configureStore, getDefaultMiddleware } from "@reduxjs/toolkit";
 import extension from 'extensionizer';
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
-import { MAIN_NET_BASE_CONFIG, network_config, NET_CONFIG_VERSION } from "../config";
+import { NET_CONFIG_VERSION } from "../config";
 import { windowId } from "./background/DappService";
+import { extGetLocal, extRemoveLocal, extSaveLocal } from "./background/extensionStorage";
 import { getLocal, saveLocal } from "./background/localStorage";
-import { extGetLocal, extSaveLocal } from "./background/extensionStorage";
-import { CURRENCY_UNIT } from "./constant/pageType";
-import { CURRENCY_UNIT_CONFIG, LANGUAGE_CONFIG, NET_WORK_CONFIG, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
-import { DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/types";
-import { WALLET_CONNECT_TYPE } from "./constant/walletType";
-import "./i18n";
+import { CURRENCY_UNIT } from "./constant";
+import { WALLET_CONNECT_TYPE } from "./constant/commonType";
+import { DAPP_ACTIONS, DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
+import { DefaultMainnetConfig } from "./constant/network";
+import { CURRENCY_UNIT_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG_V2, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
+import { languageInit } from "./i18n";
 import App from "./popup/App";
-import rootReducer from "./reducers";
-import { initCurrentAccount } from "./reducers/accountReducer";
+import { initCurrentAccount, updateShouldRequest } from "./reducers/accountReducer";
 import { updateDAppOpenWindow } from "./reducers/cache";
 import { updateCurrencyConfig } from "./reducers/currency";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteReducer";
-import { NET_CONFIG_DEFAULT, updateNetConfig } from "./reducers/network";
+import { updateCurrentNode, updateCustomNodeList } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
-import { sendNetworkChangeMsg } from "./utils/utils";
 
 
 function getLocalNetConfig(store) {
   return new Promise(async (resolve)=>{
-    let localNetConfig = await extGetLocal(NET_WORK_CONFIG)
+    let localNetConfig = await extGetLocal(NET_WORK_CONFIG_V2)
     let config
     if (!localNetConfig) {
-      let netList = network_config.map((item) => {
-        item.type = NET_CONFIG_DEFAULT
-        return item
-      })
       config = {
-        currentConfig: netList[0],
-        netList: netList,
-        netConfigVersion:NET_CONFIG_VERSION
+        currentNode: DefaultMainnetConfig,
+        customNodeList: [],
+        nodeConfigVersion:NET_CONFIG_VERSION
       }
-      store.dispatch(updateNetConfig(config))
-      await extSaveLocal(NET_WORK_CONFIG, config)
+      store.dispatch(updateCurrentNode(config.currentNode))
+      await extSaveLocal(NET_WORK_CONFIG_V2, config)
       resolve(config)
     }else{
-      let newJson = await updateNetLocalConfig(localNetConfig)
-      store.dispatch(updateNetConfig(newJson))
-      resolve(newJson)
+      store.dispatch(updateCurrentNode(localNetConfig.currentNode))
+      store.dispatch(updateCustomNodeList(localNetConfig.customNodeList))
+      resolve(localNetConfig)
     }
   })
-}
-
-async function updateNetLocalConfig(netConfig){
-  let localVersion = netConfig.netConfigVersion || 0 
-
-  if(localVersion >= NET_CONFIG_VERSION){
-    return netConfig
-  }
-  let localNetList = netConfig.netList
-  let currentUrl = netConfig.currentUrl || netConfig.currentConfig.url
-  let currentConfig = {}
-  let defaultList = []
-  let addList = []
-  let currentUrlType = ""
-  localNetList.map((item,index)=>{
-   
-    let newItem = item
-    if(item.type === NET_CONFIG_DEFAULT){
-      defaultList.push(item)
-    }else{
-      let id = item.url
-      newItem =  {
-        ...MAIN_NET_BASE_CONFIG,
-        name:item.name||"Unknown",
-        id,
-        ...item,
-      }
-      addList.push(newItem)
-    }
-    if(newItem.url === currentUrl){
-      currentConfig = newItem
-      currentUrlType = newItem.type
-    }
-
-  })
-  let config
-  if(addList.length === 0){
-    let netList = network_config.map((item) => {
-      item.type = NET_CONFIG_DEFAULT
-      return item
-    })
-    config = {
-      currentConfig: netList[0],
-      netList: netList,
-      netConfigVersion:NET_CONFIG_VERSION
-    }
-  }else{
-    let newNetList = network_config.map((item) => {
-      item.type = NET_CONFIG_DEFAULT
-      return item
-    }) 
-    newNetList.push(...addList)
-    let newCurrentConfig = {}
-    if(currentUrlType === NET_CONFIG_DEFAULT){
-      newCurrentConfig = newNetList[0]
-    }else{
-      newCurrentConfig = currentConfig
-    }
-    config = {
-      currentConfig:newCurrentConfig,
-      netList: newNetList,
-      netConfigVersion:NET_CONFIG_VERSION
-    }
-  }
-  await extSaveLocal(NET_WORK_CONFIG, config) 
-  return config
 }
 /**
  * 
@@ -196,77 +124,71 @@ async function getDappStatus(store){
 
 }
 
-async function getLocalStatus(store) {
+async function initAccountInfo(store) {
   return new Promise((resolve)=>{
     sendMsg({
       action: WALLET_GET_CURRENT_ACCOUNT,
     },async (currentAccount)=>{
       let nextRoute =""
-      if (currentAccount && currentAccount.localAccount && currentAccount.localAccount.keyringData) {
+      if (currentAccount?.localAccount?.keyringData) {
         if(currentAccount.isUnlocked){
           store.dispatch(initCurrentAccount(currentAccount))
-          nextRoute = await getDappStatus(store)
         }else{
           nextRoute = ENTRY_WITCH_ROUTE.LOCK_PAGE
         }
-        resolve({currentAccount,nextRoute})
+        resolve(nextRoute)
       }else{
         nextRoute = ENTRY_WITCH_ROUTE.WELCOME
-        resolve({nextRoute})
+        resolve(nextRoute)
       }
     })
   })
 }
-async function upgradeStorageConfig(){
-  // 这里存在
-  // 1. 从v2 升级到 v3 这里需要升级  标示是存储过 语言记录或者网络记录
-    
-  // 当不存在这两个记录时，则此处不需要升级，直接返回即可， 说明是v3 或者是新使用
-  
-  // 当存在任意一个记录时，则标示是升级，存在哪个升级哪个，升级结束后，本地保存一份升级的记录，
-  // 下次打开时，如果存在这个记录，说明已升级，直接返回，如果不存在，则继续升级过程
-  const languageConfig = getLocal(LANGUAGE_CONFIG) 
-  const networkConfig = getLocal(NET_WORK_CONFIG) 
-  if(!languageConfig || !networkConfig){// 当不存在这两个记录时，则此处不需要升级，直接返回即可， 说明是v3 或者是新使用
-    return 
+async function initNetworkFlag(){
+  let localFlag = await extGetLocal(NET_WORK_CHANGE_FLAG)
+  if(localFlag){
+    store.dispatch(updateShouldRequest(true))
+    await extRemoveLocal(NET_WORK_CHANGE_FLAG)
   }
-  const storageUpgradeToV3Status = getLocal(STORAGE_UPGRADE_STATUS)
-  if(storageUpgradeToV3Status){ // 下次打开时，如果存在这个记录，说明已升级，直接返回，
-    return
-  }
+}
 
-  if(languageConfig){
-    await extSaveLocal(LANGUAGE_CONFIG, languageConfig)
-  }
-  if(networkConfig){
-    await extSaveLocal(NET_WORK_CONFIG, JSON.parse(networkConfig))
-  }
-  saveLocal(STORAGE_UPGRADE_STATUS,true)
+function initZkAppConnect(){
+  sendMsg({
+    action: DAPP_ACTIONS.INIT_APPROVE_LIST,
+  })
 }
 
 export const applicationEntry = {
   async run() {
-    await this.appInit(store)
+    await languageInit()
+    let nextRoute = await initAccountInfo(store)
     this.render();
+    if(!nextRoute){
+      nextRoute = await getDappStatus(store)
+    }
+    const isWalletInit = nextRoute !== ENTRY_WITCH_ROUTE.WELCOME
+    if(!isWalletInit){
+      store.dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.WELCOME))
+    }
+    if(isWalletInit){
+      await this.appInit(store)
+      store.dispatch(updateEntryWitchRoute(nextRoute))
+      initZkAppConnect();
+    }
   },
 
   async appInit(store) {
     extension.runtime.connect({ name: WALLET_CONNECT_TYPE.WALLET_APP_CONNECT });
 
-    await upgradeStorageConfig()
     // init netRequest
-    let netConfig = await getLocalNetConfig(store)
-    sendNetworkChangeMsg(netConfig.currentConfig)
+    await getLocalNetConfig(store)
 
+    await initNetworkFlag(store)
     // init nextRoute
-    let accountData = await getLocalStatus(store)
-    const {nextRoute} = accountData
     // init Currency
     getLocalCurrencyConfig(store)
     
-    if(nextRoute){
-      store.dispatch(updateEntryWitchRoute(nextRoute))
-    }
+    
   },
  
   render() {

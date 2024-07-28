@@ -3,16 +3,17 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch } from "react-redux";
+import { LEDGER_PAGE_TYPE } from "../../../constant/commonType";
 import {
     GET_LEDGER_ACCOUNT_NUMBER,
     GET_WALLET_LOCK_STATUS,
     WALLET_IMPORT_LEDGER
-} from "../../../constant/types";
+} from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
 import {
     checkLedgerConnect,
-    LEDGER_CONENCT_TYPE,
+    LEDGER_CONNECT_TYPE,
     requestAccount
 } from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
@@ -30,9 +31,6 @@ const Tip_Type = {
 
   grantSuccess:"grantSuccess"
 };
-export const LEDGER_PAGE_TYPE = {
-  permissionGrant:"permissionGrant"
-}
 export const LedgerPage = ({}) => { 
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);
@@ -64,7 +62,7 @@ export const LedgerPage = ({}) => {
     });
   }, []);
 
-  const onClickConnect = useCallback(async (permissionisCheck = true) => {
+  const onClickConnect = useCallback(async (permissionsCheck = true) => {
     if(isShowSuccessTip){
       window.close();
       return 
@@ -82,8 +80,8 @@ export const LedgerPage = ({}) => {
         error,
         openApp,
       } = await checkLedgerConnect(
-        LEDGER_CONENCT_TYPE.isPage,
-        permissionisCheck
+        LEDGER_CONNECT_TYPE.isPage,
+        permissionsCheck
       );
       if (error) {
         setTipType(Tip_Type.openLedger);
@@ -92,7 +90,7 @@ export const LedgerPage = ({}) => {
       if (ledgerApp) {
         const result = await ledgerApp.getAppName();
         if (result.name === "Mina") {
-          if (permissionisCheck && !isLedgerPermission) {
+          if (permissionsCheck && !isLedgerPermission) {
             onClickNextTab();
           }
           if(isLedgerPermission){
@@ -128,10 +126,10 @@ export const LedgerPage = ({}) => {
     let msg = "";
     switch (tipType) {
       case Tip_Type.openLedger:
-        msg = i18n.t("ledgerConnetTip");
+        msg = i18n.t("ledgerConnectTip");
         break;
       case Tip_Type.openLedgerApp:
-        msg = i18n.t("ledgerConnetOpenTip");
+        msg = i18n.t("ledgerConnectOpenTip");
         break;
       case Tip_Type.openLockStatus:
         msg = i18n.t("auroLocked");
@@ -188,7 +186,7 @@ const LedgerConnectView = ({ onClickNext, tipContent,isShowSuccessTip,isLedgerPe
     <div className={styles.viewOuter}>
       <div className={styles.viewTitle}>{viewTitle}</div>
       <div className={styles.viewTip}>{i18n.t("selectHardware")}</div>
-      <img src="/img/ledger-logo.svg" className={styles.ledgerIcon} />
+      <img src="/img/ledgerBorderLogo.svg" className={styles.ledgerIcon} />
       <div className={styles.viewTip}>{i18n.t("getStarted")}</div>
       <div className={styles.startDesc}>{i18n.t("ledgerStartDesc")}</div>
 
@@ -240,7 +238,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
   }, [accountIndex, nextAccountIndex]);
   const [accountName, setAccountName] = useState("");
 
-  const [tipModalVisable, setTipModalVisable] = useState(false);
+  const [tipModalVisible, setTipModalVisible] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   useEffect(() => {
     setErrorMsg(tipContent);
@@ -253,13 +251,13 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     if (typeof ledgerApp === "boolean") {
       return;
     }
-    setTipModalVisable(true);
+    setTipModalVisible(true);
     if (ledgerApp) {
       const { publicKey, rejected } = await requestAccount(
         ledgerApp,
         accountIndex
       );
-      setTipModalVisable(false);
+      setTipModalVisible(false);
       if (rejected) {
         setErrorMsg(i18n.t("ledgerRejected"));
       } else {
@@ -329,7 +327,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
       <div className={styles.viewTip}>{i18n.t("selectHDPath")}</div>
       <div className={styles.accountNameTip}>
         <Trans
-          i18nKey={"ledgerSeletPathTip"}
+          i18nKey={"ledgerSelectPathTip"}
           components={{
             click: (
               <span
@@ -354,7 +352,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
         {errorMsg && <div className={styles.accountWarningTip}>{errorMsg}</div>}
         <Button onClick={onConfirm}>{i18n.t("import")}</Button>
       </div>
-      <LedgerModal modalVisable={tipModalVisable} />
+      <LedgerModal modalVisible={tipModalVisible} />
     </div>
   );
 };
@@ -394,7 +392,7 @@ const InputNumber = ({
         step="1"
         onChange={onChange}
         value={value}
-        className={styles.customeInput}
+        className={styles.customInput}
       />
       <div className={styles.imgContainer}>
         <img
@@ -414,11 +412,11 @@ const InputNumber = ({
 
 const SuccessView = ({ onClickNext }) => {
   return (
-    <div className={cls(styles.viewOuter, styles.innterContent)}>
+    <div className={cls(styles.viewOuter, styles.innerContent)}>
       <img src="/img/backup_success.svg" />
       <p className={styles.importSuccess}>{i18n.t("success")}</p>
       <p className={styles.importContent}>{i18n.t("ledgerSuccess")}</p>
-      <p className={styles.importContent}>{i18n.t("ledgerReturnExtension")}</p>
+      <p className={styles.importContent}>{i18n.t("returnEx")}</p>
       <div className={cls(styles.bottomContainer)}>
         <Button onClick={onClickNext}>{i18n.t("done")}</Button>
       </div>

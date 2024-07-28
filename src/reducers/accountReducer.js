@@ -1,257 +1,327 @@
-import { cointypes, TX_LIST_LENGTH } from "../../config";
-import { amountDecimals } from "../utils/utils";
+import { formatAllTxHistory, processNewTokenStatus, processTokenList, processTokenShowStatus, setScamAndTxList } from "@/utils/reducer";
+import {
+  mergeLocalConfigToNetToken
+} from "../utils/utils";
 
-const CHANGE_ACCOUNT_TX_HISTORY = "CHANGE_ACCOUNT_TX_HISTORY"
+const CHANGE_ACCOUNT_TX_HISTORY_V2 = "CHANGE_ACCOUNT_TX_HISTORY_V2";
 
-const UPDATE_CURRENT_ACCOUNT = "UPDATE_CURRENT_ACCOUNT"
+const UPDATE_CURRENT_ACCOUNT = "UPDATE_CURRENT_ACCOUNT";
 
-const INIT_CURRENT_ACCOUNT = "INIT_CURRENT_ACCOUNT"
+const INIT_CURRENT_ACCOUNT = "INIT_CURRENT_ACCOUNT";
 
-const UPDATE_NET_ACCOUNT = "UPDATE_NET_ACCOUNT"
+const UPDATE_NET_HOME_REFRESH = "UPDATE_NET_HOME_REFRESH";
+
+const UPDATE_STAKING_DATA = "UPDATE_STAKING_DATA";
+
+const UPDATE_ACCOUNT_LIST_BALANCE = "UPDATE_ACCOUNT_LIST_BALANCE";
+
+const UPDATE_SCAM_LIST = "UPDATE_SCAM_LIST";
+
+const UPDATE_TOKEN_ASSETS = "UPDATE_TOKEN_ASSETS";
+
+// token price
+const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE";
 
 
-const UPDATE_NET_HOME_REFRESH = "UPDATE_NET_HOME_REFRESH"
+const UPDATE_LOCAL_TOKEN_CONFIG = "UPDATE_LOCAL_TOKEN_CONFIG";
 
+const UPDATE_LOCAL_SHOWED_TOKEN_IDS = "UPDATE_LOCAL_SHOWED_TOKEN_IDS";
 
-const UPDATE_STAKING_DATA = "UPDATE_STAKING_DATA"
+export function updateLocalShowedTokenId(tokenIds) {
+  return {
+    type: UPDATE_LOCAL_SHOWED_TOKEN_IDS,
+    tokenIds,
+  };
+}
 
-const UPDATE_ACCOUNT_LIST_BALANCE = "UPDATE_ACCOUNT_LIST_BALANCE"
+export function updateLocalTokenConfig(tokenConfig) {
+  return {
+    type: UPDATE_LOCAL_TOKEN_CONFIG,
+    tokenConfig,
+  };
+}
 
-export function updateAccountTx(txList, txPendingList,zkAppList,zkPendingList) {
-    return {
-        type: CHANGE_ACCOUNT_TX_HISTORY,
-        txList,
-        txPendingList,
-        zkAppList,
-        zkPendingList
-    };
+export function updateCurrentPrice(tokenPrice, isCachePrice) {
+  return {
+    type: UPDATE_CURRENT_PRICE,
+    tokenPrice,
+    isCachePrice,
+  };
+}
+
+export function updateAccountTxV2({
+  txList,
+  txPendingList,
+  zkAppList,
+  zkPendingList
+},tokenId,
+) {
+  return {
+    type: CHANGE_ACCOUNT_TX_HISTORY_V2,
+    txList,
+    txPendingList,
+    zkAppList,
+    zkPendingList,
+    tokenId,
+  };
 }
 
 export function updateCurrentAccount(account) {
-    return {
-        type: UPDATE_CURRENT_ACCOUNT,
-        account
-    };
+  return {
+    type: UPDATE_CURRENT_ACCOUNT,
+    account,
+  };
 }
 
 export function initCurrentAccount(account) {
-    return {
-        type: INIT_CURRENT_ACCOUNT,
-        account
-    };
-}
-export function updateNetAccount(account, isCache) {
-    return {
-        type: UPDATE_NET_ACCOUNT,
-        account,
-        isCache
-    };
+  return {
+    type: INIT_CURRENT_ACCOUNT,
+    account,
+  };
 }
 
 export function updateShouldRequest(shouldRefresh, isSilent) {
-    return {
-        type: UPDATE_NET_HOME_REFRESH,
-        shouldRefresh,
-        isSilent
-    };
+  return {
+    type: UPDATE_NET_HOME_REFRESH,
+    shouldRefresh,
+    isSilent,
+  };
 }
 
-
 export function updateStakingRefresh(shouldRefresh) {
-    return {
-        type: UPDATE_STAKING_DATA,
-        shouldRefresh,
-    };
+  return {
+    type: UPDATE_STAKING_DATA,
+    shouldRefresh,
+  };
 }
 
 export function updateAccountList(list) {
-    return {
-        type: UPDATE_ACCOUNT_LIST_BALANCE,
-        list
-    };
+  return {
+    type: UPDATE_ACCOUNT_LIST_BALANCE,
+    list,
+  };
+}
+
+export function updateScamList(scamList) {
+  return {
+    type: UPDATE_SCAM_LIST,
+    scamList: scamList,
+  };
+}
+export function updateTokenAssets(tokenList, isCache) {
+  return {
+    type: UPDATE_TOKEN_ASSETS,
+    tokenList,
+    isCache,
+  };
 }
 
 export const ACCOUNT_BALANCE_CACHE_STATE = {
-    INIT_STATE: "INIT_STATE",
-    USING_CACHE: "USING_CACHE",
-    NEW_STATE: "NEW_STATE"
-}
-
-const initState = {
-    txList: [],
-    currentAccount: {},
-    netAccount: {},
-    balance: "0.0000",
-    nonce: "",
-    shouldRefresh: false,
-    homeBottomType: "",
-    isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
-    stakingLoadingRefresh: false,
-    accountBalanceMap:{}
+  INIT_STATE: "INIT_STATE",
+  USING_CACHE: "USING_CACHE",
+  NEW_STATE: "NEW_STATE",
 };
 
-function pendingTx(txList) {
-    let newList = []
-    for (let index = 0; index < txList.length; index++) {
-        const detail = txList[index];
-        newList.push({
-            "id": detail.id,
-            "hash": detail.hash,
-            "kind": detail.kind,
-            "dateTime": detail.time,
-            "from": detail.from,
-            "to": detail.to,
-            "amount": detail.amount,
-            "fee": detail.fee,
-            "nonce": detail.nonce,
-            "memo": detail.memo,
-            "status": "PENDING",
-            timestamp : new Date(detail.time).getTime()
-        })
-    }
-    return newList
-}
 
-function getZkOtherAccount (zkApp){
-    let accountUpdates = zkApp.zkappCommand.accountUpdates
-    if(Array.isArray(accountUpdates) && accountUpdates.length > 0){
-        return accountUpdates[0]?.body?.publicKey
-    }
-    return ""
-}
-function zkAppFormat(zkAppList,isPending=false){
-    let newList = []
-    for (let index = 0;  index < zkAppList.length; index++) {
-        const zkApp = zkAppList[index];
-        let status = isPending ?  "PENDING":zkApp.failureReason ? "failed":"applied"
-        newList.push({
-            "id": "",
-            "hash": zkApp.hash,
-            "kind": "ZKAPP",
-            "dateTime": zkApp.dateTime||"",
-            "from": zkApp.zkappCommand.feePayer.body.publicKey,
-            "to": getZkOtherAccount(zkApp),
-            "amount": "0",
-            "fee": zkApp.zkappCommand.feePayer.body.fee,
-            "nonce": zkApp.zkappCommand.feePayer.body.nonce,
-            "memo": zkApp.zkappCommand.memo,
-            "status":  status,
-            type:"zkApp",
-            body:zkApp,
-            timestamp : isPending ? "": new Date(zkApp.dateTime).getTime()
-        })
-    }
-    return newList
-}
-function commonHistoryFormat(list){
-    return  list.map((item)=>{
-        item.timestamp = new Date(item.dateTime).getTime()
-        return item
-    })
-}
+
+const initState = {
+  txList: [],
+  txHistoryMap:{},
+  currentAccount: {},
+  shouldRefresh: true,
+  isSilentRefresh: false,
+  isAccountCache: ACCOUNT_BALANCE_CACHE_STATE.INIT_STATE,
+  stakingLoadingRefresh: false,
+  accountBalanceMap: {},
+  scamList: [],
+  tokenList: [],
+  mainTokenNetInfo: {},
+  tokenShowList: [],
+  tokenPrice: {},
+  tokenTotalAmount: "0",
+  localTokenConfig: {},
+  localShowedTokenIds: [],
+  newTokenCount: 0,
+};
+
 const accountInfo = (state = initState, action) => {
-    switch (action.type) {
-        case CHANGE_ACCOUNT_TX_HISTORY:
-            let txList = action.txList
-            let txPendingList = action.txPendingList || []
-            let zkAppList = action.zkAppList || []
-            let zkPendingList = action.zkPendingList || []
+  switch (action.type) {
+    case CHANGE_ACCOUNT_TX_HISTORY_V2:
+      let tokenId = action.tokenId
+      let newList = formatAllTxHistory(action);
+      if (state.scamList.length > 0) {
+        newList = setScamAndTxList(state.scamList, newList);
+      }
 
-            txPendingList = txPendingList.reverse()
-            txPendingList = pendingTx(txPendingList)
-            zkAppList = zkAppFormat(zkAppList)
-            zkPendingList = zkAppFormat(zkPendingList,true)
-            
-            txList = commonHistoryFormat(txList)
+      let newTxHistoryMap = {
+        ...state.txHistoryMap,
+        [tokenId]:newList
+      } 
+      return {
+        ...state,
+        txHistoryMap:newTxHistoryMap,
+        isSilentRefresh: false,
+      };
+    case UPDATE_CURRENT_ACCOUNT:
+      let account = action.account;
+      return {
+        ...state,
+        currentAccount: account,
+        txHistoryMap: {},
+        shouldRefresh: true,
 
-            const commonList = [...txList,...zkAppList]
-            commonList.sort((a,b)=>b.timestamp-a.timestamp)
+        tokenList: [],
+        mainTokenNetInfo: {},
+        tokenShowList: [],
+        tokenPrice: {},
+        tokenTotalAmount: "0",
+      };
+    case INIT_CURRENT_ACCOUNT:
+      return {
+        ...state,
+        currentAccount: action.account,
+      };
+    case UPDATE_NET_HOME_REFRESH:
+      let isSilent = action.isSilent;
+      let shouldRefresh = action.shouldRefresh;
+      if (isSilent) {
+        return {
+          ...state,
+          shouldRefresh: shouldRefresh,
+          isSilentRefresh: true,
+        };
+      }
+      let newState = {};
+      if (shouldRefresh) {
+        newState = {
+          txHistoryMap: {},
+          tokenList: [],
+          mainTokenNetInfo: {},
+          tokenShowList: [],
+          tokenPrice: {},
+          tokenTotalAmount: "0",
+        };
+      }
+      return {
+        ...state,
+        shouldRefresh: shouldRefresh,
+        isSilentRefresh: false,
+        ...newState,
+      };
+    case UPDATE_STAKING_DATA:
+      return {
+        ...state,
+        stakingLoadingRefresh: action.shouldRefresh,
+      };
+    case UPDATE_ACCOUNT_LIST_BALANCE:
+      return {
+        ...state,
+        accountBalanceMap: action.list,
+      };
+    case UPDATE_SCAM_LIST:
+      const nextScamList = action.scamList.map((scamData) => {
+        return {
+          ...scamData,
+          address: scamData.address.toLowerCase(),
+        };
+      });
+      const allTxMap =  state.txHistoryMap;
+      const tokenIdList = Object.keys(allTxMap)
+      if(tokenIdList.length>0){
+        let newTxMap = {}
+        for (let index = 0; index < tokenIdList.length; index++) {
+          const tokenId = tokenIdList[index];
+          newTxMap = {
+            ...newTxMap,
+            [tokenId]:setScamAndTxList(nextScamList, allTxMap[tokenId])
+          }
+        }
+        return {
+          ...state,
+          scamList: nextScamList,
+          txHistoryMap: newTxMap,
+        };
+      }
+      return {
+        ...state,
+        scamList: nextScamList,
+      };
+    case UPDATE_TOKEN_ASSETS:
+      const nextList = action.isCache
+        ? action.tokenList
+        : mergeLocalConfigToNetToken(action.tokenList, state.tokenList);
+      const result = processTokenList(
+        nextList,
+        state.tokenPrice,
+        state.localShowedTokenIds,
+        state.localTokenConfig
+      );
+      return {
+        ...state,
+        tokenList: result.tokenList,
+        tokenTotalAmount: result.tokenTotalAmount,
+        tokenShowList: result.tokenShowList,
+        mainTokenNetInfo: result.mainTokenNetInfo,
+        newTokenCount: result.newTokenCount,
+      };
+    case UPDATE_CURRENT_PRICE:
+      let isAccountCache;
+      let cacheState = state.isAccountCache;
+      if (
+        action.isCachePrice &&
+        cacheState !== ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE
+      ) {
+        isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE;
+      } else {
+        isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE;
+      }
 
-            const commonPendingList = [...txPendingList,...zkPendingList]
-            commonPendingList.sort((a,b)=>b.nonce-a.nonce)
-            let newList = [...commonPendingList,...commonList]
-            if (newList.length > 0) {
-                newList.push({
-                    showExplorer: true
-                })
-            }
-            return {
-                ...state,
-                txList: newList
-            };
-        case UPDATE_CURRENT_ACCOUNT:
-            let account = action.account
-            return {
-                ...state,
-                currentAccount: account,
-                balance: "0.0000",
-                txList: [],
-                netAccount: {},
-                nonce: "",
-                shouldRefresh: true,
-            }
-        case INIT_CURRENT_ACCOUNT:
-            return {
-                ...state,
-                currentAccount: action.account,
-            }
-        case UPDATE_NET_ACCOUNT:
-            let netAccount = action.account
-            let balance = amountDecimals(netAccount.balance?.total||0, cointypes.decimals)
-            let nonce = netAccount.nonce
-            let inferredNonce = netAccount.inferredNonce
-
-            let isAccountCache
-            let cacheState = state.isAccountCache
-            if (action.isCache && cacheState !== ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE) {
-                isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE
-            } else {
-                isAccountCache = ACCOUNT_BALANCE_CACHE_STATE.NEW_STATE
-            }
-            return {
-                ...state,
-                netAccount: netAccount,
-                balance,
-                nonce,
-                inferredNonce,
-                isAccountCache,
-            }
-        case UPDATE_NET_HOME_REFRESH:
-            let isSilent = action.isSilent
-            let shouldRefresh = action.shouldRefresh
-            if (isSilent) {
-                return {
-                    ...state,
-                    shouldRefresh: shouldRefresh,
-                }
-            }
-            let newState = {}
-            if (shouldRefresh) {
-                newState = {
-                    netAccount: {},
-                    balance: "0.0000",
-                    nonce: "",
-                    txList: [],
-                }
-            }
-            return {
-                ...state,
-                shouldRefresh: shouldRefresh,
-                ...newState
-            }
-        case UPDATE_STAKING_DATA:
-            return {
-                ...state,
-                stakingLoadingRefresh: action.shouldRefresh
-            }
-        case UPDATE_ACCOUNT_LIST_BALANCE:
-            return {
-                ...state,
-                accountBalanceMap: action.list
-            }
-        default:
-            return state;
-    }
+      if (state.tokenList.length == 0) {
+        return {
+          ...state,
+          tokenPrice: action.tokenPrice,
+          isAccountCache: isAccountCache,
+        };
+      }
+      const priceUpdate = processTokenList(
+        state.tokenList,
+        action.tokenPrice,
+        state.localShowedTokenIds,
+        state.localTokenConfig
+      );
+      return {
+        ...state,
+        tokenPrice: action.tokenPrice,
+        isAccountCache: isAccountCache,
+        tokenList: priceUpdate.tokenList,
+        tokenTotalAmount: priceUpdate.tokenTotalAmount,
+        tokenShowList: priceUpdate.tokenShowList,
+      };
+    case UPDATE_LOCAL_TOKEN_CONFIG:
+      const statusUpdate = processTokenShowStatus(
+        state.tokenList,
+        action.tokenConfig
+      );
+      return {
+        ...state,
+        localTokenConfig: action.tokenConfig,
+        tokenList: statusUpdate.tokenList,
+        tokenShowList: statusUpdate.tokenShowList,
+        tokenTotalAmount: statusUpdate.totalShowAmount,
+      };
+    case UPDATE_LOCAL_SHOWED_TOKEN_IDS:
+    const tokenShowedUpdate = processNewTokenStatus(state.tokenList,action.tokenIds);
+      return {
+        ...state,
+        localShowedTokenIds: action.tokenIds, 
+        newTokenCount: tokenShowedUpdate.newTokenCount,
+        tokenList: tokenShowedUpdate.tokenList,
+        tokenShowList: tokenShowedUpdate.tokenShowList,
+        mainTokenNetInfo: tokenShowedUpdate.mainTokenNetInfo,
+      };
+    default:
+      return state;
+  }
 };
 
 export default accountInfo;
