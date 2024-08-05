@@ -182,6 +182,11 @@ export const GET_SIGN_PARAMS_BY_ID = "GET_SIGN_PARAMS_BY_ID"
  */
 export const GET_SIGN_PARAMS = "GET_SIGN_PARAMS"
 
+ /**
+ * get dapp approve params
+ */
+ export const GET_APPROVE_PARAMS = "GET_APPROVE_PARAMS"
+
 
 /**
  * get dapp approve account
