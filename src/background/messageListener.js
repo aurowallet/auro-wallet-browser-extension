@@ -170,7 +170,7 @@ function internalMessageListener(message, sender, sendResponse) {
       sendResponse(dappService.getSignParamsByOpenId(payload.openId))
       break
     case GET_SIGN_PARAMS:
-      sendResponse(dappService.getSignParams(payload.openId))
+      sendResponse(dappService.getSignParams())
       break
     case GET_APPROVE_PARAMS:
       sendResponse(dappService.getApproveParams())
