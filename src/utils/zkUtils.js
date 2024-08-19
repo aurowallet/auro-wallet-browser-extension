@@ -292,3 +292,14 @@ export function verifyTokenCommand(sourceData, sendTokenId, buildZkCommand) {
 
   return senderVerified && receiverVerified;
 }
+
+/**
+ * get accoutUpdate count to calc zk tx fee
+ * @param {*} zkappCommand 
+ * @returns 
+ */
+export function getAccountUpdateCount(zkappCommand) {
+  let nextZkCommand = JSON.parse(zkappCommand);
+  let accountUpdates = nextZkCommand.accountUpdates;
+  return accountUpdates.length;
+}
