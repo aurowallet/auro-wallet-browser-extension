@@ -204,8 +204,8 @@ const TokenDetail = () => {
         dispatch(updateShouldRequest(false));
         saveToLocal(history);
       } else {
-        let pendingTxList = getPendingTxList(address);
-        let gqlTxList = getTxHistory(address);
+        let pendingTxList = getPendingTxList(address).catch((err) => err);
+        let gqlTxList = getTxHistory(address).catch((err) => err);
         txResponse = await Promise.all([
           gqlTxList,
           pendingTxList,
