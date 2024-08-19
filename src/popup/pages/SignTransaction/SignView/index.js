@@ -479,7 +479,7 @@ const SignView = ({
       }
       if (sendAction == DAppActions.mina_sendPayment) {
         let amount = trimSpace(params.amount);
-        if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
+        if (!isNumber(amount) || !new BigNumber(amount).gte(0)) {
           Toast.info(i18n.t("amountError"));
           return;
         }
