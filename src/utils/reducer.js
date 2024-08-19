@@ -19,7 +19,7 @@ const defaultMinaAssets = {
     isMainToken: true,
     showBalance: "0",
     showAmount: "0",
-    iconUrl:""
+    iconUrl:"img/mina_color.svg"
   },
   localConfig: {
     hideToken: false,
