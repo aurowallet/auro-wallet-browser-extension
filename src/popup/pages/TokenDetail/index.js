@@ -99,14 +99,13 @@ const TokenDetail = () => {
   } = useMemo(() => {
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
-    let tokenIconUrl;
+    let tokenIconUrl = token.tokenBaseInfo.iconUrl;
     let tokenSymbol;
     let tokenName;
     if (isFungibleToken) {
       tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
       tokenName = addressSlice(token.tokenId, 6);
     } else {
-      tokenIconUrl = "img/mina_color.svg";
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
@@ -244,7 +243,7 @@ const TokenDetail = () => {
       
       isFirstRequest.current = false;
       setShowLoading(false);
-      isRequest = false
+      isRequest = false;
     },
     [currentAccount.address, isFungibleToken, token.tokenId, saveToLocal]
   );
@@ -300,7 +299,7 @@ const TokenDetail = () => {
         {showLoading ? (
           <LoadingView />
         ) : showTxHistory.length !== 0 ? (
-          <TxListView history={showTxHistory} tokenInfo={token}/>
+          <TxListView history={showTxHistory} tokenInfo={token} />
         ) : isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? (
           <TxNotSupportView />
         ) : (
@@ -358,7 +357,7 @@ const StyledActionItemWrapper = styled.div`
     }
 
     ${StyledActionTitle} {
-      color: #5045c7;  // Darkened #594af1 by 5%
+      color: #5045c7; // Darkened #594af1 by 5%
     }
   }
 `;

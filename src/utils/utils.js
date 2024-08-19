@@ -453,3 +453,7 @@ export function mergeLocalConfigToNetToken(newTokens,localTokens){
     }
   })
 }
+
+export function getReadableNetworkId(networkId) {
+  return networkId.replace(/:/g, '_');
+}

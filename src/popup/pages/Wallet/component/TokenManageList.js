@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenManageItem from "./TokenManageItem";
+import { TokenLaunch } from "@/constant";
+import i18n from "i18next";
 
 const StyledTokenWrapper = styled.div`
   background-color: white;
@@ -35,9 +37,9 @@ const TokenManageList = ({}) => {
         return <TokenManageItem key={index} token={token} />;
       })}
       <StyledTokenInfoRow>
-        {/* <StyledTokenInfo href={TokenLaunch} target="_blank">
-          {i18n.t("updateTokenInfo")}
-        </StyledTokenInfo> */}
+        <StyledTokenInfo href={TokenLaunch} target="_blank">
+          {i18n.t("updateTokenInfo")} 
+        </StyledTokenInfo>
       </StyledTokenInfoRow>
     </StyledTokenWrapper>
   );

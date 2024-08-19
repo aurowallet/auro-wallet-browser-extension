@@ -306,7 +306,6 @@ const StyledZkConnectStatus = styled.img`
 `;
 const WalletInfo = () => {
   const accountInfo = useSelector((state) => state.accountInfo);
-  const tokenList = useSelector((state) => state.accountInfo.tokenList);
   const tokenTotalAmount = useSelector(
     (state) => state.accountInfo.tokenTotalAmount
   );

@@ -121,3 +121,9 @@ export const NETWORK_SHOW_TESTNET = "NETWORK_SHOW_TESTNET"
 
 
 export const ZKAPP_APPROVE_LIST = "ZKAPP_APPROVE_LIST"
+
+
+/**
+ * current token list
+ */
+export const SUPPORT_TOKEN_LIST= "SUPPORT_TOKEN_LIST"
