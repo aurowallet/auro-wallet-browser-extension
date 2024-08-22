@@ -154,6 +154,46 @@ export async function openPopupWindow(
   return lastWindowIds[channel];
 }
 
+
+export async function startPopupWindow(
+  url,
+  channel = "default",
+  windowType = "",
+  options = {}
+) {
+  if (windowType === "dapp") {
+    let dappOption = await getDappWindowPosition()
+    options = {
+      ...options,
+      ...dappOption
+    }
+  }
+  const option = Object.assign({
+    width: PopupSize.width,
+    height: PopupSize.height,
+    url: url,
+    type: "popup",
+  }, options);
+
+  const createdWindow = await new Promise(resolve => {
+    extension.windows.create(option, function (windowData) {
+      resolve(windowData)
+    })
+  })
+  lastWindowIds[channel] = createdWindow?.id;
+
+  if (lastWindowIds[channel]) {
+    try {
+      await extension.windows.update(lastWindowIds[channel], {
+        focused: true,
+      });
+    } catch (e) {
+      console.log(`Failed to update window focus: ${e.message}`);
+    }
+  }
+  return lastWindowIds[channel];
+}
+
 export function closePopupWindow(channel) {
   (async () => {
     const windowId = lastWindowIds[channel];

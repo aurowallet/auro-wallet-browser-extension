@@ -32,10 +32,11 @@ import * as storage from "./storageService";
 import dappService from "./DappService";
 import extension from 'extensionizer'
 import { WALLET_CONNECT_TYPE } from "../constant/commonType";
+import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
-  if (messageSource === 'messageFromDapp') {
+  if (messageSource === 'messageFromDapp' || messageSource ===  "messageFromBuild") {
     dappService.handleMessage(message, sender, sendResponse)
     return true
   }
@@ -172,6 +173,9 @@ function internalMessageListener(message, sender, sendResponse) {
     case GET_SIGN_PARAMS:
       sendResponse(dappService.getSignParams())
       break
+    case TOKEN_BUILD.getAllTokenPendingSign:
+      sendResponse(dappService.getAllTokenSignParams())
+      break;
     case GET_APPROVE_PARAMS:
       sendResponse(dappService.getApproveParams())
       break

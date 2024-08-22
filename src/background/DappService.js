@@ -2,7 +2,7 @@ import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN } from '../constant/msgTypes';
-import { checkAndTop, closePopupWindow, openPopupWindow } from "../utils/popup";
+import { checkAndTop, closePopupWindow, openPopupWindow, startPopupWindow } from "../utils/popup";
 import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
@@ -10,20 +10,27 @@ import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get, save } from './storageService';
 import { Default_Network_List } from '@/constant/network';
 import { errorCodes } from '@/constant/dappError';
-import { zkCommondFormat } from '@/utils/zkUtils';
+import { verifyTokenCommand, zkCommondFormat } from '@/utils/zkUtils';
 import { getAccountInfo } from './api';
 import { ZKAPP_APPROVE_LIST } from '@/constant/storageKey';
 import { ZK_DEFAULT_TOKEN_ID } from '../constant';
+import { TOKEN_BUILD } from '@/constant/tokenMsgTypes';
+import { decryptData, encryptData } from '@/utils/fore';
+import { node_public_keys, react_private_keys } from '../../config';
+const { v4: uuidv4 } = require('uuid');
 
 let signRequests = [];
 let approveRequests = [];
 let notificationRequests = []
+
+let tokenSigneRequests = [];
 // Interceptor to prevent zkapp from requesting accounts at the same time
 let pendingApprove = undefined
 
 export const windowId = {
   approve_page: "approve_page",
   request_sign: "request_sign",
+  token_sign: "token_sign",
 }
 const ZKAPP_CHAIN_ACTION = [
   DAppActions.mina_addChain,
@@ -35,9 +42,11 @@ class DappService {
     this.dappStore = new ObservableStore({
       accountApprovedUrlList: {},
       currentOpenWindow: {},
-      currentConnect: {}
+      currentConnect: {},
+      tokenBuildList:{}
     })
     this.signEventListener = undefined
+    this.tokenSignListener = undefined
   }
 
   requestCallback(request, id, sendResponse) {
@@ -132,6 +141,24 @@ class DappService {
             sendResponse
           )
           break;
+      case TOKEN_BUILD.add:
+        const addId = await this.addTokenBuildList(message.payload)
+        sendResponse(addId)
+        break
+      case TOKEN_BUILD.getParams:
+        this.requestCallback(
+          () => this.getTokenParamsById(message.payload),
+          id,
+          sendResponse
+        )
+        break;
+      case TOKEN_BUILD.requestSign:
+        this.requestCallback(
+          () => this.requestTokenBuildSign(id, { ...params, action }, site),
+          id,
+          sendResponse
+        )
+        break;
       default:
         this.requestCallback(
           async ()=>{
@@ -858,6 +885,204 @@ class DappService {
       accountApprovedUrlList:approveMap
     })
     save({ ZKAPP_APPROVE_LIST: JSON.stringify(approveMap) })
+  }
+  async addTokenBuildList(buildParams){
+    const buildList = this.dappStore.getState().tokenBuildList
+    let buildID = uuidv4()
+    if(buildList[buildID]){
+      buildID = uuidv4()
+    }
+    buildList[buildID] = {
+      ...buildParams.sendParams,
+      buildID
+    }
+    this.dappStore.updateState({
+      tokenBuildList:buildList
+    })
+
+    let targetUrl = "https://token-build.aurowallet.com/?buildid=" + buildID;
+    startPopupWindow(targetUrl, "tokenSign_"+buildID, "dapp", {
+      left: buildParams.left,
+      top: buildParams.top,
+    });
+    return buildID
+  }
+
+  removeTokenBuildById(buildID){
+    const newBuildList = tokenSigneRequests.filter((item) => {
+      return item.id !== buildID
+  })
+    tokenSigneRequests = newBuildList
+    const nextTokenBuildList = this.getDappStore().tokenBuildList
+    delete nextTokenBuildList[buildID];
+    this.dappStore.updateState({
+      tokenBuildList:nextTokenBuildList
+    })
+  }
+  checkSafeBuild(site){
+    const buildUrl = new URL(site.origin)
+    const hostname = buildUrl.hostname
+    if(hostname!=='localhost' && hostname!=="token-build.aurowallet.com"){
+      return false
+    }
+    return true
+  }
+
+
+  getAllTokenSignParams() {
+    let list = [...tokenSigneRequests]
+    list.sort((a,b)=>a.time-b.time)
+    return list
+  }
+
+  async getTokenParamsById(payload){
+    const site = payload.site
+    if(!this.checkSafeBuild(site)){
+      console.log('Unsafe Build',site);
+      return { message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch }; 
+    }
+    const buildId = payload.params
+    const buildList = this.dappStore.getState().tokenBuildList
+    const nextData = buildList[buildId]
+    if(nextData){
+      const data = encryptData(JSON.stringify(nextData),node_public_keys);
+      return data
+    }
+    return nextData
+  }
+  getDecryptData(nextParams){
+    try {
+      const encrypted = nextParams.result
+      let realUnSignTxStr = decryptData(encrypted.encryptedData,encrypted.encryptedAESKey,encrypted.iv,react_private_keys);
+      return realUnSignTxStr
+    } catch (error) {
+      return ""
+    }
+  }
+  verifyTokenBuildRes(decryptData,buildData){
+    try {
+      if(!buildData){
+        return false
+      }
+      let realUnSignTx = JSON.stringify(decryptData.transaction)
+      const checkChangeStatus = verifyTokenCommand(
+        buildData,
+        buildData.tokenId,
+        realUnSignTx
+      );
+      return checkChangeStatus
+    } catch (error) {
+      console.log('verifyTokenBuildRes',error);
+      return false
+    }
+  }
+  requestTokenBuildSign(id, params, site){
+    
+    return new Promise(async (resolve, reject) => {
+      let that = this
+      try {
+        let nextParams = {...params}
+        const sendAction = params.action 
+        function onMessage(message, sender, sendResponse) {
+          const { action, payload } = message;
+          if(action === DAPP_ACTION_CANCEL_ALL){ 
+            let requestList = tokenSigneRequests
+            requestList.map((item)=>{
+                item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
+            })
+            tokenSigneRequests=[]
+            that.dappStore.updateState({
+              tokenBuildList:{}
+            })
+            that.setBadgeContent()
+            if(tokenSigneRequests.length === 0){
+              closePopupWindow(windowId.token_sign) 
+              extension.runtime.onMessage.removeListener(onMessage)
+              that.tokenSignListener = undefined
+            }
+            return 
+          }
+          let currentSignParams = [...tokenSigneRequests].find((item) => {
+            if (item.id === payload?.id) {
+              return item
+            }
+          })
+          if(!currentSignParams){
+            return
+          }
+          const nextReject = currentSignParams.reject
+          const nextResolve = currentSignParams.resolve
+          
+          switch (action) {
+            case TOKEN_BUILD.requestSign:
+                  if (payload.resultOrigin !== site.origin) {
+                    nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
+                    return
+                  }
+                  if (payload && (payload.hash || payload.signedData)) {
+                    if(payload.hash){
+                      nextResolve({
+                        hash: payload.hash
+                      })
+                    }else{
+                      nextResolve({
+                        signedData: payload.signedData
+                      })
+                    }
+                    that.removeTokenBuildById(payload.id)
+                    if(tokenSigneRequests.length == 0){
+                      closePopupWindow(windowId.token_sign)
+                      extension.runtime.onMessage.removeListener(onMessage)
+                      that.tokenSignListener = undefined
+                    }
+                    that.setBadgeContent()
+                  } else if (payload && payload.cancel) {
+                    nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
+                    that.removeTokenBuildById(payload.id)
+                    if(tokenSigneRequests.length == 0 ){
+                      closePopupWindow(windowId.token_sign)
+                      extension.runtime.onMessage.removeListener(onMessage)
+                      that.tokenSignListener = undefined
+                    }
+                    that.setBadgeContent()
+                  } else {
+                    let msg = payload.message || getMessageFromCode(errorCodes.internal)
+                    nextReject({ message: msg,code:errorCodes.internal })
+                  }
+                  sendResponse()
+                return true
+          }
+          return false
+        }
+        const decryptData = that.getDecryptData(nextParams)
+        if(!decryptData.buildID){
+          reject({ message: getMessageFromCode(errorCodes.verifyFailed),code:errorCodes.verifyFailed })
+          return
+        }
+        const buildList = this.dappStore.getState().tokenBuildList
+        const buildData = buildList[decryptData.buildID]
+
+        const checkBuildRes =  that.verifyTokenBuildRes(decryptData,buildData)
+        if(!checkBuildRes){
+          reject({ message: getMessageFromCode(errorCodes.verifyFailed),code:errorCodes.verifyFailed })
+          return
+        }
+        closePopupWindow("tokenSign_"+decryptData.buildID)
+        nextParams.buildData = buildData;
+        nextParams.result = decryptData.transaction
+        if(!that.tokenSignListener){ 
+          that.tokenSignListener = extension.runtime.onMessage.addListener(onMessage)
+        }
+        this.popupId = await this.dappOpenPopWindow('./popup.html#/token_sign', windowId.token_sign, "dapp")
+        let time = new Date().getTime()
+        tokenSigneRequests.push({ id, params:nextParams, site,popupId:this.popupId,resolve,reject,time })
+        this.setBadgeContent()
+      } catch (error) {
+        reject({ code:errorCodes.throwError,message:getMessageFromCode(errorCodes.throwError),stack: String(error), })
+      }
+    })
+
+
   }
 }
 const dappService = new DappService()

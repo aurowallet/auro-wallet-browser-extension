@@ -37,7 +37,7 @@ function App() {
       "popup.html#/register_page",
       "popup.html#/createprocess",
     ];
-    const zkPage = ["popup.html#/approve_page", "popup.html#/request_sign"];
+    const zkPage = ["popup.html#/approve_page", "popup.html#/request_sign","popup.html#/token_sign"];
 
     zkPage.map((path) => {
       if (url.href.indexOf(path) !== -1) {

@@ -17,6 +17,7 @@ import HomePage from "./Main";
 import SignTransaction from "./SignTransaction";
 import Welcome from "./Welcome";
 import styled, { keyframes } from "styled-components";
+import TokenSignPage from "./Send/tokenSign";
 
 const MainRouter = () => {
   const dispatch = useDispatch();
@@ -71,6 +72,9 @@ const MainRouter = () => {
         return;
       case ENTRY_WITCH_ROUTE.DAPP_SIGN_PAGE:
         setNextRoute(<SignTransaction />);
+        return;
+      case ENTRY_WITCH_ROUTE.DAPP_TOKEN_SIGN:
+        setNextRoute(<TokenSignPage />);
         return;
       default:
         setNextRoute(<LoadingView />);

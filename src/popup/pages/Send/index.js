@@ -43,6 +43,7 @@ import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 import { decryptData, encryptData } from "@/utils/fore";
 import { node_public_keys, react_private_keys } from "../../../../config";
+import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 
 const SendPage = ({}) => {
   const dispatch = useDispatch();
@@ -67,7 +68,7 @@ const SendPage = ({}) => {
 
   const { isFromModal } = useMemo(() => {
     let params = history.location.params || {};
-    let isFromModal = params?.isFromModal
+    let isFromModal = params?.isFromModal;
     return {
       isFromModal,
     };
@@ -249,15 +250,15 @@ const SendPage = ({}) => {
 
       setConfirmModalStatus(false);
       fetchAccountData();
-      if(isFromModal){
+      if (isFromModal) {
         history.replace({
           pathname: "token_detail",
         });
-      }else{
+      } else {
         history.goBack();
       }
     },
-    [i18n,isFromModal]
+    [i18n, isFromModal]
   );
 
   useEffect(() => {
@@ -298,6 +299,52 @@ const SendPage = ({}) => {
     [currentAccount, onSubmitTx, ledgerApp, fetchAccountData]
   );
 
+  const buildBodyInServer = useCallback(
+    async (buildTokenData) => {
+      const data = encryptData(
+        JSON.stringify(buildTokenData),
+        node_public_keys
+      );
+      const buildData = await buildTokenBody(data);
+      if (buildData.unSignTx) {
+        let realUnSignTxStr = decryptData(
+          buildData.unSignTx.encryptedData,
+          buildData.unSignTx.encryptedAESKey,
+          buildData.unSignTx.iv,
+          react_private_keys
+        );
+        let realUnSignTx = JSON.stringify(realUnSignTxStr);
+        const checkChangeStatus = verifyTokenCommand(
+          buildTokenData,
+          token.tokenId,
+          realUnSignTx
+        );
+        if (!checkChangeStatus) {
+          setConfirmBtnStatus(false);
+          Toast.info(i18n.t("buildFailed"));
+          return;
+        }
+        return realUnSignTx;
+      } else {
+        setConfirmBtnStatus(false);
+        Toast.info(buildData.error || String(buildData));
+        return;
+      }
+    },
+    [token]
+  );
+  const buildBodyInLocal = useCallback((buildTokenData) => {
+    sendMsg(
+      {
+        action: TOKEN_BUILD.add,
+        messageSource: "messageFromBuild",
+        payload: {
+          sendParams: buildTokenData,
+        },
+      },
+      (id) => {}
+    );
+  }, []);
   const getTokenBody = useCallback(
     async (payload) => {
       const tokenState = await getTokenState(
@@ -327,31 +374,32 @@ const SendPage = ({}) => {
         fee: sendFee,
         isNewAccount: fundNewAccountStatus,
         gqlUrl: currentNode.url,
-        zkAppUri:token.zkappUri
+        tokenId: token.tokenId,
+        symbol: tokenSymbol,
+        decimals: availableDecimals,
       };
-      const data = encryptData(JSON.stringify(buildTokenData),node_public_keys);
-      const buildData = await buildTokenBody(data);
-      if (buildData.unSignTx) {
-        let realUnSignTxStr = decryptData(buildData.unSignTx.encryptedData,buildData.unSignTx.encryptedAESKey,buildData.unSignTx.iv,react_private_keys);
-        let realUnSignTx = JSON.stringify(realUnSignTxStr)
-        const checkChangeStatus = verifyTokenCommand(
-          buildTokenData,
-          token.tokenId,
-          realUnSignTx
-        );
-        if (!checkChangeStatus) {
-          setConfirmBtnStatus(false);
-          Toast.info(i18n.t("buildFailed"));
-          return;
-        }
-        return realUnSignTx;
+      buildBodyInLocal(buildTokenData);
+      setConfirmModalStatus(false);
+      setConfirmBtnStatus(false);
+      fetchAccountData();
+      if (isFromModal) {
+        history.replace({
+          pathname: "token_detail",
+        });
       } else {
-        setConfirmBtnStatus(false);
-        Toast.info(buildData.error || String(buildData));
-        return;
+        history.goBack();
       }
+      // setConfirmBtnStatus(false);
+      // buildBodyInServer(buildTokenData)
     },
-    [tokenPublicKey, availableDecimals, currentNode,token]
+    [
+      tokenPublicKey,
+      availableDecimals,
+      currentNode,
+      token,
+      tokenSymbol,
+      isFromModal,
+    ]
   );
   const clickNextStep = useCallback(
     async (ledgerReady = false, preLedgerApp) => {
