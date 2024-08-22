@@ -162,7 +162,7 @@ const TokenItem = ({ token, isInModal }) => {
 
   const {showStaking} = useMemo(() => {
     const networkID = currentNode.networkID;
-    let showStaking = networkID.startsWith("mina");
+    let showStaking = networkID?.startsWith("mina");
     return {
       showStaking
     }
