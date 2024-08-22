@@ -44,7 +44,12 @@ import styles from "./index.module.scss";
 import { decryptData, encryptData } from "@/utils/fore";
 import { node_public_keys, react_private_keys } from "../../../../config";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
+import styled from "styled-components";
 
+const StyledImgWrapper = styled.div`
+display: flex;
+align-items: center;
+`
 const SendPage = ({}) => {
   const dispatch = useDispatch();
   const history = useHistory();
@@ -757,6 +762,7 @@ const SendPage = ({}) => {
         waitingLedger={waitLedgerStatus}
         contentList={contentList}
         showCloseIcon={waitLedgerStatus}
+        rightBtnCom={!isSendMainToken && <StyledImgWrapper><img src="/img/icon_popnewwindow.svg"/></StyledImgWrapper>}
       />
       <LedgerInfoModal
         modalVisible={ledgerModalStatus}
