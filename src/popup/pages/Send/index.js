@@ -382,6 +382,7 @@ const SendPage = ({}) => {
         tokenId: token.tokenId,
         symbol: tokenSymbol,
         decimals: availableDecimals,
+        langCode:i18n.language
       };
       buildBodyInLocal(buildTokenData);
       setConfirmModalStatus(false);
@@ -404,6 +405,7 @@ const SendPage = ({}) => {
       token,
       tokenSymbol,
       isFromModal,
+      i18n
     ]
   );
   const clickNextStep = useCallback(

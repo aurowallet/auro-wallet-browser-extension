@@ -71,8 +71,10 @@ export function checkAndTop(windowId, channel) {
         } catch (e) {
           console.log(`Failed to update window focus: ${e.message}`);
         }
+        resolve(true)
+      }else{
+        resolve(false)
       }
-      resolve(true)
     });
   })
 }
