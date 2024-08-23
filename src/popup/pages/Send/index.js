@@ -382,7 +382,8 @@ const SendPage = ({}) => {
         tokenId: token.tokenId,
         symbol: tokenSymbol,
         decimals: availableDecimals,
-        langCode:i18n.language
+        langCode:i18n.language,
+        networkID:currentNode.networkID,
       };
       buildBodyInLocal(buildTokenData);
       setConfirmModalStatus(false);
