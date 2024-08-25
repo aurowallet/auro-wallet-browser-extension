@@ -46,10 +46,10 @@ import { node_public_keys, react_private_keys } from "../../../../config";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import styled from "styled-components";
 
-const StyledImgWrapper = styled.div`
-display: flex;
-align-items: center;
-`
+const StyledWrapper = styled.div`
+  display: flex;
+  align-items: center;
+`;
 const SendPage = ({}) => {
   const dispatch = useDispatch();
   const history = useHistory();
@@ -382,8 +382,8 @@ const SendPage = ({}) => {
         tokenId: token.tokenId,
         symbol: tokenSymbol,
         decimals: availableDecimals,
-        langCode:i18n.language,
-        networkID:currentNode.networkID,
+        langCode: i18n.language,
+        networkID: currentNode.networkID,
       };
       buildBodyInLocal(buildTokenData);
       setConfirmModalStatus(false);
@@ -406,7 +406,7 @@ const SendPage = ({}) => {
       token,
       tokenSymbol,
       isFromModal,
-      i18n
+      i18n,
     ]
   );
   const clickNextStep = useCallback(
@@ -556,12 +556,31 @@ const SendPage = ({}) => {
         });
       }
       setContentList(list);
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        if (!isSendMainToken) {
+
+      if (!isSendMainToken) {
+        if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
           Toast.info(i18n.t("notSupportNow"));
           return;
         }
+        let fromAddress = currentAddress;
+        let toAddressValue = trimSpace(toAddress);
+        let amount = getRealTransferAmount();
+        let nonce = trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce;
+        let realMemo = memo || "";
+        let fee = trimSpace(feeAmount);
+        let payload = {
+          fromAddress,
+          toAddress: toAddressValue,
+          amount,
+          fee,
+          nonce,
+          memo: realMemo,
+        };
+        await getTokenBody(payload);
+        return;
+      }
 
+      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
         if (!ledgerReady) {
           const ledger = await getLedgerStatus();
           setLedgerApp(ledger.app);
@@ -588,6 +607,7 @@ const SendPage = ({}) => {
       ledgerStatus,
       availableBalance,
       mainTokenBalance,
+      mainTokenNetInfo
     ]
   );
 
@@ -749,7 +769,12 @@ const SendPage = ({}) => {
       </div>
       <div className={cls(styles.bottomContainer)}>
         <Button disable={btnDisableStatus} onClick={onConfirm}>
-          {i18n.t("next")}
+          <StyledWrapper>
+            {i18n.t("next")}
+            <StyledWrapper>
+              <img src="/img/icon_popnewwindow.svg" />
+            </StyledWrapper>
+          </StyledWrapper>
         </Button>
       </div>
 
@@ -765,7 +790,6 @@ const SendPage = ({}) => {
         waitingLedger={waitLedgerStatus}
         contentList={contentList}
         showCloseIcon={waitLedgerStatus}
-        rightBtnCom={!isSendMainToken && <StyledImgWrapper><img src="/img/icon_popnewwindow.svg"/></StyledImgWrapper>}
       />
       <LedgerInfoModal
         modalVisible={ledgerModalStatus}

@@ -18,7 +18,7 @@ const StyledTokenItemWrapper = styled.div`
   padding: 10px 20px;
   border-top: 0.5px solid rgba(0, 0, 0, 0.1);
 
-  background: ${(props) => (props.$newToken ? "rgba(0, 0, 0, 0.05)" : "white")};
+  background: ${(props) => (props.$newToken ? "rgba(0, 0, 0, 0.01)" : "white")};
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
