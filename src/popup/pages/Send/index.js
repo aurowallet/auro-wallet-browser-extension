@@ -771,9 +771,9 @@ const SendPage = ({}) => {
         <Button disable={btnDisableStatus} onClick={onConfirm}>
           <StyledWrapper>
             {i18n.t("next")}
-            <StyledWrapper>
+            {!isSendMainToken && <StyledWrapper>
               <img src="/img/icon_popnewwindow.svg" />
-            </StyledWrapper>
+            </StyledWrapper>}
           </StyledWrapper>
         </Button>
       </div>
