@@ -8,7 +8,7 @@ import { extGetLocal, extRemoveLocal, extSaveLocal } from "./background/extensio
 import { getLocal, saveLocal } from "./background/localStorage";
 import { CURRENCY_UNIT } from "./constant";
 import { WALLET_CONNECT_TYPE } from "./constant/commonType";
-import { DAPP_ACTIONS, DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
+import { POPUP_ACTIONS, DAPP_GET_CURRENT_OPEN_WINDOW, WALLET_GET_CURRENT_ACCOUNT } from "./constant/msgTypes";
 import { DefaultMainnetConfig } from "./constant/network";
 import { CURRENCY_UNIT_CONFIG, NET_WORK_CHANGE_FLAG, NET_WORK_CONFIG_V2, STORAGE_UPGRADE_STATUS } from "./constant/storageKey";
 import { languageInit } from "./i18n";
@@ -20,6 +20,7 @@ import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "./reducers/entryRouteR
 import { updateCurrentNode, updateCustomNodeList } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
+import PopupMonitor from "./monitor/PopupMonitor"
 
 
 function getLocalNetConfig(store) {
@@ -156,7 +157,7 @@ async function initNetworkFlag(){
 
 function initZkAppConnect(){
   sendMsg({
-    action: DAPP_ACTIONS.INIT_APPROVE_LIST,
+    action: POPUP_ACTIONS.INIT_APPROVE_LIST,
   })
 }
 
@@ -198,6 +199,7 @@ export const applicationEntry = {
       <React.StrictMode>
         <Provider store={store}>
           <App />
+          <PopupMonitor/>
         </Provider>
       </React.StrictMode>,
       document.getElementById("root")

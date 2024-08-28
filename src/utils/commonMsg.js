@@ -4,7 +4,7 @@ import extension from 'extensionizer'
  * @param {*} message 
  * @param {*} sendResponse 
  */
-export function sendMsg(message, sendResponse) {
+export function sendMsg(message, sendResponse,errorCallback) {
   const { messageSource, action, payload } = message
   extension.runtime.sendMessage(
     {
@@ -14,6 +14,9 @@ export function sendMsg(message, sendResponse) {
       sendResponse && sendResponse(params)
       if (extension.runtime.lastError) {
         console.error("send message error",extension.runtime.lastError);
+        if(errorCallback){
+          errorCallback()
+        }
       }
     }
   );

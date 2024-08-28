@@ -6,8 +6,7 @@
       "48": "img/logo/48.png",
       "128": "img/logo/128.png"
     },
-    "default_title": "Auro Wallet",
-    "default_popup": "popup.html"
+    "default_title": "Auro Wallet"
   },
   "permissions": [
     "offscreen"

@@ -1,8 +1,8 @@
 import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
-import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN } from '../constant/msgTypes';
-import { checkAndTop, closePopupWindow, openPopupWindow, startPopupWindow } from "../utils/popup";
+import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_ACTIONS } from '../constant/msgTypes';
+import { checkAndTop, closePopupWindow, openPopupWindow, startExtensionPopup, startPopupWindow } from "../utils/popup";
 import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
@@ -17,6 +17,7 @@ import { ZK_DEFAULT_TOKEN_ID } from '../constant';
 import { TOKEN_BUILD } from '@/constant/tokenMsgTypes';
 import { decryptData, encryptData } from '@/utils/fore';
 import { node_public_keys, react_private_keys } from '../../config';
+import { sendMsg } from '../utils/commonMsg';
 const { v4: uuidv4 } = require('uuid');
 
 let signRequests = [];
@@ -1073,10 +1074,17 @@ class DappService {
         if(!that.tokenSignListener){ 
           that.tokenSignListener = extension.runtime.onMessage.addListener(onMessage)
         }
-        this.popupId = await this.dappOpenPopWindow('./popup.html#/token_sign', windowId.token_sign, "dapp")
         let time = new Date().getTime()
-        tokenSigneRequests.push({ id, params:nextParams, site,popupId:this.popupId,resolve,reject,time })
+        tokenSigneRequests.push({ id, params:nextParams, site,resolve,reject,time })
         this.setBadgeContent()
+        sendMsg({
+          action: DAPP_ACTIONS.BUILD_TOKEN_SEND,
+          },undefined,
+          async ()=>{
+            await startExtensionPopup(true)
+            sendMsg({ action: DAPP_ACTIONS.BUILD_TOKEN_SEND }); 
+          }
+        )
       } catch (error) {
         reject({ code:errorCodes.throwError,message:getMessageFromCode(errorCodes.throwError),stack: String(error), })
       }

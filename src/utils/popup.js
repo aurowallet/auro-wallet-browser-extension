@@ -1,8 +1,10 @@
 import extension from 'extensionizer';
+import { POPUP_ACTIONS } from '../constant/msgTypes';
 
 const PopupSize = {
   width: 375,
   height: 600 + 28,// 28px is tabBar height
+  fixHeight:80
 };
 
 let lastWindowIds = {};
@@ -204,4 +206,41 @@ export function closePopupWindow(channel) {
     }
   })();
 }
+/**
+ * 
+ * @param {*} withListener
+ * @returns 
+ */
+export function startExtensionPopup(withListener = false) {
+  return new Promise((resolve)=>{
+  let targetUrl = 'popup.html'
+  extension.windows.getCurrent().then(async (currentWindow) => {
+    const top = currentWindow.top; // Top of the current window
+    const left = currentWindow.left + currentWindow.width - PopupSize.width; // Align to the right edge
+    const id = await openPopupWindow(targetUrl, 'aurowalletPopup', undefined, {
+      left: left,
+      top: top + PopupSize.fixHeight,
+    })
+    if(!withListener){
+      resolve(id)
+    }else{
+      const onMessage = (message, sender, sendResponse) => {
+        const { action } = message;
+        switch (action) {
+          case POPUP_ACTIONS.POPUP_NOTIFACATION:
+            sendResponse("page live");
+            extension.runtime.onMessage.removeListener(onMessage);
+            resolve(id)
+            break;
+          default:
+            break;
+        }
+        return false; 
+      };
+      extension.runtime.onMessage.addListener(onMessage)
+    }
+  });
+})
+}
+
 

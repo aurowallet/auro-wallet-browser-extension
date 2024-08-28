@@ -2,6 +2,7 @@ import {
   DAPP_ACTION_CANCEL_ALL,
   WALLET_GET_CURRENT_ACCOUNT,
 } from "@/constant/msgTypes";
+import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Loading from "@/popup/component/Loading";
 import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
@@ -11,17 +12,18 @@ import {
   ENTRY_WITCH_ROUTE,
   updateEntryWitchRoute,
 } from "@/reducers/entryRouteReducer";
+import {
+  refreshTokenSignPopup,
+  updateTokenSignStatus,
+} from "@/reducers/popupReducer";
 import { sendMsg } from "@/utils/commonMsg";
-import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
 import { LockPage } from "../../Lock";
-import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import SignView from "../SignView";
 import styles from "./index.module.scss";
 
@@ -36,16 +38,8 @@ const TX_CLICK_TYPE = {
   CANCEL: "TX_CLICK_TYPE_CANCEL",
 };
 
-/** mina sign event */
-const SIGN_EVENT_WITH_BROADCAST = [
-  DAppActions.mina_sendTransaction,
-  DAppActions.mina_sendPayment,
-  DAppActions.mina_sendStakeDelegation,
-];
-
-const SignTransaction = () => {
+const TokenSignPage = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
   const isFirstRequest = useRef(true);
   const isShowLoading = useRef(false);
 
@@ -62,6 +56,10 @@ const SignTransaction = () => {
   );
   const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
     inferredNonce
+  );
+
+  const tokenSignRefresh = useSelector(
+    (state) => state.popupReducer.tokenSignRefresh
   );
   useEffect(() => {
     setNextUseInferredNonce(inferredNonce);
@@ -99,6 +97,7 @@ const SignTransaction = () => {
         action: TOKEN_BUILD.getAllTokenPendingSign,
       },
       (res) => {
+        dispatch(refreshTokenSignPopup(false));
         setPendingSignList(res);
         if (isFirstRequest.current) {
           isShowLoading.current = true;
@@ -128,8 +127,10 @@ const SignTransaction = () => {
   }, [fetchAccountInfo, lockStatus]);
 
   useEffect(() => {
-    getSignParams();
-  }, [window.location?.href]);
+    if (tokenSignRefresh) {
+      getSignParams();
+    }
+  }, [tokenSignRefresh]);
 
   const { leftArrowColor, rightArrowColor } = useMemo(() => {
     let leftArrowColor =
@@ -200,6 +201,7 @@ const SignTransaction = () => {
         return checkStatus;
       });
       if (signList.length === 0) {
+        dispatch(updateTokenSignStatus(false));
         goToHome();
         return;
       }
@@ -243,13 +245,7 @@ const SignTransaction = () => {
   );
 
   if (!lockStatus) {
-    return (
-      <LockPage
-        onDappConfirm={true}
-        onClickUnLock={onClickUnLock}
-        history={history}
-      />
-    );
+    return <LockPage onDappConfirm={true} onClickUnLock={onClickUnLock} />;
   }
   return (
     <div className={styles.container}>
@@ -307,4 +303,4 @@ const SignTransaction = () => {
   );
 };
 
-export default SignTransaction;
+export default TokenSignPage;

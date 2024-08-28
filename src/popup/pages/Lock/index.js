@@ -25,6 +25,7 @@ import {extGetLocal, extSaveLocal} from "../../../background/extensionStorage";
 import extension from "extensionizer";
 import { DefaultMainnetConfig } from "@/constant/network";
 import { NET_CONFIG_VERSION } from "../../../../config";
+import useSafeHistory from "@/hooks/useSafeHistory";
 
 export const LockPage = ({
     onClickUnLock = () => { },
@@ -38,7 +39,7 @@ export const LockPage = ({
     const [btnLoading, setBtnLoading] = useState(false)
     
     const dispatch = useDispatch()
-    const history = useHistory()
+    const history = useSafeHistory(onDappConfirm)
 
     const onPwdInput = useCallback((e) => {
         let value = e.target.value
