@@ -28,7 +28,7 @@ import useSafeHistory from "@/hooks/useSafeHistory";
 import styled from "styled-components";
 
 const StyledFormWrapp = styled.form`
-    width: calc(100% - 40px) ;;
+    width: calc(100% - 40px) ;
 `
 
 export const LockPage = ({
@@ -134,6 +134,9 @@ export const LockPage = ({
             extension.tabs.create({
                 url: "popup.html#/register_page",
             });
+            setResetModalStatus(false)
+            history.replace({ pathname: "register_page" });
+            window.close()
         })
     }, [])
 

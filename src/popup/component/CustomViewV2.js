@@ -9,10 +9,10 @@ const StyledCustomView = styled.div`
   display: flex;
   align-items: center;
   height: 48px;
-  margin-top: 10px;
-  padding: 0px 10px;
+  padding: 10px 10px 0px;
   position: relative;
   justify-content: space-between;
+  background-color: white;
 `;
 const StyledBackArrow = styled.div`
   display: flex;
@@ -60,6 +60,7 @@ const StyledChildrenWrapper = styled.div`
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  background-color: white;
 `;
 const CustomViewV2 = ({
   children,
