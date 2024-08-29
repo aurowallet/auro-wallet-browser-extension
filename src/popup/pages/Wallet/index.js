@@ -405,28 +405,6 @@ const WalletInfo = () => {
     history.push("staking");
   }, []);
 
-  const getDappConnect = useCallback(() => {
-    extensionizer.tabs.query(
-      { active: true, currentWindow: true },
-      function (tabs) {
-        let url = tabs[0]?.url || "";
-        let origin = getOriginFromUrl(url);
-        setSiteUrl(origin);
-        sendMsg(
-          {
-            action: DAPP_GET_CONNECT_STATUS,
-            payload: {
-              siteUrl: origin,
-              address: currentAccount.address,
-            },
-          },
-          (isConnected) => {
-            setDappConnectStatus(isConnected);
-          }
-        );
-      }
-    );
-  }, [currentAccount]);
 
   const setDappDisconnect = useCallback(() => {
     sendMsg(
@@ -471,7 +449,6 @@ const WalletInfo = () => {
   }, [dappConnectStatus]);
   useEffect(() => {
     setCurrentAccount(accountInfo.currentAccount);
-    getDappConnect();
   }, [accountInfo.currentAccount]);
 
   const fetchPrice = useCallback(
@@ -517,14 +494,6 @@ const WalletInfo = () => {
         <StyledWalletBaseRow>
           <StyledWalletBaseLeft>
             <StyledWalletName>{accountName}</StyledWalletName>
-            <StyledZkConnectWrapper>
-              <Tooltip text={showTip}>
-                <StyledZkConnectStatus
-                  src={dappIcon}
-                  onClick={onShowDappModal}
-                />
-              </Tooltip>
-            </StyledZkConnectWrapper>
           </StyledWalletBaseLeft>
           <StyledWalletMore onClick={toAccountInfo}>
             <img src="/img/pointMenu.svg" />
