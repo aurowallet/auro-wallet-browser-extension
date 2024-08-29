@@ -2,7 +2,7 @@ import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
-import { checkAndTop, checkAndTopV2, closePopupWindow, lastWindowIds, openPopupWindow, startExtensionPopup, startPopupWindow } from "../utils/popup";
+import { checkAndTop, checkAndTopV2, closePopupWindow, lastWindowIds, openPopupWindow, PopupSize, startExtensionPopup, startPopupWindow } from "../utils/popup";
 import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getExtensionAction, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
@@ -16,7 +16,7 @@ import { ZKAPP_APPROVE_LIST } from '@/constant/storageKey';
 import { ZK_DEFAULT_TOKEN_ID } from '../constant';
 import { TOKEN_BUILD } from '@/constant/tokenMsgTypes';
 import { decryptData, encryptData } from '@/utils/fore';
-import { node_public_keys, react_private_keys } from '../../config';
+import { node_public_keys, react_private_keys, TOKEN_BUILD_URL } from '../../config';
 import { sendMsg } from '../utils/commonMsg';
 import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
 const { v4: uuidv4 } = require('uuid');
@@ -875,10 +875,10 @@ class DappService {
       tokenBuildList:buildList
     })
 
-    let targetUrl = "https://token-build.aurowallet.com/?buildid=" + buildID;
-    startPopupWindow(targetUrl, "tokenSign_"+buildID, "dapp", {
-      left: buildParams.left,
-      top: buildParams.top,
+    let targetUrl = TOKEN_BUILD_URL + buildID;  
+    startPopupWindow(targetUrl, "tokenSign_"+buildID, "buildDapp", {
+      left: buildParams.left + PopupSize.exitSize,
+      top: buildParams.top  + PopupSize.exitSize,
     });
     return buildID
   }

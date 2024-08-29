@@ -2,10 +2,11 @@ import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
 import extension from 'extensionizer';
 import { POPUP_ACTIONS } from '../constant/msgTypes';
 
-const PopupSize = {
+export const PopupSize = {
   width: 375,
   height: 600 + 28,// 28px is tabBar height
-  fixHeight:80
+  fixHeight:80,
+  exitSize:100,
 };
 
 export let lastWindowIds = {};
