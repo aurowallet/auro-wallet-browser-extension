@@ -7,11 +7,6 @@ import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Loading from "@/popup/component/Loading";
 import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
 import { updateShouldRequest } from "@/reducers/accountReducer";
-import { updateDAppOpenWindow } from "@/reducers/cache";
-import {
-  ENTRY_WITCH_ROUTE,
-  updateEntryWitchRoute,
-} from "@/reducers/entryRouteReducer";
 import {
   refreshTokenSignPopup,
   updateTokenSignStatus,
@@ -50,7 +45,6 @@ const TokenSignPage = () => {
   const [rightArrowStatus, setRightArrowStatus] = useState(false);
   const [advanceData, setAdvanceData] = useState({});
 
-  const dappWindow = useSelector((state) => state.cache.dappWindow);
   const inferredNonce = useSelector(
     (state) => state.accountInfo.mainTokenNetInfo?.inferredNonce
   );
@@ -118,7 +112,7 @@ const TokenSignPage = () => {
         setLockStatus(currentAccount.isUnlocked);
       }
     );
-  }, [dappWindow]);
+  }, []);
 
   useEffect(() => {
     if (lockStatus) {
@@ -181,14 +175,6 @@ const TokenSignPage = () => {
     setCurrentSignIndex(nextIndex);
   }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
-  const goToHome = useCallback(() => {
-    let url = dappWindow?.url;
-    if (url) {
-      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-    }
-    dispatch(updateDAppOpenWindow({}));
-  }, [dappWindow, showMultiView]);
-
   const onRemoveTx = useCallback(
     (openId, type, nonce) => {
       let signList = [...pendingSignList];
@@ -202,7 +188,6 @@ const TokenSignPage = () => {
       });
       if (signList.length === 0) {
         dispatch(updateTokenSignStatus(false));
-        goToHome();
         return;
       }
       setPendingSignList(signList);
@@ -216,7 +201,7 @@ const TokenSignPage = () => {
         }
       }
     },
-    [pendingSignList, nextUseInferredNonce, goToHome]
+    [pendingSignList, nextUseInferredNonce]
   );
   /** reject all tx */
   const onRejectAll = useCallback(() => {
@@ -229,7 +214,7 @@ const TokenSignPage = () => {
       },
       async (params) => {}
     );
-    goToHome();
+    dispatch(updateTokenSignStatus(false));
   }, [pendingSignList]);
 
   const onUpdateAdvance = useCallback(

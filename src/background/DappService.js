@@ -2,7 +2,7 @@ import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
-import { checkAndTop, checkAndTopV2, closePopupWindow, openPopupWindow, startExtensionPopup, startPopupWindow } from "../utils/popup";
+import { checkAndTop, checkAndTopV2, closePopupWindow, lastWindowIds, openPopupWindow, startExtensionPopup, startPopupWindow } from "../utils/popup";
 import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
@@ -23,7 +23,7 @@ const { v4: uuidv4 } = require('uuid');
 
 let signRequests = [];
 let approveRequests = [];
-let notificationRequests = []
+let chainRequests = []
 
 let tokenSigneRequests = [];
 // Interceptor to prevent zkapp from requesting accounts at the same time
@@ -43,7 +43,6 @@ class DappService {
   constructor() {
     this.dappStore = new ObservableStore({
       accountApprovedUrlList: {},
-      currentOpenWindow: {},
       currentConnect: {},
       tokenBuildList:{}
     })
@@ -207,7 +206,10 @@ class DappService {
         }
         const sendAction = params.action 
 
-        if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1 && notificationRequests.length>0){
+        if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1 && chainRequests.length>0){
+          if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){ 
+            await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+          }
           reject({ code:errorCodes.zkChainPending,message: getMessageFromCode(errorCodes.zkChainPending)})
           return
         }
@@ -273,8 +275,8 @@ class DappService {
           // format zk commond type
           nextParams.transaction = zkCommondFormat(params.transaction)
         }
-        if (this.popupId) {
-          await checkAndTop(this.popupId, windowId.request_sign)
+        if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){ 
+          await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
         }
         function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
@@ -285,7 +287,7 @@ class DappService {
             })
             signRequests=[]
             that.setBadgeContent()
-            if(notificationRequests.length === 0){
+            if(chainRequests.length === 0){
               closePopupWindow(windowId.request_sign) 
               extension.runtime.onMessage.removeListener(onMessage)
               that.signEventListener = undefined
@@ -317,8 +319,7 @@ class DappService {
                       })
                     }
                     that.removeSignParamsByOpenId(payload.id)
-                    if(signRequests.length == 0 && notificationRequests.length ===0){
-                      closePopupWindow(windowId.request_sign)
+                    if(signRequests.length == 0 && chainRequests.length ===0){
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
@@ -326,8 +327,7 @@ class DappService {
                   } else if (payload && payload.cancel) {
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeSignParamsByOpenId(payload.id)
-                    if(signRequests.length == 0 && notificationRequests.length ===0){
-                      closePopupWindow(windowId.request_sign)
+                    if(signRequests.length == 0 && chainRequests.length ===0){
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
@@ -346,8 +346,7 @@ class DappService {
                   if (payload && payload.signature) {
                     nextResolve(payload)
                     that.removeSignParamsByOpenId(payload.id)
-                    if(signRequests.length == 0 && notificationRequests.length ===0){
-                      closePopupWindow(windowId.request_sign)
+                    if(signRequests.length == 0 && chainRequests.length ===0){
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
@@ -357,8 +356,7 @@ class DappService {
                   } else {
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeSignParamsByOpenId(payload.id)
-                    if(signRequests.length == 0 && notificationRequests.length ===0){
-                      closePopupWindow(windowId.request_sign)
+                    if(signRequests.length == 0 && chainRequests.length ===0){
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
@@ -375,8 +373,7 @@ class DappService {
                   if(payload.cancel){
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeNotifyParamsByOpenId(payload.id)
-                    if(signRequests.length == 0 && notificationRequests.length ===0){
-                      closePopupWindow(windowId.request_sign)
+                    if(signRequests.length == 0 && chainRequests.length ===0){
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
@@ -384,8 +381,7 @@ class DappService {
                   }else if(payload.nextConfig){
                     nextResolve(payload.nextConfig)
                     that.removeNotifyParamsByOpenId(payload.id)
-                    if(signRequests.length == 0 && notificationRequests.length ===0){
-                      closePopupWindow(windowId.request_sign)
+                    if(signRequests.length == 0 && chainRequests.length ===0){
                       extension.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
@@ -405,8 +401,7 @@ class DappService {
                 if (payload && payload.private) {
                   nextResolve(payload)
                   that.removeSignParamsByOpenId(payload.id)
-                  if(signRequests.length == 0 && notificationRequests.length ===0){
-                    closePopupWindow(windowId.request_sign)
+                  if(signRequests.length == 0 && chainRequests.length ===0){
                     extension.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
@@ -416,8 +411,7 @@ class DappService {
                 } else {
                   nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                   that.removeSignParamsByOpenId(payload.id)
-                  if(signRequests.length == 0 && notificationRequests.length ===0){
-                    closePopupWindow(windowId.request_sign)
+                  if(signRequests.length == 0 && chainRequests.length ===0){
                     extension.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
@@ -431,52 +425,35 @@ class DappService {
         if(!that.signEventListener){
           that.signEventListener = extension.runtime.onMessage.addListener(onMessage)
         }
-        this.popupId = await this.dappOpenPopWindow('./popup.html#/request_sign', windowId.request_sign, "dapp")
         let time = new Date().getTime()
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1){
-          notificationRequests.push({ id, params:nextParams, site,popupId:this.popupId,resolve,reject,time })
+          chainRequests.push({ id, params:nextParams, site,resolve,reject,time })
         }else{
-          signRequests.push({ id, params:nextParams, site,popupId:this.popupId,resolve,reject,time })
+          signRequests.push({ id, params:nextParams, site,resolve,reject,time })
         }
         this.setBadgeContent()
+        sendMsg({
+          action: WORKER_ACTIONS.SIGN_ZK,
+          },undefined,
+          async ()=>{
+            await startExtensionPopup(true)
+            sendMsg({ action: WORKER_ACTIONS.SIGN_ZK }); 
+          }
+        )
+
       } catch (error) {
         reject({ code:errorCodes.throwError,message:getMessageFromCode(errorCodes.throwError),stack: String(error), })
       }
     })
   }
-  async dappOpenPopWindow(url,
-    channel = "default",
-    windowType = "") {
-    let that = this
-    let popupWindowId = await openPopupWindow(url, channel, windowType)
-    this.setCurrentOpenWindow(url, channel)
-    function removeListener (tabInfo, changeInfo) {
-      if (popupWindowId === changeInfo.windowId) {
-        extension.tabs.onRemoved.removeListener(removeListener)
-        let requestList = [...signRequests,...approveRequests,...notificationRequests]
-        requestList.map((item)=>{
-          if(item.popupId === changeInfo.windowId){
-            item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
-          }
-        })
-        signRequests = []
-        approveRequests = []
-        notificationRequests = []
-        that.setBadgeContent()
-        that.clearCurrentOpenWindow()
-      }
-    }
-    extension.tabs.onRemoved.addListener(removeListener);
-    return popupWindowId
-  }
   clearAllPendingZk(){
-    let requestList = [...signRequests,...approveRequests,...notificationRequests,...tokenSigneRequests]
+    let requestList = [...signRequests,...approveRequests,...chainRequests,...tokenSigneRequests]
     requestList.map((item)=>{
       item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
     })
     signRequests = []
     approveRequests = []
-    notificationRequests = []
+    chainRequests = []
     tokenSigneRequests = []
     this.setBadgeContent()
   }
@@ -583,7 +560,7 @@ class DappService {
           return false
         }
         extension.runtime.onMessage.addListener(onMessage)
-        approveRequests.push({ id, site,popupId:this.popupId,resolve,reject })
+        approveRequests.push({ id, site,resolve,reject })
         this.setBadgeContent()
         sendMsg({
           action: WORKER_ACTIONS.APPROVE,
@@ -600,7 +577,7 @@ class DappService {
 
   }
   setBadgeContent() {
-    const list = [...approveRequests,...signRequests,...notificationRequests,...tokenSigneRequests]
+    const list = [...approveRequests,...signRequests,...chainRequests,...tokenSigneRequests]
     let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
     const action = isManifestV3 ? chrome.action : chrome.browserAction;
     if (list.length > 0) {
@@ -623,7 +600,7 @@ class DappService {
   }
 
   getSignParamsByOpenId(openId) {
-    let params = [...signRequests,...notificationRequests].filter((item) => {
+    let params = [...signRequests,...chainRequests].filter((item) => {
       if (item.id === openId) {
         return item
       }
@@ -635,7 +612,7 @@ class DappService {
     }
   }
   getSignParams() {
-    let list = [...signRequests,...notificationRequests]
+    let list = [...signRequests,...chainRequests]
     list.sort((a,b)=>a.time-b.time)
     let topItem
     if(list.length>0){
@@ -643,7 +620,7 @@ class DappService {
     }
     return {
       signRequests,
-      notificationRequests,
+      chainRequests,
       topItem
     }
   }
@@ -660,29 +637,14 @@ class DappService {
     signRequests = newSignRequests
   }
   removeNotifyParamsByOpenId(openId){
-    const newNotifyRequests = notificationRequests.filter((item) => {
+    const newNotifyRequests = chainRequests.filter((item) => {
         return item.id !== openId
     })
-    notificationRequests = newNotifyRequests
+    chainRequests = newNotifyRequests
   }
   getDappStore() {
     return this.dappStore.getState()
   };
-  getCurrentOpenWindow() {
-    return this.getDappStore().currentOpenWindow
-  }
-  setCurrentOpenWindow(url, channel) {
-    this.dappStore.updateState({
-      currentOpenWindow: {
-        url, channel
-      }
-    })
-  }
-  clearCurrentOpenWindow() {
-    this.dappStore.updateState({
-      currentOpenWindow: {}
-    })
-  }
   /**
    * get dapp account  address
    * @param {*} siteUrl 
@@ -1106,7 +1068,7 @@ class DappService {
   getAllPendingZK(){
     return {
       signRequests,
-      notificationRequests,
+      chainRequests,
       approveRequests,
       tokenSigneRequests,
     }

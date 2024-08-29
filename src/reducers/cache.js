@@ -31,8 +31,6 @@ const UPDATE_DAPP_ACCOUNT_LIST = "UPDATE_DAPP_ACCOUNT_LIST";
 
 const UPDATE_ACCOUNT_BALANCE_LIST = "UPDATE_ACCOUNT_BALANCE_LIST";
 
-export const UPDATE_DAPP_CURRENT_OPEN_WINDOW =
-  "UPDATE_DAPP_CURRENT_OPEN_WINDOW";
 
 const UPDATE_RECOMMEND_FEE_LIST = "UPDATE_RECOMMEND_FEE_LIST";
 
@@ -101,18 +99,6 @@ export function updateDappSelectList(selectList) {
   };
 }
 
-/**
- * update dapp opened window
- * @param {*} dappWindow
- * @returns
- */
-export function updateDAppOpenWindow(dappWindow) {
-  return {
-    type: UPDATE_DAPP_CURRENT_OPEN_WINDOW,
-    dappWindow,
-  };
-}
-
 export function updateAccountBalanceList(accountDetail) {
   return {
     type: UPDATE_ACCOUNT_BALANCE_LIST,
@@ -161,7 +147,6 @@ const initState = {
   addressBookFrom: "",
   dappAccountList: [],
 
-  dappWindow: {},
   accountBalanceList: {},
   feeRecommend: [],
 
@@ -227,11 +212,6 @@ const cacheReducer = (state = initState, action) => {
       return {
         ...state,
         dappAccountList: action.selectList,
-      };
-    case UPDATE_DAPP_CURRENT_OPEN_WINDOW:
-      return {
-        ...state,
-        dappWindow: action.dappWindow,
       };
     case UPDATE_ACCOUNT_BALANCE_LIST:
       let accountBalanceDetail = action.accountDetail;

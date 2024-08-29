@@ -7,13 +7,7 @@ import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Loading from "@/popup/component/Loading";
 import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
 import { updateShouldRequest } from "@/reducers/accountReducer";
-import { updateDAppOpenWindow } from "@/reducers/cache";
-import {
-  ENTRY_WITCH_ROUTE,
-  updateEntryWitchRoute,
-} from "@/reducers/entryRouteReducer";
 import { sendMsg } from "@/utils/commonMsg";
-import { getQueryStringArgs } from "@/utils/utils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -21,7 +15,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { refreshZkSignPopup, updateSignZkModalStatus } from "../../../reducers/popupReducer";
 import { LockPage } from "../Lock";
 import SignView from "./SignView";
 import ZkAppChainView from "./ZkAppChainView";
@@ -58,7 +52,6 @@ const ZKAPP_CHAIN_ACTION = [
 
 const SignTransaction = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
   const isFirstRequest = useRef(true);
   const isShowLoading = useRef(false);
 
@@ -74,17 +67,21 @@ const SignTransaction = () => {
     notifyViewStatus: false,
   });
 
-  const dappWindow = useSelector((state) => state.cache.dappWindow);
   const inferredNonce = useSelector(
     (state) => state.accountInfo.mainTokenNetInfo?.inferredNonce
   );
+
+  const signZkRefresh = useSelector(
+    (state) => state.popupReducer.signZkRefresh
+  );
+
   const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
     inferredNonce
   );
   useEffect(() => {
       setNextUseInferredNonce(inferredNonce);
   }, [inferredNonce]);
-
+ 
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -118,12 +115,13 @@ const SignTransaction = () => {
         action: GET_SIGN_PARAMS,
       },
       (res) => {
-        const { signRequests, notificationRequests, topItem } = res;
+        dispatch(refreshZkSignPopup(false));
+        const { signRequests, chainRequests, topItem } = res;
         setPendingSignList(signRequests);
 
-        if (notificationRequests.length > 0) {
+        if (chainRequests.length > 0) {
           // current support 1 event
-          setNotifyData(notificationRequests[0]);
+          setNotifyData(chainRequests[0]);
         }
 
         if (
@@ -163,7 +161,7 @@ const SignTransaction = () => {
         setLockStatus(currentAccount.isUnlocked);
       }
     );
-  }, [dappWindow]);
+  }, []);
 
   useEffect(() => {
     if (lockStatus) {
@@ -172,8 +170,10 @@ const SignTransaction = () => {
   }, [fetchAccountInfo, lockStatus]);
 
   useEffect(() => {
-    getSignParams();
-  }, [window.location?.href]);
+    if (signZkRefresh) {
+      getSignParams();
+    }
+  }, [signZkRefresh]);
 
   const { leftArrowColor, rightArrowColor } = useMemo(() => {
     let leftArrowColor =
@@ -224,13 +224,6 @@ const SignTransaction = () => {
     setCurrentSignIndex(nextIndex);
   }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
-  const goToHome = useCallback(() => {
-    let url = dappWindow?.url;
-    if (url) {
-      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-    }
-    dispatch(updateDAppOpenWindow({}));
-  }, [dappWindow, showMultiView]);
 
   const onRemoveNotify = useCallback(() => {
     setNotifyData({});
@@ -240,7 +233,7 @@ const SignTransaction = () => {
         notifyViewStatus: false,
       });
     } else {
-      goToHome();
+      dispatch(updateSignZkModalStatus(false)); 
     }
   }, [pendingSignList]);
   const onRemoveTx = useCallback(
@@ -264,7 +257,7 @@ const SignTransaction = () => {
           setPendingSignList(signList);
           setCurrentSignIndex(0);
         } else {
-          goToHome();
+          dispatch(updateSignZkModalStatus(false));
         }
         return;
       }
@@ -283,7 +276,7 @@ const SignTransaction = () => {
         }
       }
     },
-    [pendingSignList, nextUseInferredNonce, goToHome, notifyData]
+    [pendingSignList, nextUseInferredNonce, notifyData]
   );
   /** reject all tx */
   const onRejectAll = useCallback(() => {
@@ -303,7 +296,7 @@ const SignTransaction = () => {
         notifyViewStatus: true,
       });
     } else {
-      goToHome();
+      dispatch(updateSignZkModalStatus(false));
     }
   }, [pendingSignList, notifyData]);
 
@@ -324,7 +317,6 @@ const SignTransaction = () => {
       <LockPage
         onDappConfirm={true}
         onClickUnLock={onClickUnLock}
-        history={history}
       />
     );
   }

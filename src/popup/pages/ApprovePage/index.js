@@ -9,11 +9,6 @@ import {
   GET_APPROVE_PARAMS,
   WALLET_GET_CURRENT_ACCOUNT,
 } from "../../../constant/msgTypes";
-import { updateDAppOpenWindow } from "../../../reducers/cache";
-import {
-  ENTRY_WITCH_ROUTE,
-  updateEntryWitchRoute,
-} from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
@@ -24,7 +19,6 @@ import styles from "./index.module.scss";
 const ApprovePage = () => {
   const dispatch = useDispatch();
 
-  const dappWindow = useSelector((state) => state.cache.dappWindow);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -43,13 +37,6 @@ const ApprovePage = () => {
     );
   }, []);
 
-  const goToHome = useCallback(() => {
-    let url = dappWindow?.url;
-    if (url) {
-      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-    }
-    dispatch(updateDAppOpenWindow({}));
-  }, [dappWindow]);
 
   useEffect(() => {
     sendMsg(
@@ -75,10 +62,9 @@ const ApprovePage = () => {
       },
       async () => {
         dispatch(updateApproveStatus(false));
-        goToHome();
       }
     );
-  }, [currentAccount, goToHome, params]);
+  }, [currentAccount,params]);
 
   const onConfirm = useCallback(() => {
     let selectAccount = [currentAccount];
@@ -93,10 +79,9 @@ const ApprovePage = () => {
       },
       () => {
         dispatch(updateApproveStatus(false));
-        goToHome();
       }
     );
-  }, [goToHome, params, currentAccount]);
+  }, [params, currentAccount]);
 
   const onClickUnLock = useCallback((account) => {
     let siteUrl = params?.site?.origin || "";

@@ -9,6 +9,8 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { POPUP_ACTIONS, WORKER_ACTIONS } from "../constant/msgTypes";
+import { updateSignZkModalStatus } from "../reducers/popupReducer";
+import SignTransaction from "../popup/pages/SignTransaction";
 // Styled-component for the popup
 const FullScreenPopup = styled.div`
   position: fixed;
@@ -40,6 +42,10 @@ function PopupMonitor() {
   const approveModalStatus = useSelector(
     (state) => state.popupReducer.approveModalStatus
   );
+  const signZkModalStatus = useSelector(
+    (state) => state.popupReducer.signZkModalStatus
+  );
+  
   useEffect(() => {
     sendMsg(
       {
@@ -48,7 +54,7 @@ function PopupMonitor() {
       async (task) => {
         const {
           signRequests,
-          notificationRequests,
+          chainRequests,
           approveRequests,
           tokenSigneRequests,
         } = task;
@@ -57,6 +63,10 @@ function PopupMonitor() {
         }
         if (tokenSigneRequests.length > 0) {
           dispatch(updateTokenSignStatus(true));
+        }
+        let list = [...signRequests,...chainRequests]
+        if (list.length > 0) {
+          dispatch(updateSignZkModalStatus(true));
         }
       }
     );
@@ -72,6 +82,10 @@ function PopupMonitor() {
           break;
         case WORKER_ACTIONS.APPROVE:
           dispatch(updateApproveStatus(true));
+          sendResponse();
+          break;
+        case WORKER_ACTIONS.SIGN_ZK:
+          dispatch(updateSignZkModalStatus(true));
           sendResponse();
           break;
         default:
@@ -90,6 +104,7 @@ function PopupMonitor() {
 
   return (
     <>
+      <ChildView status={signZkModalStatus} nextView={<SignTransaction />} />
       <ChildView status={approveModalStatus} nextView={<ApprovePage />} />
       <ChildView status={tokenModalStatus} nextView={<TokenSignPage />} />
     </>
