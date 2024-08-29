@@ -1,11 +1,14 @@
+import ApprovePage from "@/popup/pages/ApprovePage";
 import TokenSignPage from "@/popup/pages/Send/tokenSign";
-import { updateTokenSignStatus } from "@/reducers/popupReducer";
+import {
+  updateApproveStatus,
+  updateTokenSignStatus,
+} from "@/reducers/popupReducer";
 import { sendMsg } from "@/utils/commonMsg";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { DAPP_ACTIONS, POPUP_ACTIONS } from "../constant/msgTypes";
-
+import { POPUP_ACTIONS, WORKER_ACTIONS } from "../constant/msgTypes";
 // Styled-component for the popup
 const FullScreenPopup = styled.div`
   position: fixed;
@@ -31,15 +34,44 @@ const StyledContentWrapper = styled.div`
 
 function PopupMonitor() {
   const dispatch = useDispatch();
-  const tokenSignStatus = useSelector(
-    (state) => state.popupReducer.tokenSignStatus
+  const tokenModalStatus = useSelector(
+    (state) => state.popupReducer.tokenModalStatus
   );
+  const approveModalStatus = useSelector(
+    (state) => state.popupReducer.approveModalStatus
+  );
+  useEffect(() => {
+    sendMsg(
+      {
+        action: POPUP_ACTIONS.GET_ALL_PENDING_ZK,
+      },
+      async (task) => {
+        const {
+          signRequests,
+          notificationRequests,
+          approveRequests,
+          tokenSigneRequests,
+        } = task;
+        if (approveRequests.length > 0) {
+          dispatch(updateApproveStatus(true));
+        }
+        if (tokenSigneRequests.length > 0) {
+          dispatch(updateTokenSignStatus(true));
+        }
+      }
+    );
+  }, []);
+
   useEffect(() => {
     const messageListener = (message, sender, sendResponse) => {
       const { action } = message;
       switch (action) {
-        case DAPP_ACTIONS.BUILD_TOKEN_SEND:
+        case WORKER_ACTIONS.BUILD_TOKEN_SEND:
           dispatch(updateTokenSignStatus(true));
+          sendResponse();
+          break;
+        case WORKER_ACTIONS.APPROVE:
+          dispatch(updateApproveStatus(true));
           sendResponse();
           break;
         default:
@@ -57,12 +89,22 @@ function PopupMonitor() {
   }, []);
 
   return (
-    <FullScreenPopup isVisible={tokenSignStatus}>
-      <StyledContentWrapper>
-        {tokenSignStatus && <TokenSignPage />}
-      </StyledContentWrapper>
-    </FullScreenPopup>
+    <>
+      <ChildView status={approveModalStatus} nextView={<ApprovePage />} />
+      <ChildView status={tokenModalStatus} nextView={<TokenSignPage />} />
+    </>
   );
 }
+const ChildView = ({ status, nextView }) => {
+  return (
+    <>
+      {status && (
+        <FullScreenPopup isVisible={status}>
+          <StyledContentWrapper>{status && nextView}</StyledContentWrapper>
+        </FullScreenPopup>
+      )}
+    </>
+  );
+};
 
 export default PopupMonitor;

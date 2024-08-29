@@ -342,7 +342,7 @@ const SendPage = ({}) => {
     sendMsg(
       {
         action: TOKEN_BUILD.add,
-        messageSource: "messageFromBuild",
+        messageSource: "messageFromUpdate",
         payload: {
           sendParams: buildTokenData,
         },

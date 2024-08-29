@@ -16,7 +16,6 @@ import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/netwo
 import { sendMsg } from "../../../utils/commonMsg";
 import { sendNetworkChangeMsg } from "../../../utils/utils";
 import Button from "../../component/Button";
-import FormView from "../../component/FormView";
 import Input from "../../component/Input";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
@@ -26,6 +25,11 @@ import extension from "extensionizer";
 import { DefaultMainnetConfig } from "@/constant/network";
 import { NET_CONFIG_VERSION } from "../../../../config";
 import useSafeHistory from "@/hooks/useSafeHistory";
+import styled from "styled-components";
+
+const StyledFormWrapp = styled.form`
+    width: calc(100% - 40px) ;;
+`
 
 export const LockPage = ({
     onClickUnLock = () => { },
@@ -150,6 +154,9 @@ export const LockPage = ({
             setResetModalBtnStatus(true)
         }
     },[i18n])
+    const onSubmit = useCallback((event)=>{
+        event.preventDefault();
+    },[])
 
     return (
         <>
@@ -165,7 +172,7 @@ export const LockPage = ({
                 <p className={styles.welcomeBack}>
                     {i18n.t('welcomeBack')}
                 </p>
-                <FormView >
+                <StyledFormWrapp onSubmit={onSubmit}>
                     <div className={styles.pwdInputContainer}>
                         <Input
                             label={i18n.t('password')}
@@ -185,7 +192,7 @@ export const LockPage = ({
                             <p className={styles.bottomUrl}>{POWER_BY}</p>
                         </div>
                     </div>
-                </FormView>
+                </StyledFormWrapp>
             </div>
             <PopupModal
                 title={i18n.t('reset_tip_1')}

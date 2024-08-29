@@ -56,3 +56,7 @@ export const WALLET_CREATE_TYPE = {
   restore: "restore",
   create: "create",
 };
+
+export const POPUP_CHANNEL_KEYS = {
+  popup:"aurowalletPopup"
+}

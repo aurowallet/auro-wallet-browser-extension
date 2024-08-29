@@ -1,7 +1,7 @@
+import { updateApproveStatus } from "@/reducers/popupReducer";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
 import {
   DAPP_ACTION_CLOSE_WINDOW,
   DAPP_ACTION_GET_ACCOUNT,
@@ -23,7 +23,6 @@ import styles from "./index.module.scss";
 
 const ApprovePage = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
 
   const dappWindow = useSelector((state) => state.cache.dappWindow);
   const currentAccount = useSelector(
@@ -75,6 +74,7 @@ const ApprovePage = () => {
         },
       },
       async () => {
+        dispatch(updateApproveStatus(false));
         goToHome();
       }
     );
@@ -92,6 +92,7 @@ const ApprovePage = () => {
         },
       },
       () => {
+        dispatch(updateApproveStatus(false));
         goToHome();
       }
     );
@@ -114,13 +115,14 @@ const ApprovePage = () => {
             {
               action: DAPP_ACTION_CLOSE_WINDOW,
               payload: {
-                page: "approve_page",
                 account: address,
                 resultOrigin: siteUrl,
                 id: params.id,
               },
             },
-            () => {}
+            (res) => {
+              dispatch(updateApproveStatus(false));
+            }
           );
         } else {
           setLockStatus(true);
@@ -143,7 +145,6 @@ const ApprovePage = () => {
       <LockPage
         onDappConfirm={true}
         onClickUnLock={onClickUnLock}
-        history={history}
       />
     );
   }

@@ -1,37 +1,56 @@
-const POPUP_MODAL_STATUS = "POPUP_MODAL_STATUS";
-const POPUP_TOKEN_REFRESH = "POPUP_TOKEN_REFRESH";
+const TOKEN_MODAL = {
+  TOKEN_MODAL_STATUS: "TOKEN_MODAL_STATUS",
+  TOKEN_MODAL_REFRESH: "TOKEN_MODAL_REFRESH",
+};
 
-const initialState = {
-  tokenSignStatus: false,
-  tokenSignRefresh: false,
+const APPRPVE_MODAL = {
+  APPROVE_MODAL_STATUS: "APPROVE_MODAL_STATUS",
 };
 
 export function updateTokenSignStatus(status) {
   return {
-    type: POPUP_MODAL_STATUS,
+    type: TOKEN_MODAL.TOKEN_MODAL_STATUS,
     status,
   };
 }
 
 export function refreshTokenSignPopup(status) {
   return {
-    type: POPUP_TOKEN_REFRESH,
+    type: TOKEN_MODAL.TOKEN_MODAL_REFRESH,
     status,
   };
 }
+
+export function updateApproveStatus(status) {
+  return {
+    type: APPRPVE_MODAL.APPROVE_MODAL_STATUS,
+    status,
+  };
+}
+const initialState = {
+  tokenModalStatus: false,
+  tokenSignRefresh: false,
+  approveModalStatus: false,
+};
+
 // Reducer function to update the state
 function popupReducer(state = initialState, action) {
   switch (action.type) {
-    case POPUP_MODAL_STATUS:
+    case TOKEN_MODAL.TOKEN_MODAL_STATUS:
       return {
         ...state,
-        tokenSignStatus: action.status,
+        tokenModalStatus: action.status,
         tokenSignRefresh: true,
       };
-    case POPUP_TOKEN_REFRESH:
+    case TOKEN_MODAL.TOKEN_MODAL_REFRESH:
       return {
         ...state,
         tokenSignRefresh: action.status,
+      };
+    case APPRPVE_MODAL.APPROVE_MODAL_STATUS:
+      return {
+        ...state,
+        approveModalStatus: action.status,
       };
     default:
       return state;

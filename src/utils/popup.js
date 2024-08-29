@@ -1,3 +1,4 @@
+import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
 import extension from 'extensionizer';
 import { POPUP_ACTIONS } from '../constant/msgTypes';
 
@@ -7,7 +8,7 @@ const PopupSize = {
   fixHeight:80
 };
 
-let lastWindowIds = {};
+export let lastWindowIds = {};
 
 function checkForError() {
   const { lastError } = extension.runtime;
@@ -79,6 +80,43 @@ export function checkAndTop(windowId, channel) {
       }
     });
   })
+}
+
+export function checkAndTopV2(channel) {
+  return new Promise(async (resolve) => {
+    extension.tabs.query({
+      windowId: lastWindowIds[channel]
+    }, async (tabs) => {
+      console.log('checkAndTopV2');
+      if (tabs.length <= 0) {
+        resolve(false)
+        return
+      };
+      if (lastWindowIds[channel]) {
+        try {
+          await extension.windows.update(lastWindowIds[channel], {
+            focused: true,
+          });
+        } catch (e) {
+          console.log(`Failed to update window focus: ${e.message}`);
+        }
+        resolve(true)
+      }else{
+        resolve(false)
+      }
+    });
+  })
+}
+export async function testTop(channel){
+  if (lastWindowIds[channel]) {
+    try {
+      await extension.windows.update(lastWindowIds[channel], {
+        focused: true,
+      });
+    } catch (e) {
+      console.log(`Failed to update window focus: ${e.message}`);
+    }
+  }
 }
 
 async function getCurrentTab(windowId) {
@@ -217,7 +255,7 @@ export function startExtensionPopup(withListener = false) {
   extension.windows.getCurrent().then(async (currentWindow) => {
     const top = currentWindow.top; // Top of the current window
     const left = currentWindow.left + currentWindow.width - PopupSize.width; // Align to the right edge
-    const id = await openPopupWindow(targetUrl, 'aurowalletPopup', undefined, {
+    const id = await openPopupWindow(targetUrl, POPUP_CHANNEL_KEYS.popup, undefined, {
       left: left,
       top: top + PopupSize.fixHeight,
     })

@@ -1,8 +1,8 @@
 import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
-import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, DAPP_ACTIONS } from '../constant/msgTypes';
-import { checkAndTop, closePopupWindow, openPopupWindow, startExtensionPopup, startPopupWindow } from "../utils/popup";
+import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
+import { checkAndTop, checkAndTopV2, closePopupWindow, openPopupWindow, startExtensionPopup, startPopupWindow } from "../utils/popup";
 import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
@@ -18,6 +18,7 @@ import { TOKEN_BUILD } from '@/constant/tokenMsgTypes';
 import { decryptData, encryptData } from '@/utils/fore';
 import { node_public_keys, react_private_keys } from '../../config';
 import { sendMsg } from '../utils/commonMsg';
+import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
 const { v4: uuidv4 } = require('uuid');
 
 let signRequests = [];
@@ -468,6 +469,17 @@ class DappService {
     extension.tabs.onRemoved.addListener(removeListener);
     return popupWindowId
   }
+  clearAllPendingZk(){
+    let requestList = [...signRequests,...approveRequests,...notificationRequests,...tokenSigneRequests]
+    requestList.map((item)=>{
+      item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
+    })
+    signRequests = []
+    approveRequests = []
+    notificationRequests = []
+    tokenSigneRequests = []
+    this.setBadgeContent()
+  }
   async checkLocalWallet() {
     let localAccount = await get("keyringData")
     if (localAccount && localAccount.keyringData) {
@@ -512,14 +524,8 @@ class DappService {
           resolve([currentAccount])
           return
         }
-        if (this.popupId) {
-          let isExist = await checkAndTop(this.popupId, windowId.approve_page)
-          if (isExist) { 
-            reject({ message: getMessageFromCode(errorCodes.zkChainPending),code:errorCodes.zkChainPending })
-            return
-          }
-        }
-        if(pendingApprove && pendingApprove.site.origin === site.origin){
+        let isExist = await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+        if (isExist && pendingApprove) {
           reject({ message: getMessageFromCode(errorCodes.zkChainPending),code:errorCodes.zkChainPending })
           return
         }
@@ -541,14 +547,15 @@ class DappService {
                   nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
-                closePopupWindow(windowId.approve_page)
+                pendingApprove = undefined;
+                approveRequests = []
                 that.setBadgeContent()
                 if (payload.selectAccount && payload.selectAccount.length > 0) {
                   let account = payload.selectAccount[0]
                   let accountApprovedUrlList = that.dappStore.getState().accountApprovedUrlList
                   let currentApprovedList = accountApprovedUrlList[account.address] || []
-                  if (currentApprovedList.indexOf(site.origin) === -1) {
-                    currentApprovedList.push(site.origin)
+                  if (currentApprovedList.indexOf(payload.resultOrigin) === -1) {
+                    currentApprovedList.push(payload.resultOrigin)
                   }
                   accountApprovedUrlList[account.address] = currentApprovedList
                   that.updateApproveConnect(accountApprovedUrlList)
@@ -565,7 +572,8 @@ class DappService {
                 }
                 extension.runtime.onMessage.removeListener(onMessage)
                 nextResolve([payload.account])
-                closePopupWindow(payload.page)
+                pendingApprove = undefined;
+                approveRequests = []
                 that.setBadgeContent()
                 sendResponse()
                 return true
@@ -575,11 +583,16 @@ class DappService {
           return false
         }
         extension.runtime.onMessage.addListener(onMessage)
-        this.popupId = await this.dappOpenPopWindow('./popup.html#/approve_page',
-          windowId.approve_page, "dapp")
         approveRequests.push({ id, site,popupId:this.popupId,resolve,reject })
-        pendingApprove=undefined
         this.setBadgeContent()
+        sendMsg({
+          action: WORKER_ACTIONS.APPROVE,
+          },undefined,
+          async ()=>{
+            await startExtensionPopup(true)
+            sendMsg({ action: WORKER_ACTIONS.APPROVE }); 
+          }
+        )
       } catch (error) {
         reject({ stack: String(error),code:errorCodes.throwError,message:getMessageFromCode(errorCodes.throwError) })
       }
@@ -587,7 +600,7 @@ class DappService {
 
   }
   setBadgeContent() {
-    const list = [...approveRequests,...signRequests,...notificationRequests]
+    const list = [...approveRequests,...signRequests,...notificationRequests,...tokenSigneRequests]
     let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
     const action = isManifestV3 ? chrome.action : chrome.browserAction;
     if (list.length > 0) {
@@ -1078,19 +1091,25 @@ class DappService {
         tokenSigneRequests.push({ id, params:nextParams, site,resolve,reject,time })
         this.setBadgeContent()
         sendMsg({
-          action: DAPP_ACTIONS.BUILD_TOKEN_SEND,
+          action: WORKER_ACTIONS.BUILD_TOKEN_SEND,
           },undefined,
           async ()=>{
             await startExtensionPopup(true)
-            sendMsg({ action: DAPP_ACTIONS.BUILD_TOKEN_SEND }); 
+            sendMsg({ action: WORKER_ACTIONS.BUILD_TOKEN_SEND }); 
           }
         )
       } catch (error) {
         reject({ code:errorCodes.throwError,message:getMessageFromCode(errorCodes.throwError),stack: String(error), })
       }
     })
-
-
+  }
+  getAllPendingZK(){
+    return {
+      signRequests,
+      notificationRequests,
+      approveRequests,
+      tokenSigneRequests,
+    }
   }
 }
 const dappService = new DappService()

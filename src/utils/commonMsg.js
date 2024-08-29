@@ -13,7 +13,7 @@ export function sendMsg(message, sendResponse,errorCallback) {
     async (params) => {
       sendResponse && sendResponse(params)
       if (extension.runtime.lastError) {
-        console.error("send message error",extension.runtime.lastError);
+        console.error("send message error",action,extension.runtime.lastError);
         if(errorCallback){
           errorCallback()
         }

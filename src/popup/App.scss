@@ -5,6 +5,7 @@
   *::after {
     box-sizing: border-box;
   }
+  background-color: #edeff2;
 }
 
 .App-header {
@@ -12,6 +13,7 @@
   flex-direction: column;
   width: 375px;
   height: 600px;
+  margin: 0 auto;
 }
 .App-header-full {
   height: auto !important;

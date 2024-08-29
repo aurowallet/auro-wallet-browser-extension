@@ -31,13 +31,13 @@ import apiService from "./APIService";
 import * as storage from "./storageService";
 import dappService from "./DappService";
 import extension from 'extensionizer'
-import { WALLET_CONNECT_TYPE } from "../constant/commonType";
+import { POPUP_CHANNEL_KEYS, WALLET_CONNECT_TYPE } from "../constant/commonType";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
-import { startExtensionPopup } from "../utils/popup";
+import { lastWindowIds, startExtensionPopup } from "../utils/popup";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
-  if (messageSource === 'messageFromDapp' || messageSource ===  "messageFromBuild") {
+  if (messageSource === 'messageFromDapp' || messageSource ===  "messageFromUpdate") {
     dappService.handleMessage(message, sender, sendResponse)
     return true
   }
@@ -174,6 +174,9 @@ function internalMessageListener(message, sender, sendResponse) {
     case GET_SIGN_PARAMS:
       sendResponse(dappService.getSignParams())
       break
+    case POPUP_ACTIONS.GET_ALL_PENDING_ZK:
+      sendResponse(dappService.getAllPendingZK())
+      break
     case TOKEN_BUILD.getAllTokenPendingSign:
       sendResponse(dappService.getAllTokenSignParams())
       break;
@@ -260,10 +263,16 @@ function onConnectListener(externalPort) {
 function onClickIconListener(tab) {
   startExtensionPopup()
 }
+function removeListener (tabInfo, changeInfo) {
+  if(lastWindowIds[POPUP_CHANNEL_KEYS.popup] === changeInfo.windowId){
+    dappService.clearAllPendingZk()
+  }
+}
 export function setupMessageListeners() {
   extension.runtime.onMessage.addListener(internalMessageListener);
   extension.runtime.onConnect.addListener(onConnectListener);
   chrome.action.onClicked.addListener(onClickIconListener)
+  chrome.tabs.onRemoved.addListener(removeListener);
 }
 
 async function createOffscreen() {
