@@ -8,6 +8,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        max-width: 375px;
     }
     .tipContainer {
       
@@ -54,8 +55,4 @@
 
 .hold {
     flex: 1;
-}
-
-.bottomContainer {
-    padding: 12px 38px 20px;
 }
