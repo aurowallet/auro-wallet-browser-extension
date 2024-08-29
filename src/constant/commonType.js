@@ -58,5 +58,6 @@ export const WALLET_CREATE_TYPE = {
 };
 
 export const POPUP_CHANNEL_KEYS = {
-  popup:"aurowalletPopup"
+  popup:"aurowalletPopup",
+  welcome:"aurowalletWelcome"
 }

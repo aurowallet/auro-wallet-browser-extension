@@ -107,17 +107,6 @@ export function checkAndTopV2(channel) {
     });
   })
 }
-export async function testTop(channel){
-  if (lastWindowIds[channel]) {
-    try {
-      await extension.windows.update(lastWindowIds[channel], {
-        focused: true,
-      });
-    } catch (e) {
-      console.log(`Failed to update window focus: ${e.message}`);
-    }
-  }
-}
 
 async function getCurrentTab(windowId) {
   return new Promise((resolve) => {
@@ -282,3 +271,21 @@ export function startExtensionPopup(withListener = false) {
 }
 
 
+// Function to create a new tab
+function createTab(url) {
+  chrome.tabs.create({ url: url, active: true }, function(tab) {
+    lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = tab.id;
+  });
+}
+// Function to create or activate a tab
+export async function createOrActivateTab(url="") {
+    if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome] !== null) {
+      if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome]) {
+        await extension.tabs.update(lastWindowIds[POPUP_CHANNEL_KEYS.welcome], { active: true, url });
+      } else {
+        createTab(url);
+      }
+    } else {
+      createTab(url);
+    }
+}

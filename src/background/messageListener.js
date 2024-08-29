@@ -33,7 +33,7 @@ import dappService from "./DappService";
 import extension from 'extensionizer'
 import { POPUP_CHANNEL_KEYS, WALLET_CONNECT_TYPE } from "../constant/commonType";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
-import { lastWindowIds, startExtensionPopup } from "../utils/popup";
+import { createOrActivateTab, lastWindowIds, startExtensionPopup } from "../utils/popup";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
@@ -257,13 +257,22 @@ function onConnectListener(externalPort) {
   }
 }
 
-function onClickIconListener(tab) {
-  startExtensionPopup()
+async function onClickIconListener(tab) {
+  let localAccount = await storage.get("keyringData")
+  if(localAccount.keyringData){
+    startExtensionPopup()
+  }else{
+    createOrActivateTab("popup.html#/register_page")
+  }
 }
-function removeListener (tabInfo, changeInfo) {
+function removeListener (tabId, changeInfo) {
   if(lastWindowIds[POPUP_CHANNEL_KEYS.popup] === changeInfo.windowId){
     dappService.clearAllPendingZk()
     lastWindowIds[POPUP_CHANNEL_KEYS.popup] = undefined
+  }
+  // welcome is create by tab , so match with tabId
+  if(lastWindowIds[POPUP_CHANNEL_KEYS.welcome] === tabId){
+    lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = undefined
   }
 }
 export function setupMessageListeners() {
