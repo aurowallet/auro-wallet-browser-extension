@@ -3,7 +3,7 @@ import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
 import { checkAndTop, checkAndTopV2, closePopupWindow, lastWindowIds, openPopupWindow, startExtensionPopup, startPopupWindow } from "../utils/popup";
-import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
+import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getExtensionAction, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
@@ -578,8 +578,7 @@ class DappService {
   }
   setBadgeContent() {
     const list = [...approveRequests,...signRequests,...chainRequests,...tokenSigneRequests]
-    let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
-    const action = isManifestV3 ? chrome.action : chrome.browserAction;
+    const action = getExtensionAction()
     if (list.length > 0) {
       action.setBadgeText({ text: list.length.toString() });
     } else {

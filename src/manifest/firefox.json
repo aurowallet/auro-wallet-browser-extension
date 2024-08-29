@@ -7,14 +7,13 @@
       "48": "img/logo/48.png",
       "128": "img/logo/128.png"
 		},
-    "default_title": "Auro Wallet",
-    "default_popup": "popup.html"
+    "default_title": "Auro Wallet"
   },
   "background": {
     "scripts": ["background.js"],
     "persistent": true
   },
-  "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
+  "content_security_policy": "script-src 'self' 'unsafe-eval' 'wasm-eval'; object-src 'self'",
   "browser_specific_settings": {
     "gecko": {
       "id": "{e0ee8d7f-537c-4c5f-b1cc-bd66d61e4306}"

@@ -8,6 +8,7 @@ import { sendMsg } from "./commonMsg";
 import bs58check from "bs58check";
 import { extGetLocal } from "../background/extensionStorage";
 import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
+import extension from 'extensionizer'
 /**
  * address slice
  * @param {*} address
@@ -457,3 +458,10 @@ export function mergeLocalConfigToNetToken(newTokens,localTokens){
 export function getReadableNetworkId(networkId) {
   return networkId.replace(/:/g, '_');
 }
+
+export function getExtensionAction(){
+  let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
+  const action = isManifestV3 ? chrome.action : chrome.browserAction;
+  return action
+}
+

@@ -34,6 +34,7 @@ import extension from 'extensionizer'
 import { POPUP_CHANNEL_KEYS, WALLET_CONNECT_TYPE } from "../constant/commonType";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import { createOrActivateTab, lastWindowIds, startExtensionPopup } from "../utils/popup";
+import { getExtensionAction } from "../utils/utils";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
@@ -278,8 +279,10 @@ function removeListener (tabId, changeInfo) {
 export function setupMessageListeners() {
   extension.runtime.onMessage.addListener(internalMessageListener);
   extension.runtime.onConnect.addListener(onConnectListener);
-  chrome.action.onClicked.addListener(onClickIconListener)
-  chrome.tabs.onRemoved.addListener(removeListener);
+  // browser.browserAction.onClicked.addListener
+  const action = getExtensionAction()
+  action.onClicked.addListener(onClickIconListener)
+  extension.tabs.onRemoved.addListener(removeListener);
 }
 
 async function createOffscreen() {

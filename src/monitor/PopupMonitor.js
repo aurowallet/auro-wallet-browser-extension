@@ -11,6 +11,7 @@ import styled from "styled-components";
 import { POPUP_ACTIONS, WORKER_ACTIONS } from "../constant/msgTypes";
 import { updateSignZkModalStatus } from "../reducers/popupReducer";
 import SignTransaction from "../popup/pages/SignTransaction";
+import extension from 'extensionizer'
 // Styled-component for the popup
 const FullScreenPopup = styled.div`
   position: fixed;
@@ -94,11 +95,11 @@ function PopupMonitor() {
       return true;
     };
 
-    chrome.runtime.onMessage.addListener(messageListener);
+    extension.runtime.onMessage.addListener(messageListener);
     sendMsg({ action: POPUP_ACTIONS.POPUP_NOTIFACATION });
 
     return () => {
-      chrome.runtime.onMessage.removeListener(messageListener);
+      extension.runtime.onMessage.removeListener(messageListener);
     };
   }, []);
 

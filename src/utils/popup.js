@@ -273,7 +273,7 @@ export function startExtensionPopup(withListener = false) {
 
 // Function to create a new tab
 function createTab(url) {
-  chrome.tabs.create({ url: url, active: true }, function(tab) {
+  extension.tabs.create({ url: url, active: true }, function(tab) {
     lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = tab.id;
   });
 }

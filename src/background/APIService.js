@@ -6,7 +6,7 @@ import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, si
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
-import { decodeMemo, getCurrentNodeConfig } from '../utils/utils';
+import { decodeMemo, getCurrentNodeConfig, getExtensionAction } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { changeLanguage } from '../i18n';
@@ -68,8 +68,7 @@ class APIService {
           }
           return res;
         }, {});
-        let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
-        const action = isManifestV3 ? chrome.action : chrome.browserAction;
+        const action = getExtensionAction()
         return action.setIcon({
           path: icons,
         });
