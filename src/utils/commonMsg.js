@@ -5,10 +5,11 @@ import extension from 'extensionizer'
  * @param {*} sendResponse 
  */
 export function sendMsg(message, sendResponse,errorCallback) {
-  const { messageSource, action, payload } = message
+  const { action } = message
   extension.runtime.sendMessage(
     {
-      messageSource, action, payload
+      // messageSource, action, payload
+      ...message,
     },
     async (params) => {
       sendResponse && sendResponse(params)

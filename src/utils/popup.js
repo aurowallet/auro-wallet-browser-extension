@@ -88,7 +88,6 @@ export function checkAndTopV2(channel) {
     extension.tabs.query({
       windowId: lastWindowIds[channel]
     }, async (tabs) => {
-      console.log('checkAndTopV2');
       if (tabs.length <= 0) {
         resolve(false)
         return

@@ -38,6 +38,15 @@ const UPDATE_ACCOUNT_TYPE_COUNT = "UPDATE_ACCOUNT_TYPE_COUNT";
 
 const UPDATE_NEXT_TOKEN_DETAIL = "UPDATE_NEXT_TOKEN_DETAIL";
 
+const UPDATE_POPUP_LOCK_STATUS = "UPDATE_POPUP_LOCK_STATUS"
+
+export function updatePopupLockStatus(status) {
+  return {
+    type: UPDATE_POPUP_LOCK_STATUS,
+    status,
+  };
+}
+
 export function updateAddressDetail(addressDetail) {
   return {
     type: UPDATE_ADDRESS_DETAIL,
@@ -156,6 +165,7 @@ const initState = {
     ledger: 1,
   },
   nextTokenDetail: {},
+  popupLockStatus:false
 };
 
 const cacheReducer = (state = initState, action) => {
@@ -243,6 +253,11 @@ const cacheReducer = (state = initState, action) => {
       return {
         ...state,
         nextTokenDetail: action.token || {},
+      };
+    case UPDATE_POPUP_LOCK_STATUS:
+      return {
+        ...state,
+        popupLockStatus: action.status
       };
     default:
       return state;

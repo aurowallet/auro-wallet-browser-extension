@@ -3,17 +3,13 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  DAPP_ACTION_CLOSE_WINDOW,
   DAPP_ACTION_GET_ACCOUNT,
-  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS,
-  GET_APPROVE_PARAMS,
-  WALLET_GET_CURRENT_ACCOUNT,
+  GET_APPROVE_PARAMS
 } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
-import { LockPage } from "../Lock";
 import styles from "./index.module.scss";
 
 const ApprovePage = () => {
@@ -23,7 +19,6 @@ const ApprovePage = () => {
     (state) => state.accountInfo.currentAccount
   );
 
-  const [lockStatus, setLockStatus] = useState(false);
   const [params, setParams] = useState({});
 
   useEffect(() => {
@@ -38,16 +33,6 @@ const ApprovePage = () => {
   }, []);
 
 
-  useEffect(() => {
-    sendMsg(
-      {
-        action: WALLET_GET_CURRENT_ACCOUNT,
-      },
-      async (currentAccount) => {
-        setLockStatus(currentAccount.isUnlocked);
-      }
-    );
-  }, []);
 
   const onCancel = useCallback(() => {
     sendMsg(
@@ -83,38 +68,6 @@ const ApprovePage = () => {
     );
   }, [params, currentAccount]);
 
-  const onClickUnLock = useCallback((account) => {
-    let siteUrl = params?.site?.origin || "";
-    const address = account?.address||currentAccount.address
-    sendMsg(
-      {
-        action: DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS,
-        payload: {
-          siteUrl: siteUrl,
-          currentAddress: address,
-        },
-      },
-      async (currentAccountConnectStatus) => {
-        if (currentAccountConnectStatus) {
-          sendMsg(
-            {
-              action: DAPP_ACTION_CLOSE_WINDOW,
-              payload: {
-                account: address,
-                resultOrigin: siteUrl,
-                id: params.id,
-              },
-            },
-            (res) => {
-              dispatch(updateApproveStatus(false));
-            }
-          );
-        } else {
-          setLockStatus(true);
-        }
-      }
-    );
-  }, [currentAccount, params]);
 
   const showAccountInfo = useMemo(() => {
     return (
@@ -125,14 +78,6 @@ const ApprovePage = () => {
     );
   }, [currentAccount]);
 
-  if (!lockStatus) {
-    return (
-      <LockPage
-        onDappConfirm={true}
-        onClickUnLock={onClickUnLock}
-      />
-    );
-  }
   return (
     <div className={styles.container}>
       <div className={styles.titleRow}>

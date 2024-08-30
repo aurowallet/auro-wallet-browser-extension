@@ -16,7 +16,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { refreshZkSignPopup, updateSignZkModalStatus } from "../../../reducers/popupReducer";
-import { LockPage } from "../Lock";
 import SignView from "./SignView";
 import ZkAppChainView from "./ZkAppChainView";
 import styles from "./index.module.scss";
@@ -71,6 +70,8 @@ const SignTransaction = () => {
     (state) => state.accountInfo.mainTokenNetInfo?.inferredNonce
   );
 
+  const popupLockStatus = useSelector((state) => state.cache.popupLockStatus);
+
   const signZkRefresh = useSelector(
     (state) => state.popupReducer.signZkRefresh
   );
@@ -92,9 +93,6 @@ const SignTransaction = () => {
     (state) => state.accountInfo.currentAccount.address
   );
 
-  const [lockStatus, setLockStatus] = useState(false);
-
-
   const fetchAccountInfo = useCallback(async () => {
     if (isShowLoading.current) {
       Loading.show();
@@ -104,10 +102,6 @@ const SignTransaction = () => {
     isFirstRequest.current = false;
     Loading.hide();
   }, [dispatch, currentAddress]);
-
-  const onClickUnLock = useCallback(() => {
-    setLockStatus(true);
-  }, [currentAccount]);
 
   const getSignParams = useCallback(() => {
     sendMsg(
@@ -152,22 +146,12 @@ const SignTransaction = () => {
     );
   }, [pendingSignList, currentSignIndex]);
 
-  useEffect(() => {
-    sendMsg(
-      {
-        action: WALLET_GET_CURRENT_ACCOUNT,
-      },
-      async (currentAccount) => {
-        setLockStatus(currentAccount.isUnlocked);
-      }
-    );
-  }, []);
 
   useEffect(() => {
-    if (lockStatus) {
+    if (!popupLockStatus) {
       fetchAccountInfo();
     }
-  }, [fetchAccountInfo, lockStatus]);
+  }, [fetchAccountInfo, popupLockStatus]);
 
   useEffect(() => {
     if (signZkRefresh) {
@@ -312,14 +296,6 @@ const SignTransaction = () => {
     [advanceData]
   );
 
-  if (!lockStatus) {
-    return (
-      <LockPage
-        onDappConfirm={true}
-        onClickUnLock={onClickUnLock}
-      />
-    );
-  }
   return (
     <div className={styles.container}>
       {showMultiView && state.signViewStatus && (
