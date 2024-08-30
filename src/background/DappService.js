@@ -897,7 +897,8 @@ class DappService {
   checkSafeBuild(site){
     const buildUrl = new URL(site.origin)
     const hostname = buildUrl.hostname
-    if(hostname!=='localhost' && hostname!=="token-build.aurowallet.com"){
+    const whiteUrl = new URL(TOKEN_BUILD_URL)
+    if(hostname!==whiteUrl.host){
       return false
     }
     return true

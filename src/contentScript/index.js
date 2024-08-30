@@ -59,10 +59,7 @@ const contentScript = {
     script.onload = function() {
       this.parentNode.removeChild(this);
     };
-    hostPage.insertBefore(
-      script,
-      hostPage.children[0]
-    );
+    hostPage.appendChild(script);
   }
 };
 contentScript.init();
