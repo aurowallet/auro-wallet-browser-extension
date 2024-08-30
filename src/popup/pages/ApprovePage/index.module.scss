@@ -44,7 +44,7 @@
     .btnGroup {
         justify-content: center;
         align-items: center;
-        width: 100%;
+        width: calc(100% - 40px) ;
         display: flex;
 
         gap: 15px;

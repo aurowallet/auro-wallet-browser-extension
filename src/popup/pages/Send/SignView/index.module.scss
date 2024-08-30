@@ -202,7 +202,7 @@
         line-height: 17px;
         color: rgba(0, 0, 0, 0.8);
         margin: 0;
-        height: calc(100vh - 430px); // message
+        max-height: calc(100vh - 360px); // message
         overflow-y: auto;
         width: 100%;
         overflow-wrap: break-word;

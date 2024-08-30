@@ -24,17 +24,21 @@ import {
   WALLET_RESET_LAST_ACTIVE_TIME,
   WALLET_DELETE_WATCH_ACCOUNT,
   RESET_WALLET,
-  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, DAPP_GET_CURRENT_OPEN_WINDOW, GET_SIGN_PARAMS_BY_ID, WALLET_SEND_MESSAGE_TRANSACTION, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSACTION, GET_SIGN_PARAMS, WALLET_SEND_NULLIFIER, DAPP_ACTIONS
+  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, GET_SIGN_PARAMS_BY_ID, WALLET_SEND_MESSAGE_TRANSACTION, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSACTION, GET_SIGN_PARAMS, WALLET_SEND_NULLIFIER, POPUP_ACTIONS,
+  GET_APPROVE_PARAMS
 } from "../constant/msgTypes";
 import apiService from "./APIService";
 import * as storage from "./storageService";
 import dappService from "./DappService";
 import extension from 'extensionizer'
-import { WALLET_CONNECT_TYPE } from "../constant/commonType";
+import { POPUP_CHANNEL_KEYS, WALLET_CONNECT_TYPE } from "../constant/commonType";
+import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
+import { createOrActivateTab, lastWindowIds, startExtensionPopup } from "../utils/popup";
+import { getExtensionAction } from "../utils/utils";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;
-  if (messageSource === 'messageFromDapp') {
+  if (messageSource === 'messageFromDapp' || messageSource ===  "messageFromUpdate") {
     dappService.handleMessage(message, sender, sendResponse)
     return true
   }
@@ -169,7 +173,16 @@ function internalMessageListener(message, sender, sendResponse) {
       sendResponse(dappService.getSignParamsByOpenId(payload.openId))
       break
     case GET_SIGN_PARAMS:
-      sendResponse(dappService.getSignParams(payload.openId))
+      sendResponse(dappService.getSignParams())
+      break
+    case POPUP_ACTIONS.GET_ALL_PENDING_ZK:
+      sendResponse(dappService.getAllPendingZK())
+      break
+    case TOKEN_BUILD.getAllTokenPendingSign:
+      sendResponse(dappService.getAllTokenSignParams())
+      break;
+    case GET_APPROVE_PARAMS:
+      sendResponse(dappService.getApproveParams())
       break
     case DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS:
       sendResponse(dappService.getCurrentAccountConnectStatus(payload.siteUrl, payload.currentAddress))
@@ -185,9 +198,6 @@ function internalMessageListener(message, sender, sendResponse) {
       break
     case DAPP_CHANGE_CONNECTING_ADDRESS:
       sendResponse(dappService.changeCurrentConnecting(payload.address, payload.currentAddress))
-      break
-    case DAPP_GET_CURRENT_OPEN_WINDOW:
-      sendResponse(dappService.getCurrentOpenWindow())
       break
     case DAPP_CHANGE_NETWORK:
       sendResponse(dappService.notifyNetworkChange(payload.netConfig))
@@ -221,7 +231,7 @@ function internalMessageListener(message, sender, sendResponse) {
     case GET_LEDGER_ACCOUNT_NUMBER:
       sendResponse(apiService.getLedgerAccountIndex())
       break
-    case DAPP_ACTIONS.INIT_APPROVE_LIST:
+    case POPUP_ACTIONS.INIT_APPROVE_LIST:
       sendResponse(dappService.initApproveConnect())
       break
     default:
@@ -248,9 +258,31 @@ function onConnectListener(externalPort) {
   }
 }
 
+async function onClickIconListener(tab) {
+  let localAccount = await storage.get("keyringData")
+  if(localAccount.keyringData){
+    startExtensionPopup()
+  }else{
+    createOrActivateTab("popup.html#/register_page")
+  }
+}
+function removeListener (tabId, changeInfo) {
+  if(lastWindowIds[POPUP_CHANNEL_KEYS.popup] === changeInfo.windowId){
+    dappService.clearAllPendingZk()
+    lastWindowIds[POPUP_CHANNEL_KEYS.popup] = undefined
+  }
+  // welcome is create by tab , so match with tabId
+  if(lastWindowIds[POPUP_CHANNEL_KEYS.welcome] === tabId){
+    lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = undefined
+  }
+}
 export function setupMessageListeners() {
   extension.runtime.onMessage.addListener(internalMessageListener);
   extension.runtime.onConnect.addListener(onConnectListener);
+  // browser.browserAction.onClicked.addListener
+  const action = getExtensionAction()
+  action.onClicked.addListener(onClickIconListener)
+  extension.tabs.onRemoved.addListener(removeListener);
 }
 
 async function createOffscreen() {

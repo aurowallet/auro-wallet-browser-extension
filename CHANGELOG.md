@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
     - Upgrade request config
     - Remove support for Berkeley network
     - Update lock icon
+    - Zk fee recommendation
 
 ## [2.2.17]
 - Enhancements

@@ -31,6 +31,10 @@ const STATUS = {
   TX_STATUS_SUCCESS: "applied",
   TX_STATUS_FAILED: "failed",
 };
+const StyledWrapper = styled.div`
+  overflow-y: auto;
+  height: calc(100% - 130px);
+`
 
 const Record = ({}) => {
   const netConfig = useSelector((state) => state.network);
@@ -209,9 +213,11 @@ const Record = ({}) => {
         isMainCoin={isMainCoin}
       />
       <div className={styles.dividedLine} />
+      <StyledWrapper>
       {contentList.map((item, index) => {
         return <DetailRow key={index} {...item} />;
-      }, [])}
+      })}
+      </StyledWrapper>
       {showExplorer && (
         <div className={styles.explorerOuter}>
           <div className={styles.explorerContainer} onClick={onGoExplorer}>

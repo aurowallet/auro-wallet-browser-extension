@@ -118,14 +118,13 @@ const TokenItem = ({ token, isInModal }) => {
       ? i18n.t("delegated")
       : i18n.t("undelegated");
 
-    let tokenIconUrl;
+    let tokenIconUrl = token.tokenBaseInfo.iconUrl;
     let tokenSymbol;
     let tokenName;
     if (isFungibleToken) {
       tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
       tokenName = addressSlice(token.tokenId, 6);
     } else {
-      tokenIconUrl = "img/mina_color.svg";
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
@@ -163,7 +162,7 @@ const TokenItem = ({ token, isInModal }) => {
 
   const {showStaking} = useMemo(() => {
     const networkID = currentNode.networkID;
-    let showStaking = networkID.startsWith("mina");
+    let showStaking = networkID?.startsWith("mina");
     return {
       showStaking
     }

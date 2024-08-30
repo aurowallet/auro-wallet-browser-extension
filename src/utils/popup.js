@@ -1,11 +1,15 @@
+import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
 import extension from 'extensionizer';
+import { POPUP_ACTIONS } from '../constant/msgTypes';
 
-const PopupSize = {
+export const PopupSize = {
   width: 375,
   height: 600 + 28,// 28px is tabBar height
+  fixHeight:80,
+  exitSize:100,
 };
 
-let lastWindowIds = {};
+export let lastWindowIds = {};
 
 function checkForError() {
   const { lastError } = extension.runtime;
@@ -71,8 +75,35 @@ export function checkAndTop(windowId, channel) {
         } catch (e) {
           console.log(`Failed to update window focus: ${e.message}`);
         }
+        resolve(true)
+      }else{
+        resolve(false)
       }
-      resolve(true)
+    });
+  })
+}
+
+export function checkAndTopV2(channel) {
+  return new Promise(async (resolve) => {
+    extension.tabs.query({
+      windowId: lastWindowIds[channel]
+    }, async (tabs) => {
+      if (tabs.length <= 0) {
+        resolve(false)
+        return
+      };
+      if (lastWindowIds[channel]) {
+        try {
+          await extension.windows.update(lastWindowIds[channel], {
+            focused: true,
+          });
+        } catch (e) {
+          console.log(`Failed to update window focus: ${e.message}`);
+        }
+        resolve(true)
+      }else{
+        resolve(false)
+      }
     });
   })
 }
@@ -154,6 +185,46 @@ export async function openPopupWindow(
   return lastWindowIds[channel];
 }
 
+
+export async function startPopupWindow(
+  url,
+  channel = "default",
+  windowType = "",
+  options = {}
+) {
+  if (windowType === "dapp") {
+    let dappOption = await getDappWindowPosition()
+    options = {
+      ...options,
+      ...dappOption
+    }
+  }
+  const option = Object.assign({
+    width: PopupSize.width,
+    height: PopupSize.height,
+    url: url,
+    type: "popup",
+  }, options);
+
+  const createdWindow = await new Promise(resolve => {
+    extension.windows.create(option, function (windowData) {
+      resolve(windowData)
+    })
+  })
+  lastWindowIds[channel] = createdWindow?.id;
+
+  if (lastWindowIds[channel]) {
+    try {
+      await extension.windows.update(lastWindowIds[channel], {
+        focused: true,
+      });
+    } catch (e) {
+      console.log(`Failed to update window focus: ${e.message}`);
+    }
+  }
+  return lastWindowIds[channel];
+}
+
 export function closePopupWindow(channel) {
   (async () => {
     const windowId = lastWindowIds[channel];
@@ -162,4 +233,59 @@ export function closePopupWindow(channel) {
     }
   })();
 }
+/**
+ * 
+ * @param {*} withListener
+ * @returns 
+ */
+export function startExtensionPopup(withListener = false) {
+  return new Promise((resolve)=>{
+  let targetUrl = 'popup.html'
+  extension.windows.getCurrent().then(async (currentWindow) => {
+    const top = currentWindow.top; // Top of the current window
+    const left = currentWindow.left + currentWindow.width - PopupSize.width; // Align to the right edge
+    const id = await openPopupWindow(targetUrl, POPUP_CHANNEL_KEYS.popup, undefined, {
+      left: left,
+      top: top + PopupSize.fixHeight,
+    })
+    if(!withListener){
+      resolve(id)
+    }else{
+      const onMessage = (message, sender, sendResponse) => {
+        const { action } = message;
+        switch (action) {
+          case POPUP_ACTIONS.POPUP_NOTIFACATION:
+            sendResponse("page live");
+            extension.runtime.onMessage.removeListener(onMessage);
+            resolve(id)
+            break;
+          default:
+            break;
+        }
+        return false; 
+      };
+      extension.runtime.onMessage.addListener(onMessage)
+    }
+  });
+})
+}
 
+
+// Function to create a new tab
+function createTab(url) {
+  extension.tabs.create({ url: url, active: true }, function(tab) {
+    lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = tab.id;
+  });
+}
+// Function to create or activate a tab
+export async function createOrActivateTab(url="") {
+    if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome] !== null) {
+      if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome]) {
+        await extension.tabs.update(lastWindowIds[POPUP_CHANNEL_KEYS.welcome], { active: true, url });
+      } else {
+        createTab(url);
+      }
+    } else {
+      createTab(url);
+    }
+}

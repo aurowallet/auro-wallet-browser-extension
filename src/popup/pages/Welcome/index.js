@@ -53,6 +53,7 @@ const StyledBottomContainer = styled.div`
   bottom: 20px;
   left: 50%;
   transform: translate(-50%);
+  width: 100%;
 `;
 
 const StyledPowerBy = styled.p`

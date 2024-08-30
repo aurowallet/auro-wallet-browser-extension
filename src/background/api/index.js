@@ -6,8 +6,13 @@ import {
   LOCAL_CACHE_KEYS,
   RECOMMEND_FEE,
   SCAM_LIST,
+  SUPPORT_TOKEN_LIST,
 } from "../../constant/storageKey";
-import { getCurrentNodeConfig, parseStakingList } from "../../utils/utils";
+import {
+  getCurrentNodeConfig,
+  getReadableNetworkId,
+  parseStakingList,
+} from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import {
   commonFetch,
@@ -450,11 +455,29 @@ export async function getAllTokenInfoV2(tokenIds) {
   }
 }
 
-export async function getTokenState(address,tokenId) {
+export async function getTokenState(address, tokenId) {
   let txBody = getTokenStateBody();
   let result = await startFetchMyQuery(txBody, {
     publicKey: address,
     tokenId,
   }).catch((error) => error);
   return result;
+}
+
+/**
+ * get token info
+ */
+export async function fetchSupportTokenInfo() {
+  let netConfig = await getCurrentNodeConfig();
+  const readableNetworkId = getReadableNetworkId(netConfig.networkID);
+  const requestUrl =
+    BASE_INFO_URL + "/tokenInfo?networkId=" + readableNetworkId;
+  const data = await commonFetch(requestUrl).catch(() => []);
+  if (data.length > 0) {
+    saveLocal(
+      SUPPORT_TOKEN_LIST + "_" + readableNetworkId,
+      JSON.stringify(data)
+    );
+  }
+  return data;
 }

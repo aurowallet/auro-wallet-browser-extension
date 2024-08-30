@@ -103,4 +103,4 @@ export const Default_Follow_Link = [
 
 
 export const ValidatorsLaunch = 'https://github.com/aurowallet/launch/tree/master/validators'
-export const TokenLaunch = ""
+export const TokenLaunch = "https://github.com/aurowallet/launch/tree/master/tokens"

@@ -27,6 +27,15 @@ const UPDATE_LOCAL_TOKEN_CONFIG = "UPDATE_LOCAL_TOKEN_CONFIG";
 
 const UPDATE_LOCAL_SHOWED_TOKEN_IDS = "UPDATE_LOCAL_SHOWED_TOKEN_IDS";
 
+const UPDATE_SUPPORT_TOKEN_LIST = "UPDATE_SUPPORT_TOKEN_LIST";
+
+export function updateSupportTokenList(tokens) {
+  return {
+    type: UPDATE_SUPPORT_TOKEN_LIST,
+    tokens,
+  };
+}
+
 export function updateLocalShowedTokenId(tokenIds) {
   return {
     type: UPDATE_LOCAL_SHOWED_TOKEN_IDS,
@@ -34,10 +43,11 @@ export function updateLocalShowedTokenId(tokenIds) {
   };
 }
 
-export function updateLocalTokenConfig(tokenConfig) {
+export function updateLocalTokenConfig(tokenConfig,tokenId) {
   return {
     type: UPDATE_LOCAL_TOKEN_CONFIG,
     tokenConfig,
+    tokenId
   };
 }
 
@@ -142,6 +152,7 @@ const initState = {
   localTokenConfig: {},
   localShowedTokenIds: [],
   newTokenCount: 0,
+  supportTokenList:[]
 };
 
 const accountInfo = (state = initState, action) => {
@@ -175,6 +186,8 @@ const accountInfo = (state = initState, action) => {
         tokenShowList: [],
         tokenPrice: {},
         tokenTotalAmount: "0",
+        localTokenConfig:{},
+        newTokenCount:0
       };
     case INIT_CURRENT_ACCOUNT:
       return {
@@ -200,6 +213,9 @@ const accountInfo = (state = initState, action) => {
           tokenShowList: [],
           tokenPrice: {},
           tokenTotalAmount: "0",
+          supportTokenList:[],
+          localTokenConfig:{},
+          newTokenCount:0
         };
       }
       return {
@@ -251,6 +267,7 @@ const accountInfo = (state = initState, action) => {
         ? action.tokenList
         : mergeLocalConfigToNetToken(action.tokenList, state.tokenList);
       const result = processTokenList(
+        state.supportTokenList,
         nextList,
         state.tokenPrice,
         state.localShowedTokenIds,
@@ -284,6 +301,7 @@ const accountInfo = (state = initState, action) => {
         };
       }
       const priceUpdate = processTokenList(
+        state.supportTokenList,
         state.tokenList,
         action.tokenPrice,
         state.localShowedTokenIds,
@@ -300,7 +318,8 @@ const accountInfo = (state = initState, action) => {
     case UPDATE_LOCAL_TOKEN_CONFIG:
       const statusUpdate = processTokenShowStatus(
         state.tokenList,
-        action.tokenConfig
+        action.tokenConfig,
+        action.tokenId
       );
       return {
         ...state,
@@ -310,7 +329,7 @@ const accountInfo = (state = initState, action) => {
         tokenTotalAmount: statusUpdate.totalShowAmount,
       };
     case UPDATE_LOCAL_SHOWED_TOKEN_IDS:
-    const tokenShowedUpdate = processNewTokenStatus(state.tokenList,action.tokenIds);
+      const tokenShowedUpdate = processNewTokenStatus(state.tokenList,action.tokenIds);
       return {
         ...state,
         localShowedTokenIds: action.tokenIds, 
@@ -318,6 +337,11 @@ const accountInfo = (state = initState, action) => {
         tokenList: tokenShowedUpdate.tokenList,
         tokenShowList: tokenShowedUpdate.tokenShowList,
         mainTokenNetInfo: tokenShowedUpdate.mainTokenNetInfo,
+      };
+    case UPDATE_SUPPORT_TOKEN_LIST:
+      return {
+        ...state,
+        supportTokenList:action.tokens
       };
     default:
       return state;

@@ -18,7 +18,7 @@ const StyledTokenItemWrapper = styled.div`
   padding: 10px 20px;
   border-top: 0.5px solid rgba(0, 0, 0, 0.1);
 
-  background: ${(props) => (props.$newToken ? "rgba(0, 0, 0, 0.05)" : "white")};
+  background: ${(props) => (props.$newToken ? "rgba(0, 0, 0, 0.01)" : "white")};
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
@@ -85,14 +85,13 @@ const TokenManageItem = ({ token }) => {
   } = useMemo(() => {
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
-    let tokenIconUrl;
+    let tokenIconUrl  = token.tokenBaseInfo.iconUrl;
     let tokenSymbol;
     let tokenName;
     if (isFungibleToken) {
       tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
       tokenName = addressSlice(token.tokenId, 6);
     } else {
-      tokenIconUrl = "img/mina_color.svg";
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
@@ -116,6 +115,9 @@ const TokenManageItem = ({ token }) => {
     //     config
     //   }
     // }
+
+    const nextHideToken = !token.localConfig?.hideToken;
+
     let tempConfig = {
       ...localTokenConfig,
     };
@@ -123,19 +125,19 @@ const TokenManageItem = ({ token }) => {
     if (currentTokenConfig) {
       let lastTokenConfig = {
         ...currentTokenConfig,
-        hideToken: !currentTokenConfig.hideToken,
+        hideToken: nextHideToken,
       };
       tempConfig[token.tokenId] = lastTokenConfig;
     } else {
       tempConfig[token.tokenId] = {
-        hideToken: true,
+        hideToken: nextHideToken,
       };
     }
     saveLocal(
       STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG,
       JSON.stringify({ [currentAccount.address]: tempConfig })
     );
-    dispatch(updateLocalTokenConfig(tempConfig));
+    dispatch(updateLocalTokenConfig(tempConfig,token.tokenId));
   }, [token, tokenList, currentAccount, localTokenConfig]);
 
   return (

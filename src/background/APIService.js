@@ -1,17 +1,18 @@
 import { LOCK_TIME_DEFAULT } from '../constant';
-import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS } from '../constant/msgTypes';
+import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS, WORKER_ACTIONS } from '../constant/msgTypes';
 import '../i18n';
 import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
 import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, removeValue, save } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
-import { decodeMemo, getCurrentNodeConfig } from '../utils/utils';
+import { decodeMemo, getCurrentNodeConfig, getExtensionAction } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { changeLanguage } from '../i18n';
 import { extGetLocal } from './extensionStorage';
 import { LANGUAGE_CONFIG } from '../constant/storageKey';
+import { sendMsg } from '../utils/commonMsg';
 
 const ObservableStore = require('obs-store')
 const { importWalletByMnemonic, importWalletByPrivateKey, importWalletByKeystore, generateMne } = require('./accountService')
@@ -68,8 +69,7 @@ class APIService {
           }
           return res;
         }, {});
-        let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
-        const action = isManifestV3 ? chrome.action : chrome.browserAction;
+        const action = getExtensionAction()
         return action.setIcon({
           path: icons,
         });
@@ -112,6 +112,11 @@ class APIService {
                 autoLockTime,
             })
             this.setPopupIcon(true)
+            sendMsg({
+                type: FROM_BACK_TO_RECORD,
+                action: WORKER_ACTIONS.SET_LOCK,
+                payload:true
+            })
             return this.getAccountWithoutPrivate(currentAccount)
         } catch (error) {
             return { error: 'passwordError', type: "local" }
@@ -186,15 +191,12 @@ class APIService {
             nextState.autoLockTime = this.getStore().autoLockTime
             nextState.currentAccount.address = this.getCurrentAccountAddress()
             this.memStore.updateState(nextState)
-            extension.runtime.sendMessage({
-                type: FROM_BACK_TO_RECORD,
-                action: SET_LOCK,
-            }, (response) => {
-                if (chrome.runtime.lastError) {
-                  console.error("set lock error",extension.runtime.lastError);
-                }
-              });
         }
+        sendMsg({
+            type: FROM_BACK_TO_RECORD,
+            action: WORKER_ACTIONS.SET_LOCK,
+            payload:status
+        })
         this.memStore.updateState({ isUnlocked: status })
         this.setPopupIcon(status)
     };

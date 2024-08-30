@@ -260,12 +260,14 @@ export function getZkFee(zkappCommand) {
  * @returns 
  */
 export function verifyTokenCommand(sourceData, sendTokenId, buildZkCommand) {
-  const { sender, receiver, amount } = sourceData;
+  const { sender, receiver, amount,isNewAccount } = sourceData;
   const nextBuildZkCommand = JSON.parse(buildZkCommand);
-
   let senderVerified = false;
   let receiverVerified = false;
-
+  const accountUpdateCount = isNewAccount ? 4 : 3
+  if(nextBuildZkCommand.accountUpdates.length != accountUpdateCount){ 
+    return false
+  }
   nextBuildZkCommand.accountUpdates.forEach((accountUpdate) => {
     const { publicKey, balanceChange, tokenId } = accountUpdate.body;
 
@@ -291,4 +293,15 @@ export function verifyTokenCommand(sourceData, sendTokenId, buildZkCommand) {
   });
 
   return senderVerified && receiverVerified;
+}
+
+/**
+ * get accoutUpdate count to calc zk tx fee
+ * @param {*} zkappCommand 
+ * @returns 
+ */
+export function getAccountUpdateCount(zkappCommand) {
+  let nextZkCommand = JSON.parse(zkappCommand);
+  let accountUpdates = nextZkCommand.accountUpdates;
+  return accountUpdates.length;
 }

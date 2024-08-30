@@ -5,7 +5,12 @@ import Button, { button_theme } from "../Button";
 import LedgerStatusView from "../StatusView/LedgerStatusView";
 import NetworkStatusView from "../StatusView/NetworkStatusView";
 import styles from "./index.module.scss";
+import styled from "styled-components";
 
+const StyledWrapper = styled.div`
+display: flex;
+align-items: center;
+`
 export const ConfirmModal = ({
   modalVisible = false,
   title = "",
@@ -20,6 +25,7 @@ export const ConfirmModal = ({
   onClickClose = () => {},
   waitingLedger = false,
   showCloseIcon = false,
+  rightBtnCom = <></>
 }) => {
   return (
     <>
@@ -109,7 +115,10 @@ export const ConfirmModal = ({
                   {i18n.t("cancel")}
                 </Button>
                 <Button loading={loadingStatus} onClick={onConfirm}>
+                  <StyledWrapper>
                   {i18n.t("confirm")}
+                  {rightBtnCom}
+                  </StyledWrapper>
                 </Button>
               </div>
             )}

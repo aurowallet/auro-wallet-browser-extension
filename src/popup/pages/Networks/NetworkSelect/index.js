@@ -82,7 +82,7 @@ const NetworkSelect = ({}) => {
 };
 
 const StyledEntryOuter = styled.div`
-  width: 120px;
+  width: 140px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 43px;
   display: flex;

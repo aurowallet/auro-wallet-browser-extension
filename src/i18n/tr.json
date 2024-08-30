@@ -290,5 +290,6 @@
   "showTestnet": "Test Ağını Göster",
   "ledgerConnected": "Ledger bağlandı",
   "ledgerNotConnected": "Ledger cihazı bağlı değil",
-  "txType":"İşlem Türü"
+  "txType":"İşlem Türü",
+  "updateAccount":"Hesap uyuşmazlığı, lütfen hesapları değiştirin ve tekrar deneyin."
 }

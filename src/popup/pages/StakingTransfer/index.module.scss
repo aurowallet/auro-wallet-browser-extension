@@ -1,6 +1,5 @@
 .container {
-  padding: 10px 0px 0px;
-  margin-bottom: 100px;
+  padding: 10px 0px 100px;
 }
 .contentContainer {
   padding: 0px 20px;
@@ -50,7 +49,7 @@
   position: fixed;
   bottom: 0;
   width: calc(100%);
-  background-color: white;
+  max-width: 375px;
 }
 
 .hold {

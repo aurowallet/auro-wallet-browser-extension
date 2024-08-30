@@ -37,7 +37,7 @@ import {
   trimSpace,
 } from "@/utils/utils";
 import { addressValid } from "@/utils/validator";
-import { getZkFee, getZkInfo } from "@/utils/zkUtils";
+import { getAccountUpdateCount, getZkFee, getZkInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -146,26 +146,40 @@ const SignView = ({
     };
   }, [signParams, advanceData]);
 
-  const { isSendZk, zkSourceData, zkFormatData,zkOnlySign } = useMemo(() => {
+  const { isSendZk, zkSourceData, zkFormatData,zkOnlySign,defaultRecommandFee } = useMemo(() => {
     const isSendZk = sendAction === DAppActions.mina_sendTransaction;
     let zkShowData = "",
       zkSourceData = "",
-      zkFormatData = [];
+      zkFormatData = [],
+      count = 0;
+    
     if (isSendZk) {
       zkShowData = signParams.params?.transaction;
       try {
         zkFormatData = getZkInfo(zkShowData, currentAccount.address);
         zkSourceData = JSON.stringify(JSON.parse(zkShowData), null, 2);
+        count = getAccountUpdateCount(zkShowData)  
       } catch (error) {}
     }
     let zkOnlySign = (signParams?.params?.onlySign && isSendZk);
+
+    
+    let defaultRecommandFee = 0.1
+    if(netFeeList.length >= 2){
+      defaultRecommandFee = netFeeList[1].value
+    }
+    if(isSendZk && netFeeList.length >= 6){
+      const zkAccountFee = new BigNumber(netFeeList[5].value).multipliedBy(count)
+      defaultRecommandFee = new BigNumber(netFeeList[1].value).plus(zkAccountFee).toNumber()
+    }
     return {
       isSendZk,
       zkSourceData,
       zkFormatData,
-      zkOnlySign
+      zkOnlySign,
+      defaultRecommandFee
     };
-  }, [sendAction, signParams, currentAccount]);
+  }, [sendAction, signParams, currentAccount,netFeeList]);
 
   useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
@@ -465,7 +479,7 @@ const SignView = ({
       }
       if (sendAction == DAppActions.mina_sendPayment) {
         let amount = trimSpace(params.amount);
-        if (!isNumber(amount) || !new BigNumber(amount).gt(0)) {
+        if (!isNumber(amount) || !new BigNumber(amount).gte(0)) {
           Toast.info(i18n.t("amountError"));
           return;
         }
@@ -561,11 +575,11 @@ const SignView = ({
 
   useEffect(() => {
     if (!feeDefault) {
-      if (netFeeList.length >= 1) {
-        setFeeDefault(netFeeList[1].value);
+      if (defaultRecommandFee) {
+        setFeeDefault(defaultRecommandFee);
       }
     }
-  }, [netFeeList, feeDefault]);
+  }, [feeDefault,defaultRecommandFee]);
 
   const getContractAddress = useCallback((tx) => {
     try {

@@ -294,5 +294,6 @@
   "balance":"Balance",
   "updateTokenInfo":"Update your token information?",
   "tokens":"tokens",
-  "noTxHistory":"No transaction history"
+  "noTxHistory":"No transaction history",
+  "updateAccount":"Account dismatch, please switch account and try again."
 }

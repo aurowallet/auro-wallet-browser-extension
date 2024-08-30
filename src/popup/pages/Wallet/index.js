@@ -267,7 +267,7 @@ const borderCss = css`
 const StyledReceiveBtn = styled(StyledBaseBtn)`
   &:hover {
     background: #f2f2f2;
-    ${(props) => props.$showStaking ? "" : borderCss};
+    ${(props) => (props.$showStaking ? "" : borderCss)};
   }
 `;
 
@@ -306,7 +306,6 @@ const StyledZkConnectStatus = styled.img`
 `;
 const WalletInfo = () => {
   const accountInfo = useSelector((state) => state.accountInfo);
-  const tokenList = useSelector((state) => state.accountInfo.tokenList);
   const tokenTotalAmount = useSelector(
     (state) => state.accountInfo.tokenTotalAmount
   );
@@ -406,28 +405,6 @@ const WalletInfo = () => {
     history.push("staking");
   }, []);
 
-  const getDappConnect = useCallback(() => {
-    extensionizer.tabs.query(
-      { active: true, currentWindow: true },
-      function (tabs) {
-        let url = tabs[0]?.url || "";
-        let origin = getOriginFromUrl(url);
-        setSiteUrl(origin);
-        sendMsg(
-          {
-            action: DAPP_GET_CONNECT_STATUS,
-            payload: {
-              siteUrl: origin,
-              address: currentAccount.address,
-            },
-          },
-          (isConnected) => {
-            setDappConnectStatus(isConnected);
-          }
-        );
-      }
-    );
-  }, [currentAccount]);
 
   const setDappDisconnect = useCallback(() => {
     sendMsg(
@@ -472,7 +449,6 @@ const WalletInfo = () => {
   }, [dappConnectStatus]);
   useEffect(() => {
     setCurrentAccount(accountInfo.currentAccount);
-    getDappConnect();
   }, [accountInfo.currentAccount]);
 
   const fetchPrice = useCallback(
@@ -497,20 +473,20 @@ const WalletInfo = () => {
     fetchPrice();
   }, [currencyConfig.currentCurrency, netConfig.currentNode.networkID]);
 
-  const {netcolor,showStaking,nextChainIcon} = useMemo(() => {
+  const { netcolor, showStaking, nextChainIcon } = useMemo(() => {
     const networkID = netConfig.currentNode.networkID;
-    let netcolor = "rgba(0, 0, 0, 0.30)"
+    let netcolor = "rgba(0, 0, 0, 0.30)";
     if (networkID === NetworkID_MAP.mainnet) {
       netcolor = "#594AF1";
     }
-    let showStaking = networkID.startsWith("mina");
-    let isZeko = networkID.startsWith("zeko");
-    let nextChainIcon = isZeko? "/img/icon_zeko.svg":"/img/icon_mina.svg"
+    let showStaking = networkID?.startsWith("mina");
+    let isZeko = networkID?.startsWith("zeko");
+    let nextChainIcon = isZeko ? "/img/icon_zeko.svg" : "/img/icon_mina.svg";
     return {
       netcolor,
       showStaking,
-      nextChainIcon
-    }
+      nextChainIcon,
+    };
   }, [netConfig.currentNode.networkID]);
   return (
     <>
@@ -518,14 +494,6 @@ const WalletInfo = () => {
         <StyledWalletBaseRow>
           <StyledWalletBaseLeft>
             <StyledWalletName>{accountName}</StyledWalletName>
-            <StyledZkConnectWrapper>
-              <Tooltip text={showTip}>
-                <StyledZkConnectStatus
-                  src={dappIcon}
-                  onClick={onShowDappModal}
-                />
-              </Tooltip>
-            </StyledZkConnectWrapper>
           </StyledWalletBaseLeft>
           <StyledWalletMore onClick={toAccountInfo}>
             <img src="/img/pointMenu.svg" />
@@ -542,18 +510,23 @@ const WalletInfo = () => {
           <StyledDivideColumnWrapper>
             <StyledDivideColumn />
           </StyledDivideColumnWrapper>
-          <StyledReceiveBtn netcolor={netcolor} onClick={toReceive} $showStaking={showStaking}>
+          <StyledReceiveBtn
+            netcolor={netcolor}
+            onClick={toReceive}
+            $showStaking={showStaking}
+          >
             {i18n.t("receive")}
           </StyledReceiveBtn>
-          {showStaking && <>
-            <StyledDivideColumnWrapper>
-              <StyledDivideColumn />
-            </StyledDivideColumnWrapper>
-            <StyledStakeBtn netcolor={netcolor} onClick={toStaking}>
-              {i18n.t("staking")}
-            </StyledStakeBtn>
-          </>}
-          
+          {showStaking && (
+            <>
+              <StyledDivideColumnWrapper>
+                <StyledDivideColumn />
+              </StyledDivideColumnWrapper>
+              <StyledStakeBtn netcolor={netcolor} onClick={toStaking}>
+                {i18n.t("staking")}
+              </StyledStakeBtn>
+            </>
+          )}
         </StyledWalletBaseAction>
         <StyledIconBackground>
           <img src={nextChainIcon} />

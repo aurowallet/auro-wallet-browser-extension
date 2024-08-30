@@ -5,13 +5,16 @@
   *::after {
     box-sizing: border-box;
   }
+  background-color: #edeff2;
 }
 
 .App-header {
   display: flex;
   flex-direction: column;
   width: 375px;
-  height: 600px;
+  min-height: 600px;
+  margin: 0 auto;
+  background-color: white;
 }
 .App-header-full {
   height: auto !important;
@@ -38,6 +41,7 @@ body {
   --nobelGray: rgba(0, 0, 0, 0.3);
   --mediumBlack: rgba(0, 0, 0, 0.5);
   --mineBlack: rgba(0, 0, 0, 0.85);
+  background-color: #edeff2;
 }
 p {
   margin: 0;
