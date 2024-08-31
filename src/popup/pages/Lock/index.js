@@ -239,6 +239,7 @@ export const LockPage = ({}) => {
         content={i18n.t("reset_tip_2")}
         modalVisible={waringModalStatus}
         onCloseModal={onCloseWarningModal}
+        zIndex={1001}
       />
 
       <PopupModal
@@ -254,6 +255,7 @@ export const LockPage = ({}) => {
         onInputChange={onResetModalInput}
         inputPlaceholder={i18n.t("deleteTag")}
         clearWhenClose={true}
+        zIndex={1001}
       />
     </>
   );
