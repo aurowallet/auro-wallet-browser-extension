@@ -201,16 +201,19 @@ class APIService {
         this.setPopupIcon(status)
     };
     getCurrentAccount = async () => {
+        let initStatus = false
         let localAccount = await get("keyringData")
         let currentAccount = this.getStore().currentAccount
         let isUnlocked = this.getStore().isUnlocked
         if (localAccount && localAccount.keyringData) {
+            initStatus = true
             currentAccount.localAccount = {
                 keyringData: "keyringData"
             }
         }
         currentAccount.isUnlocked = isUnlocked
-        this.setPopupIcon(isUnlocked)
+        let iconStatus = !initStatus || isUnlocked;
+        this.setPopupIcon(iconStatus)
         return this.getAccountWithoutPrivate(currentAccount)
     };
     
