@@ -78,7 +78,7 @@
   "copySuccess": "已复制",
   "receive": "接收",
   "scanPay": "扫码支付",
-  "addressQrTip": "扫描二维码，转入 MINA",
+  "addressQrTip": "扫描二维码，转入 <b>{{symbol}}</b>",
   "copy": "复制",
   "ledgerNotSupport": "此浏览器暂时不支持 Ledger",
   "accountManage": "账户管理",

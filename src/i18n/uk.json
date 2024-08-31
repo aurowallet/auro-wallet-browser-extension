@@ -80,7 +80,7 @@
   "copySuccess": "Скопійовано",
   "receive": "Отримати",
   "scanPay": "Скануйте, щоб заплатити мені",
-  "addressQrTip": "Відскануйте QR-код і перенесіть на нього MINA",
+  "addressQrTip": "Відскануйте QR-код і перенесіть на нього <b>{{symbol}}</b>",
   "copy": "Копія",
   "ledgerNotSupport": "Цей браузер тимчасово не підтримує Ledger",
   "accountManage": "Управління рахунками",

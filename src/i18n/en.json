@@ -77,7 +77,7 @@
   "copySuccess": "Copied",
   "receive": "Receive",
   "scanPay": "Scan to pay me",
-  "addressQrTip": "Scan the QR code and transfer MINA to it",
+  "addressQrTip": "Scan the QR code and transfer <b>{{symbol}}</b> to it",
   "copy": "Copy",
   "ledgerNotSupport": "This browser does not support Ledger temporarily",
   "accountManage": "Account Management",

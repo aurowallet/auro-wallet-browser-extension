@@ -121,7 +121,7 @@
   "importSameAccount_2": "Mevcut bir içe aktarılmış hesap <b>{{accountName}}</b> bu adresin kopyasıdır. Auro Wallet, yinelenen hesap adreslerinin oluşturulmasını desteklemez. İçe aktarılan hesabı silmek için lütfen <click>Hesap Yönetimi</click>’ne gidin.",
   "ledgerNotSupport": "Bu tarayıcı Ledger’ı geçici olarak desteklemiyor",
   "lock": "Kilitle",
-  "addressQrTip": "QR kodunu tarayın ve MINA'yı ona aktarın",
+  "addressQrTip": "QR kodunu tarayın ve <b>{{symbol}}</b>'yı ona aktarın",
   "createPassword": "Şifre Oluştur",
   "importAccount_2": "İçe aktarılan hesaplar, orijinal olarak oluşturduğunuz Auro Wallet ile ilişkilendirilmeyecektir.",
   "confirm_reset_tip": "Cüzdan sıfırlama işlemini onaylamak için lütfen '{{deleteTag}}' yazın",

@@ -393,8 +393,11 @@ export const TokenAction = ({ type }) => {
     return { title, nextRouter, actionIconUrl, isReceive };
   }, [type]);
   const onClickActionBtn = useCallback(() => {
-    history.push(nextRouter);
-  }, []);
+    history.push({
+      pathname: nextRouter,
+      params: { isFromTokenPage: true },
+    });
+  }, [nextRouter]);
   return (
     <StyledActionItemWrapper onClick={onClickActionBtn}>
       <StyledIconWrapper rotate={String(isReceive)}>
