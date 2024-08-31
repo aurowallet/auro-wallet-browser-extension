@@ -46,6 +46,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
+import { updateShouldRequest } from "../../../../reducers/accountReducer";
 
 const FeeTypeEnum = {
   site: "FEE_RECOMMEND_SITE",
@@ -284,6 +285,9 @@ const SignView = ({
             break;
           default:
             break;
+        }
+        if(payload.hash){
+          dispatch(updateShouldRequest(true, true));
         }
         if (type === "ledger" && id && payload.hash) {
           sendMsg(

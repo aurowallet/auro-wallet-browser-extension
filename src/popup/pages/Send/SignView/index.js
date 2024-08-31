@@ -28,6 +28,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.scss";
+import { updateShouldRequest } from "../../../../reducers/accountReducer";
 
 const TX_CLICK_TYPE = {
   CONFIRM: "TX_CLICK_TYPE_CONFIRM",
@@ -154,6 +155,7 @@ const SignView = ({
         payload.id = signParams.id;
         payload.hash = data.hash;
         resultAction = TOKEN_BUILD.requestSign;
+        dispatch(updateShouldRequest(true, true));
         sendMsg(
           {
             action: resultAction,
