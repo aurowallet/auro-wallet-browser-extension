@@ -345,6 +345,8 @@ const SendPage = ({}) => {
         messageSource: "messageFromUpdate",
         payload: {
           sendParams: buildTokenData,
+          left: window.screenLeft,
+          top: window.screenTop,
         },
       },
       (id) => {}

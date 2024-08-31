@@ -5,7 +5,7 @@ import { POPUP_ACTIONS } from '../constant/msgTypes';
 export const PopupSize = {
   width: 375,
   height: 600 + 28,// 28px is tabBar height
-  fixHeight:80,
+  fixHeight: 80,
   exitSize:100,
 };
 
@@ -245,8 +245,8 @@ export function startExtensionPopup(withListener = false) {
     const top = currentWindow.top; // Top of the current window
     const left = currentWindow.left + currentWindow.width - PopupSize.width; // Align to the right edge
     const id = await openPopupWindow(targetUrl, POPUP_CHANNEL_KEYS.popup, undefined, {
-      left: left,
-      top: top + PopupSize.fixHeight,
+      left: left - 150,
+      top: top //+ PopupSize.fixHeight,
     })
     if(!withListener){
       resolve(id)

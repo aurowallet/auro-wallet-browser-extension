@@ -876,9 +876,15 @@ class DappService {
     })
 
     let targetUrl = TOKEN_BUILD_URL + buildID;  
+    let nextOption = {}
+    if(buildParams?.left && buildParams?.top){
+      nextOption = {
+        left: buildParams.left + PopupSize.exitSize,
+        top: buildParams.top  + PopupSize.exitSize,
+      }
+    }
     startPopupWindow(targetUrl, "tokenSign_"+buildID, "buildDapp", {
-      left: buildParams.left + PopupSize.exitSize,
-      top: buildParams.top  + PopupSize.exitSize,
+      ...nextOption
     });
     return buildID
   }
