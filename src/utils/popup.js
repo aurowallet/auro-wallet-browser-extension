@@ -1,12 +1,12 @@
-import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
-import extension from 'extensionizer';
-import { POPUP_ACTIONS } from '../constant/msgTypes';
+import { POPUP_CHANNEL_KEYS } from "@/constant/commonType";
+import extension from "extensionizer";
+import { POPUP_ACTIONS } from "../constant/msgTypes";
 
 export const PopupSize = {
   width: 375,
-  height: 600 + 28,// 28px is tabBar height
+  height: 600 + 28, // 28px is tabBar height
   fixHeight: 80,
-  exitSize:100,
+  exitSize: 100,
 };
 
 export let lastWindowIds = {};
@@ -21,7 +21,6 @@ function checkForError() {
   }
   return new Error(lastError.message);
 }
-
 
 function getLastFocusedWindow() {
   return new Promise((resolve, reject) => {
@@ -51,71 +50,81 @@ export async function getDappWindowPosition() {
     left = Math.max(screenX + (outerWidth - PopupSize.width), 0);
   }
   return {
-    top, left
-  }
+    top,
+    left,
+  };
 }
 /**
- * @param {*} windowId 
- * @returns 
+ * @param {*} windowId
+ * @returns
  */
 export function checkAndTop(windowId, channel) {
   return new Promise(async (resolve) => {
-    extension.tabs.query({
-      windowId: windowId
-    }, async (tabs) => {
-      if (tabs.length <= 0) {
-        resolve(false)
-        return
-      };
-      if (lastWindowIds[channel]) {
-        try {
-          await extension.windows.update(lastWindowIds[channel], {
-            focused: true,
-          });
-        } catch (e) {
-          console.log(`Failed to update window focus: ${e.message}`);
+    extension.tabs.query(
+      {
+        windowId: windowId,
+      },
+      async (tabs) => {
+        if (tabs.length <= 0) {
+          resolve(false);
+          return;
         }
-        resolve(true)
-      }else{
-        resolve(false)
+        if (lastWindowIds[channel]) {
+          try {
+            await extension.windows.update(lastWindowIds[channel], {
+              focused: true,
+            });
+          } catch (e) {
+            console.log(`Failed to update window focus: ${e.message}`);
+          }
+          resolve(true);
+        } else {
+          resolve(false);
+        }
       }
-    });
-  })
+    );
+  });
 }
 
 export function checkAndTopV2(channel) {
   return new Promise(async (resolve) => {
-    extension.tabs.query({
-      windowId: lastWindowIds[channel]
-    }, async (tabs) => {
-      if (tabs.length <= 0) {
-        resolve(false)
-        return
-      };
-      if (lastWindowIds[channel]) {
-        try {
-          await extension.windows.update(lastWindowIds[channel], {
-            focused: true,
-          });
-        } catch (e) {
-          console.log(`Failed to update window focus: ${e.message}`);
+    extension.tabs.query(
+      {
+        windowId: lastWindowIds[channel],
+      },
+      async (tabs) => {
+        if (tabs.length <= 0) {
+          resolve(false);
+          return;
         }
-        resolve(true)
-      }else{
-        resolve(false)
+        if (lastWindowIds[channel]) {
+          try {
+            await extension.windows.update(lastWindowIds[channel], {
+              focused: true,
+            });
+          } catch (e) {
+            console.log(`Failed to update window focus: ${e.message}`);
+          }
+          resolve(true);
+        } else {
+          resolve(false);
+        }
       }
-    });
-  })
+    );
+  });
 }
 
 async function getCurrentTab(windowId) {
   return new Promise((resolve) => {
-    extension.tabs.query({
-      windowId: windowId
-    }, (tabs) => {
-      resolve(tabs)
-    })
-  })
+    extension.tabs.query(
+      {
+        windowId: windowId,
+      },
+      (tabs) => {
+        resolve(tabs);
+      }
+    );
+  });
 }
 /**
  * Try open window if no previous window exists.
@@ -130,22 +139,25 @@ export async function openPopupWindow(
   options = {}
 ) {
   if (windowType === "dapp") {
-    let dappOption = await getDappWindowPosition()
+    let dappOption = await getDappWindowPosition();
     options = {
       ...options,
-      ...dappOption
-    }
+      ...dappOption,
+    };
   }
-  const option = Object.assign({
-    width: PopupSize.width,
-    height: PopupSize.height,
-    url: url,
-    type: "popup",
-  }, options);
+  const option = Object.assign(
+    {
+      width: PopupSize.width,
+      height: PopupSize.height,
+      url: url,
+      type: "popup",
+    },
+    options
+  );
 
   if (lastWindowIds[channel] !== undefined) {
     try {
-      const window = await getCurrentTab(lastWindowIds[channel])
+      const window = await getCurrentTab(lastWindowIds[channel]);
       if (window?.length) {
         const tab = window[0];
         if (tab?.id) {
@@ -157,19 +169,19 @@ export async function openPopupWindow(
         throw new Error("Null window or tabs");
       }
     } catch {
-      const createdWindow = await new Promise(resolve => {
+      const createdWindow = await new Promise((resolve) => {
         extension.windows.create(option, function (windowData) {
-          resolve(windowData)
-        })
-      })
+          resolve(windowData);
+        });
+      });
       lastWindowIds[channel] = createdWindow?.id;
     }
   } else {
-    const createdWindow = await new Promise(resolve => {
+    const createdWindow = await new Promise((resolve) => {
       extension.windows.create(option, function (windowData) {
-        resolve(windowData)
-      })
-    })
+        resolve(windowData);
+      });
+    });
     lastWindowIds[channel] = createdWindow?.id;
   }
 
@@ -185,7 +197,6 @@ export async function openPopupWindow(
   return lastWindowIds[channel];
 }
 
-
 export async function startPopupWindow(
   url,
   channel = "default",
@@ -193,24 +204,27 @@ export async function startPopupWindow(
   options = {}
 ) {
   if (windowType === "dapp") {
-    let dappOption = await getDappWindowPosition()
+    let dappOption = await getDappWindowPosition();
     options = {
       ...options,
-      ...dappOption
-    }
+      ...dappOption,
+    };
   }
-  const option = Object.assign({
-    width: PopupSize.width,
-    height: PopupSize.height,
-    url: url,
-    type: "popup",
-  }, options);
+  const option = Object.assign(
+    {
+      width: PopupSize.width,
+      height: PopupSize.height,
+      url: url,
+      type: "popup",
+    },
+    options
+  );
 
-  const createdWindow = await new Promise(resolve => {
+  const createdWindow = await new Promise((resolve) => {
     extension.windows.create(option, function (windowData) {
-      resolve(windowData)
-    })
-  })
+      resolve(windowData);
+    });
+  });
   lastWindowIds[channel] = createdWindow?.id;
 
   if (lastWindowIds[channel]) {
@@ -234,58 +248,70 @@ export function closePopupWindow(channel) {
   })();
 }
 /**
- * 
+ *
  * @param {*} withListener
- * @returns 
+ * @returns
  */
 export function startExtensionPopup(withListener = false) {
-  return new Promise((resolve)=>{
-  let targetUrl = 'popup.html'
-  extension.windows.getCurrent().then(async (currentWindow) => {
-    const top = currentWindow.top; // Top of the current window
-    const left = currentWindow.left + currentWindow.width - PopupSize.width; // Align to the right edge
-    const id = await openPopupWindow(targetUrl, POPUP_CHANNEL_KEYS.popup, undefined, {
-      left: left - 150,
-      top: top //+ PopupSize.fixHeight,
-    })
-    if(!withListener){
-      resolve(id)
-    }else{
-      const onMessage = (message, sender, sendResponse) => {
-        const { action } = message;
-        switch (action) {
-          case POPUP_ACTIONS.POPUP_NOTIFACATION:
-            sendResponse("page live");
-            extension.runtime.onMessage.removeListener(onMessage);
-            resolve(id)
-            break;
-          default:
-            break;
-        }
-        return false; 
-      };
-      extension.runtime.onMessage.addListener(onMessage)
+  return new Promise(async (resolve) => {
+    if (lastWindowIds[POPUP_CHANNEL_KEYS.popup]) {
+      await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
+      resolve(lastWindowIds[POPUP_CHANNEL_KEYS.popup]);
+      return
     }
+    let targetUrl = "popup.html";
+    extension.windows.getCurrent().then(async (currentWindow) => {
+      const top = currentWindow.top; // Top of the current window
+      const left = currentWindow.left + currentWindow.width - PopupSize.width; // Align to the right edge
+      const id = await openPopupWindow(
+        targetUrl,
+        POPUP_CHANNEL_KEYS.popup,
+        undefined,
+        {
+          left: left - 150,
+          top: top, //+ PopupSize.fixHeight,
+        }
+      );
+      if (!withListener) {
+        resolve(id);
+      } else {
+        const onMessage = (message, sender, sendResponse) => {
+          const { action } = message;
+          switch (action) {
+            case POPUP_ACTIONS.POPUP_NOTIFACATION:
+              sendResponse("page live");
+              extension.runtime.onMessage.removeListener(onMessage);
+              resolve(id);
+              break;
+            default:
+              break;
+          }
+          return false;
+        };
+        extension.runtime.onMessage.addListener(onMessage);
+      }
+    });
   });
-})
 }
-
 
 // Function to create a new tab
 function createTab(url) {
-  extension.tabs.create({ url: url, active: true }, function(tab) {
+  extension.tabs.create({ url: url, active: true }, function (tab) {
     lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = tab.id;
   });
 }
 // Function to create or activate a tab
-export async function createOrActivateTab(url="") {
-    if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome] !== null) {
-      if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome]) {
-        await extension.tabs.update(lastWindowIds[POPUP_CHANNEL_KEYS.welcome], { active: true, url });
-      } else {
-        createTab(url);
-      }
+export async function createOrActivateTab(url = "") {
+  if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome] !== null) {
+    if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome]) {
+      await extension.tabs.update(lastWindowIds[POPUP_CHANNEL_KEYS.welcome], {
+        active: true,
+        url,
+      });
     } else {
       createTab(url);
     }
+  } else {
+    createTab(url);
+  }
 }
