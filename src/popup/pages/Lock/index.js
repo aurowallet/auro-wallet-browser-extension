@@ -1,7 +1,12 @@
+import { DefaultMainnetConfig } from "@/constant/network";
+import extension from "extensionizer";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useHistory } from "react-router-dom";
+import styled from "styled-components";
+import { NET_CONFIG_VERSION } from "../../../../config";
+import { extSaveLocal } from "../../../background/extensionStorage";
 import {
   clearLocalExcept,
   getLocal,
@@ -10,14 +15,14 @@ import {
 import { clearStorage } from "../../../background/storageService";
 import { CURRENCY_UNIT, POWER_BY } from "../../../constant";
 import {
+  RESET_WALLET,
+  WALLET_APP_SUBMIT_PWD,
+} from "../../../constant/msgTypes";
+import {
   CURRENCY_UNIT_CONFIG,
   LOCAL_BASE_INFO,
   NET_WORK_CONFIG_V2,
 } from "../../../constant/storageKey";
-import {
-  RESET_WALLET,
-  WALLET_APP_SUBMIT_PWD,
-} from "../../../constant/msgTypes";
 import { resetWallet } from "../../../reducers";
 import { initCurrentAccount } from "../../../reducers/accountReducer";
 import { updateExtensionBaseInfo } from "../../../reducers/cache";
@@ -37,15 +42,6 @@ import Input from "../../component/Input";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
-import {
-  extGetLocal,
-  extSaveLocal,
-} from "../../../background/extensionStorage";
-import extension from "extensionizer";
-import { DefaultMainnetConfig } from "@/constant/network";
-import { NET_CONFIG_VERSION } from "../../../../config";
-import useSafeHistory from "@/hooks/useSafeHistory";
-import styled from "styled-components";
 
 const StyledFormWrapp = styled.form`
   width: calc(100% - 40px);
@@ -56,13 +52,21 @@ const LockedPageWrapper = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 1000;
+  z-index: 200;
+  background-color: #edeff2;
   display: flex;
   align-items: center;
   justify-content: center;
+`;
+
+const StyledLockContent = styled.div`
+  display: flex;
+  align-items: center;
   font-size: 24px;
   flex-direction: column;
   background-color: white;
+  height: 100vh;
+  min-width: 375px;
 `;
 
 export const LockPage = ({}) => {
@@ -194,39 +198,41 @@ export const LockPage = ({}) => {
   return (
     <>
       <LockedPageWrapper>
-        <div className={styles.resetEntryOuter}>
-          <div
-            className={styles.resetEntryContainer}
-            onClick={onShowResetModal}
-          >
-            {i18n.t("resetWallet")}
-          </div>
-        </div>
-        <div className={styles.logoContainer}>
-          <img src="/img/colorful_logo.svg" className={styles.logo} />
-        </div>
-        <p className={styles.welcomeBack}>{i18n.t("welcomeBack")}</p>
-        <StyledFormWrapp onSubmit={onSubmit}>
-          <div className={styles.pwdInputContainer}>
-            <Input
-              label={i18n.t("password")}
-              placeholder={i18n.t("enterPwd")}
-              onChange={onPwdInput}
-              value={pwdValue}
-              inputType={"password"}
-            />
-            <div className={styles.btnContainer}>
-              <Button
-                loading={btnLoading}
-                disable={!unLockBtnStatus}
-                onClick={goToConfirm}
-              >
-                {i18n.t("unlock")}
-              </Button>
-              <p className={styles.bottomUrl}>{POWER_BY}</p>
+        <StyledLockContent>
+          <div className={styles.resetEntryOuter}>
+            <div
+              className={styles.resetEntryContainer}
+              onClick={onShowResetModal}
+            >
+              {i18n.t("resetWallet")}
             </div>
           </div>
-        </StyledFormWrapp>
+          <div className={styles.logoContainer}>
+            <img src="/img/colorful_logo.svg" className={styles.logo} />
+          </div>
+          <p className={styles.welcomeBack}>{i18n.t("welcomeBack")}</p>
+          <StyledFormWrapp onSubmit={onSubmit}>
+            <div className={styles.pwdInputContainer}>
+              <Input
+                label={i18n.t("password")}
+                placeholder={i18n.t("enterPwd")}
+                onChange={onPwdInput}
+                value={pwdValue}
+                inputType={"password"}
+              />
+              <div className={styles.btnContainer}>
+                <Button
+                  loading={btnLoading}
+                  disable={!unLockBtnStatus}
+                  onClick={goToConfirm}
+                >
+                  {i18n.t("unlock")}
+                </Button>
+                <p className={styles.bottomUrl}>{POWER_BY}</p>
+              </div>
+            </div>
+          </StyledFormWrapp>
+        </StyledLockContent>
       </LockedPageWrapper>
       <PopupModal
         title={i18n.t("reset_tip_1")}

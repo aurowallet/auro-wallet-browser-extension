@@ -11,7 +11,7 @@ import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 const StyledPageWrapper = styled.div`
   width: 375px;
-  height: 600px;
+  height: 100vh;
   background-image: url("/img/receivePageBg.svg");
   background-size: cover;
   background-position: center;
@@ -72,21 +72,25 @@ const StyledReceiveTip = styled.p`
 const ReceivePage = ({}) => {
   let history = useHistory();
   const accountInfo = useSelector((state) => state.accountInfo);
-  const [currentAccount, setCurrentAccount] = useState(
-    accountInfo.currentAccount
-  );
-  const isFromTokenPage = useMemo(() => {
-    return history.location.params?.isFromTokenPage || "";
+  const token = useSelector((state) => state.cache.nextTokenDetail);
+  const currentAccount = useMemo(()=>{
+    return accountInfo.currentAccount
+  },[accountInfo])
+
+  const isShowToken = useMemo(() => {
+    let isFungibleToken = history.location.params?.isFungibleToken;
+    let isFromTokenPage = history.location.params?.isFromTokenPage;
+    return isFungibleToken && isFromTokenPage;
   }, []);
 
-  const token = useSelector((state) => state.cache.nextTokenDetail);
+  
   const { tokenSymbol } = useMemo(() => {
     let tokenSymbol = MAIN_COIN_CONFIG.symbol;
-    if (isFromTokenPage) {
-      tokenSymbol = token.tokenNetInfo.tokenSymbol ?? "UNKNOWN";
+    if (isShowToken ) {
+      tokenSymbol = token?.tokenNetInfo?.tokenSymbol ?? "UNKNOWN";
     }
     return { tokenSymbol };
-  }, [isFromTokenPage]);
+  }, [isShowToken,token]);
 
   const onCopy = useCallback(() => {
     copyText(currentAccount.address).then(() => {

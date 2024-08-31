@@ -47,6 +47,7 @@
     position: fixed;
     bottom: 0;
     width: calc(100% - 40px) ;
+    max-width: calc(375px - 40px);
     background-color: white;
 }
 .explorerContainer {

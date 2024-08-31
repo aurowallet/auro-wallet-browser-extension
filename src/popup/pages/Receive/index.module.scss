@@ -26,8 +26,8 @@
         text-align: center;
         color: rgba(0, 0, 0, 0.5);
     }
-    .receiveBold{
-        color: rgba(0, 0, 0, 0.80);
+    .receiveBold {
+        color: rgba(0, 0, 0, 0.8);
     }
     .qrCodeContainer {
         display: flex;
@@ -46,7 +46,7 @@
     .dividedLine2 {
         border: 0.5px solid rgba(0, 0, 0, 0.1);
     }
-    .copyOuterContainer{
+    .copyOuterContainer {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -55,15 +55,15 @@
         cursor: pointer;
         border-bottom-left-radius: 12px;
         border-bottom-right-radius: 12px;
-        &:hover{
-            background-color: #F2F2F2;;
+        &:hover {
+            background-color: #f2f2f2;
         }
     }
     .copyContainer {
         display: flex;
         align-items: center;
         justify-content: center;
-        
+
         width: fit-content;
     }
     .copyTxt {

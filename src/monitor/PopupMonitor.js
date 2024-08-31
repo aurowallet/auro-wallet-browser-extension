@@ -19,11 +19,11 @@ const FullScreenPopup = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: #edeff2;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 200;
   visibility: ${({ isVisible }) => (isVisible ? "visible" : "hidden")};
   opacity: ${({ isVisible }) => (isVisible ? 1 : 0)};
   transition: visibility 0.3s, opacity 0.3s;
@@ -31,6 +31,7 @@ const FullScreenPopup = styled.div`
 
 const StyledContentWrapper = styled.div`
   width: 100%;
+  max-width: 375px;
   height: 100%;
   background-color: white;
 `;

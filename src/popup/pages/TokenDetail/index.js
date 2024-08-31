@@ -283,10 +283,10 @@ const TokenDetail = () => {
         <StyledBalanceRow>{displayBalance}</StyledBalanceRow>
         <StyledAmountRow>{displayAmount}</StyledAmountRow>
         <StyledActionRow>
-          <TokenAction type={token_action_type.send} />
-          <TokenAction type={token_action_type.receive} />
+          <TokenAction type={token_action_type.send} isFungibleToken={isFungibleToken} />
+          <TokenAction type={token_action_type.receive} isFungibleToken={isFungibleToken}/>
           {!isFungibleToken && (
-            <TokenAction type={token_action_type.delegation} />
+            <TokenAction type={token_action_type.delegation} isFungibleToken={isFungibleToken}/>
           )}
         </StyledActionRow>
       </StyledTopWrapper>
@@ -362,7 +362,7 @@ const StyledActionItemWrapper = styled.div`
   }
 `;
 
-export const TokenAction = ({ type }) => {
+export const TokenAction = ({ type,isFungibleToken }) => {
   const history = useHistory();
   const { title, nextRouter, actionIconUrl, isReceive } = useMemo(() => {
     let title = "";
@@ -395,9 +395,9 @@ export const TokenAction = ({ type }) => {
   const onClickActionBtn = useCallback(() => {
     history.push({
       pathname: nextRouter,
-      params: { isFromTokenPage: true },
+      params: { isFromTokenPage: true,isFungibleToken },
     });
-  }, [nextRouter]);
+  }, [nextRouter,isFungibleToken]);
   return (
     <StyledActionItemWrapper onClick={onClickActionBtn}>
       <StyledIconWrapper rotate={String(isReceive)}>

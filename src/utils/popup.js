@@ -268,7 +268,7 @@ export function startExtensionPopup(withListener = false) {
         POPUP_CHANNEL_KEYS.popup,
         undefined,
         {
-          left: left - 150,
+          left: left - 130,
           top: top, //+ PopupSize.fixHeight,
         }
       );
