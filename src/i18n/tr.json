@@ -218,7 +218,7 @@
   "walletAddress": "Cüzdan Adresi",
   "advanceMode": "Gelişmiş",
   "confirmPassword": "Şifrenizi Doğrulayın",
-  "copyTipContent": "Özel anahtarın kopyalanması, panonun kolayca izlenebilmesi ve üçüncü taraf uygulamalar tarafından çalınabilmesi nedeniyle riskli olabilir.",
+  "copyTipContent": "Özel anahtarın kopyalanması, panonun kolayca izlenebilmesi ve üçüncü taraf uygulamalar tarafından çalınabilmesi sebebiyle riskli olabilir.",
   "atLeastOneLowercaseLetter": "küçük harf",
   "fee": "Ücret",
   "importPrivateKey": "Özel Anahtarı İçe Aktar",
