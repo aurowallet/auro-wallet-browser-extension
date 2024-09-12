@@ -160,13 +160,13 @@ const TokenItem = ({ token, isInModal }) => {
     }
   }, [dispatch, token, isInModal]);
 
-  const {showStaking} = useMemo(() => {
-    const networkID = currentNode.networkID;
-    let showStaking = networkID?.startsWith("mina");
-    return {
-      showStaking
-    }
-  }, [currentNode.networkID]);
+  // const {showStaking} = useMemo(() => {
+  //   const networkID = currentNode.networkID;
+  //   let showStaking = networkID?.startsWith("mina");
+  //   return {
+  //     showStaking
+  //   }
+  // }, [currentNode.networkID]);
   return (
     <StyledTokenItemWrapper onClick={onClickToken}>
       <StyledTokenLeft>
@@ -176,13 +176,13 @@ const TokenItem = ({ token, isInModal }) => {
         <StyledTokenInfo>
           <StyledTokenSymbolWrapper>
             <StyledTokenSymbol>{tokenSymbol}</StyledTokenSymbol>
-            {!isFungibleToken && !isInModal && showStaking && (
+            {/* {!isFungibleToken && !isInModal && showStaking && (
               <StyledDelegateStatus
                 $isChecked={token.tokenBaseInfo.isDelegation}
               >
                 {delegationText}
               </StyledDelegateStatus>
-            )}
+            )} */}
             {/* scam status */}
             {/*  {!isInModal && <StyledScamTag>{i18n.t("scam")}</StyledScamTag>} */}
           </StyledTokenSymbolWrapper>
