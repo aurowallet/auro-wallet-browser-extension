@@ -876,7 +876,11 @@ class DappService {
       tokenBuildList:buildList
     })
 
-    let targetUrl = TOKEN_BUILD_URL + buildID;  
+    let languageCode = buildParams.sendParams.langCode||""
+    if(languageCode){
+      languageCode = `/${languageCode}`
+    }
+    let targetUrl = TOKEN_BUILD_URL + languageCode  +"?buildid="+buildID;
     let nextOption = {}
     if(buildParams?.left && buildParams?.top){
       nextOption = {
