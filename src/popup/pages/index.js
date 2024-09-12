@@ -70,15 +70,6 @@ const MainRouter = () => {
       case ENTRY_WITCH_ROUTE.LOCK_PAGE:
         setNextRoute(<LockPage />);
         return;
-      case ENTRY_WITCH_ROUTE.DAPP_APPROVE_PAGE:
-        setNextRoute(<ApprovePage />);
-        return;
-      case ENTRY_WITCH_ROUTE.DAPP_SIGN_PAGE:
-        setNextRoute(<SignTransaction />);
-        return;
-      case ENTRY_WITCH_ROUTE.DAPP_TOKEN_SIGN:
-        setNextRoute(<TokenSignPage />);
-        return;
       default:
         setNextRoute(<LoadingView />);
         return;

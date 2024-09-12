@@ -26,8 +26,6 @@ let approveRequests = [];
 let chainRequests = []
 
 let tokenSigneRequests = [];
-// Interceptor to prevent zkapp from requesting accounts at the same time
-let pendingApprove = undefined
 
 export const windowId = {
   approve_page: "approve_page",
@@ -427,6 +425,10 @@ class DappService {
         }
         let time = new Date().getTime()
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1){
+          if(chainRequests.length>0){ // Handle approve and chain requests for concurrent requests
+            reject({ code:errorCodes.zkChainPending,message: getMessageFromCode(errorCodes.zkChainPending)})
+            return
+          }
           chainRequests.push({ id, params:nextParams, site,resolve,reject,time })
         }else{
           signRequests.push({ id, params:nextParams, site,resolve,reject,time })
@@ -501,12 +503,13 @@ class DappService {
           resolve([currentAccount])
           return
         }
-        let isExist = await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
-        if (isExist && pendingApprove) {
+        if(approveRequests.length>0){
+          if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){
+            await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+          }
           reject({ message: getMessageFromCode(errorCodes.zkChainPending),code:errorCodes.zkChainPending })
           return
         }
-        pendingApprove = { id, site}
         function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
           
@@ -524,7 +527,6 @@ class DappService {
                   nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
-                pendingApprove = undefined;
                 approveRequests = []
                 that.setBadgeContent()
                 if (payload.selectAccount && payload.selectAccount.length > 0) {
@@ -549,7 +551,6 @@ class DappService {
                 }
                 extension.runtime.onMessage.removeListener(onMessage)
                 nextResolve([payload.account])
-                pendingApprove = undefined;
                 approveRequests = []
                 that.setBadgeContent()
                 sendResponse()
