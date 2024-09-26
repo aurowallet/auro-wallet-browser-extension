@@ -32,7 +32,9 @@ import {
 } from "../Wallet/component/StatusView";
 import TokenIcon from "../Wallet/component/TokenIcon";
 import TxListView from "../Wallet/component/TxListView";
-
+import useFetchAccountData from "../../../hooks/useUpdateAccount";
+import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
+import extension from "extensionizer";
 const StyledTopWrapper = styled.div`
   background: #f9fafc;
   display: flex;
@@ -67,6 +69,19 @@ const StyledHistoryWrapper = styled.div`
 
 const TokenDetail = () => {
   const token = useSelector((state) => state.cache.nextTokenDetail);
+  const tokenList = useSelector((state) => state.accountInfo.tokenList);
+  const nextTokenInfo = useMemo(()=>{
+    let tokenInfo = tokenList.find((item) => {
+      if (item.tokenId === token?.tokenId) {
+        return item
+      }
+    })
+    if(!tokenInfo){
+      return token
+    }
+    return tokenInfo
+  },[tokenList,token])
+
   const txHistoryMap = useSelector((state) => state.accountInfo.txHistoryMap);
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const currentNode = useSelector((state) => state.network.currentNode);
@@ -79,6 +94,7 @@ const TokenDetail = () => {
   const dispatch = useDispatch();
   const isMounted = useRef(true);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const [showLoading, setShowLoading] = useState(true);
 
@@ -97,23 +113,23 @@ const TokenDetail = () => {
     tokenName,
     isFungibleToken,
   } = useMemo(() => {
-    const isFungibleToken = !token.tokenBaseInfo.isMainToken;
+    const isFungibleToken = !nextTokenInfo.tokenBaseInfo.isMainToken;
 
-    let tokenIconUrl = token.tokenBaseInfo.iconUrl;
+    let tokenIconUrl = nextTokenInfo.tokenBaseInfo.iconUrl;
     let tokenSymbol;
     let tokenName;
     if (isFungibleToken) {
-      tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
-      tokenName = addressSlice(token.tokenId, 6);
+      tokenSymbol = nextTokenInfo?.tokenNetInfo?.tokenSymbol;
+      tokenName = addressSlice(nextTokenInfo.tokenId, 6);
     } else {
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
       tokenName = MAIN_COIN_CONFIG.name;
     }
 
-    let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
+    let displayBalance = getBalanceForUI(nextTokenInfo.tokenBaseInfo.showBalance);
 
-    let displayAmount = token.tokenBaseInfo.showAmount || "";
-    if (token.tokenBaseInfo.showAmount) {
+    let displayAmount = nextTokenInfo.tokenBaseInfo.showAmount || "";
+    if (nextTokenInfo.tokenBaseInfo.showAmount) {
       displayAmount =
         currencyConfig.currentCurrency.symbol +
         " " +
@@ -122,14 +138,14 @@ const TokenDetail = () => {
 
     return {
       tokenIconUrl,
-      token,
+      token:nextTokenInfo,
       isFungibleToken,
       tokenSymbol,
       tokenName,
       displayBalance,
       displayAmount,
     };
-  }, [token]);
+  }, [nextTokenInfo]);
 
   const showTxHistory = useMemo(() => {
     let list = txHistoryMap[token.tokenId] || [];
@@ -263,6 +279,30 @@ const TokenDetail = () => {
   }, [shouldRefresh, requestHistory]);
 
   useEffect(() => {
+    if (shouldRefresh) {
+      fetchAccountData();
+    }
+  }, [shouldRefresh, fetchAccountData]);
+ 
+  useEffect(() => {
+    let onMessageListening = (message, sender, sendResponse) => {
+      const { type, action, hash } = message;
+      if (
+        type === FROM_BACK_TO_RECORD &&
+        action === TX_SUCCESS
+      ) {
+        dispatch(updateShouldRequest(true, true));
+        sendResponse();
+      }
+      return true;
+    };
+    extension.runtime.onMessage.addListener(onMessageListening);
+    return () => {
+      extension.runtime.onMessage.removeListener(onMessageListening);
+    };
+  }, []);
+
+  useEffect(() => {
     return () => {
       isMounted.current = false;
     };
@@ -310,6 +350,7 @@ const TokenDetail = () => {
       <Clock
         schemeEvent={() => {
           requestHistory();
+          fetchAccountData();
         }}
       />
     </CustomViewV2>
