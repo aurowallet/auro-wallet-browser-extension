@@ -252,7 +252,7 @@
   "grantLedger": "Donanım Cüzdanına İzin Ver",
   "speedUpTip": "Normalde bir işlemin onaylanması <light>3 dakika</light> sürer. Ancak ağın yoğun olduğu ve işleminizin 3 dakikadan uzun sürebildiği durumlarda işlem ücretini artırarak işlem sürecini hızlandırabilirsiniz.",
   "txHistoryTip": "İşlem geçmişi sağlanamıyor",
-  "scam": "sahteralık",
+  "scam": "sahtekarlık",
   "current": "Geçerli",
   "testnet": "test ağı",
   "showData": "Verileri göster",
