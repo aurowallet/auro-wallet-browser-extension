@@ -285,7 +285,7 @@ export async function getCurrencyPrice(currency) {
   if (netConfig.networkID !== NetworkID_MAP.mainnet) {
     return {};
   }
-  let priceUrl = BASE_INFO_URL + "/prices?currency=" + currency;
+  let priceUrl = BASE_INFO_URL + "/prices?currency=" + encodeURIComponent(currency);
   let data = await commonFetch(priceUrl).catch(() => {});
   let price = data?.data || 0;
   let tokenPrice = {};
@@ -471,7 +471,7 @@ export async function fetchSupportTokenInfo() {
   let netConfig = await getCurrentNodeConfig();
   const readableNetworkId = getReadableNetworkId(netConfig.networkID);
   const requestUrl =
-    BASE_INFO_URL + "/tokenInfo?networkId=" + readableNetworkId;
+    BASE_INFO_URL + "/tokenInfo?networkId=" + encodeURIComponent(readableNetworkId);
   const data = await commonFetch(requestUrl).catch(() => []);
   if (data.length > 0) {
     saveLocal(
