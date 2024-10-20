@@ -203,11 +203,10 @@ class DappService {
           return
         }
         const sendAction = params.action 
-
+        if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){ 
+          await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+        }
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1 && chainRequests.length>0){
-          if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){ 
-            await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
-          }
           reject({ code:errorCodes.zkChainPending,message: getMessageFromCode(errorCodes.zkChainPending)})
           return
         }
@@ -503,10 +502,10 @@ class DappService {
           resolve([currentAccount])
           return
         }
+        if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){
+          await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+        }
         if(approveRequests.length>0){
-          if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){
-            await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
-          }
           reject({ message: getMessageFromCode(errorCodes.zkChainPending),code:errorCodes.zkChainPending })
           return
         }
