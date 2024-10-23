@@ -48,10 +48,10 @@ import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
 
-const FeeTypeEnum = {
-  site: "FEE_RECOMMEND_SITE",
-  default: "FEE_RECOMMEND_DEFAULT",
-  custom: "FEE_RECOMMEND_CUSTOM",
+const ZkAppValueType = {
+  site: "RECOMMEND_SITE",
+  default: "RECOMMEND_DEFAULT",
+  custom: "RECOMMEND_CUSTOM",
 };
 
 /** page click event */
@@ -85,7 +85,9 @@ const SignView = ({
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
-  const mainTokenNetInfo = useSelector((state) => state.accountInfo.mainTokenNetInfo);
+  const mainTokenNetInfo = useSelector(
+    (state) => state.accountInfo.mainTokenNetInfo
+  );
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
@@ -93,6 +95,7 @@ const SignView = ({
   const [feeDefault, setFeeDefault] = useState("");
   const [customFeeStatus, setCustomFeeStatus] = useState(false);
   const [feeType, setFeeType] = useState("");
+  const [nonceType, setNonceType] = useState("");
   const [nonceValue, setNonceValue] = useState("");
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [feeErrorTip, setFeeErrorTip] = useState("");
@@ -121,7 +124,10 @@ const SignView = ({
     const body = signParams?.params?.transaction;
     const zkFee = getZkFee(body);
     let siteFee =
-      zkFee || signParams?.params?.feePayer?.fee || signParams?.params?.fee || "";
+      zkFee ||
+      signParams?.params?.feePayer?.fee ||
+      signParams?.params?.fee ||
+      "";
     let siteRecommendFee = isNumber(siteFee) ? siteFee + "" : "";
     let id = signParams?.id || "";
     let currentAdvanceData = advanceData[id] || {};
@@ -147,40 +153,54 @@ const SignView = ({
     };
   }, [signParams, advanceData]);
 
-  const { isSendZk, zkSourceData, zkFormatData,zkOnlySign,defaultRecommandFee } = useMemo(() => {
+  const {
+    isSendZk,
+    zkSourceData,
+    zkFormatData,
+    zkOnlySign,
+    defaultRecommandFee,
+    zkAppNonce,
+  } = useMemo(() => {
     const isSendZk = sendAction === DAppActions.mina_sendTransaction;
     let zkShowData = "",
       zkSourceData = "",
       zkFormatData = [],
       count = 0;
-    
+
     if (isSendZk) {
       zkShowData = signParams.params?.transaction;
       try {
         zkFormatData = getZkInfo(zkShowData, currentAccount.address);
         zkSourceData = JSON.stringify(JSON.parse(zkShowData), null, 2);
-        count = getAccountUpdateCount(zkShowData)  
+        count = getAccountUpdateCount(zkShowData);
       } catch (error) {}
     }
-    let zkOnlySign = (signParams?.params?.onlySign && isSendZk);
+    let zkOnlySign = signParams?.params?.onlySign && isSendZk;
+    let zkAppNonce = isNumber(signParams?.params?.nonce)
+      ? signParams?.params?.nonce
+      : "";
 
-    
-    let defaultRecommandFee = 0.1
-    if(netFeeList.length >= 2){
-      defaultRecommandFee = netFeeList[1].value
+    let defaultRecommandFee = 0.1;
+    if (netFeeList.length >= 2) {
+      defaultRecommandFee = netFeeList[1].value;
     }
-    if(isSendZk && netFeeList.length >= 6){
-      const zkAccountFee = new BigNumber(netFeeList[5].value).multipliedBy(count)
-      defaultRecommandFee = new BigNumber(netFeeList[1].value).plus(zkAccountFee).toNumber()
+    if (isSendZk && netFeeList.length >= 6) {
+      const zkAccountFee = new BigNumber(netFeeList[5].value).multipliedBy(
+        count
+      );
+      defaultRecommandFee = new BigNumber(netFeeList[1].value)
+        .plus(zkAccountFee)
+        .toNumber();
     }
     return {
       isSendZk,
       zkSourceData,
       zkFormatData,
       zkOnlySign,
-      defaultRecommandFee
+      defaultRecommandFee,
+      zkAppNonce,
     };
-  }, [sendAction, signParams, currentAccount,netFeeList]);
+  }, [sendAction, signParams, currentAccount, netFeeList]);
 
   useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
@@ -269,9 +289,9 @@ const SignView = ({
             resultAction = DAPP_ACTION_SIGN_MESSAGE;
             break;
           case DAppActions.mina_sendTransaction:
-            if(zkOnlySign){
+            if (zkOnlySign) {
               payload.signedData = JSON.stringify(data);
-            }else{
+            } else {
               payload.hash = data.hash;
             }
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
@@ -286,7 +306,7 @@ const SignView = ({
           default:
             break;
         }
-        if(payload.hash){
+        if (payload.hash) {
           dispatch(updateShouldRequest(true, true));
         }
         if (type === "ledger" && id && payload.hash) {
@@ -312,7 +332,7 @@ const SignView = ({
         );
       }
     },
-    [signParams, sendAction, onRemoveTx,zkOnlySign]
+    [signParams, sendAction, onRemoveTx, zkOnlySign]
   );
   useEffect(() => {
     setShowRawData(isSendZk && selectedTabIndex === 0);
@@ -395,7 +415,7 @@ const SignView = ({
         }
       }
       let { params } = signParams;
-      let validNonce = nonceValue || inferredNonce;
+      let validNonce = nonceValue || zkAppNonce || inferredNonce;
       let nonce = trimSpace(validNonce);
 
       let toAddress = "";
@@ -464,7 +484,8 @@ const SignView = ({
       sendAction,
       inferredNonce,
       isSendZk,
-      zkOnlySign
+      zkOnlySign,
+      zkAppNonce,
     ]
   );
 
@@ -488,7 +509,7 @@ const SignView = ({
           return;
         }
       }
-      let validNonce = nonceValue || inferredNonce;
+      let validNonce = nonceValue || zkAppNonce || inferredNonce;
       let nonce = trimSpace(validNonce) || "";
       if (nonce.length > 0 && !isNumber(nonce)) {
         Toast.info(i18n.t("waitNonce"));
@@ -502,7 +523,11 @@ const SignView = ({
       if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
         let amount = trimSpace(params.amount) || 0;
         let maxAmount = new BigNumber(amount).plus(fee).toString();
-        if (new BigNumber(maxAmount).gt(mainTokenNetInfo?.tokenBaseInfo.showBalance)) {
+        if (
+          new BigNumber(maxAmount).gt(
+            mainTokenNetInfo?.tokenBaseInfo.showBalance
+          )
+        ) {
           Toast.info(i18n.t("balanceNotEnough"));
           return;
         }
@@ -536,6 +561,7 @@ const SignView = ({
       clickNextStep,
       sendAction,
       inferredNonce,
+      zkAppNonce,
     ]
   );
 
@@ -583,7 +609,7 @@ const SignView = ({
         setFeeDefault(defaultRecommandFee);
       }
     }
-  }, [feeDefault,defaultRecommandFee]);
+  }, [feeDefault, defaultRecommandFee]);
 
   const getContractAddress = useCallback((tx) => {
     try {
@@ -678,24 +704,32 @@ const SignView = ({
     zkSourceData,
     zkFormatData,
     isSendZk,
-    zkOnlySign
+    zkOnlySign,
   ]);
 
   useEffect(() => {
     if (customFeeStatus) {
-      setFeeType(FeeTypeEnum.custom);
+      setFeeType(ZkAppValueType.custom);
       return;
     }
     if (siteRecommendFee) {
-      setFeeType(FeeTypeEnum.site);
+      setFeeType(ZkAppValueType.site);
       setFeeValue(siteRecommendFee);
       return;
     }
     if (feeDefault) {
-      setFeeType(FeeTypeEnum.default);
+      setFeeType(ZkAppValueType.default);
       setFeeValue(feeDefault);
     }
   }, [feeDefault, feeValue, customFeeStatus, siteRecommendFee]);
+
+  useEffect(() => {
+    if (nonceValue) {
+      setNonceType(ZkAppValueType.custom);
+    } else if (zkAppNonce) {
+      setNonceType(ZkAppValueType.site);
+    }
+  }, [nonceValue, zkAppNonce]);
 
   const checkFeeHigh = useCallback(() => {
     let checkFee = "";
@@ -766,7 +800,7 @@ const SignView = ({
         title = "create";
         break;
       case DAppActions.mina_sendTransaction:
-        if(zkOnlySign){
+        if (zkOnlySign) {
           title = "sign";
         }
         break;
@@ -774,7 +808,7 @@ const SignView = ({
         break;
     }
     return title;
-  }, [sendAction,zkOnlySign]);
+  }, [sendAction, zkOnlySign]);
 
   const onLedgerInfoModalConfirm = useCallback(
     (ledger) => {
@@ -784,6 +818,10 @@ const SignView = ({
     },
     [onConfirm]
   );
+  const onResetNonce = useCallback(() => {
+    setNonceType(ZkAppValueType.custom);
+    setNonceValue(inferredNonce);
+  }, [inferredNonce]);
 
   return (
     <section className={styles.sectionSign}>
@@ -808,7 +846,11 @@ const SignView = ({
             leftContent={showAccountAddress}
             leftCopyContent={currentAccount.address}
             rightTitle={i18n.t("amount")}
-            rightContent={mainTokenNetInfo?.tokenBaseInfo?.showBalance + " " + MAIN_COIN_CONFIG.symbol}
+            rightContent={
+              mainTokenNetInfo?.tokenBaseInfo?.showBalance +
+              " " +
+              MAIN_COIN_CONFIG.symbol
+            }
           />
         ) : (
           <>
@@ -825,6 +867,41 @@ const SignView = ({
             {sendAction === DAppActions.mina_sendPayment && (
               <CommonRow leftTitle={i18n.t("amount")} leftContent={toAmount} />
             )}
+            {zkAppNonce && (
+              <div className={styles.accountRow}>
+                <div className={styles.rowLeft}>
+                  <p className={styles.rowTitle}>{"Nonce"}</p>
+                  <div className={styles.feeCon}>
+                    <p className={cls(styles.rowContent, styles.feeContent)}>
+                      {nonceValue || zkAppNonce}
+                    </p>
+                    {nonceType !== ZkAppValueType.custom && (
+                      <span
+                        className={cls(
+                          nonceType === ZkAppValueType.site
+                            ? styles.feeTypeSite
+                            : styles.feeTypeDefault
+                        )}
+                      >
+                        {nonceType === ZkAppValueType.site
+                          ? i18n.t("siteSuggested")
+                          : i18n.t("fee_default")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {nonceType === ZkAppValueType.site && (
+                  <div className={styles.modeWrapper}>
+                    <p
+                      className={styles.rowPurpleContent}
+                      onClick={onResetNonce}
+                    >
+                      {i18n.t("reset")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             <div className={styles.accountRow}>
               <div className={styles.rowLeft}>
                 <p className={styles.rowTitle}>{i18n.t("transactionFee")}</p>
@@ -832,15 +909,15 @@ const SignView = ({
                   <p className={cls(styles.rowContent, styles.feeContent)}>
                     {feeValue + " " + MAIN_COIN_CONFIG.symbol}
                   </p>
-                  {feeType !== FeeTypeEnum.custom && (
+                  {feeType !== ZkAppValueType.custom && (
                     <span
                       className={cls(
-                        feeType === FeeTypeEnum.site
+                        feeType === ZkAppValueType.site
                           ? styles.feeTypeSite
                           : styles.feeTypeDefault
                       )}
                     >
-                      {feeType === FeeTypeEnum.site
+                      {feeType === ZkAppValueType.site
                         ? i18n.t("siteSuggested")
                         : i18n.t("fee_default")}
                     </span>
@@ -947,6 +1024,7 @@ const SignView = ({
         onNonceInput={onNonceInput}
         onConfirm={onConfirmAdvance}
         feeErrorTip={feeErrorTip}
+        zkAppNonce={nonceValue || zkAppNonce}
       />
       <ConfirmModal
         modalVisible={confirmModalStatus}

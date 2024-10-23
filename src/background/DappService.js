@@ -263,7 +263,7 @@ class DappService {
         }
 
         if (sendAction === DAppActions.mina_sendPayment) {
-          if (!isNumber(params.amount)) {
+          if (!isNumber(params.amount)|| (params.nonce && !isNumber(params.nonce))) {
             reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
             return
           }

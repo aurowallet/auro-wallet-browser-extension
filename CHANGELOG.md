@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
     - Remove support for Berkeley network
     - Update lock icon
     - Zk fee recommendation
+    - ZkApp recommend nonce
 
 ## [2.2.17]
 - Enhancements

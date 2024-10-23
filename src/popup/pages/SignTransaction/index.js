@@ -15,7 +15,10 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { refreshZkSignPopup, updateSignZkModalStatus } from "../../../reducers/popupReducer";
+import {
+  refreshZkSignPopup,
+  updateSignZkModalStatus,
+} from "../../../reducers/popupReducer";
 import SignView from "./SignView";
 import ZkAppChainView from "./ZkAppChainView";
 import styles from "./index.module.scss";
@@ -80,9 +83,9 @@ const SignTransaction = () => {
     inferredNonce
   );
   useEffect(() => {
-      setNextUseInferredNonce(inferredNonce);
+    setNextUseInferredNonce(inferredNonce);
   }, [inferredNonce]);
- 
+
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -146,7 +149,6 @@ const SignTransaction = () => {
     );
   }, [pendingSignList, currentSignIndex]);
 
-
   useEffect(() => {
     if (!popupLockStatus) {
       fetchAccountInfo();
@@ -208,7 +210,6 @@ const SignTransaction = () => {
     setCurrentSignIndex(nextIndex);
   }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
-
   const onRemoveNotify = useCallback(() => {
     setNotifyData({});
     if (pendingSignList.length > 0) {
@@ -217,7 +218,7 @@ const SignTransaction = () => {
         notifyViewStatus: false,
       });
     } else {
-      dispatch(updateSignZkModalStatus(false)); 
+      dispatch(updateSignZkModalStatus(false));
     }
   }, [pendingSignList]);
   const onRemoveTx = useCallback(

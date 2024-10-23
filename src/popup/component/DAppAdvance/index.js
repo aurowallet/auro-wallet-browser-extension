@@ -20,12 +20,16 @@ const DAppAdvance = ({
 
     nonceValue = "",
     onNonceInput = () => { },
+    zkAppNonce=""
 }) => {
 
     const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
     const nonceHolder = useMemo(() => {
+        if(zkAppNonce){
+            return zkAppNonce
+        }
         return isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? mainTokenNetInfo.inferredNonce : ""
-    }, [mainTokenNetInfo])
+    }, [mainTokenNetInfo,zkAppNonce])
 
     const onClickOuter = useCallback((e) => {
         onClickClose()
