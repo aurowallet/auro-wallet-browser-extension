@@ -253,20 +253,20 @@ export function getZkFee(zkappCommand) {
 }
 
 /**
- * verifyTokenCommand from server 
- * @param {*} sourceData 
- * @param {*} sendTokenId 
- * @param {*} buildZkCommand 
- * @returns 
+ * verifyTokenCommand from server
+ * @param {*} sourceData
+ * @param {*} sendTokenId
+ * @param {*} buildZkCommand
+ * @returns
  */
 export function verifyTokenCommand(sourceData, sendTokenId, buildZkCommand) {
-  const { sender, receiver, amount,isNewAccount } = sourceData;
+  const { sender, receiver, amount, isNewAccount } = sourceData;
   const nextBuildZkCommand = JSON.parse(buildZkCommand);
   let senderVerified = false;
   let receiverVerified = false;
-  const accountUpdateCount = isNewAccount ? 4 : 3
-  if(nextBuildZkCommand.accountUpdates.length != accountUpdateCount){ 
-    return false
+  const accountUpdateCount = isNewAccount ? 4 : 3;
+  if (nextBuildZkCommand.accountUpdates.length != accountUpdateCount) {
+    return false;
   }
   nextBuildZkCommand.accountUpdates.forEach((accountUpdate) => {
     const { publicKey, balanceChange, tokenId } = accountUpdate.body;
@@ -297,11 +297,81 @@ export function verifyTokenCommand(sourceData, sendTokenId, buildZkCommand) {
 
 /**
  * get accoutUpdate count to calc zk tx fee
- * @param {*} zkappCommand 
- * @returns 
+ * @param {*} zkappCommand
+ * @returns
  */
 export function getAccountUpdateCount(zkappCommand) {
   let nextZkCommand = JSON.parse(zkappCommand);
   let accountUpdates = nextZkCommand.accountUpdates;
   return accountUpdates.length;
+}
+export function getZkAppUpdateInfo(accountUpdates, publicKey, tokenId) {
+  try {
+    if (!Array.isArray(accountUpdates)) {
+      return 0;
+    }
+    let totalBalanceChange = "0";
+    let updateList = [];
+    let otherList = [];
+    accountUpdates.forEach((update) => {
+      const { body } = update;
+      if (body.tokenId === tokenId) {
+        const magnitude = new BigNumber(body.balanceChange.magnitude)
+          .abs()
+          .toString();
+        if (body.publicKey === publicKey) {
+          if (body.balanceChange.sgn === "Negative") {
+            totalBalanceChange = new BigNumber(totalBalanceChange)
+              .minus(magnitude)
+              .toString();
+          } else if (body.balanceChange.sgn === "Positive") {
+            totalBalanceChange = new BigNumber(totalBalanceChange)
+              .plus(magnitude)
+              .toString();
+          }
+        } else {
+          updateList.push({
+            address: body.publicKey,
+            amount: magnitude,
+          });
+        }
+      }
+      if (body.publicKey !== publicKey) {
+        otherList.push(body.publicKey);
+      }
+    });
+    if (updateList.length !== 0) {
+      updateList.sort((a, b) => b.amount - a.amount);
+    }
+
+    let symbol = "";
+    let from = "";
+    let to = "";
+    if (totalBalanceChange > 0) {
+      symbol = "+";
+
+      from = updateList.length > 0 ? updateList[0].address : otherList[0];
+      to = publicKey;
+    } else if (totalBalanceChange < 0) {
+      symbol = "-";
+      totalBalanceChange = new BigNumber(totalBalanceChange).abs().toString();
+      from = publicKey;
+      to = updateList.length > 0 ? updateList[0].address : otherList[0];
+    }
+    return {
+      totalBalanceChange,
+      symbol,
+      updateCount: accountUpdates.length,
+      from, //
+      to,
+    };
+  } catch (error) {
+    return {
+      totalBalanceChange: 0,
+      symbol: "",
+      updateCount: "-",
+      from: "-",
+      to: "-",
+    };
+  }
 }

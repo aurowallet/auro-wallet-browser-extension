@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled, { css } from "styled-components";
-import { MAIN_COIN_CONFIG } from "../../../constant";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { openTab } from "../../../utils/commonMsg";
@@ -22,6 +22,7 @@ import {
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import { getZkAppUpdateInfo } from "../../../utils/zkUtils";
 
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
@@ -34,7 +35,7 @@ const STATUS = {
 const StyledWrapper = styled.div`
   overflow-y: auto;
   height: calc(100% - 130px);
-`
+`;
 
 const Record = ({}) => {
   const netConfig = useSelector((state) => state.network);
@@ -55,42 +56,56 @@ const Record = ({}) => {
   }, [history]);
 
   const { contentList, isZkReceive, isMainCoin } = useMemo(() => {
+    let kindLow = txDetail.kind?.toLowerCase();
+    let typeCamelCase = kindLow !== "zkapp";
     let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
     let showAmount = 0;
     let showFrom = txDetail.from;
     let showTo;
     let isZkReceive;
     if (isMainCoin) {
-      showAmount =
-        getBalanceForUI(
-          txDetail.amount,
+      if (!typeCamelCase) {
+        const accountUpdates = txDetail.body.zkappCommand.accountUpdates;
+        const result = getZkAppUpdateInfo(
+          accountUpdates,
+          currentAccount.address,
+          ZK_DEFAULT_TOKEN_ID
+        );
+        showAmount = getBalanceForUI(
+          result.totalBalanceChange,
           MAIN_COIN_CONFIG.decimals,
           MAIN_COIN_CONFIG.decimals
-        ) +
-        " " +
-        MAIN_COIN_CONFIG.symbol;
-      showTo = txDetail.to;
-    } else {
-      const accountUpdates = txDetail.body.zkappCommand.accountUpdates; // []
-      const positiveUpdate = accountUpdates.filter((item) => {
-        const updateBody = item.body;
-        return (
-          updateBody.tokenId == tokenInfo.tokenId &&
-          updateBody.balanceChange.sgn === "Positive"
         );
-      });
-      if (positiveUpdate.length > 0) {
-        const positiveItem = positiveUpdate[0];
-        const balance = positiveItem.body.balanceChange.magnitude;
-        const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
-        const tokenSymbol = tokenInfo?.tokenNetInfo?.tokenSymbol;
+        showAmount = showAmount + " " +MAIN_COIN_CONFIG.symbol;
+        showTo = result.to;
+        showFrom = result.from;
+      } else {
         showAmount =
-          getBalanceForUI(balance, tokenDecimal, tokenDecimal) +
+          getBalanceForUI(
+            txDetail.amount,
+            MAIN_COIN_CONFIG.decimals,
+            MAIN_COIN_CONFIG.decimals
+          ) +
           " " +
-          tokenSymbol;
-        showTo = positiveItem.body.publicKey;
-        isZkReceive = positiveItem.body.publicKey == currentAccount.address;
+          MAIN_COIN_CONFIG.symbol;
+        showTo = txDetail.to;
       }
+    } else {
+      const accountUpdates = txDetail.body.zkappCommand?.accountUpdates;
+      const result = getZkAppUpdateInfo(
+        accountUpdates,
+        currentAccount.address,
+        tokenInfo.tokenId
+      );
+      const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
+      showAmount = getBalanceForUI(
+        result.totalBalanceChange,
+        tokenDecimal,
+        tokenDecimal
+      );
+      showAmount = showAmount + " " +tokenInfo?.tokenNetInfo?.tokenSymbol;
+      showTo = result.to;
+      showFrom = result.from;
     }
 
     let memo = txDetail.memo || "";
@@ -105,8 +120,6 @@ const Record = ({}) => {
     let txTime = txDetail.dateTime ? getShowTime(txDetail.dateTime) : "";
     let nonce = String(txDetail.nonce);
     let txHash = txDetail.hash;
-    let kindLow = txDetail.kind?.toLowerCase();
-    let typeCamelCase = kindLow !== "zkapp";
     let txType = txDetail.kind;
     if (kindLow == "stake_delegation") {
       txType = "delegation";
@@ -214,9 +227,9 @@ const Record = ({}) => {
       />
       <div className={styles.dividedLine} />
       <StyledWrapper>
-      {contentList.map((item, index) => {
-        return <DetailRow key={index} {...item} />;
-      })}
+        {contentList.map((item, index) => {
+          return <DetailRow key={index} {...item} />;
+        })}
       </StyledWrapper>
       {showExplorer && (
         <div className={styles.explorerOuter}>
