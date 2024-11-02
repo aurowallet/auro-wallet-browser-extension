@@ -5,6 +5,7 @@ import { Trans } from "react-i18next";
 import { useDispatch } from "react-redux";
 import { LEDGER_PAGE_TYPE } from "../../../constant/commonType";
 import {
+  ACCOUNT_ACTIONS,
     GET_LEDGER_ACCOUNT_NUMBER,
     GET_WALLET_LOCK_STATUS,
     WALLET_IMPORT_LEDGER
@@ -279,6 +280,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
               }
             } else {
               dispatch(updateCurrentAccount(account));
+              sendMsg({ action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,payload:account.address }); 
               onClickNext && onClickNext();
             }
           }

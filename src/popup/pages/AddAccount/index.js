@@ -29,6 +29,7 @@ const AddAccount = ({}) => {
     extension.tabs.create({
       url: "popup.html#/ledger_page",
     });
+    window.close();
   }, [i18n]);
 
   const goImport = useCallback(() => {

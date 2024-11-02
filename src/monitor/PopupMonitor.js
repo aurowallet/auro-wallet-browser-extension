@@ -8,10 +8,11 @@ import { sendMsg } from "@/utils/commonMsg";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { POPUP_ACTIONS, WORKER_ACTIONS } from "../constant/msgTypes";
+import { ACCOUNT_ACTIONS, POPUP_ACTIONS, WALLET_GET_CURRENT_ACCOUNT, WORKER_ACTIONS } from "../constant/msgTypes";
 import { updateSignZkModalStatus } from "../reducers/popupReducer";
 import SignTransaction from "../popup/pages/SignTransaction";
 import extension from 'extensionizer'
+import { updateCurrentAccount } from "@/reducers/accountReducer";
 // Styled-component for the popup
 const FullScreenPopup = styled.div`
   position: fixed;
@@ -76,7 +77,7 @@ function PopupMonitor() {
 
   useEffect(() => {
     const messageListener = (message, sender, sendResponse) => {
-      const { action } = message;
+      const { action,payload } = message;
       switch (action) {
         case WORKER_ACTIONS.BUILD_TOKEN_SEND:
           dispatch(updateTokenSignStatus(true));
@@ -88,6 +89,19 @@ function PopupMonitor() {
           break;
         case WORKER_ACTIONS.SIGN_ZK:
           dispatch(updateSignZkModalStatus(true));
+          sendResponse();
+          break;
+        case ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT:
+          if(payload){
+            sendMsg(
+              {
+                action: WALLET_GET_CURRENT_ACCOUNT,
+              },
+              async (currentAccount) => {
+                dispatch(updateCurrentAccount(currentAccount));
+              }
+            );
+          }
           sendResponse();
           break;
         default:
