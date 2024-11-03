@@ -1,4 +1,3 @@
-
 import styled from "styled-components";
 
 const TooltipContainer = styled.div`
@@ -7,9 +6,10 @@ const TooltipContainer = styled.div`
 `;
 
 const TooltipText = styled.div`
+  background: rgba(0, 0, 0, 0.8);
+
   visibility: hidden;
   max-width: 335px;
-  background-color: black;
   color: white;
   text-align: center;
   border-radius: 8px;

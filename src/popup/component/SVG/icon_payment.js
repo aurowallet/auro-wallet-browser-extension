@@ -11,7 +11,7 @@ function IconPayment({ fill }) {
       <path
         d="M30.585 26.4834L24.319 20.2175L18.0531 26.4834"
         stroke="white"
-        stroke-width="3.6"
+        strokeWidth="3.6"
       />
       <rect
         x="25.7852"

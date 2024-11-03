@@ -132,7 +132,7 @@
   "copySuccess": "Скопировано",
   "scanPay": "Сканировать, чтобы заплатить мне",
   "copy": "Копировать",
-  "addressQrTip": "Отсканируйте QR-код и переведите на него MINA",
+  "addressQrTip": "Отсканируйте QR-код и переведите на него <b>{{symbol}}</b>",
   "ledgerNotSupport": "Этот браузер временно не поддерживает Ledger",
   "accountManage": "Управление счетами",
   "noSupported": "Не поддерживается",
@@ -286,5 +286,14 @@
   "showTestnet": "Показать Тестнеты",
   "ledgerConnected": "Устройство Ledger подключено",
   "ledgerNotConnected": "Устройство Ledger не подключено",
-  "txType":"Тип транзакции"
+  "txType": "Тип транзакции",
+  "updateAccount": "Несоответствие учетной записи, пожалуйста, переключите учетную запись и попробуйте снова.",
+  "selectAsset": "Выбрать актив",
+  "assetManagement": "Управление активами",
+  "tokens": "TOKENS",
+  "newTokenFound": "Найдено {{count}} новых токенов",
+  "ignore": "Игнорировать",
+  "balance": "Баланс",
+  "updateTokenInfo": "Обновить информацию о токенах?",
+  "noTxHistory": "История транзакций отсутствует"
 }

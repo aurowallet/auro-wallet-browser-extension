@@ -8,20 +8,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled, { css } from "styled-components";
-import { MAIN_COIN_CONFIG } from "../../../constant";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { openTab } from "../../../utils/commonMsg";
 import {
   copyText,
   decodeMemo,
-  getAmountDisplay,
+  getBalanceForUI,
   getShowTime,
   getTimeGMT,
 } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import { getZkAppUpdateInfo } from "../../../utils/zkUtils";
 
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
@@ -31,30 +32,85 @@ const STATUS = {
   TX_STATUS_SUCCESS: "applied",
   TX_STATUS_FAILED: "failed",
 };
+const StyledWrapper = styled.div`
+  overflow-y: auto;
+  height: calc(100% - 130px);
+`;
 
 const Record = ({}) => {
   const netConfig = useSelector((state) => state.network);
+  const currentAccount = useSelector(
+    (state) => state.accountInfo.currentAccount
+  );
   const dispatch = useDispatch();
   const history = useHistory();
 
-  const txDetail = useMemo(() => {
-    return history.location.params?.txDetail || {};
+  const { txDetail, tokenInfo } = useMemo(() => {
+    let params = history.location.params || {};
+    let txDetail = params?.txDetail || {};
+    let tokenInfo = params?.tokenInfo || {};
+    return {
+      txDetail,
+      tokenInfo,
+    };
   }, [history]);
 
-  const { contentList } = useMemo(() => {
-    let amount =
-      getAmountDisplay(
-        txDetail.amount,
-        MAIN_COIN_CONFIG.decimals,
-        MAIN_COIN_CONFIG.decimals
-      ) +
-      " " +
-      MAIN_COIN_CONFIG.symbol;
-    let receiveAddress = txDetail.to;
-    let sendAddress = txDetail.from;
+  const { contentList, isZkReceive, isMainCoin } = useMemo(() => {
+    let kindLow = txDetail.kind?.toLowerCase();
+    let typeCamelCase = kindLow !== "zkapp";
+    let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
+    let showAmount = 0;
+    let showFrom = txDetail.from;
+    let showTo;
+    let isZkReceive;
+    if (isMainCoin) {
+      if (!typeCamelCase) {
+        const accountUpdates = txDetail.body.zkappCommand.accountUpdates;
+        const result = getZkAppUpdateInfo(
+          accountUpdates,
+          currentAccount.address,
+          ZK_DEFAULT_TOKEN_ID
+        );
+        showAmount = getBalanceForUI(
+          result.totalBalanceChange,
+          MAIN_COIN_CONFIG.decimals,
+          MAIN_COIN_CONFIG.decimals
+        );
+        showAmount = showAmount + " " +MAIN_COIN_CONFIG.symbol;
+        showTo = result.to;
+        showFrom = result.from;
+      } else {
+        showAmount =
+          getBalanceForUI(
+            txDetail.amount,
+            MAIN_COIN_CONFIG.decimals,
+            MAIN_COIN_CONFIG.decimals
+          ) +
+          " " +
+          MAIN_COIN_CONFIG.symbol;
+        showTo = txDetail.to;
+      }
+    } else {
+      const accountUpdates = txDetail.body.zkappCommand?.accountUpdates;
+      const result = getZkAppUpdateInfo(
+        accountUpdates,
+        currentAccount.address,
+        tokenInfo.tokenId
+      );
+      const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
+      showAmount = getBalanceForUI(
+        result.totalBalanceChange,
+        tokenDecimal,
+        tokenDecimal
+      );
+      showAmount = showAmount + " " +tokenInfo?.tokenNetInfo?.tokenSymbol;
+      showTo = result.to;
+      showFrom = result.from;
+    }
+
     let memo = txDetail.memo || "";
     let fee =
-      getAmountDisplay(
+      getBalanceForUI(
         txDetail.fee,
         MAIN_COIN_CONFIG.decimals,
         MAIN_COIN_CONFIG.decimals
@@ -64,11 +120,9 @@ const Record = ({}) => {
     let txTime = txDetail.dateTime ? getShowTime(txDetail.dateTime) : "";
     let nonce = String(txDetail.nonce);
     let txHash = txDetail.hash;
-    let kindLow = txDetail.kind?.toLowerCase();
-    let typeCamelCase = kindLow!== "zkapp";
-    let txType = txDetail.kind
-    if(kindLow == "stake_delegation"){
-      txType = "delegation"
+    let txType = txDetail.kind;
+    if (kindLow == "stake_delegation") {
+      txType = "delegation";
     }
 
     let contentList = [
@@ -79,15 +133,15 @@ const Record = ({}) => {
       },
       {
         title: i18n.t("amount"),
-        content: amount,
+        content: showAmount,
       },
       {
         title: i18n.t("to"),
-        content: receiveAddress,
+        content: showTo,
       },
       {
         title: i18n.t("from"),
-        content: sendAddress,
+        content: showFrom,
         showScamTag: txDetail.isFromAddressScam,
       },
     ];
@@ -121,8 +175,10 @@ const Record = ({}) => {
     );
     return {
       contentList,
+      isZkReceive,
+      isMainCoin,
     };
-  }, [i18n, txDetail]);
+  }, [i18n, txDetail, tokenInfo, currentAccount]);
 
   const getExplorerUrl = useCallback(() => {
     let currentNode = netConfig.currentNode;
@@ -164,11 +220,17 @@ const Record = ({}) => {
 
   return (
     <CustomView title={i18n.t("details")} contentClassName={styles.container}>
-      <StatusRow txDetail={txDetail} />
+      <StatusRow
+        txDetail={txDetail}
+        isZkReceive={isZkReceive}
+        isMainCoin={isMainCoin}
+      />
       <div className={styles.dividedLine} />
-      {contentList.map((item, index) => {
-        return <DetailRow key={index} {...item} />;
-      }, [])}
+      <StyledWrapper>
+        {contentList.map((item, index) => {
+          return <DetailRow key={index} {...item} />;
+        })}
+      </StyledWrapper>
       {showExplorer && (
         <div className={styles.explorerOuter}>
           <div className={styles.explorerContainer} onClick={onGoExplorer}>
@@ -231,7 +293,7 @@ const StyledTitle = styled.div`
   font-size: 14px;
   margin-top: 10px;
 `;
-const StatusRow = ({ txDetail }) => {
+const StatusRow = ({ txDetail, isMainCoin, isZkReceive }) => {
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -267,6 +329,10 @@ const StatusRow = ({ txDetail }) => {
         break;
       case "zkapp":
         StatusIcon = <IconZkApp fill={icon_color} />;
+        if (!isMainCoin) {
+          StatusIcon = <IconPayment fill={icon_color} />;
+          isReceive = isZkReceive;
+        }
         break;
       default:
         break;
@@ -277,7 +343,7 @@ const StatusRow = ({ txDetail }) => {
       isReceive,
       icon_color,
     };
-  }, [txDetail, currentAccount]);
+  }, [txDetail, currentAccount, isMainCoin, isZkReceive]);
 
   return (
     <StyledRowWrapper>

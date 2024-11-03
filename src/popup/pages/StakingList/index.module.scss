@@ -4,10 +4,10 @@
 
 .inputCon {
 
-  position: fixed;
   width: 100%;
   background-color: white;
   padding: 0 20px 10px;
+  max-width: 375px;
   .customInputContainer {
     background: rgba(0, 0, 0, 0.05);
     border: 0.5px solid transparent;
@@ -27,7 +27,6 @@
 }
 
 .listContainer {
-  margin-top: 58px;
   padding: 0 20px;
   overflow: auto;
 }

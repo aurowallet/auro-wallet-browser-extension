@@ -186,6 +186,7 @@
 
         gap: 15px;
         padding: 12px 0px 20px;
+        max-width: 375px;
     }
     // }
     .highContent {
@@ -202,7 +203,7 @@
         line-height: 17px;
         color: rgba(0, 0, 0, 0.8);
         margin: 0;
-        max-height: calc(100vh - 360px); // message
+        height: calc(100vh - 500px); // message
         overflow-y: auto;
         width: 100%;
         overflow-wrap: break-word;

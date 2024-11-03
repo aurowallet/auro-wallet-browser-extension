@@ -78,7 +78,7 @@
   "copySuccess": "已复制",
   "receive": "接收",
   "scanPay": "扫码支付",
-  "addressQrTip": "扫描二维码，转入 MINA",
+  "addressQrTip": "扫描二维码，转入 <b>{{symbol}}</b>",
   "copy": "复制",
   "ledgerNotSupport": "此浏览器暂时不支持 Ledger",
   "accountManage": "账户管理",
@@ -287,5 +287,13 @@
   "showTestnet": "显示测试网",
   "ledgerConnected": "Ledger 已连接",
   "ledgerNotConnected": "Ledger 未连接",
-  "txType":"交易类型"
+  "txType": "交易类型",
+  "updateAccount": "账户不匹配，请切换账户后重试",
+  "selectAsset": "选择资产",
+  "assetManagement": "资产管理",
+  "newTokenFound": "发现了{{count}}个新代币",
+  "ignore": "忽略",
+  "updateTokenInfo": "更新您的代币信息？",
+  "noTxHistory": "没有交易历史",
+  "tokens": "TOKENS"
 }

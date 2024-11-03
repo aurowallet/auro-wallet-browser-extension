@@ -3,10 +3,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { getBaseInfo } from "../../background/api";
-import { FROM_BACK_TO_RECORD, SET_LOCK } from "../../constant/msgTypes";
+import { FROM_BACK_TO_RECORD, SET_LOCK, WORKER_ACTIONS } from "../../constant/msgTypes";
 import { languageInit } from "../../i18n";
 import { setLanguage } from "../../reducers/appReducer";
-import { updateExtensionBaseInfo } from "../../reducers/cache";
+import { updateExtensionBaseInfo, updatePopupLockStatus } from "../../reducers/cache";
 import {
   ENTRY_WITCH_ROUTE,
   updateEntryWitchRoute,
@@ -17,6 +17,7 @@ import HomePage from "./Main";
 import SignTransaction from "./SignTransaction";
 import Welcome from "./Welcome";
 import styled, { keyframes } from "styled-components";
+import TokenSignPage from "./Send/tokenSign";
 
 const MainRouter = () => {
   const dispatch = useDispatch();
@@ -42,10 +43,13 @@ const MainRouter = () => {
 
   useEffect(() => {
     let lockEvent = (message, sender, sendResponse) => {
-      const { type, action } = message;
-      if (type === FROM_BACK_TO_RECORD && action === SET_LOCK) {
-        dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
-        history.push("/lock_page");
+      const { type, action, payload } = message;
+      if (type === FROM_BACK_TO_RECORD && action === WORKER_ACTIONS.SET_LOCK) {
+        if(!payload){
+          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
+          history.push("/lock_page");
+        }
+        dispatch(updatePopupLockStatus(!payload))
         sendResponse()
       }
       return false;
@@ -65,12 +69,6 @@ const MainRouter = () => {
         return;
       case ENTRY_WITCH_ROUTE.LOCK_PAGE:
         setNextRoute(<LockPage />);
-        return;
-      case ENTRY_WITCH_ROUTE.DAPP_APPROVE_PAGE:
-        setNextRoute(<ApprovePage />);
-        return;
-      case ENTRY_WITCH_ROUTE.DAPP_SIGN_PAGE:
-        setNextRoute(<SignTransaction />);
         return;
       default:
         setNextRoute(<LoadingView />);
@@ -111,3 +109,4 @@ const LoadingView = () => {
     </StyledLoadingWrapper>
   );
 };
+

@@ -5,6 +5,7 @@ import { Trans } from "react-i18next";
 import { useDispatch } from "react-redux";
 import { LEDGER_PAGE_TYPE } from "../../../constant/commonType";
 import {
+  ACCOUNT_ACTIONS,
     GET_LEDGER_ACCOUNT_NUMBER,
     GET_WALLET_LOCK_STATUS,
     WALLET_IMPORT_LEDGER
@@ -186,7 +187,7 @@ const LedgerConnectView = ({ onClickNext, tipContent,isShowSuccessTip,isLedgerPe
     <div className={styles.viewOuter}>
       <div className={styles.viewTitle}>{viewTitle}</div>
       <div className={styles.viewTip}>{i18n.t("selectHardware")}</div>
-      <img src="/img/ledger-logo.svg" className={styles.ledgerIcon} />
+      <img src="/img/ledgerBorderLogo.svg" className={styles.ledgerIcon} />
       <div className={styles.viewTip}>{i18n.t("getStarted")}</div>
       <div className={styles.startDesc}>{i18n.t("ledgerStartDesc")}</div>
 
@@ -279,6 +280,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
               }
             } else {
               dispatch(updateCurrentAccount(account));
+              sendMsg({ action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,payload:account.address }); 
               onClickNext && onClickNext();
             }
           }

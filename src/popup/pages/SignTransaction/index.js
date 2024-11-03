@@ -1,19 +1,13 @@
-import { getBalance } from "@/background/api";
 import {
   DAPP_ACTION_CANCEL_ALL,
   GET_SIGN_PARAMS,
   WALLET_GET_CURRENT_ACCOUNT,
 } from "@/constant/msgTypes";
+import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Loading from "@/popup/component/Loading";
 import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
-import { updateNetAccount } from "@/reducers/accountReducer";
-import { updateDAppOpenWindow } from "@/reducers/cache";
-import {
-  ENTRY_WITCH_ROUTE,
-  updateEntryWitchRoute,
-} from "@/reducers/entryRouteReducer";
+import { updateShouldRequest } from "@/reducers/accountReducer";
 import { sendMsg } from "@/utils/commonMsg";
-import { getQueryStringArgs } from "@/utils/utils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -21,11 +15,13 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
-import { LockPage } from "../Lock";
+import {
+  refreshZkSignPopup,
+  updateSignZkModalStatus,
+} from "../../../reducers/popupReducer";
 import SignView from "./SignView";
-import styles from "./index.module.scss";
 import ZkAppChainView from "./ZkAppChainView";
+import styles from "./index.module.scss";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
@@ -58,9 +54,8 @@ const ZKAPP_CHAIN_ACTION = [
 
 const SignTransaction = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
   const isFirstRequest = useRef(true);
-  const isShowLoading = useRef(false)
+  const isShowLoading = useRef(false);
 
   const [pendingSignList, setPendingSignList] = useState([]);
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
@@ -74,64 +69,56 @@ const SignTransaction = () => {
     notifyViewStatus: false,
   });
 
-  const dappWindow = useSelector((state) => state.cache.dappWindow);
   const inferredNonce = useSelector(
-    (state) => state.accountInfo.netAccount.inferredNonce
+    (state) => state.accountInfo.mainTokenNetInfo?.inferredNonce
   );
+
+  const popupLockStatus = useSelector((state) => state.cache.popupLockStatus);
+
+  const signZkRefresh = useSelector(
+    (state) => state.popupReducer.signZkRefresh
+  );
+
   const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
     inferredNonce
   );
   useEffect(() => {
-    if (inferredNonce) {
-      setNextUseInferredNonce(inferredNonce);
-    }
+    setNextUseInferredNonce(inferredNonce);
   }, [inferredNonce]);
 
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
+
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
+
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
 
-  const [lockStatus, setLockStatus] = useState(false);
-
-  const params = useMemo(() => {
-    let url = dappWindow.url || window.location?.href || "";
-    return getQueryStringArgs(url);
-  }, [dappWindow]);
-
   const fetchAccountInfo = useCallback(async () => {
-    if(isShowLoading.current){
-      Loading.show()
+    if (isShowLoading.current) {
+      Loading.show();
     }
-    let account = await getBalance(currentAddress);
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account));
-    }
+    dispatch(updateShouldRequest(true, true));
+    await fetchAccountData();
     isFirstRequest.current = false;
     Loading.hide();
   }, [dispatch, currentAddress]);
-
-  const onClickUnLock = useCallback(() => {
-    setLockStatus(true);
-  }, [currentAccount, params]);
 
   const getSignParams = useCallback(() => {
     sendMsg(
       {
         action: GET_SIGN_PARAMS,
-        payload: {
-          openId: params.openId,
-        },
       },
       (res) => {
-        const { signRequests, notificationRequests, topItem } = res;
+        dispatch(refreshZkSignPopup(false));
+        const { signRequests, chainRequests, topItem } = res;
         setPendingSignList(signRequests);
 
-        if (notificationRequests.length > 0) {
+        if (chainRequests.length > 0) {
           // current support 1 event
-          setNotifyData(notificationRequests[0]);
+          setNotifyData(chainRequests[0]);
         }
 
         if (
@@ -151,37 +138,28 @@ const SignTransaction = () => {
             const firstSignParams = signRequests[0];
             const sendAction = firstSignParams?.params?.action || "";
             if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-              isShowLoading.current = true
+              isShowLoading.current = true;
             }
           }
-          if(currentSignIndex < (signRequests.length-1)){
-            setRightArrowStatus(false)
+          if (currentSignIndex < signRequests.length - 1) {
+            setRightArrowStatus(false);
           }
         }
       }
     );
-  }, [params, pendingSignList,currentSignIndex]);
+  }, [pendingSignList, currentSignIndex]);
 
   useEffect(() => {
-    sendMsg(
-      {
-        action: WALLET_GET_CURRENT_ACCOUNT,
-      },
-      async (currentAccount) => {
-        setLockStatus(currentAccount.isUnlocked);
-      }
-    );
-  }, [dappWindow]);
-
-  useEffect(() => {
-    if(lockStatus){
+    if (!popupLockStatus) {
       fetchAccountInfo();
     }
-  }, [fetchAccountInfo,lockStatus]);
-  
+  }, [fetchAccountInfo, popupLockStatus]);
+
   useEffect(() => {
-    getSignParams();
-  }, [window.location?.href]);
+    if (signZkRefresh) {
+      getSignParams();
+    }
+  }, [signZkRefresh]);
 
   const { leftArrowColor, rightArrowColor } = useMemo(() => {
     let leftArrowColor =
@@ -232,14 +210,6 @@ const SignTransaction = () => {
     setCurrentSignIndex(nextIndex);
   }, [pendingSignList, rightArrowStatus, currentSignIndex]);
 
-  const goToHome = useCallback(() => {
-    let url = dappWindow?.url;
-    if (url) {
-      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-    }
-    dispatch(updateDAppOpenWindow({}));
-  }, [dappWindow, showMultiView]);
-
   const onRemoveNotify = useCallback(() => {
     setNotifyData({});
     if (pendingSignList.length > 0) {
@@ -248,7 +218,7 @@ const SignTransaction = () => {
         notifyViewStatus: false,
       });
     } else {
-      goToHome();
+      dispatch(updateSignZkModalStatus(false));
     }
   }, [pendingSignList]);
   const onRemoveTx = useCallback(
@@ -272,7 +242,7 @@ const SignTransaction = () => {
           setPendingSignList(signList);
           setCurrentSignIndex(0);
         } else {
-          goToHome();
+          dispatch(updateSignZkModalStatus(false));
         }
         return;
       }
@@ -291,7 +261,7 @@ const SignTransaction = () => {
         }
       }
     },
-    [pendingSignList, nextUseInferredNonce, goToHome, notifyData]
+    [pendingSignList, nextUseInferredNonce, notifyData]
   );
   /** reject all tx */
   const onRejectAll = useCallback(() => {
@@ -311,7 +281,7 @@ const SignTransaction = () => {
         notifyViewStatus: true,
       });
     } else {
-      goToHome();
+      dispatch(updateSignZkModalStatus(false));
     }
   }, [pendingSignList, notifyData]);
 
@@ -327,15 +297,6 @@ const SignTransaction = () => {
     [advanceData]
   );
 
-  if (!lockStatus) {
-    return (
-      <LockPage
-        onDappConfirm={true}
-        onClickUnLock={onClickUnLock}
-        history={history}
-      />
-    );
-  }
   return (
     <div className={styles.container}>
       {showMultiView && state.signViewStatus && (

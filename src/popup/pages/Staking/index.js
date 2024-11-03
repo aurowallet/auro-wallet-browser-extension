@@ -12,7 +12,7 @@ import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo } from "../../..
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationKey } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, copyText, getAmountForUI, isNumber } from "../../../utils/utils";
+import { addressSlice, copyText, isNumber } from "../../../utils/utils";
 import Button, { button_size } from "../../component/Button";
 import Clock from "../../component/Clock";
 import CustomView from "../../component/CustomView";
@@ -22,13 +22,13 @@ import { MAIN_COIN_CONFIG } from "@/constant";
 
 const Staking = ({ }) => {
 
-  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
   const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
   const block = useSelector(state => state.staking.block)
   const daemonStatus = useSelector(state => state.staking.daemonStatus)
   const dispatch = useDispatch()
 
-  const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === netAccount.delegate ? "" : netAccount.delegate)
+  const [delegatePublicKey, setDelegatePublicKey] = useState(currentAddress === mainTokenNetInfo?.delegateAccount?.publicKey ? "" : mainTokenNetInfo?.delegateAccount?.publicKey)
   const [loading, setLoading] = useState(false)
   const isFirstRequest = useRef(!isNumber(daemonStatus?.consensusConfiguration?.slotsPerEpoch));
 
@@ -160,7 +160,7 @@ const DelegationInfo = ({
 
   const history = useHistory()
   const stakingList = useSelector(state => state.staking.stakingList)
-  const accountInfo = useSelector(state => state.accountInfo)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
 
   const onChangeNode = useCallback(() => {
     history.push({
@@ -183,12 +183,12 @@ const DelegationInfo = ({
         nodeName = delegateNode.nodeName || addressSlice(delegateNode.nodeAddress, 8);
       }
     }
-    let stakedBalance = accountInfo.balance || "0.00"
+    let stakedBalance = mainTokenNetInfo?.tokenBaseInfo?.showBalance || "0.00"
     stakedBalance = stakedBalance + " "+ MAIN_COIN_CONFIG.symbol
     return {
       showNodeAddress, nodeName,stakedBalance
     }
-  }, [delegatePublicKey, stakingList,accountInfo])
+  }, [delegatePublicKey, stakingList,mainTokenNetInfo])
  
   return (<div className={styles.delegationContainer}>
     <div className={styles.delegationRow}>

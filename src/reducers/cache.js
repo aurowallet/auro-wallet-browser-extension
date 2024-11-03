@@ -26,23 +26,24 @@ const UPDATE_ADDRESS_DETAIL = "UPDATE_ADDRESS_DETAIL";
 
 const UPDATE_ADDRESS_BOOK_FROM = "UPDATE_ADDRESS_BOOK_FROM";
 
-const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE";
 
 const UPDATE_DAPP_ACCOUNT_LIST = "UPDATE_DAPP_ACCOUNT_LIST";
 
 const UPDATE_ACCOUNT_BALANCE_LIST = "UPDATE_ACCOUNT_BALANCE_LIST";
 
-export const UPDATE_DAPP_CURRENT_OPEN_WINDOW =
-  "UPDATE_DAPP_CURRENT_OPEN_WINDOW";
 
 const UPDATE_RECOMMEND_FEE_LIST = "UPDATE_RECOMMEND_FEE_LIST";
 
 const UPDATE_ACCOUNT_TYPE_COUNT = "UPDATE_ACCOUNT_TYPE_COUNT";
 
-export function updateCurrentPrice(price) {
+const UPDATE_NEXT_TOKEN_DETAIL = "UPDATE_NEXT_TOKEN_DETAIL";
+
+const UPDATE_POPUP_LOCK_STATUS = "UPDATE_POPUP_LOCK_STATUS"
+
+export function updatePopupLockStatus(status) {
   return {
-    type: UPDATE_CURRENT_PRICE,
-    price,
+    type: UPDATE_POPUP_LOCK_STATUS,
+    status,
   };
 }
 
@@ -107,18 +108,6 @@ export function updateDappSelectList(selectList) {
   };
 }
 
-/**
- * update dapp opened window
- * @param {*} dappWindow
- * @returns
- */
-export function updateDAppOpenWindow(dappWindow) {
-  return {
-    type: UPDATE_DAPP_CURRENT_OPEN_WINDOW,
-    dappWindow,
-  };
-}
-
 export function updateAccountBalanceList(accountDetail) {
   return {
     type: UPDATE_ACCOUNT_BALANCE_LIST,
@@ -139,6 +128,14 @@ export function updateAccountTypeCount(countMap) {
     countMap,
   };
 }
+
+export function updateNextTokenDetail(token) {
+  return {
+    type: UPDATE_NEXT_TOKEN_DETAIL,
+    token,
+  };
+}
+
 const initState = {
   fromType: "",
   accountInfo: {},
@@ -157,10 +154,8 @@ const initState = {
 
   addressDetail: {},
   addressBookFrom: "",
-  currentPrice: "",
   dappAccountList: [],
 
-  dappWindow: {},
   accountBalanceList: {},
   feeRecommend: [],
 
@@ -169,10 +164,12 @@ const initState = {
     import: 1,
     ledger: 1,
   },
+  nextTokenDetail: {},
+  popupLockStatus:false
 };
 
 const cacheReducer = (state = initState, action) => {
-  switch (action.type) {
+  switch (action.type) { 
     case SET_ACCOUNT_INFO:
       let accountInfo = action.info;
       return {
@@ -221,20 +218,10 @@ const cacheReducer = (state = initState, action) => {
         addressBookFrom: action.from,
       };
 
-    case UPDATE_CURRENT_PRICE:
-      return {
-        ...state,
-        currentPrice: action.price,
-      };
     case UPDATE_DAPP_ACCOUNT_LIST:
       return {
         ...state,
         dappAccountList: action.selectList,
-      };
-    case UPDATE_DAPP_CURRENT_OPEN_WINDOW:
-      return {
-        ...state,
-        dappWindow: action.dappWindow,
       };
     case UPDATE_ACCOUNT_BALANCE_LIST:
       let accountBalanceDetail = action.accountDetail;
@@ -261,6 +248,16 @@ const cacheReducer = (state = initState, action) => {
       return {
         ...state,
         accountTypeCount: accountTypeCount,
+      };
+    case UPDATE_NEXT_TOKEN_DETAIL:
+      return {
+        ...state,
+        nextTokenDetail: action.token || {},
+      };
+    case UPDATE_POPUP_LOCK_STATUS:
+      return {
+        ...state,
+        popupLockStatus: action.status
       };
     default:
       return state;

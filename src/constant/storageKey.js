@@ -45,21 +45,13 @@ export const LOCAL_BASE_INFO = "LOCAL_BASE_INFO"
  */
 export const LOCAL_CACHE_KEYS = {
     /**
-     * Transaction Record
-     */
-    "TRANSACTION_HISTORY": "TRANSACTION_HISTORY",
-    /**
-     * pending history
-     */
-    "PENDING_TRANSACTION_HISTORY": "PENDING_TRANSACTION_HISTORY",
-    /**
      * balance 
      */
     "ACCOUNT_BALANCE": "ACCOUNT_BALANCE",
     /**
      * PRICE 
      */
-    "COIN_PRICE": "COIN_PRICE",
+    "COIN_PRICE": "COIN_PRICE_V2",
     /**
      * block information   
      */
@@ -79,17 +71,24 @@ export const LOCAL_CACHE_KEYS = {
      */
     "STAKING_LIST": "STAKING_LIST",
 
+    /**
+     * base token assets
+     */
+    "BASE_TOKEN_ASSETS": "BASE_TOKEN_ASSETS",
 
     /**
-     * zkapp transaction list 
+     * save all token tx history
      */
-    "ZKAPP_TX_LIST": "ZKAPP_TX_LIST",
+    "ALL_TX_HISTORY":"ALL_TX_HISTORY"
+}
 
-    /**
-     * zkapp transaction list 
-     */
-    "ZKAPP_PENDING_TX_LIST": "ZKAPP_PENDING_TX_LIST",
+/**
+ * stable account storage, do not clear when change account or network
+ */
+export const STABLE_LOCAL_ACCOUNT_CACHE_KEYS = {
+    "TOKEN_CONFIG": "TOKEN_CONFIG",
 
+    "SHOWED_TOKEN": "SHOWED_TOKEN",
 }
 
 
@@ -122,3 +121,9 @@ export const NETWORK_SHOW_TESTNET = "NETWORK_SHOW_TESTNET"
 
 
 export const ZKAPP_APPROVE_LIST = "ZKAPP_APPROVE_LIST"
+
+
+/**
+ * current token list
+ */
+export const SUPPORT_TOKEN_LIST= "SUPPORT_TOKEN_LIST"

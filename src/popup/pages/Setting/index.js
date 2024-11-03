@@ -63,7 +63,7 @@ const Setting = ({ }) => {
             return autoLockTime
         }
         const getNetwork = () => {
-            return showNameSlice(currentNode.name,10)
+            return showNameSlice(currentNode.name,12)
         }
         const getLanguage = () => {
             let currentLanguage = languageOption.filter((language) => {
@@ -146,33 +146,6 @@ const Setting = ({ }) => {
         }
     }, [i18n, currentNode, currency, dispatch, connectCount, currentLockTime])
 
-    const [showOpenTabStatus,setShowOpenTabStatus] = useState(true)
-    useEffect(()=>{
-      const url = new URL(window.location.href); 
-      if (url.pathname.indexOf('popup.html') !==-1) {
-          setShowOpenTabStatus(true)
-      }else{
-          setShowOpenTabStatus(false)
-      }
-    },[window.location.href])
-
-    const onClickRightIcon = useCallback( async() => {
-        if(!showOpenTabStatus){
-            return 
-        }
-        const url = new URL(window.location.href); 
-        let targetUrl = './notification.html#/'
-        if (!url.searchParams.has('aurowalletPopup')) {
-            url.searchParams.set('aurowalletPopup', '1');
-            await openPopupWindow(targetUrl, 'aurowalletPopup', undefined, {
-                left: window.screenLeft,
-                top: window.screenTop,
-            })
-            window.close();
-        }else{
-            fitPopupWindow()
-        }
-    }, [showOpenTabStatus])
     
 
    
@@ -185,8 +158,6 @@ const Setting = ({ }) => {
         title={i18n.t('setting')}
         customTitleClass={styles.customTitleClass}
         onClickTitle={onClickTitle}
-        rightIcon={showOpenTabStatus ? "/img/icon_new_window.svg":""}
-        onClickRightIcon={onClickRightIcon}
         rightHoverContent={i18n.t('popOutWindow')}
         contentClassName={styles.contentClassName}
     >

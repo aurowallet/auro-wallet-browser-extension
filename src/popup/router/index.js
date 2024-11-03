@@ -43,6 +43,8 @@ import StakingTransfer from '../pages/StakingTransfer';
 import Welcome from '../pages/Welcome';
 import { CreateProcessPage } from '../pages/CreateProcessPage';
 import AddAccount from '../pages/AddAccount';
+import TokenDetail from '../pages/TokenDetail';
+import TokenSignPage from '../pages/Send/tokenSign';
 
 
 
@@ -93,6 +95,7 @@ export function getAllRouter() {
 
         <Route path="/request_sign" component={SignTransaction} />
         <Route path="/approve_page" component={ApprovePage} />
+        <Route path="/token_sign" component={TokenSignPage} />
         
         <Route path={"/app_connection"} component={AppConnection}/>
         <Route path={"/auto_lock"} component={AutoLock}/>
@@ -103,6 +106,7 @@ export function getAllRouter() {
         <Route path={"/createprocess"} component={CreateProcessPage}/>
         <Route path={"/add_account"} component={AddAccount}/>
         
+        <Route path={"/token_detail"} component={TokenDetail}/>
       </Switch>
     </HashRouter>
   );

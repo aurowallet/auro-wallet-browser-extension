@@ -25,6 +25,9 @@ import styles from "./index.module.scss";
 import styled from "styled-components";
 
 const AccountManagePage = ({}) => {
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
   const dispatch = useDispatch();
   const history = useHistory();
   const isMounted = useRef(true);
@@ -32,40 +35,6 @@ const AccountManagePage = ({}) => {
   const [commonAccountList, setCommonAccountList] = useState([]);
   const [watchModeAccountList, setWatchModeAccountList] = useState([]);
 
-  const [currentAddress, setCurrentAddress] = useState("");
-
-  const setBalance2Account = useCallback((accountList, accountBalanceMap) => {
-    if (accountBalanceMap && Object.keys(accountBalanceMap).length === 0) {
-      return accountList;
-    }
-    let nextAccountList = [...accountList];
-    for (let index = 0; index < nextAccountList.length; index++) {
-      const account = nextAccountList[index];
-      let accountBalance = accountBalanceMap[account.address];
-      if (accountBalance) {
-        let balance = accountBalance.balance.total;
-        balance = amountDecimals(balance, MAIN_COIN_CONFIG.decimals);
-        nextAccountList[index].balance = balance;
-      }
-    }
-    return nextAccountList;
-  }, []);
-
-  const setBalanceMap = useCallback(
-    (commonAccountList, watchModeAccountList, tempBalanceList) => {
-      let tempCommonAccountList = setBalance2Account(
-        commonAccountList,
-        tempBalanceList
-      );
-      let tempWatchModeAccountList = setBalance2Account(
-        watchModeAccountList,
-        tempBalanceList
-      );
-      setCommonAccountList(tempCommonAccountList);
-      setWatchModeAccountList(tempWatchModeAccountList);
-    },
-    [setBalance2Account, commonAccountList, watchModeAccountList]
-  );
 
   const getAccountTypeIndex = useCallback((list) => {
     if (list.length === 0) {
@@ -76,10 +45,9 @@ const AccountManagePage = ({}) => {
   }, []);
 
   const fetchBalance = useCallback(
-    async (addressList, commonAccountList, watchModeAccountList) => {
+    async (addressList) => {
       let tempBalanceList = await getBalanceBatch(addressList);
       dispatch(updateAccountList(tempBalanceList));
-      setBalanceMap(commonAccountList, watchModeAccountList, tempBalanceList);
     },
     []
   );
@@ -117,12 +85,11 @@ const AccountManagePage = ({}) => {
         onUpdateAccountTypeCount(listData.allList);
         setCommonAccountList(listData.commonList);
         setWatchModeAccountList(listData.watchList);
-        setCurrentAddress(account.currentAddress);
 
         let addressList = listData.allList.map((item) => {
           return item.address;
         });
-        fetchBalance(addressList, listData.commonList, listData.watchList);
+        fetchBalance(addressList);
       }
     );
   }, []);
@@ -161,7 +128,6 @@ const AccountManagePage = ({}) => {
             let listData = account.accountList;
             if (listData.allList && listData.allList.length > 0) {
               dispatch(updateCurrentAccount(account.currentAccount));
-              setCurrentAddress(account.currentAddress);
               sendMsg(
                 {
                   action: DAPP_CHANGE_CONNECTING_ADDRESS,
@@ -277,14 +243,22 @@ const CommonAccountRow = ({
 }) => {
   const dispatch = useDispatch();
   const history = useHistory();
-
-  const [showBalance, setShowBalance] = useState(0);
-
-  useEffect(() => {
-    let balance = isNumber(account.balance) ? account.balance : 0;
-    balance = balance + " " + MAIN_COIN_CONFIG.symbol;
-    setShowBalance(balance);
-  }, [account.balance]);
+  const accountBalanceMap = useSelector(
+    (state) => state.accountInfo.accountBalanceMap
+  );
+  const{showBalance}= useMemo(()=>{
+    let showBalance = 0
+    let balanceMap = accountBalanceMap[account.address]
+    if(balanceMap){
+      let balance = balanceMap.balance.total;
+        balance = amountDecimals(balance, MAIN_COIN_CONFIG.decimals);
+        showBalance = balance
+    }
+    showBalance = showBalance + " " + MAIN_COIN_CONFIG.symbol;
+    return {
+      showBalance
+    }
+  },[accountBalanceMap,account.address])
 
   const getAccountType = useCallback(
     (item) => {

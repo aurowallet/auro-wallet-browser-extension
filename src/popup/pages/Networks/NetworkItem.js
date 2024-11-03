@@ -22,7 +22,7 @@ const StyledNetworkItemWrapper = styled.div`
   &:hover {
     border: 0.5px solid #594af1;
   }
-  ${(props) => (props.select == "true" ? selectedCss : unSelectedCss)};
+  ${(props) => (props.$checkStatus ? selectedCss : unSelectedCss)};
 `;
 
 const StyledNetworkTop = styled.div`
@@ -58,7 +58,7 @@ const StyledNetworkTypeWrapper = styled.div`
   margin-left: 10px;
   border-radius: 4px;
   padding: 1.5px 5px;
-  ${(props) => (props.select == "true" ? selectedTypeCss : unSelectedTypeCss)};
+  ${unSelectedTypeCss};
 `;
 const StyledNetworkType = styled.div`
   font-weight: 500;
@@ -118,7 +118,7 @@ const NetworkItem = ({
   return (
     <StyledNetworkItemWrapper
       onClick={() => onClickItem(nodeItem)}
-      select={String(select)}
+      $checkStatus={select}
       color={select && !editMode ? "#594af1" : "#f9fafc"}
     >
       <StyledNetworkLeft>

@@ -5,13 +5,14 @@ import { sendMsg } from "../utils/commonMsg";
 import { WALLET_RESET_LAST_ACTIVE_TIME } from "../constant/msgTypes";
 import { useCallback, useEffect, useState } from "react";
 import cls from "classnames";
-import { getRecommendFee, getScamList } from "../background/api";
+import { fetchSupportTokenInfo, getRecommendFee, getScamList } from "../background/api";
 import { updateRecommendFee } from "../reducers/cache";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../background/localStorage";
-import { RECOMMEND_FEE, SCAM_LIST } from "../constant/storageKey";
-import { updateScamList } from "../reducers/accountReducer";
+import { RECOMMEND_FEE, SCAM_LIST, SUPPORT_TOKEN_LIST } from "../constant/storageKey";
+import { updateScamList, updateSupportTokenList } from "../reducers/accountReducer";
 import { NetworkID_MAP } from "@/constant/network";
+import { getReadableNetworkId } from "@/utils/utils";
 
 function setLastActiveTime() {
   sendMsg(
@@ -25,6 +26,7 @@ function setLastActiveTime() {
 function App() {
   const dispatch = useDispatch();
   const currentNode = useSelector((state) => state.network.currentNode);
+  const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
 
   const [showFullStatus, setShowFullStatus] = useState(false);
   const [autoWidthStatus, setAutoWidthStatus] = useState(false);
@@ -35,7 +37,7 @@ function App() {
       "popup.html#/register_page",
       "popup.html#/createprocess",
     ];
-    const zkPage = ["popup.html#/approve_page", "popup.html#/request_sign"];
+    const zkPage = ["popup.html#/approve_page", "popup.html#/request_sign","popup.html#/token_sign"];
 
     zkPage.map((path) => {
       if (url.href.indexOf(path) !== -1) {
@@ -87,6 +89,13 @@ function App() {
     }
   }, []);
 
+  const initTokenNetInfo = useCallback(async()=>{
+    let tokenInfoList = await fetchSupportTokenInfo();
+    if (tokenInfoList.length > 0) {
+      dispatch(updateSupportTokenList(tokenInfoList));
+    }
+  },[])
+
   const initNetData = useCallback(() => {
     fetchFeeData();
     fetchScamList();
@@ -105,6 +114,24 @@ function App() {
   useEffect(() => {
     initNetData();
   }, []);
+
+  const loadLocalSupportToken = useCallback(()=>{
+    const readableNetworkId = getReadableNetworkId(currentNode.networkID);
+   let supportList = getLocal(SUPPORT_TOKEN_LIST + "_" + readableNetworkId)
+   if (supportList) {
+     let supportListJson = JSON.parse(supportList)
+     if (supportListJson) {
+       dispatch(updateSupportTokenList(supportListJson));
+     }
+   }
+ },[currentNode])
+
+  useEffect(() => {
+    if(shouldRefresh && currentNode?.networkID){
+      loadLocalSupportToken()
+      initTokenNetInfo();
+    }
+  }, [shouldRefresh,currentNode]);
 
   return (
     <div className="App">

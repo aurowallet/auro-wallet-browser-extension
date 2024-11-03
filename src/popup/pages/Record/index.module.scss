@@ -47,13 +47,14 @@
     position: fixed;
     bottom: 0;
     width: calc(100% - 40px) ;
+    max-width: calc(375px - 40px);
     background-color: white;
 }
 .explorerContainer {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 20px auto;
+    margin: 10px auto;
     cursor: pointer;
     width: fit-content;
     .explorerTitle {

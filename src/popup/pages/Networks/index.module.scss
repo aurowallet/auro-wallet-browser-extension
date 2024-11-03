@@ -19,9 +19,10 @@
 .bottomContainer {
     position: absolute;
     padding: 12px 38px 20px;
-    width: 100%;
+    width: 100% ;
     bottom: 0;
     background-color: white;
+    max-width: 375px;
 }
 
 .networkTitleWrapper {

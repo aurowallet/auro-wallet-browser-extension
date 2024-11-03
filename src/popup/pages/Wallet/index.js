@@ -1,61 +1,96 @@
-import BigNumber from "bignumber.js";
-import cls from "classnames";
+import FooterPopup from "@/popup/component/FooterPopup";
+import { PopupModalV2 } from "@/popup/component/PopupModalV2";
+import Tooltip from "@/popup/component/ToolTip/Tooltip";
 import extensionizer from "extensionizer";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { MAIN_COIN_CONFIG } from "../../../constant";
-import {
-  getBalance,
-  getCurrencyPrice,
-  getGqlTxHistory,
-  getPendingTxList,
-  getZkAppPendingTx,
-  getZkAppTxHistory,
-} from "../../../background/api";
-import { extSaveLocal } from "../../../background/extensionStorage";
+import { getCurrencyPrice } from "../../../background/api";
+
+import { saveLocal } from "@/background/localStorage";
+import { NetworkID_MAP } from "@/constant/network";
+import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
+import useFetchAccountData from "@/hooks/useUpdateAccount";
+import Clock from "@/popup/component/Clock";
+import styled, { css } from "styled-components";
 import {
   DAPP_DISCONNECT_SITE,
   DAPP_GET_CONNECT_STATUS,
   WALLET_GET_ALL_ACCOUNT,
 } from "../../../constant/msgTypes";
-import { NetworkID_MAP } from "../../../constant/network";
 import {
   ACCOUNT_BALANCE_CACHE_STATE,
-  updateAccountTx,
-  updateNetAccount,
+  updateCurrentPrice,
   updateShouldRequest,
-  updateStakingRefresh,
 } from "../../../reducers/accountReducer";
-import { setAccountInfo, updateCurrentPrice } from "../../../reducers/cache";
+import { setAccountInfo } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import {
   addressSlice,
-  clearLocalCache,
   copyText,
   getAmountForUI,
-  getDisplayAmount,
   getOriginFromUrl,
-  isNaturalNumber,
-  isNumber,
-  sendNetworkChangeMsg,
 } from "../../../utils/utils";
-import Clock from "../../component/Clock";
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
-import {
-  LoadingView,
-  NoBalanceDetail,
-  UnknownInfoView,
-} from "./component/StatusView";
-import TxListView from "./component/TxListView";
-import styles from "./index.module.scss";
 import NetworkSelect from "../Networks/NetworkSelect";
+import TokenListView from "./component/TokenListView";
 
+const StyledPageWrapper = styled.div`
+  background: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+`;
+const StyledHeaderBarWrapper = styled.div`
+  position: fixed;
+  width: 100%;
+  max-width: 375px;
+  z-index: 3;
+  background: #edeff2;
+`;
+const StyledHeaderBarContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+
+  padding: 10px 20px 0px;
+`;
+const StyledHeaderBarIcon = styled.img`
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  padding: 3px;
+
+  &:hover {
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+  }
+`;
+
+const StyledPageContent = styled.div`
+  margin-top: 58px;
+  overflow-y: auto;
+  background: #edeff2;
+`;
+const rightBtnStyle = css`
+  color: #d65a5a;
+`;
+const StyledConfirmContent = styled.div`
+  font-size: 14px;
+  line-height: 22px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0;
+`;
+const StyledTipsSpecial = styled.span`
+  color: #d65a5a;
+`;
 const Wallet = ({}) => {
   const history = useHistory();
+
   const [watchModalStatus, setWatchModalStatus] = useState(false);
 
   const toSetting = useCallback(() => {
@@ -93,53 +128,187 @@ const Wallet = ({}) => {
   }, []);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.toolbarContainer}>
-        <div className={styles.toolBar}>
-          <img
-            src="/img/menu.svg"
-            className={styles.menuIcon}
-            onClick={toSetting}
-          />
+    <StyledPageWrapper>
+      <StyledHeaderBarWrapper>
+        <StyledHeaderBarContent>
+          <StyledHeaderBarIcon src="/img/menu.svg" onClick={toSetting} />
           <NetworkSelect />
-          <img
-            src="/img/wallet.svg"
-            className={styles.walletIcon}
-            onClick={toManagePage}
-          />
-        </div>
-      </div>
-      <div className={styles.walletContent}>
+          <StyledHeaderBarIcon src="/img/wallet.svg" onClick={toManagePage} />
+        </StyledHeaderBarContent>
+      </StyledHeaderBarWrapper>
+      <StyledPageContent>
         <WalletInfo />
-        <WalletDetail />
-      </div>
-      <PopupModal
+        <TokenListView />
+      </StyledPageContent>
+
+      <PopupModalV2
         title={i18n.t("watchModeDeleteBtn")}
         leftBtnContent={i18n.t("cancel")}
         rightBtnContent={i18n.t("deleteTag")}
         onLeftBtnClick={onCloseWatchModal}
         onRightBtnClick={onWatchModalConfirm}
-        rightBtnStyle={styles.watchModalRightBtn}
+        rightBtnStyle={rightBtnStyle}
         componentContent={
-          <p className={styles.confirmContent}>
+          <StyledConfirmContent>
             <Trans
               i18nKey={i18n.t("watchModeDeleteTip")}
               components={{
-                red: <span className={styles.tipsSpecial} />,
+                red: <StyledTipsSpecial />,
               }}
             />
-          </p>
+          </StyledConfirmContent>
         }
         modalVisible={watchModalStatus}
       />
-    </div>
+    </StyledPageWrapper>
   );
 };
 export default Wallet;
 
+const StyledWalletInfoWrapper = styled.div`
+  border-radius: 20px;
+  background: ${(props) =>
+    props.netcolor ? props.netcolor : "rgba(0, 0, 0, 0.30)"};
+  margin: 10px 20px 20px;
+  padding: 20px;
+  position: relative;
+`;
+const StyledWalletBaseRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+const StyledWalletBaseLeft = styled.div`
+  display: flex;
+  align-items: center;
+`;
+const StyledWalletName = styled.div`
+  font-size: 16px;
+  line-height: 18px;
+  color: #ffffff;
+  font-weight: 600;
+`;
+
+const StyledWalletMore = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+`;
+const StyledWalletAddress = styled.div`
+  font-weight: 500;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0px;
+  cursor: pointer;
+
+  &:hover {
+    color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
+  }
+`;
+
+const cacheCss = css`
+  color: rgba(255, 255, 255, 0.6) !important;
+`;
+const StyledCurrencyRow = styled.div`
+  font-weight: 700;
+  font-size: 32px;
+  color: #ffffff;
+  margin-top: 20px;
+  ${(props) => props.$isCache && cacheCss}
+`;
+
+const StyledWalletBaseAction = styled.div`
+  box-sizing: border-box;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 10px;
+  z-index: 1;
+`;
+const StyledBaseBtn = styled.div`
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  color: ${(props) =>
+    props.netcolor ? props.netcolor : "rgba(0, 0, 0, 0.30)"};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+  padding: 10px 0px;
+  flex: 1;
+  cursor: pointer;
+`;
+const StyledSendBtn = styled(StyledBaseBtn)`
+  &:hover {
+    background: #f2f2f2;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+`;
+
+const borderCss = css`
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+`
+const StyledReceiveBtn = styled(StyledBaseBtn)`
+  &:hover {
+    background: #f2f2f2;
+    ${(props) => (props.$showStaking ? "" : borderCss)};
+  }
+`;
+
+const StyledStakeBtn = styled(StyledBaseBtn)`
+  &:hover {
+    background: #f2f2f2;
+    ${borderCss};
+  }
+`;
+const StyledDivideColumnWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0px;
+`;
+const StyledDivideColumn = styled.div`
+  border: 0.5px solid #f2f2f2;
+  height: 24px;
+`;
+
+const StyledIconBackground = styled.div`
+  position: absolute;
+  width: 100px;
+  object-fit: scale-down;
+  z-index: 1;
+  right: 20px;
+  top: 50px;
+`;
+const StyledZkConnectWrapper = styled.div`
+  margin-left: 6px;
+  display: flex;
+`;
+const StyledZkConnectStatus = styled.img`
+  cursor: pointer;
+  height: 20px;
+`;
 const WalletInfo = () => {
   const accountInfo = useSelector((state) => state.accountInfo);
-  const cache = useSelector((state) => state.cache);
+  const tokenTotalAmount = useSelector(
+    (state) => state.accountInfo.tokenTotalAmount
+  );
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const netConfig = useSelector((state) => state.network);
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
@@ -150,11 +319,14 @@ const WalletInfo = () => {
   const [currentAccount, setCurrentAccount] = useState(
     accountInfo.currentAccount
   );
+
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
   const [dappConnectStatus, setDappConnectStatus] = useState(false);
   const [dappIcon, setDappIcon] = useState("/img/dappUnConnect.svg");
 
   const [dappModalStatus, setDappModalStatus] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
+  const [tokenModalStatus, setTokenModalStatus] = useState(false);
   let isRequest = false;
 
   const { dappModalContent, leftBtnContent, rightBtnContent } = useMemo(() => {
@@ -175,44 +347,19 @@ const WalletInfo = () => {
 
   const {
     accountName,
-    deleText,
     showAddress,
-    balance,
-    showSmallBalanceClass,
     unitBalance,
-    showCurrency,
     isCache,
     showTip,
   } = useMemo(() => {
-    let netAccount = accountInfo.netAccount;
-    let balance = accountInfo.balance || "0.00";
-    balance = getDisplayAmount(balance);
-
-    let showSmallBalanceClass = (balance + "").length >= 14;
-
     let accountName = currentAccount?.accountName;
 
-    let delegateState =
-      netAccount?.delegate && netAccount?.delegate !== currentAccount.address;
-    let deleText = delegateState ? i18n.t("delegated") : i18n.t("undelegated");
-
     let showAddress = addressSlice(currentAccount.address);
-
-    let unitBalance = "--";
-    if (cache.currentPrice) {
-      unitBalance = new BigNumber(cache.currentPrice)
-        .multipliedBy(balance)
-        .toString();
-      unitBalance =
-        currencyConfig.currentCurrency.symbol +
-        " " +
-        getAmountForUI(unitBalance, 0, 2);
+    let currency = currencyConfig.currentCurrency.symbol;
+    let unitBalance = currency + " 0.00";
+    if (tokenTotalAmount) {
+      unitBalance = currency + " " + getAmountForUI(tokenTotalAmount, 0, 2);
     }
-    // format
-    balance = new BigNumber(balance).toFormat();
-
-    const networkID = netConfig.currentNode?.networkID;
-    let showCurrency = networkID == NetworkID_MAP.mainnet;
 
     let isCache =
       accountInfo.isAccountCache === ACCOUNT_BALANCE_CACHE_STATE.USING_CACHE;
@@ -222,19 +369,15 @@ const WalletInfo = () => {
       : i18n.t("dappDisconnect");
     return {
       accountName,
-      deleText,
       showAddress,
-      balance,
-      showSmallBalanceClass,
       unitBalance,
-      showCurrency,
       isCache,
       showTip,
     };
   }, [
     currentAccount,
     i18n,
-    cache,
+    tokenTotalAmount,
     currencyConfig,
     netConfig,
     accountInfo,
@@ -253,7 +396,7 @@ const WalletInfo = () => {
   }, [currentAccount]);
 
   const toSend = useCallback(() => {
-    history.push("send_page");
+    setTokenModalStatus(true);
   }, []);
   const toReceive = useCallback(() => {
     history.push("receive_page");
@@ -262,28 +405,6 @@ const WalletInfo = () => {
     history.push("staking");
   }, []);
 
-  const getDappConnect = useCallback(() => {
-    extensionizer.tabs.query(
-      { active: true, currentWindow: true },
-      function (tabs) {
-        let url = tabs[0]?.url || "";
-        let origin = getOriginFromUrl(url);
-        setSiteUrl(origin);
-        sendMsg(
-          {
-            action: DAPP_GET_CONNECT_STATUS,
-            payload: {
-              siteUrl: origin,
-              address: currentAccount.address,
-            },
-          },
-          (isConnected) => {
-            setDappConnectStatus(isConnected);
-          }
-        );
-      }
-    );
-  }, [currentAccount]);
 
   const setDappDisconnect = useCallback(() => {
     sendMsg(
@@ -328,132 +449,96 @@ const WalletInfo = () => {
   }, [dappConnectStatus]);
   useEffect(() => {
     setCurrentAccount(accountInfo.currentAccount);
-    getDappConnect();
   }, [accountInfo.currentAccount]);
 
   const fetchPrice = useCallback(
     async (currency) => {
-      let currentNode = netConfig.currentNode;
-      if (currentNode.networkID == NetworkID_MAP.mainnet) {
-        let lastCurrency = currencyConfig.currentCurrency;
-        if (currency) {
-          lastCurrency = currency;
-        }
-        let price = await getCurrencyPrice(lastCurrency.key);
-        if (isNumber(price)) {
-          dispatch(updateCurrentPrice(price));
-        }
+      let lastCurrency = currencyConfig.currentCurrency;
+      if (currency) {
+        lastCurrency = currency;
       }
+      let tokenPrice = await getCurrencyPrice(lastCurrency.key);
+      dispatch(updateCurrentPrice(tokenPrice));
     },
     [netConfig, currencyConfig]
   );
 
-  const fetchAccountData = useCallback(() => {
-    if (isRequest) {
-      return;
+  useEffect(() => {
+    if (shouldRefresh) {
+      fetchAccountData();
     }
-    isRequest = true;
-    let address = currentAccount.address;
-    getBalance(address)
-      .then((account) => {
-        if (account.publicKey) {
-          dispatch(updateNetAccount(account));
-        } else if (account.error) {
-          Toast.info(i18n.t("nodeError"));
-        }
-      })
-      .finally(() => {
-        isRequest = false;
-      });
-  }, [i18n, currentAccount]);
-
-  useEffect(() => {
-    fetchAccountData();
-  }, [
-    netConfig.currentNode.networkID,
-    fetchAccountData,
-    currentAccount.address,
-  ]);
-
-  useEffect(() => {
-    fetchAccountData();
-  }, [shouldRefresh]);
+  }, [shouldRefresh, fetchAccountData]);
 
   useEffect(() => {
     fetchPrice();
   }, [currencyConfig.currentCurrency, netConfig.currentNode.networkID]);
+
+  const { netcolor, showStaking, nextChainIcon } = useMemo(() => {
+    const networkID = netConfig.currentNode.networkID;
+    let netcolor = "rgba(0, 0, 0, 0.30)";
+    if (networkID === NetworkID_MAP.mainnet) {
+      netcolor = "#594AF1";
+    }
+    let showStaking = networkID?.startsWith("mina");
+    let isZeko = networkID?.startsWith("zeko");
+    let nextChainIcon = isZeko ? "/img/icon_zeko.svg" : "/img/icon_mina.svg";
+    return {
+      netcolor,
+      showStaking,
+      nextChainIcon,
+    };
+  }, [netConfig.currentNode.networkID]);
   return (
     <>
-      <div className={styles.walletInfoContainer}>
-        <img src="/img/walletBg.svg" className={styles.walletBg} />
-        <div className={styles.walletInfoTopContainer}>
-          <div className={styles.walletInfoTopLeftContainer}>
-            <div className={styles.walletInfoLeftTop}>
-              <p className={styles.accountName}>{accountName}</p>
-              <div className={styles.accountStatus}>{deleText}</div>
-              <div className={styles.dappContainer}>
-                <img
-                  src={dappIcon}
-                  className={styles.dappConnectIcon}
-                  onClick={onShowDappModal}
-                />
-                <div className={styles.baseTipContainer}>
-                  <span className={styles.baseTip}>{showTip}</span>
-                </div>
-              </div>
-            </div>
-            <div
-              className={styles.walletInfoLeftBottom}
-              onClick={onCopyAddress}
-            >
-              <p className={styles.accountAddress}>{showAddress}</p>
-            </div>
-          </div>
-          <div className={styles.dappConnectContainer} onClick={toAccountInfo}>
+      <StyledWalletInfoWrapper netcolor={netcolor}>
+        <StyledWalletBaseRow>
+          <StyledWalletBaseLeft>
+            <StyledWalletName>{accountName}</StyledWalletName>
+          </StyledWalletBaseLeft>
+          <StyledWalletMore onClick={toAccountInfo}>
             <img src="/img/pointMenu.svg" />
-          </div>
-        </div>
-        <div className={styles.assetsContainer}>
-          <div className={styles.amountNumberContainer}>
-            <p
-              className={cls(styles.amountNumber, {
-                [styles.balanceSizeMine]: showSmallBalanceClass,
-                [styles.cacheBalance]: isCache,
-              })}
-            >
-              {balance}
-            </p>
-            <span
-              className={cls(styles.amountSymbol, {
-                [styles.cacheBalance]: isCache,
-              })}
-            >
-              {MAIN_COIN_CONFIG.symbol}
-            </span>
-          </div>
-          <p
-            className={cls(styles.amountValue, {
-              [styles.fontHolder]: !showCurrency,
-            })}
-          >
-            {unitBalance}
-          </p>
-        </div>
-
-        <div className={styles.btnGroup}>
-          <p className={cls(styles.btn, styles.sendBtn)} onClick={toSend}>
+          </StyledWalletMore>
+        </StyledWalletBaseRow>
+        <StyledWalletAddress onClick={onCopyAddress}>
+          {showAddress}
+        </StyledWalletAddress>
+        <StyledCurrencyRow $isCache={isCache}>{unitBalance}</StyledCurrencyRow>
+        <StyledWalletBaseAction>
+          <StyledSendBtn netcolor={netcolor} onClick={toSend}>
             {i18n.t("send")}
-          </p>
-          <div className={cls(styles.hr, styles.sendBtnLine)} />
-          <p className={cls(styles.btn, styles.receiveBtn)} onClick={toReceive}>
+          </StyledSendBtn>
+          <StyledDivideColumnWrapper>
+            <StyledDivideColumn />
+          </StyledDivideColumnWrapper>
+          <StyledReceiveBtn
+            netcolor={netcolor}
+            onClick={toReceive}
+            $showStaking={showStaking}
+          >
             {i18n.t("receive")}
-          </p>
-          <div className={cls(styles.hr, styles.receiveBtnLine)} />
-          <p className={cls(styles.btn, styles.stakingBtn)} onClick={toStaking}>
-            {i18n.t("staking")}
-          </p>
-        </div>
-      </div>
+          </StyledReceiveBtn>
+          {showStaking && (
+            <>
+              <StyledDivideColumnWrapper>
+                <StyledDivideColumn />
+              </StyledDivideColumnWrapper>
+              <StyledStakeBtn netcolor={netcolor} onClick={toStaking}>
+                {i18n.t("staking")}
+              </StyledStakeBtn>
+            </>
+          )}
+        </StyledWalletBaseAction>
+        <StyledIconBackground>
+          <img src={nextChainIcon} />
+        </StyledIconBackground>
+      </StyledWalletInfoWrapper>
+      <FooterPopup
+        isOpen={tokenModalStatus}
+        onClose={() => setTokenModalStatus(false)}
+        title={i18n.t("selectAsset")}
+      >
+        <TokenListView isInModal={true} />
+      </FooterPopup>
       <PopupModal
         title={siteUrl}
         leftBtnContent={leftBtnContent}
@@ -463,100 +548,7 @@ const WalletInfo = () => {
         content={dappModalContent}
         modalVisible={dappModalStatus}
       />
+      <Clock schemeEvent={() => dispatch(updateShouldRequest(true, true))} />
     </>
-  );
-};
-
-const WalletDetail = () => {
-  const dispatch = useDispatch();
-  const isMounted = useRef(true);
-
-  const currentNode = useSelector((state) => state.network.currentNode);
-  const accountInfo = useSelector((state) => state.accountInfo);
-  const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
-  const isSilentRefresh = useSelector(
-    (state) => state.accountInfo.isSilentRefresh
-  );
-  const inferredNonce = useSelector(
-    (state) => state.accountInfo.netAccount.inferredNonce
-  );
-
-  const requestHistory = useCallback(
-    async (address = accountInfo.currentAccount.address) => {
-      let pendingTxList = getPendingTxList(address);
-      let gqlTxList = getGqlTxHistory(address);
-      let zkAppTxList = getZkAppTxHistory(address);
-      let getZkAppPending = getZkAppPendingTx(address);
-      await Promise.all([
-        gqlTxList,
-        pendingTxList,
-        zkAppTxList,
-        getZkAppPending,
-      ])
-        .then((data) => {
-          let newList = data[0];
-          let txPendingData = data[1];
-          let zkApp = data[2];
-          let txPendingList = txPendingData.txList;
-          let zkPendingList = data[3];
-          dispatch(
-            updateAccountTx(newList, txPendingList, zkApp, zkPendingList)
-          );
-        })
-        .finally(() => {
-          if (isMounted.current) {
-            dispatch(updateShouldRequest(false));
-          }
-        });
-    },
-    [accountInfo.currentAccount, currentNode]
-  );
-
-  const onClickRefresh = useCallback(() => {
-    dispatch(updateShouldRequest(true, true));
-    requestHistory();
-  }, [requestHistory]);
-
-  useEffect(() => {
-    if (shouldRefresh) {
-      requestHistory();
-    }
-  }, [shouldRefresh, requestHistory]);
-
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  let childView = <></>;
-  if (shouldRefresh && !isSilentRefresh) {
-    childView = <LoadingView />;
-  } else {
-    if (accountInfo.txList.length !== 0) {
-      childView = (
-        <TxListView
-          history={accountInfo.txList}
-          onClickRefresh={onClickRefresh}
-          showHistoryStatus={true}
-        />
-      );
-    } else {
-      if (isNaturalNumber(inferredNonce)) {
-        childView = <UnknownInfoView />;
-      } else {
-        childView = <NoBalanceDetail />;
-      }
-    }
-  }
-  return (
-    <div className={styles.walletDetail}>
-      {childView}
-      <Clock
-        schemeEvent={() => {
-          dispatch(updateShouldRequest(true, true));
-        }}
-      />
-    </div>
   );
 };

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+
+## [2.3.0]
+- Enhancements
+    - Add token support
+    - Add support for Zeko testnet
+    - Upgrade request config
+    - Remove support for Berkeley network
+    - Update lock icon
+    - Zk fee recommendation
+    - ZkApp recommend nonce
+
 ## [2.2.17]
 - Enhancements
     - Upgrade network config

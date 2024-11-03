@@ -8,6 +8,7 @@ import { sendMsg } from "./commonMsg";
 import bs58check from "bs58check";
 import { extGetLocal } from "../background/extensionStorage";
 import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
+import extension from 'extensionizer'
 /**
  * address slice
  * @param {*} address
@@ -47,28 +48,30 @@ export function toNonExponential(ExpNumber) {
  * @param {*} decimal
  */
 export function amountDecimals(amount, decimal = 0) {
+  // if decimal bigger than 100 , use 0
+  let nextDecimals = decimal
+  if(BigNumber(nextDecimals).gt(100)){
+    nextDecimals = 0
+  }
   let realBalance = new BigNumber(amount)
-    .dividedBy(new BigNumber(10).pow(decimal))
+    .dividedBy(new BigNumber(10).pow(nextDecimals))
     .toString();
   return realBalance;
 }
 
-/**
- * Impression amount conversion. 4 decimal places by default
- * @param {*} number
- * @param {*} fixed
- */
-export function getDisplayAmount(number, fixed = 4) {
-  if (isNaN(parseFloat(number)) || number === 0) {
-    return "0.00";
+export function getBalanceForUI(balance, decimal = 0, fixed = 4) {
+  try {
+    let nextBalance = amountDecimals(balance, decimal)
+    if (isNaN(parseFloat(nextBalance)) || nextBalance === 0) {
+      return "0.00";
+    }
+    let showBalance = new BigNumber(nextBalance).toFixed(Number(fixed), 1).toString();
+    return toNonExponential(showBalance);
+  } catch (error) {// for decimal error
+    return balance
   }
-  let showAmount = new BigNumber(number).toFixed(fixed, 1).toString();
-  return toNonExponential(showAmount);
 }
 
-export function getAmountDisplay(amount, decimal = 0, fixed = 4) {
-  return getDisplayAmount(amountDecimals(amount, decimal), fixed);
-}
 export function getAmountForUI(
   rawAmount,
   decimal = MAIN_COIN_CONFIG.decimals,
@@ -427,3 +430,38 @@ export function checkValidStrInList(list) {
     return typeof element === "string" && element.trim() !== "";
   });
 }
+
+/**
+ * @param {*} netToken 
+ * @param {*} localToken 
+ */
+export function mergeLocalConfigToNetToken(newTokens,localTokens){
+  const tokenMap = new Map();
+
+  localTokens.forEach(token => {
+    tokenMap.set(token.tokenId, token);
+  });
+
+  return newTokens.map((token)=>{
+    const localToken = tokenMap.get(token.tokenId);
+    if (localToken) {
+      return {
+        ...token,
+        localConfig:localToken.localConfig??{}
+      }
+    } else {
+      return token
+    }
+  })
+}
+
+export function getReadableNetworkId(networkId) {
+  return networkId.replace(/:/g, '_');
+}
+
+export function getExtensionAction(){
+  let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
+  const action = isManifestV3 ? chrome.action : chrome.browserAction;
+  return action
+}
+

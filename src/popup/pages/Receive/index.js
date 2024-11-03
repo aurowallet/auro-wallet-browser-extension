@@ -1,16 +1,17 @@
 import i18n from "i18next";
 import QRCode from "qrcode.react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
 import styled from "styled-components";
-import { POWER_BY } from "../../../constant";
+import { MAIN_COIN_CONFIG, POWER_BY } from "../../../constant";
 import { copyText } from "../../../utils/utils";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
-import { useHistory } from 'react-router-dom';
 const StyledPageWrapper = styled.div`
   width: 375px;
-  height: 600px;
+  height: 100vh;
   background-image: url("/img/receivePageBg.svg");
   background-size: cover;
   background-position: center;
@@ -48,12 +49,48 @@ const StyledPageTitle = styled.div`
   white-space: nowrap;
 `;
 
+const StyledAddressContent = styled.p`
+  font-size: 14px;
+  line-height: 17px;
+  text-align: center;
+  color: #000000;
+  margin: 22px auto 40px;
+  padding: 0 20px;
+  word-break: break-all;
+`;
+const StyledBoldPart = styled.span`
+  font-weight: 700;
+`;
+const StyledReceiveTip = styled.p`
+  margin: 36px auto 22px;
+  font-size: 14px;
+  line-height: 17px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.5);
+`;
+
 const ReceivePage = ({}) => {
   let history = useHistory();
   const accountInfo = useSelector((state) => state.accountInfo);
-  const [currentAccount, setCurrentAccount] = useState(
-    accountInfo.currentAccount
-  );
+  const token = useSelector((state) => state.cache.nextTokenDetail);
+  const currentAccount = useMemo(()=>{
+    return accountInfo.currentAccount
+  },[accountInfo])
+
+  const isShowToken = useMemo(() => {
+    let isFungibleToken = history.location.params?.isFungibleToken;
+    let isFromTokenPage = history.location.params?.isFromTokenPage;
+    return isFungibleToken && isFromTokenPage;
+  }, []);
+
+  
+  const { tokenSymbol } = useMemo(() => {
+    let tokenSymbol = MAIN_COIN_CONFIG.symbol;
+    if (isShowToken ) {
+      tokenSymbol = token?.tokenNetInfo?.tokenSymbol ?? "UNKNOWN";
+    }
+    return { tokenSymbol };
+  }, [isShowToken,token]);
 
   const onCopy = useCallback(() => {
     copyText(currentAccount.address).then(() => {
@@ -61,9 +98,19 @@ const ReceivePage = ({}) => {
     });
   }, [i18n, currentAccount]);
 
-  const onClickBack = useCallback(()=>{
-    history.goBack()
-  },[history])
+  const onClickBack = useCallback(() => {
+    history.goBack();
+  }, [history]);
+
+  const { mainPart, lastPart } = useMemo(() => {
+    const address = currentAccount.address;
+    const mainPart = address.slice(0, -6);
+    const lastPart = address.slice(-6);
+    return {
+      mainPart,
+      lastPart,
+    };
+  }, [currentAccount.address]);
 
   return (
     <StyledPageWrapper>
@@ -76,7 +123,15 @@ const ReceivePage = ({}) => {
       <div className={styles.content}>
         <p className={styles.title}>{i18n.t("scanPay")}</p>
         <div className={styles.dividedLine} />
-        <p className={styles.receiveTip}>{i18n.t("addressQrTip")}</p>
+        <StyledReceiveTip>
+          <Trans
+            i18nKey={"addressQrTip"}
+            values={{ symbol: tokenSymbol }}
+            components={{
+              b: <span className={styles.receiveBold} />,
+            }}
+          />
+        </StyledReceiveTip>
         <div className={styles.qrCodeContainer}>
           <QRCode
             value={currentAccount.address}
@@ -91,7 +146,10 @@ const ReceivePage = ({}) => {
             }}
           />
         </div>
-        <p className={styles.address}>{currentAccount.address}</p>
+        <StyledAddressContent>
+          {mainPart}
+          <StyledBoldPart>{lastPart}</StyledBoldPart>
+        </StyledAddressContent>
         <div className={styles.dividedLine2} />
         <div className={styles.copyOuterContainer} onClick={onCopy}>
           <div className={styles.copyContainer}>

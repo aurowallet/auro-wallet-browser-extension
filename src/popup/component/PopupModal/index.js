@@ -3,12 +3,25 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { isTrueNumber, nameLengthCheck } from "../../../utils/utils";
 import Input from "../Input";
 import styles from "./index.module.scss";
+import styled from "styled-components";
 
 export const PopupModal_type = {
     common: "popup_common",
     warning: "popup_warning",
     input: "popup_input"
 }
+const StyledOuterContainer = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: ${(props) => (props.$zindex ? props.$zindex : 10)};
+    background: rgba(0, 0, 0, 0.8);
+    width: 100%;
+    height: 100%;
+    
+    display: flex;
+    align-items: center;
+`
 
 export const PopupModal = ({
     title = "",
@@ -33,7 +46,8 @@ export const PopupModal = ({
     maxInputLength = -1,
 
     rightBtnDisable=false,
-    clearWhenClose = true
+    clearWhenClose = true,
+    zIndex
 }) => {
 
     const [inputValue, setInputValue] = useState("")
@@ -84,7 +98,7 @@ export const PopupModal = ({
     return (
         <>
             {
-                modalVisible && <div className={styles.outerContainer}>
+                modalVisible && <StyledOuterContainer $zindex={zIndex}>
                     <div className={styles.contentContainer}>
                         <div className={styles.topContainer}>
                             {modalTopIcon && <div className={styles.iconContainer}>
@@ -120,7 +134,7 @@ export const PopupModal = ({
                             })} onClick={onRightClick}>{rightBtnContent}</div>}
                         </div>}
                     </div>
-                </div>
+                </StyledOuterContainer>
             }
         </>
     )

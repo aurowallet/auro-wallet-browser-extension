@@ -2,7 +2,7 @@ export const POWER_BY = "aurowallet.com";
 
 /** coin config */
 export const MAIN_COIN_CONFIG = {
-  name: "MINA",
+  name: "Mina Protocol",
   segwitAvailable: true,
   coinType: 12586,
   network: null,
@@ -87,16 +87,20 @@ export const Default_Follow_Link = [
   {
     website: "https://www.aurowallet.com",
     name: "Website",
-    icon:"/img/ic_website.svg"
+    icon: "/img/ic_website.svg",
   },
   {
     website: "https://twitter.com/aurowallet_com",
     name: "X",
-    icon:"/img/ic_x.svg"
+    icon: "/img/ic_x.svg",
   },
   {
     website: "https://t.me/aurowallet",
     name: "Telegram",
-    icon:"/img/ic_telegram.svg"
+    icon: "/img/ic_telegram.svg",
   },
 ];
+
+
+export const ValidatorsLaunch = 'https://github.com/aurowallet/launch/tree/master/validators'
+export const TokenLaunch = "https://github.com/aurowallet/launch/tree/master/token"

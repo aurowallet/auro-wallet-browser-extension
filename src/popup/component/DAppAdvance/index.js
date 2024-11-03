@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import Button from "../Button";
 import Input from "../Input";
 import styles from "./index.module.scss";
+import { isNaturalNumber } from "@/utils/utils";
 
 const DAppAdvance = ({
     modalVisible = false,
@@ -19,12 +20,16 @@ const DAppAdvance = ({
 
     nonceValue = "",
     onNonceInput = () => { },
+    zkAppNonce=""
 }) => {
 
-    const netAccount = useSelector(state => state.accountInfo.netAccount)
+    const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
     const nonceHolder = useMemo(() => {
-        return netAccount.inferredNonce ? netAccount.inferredNonce : ""
-    }, [netAccount])
+        if(zkAppNonce){
+            return zkAppNonce
+        }
+        return isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? mainTokenNetInfo.inferredNonce : ""
+    }, [mainTokenNetInfo,zkAppNonce])
 
     const onClickOuter = useCallback((e) => {
         onClickClose()

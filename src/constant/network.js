@@ -1,13 +1,13 @@
 import {
-  BerkeleyUrlConfig,
   DevnetUrlConfig,
   MainnetUrlConfig,
+  ZekoTestnetConfig,
 } from "../../config";
 
 export const NetworkID_MAP = {
   mainnet: "mina:mainnet",
   testnet: "mina:testnet",
-  berkeley: "mina:berkeley",
+  zekotestnet:"zeko:testnet"
 };
 
 export const DefaultMainnetConfig = {
@@ -28,17 +28,19 @@ const DefaultDevnetConfig = {
   networkID: NetworkID_MAP.testnet,
 };
 
-const DefaultBerkeleyConfig = {
-  url: BerkeleyUrlConfig.gql,
-  explorer: BerkeleyUrlConfig.explorer,
-  gqlTxUrl: BerkeleyUrlConfig.tx,
-  name: "Berkeley",
+const ZekoDevnetConfig = {
+  url: ZekoTestnetConfig.gql,
+  explorer: ZekoTestnetConfig.explorer,
+  gqlTxUrl: ZekoTestnetConfig.tx,
+  name: "Zeko Testnet",
   isDefaultNode: true,
-  networkID: NetworkID_MAP.berkeley,
+  networkID: NetworkID_MAP.zekotestnet,
 };
+
+
 
 export const Default_Network_List = [
   DefaultMainnetConfig,
   DefaultDevnetConfig,
-  DefaultBerkeleyConfig,
+  ZekoDevnetConfig
 ];

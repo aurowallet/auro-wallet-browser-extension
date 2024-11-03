@@ -5,19 +5,15 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import {
-  getPendingTxList,
-  sendStakeTx,
-  sendTx,
-} from "../../../../../background/api";
-import { MAIN_COIN_CONFIG } from "../../../../../constant";
+import { sendStakeTx, sendTx } from "../../../../../background/api";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../../../constant";
 import {
   ACCOUNT_TYPE,
   LEDGER_STATUS,
 } from "../../../../../constant/commonType";
 import {
   QA_SIGN_TRANSACTION,
-  WALLET_CHECK_TX_STATUS
+  WALLET_CHECK_TX_STATUS,
 } from "../../../../../constant/msgTypes";
 import { updateShouldRequest } from "../../../../../reducers/accountReducer";
 import { updateLedgerConnectStatus } from "../../../../../reducers/ledger";
@@ -31,7 +27,7 @@ import {
   addressSlice,
   amountDecimals,
   decodeMemo,
-  getDisplayAmount,
+  getBalanceForUI,
   getRealErrorMsg,
   getShowTime,
   isNumber,
@@ -43,8 +39,8 @@ import {
   TransactionModal,
   TransactionModalType,
 } from "../../../../component/TransactionModal";
-import { HistoryHeader } from "../StatusView";
 import styles from "./index.module.scss";
+import { getZkAppUpdateInfo } from "@/utils/zkUtils";
 
 /**
  *
@@ -52,23 +48,18 @@ import styles from "./index.module.scss";
  * @param {*} showEmpty
  * @returns
  */
-const TxListView = ({
-  history = [],
-  showHistoryStatus = false,
-  onClickRefresh = () => {},
-}) => {
+const TxListView = ({ history = [], tokenInfo = {} }) => {
   const dispatch = useDispatch();
 
   const accountInfo = useSelector((state) => state.accountInfo);
   const netConfig = useSelector((state) => state.network);
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
-  const shouldRefresh = useSelector(state => state.accountInfo.shouldRefresh)
 
   const onGoExplorer = useCallback(() => {
     let currentNode = netConfig.currentNode;
     let url =
-    currentNode.explorer +
+      currentNode.explorer +
       "/account/" +
       accountInfo.currentAccount.address +
       "/txs";
@@ -203,7 +194,6 @@ const TxListView = ({
         );
       }
       setTransactionModalStatus(false);
-      await getPendingTxList(transactionModalData.from);
     },
     [i18n, transactionModalData]
   );
@@ -362,11 +352,6 @@ const TxListView = ({
   }, []);
   return (
     <div className={cls(styles.historyContainer, styles.holderContainer)}>
-      <HistoryHeader
-        showHistoryStatus={showHistoryStatus}
-        historyRefreshing={shouldRefresh}
-        onClickRefresh={onClickRefresh}
-      />
       <div className={styles.listContainer}>
         {history.map((item, index) => {
           if (item.showExplorer) {
@@ -389,6 +374,7 @@ const TxListView = ({
               currentAccount={accountInfo.currentAccount}
               onClickSpeedUp={onClickSpeedUp}
               onClickCancel={onClickCancel}
+              tokenInfo={tokenInfo}
             />
           );
         })}
@@ -427,6 +413,7 @@ const TxItem = ({
   index,
   onClickSpeedUp,
   onClickCancel,
+  tokenInfo,
 }) => {
   const {
     statusIcon,
@@ -445,6 +432,7 @@ const TxItem = ({
       statusText,
       statusStyle = "";
     const txKindLow = txData.kind?.toLowerCase();
+    let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
     if (txKindLow === "payment") {
       isReceive =
         txData.to.toLowerCase() === currentAccount.address.toLowerCase();
@@ -458,20 +446,50 @@ const TxItem = ({
     } else {
       statusIcon = "/img/tx_pending.svg";
     }
-    showAddress = addressSlice(isReceive ? txData.from : txData.to, 8);
-    showAddress = !showAddress ? txData.kind.toUpperCase() : showAddress;
+    if (!isMainCoin) {
+      const accountUpdates = txData.body.zkappCommand?.accountUpdates;
+      const result = getZkAppUpdateInfo(
+        accountUpdates,
+        currentAccount.address,
+        tokenInfo.tokenId
+      );
+      const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
+      amount = getBalanceForUI(result.totalBalanceChange, tokenDecimal, 2);
+      amount = result.symbol + amount;
+      let isZkReceive = result.symbol !== "-"
+      statusIcon = isZkReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
+      showAddress = isZkReceive ? addressSlice(result.from, 8):addressSlice(result.to, 8)
+
+    } else {
+      if (isMainCoin && txKindLow === "zkapp") {
+        const accountUpdates = txData.body.zkappCommand?.accountUpdates;
+        const result = getZkAppUpdateInfo(
+          accountUpdates,
+          currentAccount.address,
+          ZK_DEFAULT_TOKEN_ID
+        );
+
+        amount = getBalanceForUI(result.totalBalanceChange, MAIN_COIN_CONFIG.decimals, 2);
+        amount = result.symbol + amount;
+        let isZkReceive = result.symbol !== "-"
+        showAddress = isZkReceive ? addressSlice(result.from, 8):addressSlice(result.to, 8)
+      }
+    }
+    if (!showAddress) {
+      showAddress = addressSlice(isReceive ? txData.from : txData.to, 8);
+      showAddress = !showAddress ? txData.kind.toUpperCase() : showAddress;
+    }
+    if (!amount) {
+      amount = getBalanceForUI(txData.amount, MAIN_COIN_CONFIG.decimals, 2);
+      amount = isReceive ? "+" + amount : "-" + amount;
+      if (txKindLow === "zkapp") {
+        amount = "0";
+      }
+    }
     timeInfo =
       txData.status === TX_STATUS.PENDING
         ? "Nonce " + txData.nonce
         : getShowTime(txData.dateTime);
-
-    amount = amountDecimals(txData.amount, MAIN_COIN_CONFIG.decimals);
-    amount = getDisplayAmount(amount, 2);
-    amount = isReceive ? "+" + amount : "-" + amount;
-
-    if (txKindLow === "zkapp") {
-      amount = "0";
-    }
 
     let showPendTx = false;
 
@@ -498,7 +516,7 @@ const TxItem = ({
       statusStyle,
       showPendTx,
     };
-  }, [txData, i18n]);
+  }, [txData, i18n, tokenInfo, currentAccount]);
   const [showPendingAction, setShowPendingAction] = useState(false);
 
   useEffect(() => {
@@ -523,9 +541,9 @@ const TxItem = ({
   const onToDetail = useCallback(() => {
     history.push({
       pathname: "/record_page",
-      params: { txDetail: txData },
+      params: { txDetail: txData, tokenInfo },
     });
-  }, [txData]);
+  }, [txData, tokenInfo]);
   const paddingLineStyle = useMemo(() => {
     return index !== 0;
   }, [index]);

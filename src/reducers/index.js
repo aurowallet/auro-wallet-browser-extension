@@ -8,6 +8,7 @@ import staking from "./stakingReducer";
 import tabRouteConfig from './tabRouteReducer';
 import currencyConfig from './currency';
 import ledger from './ledger'
+import popupReducer from "./popupReducer"
 
 
 export const RESET_DATA = "RESET_DATA"
@@ -31,7 +32,8 @@ const appRootReducer = combineReducers({
   cache: cacheReducer,
   staking,
   currencyConfig,
-  ledger
+  ledger,
+  popupReducer
 });
 
 const rootReducer = (state, action) => {

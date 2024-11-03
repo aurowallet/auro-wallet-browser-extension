@@ -4,8 +4,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
-import { getBalance, sendStakeTx } from "../../../background/api";
-import { updateNetAccount } from '../../../reducers/accountReducer';
+import { sendStakeTx } from "../../../background/api";
 import { addressSlice, getRealErrorMsg, isNaturalNumber, isNumber, trimSpace } from "../../../utils/utils";
 import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
@@ -22,6 +21,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { getLedgerStatus, requestSignDelegation } from "../../../utils/ledger";
 import Toast from "../../component/Toast";
 
+import useFetchAccountData from "@/hooks/useUpdateAccount";
 import { DAppActions } from "@aurowallet/mina-provider";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
@@ -31,11 +31,11 @@ const StakingTransfer = () => {
   const dispatch = useDispatch()
   const history = useHistory()
 
-  const balance = useSelector(state => state.accountInfo.balance)
   const currentAccount = useSelector(state => state.accountInfo.currentAccount)
-  const netAccount = useSelector(state => state.accountInfo.netAccount)
+  const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
   const netFeeList = useSelector(state => state.cache.feeRecommend)
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
+  const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const {
     menuAdd, nodeName, nodeAddress, showNodeName
@@ -169,7 +169,7 @@ const StakingTransfer = () => {
     }
     let fromAddress = currentAccount.address
     let toAddress = nodeAddress || trimSpace(blockAddress)
-    let nonce = trimSpace(inputNonce) || netAccount.inferredNonce
+    let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce
     let realMemo = memo || ""
     let fee = trimSpace(feeAmount)
     let payload = {
@@ -187,7 +187,7 @@ const StakingTransfer = () => {
       setConfirmBtnStatus(false)
       onSubmitSuccess(data)
     })
-  }, [currentAccount, netAccount, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus,memo])
+  }, [currentAccount, mainTokenNetInfo, inputNonce, feeAmount, blockAddress,ledgerTransfer,ledgerStatus,memo])
 
   const onConfirm = useCallback(async(ledgerReady=false) => {
     let realBlockAddress = nodeAddress || blockAddress
@@ -201,7 +201,7 @@ const StakingTransfer = () => {
       return
     }
 
-    if (new BigNumber(inputFee).gt(balance)) {
+    if (new BigNumber(inputFee).gt(mainTokenNetInfo.tokenBaseInfo.showBalance)) {
       Toast.info(i18n.t('balanceNotEnough'));
       return;
     }
@@ -252,7 +252,7 @@ const StakingTransfer = () => {
       setConfirmModalStatus(true)
     }
    
-  }, [nodeAddress, balance, feeAmount, inputNonce,currentAccount,
+  }, [nodeAddress, mainTokenNetInfo, feeAmount, inputNonce,currentAccount,
     clickNextStep, nodeName, nodeAddress, blockAddress, currentAccount, memo,ledgerStatus])
 
     const onLedgerInfoModalConfirm = useCallback((ledger)=>{
@@ -270,14 +270,6 @@ const StakingTransfer = () => {
       }
     });
   }, [nodeAddress])
-
-
-  const fetchAccountData = useCallback(async () => {
-    let account = await getBalance(currentAccount.address)
-    if (account.publicKey) {
-      dispatch(updateNetAccount(account))
-    }
-  }, [currentAccount])
 
 
   useEffect(()=>{

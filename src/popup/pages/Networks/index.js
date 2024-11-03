@@ -29,6 +29,7 @@ const StyledItemWrapper = styled.div`
 const NetworkPage = ({}) => {
   const allNodeList = useSelector((state) => state.network.allNodeList);
   const customNodeList = useSelector((state) => state.network.customNodeList);
+  const currentNode = useSelector((state) => state.network.currentNode);
 
   const [editMode, setEditMode] = useState(false);
 
@@ -100,13 +101,16 @@ const NetworkPage = ({}) => {
 
       dispatch(updateCurrentNode(config.currentNode));
       dispatch(updateCustomNodeList(config.customNodeList));
-      dispatch(updateShouldRequest(true));
-      dispatch(updateStakingRefresh(true));
+      
+      if(nodeItem.networkID !== currentNode.networkID){
+        dispatch(updateStakingRefresh(true));
+        dispatch(updateShouldRequest(true));
+      }
 
       sendNetworkChangeMsg(config.currentNode);
       history.goBack();
     },
-    [customNodeList, editMode]
+    [customNodeList, editMode,currentNode]
   );
 
   const onEditItem = useCallback(
