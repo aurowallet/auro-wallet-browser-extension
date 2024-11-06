@@ -471,8 +471,13 @@ const TxItem = ({
 
         amount = getBalanceForUI(result.totalBalanceChange, MAIN_COIN_CONFIG.decimals, 2);
         amount = result.symbol + amount;
-        let isZkReceive = result.symbol !== "-"
-        showAddress = isZkReceive ? addressSlice(result.from, 8):addressSlice(result.to, 8)
+        if(result.symbol == "-"){
+          showAddress = addressSlice(result.to, 8)
+        }else if(result.symbol == "+"){
+          showAddress = addressSlice(result.from, 8)
+        }else{
+          showAddress = addressSlice(result.to, 8)
+        }
       }
     }
     if (!showAddress) {

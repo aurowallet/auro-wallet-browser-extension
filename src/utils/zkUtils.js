@@ -315,10 +315,10 @@ export function getZkAppUpdateInfo(accountUpdates, publicKey, tokenId) {
     let otherList = [];
     accountUpdates.forEach((update) => {
       const { body } = update;
+      const magnitude = new BigNumber(body.balanceChange.magnitude)
+        .abs()
+        .toString();
       if (body.tokenId === tokenId) {
-        const magnitude = new BigNumber(body.balanceChange.magnitude)
-          .abs()
-          .toString();
         if (body.publicKey === publicKey) {
           if (body.balanceChange.sgn === "Negative") {
             totalBalanceChange = new BigNumber(totalBalanceChange)
@@ -330,34 +330,49 @@ export function getZkAppUpdateInfo(accountUpdates, publicKey, tokenId) {
               .toString();
           }
         } else {
-          updateList.push({
-            address: body.publicKey,
-            amount: magnitude,
-          });
+          if (!new BigNumber(magnitude).isZero()) {
+            updateList.push({
+              address: body.publicKey,
+              amount: magnitude,
+            });
+          }
         }
       }
       if (body.publicKey !== publicKey) {
-        otherList.push(body.publicKey);
+        otherList.push({
+          address: body.publicKey,
+          amount: magnitude,
+        });
       }
     });
     if (updateList.length !== 0) {
       updateList.sort((a, b) => b.amount - a.amount);
     }
+    if (otherList.length !== 0) {
+      otherList.sort((a, b) => b.amount - a.amount);
+    }
 
     let symbol = "";
     let from = "";
     let to = "";
+
     if (totalBalanceChange > 0) {
       symbol = "+";
-
-      from = updateList.length > 0 ? updateList[0].address : otherList[0];
+      from =
+        updateList.length > 0 ? updateList[0].address : otherList[0]?.address;
       to = publicKey;
     } else if (totalBalanceChange < 0) {
       symbol = "-";
       totalBalanceChange = new BigNumber(totalBalanceChange).abs().toString();
       from = publicKey;
-      to = updateList.length > 0 ? updateList[0].address : otherList[0];
+      to =
+        updateList.length > 0 ? updateList[0].address : otherList[0]?.address;
+    } else {
+      to =
+        updateList.length > 0 ? updateList[0].address : otherList[0]?.address;
+      from = publicKey;
     }
+
     return {
       totalBalanceChange,
       symbol,
