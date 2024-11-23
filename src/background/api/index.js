@@ -22,7 +22,6 @@ import {
 } from "../request";
 import {
   getBalanceBatchBody,
-  getBalanceBody,
   getBlockInfoBody,
   getDaemonStatusBody,
   getDelegationInfoBody,
@@ -33,7 +32,6 @@ import {
   getPendingZkAppTxBody,
   getQATxStatusBody,
   getStakeTxSend,
-  getTokenInfoBody,
   getTokenInfoBodyV2,
   getTokenQueryBody,
   getTokenStateBody,
@@ -43,33 +41,6 @@ import {
   getZkAppTransactionListBody,
 } from "./gqlparams";
 
-/**
- * get balance
- */
-export async function getBalance(address) {
-  let txBody = getBalanceBody();
-  let result = await startFetchMyQuery(txBody, {
-    publicKey: address,
-  }).catch((error) => error);
-  let account = result?.account || {
-    publicKey: address,
-  };
-  saveLocal(
-    LOCAL_CACHE_KEYS.ACCOUNT_BALANCE,
-    JSON.stringify({ [address]: account })
-  );
-  if (result?.error) {
-    account.error = result.error;
-  }
-  saveLocal(
-    LOCAL_CACHE_KEYS.ACCOUNT_BALANCE,
-    JSON.stringify({ [address]: account })
-  );
-  if (result?.error) {
-    account.error = result.error;
-  }
-  return account;
-}
 /**
  * get txStatus
  * @param {*} paymentId
@@ -285,7 +256,8 @@ export async function getCurrencyPrice(currency) {
   if (netConfig.networkID !== NetworkID_MAP.mainnet) {
     return {};
   }
-  let priceUrl = BASE_INFO_URL + "/prices?currency=" + encodeURIComponent(currency);
+  let priceUrl =
+    BASE_INFO_URL + "/prices?currency=" + encodeURIComponent(currency);
   let data = await commonFetch(priceUrl).catch(() => {});
   let price = data?.data || 0;
   let tokenPrice = {};
@@ -314,24 +286,23 @@ export async function getTxHistory(address, limit) {
     throw new Error(String(result.error));
   }
   let txList = result?.transactions || [];
-  return {txList,address};
+  return { txList, address };
 }
 
 /** request gql transaction */
-export async function getZkAppTxHistory(address,tokenId, limit) {
+export async function getZkAppTxHistory(address, tokenId, limit) {
   let netConfig = await getCurrentNodeConfig();
   let gqlTxUrl = netConfig.gqlTxUrl;
   if (!gqlTxUrl) {
     return [];
   }
-  const nextTokenId =
-        tokenId == ZK_DEFAULT_TOKEN_ID ? "" : tokenId;
+  const nextTokenId = tokenId == ZK_DEFAULT_TOKEN_ID ? "" : tokenId;
   let txBody = getZkAppTransactionListBody();
   let result = await startFetchMyQuery(
     txBody,
     {
       publicKey: address,
-      tokenId:nextTokenId,
+      tokenId: nextTokenId,
       limit: limit || DEFAULT_TX_REQUEST_LENGTH,
     },
     gqlTxUrl
@@ -340,7 +311,7 @@ export async function getZkAppTxHistory(address,tokenId, limit) {
     throw new Error(String(result.error));
   }
   let txList = result?.zkapps || [];
-  return {txList,address,tokenId};
+  return { txList, address, tokenId };
 }
 
 export async function getZkAppPendingTx(address, limit) {
@@ -365,7 +336,7 @@ export async function getZkAppPendingTx(address, limit) {
     throw new Error(String(result.error));
   }
   let txList = result.pooledZkappCommands || [];
-  return {txList,address};
+  return { txList, address };
 }
 
 /**
@@ -396,9 +367,11 @@ export async function getAccountInfo(address, tokenId) {
   }
 }
 export async function buildTokenBody(params) {
-  const requestUrl = TokenBuildUrl + "/tokenbuild"
-  const timeout = 3 * 60 * 1000
-  const result = await postRequest(requestUrl, params,timeout).catch((err) => err);
+  const requestUrl = TokenBuildUrl + "/tokenbuild";
+  const timeout = 3 * 60 * 1000;
+  const result = await postRequest(requestUrl, params, timeout).catch(
+    (err) => err
+  );
   return result;
 }
 export async function getAllTokenAssets(address) {
@@ -410,36 +383,6 @@ export async function getAllTokenAssets(address) {
     result.error = result.error;
   }
   return result;
-}
-
-export async function getTokenInfo(tokenId) {
-  if (tokenId === ZK_DEFAULT_TOKEN_ID) {
-    return null;
-  }
-
-  const tokenBody = getTokenInfoBody();
-  const result = await startFetchMyQuery(tokenBody, { tokenId }).catch(
-    (error) => error
-  );
-  return result.tokenOwner || {};
-}
-
-export async function getAllTokenInfo(accounts) {
-  const tokenInfoPromises = accounts.map(async (account) => {
-    const tokenNetInfo = await getTokenInfo(account.tokenId);
-    return {
-      ...account,
-      tokenNetInfo,
-    };
-  });
-
-  try {
-    const allAccountsWithTokenInfo = await Promise.all(tokenInfoPromises);
-    return allAccountsWithTokenInfo;
-  } catch (error) {
-    console.error("Error fetching token info:", error);
-    return { error: error.message };
-  }
 }
 
 export async function getAllTokenInfoV2(tokenIds) {
@@ -471,7 +414,9 @@ export async function fetchSupportTokenInfo() {
   let netConfig = await getCurrentNodeConfig();
   const readableNetworkId = getReadableNetworkId(netConfig.networkID);
   const requestUrl =
-    BASE_INFO_URL + "/tokenInfo?networkId=" + encodeURIComponent(readableNetworkId);
+    BASE_INFO_URL +
+    "/tokenInfo?networkId=" +
+    encodeURIComponent(readableNetworkId);
   const data = await commonFetch(requestUrl).catch(() => []);
   if (data.length > 0) {
     saveLocal(

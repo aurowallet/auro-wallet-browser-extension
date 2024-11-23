@@ -1,22 +1,3 @@
-/**
- * return account balance
- */
-export function getBalanceBody() {
-  return `query accountBalance($publicKey: PublicKey!) {
-    account(publicKey: $publicKey) {
-      balance {
-        total
-      },
-      nonce
-      inferredNonce
-      delegate
-      publicKey
-    }
-  }
-  
-  `;
-}
-
 export function getTxStatusBody() {
   return `
   query txStatus($paymentId:ID! ) {
@@ -92,7 +73,11 @@ $validUntil: UInt32, $scalar: String, $field: String) {
 }
 `;
 }
-
+/**
+ * get delegation mutation body, for ledger and common account
+ * @param {*} isRawSignature 
+ * @returns 
+ */
 export function getStakeTxSend(isRawSignature) {
   if (isRawSignature) {
     return getStakeTxSendWithRawSignature();
@@ -174,7 +159,7 @@ $validUntil: UInt32,$scalar: String!, $field: String!
 `;
 }
 /**
- *
+ * get payment mutation body, for ledger and common account
  * @param {*} isRawSignature
  */
 export function getTxSend(isRawSignature) {
@@ -184,7 +169,10 @@ export function getTxSend(isRawSignature) {
     return getTxSendWithScalarField();
   }
 }
-
+/**
+ * get pending transaction, payment, delegation
+ * @returns 
+ */
 export function getPendingTxBody() {
   return `
   query pendingTx($publicKey: PublicKey) {
@@ -215,7 +203,11 @@ function balanceBodyBase(index) {
   }
   `;
 }
-
+/**
+ * get account balance for batch request
+ * @param {*} addressArrayLength 
+ * @returns 
+ */
 export function getBalanceBatchBody(addressArrayLength) {
   const variablesDeclare = new Array(addressArrayLength)
     .fill(null)
@@ -231,6 +223,10 @@ export function getBalanceBatchBody(addressArrayLength) {
   `;
 }
 
+/**
+ * get daemon epoch and slot info
+ * @returns 
+ */
 export function getDaemonStatusBody() {
   return `
   query daemonStatus {
@@ -246,6 +242,10 @@ export function getDaemonStatusBody() {
   }
   `;
 }
+/**
+ * get current block info
+ * @returns 
+ */
 export function getBlockInfoBody() {
   return `
   query blockInfo($stateHash: String) {
@@ -260,7 +260,10 @@ export function getBlockInfoBody() {
   }
   `;
 }
-
+/**
+ * get delegation state by publicKey
+ * @returns 
+ */
 export function getDelegationInfoBody() {
   return `
   query delegationInfo($publicKey: PublicKey!) {
@@ -271,6 +274,10 @@ export function getDelegationInfoBody() {
   `;
 }
 
+/**
+ * get zkApp mutation body
+ * @returns 
+ */
 export function getPartyBody() {
   return `
   mutation sendZkapp($zkappCommandInput:ZkappCommandInput!){
@@ -290,7 +297,9 @@ export function getPartyBody() {
 }
 
 /**
- * return tx history
+ * get transtion history 
+ * archive node
+ * @returns 
  */
 export function getTxHistoryBody() {
   return `query txHistory($publicKey: String,$limit:Int) {
@@ -318,21 +327,9 @@ export function getTxHistoryBody() {
 }
 
 /**
- * return deletion total
+ * get zkApp transaction status
+ * @returns 
  */
-export function getDeletionTotalBody() {
-  return `query delegationTotals($publicKey: String,$epoch:Int) {
-    stake(query: {epoch: $epoch, public_key: $publicKey}) {
-      delegationTotals {
-        countDelegates
-        totalDelegated
-      }
-    }
-  }
-  
-  `;
-}
-
 export function getQATxStatusBody() {
   return `
   query txStatus($zkappTransaction:ID) {
@@ -340,7 +337,11 @@ export function getQATxStatusBody() {
   }
   `;
 }
-
+/**
+ * get zkApp transaction
+ * archive node 
+ * @returns 
+ */
 export function getZkAppTransactionListBody() {
   return `
   query zkApps($publicKey: String,$limit:Int,$tokenId: String) {
@@ -381,7 +382,10 @@ export function getZkAppTransactionListBody() {
   }
   `;
 }
-
+/**
+ * get pending tx history by publicKey
+ * @returns 
+ */
 export function getPendingZkAppTxBody() {
   return `
   query pendingZkTx($publicKey: PublicKey) {
@@ -610,6 +614,10 @@ export function getNetworkIDBody() {
   }
   `;
 }
+/**
+ * get all token assets by publicKey
+ * @returns 
+ */
 export function getTokenQueryBody() {
   return `
   query tokenQueryBody($publicKey: PublicKey!) {
@@ -630,18 +638,11 @@ export function getTokenQueryBody() {
   `;
 }
 
-export function getTokenInfoBody() {
-  return `
-  query tokenInfoBody($tokenId: TokenId!) {
-    tokenOwner(tokenId: $tokenId) {
-      publicKey
-      tokenSymbol
-      zkappState
-    }
-  }
-  `;
-}
-
+/**
+ * get token info by tokenIds
+ * @param {*} tokenIds 
+ * @returns 
+ */
 export function getTokenInfoBodyV2(tokenIds) {
   let queryFields = tokenIds
     .map((tokenId) => {
@@ -662,6 +663,10 @@ export function getTokenInfoBodyV2(tokenIds) {
   `;
 }
 
+/**
+ * get token state between token and account
+ * @returns 
+ */
 export function getTokenStateBody() {
   return `
   query tokenState($publicKey: PublicKey!,$tokenId: TokenId!) {
