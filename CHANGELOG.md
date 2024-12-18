@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ## [2.3.1]
 - Enhancements
     - Support import 24 words mnemonics
+    - Update networkID of testnet
 
 ## [2.3.0]
 - Enhancements

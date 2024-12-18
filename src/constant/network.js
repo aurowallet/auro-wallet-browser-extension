@@ -6,7 +6,7 @@ import {
 
 export const NetworkID_MAP = {
   mainnet: "mina:mainnet",
-  testnet: "mina:testnet",
+  testnet: "mina:devnet",
   zekotestnet:"zeko:testnet"
 };
 
