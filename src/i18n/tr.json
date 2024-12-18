@@ -296,5 +296,5 @@
   "updateTokenInfo": "Jeton bilgilerinizi güncellemek ister misiniz?",
   "tokens": "TOKENS",
   "noTxHistory": "İşlem geçmişi yok",
-  "mneTip":"{{count}} tane hafıza kelimesine sahibim."
+  "mneTip":"{{count}} tane hafıza kelimesine sahibim"
 }

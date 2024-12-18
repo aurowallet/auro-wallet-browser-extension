@@ -279,8 +279,8 @@
   "available": "可用",
   "contributeLanguage": "贡献语言",
   "pinExtension": "固定 Auro Wallet",
-  "clickBrowser": "点击<icon/>在浏览器中",
-  "clickButton": "然后<icon/>点击按钮",
+  "clickBrowser": "在浏览器中点击<icon/>",
+  "clickButton": "然后点击按钮<icon/>",
   "addAccount": "添加账户",
   "createAccount": "创建账户",
   "hardwareWallet": "硬件钱包",
@@ -296,5 +296,5 @@
   "updateTokenInfo": "更新您的代币信息？",
   "noTxHistory": "没有交易历史",
   "tokens": "TOKENS",
-  "mneTip":"我有{{count}}个助记词。"
+  "mneTip":"我有{{count}}个助记词"
 }

@@ -28,6 +28,9 @@ const StyledProcessTitle = styled.div`
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const StyledBottomContainer = styled.div`
@@ -61,14 +64,13 @@ const StyledBottomMneContainer = styled.div`
   flex-wrap: wrap;
   gap: 12px 20px;
 `;
-const StyledRowSwitch = styled.div`
+const StyledRowSwitch = styled.span`
   color: #594af1;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  position: absolute;
+  right: 40px;
 `;
 
 export const RestoreMneView = ({
@@ -102,7 +104,7 @@ export const RestoreMneView = ({
     let nextCount = mneCount == 12 ? 24 : 12;
     setMenCount(nextCount);
     setMneInputList(Array(nextCount).fill(""));
-
+    setSimilarWordList([]);
     if (onSwitchMneCount) {
       onSwitchMneCount(nextCount == 24);
     }
@@ -196,11 +198,13 @@ export const RestoreMneView = ({
     <StyledPwdContainer>
       <BackView onClickBack={onClickPre} />
       <StyledPwdContentContainer>
-        <StyledProcessTitle>{i18n.t("restoreWallet")}</StyledProcessTitle>
+        <StyledProcessTitle>
+          {i18n.t("restoreWallet")}
+          <StyledRowSwitch onClick={onSwitch}>
+            {i18n.t("mneTip", { count: mneCount == 12 ? 24 : 12 })}
+          </StyledRowSwitch>
+        </StyledProcessTitle>
 
-        <StyledRowSwitch onClick={onSwitch}>
-          {i18n.t("mneTip", { count: mneCount == 12 ? 24 : 12 })}
-        </StyledRowSwitch>
         <StyledMneTip>{i18n.t("inputSeed")}</StyledMneTip>
         <StyledTopMneContainer>
           {mneInputList.map((mne, index) => {

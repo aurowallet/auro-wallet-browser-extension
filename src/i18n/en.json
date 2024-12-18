@@ -296,5 +296,5 @@
   "tokens": "tokens",
   "noTxHistory": "No transaction history",
   "updateAccount": "Account dismatch, please switch account and try again.",
-  "mneTip":"I have {{count}} mnemonic phrases."
+  "mneTip":"I have {{count}} mnemonic phrases"
 }
