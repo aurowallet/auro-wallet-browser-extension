@@ -15,6 +15,6 @@ export const StyledPageOuterWrapper = styled.div`
 export const StyledPageInnerContent = styled.div`
   background-color: white;
   width: 750px;
-  height: 600px;
+  height: ${(props) => (props.showMore ? "750px" : "600px")};
   position: relative;
 `;

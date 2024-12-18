@@ -18,7 +18,7 @@
   "ledgerNotSupportSign": "Ledger imza mesajını desteklemiyor",
   "reset": "Sıfırla",
   "goStake": "Staking’e git",
-  "backTips_2": "Anımsatıcı ifade 12 İngilizce kelimeden oluşur, bu kelimeler kaybolursa geri alınamaz. Anımsatıcı ifadenin güvenli bir yerde saklandığından emin olun.",
+  "backTips_2": "Anımsatıcı ifade İngilizce kelimelerden oluşur, bu kelimeler kaybolursa geri alınamaz. Anımsatıcı ifadenin güvenli bir yerde saklandığından emin olun.",
   "imported": "İçe Aktarıldı",
   "editAddress": "Adresi Düzenle",
   "password": "Şifre",
@@ -39,7 +39,7 @@
   "ledgerImportTip": "Lütfen [İçe Aktar] düğmesine tıklayın ve Ledger cüzdanınızdan onaylayın.",
   "connectLedger": "Ledger’a Bağlan",
   "amountError": "Lütfen geçerli bir işlem tutarı girin",
-  "inputSeed": "Lütfen 12 anımsatıcı ifadeyi, büyük harf ve noktalama işareti olmadan, sırayla girin.",
+  "inputSeed": "Lütfen anımsatıcı ifadeyi, büyük harf ve noktalama işareti olmadan, sırayla girin.",
   "keystorePassword": "Anahtar Deposu Şifresi",
   "fee_fast": "Hızlı",
   "balanceNotEnough": "Yetersiz bakiye",
@@ -295,5 +295,6 @@
   "ignore": "Yoksay",
   "updateTokenInfo": "Jeton bilgilerinizi güncellemek ister misiniz?",
   "tokens": "TOKENS",
-  "noTxHistory": "İşlem geçmişi yok"
+  "noTxHistory": "İşlem geçmişi yok",
+  "mneTip":"{{count}} tane hafıza kelimesine sahibim."
 }

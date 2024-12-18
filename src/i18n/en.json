@@ -37,7 +37,7 @@
   "backup_success": "Congrats, You have successfully created a wallet!",
   "backup_success_restore": "Congrats, You have successfully restored a wallet!",
   "ledgerSuccessTip": "Congrats, You have successfully imported the Ledger wallet!",
-  "inputSeed": "Please enter 12 mnemonic phrases in order, without capitalization, punctuation symbols.",
+  "inputSeed": "Please enter mnemonic phrases in order, without capitalization, punctuation symbols.",
   "confirm": "Confirm",
   "feeTooHigh": "Fees are much higher than average",
   "postFailed": "Transaction broadcast failed",
@@ -107,7 +107,7 @@
   "privateKeyTip_2": "Once the private key is lost, it cannot be retrieved. Please make sure to backup the private key and keep it in a safe place.",
   "deleteAccountTip": "A deleted account can only be restored by the Mnemonic Phrase or Private Key. Please make sure you have backed up your Mnemonic Phrase and Private Key.",
   "backTips_1": "Backup your mnemonic phrase now!",
-  "backTips_2": "The Mnemonic phrase consists of 12 English words, which cannot be retrieved if they are lost. Make sure the mnemonic phrase is kept in a secure location.",
+  "backTips_2": "The mnemonic phrase consists of multiple words, which cannot be retrieved if they are lost. Make sure the mnemonic phrase is kept in a secure location.",
   "backTips_3": "If the wallet cannot be accessed because the device is lost or for any other reason, importing the mnemonic phrase is the only way to retrieve your assets.",
   "security": "Security",
   "ok": "OK",
@@ -295,5 +295,6 @@
   "updateTokenInfo": "Update your token information?",
   "tokens": "tokens",
   "noTxHistory": "No transaction history",
-  "updateAccount": "Account dismatch, please switch account and try again."
+  "updateAccount": "Account dismatch, please switch account and try again.",
+  "mneTip":"I have {{count}} mnemonic phrases."
 }

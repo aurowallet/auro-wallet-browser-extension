@@ -48,21 +48,36 @@ const StyledMneTip = styled.div`
 const StyledTopMneContainer = styled.div`
   margin-top: 20px;
   display: grid;
-  max-width: 408px;
-  grid-template-columns: 1fr 1fr 1fr;
+  max-width: 572px;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-row-gap: 12px;
   grid-column-gap: 20px;
 `;
 
 const StyledBottomMneContainer = styled.div`
+  max-width: 572px;
   margin-top: 40px;
   display: flex;
   flex-wrap: wrap;
   gap: 12px 20px;
 `;
+const StyledRowSwitch = styled.div`
+  color: #594af1;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+`;
 
-export const RestoreMneView = ({ onClickPre, onClickNext }) => {
-  const [mneInputList, setMneInputList] = useState(Array(12).fill(""));
+export const RestoreMneView = ({
+  onClickPre,
+  onClickNext,
+  onSwitchMneCount,
+}) => {
+  const [mneCount, setMenCount] = useState(12);
+  const [mneInputList, setMneInputList] = useState(Array(mneCount).fill(""));
   const [similarWordList, setSimilarWordList] = useState([]);
   const [btnLoading, setBtnLoading] = useState(false);
   const [btnClick, setBtnClick] = useState(true);
@@ -83,6 +98,15 @@ export const RestoreMneView = ({ onClickPre, onClickNext }) => {
       setSimilarWordList([]);
     }
   }, [mneInput]);
+  const onSwitch = useCallback(() => {
+    let nextCount = mneCount == 12 ? 24 : 12;
+    setMenCount(nextCount);
+    setMneInputList(Array(nextCount).fill(""));
+
+    if (onSwitchMneCount) {
+      onSwitchMneCount(nextCount == 24);
+    }
+  }, [mneCount, onSwitchMneCount]);
 
   useEffect(() => {
     getSimilarWord();
@@ -109,19 +133,18 @@ export const RestoreMneView = ({ onClickPre, onClickNext }) => {
       const wordsStr =
         (value || "").trim().toLowerCase().match(/\w+/gu)?.join(" ") || "";
       const words = wordsStr.split(" ");
-      // Handling 12 words
-      if (words.length === 12) {
+      if (words.length === mneCount) {
         setMneInputList(words);
         return;
       }
 
       const newFullWords = mneInputList.slice();
-      for (let i = index; i < Math.min(index + words.length, 12); i++) {
+      for (let i = index; i < Math.min(index + words.length, mneCount); i++) {
         newFullWords[i] = words[i - index];
       }
       setMneInputList(newFullWords);
     },
-    [mneInputList]
+    [mneInputList, mneCount]
   );
 
   const onClickSimilarWord = useCallback(
@@ -162,12 +185,12 @@ export const RestoreMneView = ({ onClickPre, onClickNext }) => {
 
   useEffect(() => {
     const validList = checkValidStrInList(mneInputList);
-    if (validList.length === 12) {
+    if (validList.length === mneCount) {
       setBtnClick(false);
     } else {
       setBtnClick(true);
     }
-  }, [mneInputList]);
+  }, [mneInputList, mneCount]);
 
   return (
     <StyledPwdContainer>
@@ -175,6 +198,9 @@ export const RestoreMneView = ({ onClickPre, onClickNext }) => {
       <StyledPwdContentContainer>
         <StyledProcessTitle>{i18n.t("restoreWallet")}</StyledProcessTitle>
 
+        <StyledRowSwitch onClick={onSwitch}>
+          {i18n.t("mneTip", { count: mneCount == 12 ? 24 : 12 })}
+        </StyledRowSwitch>
         <StyledMneTip>{i18n.t("inputSeed")}</StyledMneTip>
         <StyledTopMneContainer>
           {mneInputList.map((mne, index) => {

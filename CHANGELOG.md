@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Un-Released]
 
 
+## [2.3.1]
+- Enhancements
+    - Support import 24 words mnemonics
+
 ## [2.3.0]
 - Enhancements
     - Add token support

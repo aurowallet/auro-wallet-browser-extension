@@ -37,7 +37,7 @@
   "backup_success": "恭喜，已经成功创建钱包！",
   "backup_success_restore": "恭喜，已经成功导入钱包！",
   "ledgerSuccessTip": "恭喜，已经成功导入 Ledger 钱包！",
-  "inputSeed": "请按顺序输入12位助记词，没有大写和标点符号。",
+  "inputSeed": "请按顺序输入助记词，没有大写和标点符号。",
   "confirm": "确定",
   "feeTooHigh": "交易费用远高于平均值",
   "postFailed": "广播失败",
@@ -108,7 +108,7 @@
   "privateKeyTip_2": "私钥丢失，无法找回，请务必备份好私钥，并将其保管至安全的地方。",
   "deleteAccountTip": "删除的账户只能通过助记词或者私钥恢复，请确认您已经备份好助记词或者私钥。",
   "backTips_1": "现在开始备份助记词!",
-  "backTips_2": "助记词由12个英文单词组成，丢失无法找回。请确认保存好助记词，并将其放在安全的地方。",
+  "backTips_2": "助记词由多个英文单词组成，丢失无法找回。请确认保存好助记词，并将其放在安全的地方。",
   "backTips_3": "当发生设备丢失或者其它原因无法访问钱包时，使用助记词是找回资产的唯一方法。",
   "security": "安全",
   "ok": "好的",
@@ -295,5 +295,6 @@
   "ignore": "忽略",
   "updateTokenInfo": "更新您的代币信息？",
   "noTxHistory": "没有交易历史",
-  "tokens": "TOKENS"
+  "tokens": "TOKENS",
+  "mneTip":"我有{{count}}个助记词。"
 }
