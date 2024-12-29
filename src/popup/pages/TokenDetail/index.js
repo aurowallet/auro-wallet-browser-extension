@@ -126,7 +126,7 @@ const TokenDetail = () => {
       tokenName = MAIN_COIN_CONFIG.name;
     }
 
-    let displayBalance = getBalanceForUI(nextTokenInfo.tokenBaseInfo.showBalance);
+    let displayBalance = getBalanceForUI(nextTokenInfo.tokenBaseInfo.showBalance) + " " + tokenSymbol;
 
     let displayAmount = nextTokenInfo.tokenBaseInfo.showAmount || "";
     if (nextTokenInfo.tokenBaseInfo.showAmount) {

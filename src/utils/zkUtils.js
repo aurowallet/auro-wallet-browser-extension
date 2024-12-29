@@ -305,88 +305,117 @@ export function getAccountUpdateCount(zkappCommand) {
   let accountUpdates = nextZkCommand.accountUpdates;
   return accountUpdates.length;
 }
-export function getZkAppUpdateInfo(accountUpdates, publicKey, tokenId) {
+
+export function getZkAppUpdateInfo(
+  accountUpdates,
+  publicKey,
+  feePayer,
+  tokenId
+) {
   try {
-    if (!Array.isArray(accountUpdates)) {
-      return 0;
+    if (!accountUpdates || accountUpdates.length === 0) {
+      return {
+        totalBalanceChange: "0",
+        symbol: "",
+        updateCount: "-",
+        from: "",
+        to: "",
+        isZkReceive: true,
+      };
     }
-    let totalBalanceChange = "0";
-    let updateList = [];
-    let otherList = [];
+
+    let totalBalanceChange = new BigNumber(0);
+    const updateList = [];
+    const otherList = [];
+
     accountUpdates.forEach((update) => {
-      const { body } = update;
-      const magnitude = new BigNumber(body.balanceChange.magnitude)
-        .abs()
-        .toString();
+      const body = update.body;
+      const magnitude = new BigNumber(body.balanceChange.magnitude).abs();
+
       if (body.tokenId === tokenId) {
         if (body.publicKey === publicKey) {
           if (body.balanceChange.sgn === "Negative") {
-            totalBalanceChange = new BigNumber(totalBalanceChange)
-              .minus(magnitude)
-              .toString();
+            totalBalanceChange = totalBalanceChange.minus(magnitude);
           } else if (body.balanceChange.sgn === "Positive") {
-            totalBalanceChange = new BigNumber(totalBalanceChange)
-              .plus(magnitude)
-              .toString();
+            totalBalanceChange = totalBalanceChange.plus(magnitude);
           }
         } else {
-          if (!new BigNumber(magnitude).isZero()) {
-            updateList.push({
-              address: body.publicKey,
-              amount: magnitude,
-            });
-          }
+          updateList.push({
+            address: body.publicKey,
+            amount: magnitude.toString(),
+          });
         }
-      }
-      if (body.publicKey !== publicKey) {
+      } else {
         otherList.push({
           address: body.publicKey,
-          amount: magnitude,
+          amount: magnitude.toString(),
         });
       }
     });
-    if (updateList.length !== 0) {
-      updateList.sort((a, b) => b.amount - a.amount);
+
+    if (updateList.length > 0) {
+      updateList.sort((a, b) =>
+        new BigNumber(b.amount).comparedTo(new BigNumber(a.amount))
+      );
     }
-    if (otherList.length !== 0) {
-      otherList.sort((a, b) => b.amount - a.amount);
+
+    if (otherList.length > 0) {
+      otherList.sort((a, b) =>
+        new BigNumber(b.amount).comparedTo(new BigNumber(a.amount))
+      );
     }
 
     let symbol = "";
     let from = "";
     let to = "";
+    let isZkReceive = false;
 
-    if (totalBalanceChange > 0) {
+    if (totalBalanceChange.isGreaterThan(0)) {
       symbol = "+";
       from =
-        updateList.length > 0 ? updateList[0].address : otherList[0]?.address;
+        updateList.length > 0 ? updateList[0].address : otherList[0].address;
       to = publicKey;
-    } else if (totalBalanceChange < 0) {
+      isZkReceive = true;
+    } else if (totalBalanceChange.isLessThan(0)) {
       symbol = "-";
-      totalBalanceChange = new BigNumber(totalBalanceChange).abs().toString();
+      totalBalanceChange = totalBalanceChange.abs();
       from = publicKey;
-      to =
-        updateList.length > 0 ? updateList[0].address : otherList[0]?.address;
+      to = updateList.length > 0 ? updateList[0].address : otherList[0].address;
+      isZkReceive = false;
     } else {
-      to =
-        updateList.length > 0 ? updateList[0].address : otherList[0]?.address;
-      from = publicKey;
+      let result;
+      if (updateList.length > 0) {
+        result = updateList.find((item) => item.address !== feePayer) || {
+          address: "",
+          amount: "",
+        };
+        to = result.address || publicKey;
+      } else {
+        result = otherList.find((item) => item.address !== feePayer) || {
+          address: "",
+          amount: "",
+        };
+        to = result.address || publicKey;
+      }
+      from = feePayer;
     }
 
     return {
-      totalBalanceChange,
+      totalBalanceChange: totalBalanceChange.toString(),
       symbol,
-      updateCount: accountUpdates.length,
-      from, //
+      updateCount: accountUpdates.length.toString(),
+      from,
       to,
+      isZkReceive,
     };
   } catch (error) {
     return {
-      totalBalanceChange: 0,
+      totalBalanceChange: "0",
       symbol: "",
       updateCount: "-",
-      from: "-",
-      to: "-",
+      from: "",
+      to: "",
+      isZkReceive: true,
     };
   }
 }

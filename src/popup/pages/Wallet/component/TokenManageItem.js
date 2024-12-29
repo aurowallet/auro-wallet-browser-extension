@@ -97,7 +97,7 @@ const TokenManageItem = ({ token }) => {
     }
 
     let displayBalance = getBalanceForUI(token.tokenBaseInfo.showBalance);
-    let showBalanceText = i18n.t("balance") + ": " + displayBalance;
+    let showBalanceText = i18n.t("amount") + ": " + displayBalance;
     const tokenShowed = token.tokenBaseInfo.tokenShowed;
     return {
       tokenIconUrl,

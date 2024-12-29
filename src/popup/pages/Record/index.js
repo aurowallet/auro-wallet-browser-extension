@@ -69,6 +69,7 @@ const Record = ({}) => {
         const result = getZkAppUpdateInfo(
           accountUpdates,
           currentAccount.address,
+          txDetail.from,
           ZK_DEFAULT_TOKEN_ID
         );
         showAmount = getBalanceForUI(
@@ -76,7 +77,7 @@ const Record = ({}) => {
           MAIN_COIN_CONFIG.decimals,
           MAIN_COIN_CONFIG.decimals
         );
-        showAmount = showAmount + " " +MAIN_COIN_CONFIG.symbol;
+        showAmount = showAmount + " " + MAIN_COIN_CONFIG.symbol;
         showTo = result.to;
         showFrom = result.from;
       } else {
@@ -95,6 +96,7 @@ const Record = ({}) => {
       const result = getZkAppUpdateInfo(
         accountUpdates,
         currentAccount.address,
+        txDetail.from,
         tokenInfo.tokenId
       );
       const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
@@ -103,7 +105,7 @@ const Record = ({}) => {
         tokenDecimal,
         tokenDecimal
       );
-      showAmount = showAmount + " " +tokenInfo?.tokenNetInfo?.tokenSymbol;
+      showAmount = showAmount + " " + tokenInfo?.tokenNetInfo?.tokenSymbol;
       showTo = result.to;
       showFrom = result.from;
     }
@@ -152,10 +154,16 @@ const Record = ({}) => {
         content: showMemo,
       });
     }
-    contentList.push({
-      title: i18n.t("fee"),
-      content: fee,
-    });
+    contentList.push(
+      {
+        title: "Nonce",
+        content: nonce,
+      },
+      {
+        title: i18n.t("fee"),
+        content: fee,
+      }
+    );
 
     if (txTime) {
       contentList.push({
@@ -163,16 +171,10 @@ const Record = ({}) => {
         content: txTime + " " + getTimeGMT(txDetail.dateTime),
       });
     }
-    contentList.push(
-      {
-        title: "Nonce",
-        content: nonce,
-      },
-      {
-        title: i18n.t("transactionHash"),
-        content: txHash,
-      }
-    );
+    contentList.push({
+      title: i18n.t("transactionHash"),
+      content: txHash,
+    });
     return {
       contentList,
       isZkReceive,

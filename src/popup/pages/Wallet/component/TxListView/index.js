@@ -451,10 +451,11 @@ const TxItem = ({
       const result = getZkAppUpdateInfo(
         accountUpdates,
         currentAccount.address,
+        txData.from,
         tokenInfo.tokenId
       );
       const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
-      amount = getBalanceForUI(result.totalBalanceChange, tokenDecimal, 2);
+      amount = getBalanceForUI(result.totalBalanceChange, tokenDecimal, 4);
       amount = result.symbol + amount;
       let isZkReceive = result.symbol !== "-"
       statusIcon = isZkReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
@@ -466,10 +467,11 @@ const TxItem = ({
         const result = getZkAppUpdateInfo(
           accountUpdates,
           currentAccount.address,
+          txData.from,
           ZK_DEFAULT_TOKEN_ID
         );
 
-        amount = getBalanceForUI(result.totalBalanceChange, MAIN_COIN_CONFIG.decimals, 2);
+        amount = getBalanceForUI(result.totalBalanceChange, MAIN_COIN_CONFIG.decimals, 4);
         amount = result.symbol + amount;
         if(result.symbol == "-"){
           showAddress = addressSlice(result.to, 8)
@@ -485,7 +487,7 @@ const TxItem = ({
       showAddress = !showAddress ? txData.kind.toUpperCase() : showAddress;
     }
     if (!amount) {
-      amount = getBalanceForUI(txData.amount, MAIN_COIN_CONFIG.decimals, 2);
+      amount = getBalanceForUI(txData.amount, MAIN_COIN_CONFIG.decimals, 4);
       amount = isReceive ? "+" + amount : "-" + amount;
       if (txKindLow === "zkapp") {
         amount = "0";

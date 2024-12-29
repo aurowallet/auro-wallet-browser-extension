@@ -3,7 +3,11 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
-
+- Enhancements
+    - TokenDetail Page UI
+    - Transacton time format
+    - TransactonDetail Page item sort
+    - zkApp to address
 
 ## [2.3.1]
 - Enhancements
@@ -17,8 +21,8 @@ All notable changes to this project will be documented in this file.
     - Upgrade request config
     - Remove support for Berkeley network
     - Update lock icon
-    - Zk fee recommendation
-    - ZkApp recommend nonce
+    - zkApp fee recommendation
+    - zkApp recommend nonce
 
 ## [2.2.17]
 - Enhancements
