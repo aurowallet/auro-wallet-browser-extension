@@ -128,7 +128,11 @@ const StakingTransfer = () => {
         }
       }, () => { })
     }
-    history.replace("/")
+    if(history.length>=4){
+      history.go(-3)
+    }else{
+      history.replace("/")
+    }
   }, [history])
 
 
