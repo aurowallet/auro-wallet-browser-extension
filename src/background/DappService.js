@@ -205,6 +205,8 @@ class DappService {
         const sendAction = params.action 
         if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){ 
           await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+        }else{
+          await startExtensionPopup(true)
         }
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1 && chainRequests.length>0){
           reject({ code:errorCodes.zkChainPending,message: getMessageFromCode(errorCodes.zkChainPending)})
@@ -274,6 +276,8 @@ class DappService {
         }
         if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){ 
           await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+        }else{
+          await startExtensionPopup(true)
         }
         function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
@@ -504,6 +508,8 @@ class DappService {
         }
         if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){
           await checkAndTopV2(POPUP_CHANNEL_KEYS.popup)
+        }else{
+          await startExtensionPopup(true)
         }
         if(approveRequests.length>0){
           reject({ message: getMessageFromCode(errorCodes.zkChainPending),code:errorCodes.zkChainPending })
