@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
     - Transacton time format
     - TransactonDetail Page item sort
     - zkApp to address
+    - Add zkApp get wallet info
+- Fix 
+    - popup issue
 
 ## [2.3.1]
 - Enhancements

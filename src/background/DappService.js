@@ -158,6 +158,13 @@ class DappService {
           sendResponse
         )
         break;
+      case DAppActions.wallet_info:
+        this.requestCallback(
+          () => this.getWalletInfo(),
+          id,
+          sendResponse
+        )
+        break
       default:
         this.requestCallback(
           async ()=>{
@@ -1088,6 +1095,15 @@ class DappService {
       approveRequests,
       tokenSigneRequests,
     }
+  }
+  async getWalletInfo(){
+    let isCreate = await this.checkLocalWallet()
+    const pkg = require("../../package.json");
+    const baseWalletInfo = {
+      version:pkg.version,
+      init:isCreate
+    }
+    return baseWalletInfo
   }
 }
 const dappService = new DappService()
