@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
     - TransactonDetail Page item sort
     - zkApp to address
     - Add zkApp get wallet info
+    - Add isTrusted verify
 - Fix 
     - popup issue
 
