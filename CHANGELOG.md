@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
     - zkApp to address
     - Add zkApp get wallet info
     - Add isTrusted verify
+    - Add paymentId to transaction
 - Fix 
     - Popup issue
     - Small amount token transfer

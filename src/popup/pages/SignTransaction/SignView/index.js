@@ -271,11 +271,13 @@ const SignView = ({
         switch (sendAction) {
           case DAppActions.mina_sendStakeDelegation:
             payload.hash = data.sendDelegation.delegation.hash;
+            payload.paymentId = data.sendDelegation.delegation.id;
             id = data.sendDelegation.delegation.id;
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
             break;
           case DAppActions.mina_sendPayment:
-            payload.hash = data.sendPayment.payment.hash;
+            payload.hash = data.sendPayment.payment.hash; 
+            payload.paymentId = data.sendPayment.payment.id;
             id = data.sendPayment.payment.id;
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
             break;
@@ -293,6 +295,7 @@ const SignView = ({
               payload.signedData = JSON.stringify(data);
             } else {
               payload.hash = data.hash;
+              payload.paymentId = data.id;
             }
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
             break;

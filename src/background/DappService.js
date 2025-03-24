@@ -319,7 +319,8 @@ class DappService {
                   if (payload && (payload.hash || payload.signedData)) {
                     if(payload.hash){
                       nextResolve({
-                        hash: payload.hash
+                        hash: payload.hash,
+                        paymentId:payload.paymentId
                       })
                     }else{
                       nextResolve({
