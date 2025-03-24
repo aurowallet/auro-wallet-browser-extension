@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Fix 
     - Popup issue
     - Small amount token transfer
+    - Ledger name
 
 ## [2.3.1]
 - Enhancements

@@ -287,7 +287,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
         );
       }
     }
-  }, [onClickNext, accountIndex, placeholderText]);
+  }, [onClickNext, accountIndex, placeholderText,accountName]);
   const onNameInput = useCallback((e) => {
     let value = e.target.value;
     if (value.length <= 16) {
