@@ -70,17 +70,17 @@ const StyledHistoryWrapper = styled.div`
 const TokenDetail = () => {
   const token = useSelector((state) => state.cache.nextTokenDetail);
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
-  const nextTokenInfo = useMemo(()=>{
+  const nextTokenInfo = useMemo(() => {
     let tokenInfo = tokenList.find((item) => {
       if (item.tokenId === token?.tokenId) {
-        return item
+        return item;
       }
-    })
-    if(!tokenInfo){
-      return token
+    });
+    if (!tokenInfo) {
+      return token;
     }
-    return tokenInfo
-  },[tokenList,token])
+    return tokenInfo;
+  }, [tokenList, token]);
 
   const txHistoryMap = useSelector((state) => state.accountInfo.txHistoryMap);
   const currencyConfig = useSelector((state) => state.currencyConfig);
@@ -126,7 +126,14 @@ const TokenDetail = () => {
       tokenName = MAIN_COIN_CONFIG.name;
     }
 
-    let displayBalance = getBalanceForUI(nextTokenInfo.tokenBaseInfo.showBalance) + " " + tokenSymbol;
+    let displayBalance =
+      getBalanceForUI(
+        nextTokenInfo.tokenBaseInfo.showBalance,
+        0,
+        nextTokenInfo.tokenBaseInfo.decimals
+      ) +
+      " " +
+      tokenSymbol;
 
     let displayAmount = nextTokenInfo.tokenBaseInfo.showAmount || "";
     if (nextTokenInfo.tokenBaseInfo.showAmount) {
@@ -138,7 +145,7 @@ const TokenDetail = () => {
 
     return {
       tokenIconUrl,
-      token:nextTokenInfo,
+      token: nextTokenInfo,
       isFungibleToken,
       tokenSymbol,
       tokenName,
@@ -256,7 +263,7 @@ const TokenDetail = () => {
         dispatch(updateShouldRequest(false));
         saveToLocal(history);
       }
-      
+
       isFirstRequest.current = false;
       setShowLoading(false);
       isRequest = false;
@@ -287,10 +294,7 @@ const TokenDetail = () => {
   useEffect(() => {
     let onMessageListening = (message, sender, sendResponse) => {
       const { type, action, hash } = message;
-      if (
-        type === FROM_BACK_TO_RECORD &&
-        action === TX_SUCCESS
-      ) {
+      if (type === FROM_BACK_TO_RECORD && action === TX_SUCCESS) {
         dispatch(updateShouldRequest(true, true));
         sendResponse();
       }
@@ -323,10 +327,19 @@ const TokenDetail = () => {
         <StyledBalanceRow>{displayBalance}</StyledBalanceRow>
         <StyledAmountRow>{displayAmount}</StyledAmountRow>
         <StyledActionRow>
-          <TokenAction type={token_action_type.send} isFungibleToken={isFungibleToken} />
-          <TokenAction type={token_action_type.receive} isFungibleToken={isFungibleToken}/>
+          <TokenAction
+            type={token_action_type.send}
+            isFungibleToken={isFungibleToken}
+          />
+          <TokenAction
+            type={token_action_type.receive}
+            isFungibleToken={isFungibleToken}
+          />
           {!isFungibleToken && (
-            <TokenAction type={token_action_type.delegation} isFungibleToken={isFungibleToken}/>
+            <TokenAction
+              type={token_action_type.delegation}
+              isFungibleToken={isFungibleToken}
+            />
           )}
         </StyledActionRow>
       </StyledTopWrapper>
@@ -403,7 +416,7 @@ const StyledActionItemWrapper = styled.div`
   }
 `;
 
-export const TokenAction = ({ type,isFungibleToken }) => {
+export const TokenAction = ({ type, isFungibleToken }) => {
   const history = useHistory();
   const { title, nextRouter, actionIconUrl, isReceive } = useMemo(() => {
     let title = "";
@@ -436,9 +449,9 @@ export const TokenAction = ({ type,isFungibleToken }) => {
   const onClickActionBtn = useCallback(() => {
     history.push({
       pathname: nextRouter,
-      params: { isFromTokenPage: true,isFungibleToken },
+      params: { isFromTokenPage: true, isFungibleToken },
     });
-  }, [nextRouter,isFungibleToken]);
+  }, [nextRouter, isFungibleToken]);
   return (
     <StyledActionItemWrapper onClick={onClickActionBtn}>
       <StyledIconWrapper rotate={String(isReceive)}>

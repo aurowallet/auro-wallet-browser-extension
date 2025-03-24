@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file.
     - Add zkApp get wallet info
     - Add isTrusted verify
 - Fix 
-    - popup issue
+    - Popup issue
+    - Small amount token transfer
 
 ## [2.3.1]
 - Enhancements

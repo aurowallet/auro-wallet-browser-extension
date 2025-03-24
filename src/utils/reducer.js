@@ -1,6 +1,6 @@
 import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "@/constant";
 import BigNumber from "bignumber.js";
-import { amountDecimals, mergeLocalConfigToNetToken, txSort } from "./utils";
+import { amountDecimals, mergeLocalConfigToNetToken, toNonExponential, txSort } from "./utils";
 
 // ============================token action================================
 const defaultMinaAssets = {
@@ -125,26 +125,26 @@ export function processTokenList(
     }
     tokenBaseInfo.decimals = decimals;
     if (tokenItem.tokenNetInfo?.publicKey) {
-      tokenBaseInfo.showBalance = amountDecimals(
+      tokenBaseInfo.showBalance = toNonExponential(amountDecimals(
         tokenItem.balance.total,
         decimals
-      );
+      ));
     } else {
       if (isMainToken) {
         tokenBaseInfo.isMainToken = true;
         const delegateAccount = tokenItem.delegateAccount?.publicKey;
         tokenBaseInfo.isDelegation =
           delegateAccount && delegateAccount !== tokenItem.publicKey;
-        tokenBaseInfo.showBalance = amountDecimals(
+        tokenBaseInfo.showBalance = toNonExponential(amountDecimals(
           tokenItem.balance.total,
           tokenBaseInfo.decimals
-        );
+        ));
         tokenBaseInfo.iconUrl = "img/mina_color.svg";
       } else {
-        tokenBaseInfo.showBalance = amountDecimals(
+        tokenBaseInfo.showBalance = toNonExponential(amountDecimals(
           tokenItem.balance.total,
           decimals
-        );
+        ));
       }
     }
 
