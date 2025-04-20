@@ -236,27 +236,27 @@ function internalMessageListener(message, sender, sendResponse) {
       sendResponse(dappService.initApproveConnect())
       break
     case CredentialMsg.store_credential:
-      apiService.storePrivateCredential(payload).then((res, err) => {
+      apiService.storePrivateCredential(payload.address,payload.credential).then((res, err) => {
         sendResponse(res);
       })
       break;
     case CredentialMsg.get_credentials:
-      apiService.getPrivateCredential().then((res, err) => {
+      apiService.getPrivateCredential(payload).then((res, err) => {
         sendResponse(res);
       })
       break;
     case CredentialMsg.ID_LIST:
-      apiService.getCredentialIdList().then((res, err) => {
+      apiService.getCredentialIdList(payload).then((res, err) => {
         sendResponse(res);
       })
       break;
     case CredentialMsg.target_credential:
-      apiService.getTargetCredential(payload).then((res, err) => {
+      apiService.getTargetCredential(payload.address,payload.credentialId).then((res, err) => {
         sendResponse(res);
       })
       break;
       case CredentialMsg.remove_credential_detail:
-      apiService.removeTargetCredential(payload).then((res, err) => {
+      apiService.removeTargetCredential(payload.address,payload.credentialId).then((res, err) => {
         sendResponse(res);
       })
       break;

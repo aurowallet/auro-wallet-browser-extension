@@ -6,6 +6,7 @@ import { CredentialMsg } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
+import { useSelector } from "react-redux";
 
 const StyledContentWrapper = styled.div`
   flex: 1;
@@ -32,6 +33,7 @@ const StyledItemDividedLine = styled.div`
 `;
 const CredentialManage = ({}) => {
   const history = useHistory();
+  const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
 
   const [credentialList, setCredentialList] = useState([]);
 
@@ -39,12 +41,13 @@ const CredentialManage = ({}) => {
     sendMsg(
       {
         action: CredentialMsg.ID_LIST,
+        payload:currentAddress
       },
       (credentials) => {
         setCredentialList(credentials);
       }
     );
-  }, []);
+  }, [currentAddress]);
 
   const onClickCredentialItem = useCallback((credentialId) => {
     history.push({

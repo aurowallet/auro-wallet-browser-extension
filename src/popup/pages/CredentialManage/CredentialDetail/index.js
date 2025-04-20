@@ -6,6 +6,7 @@ import { CredentialMsg } from "../../../../constant/msgTypes";
 import { sendMsg } from "../../../../utils/commonMsg";
 import { addressSlice } from "../../../../utils/utils";
 import CustomView from "../../../component/CustomView";
+import { useSelector } from "react-redux";
 
 const StyledJsonView = styled.div`
   overflow-y: auto;
@@ -36,6 +37,8 @@ const StyledDelete = styled.p`
 
 const CredentialDetail = ({}) => {
   const history = useHistory();
+  const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
+
   const [credential, setCredential] = useState("");
 
   const credentialId = useMemo(() => {
@@ -47,7 +50,10 @@ const CredentialDetail = ({}) => {
     sendMsg(
       {
         action: CredentialMsg.target_credential,
-        payload: credentialId,
+        payload: {
+          credentialId:credentialId,
+          address:currentAddress
+        },
       },
       (targetCredential) => {
         try {
@@ -59,18 +65,21 @@ const CredentialDetail = ({}) => {
         }
       }
     );
-  }, [credentialId]);
+  }, [credentialId,currentAddress]);
   const onClickDelete = useCallback(() => {
     sendMsg(
       {
         action: CredentialMsg.remove_credential_detail,
-        payload: credentialId,
+        payload: {
+          credentialId:credentialId,
+          address:currentAddress
+        },
       },
       () => {
         history.goBack();
       }
     );
-  }, [credentialId]);
+  }, [credentialId,currentAddress]);
 
   return (
     <CustomView

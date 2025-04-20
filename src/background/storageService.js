@@ -75,40 +75,69 @@ const setStoredData = (data) => {
   });
 };
 
-export const getCredentialById = async (credentialId) => {
+export const getCredentialById = async (address, credentialId) => {
   const { credentials } = await getStoredCredentials();
-  return credentials[credentialId] || {};
+  return credentials[address]?.[credentialId] || {};
 };
 
-export const storeCredential = async ({ credentialId, credential }) => {
+export const storeCredential = async ({
+  address,
+  credentialId,
+  credential,
+}) => {
   const current = await getStoredCredentials();
   const newData = produce(current, (draft) => {
-    draft.credentials[credentialId] = {
-      ...draft.credentials[credentialId],
+    // Ensure the address key exists in credentials
+    if (!draft.credentials[address]) {
+      draft.credentials[address] = {};
+    }
+    // Store the credential under the specified address and credentialId
+    draft.credentials[address][credentialId] = {
+      ...draft.credentials[address][credentialId],
       ...credential,
     };
   });
   await setStoredData(newData);
 };
-export const removeCredential = async (credentialId) => {
+export const removeCredential = async (address, credentialId) => {
   const current = await getStoredCredentials();
   const newData = produce(current, (draft) => {
-    delete draft.credentials[credentialId];
+    if (draft.credentials[address]) {
+      delete draft.credentials[address][credentialId];
+      // Optionally, clean up the address key if it's empty
+      if (Object.keys(draft.credentials[address]).length === 0) {
+        delete draft.credentials[address];
+      }
+    }
   });
   await setStoredData(newData);
 };
-export const searchCredential = async ({ query, props }) => {
+export const searchCredential = async ({ address, query, props }) => {
   const { credentials } = await getStoredCredentials();
-  
-  const objectsStatesArray = Object.values(credentials);
+
+  // Get credentials for the specified address, default to empty object if not found
+  const addressCredentials = credentials[address] || {};
+
+  // Convert to array of credential objects, including the credentialId
+  const objectsStatesArray = Object.entries(addressCredentials).map(
+    ([id, credential]) => ({
+      id,
+      ...credential,
+    })
+  );
+
+  // Filter based on the query
   const filteredObjects = objectsStatesArray.filter((object) =>
     matchesQuery(object, query)
   );
+
+  // If props are specified, return only the requested properties
   if (props?.length) {
     return filteredObjects.flatMap((object) =>
       props.filter((prop) => prop in object).map((prop) => object[prop])
     );
   }
+
   return filteredObjects;
 };
 function matchesQuery(obj, query) {

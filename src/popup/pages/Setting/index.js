@@ -45,14 +45,18 @@ const Setting = ({ }) => {
         }, (time) => {
             setCurrentLockTime(time)
         })
+    }, [])
 
 
+
+    useEffect(()=>{
         sendMsg({
             action: CredentialMsg.ID_LIST,
+            payload:currentAddress
         }, (credentialsIds) => {
             setCredentialCount(credentialsIds.length)
         })
-    }, [])
+    },[currentAddress])
 
     const {
         routeList, rowAbout

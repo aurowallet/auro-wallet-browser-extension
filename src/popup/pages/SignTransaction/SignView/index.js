@@ -716,6 +716,7 @@ const SignView = ({
       const newCredentialHash = createCredentialHash(credentialData);
       const existingCredentials = await sendMsgV2({
         action: CredentialMsg.get_credentials,
+        payload:currentAccount.address
       });
       const isDuplicate = existingCredentials.some((existing) => {
         const existingHash = createCredentialHash(
@@ -733,7 +734,10 @@ const SignView = ({
         const parsedResult = credentialToStore;
         await sendMsgV2({
           action: CredentialMsg.store_credential,
-          payload: parsedResult,
+          payload: {
+            credential:parsedResult,
+            address:currentAccount.address
+          },
         });
         sendMsg(
           {
@@ -1518,12 +1522,13 @@ const PresentationView = ({
     sendMsg(
       {
         action: CredentialMsg.get_credentials,
+        payload:currentAccount.address
       },
       async (credentials) => {
         setStoredCredentials(credentials);
       }
     );
-  }, []);
+  }, [currentAccount]);
 
   const displayPresentation = useMemo(() => {
     const { presentationRequest, zkAppAccount } = presentationData;

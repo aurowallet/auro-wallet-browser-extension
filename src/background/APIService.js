@@ -873,8 +873,9 @@ class APIService {
         })
         return ledgerList.length
     }
-    storePrivateCredential= async (credential) => {
+    storePrivateCredential= async (address,credential) => {
         const nextCredential = {
+                address,
                 credentialId: crypto.randomUUID(),
                 credential: {
                     credential,
@@ -884,8 +885,9 @@ class APIService {
         await storeCredential(nextCredential)
         return ;
       }
-    getPrivateCredential= async () => {
+    getPrivateCredential= async (address) => {
         const credentials = await searchCredential({
+            address,
             query: { type: "private-credential" },
             props: [],
         })
@@ -897,17 +899,18 @@ class APIService {
         })
         return filterCre
     }
-    getCredentialIdList = async ()=>{
-        const {credentials} = await getStoredCredentials()
-        return Object.keys(credentials);
-    }
-    getTargetCredential = async (credentialId)=>{
-        const credential = await getCredentialById(credentialId)
+    getCredentialIdList = async (address) => {
+        const { credentials } = await getStoredCredentials();
+        const addressCredentials = credentials[address] || {};
+        return Object.keys(addressCredentials);
+      };
+    getTargetCredential = async (address,credentialId)=>{
+        const credential = await getCredentialById(address,credentialId)
         return credential;
     }
-    removeTargetCredential = async (credentialId)=>{
+    removeTargetCredential = async (address,credentialId)=>{
         try {
-            await removeCredential(credentialId)    
+            await removeCredential(address,credentialId)    
             return true
         } catch (error) {
             return false
