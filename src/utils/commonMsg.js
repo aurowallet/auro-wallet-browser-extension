@@ -23,6 +23,24 @@ export function sendMsg(message, sendResponse,errorCallback) {
   );
 }
 
+export function sendMsgV2(message) {
+  return new Promise((resolve, reject) => {
+    const { action } = message;
+    extension.runtime.sendMessage(
+      {
+        ...message,
+      },
+      (response) => {
+        if (extension.runtime.lastError) {
+          console.error("send message error", action, extension.runtime.lastError);
+          reject(extension.runtime.lastError);
+        } else {
+          resolve(response);
+        }
+      }
+    );
+  });
+}
 
 /**
  * open web  page

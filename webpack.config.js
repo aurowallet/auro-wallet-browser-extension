@@ -52,6 +52,7 @@ module.exports = (env, argv) => {
       popup: "./src/index.js",
       contentScript: "./src/contentScript/index.js",
       webhook: "./src/webHook/index.js",
+      sandbox: "./src/sandbox/index.js",
     },
     output: {
       path: path.resolve(__dirname, "./dist"),

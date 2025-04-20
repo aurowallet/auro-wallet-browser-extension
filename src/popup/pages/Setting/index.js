@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom';
 import { getLocal } from "../../../background/localStorage";
 import { AUTO_LOCK_TIME_LIST } from "../../../constant";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
-import { DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/msgTypes";
+import { CredentialMsg, DAPP_CONNECTION_LIST, WALLET_GET_LOCK_TIME } from "../../../constant/msgTypes";
 import { languageOption } from "../../../i18n";
 import { updateAddressBookFrom } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -26,6 +26,7 @@ const Setting = ({ }) => {
     const [connectCount, setConnectCount] = useState(0)
     
     const [currentLockTime, setCurrentLockTime] = useState("")
+    const [credentialCount, setCredentialCount] = useState(0)
 
 
     useEffect(() => {
@@ -43,6 +44,13 @@ const Setting = ({ }) => {
             action: WALLET_GET_LOCK_TIME,
         }, (time) => {
             setCurrentLockTime(time)
+        })
+
+
+        sendMsg({
+            action: CredentialMsg.ID_LIST,
+        }, (credentialsIds) => {
+            setCredentialCount(credentialsIds.length)
         })
     }, [])
 
@@ -133,6 +141,12 @@ const Setting = ({ }) => {
                 targetRoute: "address_book",
                 rightContent: getAddressBook(),
                 action: addressBookAction
+            },
+            {
+                icon: '/img/ic_credentials_manage.svg',
+                title: i18n.t('credentialsTitle'),
+                targetRoute: "credential_manage",
+                rightContent: credentialCount,
             }
         ]
         const rowAbout = {
@@ -144,7 +158,7 @@ const Setting = ({ }) => {
             routeList,
             rowAbout
         }
-    }, [i18n, currentNode, currency, dispatch, connectCount, currentLockTime])
+    }, [i18n, currentNode, currency, dispatch, connectCount, currentLockTime,credentialCount])
 
     
 

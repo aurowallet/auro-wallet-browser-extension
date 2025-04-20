@@ -3,8 +3,10 @@ import { MAIN_COIN_CONFIG } from "@/constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "@/constant/commonType";
 import {
   DAPP_ACTION_CREATE_NULLIFIER,
+  DAPP_ACTION_REQUEST_PRESENTATION,
   DAPP_ACTION_SEND_TRANSACTION,
   DAPP_ACTION_SIGN_MESSAGE,
+  DAPP_ACTION_STORE_CREDENTIAL,
   QA_SIGN_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_SEND_FIELDS_MESSAGE_TRANSACTION,
@@ -20,7 +22,7 @@ import NetworkStatusView from "@/popup/component/StatusView/NetworkStatusView";
 import Tabs from "@/popup/component/Tabs";
 import Toast from "@/popup/component/Toast";
 import { updateLedgerConnectStatus } from "@/reducers/ledger";
-import { sendMsg } from "@/utils/commonMsg";
+import { sendMsg, sendMsgV2 } from "@/utils/commonMsg";
 import {
   getLedgerStatus,
   requestSignDelegation,
@@ -29,6 +31,7 @@ import {
 import {
   addressSlice,
   copyText,
+  createCredentialHash,
   exportFile,
   getRealErrorMsg,
   isNaturalNumber,
@@ -42,11 +45,15 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
+import { PrettyPrinter } from "mina-attestations";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { serializeError } from "serialize-error";
+import styled from "styled-components";
+import { CredentialMsg } from "../../../../constant/msgTypes";
+import { updateShouldRequest } from "../../../../reducers/accountReducer";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
-import { updateShouldRequest } from "../../../../reducers/accountReducer";
 
 const ZkAppValueType = {
   site: "RECOMMEND_SITE",
@@ -71,7 +78,39 @@ const SIGN_MESSAGE_EVENT = [
 const COMMON_TRANSACTION_ACTION = [
   DAppActions.mina_sendPayment,
   DAppActions.mina_sendStakeDelegation,
+  DAppActions.mina_sendTransaction,
 ];
+
+const Ledger_support_action = [
+  DAppActions.mina_sendPayment,
+  DAppActions.mina_sendStakeDelegation,
+];
+
+const StyledJsonView = styled.div`
+  overflow-y: auto;
+  border-radius: 4px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  color: rgba(0, 0, 0, 0.8);
+  margin-top: 20px;
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+  width: calc(100% - 20px);
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  pre {
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+`;
+const StyledJsonViewRequire = styled(StyledJsonView)`
+  margin-top: 10px;
+  max-height: 100px;
+`;
+const StyledJsonViewSmall = styled(StyledJsonView)`
+  margin-top: 10px;
+  max-height: 130px;
+`;
 
 const SignView = ({
   signParams,
@@ -113,12 +152,15 @@ const SignView = ({
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
   const [ledgerApp, setLedgerApp] = useState();
+  const [selectedCredentials, setSelectedCredentials] = useState({});
 
   const {
     sendAction,
     siteRecommendFee,
     currentAdvanceData,
     transactionTypeName,
+    credentialData,
+    presentationData,
   } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     const body = signParams?.params?.transaction;
@@ -145,11 +187,22 @@ const SignView = ({
       default:
         break;
     }
+
+    let credentialData = {};
+    let presentationData = {};
+    if (sendAction == DAppActions.mina_storePrivateCredential) {
+      credentialData = signParams.params.credential || {};
+    }
+    if (sendAction == DAppActions.mina_requestPresentation) {
+      presentationData = signParams.params.presentationData || {};
+    }
     return {
       sendAction,
       siteRecommendFee,
       currentAdvanceData,
       transactionTypeName,
+      credentialData,
+      presentationData,
     };
   }, [signParams, advanceData]);
 
@@ -236,6 +289,12 @@ const SignView = ({
       case DAppActions.mina_createNullifier:
         resultAction = DAPP_ACTION_CREATE_NULLIFIER;
         break;
+      case DAppActions.mina_storePrivateCredential:
+        resultAction = DAPP_ACTION_STORE_CREDENTIAL;
+        break;
+      case DAppActions.mina_requestPresentation:
+        resultAction = DAPP_ACTION_REQUEST_PRESENTATION;
+        break;
       default:
         break;
     }
@@ -276,7 +335,7 @@ const SignView = ({
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
             break;
           case DAppActions.mina_sendPayment:
-            payload.hash = data.sendPayment.payment.hash; 
+            payload.hash = data.sendPayment.payment.hash;
             payload.paymentId = data.sendPayment.payment.id;
             id = data.sendPayment.payment.id;
             resultAction = DAPP_ACTION_SEND_TRANSACTION;
@@ -343,21 +402,6 @@ const SignView = ({
 
   const ledgerTransfer = useCallback(
     async (params, preLedgerApp) => {
-      if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
-        Toast.info(i18n.t("notSupportNow"));
-        sendMsg(
-          {
-            action: DAPP_ACTION_SIGN_MESSAGE,
-            payload: { error: "Not supported yet" },
-          },
-          async (params) => {}
-        );
-        return;
-      }
-      if (COMMON_TRANSACTION_ACTION.indexOf(sendAction) === -1) {
-        Toast.info(i18n.t("notSupportNow"));
-        return;
-      }
       const nextLedgerApp = preLedgerApp || ledgerApp;
       if (nextLedgerApp) {
         let signResult;
@@ -416,6 +460,45 @@ const SignView = ({
           }
           setLedgerApp(ledger.app);
         }
+      }
+      if (sendAction === DAppActions.mina_storePrivateCredential) {
+        const res = await onStoreInfo();
+        if (!res) {
+          return;
+        }
+        sendMsg(
+          {
+            action: DAPP_ACTION_STORE_CREDENTIAL,
+            payload: {
+              ...res,
+            },
+          },
+          async (params) => {
+            onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
+          }
+        );
+        return;
+      }
+      if (sendAction === DAppActions.mina_requestPresentation) {
+        const res = await onPresentation();
+
+        if (!res) {
+          return;
+        }
+        sendMsg(
+          {
+            action: DAPP_ACTION_REQUEST_PRESENTATION,
+            payload: {
+              presentation: res,
+              resultOrigin: signParams?.site?.origin,
+              id: signParams.id,
+            },
+          },
+          async (params) => {
+            onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
+          }
+        );
+        return;
       }
       let { params } = signParams;
       let validNonce = nonceValue || zkAppNonce || inferredNonce;
@@ -489,15 +572,237 @@ const SignView = ({
       isSendZk,
       zkOnlySign,
       zkAppNonce,
+      selectedCredentials,
+      credentialData,
+      presentationData,
     ]
   );
+
+  const checkLedgerSupport = useCallback(() => {
+    if (Ledger_support_action.indexOf(sendAction) === -1) {
+      Toast.info(i18n.t("notSupportNow"));
+      let resultAction = "";
+      switch (sendAction) {
+        case DAppActions.mina_sendTransaction:
+          resultAction = DAPP_ACTION_SEND_TRANSACTION;
+          break;
+        case DAppActions.mina_signFields:
+          resultAction = DAPP_ACTION_SIGN_MESSAGE;
+          break;
+        case DAppActions.mina_createNullifier:
+          resultAction = DAPP_ACTION_CREATE_NULLIFIER;
+          break;
+        case DAppActions.mina_signMessage:
+        case DAppActions.mina_sign_JsonMessage:
+          resultAction = DAPP_ACTION_SIGN_MESSAGE;
+          break;
+        case DAppActions.mina_storePrivateCredential:
+          resultAction = DAPP_ACTION_STORE_CREDENTIAL;
+          break;
+        case DAppActions.mina_requestPresentation:
+          resultAction = DAPP_ACTION_REQUEST_PRESENTATION;
+          break;
+        default:
+          break;
+      }
+      sendMsg(
+        {
+          action: resultAction,
+          payload: { error: "Not supported yet" },
+        },
+        async (params) => {}
+      );
+      return false;
+    }
+    return true;
+  }, []);
+
+  const sendSandboxMessage = (payload) => {
+    return new Promise((resolve, reject) => {
+      const sandbox = document.getElementById("o1jssandbox");
+      if (!sandbox) {
+        resolve({
+          error: { message: "Sandbox iframe not found" },
+        });
+        return;
+      }
+      // Listen for the response from the sandbox
+      const messageHandler = (event) => {
+        if (event.data.type === "validate-credential-result") {
+          window.removeEventListener("message", messageHandler);
+          resolve({
+            type: event.data.type,
+            result: event.data.result,
+            error: event.data.error,
+          });
+        }
+        if (event.data.type === "presentation-signing-request") {
+          sendMsg(
+            {
+              action: WALLET_SEND_FIELDS_MESSAGE_TRANSACTION,
+              payload: {
+                message: event.data.fields,
+              },
+            },
+            (data) => {
+              if (!data.signature) {
+                Toast.info(data?.error?.message || "presentation sign failed");
+                setBtnLoading(false);
+                window.removeEventListener("message", messageHandler);
+                return;
+              }
+              sendSandboxMessage({
+                type: "presentation-signature",
+                signature: data.signature,
+              });
+            }
+          );
+        }
+        if (event.data.type === "presentation-result") {
+          window.removeEventListener("message", messageHandler);
+          resolve({
+            type: event.data.type,
+            result: event.data.result,
+            error: event.data.error,
+          });
+        }
+        if (event.data.type === "init-sandbox-extension-id") {
+          if (sandbox) {
+            Toast.info(i18n.t("tryAgain"));
+            const allowedOrigin = `chrome-extension://${chrome.runtime.id}`;
+            sandbox.contentWindow.postMessage(
+              {
+                type: "init-sandbox",
+                parentOrigin: allowedOrigin,
+              },
+              "*"
+            );
+            resolve({
+              error: {
+                message: i18n.t("tryAgain"),
+              },
+            });
+          }
+        }
+      };
+      window.addEventListener("message", messageHandler);
+      sandbox.contentWindow?.postMessage(payload, "*");
+    });
+  };
+
+  const onStoreInfo = async () => {
+    const stringifiedCredential = JSON.stringify(credentialData);
+    let credentialToStore;
+
+    try {
+      setBtnLoading(true);
+      const credentialWitnessType = credentialData.witness.type;
+      if (credentialWitnessType === "unsigned") {
+        credentialToStore = stringifiedCredential;
+      } else {
+        const result = await sendSandboxMessage({
+          type: "validate-credential",
+          payload: stringifiedCredential,
+        });
+
+        if (result?.error || !result?.result) {
+          Toast.info(result.error?.message || "validate credential failed");
+          setBtnLoading(false);
+          return;
+        }
+        credentialToStore = result.result;
+      }
+
+      const newCredentialHash = createCredentialHash(credentialData);
+      const existingCredentials = await sendMsgV2({
+        action: CredentialMsg.get_credentials,
+      });
+      const isDuplicate = existingCredentials.some((existing) => {
+        const existingHash = createCredentialHash(
+          JSON.parse(existing.credential)
+        );
+        return existingHash === newCredentialHash;
+      });
+      if (isDuplicate) {
+        Toast.info(i18n.t("credentialExist"));
+        setBtnLoading(false);
+        return;
+      }
+
+      try {
+        const parsedResult = credentialToStore;
+        await sendMsgV2({
+          action: CredentialMsg.store_credential,
+          payload: parsedResult,
+        });
+        sendMsg(
+          {
+            action: DAPP_ACTION_STORE_CREDENTIAL,
+            payload: {
+              credential: parsedResult,
+              resultOrigin: signParams?.site?.origin,
+              id: signParams.id,
+            },
+          },
+          async (params) => {
+            onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
+          }
+        );
+        setBtnLoading(true);
+        return { success: parsedResult };
+      } catch (error) {
+        const err = serializeError(error);
+        Toast.info(
+          `Failed to store private credential: ${
+            err.message || error.message || JSON.stringify(error)
+          }`
+        );
+      }
+    } catch (error) {
+      console.log(" onStoreInfo error", error);
+      const err = serializeError(error);
+      Toast.info(
+        `Failed to store validate credential: ${
+          err.message || error.message || JSON.stringify(error)
+        }`
+      );
+    }
+  };
+
+  const onPresentation = async () => {
+    const { presentationRequest, zkAppAccount } = presentationData;
+    const verifierIdentity =
+      presentationRequest.type === "zk-app"
+        ? zkAppAccount
+        : signParams?.site?.origin;
+
+    if (!selectedCredentials?.credential) {
+      Toast.info(i18n.t("credentalSelectTip"));
+      return;
+    }
+    setBtnLoading(true);
+    const result = await sendSandboxMessage({
+      type: "presentation",
+      payload: {
+        presentationRequest,
+        selectedCredentials: selectedCredentials.credential.credentialStr,
+        verifierIdentity,
+      },
+    });
+    if (result?.error || !result?.result) {
+      Toast.info(result.error?.message || "validate credential failed");
+      setBtnLoading(false);
+      return;
+    }
+    return result?.result;
+  };
 
   const onConfirm = useCallback(
     async (ledgerReady = false) => {
       let params = signParams.params;
       if (
-        SIGN_MESSAGE_EVENT.indexOf(sendAction) == -1 &&
-        sendAction !== DAppActions.mina_sendTransaction
+        sendAction == DAppActions.mina_sendPayment ||
+        sendAction == DAppActions.mina_sendStakeDelegation
       ) {
         let toAddress = trimSpace(params.to);
         if (!addressValid(toAddress)) {
@@ -512,18 +817,18 @@ const SignView = ({
           return;
         }
       }
-      let validNonce = nonceValue || zkAppNonce || inferredNonce;
-      let nonce = trimSpace(validNonce) || "";
-      if (nonce.length > 0 && !isNumber(nonce)) {
-        Toast.info(i18n.t("waitNonce"));
-        return;
-      }
-      let fee = trimSpace(feeValue);
-      if (fee.length > 0 && !isNumber(fee)) {
-        Toast.info(i18n.t("inputFeeError"));
-        return;
-      }
-      if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
+      if (COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1) {
+        let validNonce = nonceValue || zkAppNonce || inferredNonce;
+        let nonce = trimSpace(validNonce) || "";
+        if (nonce.length > 0 && !isNumber(nonce)) {
+          Toast.info(i18n.t("waitNonce"));
+          return;
+        }
+        let fee = trimSpace(feeValue);
+        if (fee.length > 0 && !isNumber(fee)) {
+          Toast.info(i18n.t("inputFeeError"));
+          return;
+        }
         let amount = trimSpace(params.amount) || 0;
         let maxAmount = new BigNumber(amount).plus(fee).toString();
         if (
@@ -536,6 +841,10 @@ const SignView = ({
         }
       }
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+        let support = checkLedgerSupport();
+        if (!support) {
+          return;
+        }
         if (!ledgerReady) {
           const ledger = await getLedgerStatus();
           setLedgerApp(ledger.app);
@@ -565,6 +874,9 @@ const SignView = ({
       sendAction,
       inferredNonce,
       zkAppNonce,
+      selectedCredentials,
+      credentialData,
+      presentationData,
     ]
   );
 
@@ -825,6 +1137,11 @@ const SignView = ({
     setNonceType(ZkAppValueType.custom);
     setNonceValue(inferredNonce);
   }, [inferredNonce]);
+  const onSelectCredential = (credentialData) => {
+    setSelectedCredentials({
+      ...credentialData,
+    });
+  };
 
   return (
     <section className={styles.sectionSign}>
@@ -843,6 +1160,26 @@ const SignView = ({
             siteUrl={signParams?.site?.origin}
           />
         </div>
+        {sendAction === DAppActions.mina_storePrivateCredential ? (
+          <CredentialView
+            currentAccount={currentAccount}
+            showAccountAddress={showAccountAddress}
+            credentialData={credentialData}
+          />
+        ) : (
+          <></>
+        )}
+        {sendAction === DAppActions.mina_requestPresentation ? (
+          <PresentationView
+            currentAccount={currentAccount}
+            showAccountAddress={showAccountAddress}
+            presentationData={presentationData}
+            origin={signParams?.site?.origin}
+            onSelectCredential={onSelectCredential}
+          />
+        ) : (
+          <></>
+        )}
         {SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1 ? (
           <CommonRow
             leftTitle={currentAccount.accountName}
@@ -856,6 +1193,9 @@ const SignView = ({
             }
           />
         ) : (
+          <></>
+        )}
+        {COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1 ? (
           <>
             <CommonRow
               leftTitle={currentAccount.accountName}
@@ -935,6 +1275,8 @@ const SignView = ({
             </div>
             <div className={styles.highFeeTip}>{feeErrorTip}</div>
           </>
+        ) : (
+          <></>
         )}
         {tabList.length > 0 && (
           <div className={styles.accountRow}>
@@ -1114,6 +1456,273 @@ const CommonRow = ({
           onClick={onClickRight}
         >
           {rightContent}
+        </p>
+      </div>
+    </div>
+  );
+};
+const CredentialView = ({
+  currentAccount,
+  showAccountAddress,
+  credentialData,
+}) => {
+  const displayCredentialData = useMemo(() => {
+    let displayCredentialData = credentialData;
+    if (Object.keys(credentialData).length > 0) {
+      displayCredentialData = PrettyPrinter.simplifyCredentialData(
+        credentialData
+      );
+    }
+    return displayCredentialData;
+  }, [credentialData]);
+  return (
+    <>
+      <CommonRow
+        leftTitle={currentAccount.accountName}
+        leftContent={showAccountAddress}
+        leftCopyContent={currentAccount.address}
+      />
+      <StyledJsonView>
+        <pre>{JSON.stringify(displayCredentialData, null, 4)}</pre>
+      </StyledJsonView>
+    </>
+  );
+};
+
+const StyledSelectRow = styled.label`
+  padding: 0.75rem;
+  border-radius: 1rem;
+  gap: 0.5rem;
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  background-color: #eee;
+  margin-bottom: 10px;
+`;
+const StyledTipContent = styled.p`
+  margin: 10px 0;
+  font-weight: 500;
+  font-size: 14px;
+`;
+
+const PresentationView = ({
+  currentAccount,
+  showAccountAddress,
+  presentationData,
+  origin,
+  onSelectCredential,
+}) => {
+  const [storedCredentials, setStoredCredentials] = useState([]);
+  const [selectedCredentials, setSelectedCredentials] = useState(new Map());
+  useEffect(() => {
+    sendMsg(
+      {
+        action: CredentialMsg.get_credentials,
+      },
+      async (credentials) => {
+        setStoredCredentials(credentials);
+      }
+    );
+  }, []);
+
+  const displayPresentation = useMemo(() => {
+    const { presentationRequest, zkAppAccount } = presentationData;
+    const verifierIdentity =
+      presentationRequest.type === "zk-app" ? zkAppAccount : origin;
+    const formatted = [
+      PrettyPrinter.printPresentationRequest(presentationRequest),
+      PrettyPrinter.printVerifierIdentity(
+        presentationRequest.type,
+        verifierIdentity
+      ),
+    ].join("\n");
+    return formatted;
+  }, [presentationData, origin]);
+
+  const getCredentialRequirements = (presentationRequest) => {
+    const extractDataFields = (data) => {
+      if (!data) return [];
+
+      if (data._type === "Struct" && data.properties) {
+        return Object.keys(data.properties);
+      }
+
+      if (data._type === "DynamicRecord" && data.knownShape) {
+        return Object.keys(data.knownShape);
+      }
+      return Object.keys(data);
+    };
+    const requirements = [];
+    for (const [key, input] of Object.entries(
+      presentationRequest.spec.inputs
+    )) {
+      if (input.type === "credential" && input.credentialType && input.data) {
+        requirements.push({
+          inputKey: key,
+          type: input.credentialType,
+          dataFields: extractDataFields(input.data),
+        });
+      }
+    }
+    return requirements;
+  };
+  const credentialMatchesRequirement = (credential, requirement) => {
+    if (credential.witness?.type !== requirement.type) {
+      return false;
+    }
+    const getCredentialDataKeys = (credential) => {
+      const data =
+        credential.credential.value?.data || credential.credential.data;
+      return data ? Object.keys(data) : [];
+    };
+    const credentialFields = getCredentialDataKeys(credential);
+    return requirement.dataFields.every((field) =>
+      credentialFields.includes(field)
+    );
+  };
+  const findMatchingRequirements = (credential, requirements) => {
+    return requirements.filter((req) =>
+      credentialMatchesRequirement(credential, req)
+    );
+  };
+
+  const { credentials, requirements } = useMemo(() => {
+    try {
+      const { presentationRequest, zkAppAccount } = presentationData;
+      const credentialRequirements = getCredentialRequirements(
+        presentationRequest
+      );
+      const parsedStoredCredentials = storedCredentials.map((credentials) => {
+        return {
+          credential: JSON.parse(credentials.credential),
+          credentialStr: credentials.credential,
+        };
+      });
+      const validCredentials = parsedStoredCredentials
+        .filter(
+          (credential) =>
+            findMatchingRequirements(
+              credential.credential,
+              credentialRequirements
+            ).length > 0
+        )
+        .map((credential) => ({
+          id: createCredentialHash(credential.credential),
+          credential,
+          matchingRequirements: findMatchingRequirements(
+            credential.credential,
+            credentialRequirements
+          ),
+        }));
+
+      return {
+        credentials: validCredentials,
+        requirements: credentialRequirements,
+      };
+    } catch (error) {
+      error.message = `Issue with parsing: ${error.message}`;
+      throw error;
+    }
+  }, [presentationData, storedCredentials]);
+
+  const isSelectedFor = (credentialId, inputKey) => {
+    const selection = selectedCredentials.get(inputKey);
+    return selection?.credentialId === credentialId;
+  };
+  const handleCredentialSelect = (credentialData, inputKey) => {
+    setSelectedCredentials((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(inputKey, {
+        credential: credentialData.credential,
+        credentialId: credentialData.id,
+      });
+      return newMap;
+    });
+    onSelectCredential && onSelectCredential(credentialData, inputKey);
+  };
+
+  return (
+    <>
+      <CommonRow
+        leftTitle={currentAccount.accountName}
+        leftContent={showAccountAddress}
+        leftCopyContent={currentAccount.address}
+      />
+      <StyledJsonViewRequire>
+        <pre>{displayPresentation ?? ""}</pre>
+      </StyledJsonViewRequire>
+
+      {requirements.map((requirement, index) => {
+        const matchingCredentials = credentials.filter((cred) =>
+          cred.matchingRequirements.some(
+            (req) => req.inputKey === requirement.inputKey
+          )
+        );
+        return (
+          <div key={requirement.inputKey + "_" + index}>
+            <StyledTipContent>
+              {i18n.t("selectCredentialTip", { key: requirement.inputKey })}
+            </StyledTipContent>
+            <StyledJsonViewSmall>
+              <div>
+                {matchingCredentials.length > 0 ? (
+                  matchingCredentials.map((credentialData, index) => (
+                    <StyledSelectRow
+                      key={`${credentialData.id}-${requirement.inputKey}`}
+                    >
+                      <input
+                        type="radio"
+                        name={requirement.inputKey}
+                        checked={isSelectedFor(
+                          credentialData.id,
+                          requirement.inputKey
+                        )}
+                        onChange={() =>
+                          handleCredentialSelect(
+                            credentialData,
+                            requirement.inputKey
+                          )
+                        }
+                      />
+                      <CredentialDisplay
+                        key={credentialData.id + "+" + index}
+                        credential={credentialData.credential.credential}
+                        matchingRequirements={
+                          credentialData.matchingRequirements
+                        }
+                      />
+                    </StyledSelectRow>
+                  ))
+                ) : (
+                  <div>{i18n.t("noMatchCredentials")}</div>
+                )}
+              </div>
+            </StyledJsonViewSmall>
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+const StyledTipSpan = styled.span`
+  margin-right: 4px;
+`;
+const CredentialDisplay = ({ credential, matchingRequirements }) => {
+  const witnessType = credential.witness?.type || "unknown";
+  const simplifiedData = PrettyPrinter.simplifyCredentialData(credential);
+  const description = credential.metadata?.description;
+
+  return (
+    <div>
+      {description && <p>{description}</p>}
+      <pre>{JSON.stringify(simplifiedData, null, 2)}</pre>
+      <div>
+        <StyledTipSpan>Type: {witnessType}</StyledTipSpan>
+        <p>
+          {i18n.t("credentialsMatchTip", {
+            keys: matchingRequirements.map((r) => r.inputKey).join(", "),
+          })}
         </p>
       </div>
     </div>

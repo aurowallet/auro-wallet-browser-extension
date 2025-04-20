@@ -22,6 +22,7 @@ import {
 import SignView from "./SignView";
 import ZkAppChainView from "./ZkAppChainView";
 import styles from "./index.module.scss";
+import { isNaturalNumber } from "@/utils/utils";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
@@ -252,6 +253,7 @@ const SignTransaction = () => {
       if (type === TX_CLICK_TYPE.CONFIRM) {
         const sendAction = tempSignParams?.params?.action || "";
         if (
+          isNaturalNumber(nonce) && 
           SIGN_EVENT_WITH_BROADCAST.indexOf(sendAction) !== -1 &&
           nextUseInferredNonce === nonce
         ) {

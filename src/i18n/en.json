@@ -296,5 +296,13 @@
   "tokens": "tokens",
   "noTxHistory": "No transaction history",
   "updateAccount": "Account dismatch, please switch account and try again.",
-  "mneTip":"I have {{count}} mnemonic phrases"
+  "mneTip":"I have {{count}} mnemonic phrases",
+  "credentialsTitle":"Credentials",
+  "noCredentials":"No Credential",
+  "selectCredentialTip":"Select credential for {{key}}:",
+  "noMatchCredentials":"No matching credentials found for this input",
+  "credentialsMatchTip":"Can be used for: {{keys}}", 
+  "credentalSelectTip":"Please select credental",
+  "tryAgain":"Please try again",
+  "credentialExist":"Credential already exist"
 }

@@ -25,7 +25,8 @@ import {
   WALLET_DELETE_WATCH_ACCOUNT,
   RESET_WALLET,
   DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, GET_SIGN_PARAMS_BY_ID, WALLET_SEND_MESSAGE_TRANSACTION, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSACTION, GET_SIGN_PARAMS, WALLET_SEND_NULLIFIER, POPUP_ACTIONS,
-  GET_APPROVE_PARAMS
+  GET_APPROVE_PARAMS,
+  CredentialMsg
 } from "../constant/msgTypes";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -234,6 +235,31 @@ function internalMessageListener(message, sender, sendResponse) {
     case POPUP_ACTIONS.INIT_APPROVE_LIST:
       sendResponse(dappService.initApproveConnect())
       break
+    case CredentialMsg.store_credential:
+      apiService.storePrivateCredential(payload).then((res, err) => {
+        sendResponse(res);
+      })
+      break;
+    case CredentialMsg.get_credentials:
+      apiService.getPrivateCredential().then((res, err) => {
+        sendResponse(res);
+      })
+      break;
+    case CredentialMsg.ID_LIST:
+      apiService.getCredentialIdList().then((res, err) => {
+        sendResponse(res);
+      })
+      break;
+    case CredentialMsg.target_credential:
+      apiService.getTargetCredential(payload).then((res, err) => {
+        sendResponse(res);
+      })
+      break;
+      case CredentialMsg.remove_credential_detail:
+      apiService.removeTargetCredential(payload).then((res, err) => {
+        sendResponse(res);
+      })
+      break;
     default:
       break;
   }

@@ -296,5 +296,13 @@
   "updateTokenInfo": "Оновити інформацію про токен?",
   "noTxHistory": "Історія транзакцій відсутня",
   "tokens": "TOKENS",
-  "mneTip":"Я маю {{count}} мнемонічних фраз"
+  "mneTip":"Я маю {{count}} мнемонічних фраз",
+  "credentialsTitle":"Облікові дані",
+  "noCredentials":"Немає облікових даних",
+  "selectCredentialTip":"Виберіть облікові дані для {{key}}:",
+  "noMatchCredentials":"Не знайдено відповідних облікових даних для цього введення",
+  "credentialsMatchTip":"Може бути використано для: {{keys}}",
+  "credentalSelectTip":"Будь ласка, виберіть облікові дані",
+  "tryAgain":"Будь ласка, спробуйте ще раз",
+  "credentialExist":"Облікові дані вже існують"
 }

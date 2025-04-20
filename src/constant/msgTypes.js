@@ -295,3 +295,14 @@ export const WORKER_ACTIONS = {
 export const ACCOUNT_ACTIONS = {
     REFRESH_CURRENT_ACCOUNT:"REFRESH_CURRENT_ACCOUNT"
 }
+
+
+export const CredentialMsg = {
+    ID_LIST: "Credential_id_list",
+    target_credential:"target_credential",
+    remove_credential_detail:"remove_credential_detail",
+    store_credential:"store_credential",
+    get_credentials:"get_credentials",
+}
+export const DAPP_ACTION_STORE_CREDENTIAL = "DAPP_ACTION_STORE_CREDENTIAL"
+export const DAPP_ACTION_REQUEST_PRESENTATION = "DAPP_ACTION_REQUEST_PRESENTATION"

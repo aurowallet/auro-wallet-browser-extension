@@ -7,6 +7,8 @@ import AccountManagePage from '../pages/AccountManage';
 import AccountName from '../pages/AccountName';
 import AddressBook from '../pages/AddressBook';
 import AddressEditor from '../pages/AddressBook/AddressEditor';
+import CredentialManage from '../pages/CredentialManage';
+import CredentialDetail from '../pages/CredentialManage/CredentialDetail';
 import AppConnection from '../pages/AppConnection';
 import ApprovePage from '../pages/ApprovePage';
 import AutoLock from '../pages/AutoLock';
@@ -107,6 +109,9 @@ export function getAllRouter() {
         <Route path={"/add_account"} component={AddAccount}/>
         
         <Route path={"/token_detail"} component={TokenDetail}/>
+
+        <Route path="/credential_manage" component={CredentialManage} />
+        <Route path={"/credential_detail"} component={CredentialDetail}/>
       </Switch>
     </HashRouter>
   );

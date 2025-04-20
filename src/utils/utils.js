@@ -8,7 +8,10 @@ import { sendMsg } from "./commonMsg";
 import bs58check from "bs58check";
 import { extGetLocal } from "../background/extensionStorage";
 import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
-import extension from 'extensionizer'
+import extension from "extensionizer";
+import { sha256 } from "@noble/hashes/sha256";
+import { utf8ToBytes } from "@noble/hashes/utils";
+
 /**
  * address slice
  * @param {*} address
@@ -49,9 +52,9 @@ export function toNonExponential(ExpNumber) {
  */
 export function amountDecimals(amount, decimal = 0) {
   // if decimal bigger than 100 , use 0
-  let nextDecimals = decimal
-  if(BigNumber(nextDecimals).gt(100)){
-    nextDecimals = 0
+  let nextDecimals = decimal;
+  if (BigNumber(nextDecimals).gt(100)) {
+    nextDecimals = 0;
   }
   let realBalance = new BigNumber(amount)
     .dividedBy(new BigNumber(10).pow(nextDecimals))
@@ -61,14 +64,17 @@ export function amountDecimals(amount, decimal = 0) {
 
 export function getBalanceForUI(balance, decimal = 0, fixed = 4) {
   try {
-    let nextBalance = amountDecimals(balance, decimal)
+    let nextBalance = amountDecimals(balance, decimal);
     if (isNaN(parseFloat(nextBalance)) || nextBalance === 0) {
       return "0.00";
     }
-    let showBalance = new BigNumber(nextBalance).toFixed(Number(fixed), 1).toString();
+    let showBalance = new BigNumber(nextBalance)
+      .toFixed(Number(fixed), 1)
+      .toString();
     return toNonExponential(showBalance);
-  } catch (error) {// for decimal error
-    return balance
+  } catch (error) {
+    // for decimal error
+    return balance;
   }
 }
 
@@ -321,7 +327,7 @@ export function getShowTime(time) {
 
     return `${year}-${month}-${day} ${hour}:${minute}`;
   } catch (error) {
-    return time
+    return time;
   }
 }
 
@@ -341,7 +347,6 @@ export function getArrayDiff(deletedAccountApproved, newAccountApproved) {
   }
   return list;
 }
-
 
 export function exportFile(data, fileName) {
   const streamData = new Blob([data], { type: "application/octet-stream" });
@@ -431,36 +436,59 @@ export function checkValidStrInList(list) {
 }
 
 /**
- * @param {*} netToken 
- * @param {*} localToken 
+ * @param {*} netToken
+ * @param {*} localToken
  */
-export function mergeLocalConfigToNetToken(newTokens,localTokens){
+export function mergeLocalConfigToNetToken(newTokens, localTokens) {
   const tokenMap = new Map();
 
-  localTokens.forEach(token => {
+  localTokens.forEach((token) => {
     tokenMap.set(token.tokenId, token);
   });
 
-  return newTokens.map((token)=>{
+  return newTokens.map((token) => {
     const localToken = tokenMap.get(token.tokenId);
     if (localToken) {
       return {
         ...token,
-        localConfig:localToken.localConfig??{}
-      }
+        localConfig: localToken.localConfig ?? {},
+      };
     } else {
-      return token
+      return token;
     }
-  })
+  });
 }
 
 export function getReadableNetworkId(networkId) {
-  return networkId.replace(/:/g, '_');
+  return networkId.replace(/:/g, "_");
 }
 
-export function getExtensionAction(){
-  let isManifestV3 = extension.runtime.getManifest().manifest_version === 3
+export function getExtensionAction() {
+  let isManifestV3 = extension.runtime.getManifest().manifest_version === 3;
   const action = isManifestV3 ? chrome.action : chrome.browserAction;
-  return action
+  return action;
 }
 
+export const createCredentialHash = (credential) => {
+  const { metadata: _, ...credentialWithoutMetadata } = credential;
+
+  function sortObject(obj) {
+    if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+      return obj;
+    }
+    const sorted = {};
+    Object.keys(obj)
+      .sort()
+      .forEach((key) => {
+        sorted[key] = sortObject(obj[key]);
+      });
+    return sorted;
+  }
+  const normalized = sortObject(credentialWithoutMetadata);
+  const stableString = JSON.stringify(normalized);
+  const bytes = utf8ToBytes(stableString);
+  const hash = sha256(bytes);
+  return Array.from(hash)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};

@@ -1,7 +1,7 @@
 import { DAppActions } from '@aurowallet/mina-provider';
 import extension from 'extensionizer';
 import ObservableStore from "obs-store";
-import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
+import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_REQUEST_PRESENTATION, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_STORE_CREDENTIAL, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
 import { checkAndTop, checkAndTopV2, closePopupWindow, lastWindowIds, openPopupWindow, PopupSize, startExtensionPopup, startPopupWindow } from "../utils/popup";
 import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getExtensionAction, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
@@ -19,6 +19,10 @@ import { decryptData, encryptData } from '@/utils/fore';
 import { node_public_keys, react_private_keys, TOKEN_BUILD_URL } from '../../config';
 import { sendMsg } from '../utils/commonMsg';
 import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
+import {
+  PresentationRequestSchema,
+  StoredCredentialSchema,
+} from "mina-attestations/validation"
 const { v4: uuidv4 } = require('uuid');
 
 let signRequests = [];
@@ -91,6 +95,14 @@ class DappService {
       case DAppActions.mina_signMessage:
       case DAppActions.mina_sign_JsonMessage:
       case DAppActions.mina_signFields:
+        this.requestCallback(
+          () => this.signTransaction(id, { ...params, action }, site),
+          id,
+          sendResponse
+        )
+        break;
+      case DAppActions.mina_storePrivateCredential:
+      case DAppActions.mina_requestPresentation:
         this.requestCallback(
           () => this.signTransaction(id, { ...params, action }, site),
           id,
@@ -276,9 +288,27 @@ class DappService {
             reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
             return
           }
+        } 
+        if (sendAction === DAppActions.mina_storePrivateCredential) {
+          const credentialData = params.credential||params["0"];
+          const result = StoredCredentialSchema.safeParse(credentialData);
+          nextParams.credential = credentialData;
+          if(!result.success){
+            reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
+            return
+          }
+        }
+        if (sendAction === DAppActions.mina_requestPresentation) {
+          const presentationData = params.presentation || params["0"]
+          const presentationRequest = presentationData.presentationRequest??{}
+          const result = PresentationRequestSchema.safeParse(presentationRequest);
+          nextParams.presentationData = presentationData;
+          if(!result.success){
+            reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
+            return
+          }
         }
         if(sendAction === DAppActions.mina_sendTransaction){
-          // format zk commond type
           nextParams.transaction = zkCommondFormat(params.transaction)
         }
         if(lastWindowIds[POPUP_CHANNEL_KEYS.popup]){ 
@@ -311,6 +341,66 @@ class DappService {
           const nextResolve = currentSignParams.resolve
           
           switch (action) {
+            case DAPP_ACTION_STORE_CREDENTIAL:
+              if (payload.resultOrigin !== currentSignParams.site.origin) {
+                nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
+                return
+              }
+              if (payload && payload.cancel) {
+                  nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
+                  that.removeSignParamsByOpenId(payload.id)
+                  if(signRequests.length == 0 && chainRequests.length ===0){
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    that.signEventListener = undefined
+                  }
+                  that.setBadgeContent()
+                }else if(payload && payload.credential){
+                  nextResolve({
+                    result:{success: payload.credential},
+                    credential: payload.credential,
+                  })
+                  that.removeSignParamsByOpenId(payload.id)
+                  if(signRequests.length == 0 && chainRequests.length ===0){
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    that.signEventListener = undefined
+                  }
+                  that.setBadgeContent()
+                }else{
+                    let msg = payload.message || getMessageFromCode(errorCodes.internal)
+                    nextReject({ message: msg,code:errorCodes.internal })
+                }
+              sendResponse()
+              return true
+            case DAPP_ACTION_REQUEST_PRESENTATION:
+              if (payload.resultOrigin !== currentSignParams.site.origin) {
+                nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
+                return
+              }
+              if (payload && payload.cancel) {
+                  nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
+                  that.removeSignParamsByOpenId(payload.id)
+                  if(signRequests.length == 0 && chainRequests.length ===0){
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    that.signEventListener = undefined
+                  }
+                  that.setBadgeContent()
+                }else if(payload && payload.presentation){
+                  nextResolve({
+                    result:payload.presentation,
+                    presentation:payload.presentation
+                  })
+                  that.removeSignParamsByOpenId(payload.id)
+                  if(signRequests.length == 0 && chainRequests.length ===0){
+                    extension.runtime.onMessage.removeListener(onMessage)
+                    that.signEventListener = undefined
+                  }
+                  that.setBadgeContent()
+                }else{
+                    let msg = payload.message || getMessageFromCode(errorCodes.internal)
+                    nextReject({ message: msg,code:errorCodes.internal })
+                }
+              sendResponse()
+              return true
             case DAPP_ACTION_SEND_TRANSACTION:
                   if (payload.resultOrigin !== currentSignParams.site.origin) {
                     nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })

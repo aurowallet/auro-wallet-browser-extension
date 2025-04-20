@@ -15,11 +15,17 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "minimum_chrome_version":"88",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; worker-src blob: 'self'; child-src blob: 'self'"
+  },
+  "minimum_chrome_version": "88",
   "web_accessible_resources": [
     {
       "resources": [
-        "webhook.js"
+        "webhook.js",
+        "sandbox.html",
+        "sandbox.js"
       ],
       "matches": [
         "file://*/*",
@@ -27,5 +33,16 @@
         "https://*/*"
       ]
     }
-  ]
+  ],
+  "sandbox": {
+    "pages": [
+      "sandbox.html"
+    ]
+  },
+  "cross_origin_embedder_policy": {
+    "value": "require-corp"
+  },
+  "cross_origin_opener_policy": {
+    "value": "same-origin"
+  }
 }

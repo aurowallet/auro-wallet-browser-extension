@@ -171,6 +171,19 @@ export const applicationEntry = {
     }
   },
 
+  async initSandbox() {
+    const sandbox = document.getElementById("o1jssandbox");
+    if (sandbox) {
+      const allowedOrigin = `chrome-extension://${chrome.runtime.id}`;
+      sandbox.contentWindow.postMessage(
+        {
+          type: "init-sandbox",
+          parentOrigin: allowedOrigin,
+        },
+        "*"
+      );
+    }
+  },
   async appInit(store) {
     extension.runtime.connect({ name: WALLET_CONNECT_TYPE.WALLET_APP_CONNECT });
 
@@ -181,6 +194,7 @@ export const applicationEntry = {
     // init nextRoute
     // init Currency
     getLocalCurrencyConfig(store);
+    this.initSandbox();
   },
 
   render() {

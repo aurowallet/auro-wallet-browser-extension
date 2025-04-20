@@ -3,7 +3,7 @@ import { FROM_BACK_TO_RECORD, SET_LOCK, TX_SUCCESS, WORKER_ACTIONS } from '../co
 import '../i18n';
 import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './api';
 import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
-import { get, removeValue, save } from './storageService';
+import { get, getCredentialById, getStoredCredentials, removeCredential, removeValue, save, searchCredential, storeCredential } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
 import extension from 'extensionizer'
 import { decodeMemo, getCurrentNodeConfig, getExtensionAction } from '../utils/utils';
@@ -872,6 +872,46 @@ class APIService {
             return account.type === ACCOUNT_TYPE.WALLET_LEDGER
         })
         return ledgerList.length
+    }
+    storePrivateCredential= async (credential) => {
+        const nextCredential = {
+                credentialId: crypto.randomUUID(),
+                credential: {
+                    credential,
+                    type: "private-credential",
+                },
+        }
+        await storeCredential(nextCredential)
+        return ;
+      }
+    getPrivateCredential= async () => {
+        const credentials = await searchCredential({
+            query: { type: "private-credential" },
+            props: [],
+        })
+        
+        const filterCre = credentials.map((credential) => {
+            if (!credential) return credential
+            const { type, ...credentialWithoutType } = credential
+            return credentialWithoutType
+        })
+        return filterCre
+    }
+    getCredentialIdList = async ()=>{
+        const {credentials} = await getStoredCredentials()
+        return Object.keys(credentials);
+    }
+    getTargetCredential = async (credentialId)=>{
+        const credential = await getCredentialById(credentialId)
+        return credential;
+    }
+    removeTargetCredential = async (credentialId)=>{
+        try {
+            await removeCredential(credentialId)    
+            return true
+        } catch (error) {
+            return false
+        }
     }
 }
 
