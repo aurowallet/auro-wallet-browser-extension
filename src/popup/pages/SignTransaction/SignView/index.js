@@ -99,6 +99,10 @@ const StyledJsonView = styled.div`
   overflow-wrap: break-word;
   white-space: pre-wrap;
   pre {
+    font-size: 14px;
+    line-height: 17px;
+    margin: 0;
+    color: rgba(0, 0, 0, 0.8);
     word-break: break-all;
     white-space: pre-wrap;
   }
@@ -109,7 +113,8 @@ const StyledJsonViewRequire = styled(StyledJsonView)`
 `;
 const StyledJsonViewSmall = styled(StyledJsonView)`
   margin-top: 10px;
-  max-height: calc(100vh - 460px);
+  max-height: ${(props) =>
+    props.$ismulti ? "calc(100vh - 550px)" : "calc(100vh - 460px)"};
 `;
 
 const SignView = ({
@@ -716,7 +721,7 @@ const SignView = ({
       const newCredentialHash = createCredentialHash(credentialData);
       const existingCredentials = await sendMsgV2({
         action: CredentialMsg.get_credentials,
-        payload:currentAccount.address
+        payload: currentAccount.address,
       });
       const isDuplicate = existingCredentials.some((existing) => {
         const existingHash = createCredentialHash(
@@ -735,8 +740,8 @@ const SignView = ({
         await sendMsgV2({
           action: CredentialMsg.store_credential,
           payload: {
-            credential:parsedResult,
-            address:currentAccount.address
+            credential: parsedResult,
+            address: currentAccount.address,
           },
         });
         sendMsg(
@@ -1001,9 +1006,9 @@ const SignView = ({
         tabInitId = "tab2";
       }
     }
-    let pageTitle = i18n.t("transactionDetails");
-    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1 || zkOnlySign) {
-      pageTitle = i18n.t("signatureRequest");
+    let pageTitle = i18n.t("signatureRequest");
+    if (COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1 && !zkOnlySign) {
+      pageTitle = i18n.t("transactionDetails");
     }
     return {
       showAccountAddress,
@@ -1180,6 +1185,7 @@ const SignView = ({
             presentationData={presentationData}
             origin={signParams?.site?.origin}
             onSelectCredential={onSelectCredential}
+            showMultiView={showMultiView}
           />
         ) : (
           <></>
@@ -1504,9 +1510,12 @@ const StyledSelectRow = styled.label`
   margin-bottom: 10px;
 `;
 const StyledTipContent = styled.p`
-  margin: 10px 0;
-  font-weight: 500;
+  margin-top: 10px;
+  color: #808080;
   font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
 `;
 
 const PresentationView = ({
@@ -1515,6 +1524,7 @@ const PresentationView = ({
   presentationData,
   origin,
   onSelectCredential,
+  showMultiView = false,
 }) => {
   const [storedCredentials, setStoredCredentials] = useState([]);
   const [selectedCredentials, setSelectedCredentials] = useState(new Map());
@@ -1522,7 +1532,7 @@ const PresentationView = ({
     sendMsg(
       {
         action: CredentialMsg.get_credentials,
-        payload:currentAccount.address
+        payload: currentAccount.address,
       },
       async (credentials) => {
         setStoredCredentials(credentials);
@@ -1668,7 +1678,7 @@ const PresentationView = ({
             <StyledTipContent>
               {i18n.t("selectCredentialTip", { key: requirement.inputKey })}
             </StyledTipContent>
-            <StyledJsonViewSmall>
+            <StyledJsonViewSmall $ismulti={showMultiView}>
               <div>
                 {matchingCredentials.length > 0 ? (
                   matchingCredentials.map((credentialData, index) => (
@@ -1713,6 +1723,11 @@ const PresentationView = ({
 const StyledTipSpan = styled.span`
   margin-right: 4px;
 `;
+const StyledTipWrapper = styled.div`
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+  font-weight: 400;
+`;
 const CredentialDisplay = ({ credential, matchingRequirements }) => {
   const witnessType = credential.witness?.type || "unknown";
   const simplifiedData = PrettyPrinter.simplifyCredentialData(credential);
@@ -1722,14 +1737,14 @@ const CredentialDisplay = ({ credential, matchingRequirements }) => {
     <div>
       {description && <p>{description}</p>}
       <pre>{JSON.stringify(simplifiedData, null, 2)}</pre>
-      <div>
+      <StyledTipWrapper>
         <StyledTipSpan>Type: {witnessType}</StyledTipSpan>
         <p>
           {i18n.t("credentialsMatchTip", {
             keys: matchingRequirements.map((r) => r.inputKey).join(", "),
           })}
         </p>
-      </div>
+      </StyledTipWrapper>
     </div>
   );
 };

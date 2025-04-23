@@ -13,12 +13,15 @@ const StyledJsonView = styled.div`
   border-radius: 4px;
   border: 0.5px solid rgba(0, 0, 0, 0.1);
   padding: 10px;
-  color: rgba(0, 0, 0, 0.8);
   overflow-y: auto;
   width: calc(100% - 0px);
   overflow-wrap: break-word;
   white-space: pre-wrap;
   margin-bottom: 10px;
+
+  color: #000;
+  font-size: 14px;
+  font-weight: 400;
   pre {
     word-break: break-all;
     white-space: pre-wrap;
@@ -37,7 +40,9 @@ const StyledDelete = styled.p`
 
 const CredentialDetail = ({}) => {
   const history = useHistory();
-  const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
 
   const [credential, setCredential] = useState("");
 
@@ -51,8 +56,8 @@ const CredentialDetail = ({}) => {
       {
         action: CredentialMsg.target_credential,
         payload: {
-          credentialId:credentialId,
-          address:currentAddress
+          credentialId: credentialId,
+          address: currentAddress,
         },
       },
       (targetCredential) => {
@@ -65,21 +70,21 @@ const CredentialDetail = ({}) => {
         }
       }
     );
-  }, [credentialId,currentAddress]);
+  }, [credentialId, currentAddress]);
   const onClickDelete = useCallback(() => {
     sendMsg(
       {
         action: CredentialMsg.remove_credential_detail,
         payload: {
-          credentialId:credentialId,
-          address:currentAddress
+          credentialId: credentialId,
+          address: currentAddress,
         },
       },
       () => {
         history.goBack();
       }
     );
-  }, [credentialId,currentAddress]);
+  }, [credentialId, currentAddress]);
 
   return (
     <CustomView
