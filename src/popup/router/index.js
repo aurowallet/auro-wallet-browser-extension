@@ -48,6 +48,8 @@ import AddAccount from '../pages/AddAccount';
 import TokenDetail from '../pages/TokenDetail';
 import TokenSignPage from '../pages/Send/tokenSign';
 
+import Perferences from '../pages/Perferences';
+
 
 
 export function getAllRouter() {
@@ -112,6 +114,8 @@ export function getAllRouter() {
 
         <Route path="/credential_manage" component={CredentialManage} />
         <Route path={"/credential_detail"} component={CredentialDetail}/>
+
+        <Route path="/perferences_page" component={Perferences} />
       </Switch>
     </HashRouter>
   );

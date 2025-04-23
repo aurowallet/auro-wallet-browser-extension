@@ -14,26 +14,27 @@ const StyledContentWrapper = styled.div`
 const StyledItemWrapper = styled.div`
   padding: 10px 20px;
   cursor: pointer;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
 `;
 const StyledItemContent = styled.p`
-  font-weight: 500;
-  font-size: 14px;
   line-height: 100%;
-  color: rgba(0, 0, 0, 0.3);
   margin: 4px 0px 0px;
   word-break: break-all;
-`;
-const StyledItemDividedLine = styled.div`
-  height: 0.5px;
-  background-color: rgba(0, 0, 0, 0.1);
-  margin: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #000000;
+  word-break: break-all;
 `;
 const CredentialManage = ({}) => {
   const history = useHistory();
-  const currentAddress = useSelector(state => state.accountInfo.currentAccount.address)
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
 
   const [credentialList, setCredentialList] = useState([]);
 
@@ -41,7 +42,7 @@ const CredentialManage = ({}) => {
     sendMsg(
       {
         action: CredentialMsg.ID_LIST,
-        payload:currentAddress
+        payload: currentAddress,
       },
       (credentials) => {
         setCredentialList(credentials);
@@ -75,9 +76,6 @@ const CredentialManage = ({}) => {
                 >
                   <StyledItemContent>{credentialId}</StyledItemContent>
                 </StyledItemWrapper>
-                {index !== credentialList.length - 1 && (
-                  <StyledItemDividedLine />
-                )}
               </div>
             );
           })}

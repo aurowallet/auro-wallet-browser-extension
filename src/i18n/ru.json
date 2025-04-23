@@ -304,5 +304,6 @@
   "credentialsMatchTip":"Может быть использовано для: {{keys}}",
   "credentalSelectTip":"Пожалуйста, выберите учетные данные",
   "tryAgain":"Пожалуйста, попробуйте снова",
-  "credentialExist":"Учетные данные уже существуют"
+  "credentialExist":"Учетные данные уже существуют",
+  "perferences":"Настройки"
 }

@@ -304,5 +304,6 @@
   "credentialsMatchTip":"Şunun için kullanılabilir: {{keys}}",
   "credentalSelectTip":"Lütfen kimlik bilgisi seçin",
   "tryAgain":"Lütfen tekrar deneyin",
-  "credentialExist":"Kimlik bilgisi zaten mevcut"
+  "credentialExist":"Kimlik bilgisi zaten mevcut",
+  "perferences":"Tercihler"
 }
