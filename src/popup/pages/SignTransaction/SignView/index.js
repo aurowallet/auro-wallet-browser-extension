@@ -849,6 +849,11 @@ const SignView = ({
           return;
         }
       }
+      const isEdge = /Edg\//i.test(navigator.userAgent);
+      if (sendAction === DAppActions.mina_requestPresentation && isEdge ) {
+        Toast.info(i18n.t("notSupportNow"));
+        return;
+      }
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
         let support = checkLedgerSupport();
         if (!support) {
