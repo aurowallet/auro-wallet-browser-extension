@@ -109,7 +109,7 @@ const StyledJsonViewRequire = styled(StyledJsonView)`
 `;
 const StyledJsonViewSmall = styled(StyledJsonView)`
   margin-top: 10px;
-  max-height: 130px;
+  max-height: calc(100vh - 460px);
 `;
 
 const SignView = ({

@@ -75,7 +75,7 @@ async function writeManifestFile(targetPath, fileContent) {
   try {
     const id = "1003";
 
-    const chromeFileName = `${pck.name}-chrome-edge-${pck.version}-${id}`;
+    const chromeFileName = `${pck.name}-chrome-${pck.version}-${id}`;
     const firefoxFileName = `${pck.name}-firefox-${pck.version}-${id}`;
     const sourceFileName = `${pck.name}-source-${pck.version}-${id}`;
     const publishFileName = `${pck.name}-${pck.version}-${id}`;
