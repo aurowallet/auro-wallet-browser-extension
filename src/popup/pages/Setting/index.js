@@ -89,7 +89,7 @@ const Setting = ({}) => {
         rightContent: connectCount,
       },
       {
-        icon: "/img/ic_credentials_manage.svg",
+        icon: "/img/ic_credentials.svg",
         title: i18n.t("credentialsTitle"),
         targetRoute: "credential_manage",
         rightContent: credentialCount,
