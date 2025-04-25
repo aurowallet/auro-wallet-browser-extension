@@ -76,6 +76,10 @@
             justify-content: space-between;
             position: relative;
         }
+        .accountRowTab {
+            @extend .accountRow;
+            margin-top: 0px;
+        }
         .rowTitle {
             font-weight: 500;
             font-size: 12px;
@@ -196,11 +200,10 @@
         max-height: calc(100vh - 400px - 80px) !important;
     }
     .tabContent {
+        font-size: 12px;
         border-radius: 4px;
         border: 0.5px solid rgba(0, 0, 0, 0.1);
         padding: 10px;
-        font-size: 14px;
-        line-height: 17px;
         color: rgba(0, 0, 0, 0.8);
         margin: 0;
         height: calc(100vh - 500px); // message
@@ -208,6 +211,17 @@
         width: 100%;
         overflow-wrap: break-word;
         white-space: pre-wrap;
+    }
+    .tabContentv2 {
+        @extend .tabContent;
+        height: calc(100vh - 440px); // message
+    }
+    .tabContentPresen{
+        @extend .tabContent;
+        height: 100px;
+        pre{
+            margin: 0;
+        }
     }
     .multiContent {
         max-height: calc(100vh - 440px);

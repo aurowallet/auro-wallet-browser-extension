@@ -13,6 +13,7 @@ import {
   WALLET_SEND_NULLIFIER,
 } from "@/constant/msgTypes";
 import Button, { button_size, button_theme } from "@/popup/component/Button";
+import { CheckBox } from "@/popup/component/CheckBox";
 import { ConfirmModal } from "@/popup/component/ConfirmModal";
 import DAppAdvance from "@/popup/component/DAppAdvance";
 import DappWebsite from "@/popup/component/DappWebsite";
@@ -52,6 +53,7 @@ import { serializeError } from "serialize-error";
 import styled from "styled-components";
 import { CredentialMsg } from "../../../../constant/msgTypes";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
+import { getBalanceForUI } from "../../../../utils/utils";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
 
@@ -99,7 +101,7 @@ const StyledJsonView = styled.div`
   overflow-wrap: break-word;
   white-space: pre-wrap;
   pre {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 17px;
     margin: 0;
     color: rgba(0, 0, 0, 0.8);
@@ -107,14 +109,13 @@ const StyledJsonView = styled.div`
     white-space: pre-wrap;
   }
 `;
-const StyledJsonViewRequire = styled(StyledJsonView)`
-  margin-top: 10px;
-  max-height: 100px;
-`;
+
 const StyledJsonViewSmall = styled(StyledJsonView)`
+  border: unset;
   margin-top: 10px;
+  padding: 0px;
   max-height: ${(props) =>
-    props.$ismulti ? "calc(100vh - 550px)" : "calc(100vh - 460px)"};
+    props.$ismulti ? "calc(100vh - 600px)" : "calc(100vh - 520px)"};
 `;
 
 const SignView = ({
@@ -850,7 +851,7 @@ const SignView = ({
         }
       }
       const isEdge = /Edg\//i.test(navigator.userAgent);
-      if (sendAction === DAppActions.mina_requestPresentation && isEdge ) {
+      if (sendAction === DAppActions.mina_requestPresentation && isEdge) {
         Toast.info(i18n.t("notSupportNow"));
         return;
       }
@@ -1179,6 +1180,7 @@ const SignView = ({
             currentAccount={currentAccount}
             showAccountAddress={showAccountAddress}
             credentialData={credentialData}
+            mainTokenNetInfo={mainTokenNetInfo}
           />
         ) : (
           <></>
@@ -1191,6 +1193,7 @@ const SignView = ({
             origin={signParams?.site?.origin}
             onSelectCredential={onSelectCredential}
             showMultiView={showMultiView}
+            mainTokenNetInfo={mainTokenNetInfo}
           />
         ) : (
           <></>
@@ -1202,7 +1205,7 @@ const SignView = ({
             leftCopyContent={currentAccount.address}
             rightTitle={i18n.t("amount")}
             rightContent={
-              mainTokenNetInfo?.tokenBaseInfo?.showBalance +
+              getBalanceForUI(mainTokenNetInfo?.tokenBaseInfo?.showBalance) +
               " " +
               MAIN_COIN_CONFIG.symbol
             }
@@ -1294,7 +1297,7 @@ const SignView = ({
           <></>
         )}
         {tabList.length > 0 && (
-          <div className={styles.accountRow}>
+          <div className={styles.accountRowTab}>
             <Tabs
               selected={selectedTabIndex}
               initId={tabInitId}
@@ -1476,51 +1479,147 @@ const CommonRow = ({
     </div>
   );
 };
+const StyledJsonWrapper = styled.div`
+  width: calc(100% - 0px);
+  pre {
+    word-break: break-all;
+    white-space: pre-wrap;
+    margin: 0;
+  }
+`;
 const CredentialView = ({
   currentAccount,
   showAccountAddress,
   credentialData,
+  mainTokenNetInfo,
 }) => {
-  const displayCredentialData = useMemo(() => {
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const tabContentRef = useRef([]);
+
+  const { displayCredentialData, tabList, tabInitId } = useMemo(() => {
     let displayCredentialData = credentialData;
     if (Object.keys(credentialData).length > 0) {
       displayCredentialData = PrettyPrinter.simplifyCredentialData(
         credentialData
       );
     }
-    return displayCredentialData;
+
+    let tabList = [];
+    let tabInitId = "tab1";
+
+    let contentObj = {
+      id: "tab1",
+      label: i18n.t("content"),
+      content: displayCredentialData,
+    };
+    if (displayCredentialData) {
+      tabList.push(contentObj);
+    }
+    return { displayCredentialData, tabList, tabInitId };
   }, [credentialData]);
+
+  const onSelectedTab = useCallback((tabIndex) => {}, []);
+
+  useEffect(() => {
+    const targetRef = tabContentRef.current[0];
+    if (targetRef) {
+      const showBtn = targetRef.scrollHeight > targetRef.clientHeight;
+      setShowScrollBtn(showBtn);
+    }
+  }, [tabContentRef]);
+  const onClickScrollBtn = useCallback(() => {
+    const targetRef = tabContentRef.current[0];
+    if (targetRef) {
+      targetRef.scrollTo({
+        top: targetRef.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [tabContentRef]);
+
   return (
     <>
       <CommonRow
         leftTitle={currentAccount.accountName}
         leftContent={showAccountAddress}
         leftCopyContent={currentAccount.address}
+        rightTitle={i18n.t("amount")}
+        rightContent={
+          getBalanceForUI(mainTokenNetInfo?.tokenBaseInfo?.showBalance) +
+          " " +
+          MAIN_COIN_CONFIG.symbol
+        }
       />
-      <StyledJsonView>
-        <pre>{JSON.stringify(displayCredentialData, null, 4)}</pre>
-      </StyledJsonView>
+      {tabList.length > 0 && (
+        <div className={styles.accountRowTab}>
+          <Tabs
+            selected={0}
+            initId={tabInitId}
+            onSelect={onSelectedTab}
+            customTabPanelCss={styles.customTabPanelCss}
+            customBtnCss={styles.customBtnCss}
+          >
+            {tabList.map((tab, index) => {
+              return (
+                <div key={tab.id} id={tab.id} label={tab.label}>
+                  {showScrollBtn && (
+                    <div
+                      className={cls(styles.scrollBtn)}
+                      onClick={onClickScrollBtn}
+                    >
+                      <img src="/img/icon_roll.svg" />
+                    </div>
+                  )}
+                  {
+                    <StyledJsonWrapper
+                      ref={(element) =>
+                        (tabContentRef.current[index] = element)
+                      }
+                      className={styles.tabContentv2}
+                    >
+                      <pre>
+                        {JSON.stringify(displayCredentialData, null, 4)}
+                      </pre>
+                    </StyledJsonWrapper>
+                  }
+                </div>
+              );
+            })}
+          </Tabs>
+        </div>
+      )}
     </>
   );
 };
 
 const StyledSelectRow = styled.label`
-  padding: 0.75rem;
-  border-radius: 1rem;
-  gap: 0.5rem;
-  align-items: center;
   cursor: pointer;
   display: flex;
-  background-color: #eee;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
+  border-radius: 4px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
 `;
 const StyledTipContent = styled.p`
+  width: fit-content;
+  padding: 10px 0px;
+`;
+const StyledCredentialRow = styled.div`
+  font-weight: 600;
+  font-size: 12px;
+  color: rgba(0, 0, 0);
+  margin-bottom: 6px;
+`;
+const StyledDivideLine = styled.div`
+  height: 3px;
+  background: #000000;
+`;
+const StyledRequirementWrapper = styled.div`
   margin-top: 10px;
-  color: #808080;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
 `;
 
 const PresentationView = ({
@@ -1530,9 +1629,14 @@ const PresentationView = ({
   origin,
   onSelectCredential,
   showMultiView = false,
+  mainTokenNetInfo,
 }) => {
+  const tabContentRef = useRef([]);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
   const [storedCredentials, setStoredCredentials] = useState([]);
   const [selectedCredentials, setSelectedCredentials] = useState(new Map());
+  const [checkStatus, setCheckStatus] = useState(false);
   useEffect(() => {
     sendMsg(
       {
@@ -1544,8 +1648,9 @@ const PresentationView = ({
       }
     );
   }, [currentAccount]);
+  const onSelectedTab = useCallback((tabIndex) => {}, []);
 
-  const displayPresentation = useMemo(() => {
+  const { displayPresentation, tabList, tabInitId } = useMemo(() => {
     const { presentationRequest, zkAppAccount } = presentationData;
     const verifierIdentity =
       presentationRequest.type === "zk-app" ? zkAppAccount : origin;
@@ -1556,7 +1661,20 @@ const PresentationView = ({
         verifierIdentity
       ),
     ].join("\n");
-    return formatted;
+
+    let tabList = [];
+    let tabInitId = "tab1";
+
+    let contentObj = {
+      id: "tab1",
+      label: i18n.t("content"),
+      content: "",
+    };
+    if (formatted) {
+      tabList.push(contentObj);
+    }
+
+    return { displayPresentation: formatted, tabList, tabInitId };
   }, [presentationData, origin]);
 
   const getCredentialRequirements = (presentationRequest) => {
@@ -1660,6 +1778,22 @@ const PresentationView = ({
     });
     onSelectCredential && onSelectCredential(credentialData, inputKey);
   };
+  useEffect(() => {
+    const targetRef = tabContentRef.current[0];
+    if (targetRef) {
+      const showBtn = targetRef.scrollHeight > targetRef.clientHeight;
+      setShowScrollBtn(showBtn);
+    }
+  }, [tabContentRef]);
+  const onClickScrollBtn = useCallback(() => {
+    const targetRef = tabContentRef.current[0];
+    if (targetRef) {
+      targetRef.scrollTo({
+        top: targetRef.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [tabContentRef]);
 
   return (
     <>
@@ -1667,10 +1801,50 @@ const PresentationView = ({
         leftTitle={currentAccount.accountName}
         leftContent={showAccountAddress}
         leftCopyContent={currentAccount.address}
+        rightTitle={i18n.t("amount")}
+        rightContent={
+          getBalanceForUI(mainTokenNetInfo?.tokenBaseInfo?.showBalance) +
+          " " +
+          MAIN_COIN_CONFIG.symbol
+        }
       />
-      <StyledJsonViewRequire>
-        <pre>{displayPresentation ?? ""}</pre>
-      </StyledJsonViewRequire>
+
+      {tabList.length > 0 && (
+        <div className={styles.accountRowTab}>
+          <Tabs
+            selected={0}
+            initId={tabInitId}
+            onSelect={onSelectedTab}
+            customTabPanelCss={styles.customTabPanelCss}
+            customBtnCss={styles.customBtnCss}
+          >
+            {tabList.map((tab, index) => {
+              return (
+                <div key={tab.id} id={tab.id} label={tab.label}>
+                  {showScrollBtn && (
+                    <div
+                      className={styles.scrollBtn}
+                      onClick={onClickScrollBtn}
+                    >
+                      <img src="/img/icon_roll.svg" />
+                    </div>
+                  )}
+                  {
+                    <StyledJsonWrapper
+                      ref={(element) =>
+                        (tabContentRef.current[index] = element)
+                      }
+                      className={styles.tabContentPresen}
+                    >
+                      <pre>{displayPresentation ?? ""}</pre>
+                    </StyledJsonWrapper>
+                  }
+                </div>
+              );
+            })}
+          </Tabs>
+        </div>
+      )}
 
       {requirements.map((requirement, index) => {
         const matchingCredentials = credentials.filter((cred) =>
@@ -1679,9 +1853,12 @@ const PresentationView = ({
           )
         );
         return (
-          <div key={requirement.inputKey + "_" + index}>
+          <StyledRequirementWrapper key={requirement.inputKey + "_" + index}>
             <StyledTipContent>
-              {i18n.t("selectCredentialTip", { key: requirement.inputKey })}
+              <StyledCredentialRow>
+                {i18n.t("selectCredentialTip", { key: requirement.inputKey })}
+              </StyledCredentialRow>
+              <StyledDivideLine />
             </StyledTipContent>
             <StyledJsonViewSmall $ismulti={showMultiView}>
               <div>
@@ -1689,20 +1866,18 @@ const PresentationView = ({
                   matchingCredentials.map((credentialData, index) => (
                     <StyledSelectRow
                       key={`${credentialData.id}-${requirement.inputKey}`}
+                      onClick={() => {
+                        handleCredentialSelect(
+                          credentialData,
+                          requirement.inputKey
+                        );
+                      }}
                     >
-                      <input
-                        type="radio"
-                        name={requirement.inputKey}
-                        checked={isSelectedFor(
+                      <CheckBox
+                        status={isSelectedFor(
                           credentialData.id,
                           requirement.inputKey
                         )}
-                        onChange={() =>
-                          handleCredentialSelect(
-                            credentialData,
-                            requirement.inputKey
-                          )
-                        }
                       />
                       <CredentialDisplay
                         key={credentialData.id + "+" + index}
@@ -1718,20 +1893,23 @@ const PresentationView = ({
                 )}
               </div>
             </StyledJsonViewSmall>
-          </div>
+          </StyledRequirementWrapper>
         );
       })}
     </>
   );
 };
 
+const StyledCredentialCard = styled.div`
+  padding: 10px;
+  margin-left: 6px;
+`;
 const StyledTipSpan = styled.span`
   margin-right: 4px;
 `;
 const StyledTipWrapper = styled.div`
   color: rgba(0, 0, 0, 0.8);
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 12px;
 `;
 const CredentialDisplay = ({ credential, matchingRequirements }) => {
   const witnessType = credential.witness?.type || "unknown";
@@ -1739,7 +1917,7 @@ const CredentialDisplay = ({ credential, matchingRequirements }) => {
   const description = credential.metadata?.description;
 
   return (
-    <div>
+    <StyledCredentialCard>
       {description && <p>{description}</p>}
       <pre>{JSON.stringify(simplifiedData, null, 2)}</pre>
       <StyledTipWrapper>
@@ -1750,7 +1928,7 @@ const CredentialDisplay = ({ credential, matchingRequirements }) => {
           })}
         </p>
       </StyledTipWrapper>
-    </div>
+    </StyledCredentialCard>
   );
 };
 

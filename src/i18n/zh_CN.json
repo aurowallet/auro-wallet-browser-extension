@@ -299,7 +299,7 @@
   "mneTip":"我有{{count}}个助记词",
   "credentialsTitle":"凭证",
   "noCredentials":"无凭证",
-  "selectCredentialTip":"为 {{key}} 选择凭证：",
+  "selectCredentialTip":"为 {{key}} 选择凭证",
   "noMatchCredentials":"未找到与此输入匹配的凭证",
   "credentialsMatchTip":"可用于：{{keys}}",
   "credentalSelectTip":"请选择凭证",

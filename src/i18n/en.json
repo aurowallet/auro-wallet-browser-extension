@@ -299,7 +299,7 @@
   "mneTip":"I have {{count}} mnemonic phrases",
   "credentialsTitle":"Credentials",
   "noCredentials":"No Credential",
-  "selectCredentialTip":"Select credential for {{key}}:",
+  "selectCredentialTip":"Select credential for {{key}}",
   "noMatchCredentials":"No matching credentials found for this input",
   "credentialsMatchTip":"Can be used for: {{keys}}", 
   "credentalSelectTip":"Please select credental",

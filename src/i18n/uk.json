@@ -299,7 +299,7 @@
   "mneTip":"Я маю {{count}} мнемонічних фраз",
   "credentialsTitle":"Облікові дані",
   "noCredentials":"Немає облікових даних",
-  "selectCredentialTip":"Виберіть облікові дані для {{key}}:",
+  "selectCredentialTip":"Виберіть облікові дані для {{key}}",
   "noMatchCredentials":"Не знайдено відповідних облікових даних для цього введення",
   "credentialsMatchTip":"Може бути використано для: {{keys}}",
   "credentalSelectTip":"Будь ласка, виберіть облікові дані",
