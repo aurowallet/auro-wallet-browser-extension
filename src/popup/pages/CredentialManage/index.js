@@ -1,35 +1,38 @@
+import { getCredentialDisplayData } from "@/utils/utils";
 import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
+import { PrettyPrinter } from "mina-attestations";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { CredentialMsg } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
-import { useSelector } from "react-redux";
 
 const StyledContentWrapper = styled.div`
   flex: 1;
 `;
 const StyledItemWrapper = styled.div`
-  padding: 10px 20px;
+  margin: 0px 20px 10px;
+  padding: 10px 0px 10px 20px;
   cursor: pointer;
-  min-height: 54px;
+  min-height: 40px;
   display: flex;
   align-items: center;
+  border-radius: 10px;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  background: #f9fafc;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
   &:hover {
     background: rgba(0, 0, 0, 0.05);
   }
 `;
-const StyledItemContent = styled.p`
-  line-height: 100%;
-  margin: 4px 0px 0px;
-  word-break: break-all;
-  font-weight: 600;
-  font-size: 14px;
-  color: #000000;
-  word-break: break-all;
-`;
+
 const CredentialManage = ({}) => {
   const history = useHistory();
   const currentAddress = useSelector(
@@ -41,11 +44,26 @@ const CredentialManage = ({}) => {
   useEffect(() => {
     sendMsg(
       {
-        action: CredentialMsg.ID_LIST,
+        action: CredentialMsg.get_credentials,
         payload: currentAddress,
       },
       (credentials) => {
-        setCredentialList(credentials);
+        let list = [];
+        for (let index = 0; index < credentials.length; index++) {
+          const credential = credentials[index];
+          const displayCredentialData = PrettyPrinter.simplifyCredentialData(
+            JSON.parse(credential.credential)
+          );
+          const parseCredential = getCredentialDisplayData(
+            displayCredentialData
+          );
+          list.push({
+            ...credential,
+            displayCredentialData,
+            parseCredential,
+          });
+        }
+        setCredentialList(list);
       }
     );
   }, [currentAddress]);
@@ -68,13 +86,14 @@ const CredentialManage = ({}) => {
         <EmptyView />
       ) : (
         <StyledContentWrapper>
-          {credentialList.map((credentialId, index) => {
+          {credentialList.map((credentialData, index) => {
             return (
-              <div key={credentialId}>
+              <div key={index}>
                 <StyledItemWrapper
-                  onClick={() => onClickCredentialItem(credentialId)}
+                  onClick={() => onClickCredentialItem(credentialData.id)}
                 >
-                  <StyledItemContent>{credentialId}</StyledItemContent>
+                  <CredentialView data={credentialData.parseCredential} />
+                  <img src="/img/icon_arrow.svg" />
                 </StyledItemWrapper>
               </div>
             );
@@ -82,6 +101,43 @@ const CredentialManage = ({}) => {
         </StyledContentWrapper>
       )}
     </CustomView>
+  );
+};
+
+const StyledItemContent = styled.div`
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+  font-weight: 500;
+  div{
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  > :not(:first-child) {
+    margin-top: 8px;
+  }
+`;
+const CredentialView = (data) => {
+  const profileData = useMemo(() => {
+    const nextData = data.data;
+    const availablePairs = Object.entries(nextData).filter(
+      ([_, value]) => value !== ""
+    );
+    const stableKeys = availablePairs.slice(0, 3).map(([key]) => key);
+    const profileData = stableKeys.map((key, index) => ({
+      key: key.charAt(0).toUpperCase() + key.slice(1),
+      value: nextData[key] || "",
+    }));
+    return profileData;
+  }, [data]);
+  return (
+    <StyledItemContent>
+      {profileData.map((item, index) => (
+        <div key={index}>
+          {item.key}: {item.value}
+        </div>
+      ))}
+    </StyledItemContent>
   );
 };
 

@@ -1,12 +1,12 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { CredentialMsg } from "../../../../constant/msgTypes";
 import { sendMsg } from "../../../../utils/commonMsg";
 import { addressSlice } from "../../../../utils/utils";
 import CustomView from "../../../component/CustomView";
-import { useSelector } from "react-redux";
 
 const StyledJsonView = styled.div`
   overflow-y: auto;
@@ -18,9 +18,8 @@ const StyledJsonView = styled.div`
   overflow-wrap: break-word;
   white-space: pre-wrap;
   margin-bottom: 10px;
-
-  color: #000;
-  font-size: 14px;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 12px;
   font-weight: 400;
   pre {
     word-break: break-all;
@@ -88,7 +87,7 @@ const CredentialDetail = ({}) => {
 
   return (
     <CustomView
-      title={addressSlice(credentialId, 6)}
+      title={"ID:" + addressSlice(credentialId, 6)}
       rightComponent={
         <StyledDelete onClick={onClickDelete}>
           {i18n.t("deleteTag")}

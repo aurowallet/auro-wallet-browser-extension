@@ -1,16 +1,16 @@
-import BigNumber from "bignumber.js";
-import validUrl from "valid-url";
-import { MAIN_COIN_CONFIG } from "../constant";
-import { getLocal, removeLocal } from "../background/localStorage";
-import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG_V2 } from "../constant/storageKey";
-import { DAPP_CHANGE_NETWORK } from "../constant/msgTypes";
-import { sendMsg } from "./commonMsg";
-import bs58check from "bs58check";
-import { extGetLocal } from "../background/extensionStorage";
 import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
-import extension from "extensionizer";
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
+import BigNumber from "bignumber.js";
+import bs58check from "bs58check";
+import extension from "extensionizer";
+import validUrl from "valid-url";
+import { extGetLocal } from "../background/extensionStorage";
+import { removeLocal } from "../background/localStorage";
+import { MAIN_COIN_CONFIG } from "../constant";
+import { DAPP_CHANGE_NETWORK } from "../constant/msgTypes";
+import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG_V2 } from "../constant/storageKey";
+import { sendMsg } from "./commonMsg";
 
 /**
  * address slice
@@ -317,7 +317,11 @@ export function getShowTime(time) {
     if (!time) {
       return "date-time";
     }
-    const date = new Date(time);
+    let nextTime = time;
+    if (typeof time === "string") {
+      nextTime = parseInt(time);
+    }
+    const date = new Date(nextTime);
 
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
@@ -492,3 +496,30 @@ export const createCredentialHash = (credential) => {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 };
+
+export function getCredentialDisplayData(data) {
+  const result = {};
+  for (const [key, value] of Object.entries(data)) {
+    try {
+      if (typeof value === "string") {
+        result[key] = value;
+      } else if (
+        value &&
+        typeof value === "object" &&
+        "magnitude" in value &&
+        "sgn" in value
+      ) {
+        const sign = value.sgn === "Positive" ? 1 : -1;
+        result[key] = sign * parseInt(value.magnitude);
+      } else {
+        result[key] = JSON.stringify(value);
+      }
+      if (key === "expiresAt") {
+        result[key] = getShowTime(value);
+      }
+    } catch (e) {
+      result[key] = "";
+    }
+  }
+  return result;
+}
