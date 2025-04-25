@@ -356,7 +356,6 @@ class DappService {
                   that.setBadgeContent()
                 }else if(payload && payload.credential){
                   nextResolve({
-                    result:{success: payload.credential},
                     credential: payload.credential,
                   })
                   that.removeSignParamsByOpenId(payload.id)
@@ -386,7 +385,6 @@ class DappService {
                   that.setBadgeContent()
                 }else if(payload && payload.presentation){
                   nextResolve({
-                    result:payload.presentation,
                     presentation:payload.presentation
                   })
                   that.removeSignParamsByOpenId(payload.id)
