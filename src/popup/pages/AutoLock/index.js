@@ -10,7 +10,7 @@ import styles from "./index.module.scss";
 
 
 const AutoLock = ({ }) => {
-  const [currentLockDuration, setCurrentLockDuration] = useState(AUTO_LOCK_TIME_LIST[0].value)
+  const [currentLockDuration, setCurrentLockDuration] = useState()
   const history = useHistory()
 
   const onSelect = useCallback((data) => {

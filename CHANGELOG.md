@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
     - Add isTrusted verify
     - Add paymentId to transaction
     - Add support of credentials
+    - Autolock UI
 - Fix 
     - Popup issue
     - Small amount token transfer
