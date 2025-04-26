@@ -1856,7 +1856,7 @@ const PresentationView = ({
           <StyledRequirementWrapper key={requirement.inputKey + "_" + index}>
             <StyledTipContent>
               <StyledCredentialRow>
-                {i18n.t("selectCredentialTip", { key: requirement.inputKey })}
+                {i18n.t("credentialsTitle")}
               </StyledCredentialRow>
               <StyledDivideLine />
             </StyledTipContent>

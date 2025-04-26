@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Un-Released]
 - Enhancements
     - TokenDetail Page UI
-    - Transacton time format
-    - TransactonDetail Page item sort
+    - Transaction time format
+    - TransactionDetail Page item sort
     - zkApp to address
     - Add zkApp get wallet info
     - Add isTrusted verify
     - Add paymentId to transaction
-    - Add support of credential
+    - Add support of credentials
 - Fix 
     - Popup issue
     - Small amount token transfer
