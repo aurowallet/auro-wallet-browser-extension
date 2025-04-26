@@ -305,5 +305,6 @@
   "credentalSelectTip":"Будь ласка, виберіть облікові дані",
   "tryAgain":"Будь ласка, спробуйте ще раз",
   "credentialExist":"Облікові дані вже існують",
-  "perferences":"Налаштування"
+  "perferences":"Налаштування",
+  "credential":"Облікові дані"
 }

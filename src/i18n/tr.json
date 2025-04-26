@@ -305,5 +305,6 @@
   "credentalSelectTip":"Lütfen kimlik bilgisi seçin",
   "tryAgain":"Lütfen tekrar deneyin",
   "credentialExist":"Kimlik bilgisi zaten mevcut",
-  "perferences":"Tercihler"
+  "perferences":"Tercihler",
+  "credential":"Kimlik Bilgisi"
 }

@@ -305,5 +305,6 @@
   "credentalSelectTip":"Please select credental",
   "tryAgain":"Please try again",
   "credentialExist":"Credential already exist",
-  "perferences":"Perferences"
+  "perferences":"Perferences",
+  "credential":"Credential"
 }

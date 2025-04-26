@@ -305,5 +305,6 @@
   "credentalSelectTip":"Пожалуйста, выберите учетные данные",
   "tryAgain":"Пожалуйста, попробуйте снова",
   "credentialExist":"Учетные данные уже существуют",
-  "perferences":"Настройки"
+  "perferences":"Настройки",
+  "credential":"Учетные данные"
 }

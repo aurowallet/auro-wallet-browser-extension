@@ -114,6 +114,7 @@ const StyledJsonViewSmall = styled(StyledJsonView)`
   border: unset;
   margin-top: 10px;
   padding: 0px;
+  width: 100%;
   max-height: ${(props) =>
     props.$ismulti ? "calc(100vh - 600px)" : "calc(100vh - 520px)"};
 `;
@@ -1181,6 +1182,7 @@ const SignView = ({
             showAccountAddress={showAccountAddress}
             credentialData={credentialData}
             mainTokenNetInfo={mainTokenNetInfo}
+            showMultiView={showMultiView}
           />
         ) : (
           <></>
@@ -1492,6 +1494,7 @@ const CredentialView = ({
   showAccountAddress,
   credentialData,
   mainTokenNetInfo,
+  showMultiView = false,
 }) => {
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const tabContentRef = useRef([]);
@@ -1564,7 +1567,9 @@ const CredentialView = ({
                 <div key={tab.id} id={tab.id} label={tab.label}>
                   {showScrollBtn && (
                     <div
-                      className={cls(styles.scrollBtn)}
+                      className={cls(styles.scrollBtn, {
+                        [styles.scrollBtnBm]: showMultiView,
+                      })}
                       onClick={onClickScrollBtn}
                     >
                       <img src="/img/icon_roll.svg" />
@@ -1823,7 +1828,9 @@ const PresentationView = ({
                 <div key={tab.id} id={tab.id} label={tab.label}>
                   {showScrollBtn && (
                     <div
-                      className={styles.scrollBtn}
+                      className={cls(styles.scrollBtn, {
+                        [styles.scrollBtnBm]: showMultiView,
+                      })}
                       onClick={onClickScrollBtn}
                     >
                       <img src="/img/icon_roll.svg" />
@@ -1856,7 +1863,7 @@ const PresentationView = ({
           <StyledRequirementWrapper key={requirement.inputKey + "_" + index}>
             <StyledTipContent>
               <StyledCredentialRow>
-                {i18n.t("credentialsTitle")}
+                {i18n.t("credential")}
               </StyledCredentialRow>
               <StyledDivideLine />
             </StyledTipContent>
