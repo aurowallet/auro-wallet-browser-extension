@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
+
+## [2.3.2]
 - Enhancements
     - TokenDetail Page UI
     - Transaction time format

@@ -1,5 +1,5 @@
 .sectionSign {
-    overflow: auto;
+    height: 100vh;
     .titleRow {
         display: flex;
         align-items: center;
@@ -46,9 +46,15 @@
     .mg-t20 {
         margin-top: 20px;
     }
+    .multiContentWrapper{
+        height: calc(100vh - 250px) !important;
+    }
     .content {
         @extend .mg-t20;
         padding: 0px 20px;
+        height: calc(100vh - 170px);
+        overflow-y: auto;
+
         .accountTip {
             font-size: 14px;
             line-height: 20px;
@@ -193,12 +199,6 @@
         max-width: 375px;
     }
     // }
-    .highContent {
-        max-height: calc(100vh - 400px) !important;
-    }
-    .highMultiContent {
-        max-height: calc(100vh - 400px - 80px) !important;
-    }
     .tabContent {
         font-size: 12px;
         border-radius: 4px;
@@ -206,7 +206,6 @@
         padding: 10px;
         color: rgba(0, 0, 0, 0.8);
         margin: 0;
-        height: calc(100vh - 500px); // message
         overflow-y: auto;
         width: 100%;
         overflow-wrap: break-word;
@@ -214,17 +213,12 @@
     }
     .tabContentv2 {
         @extend .tabContent;
-        height: calc(100vh - 440px); // message
     }
     .tabContentPresen{
         @extend .tabContent;
-        height: 100px;
         pre{
             margin: 0;
         }
-    }
-    .multiContent {
-        max-height: calc(100vh - 440px);
     }
     .highFeeTip {
         font-weight: 500;
@@ -258,9 +252,6 @@
         bottom: 5px;
         right: 5px;
         cursor: pointer;
-    }
-    .scrollBtnBm {
-        // bottom: 10px;
     }
 }
 .customBtnCss {

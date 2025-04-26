@@ -95,7 +95,6 @@ const StyledJsonView = styled.div`
   padding: 10px;
   color: rgba(0, 0, 0, 0.8);
   margin-top: 20px;
-  max-height: calc(100vh - 400px);
   overflow-y: auto;
   width: calc(100% - 20px);
   overflow-wrap: break-word;
@@ -115,8 +114,6 @@ const StyledJsonViewSmall = styled(StyledJsonView)`
   margin-top: 10px;
   padding: 0px;
   width: 100%;
-  max-height: ${(props) =>
-    props.$ismulti ? "calc(100vh - 600px)" : "calc(100vh - 520px)"};
 `;
 
 const SignView = ({
@@ -1169,7 +1166,11 @@ const SignView = ({
           <NetworkStatusView />
         </div>
       </div>
-      <div className={styles.content}>
+      <div
+        className={cls(styles.content, {
+          [styles.multiContentWrapper]: showMultiView,
+        })}
+      >
         <div className={styles.websiteContainer}>
           <DappWebsite
             siteIcon={signParams?.site?.webIcon}
@@ -1326,16 +1327,11 @@ const SignView = ({
                         }
                         className={cls(styles.tabContent, {
                           [styles.clickCss]: clickAble,
-                          [styles.multiContent]: showMultiView,
-                          [styles.highContent]: isSendZk,
-                          [styles.highMultiContent]: showMultiView && isSendZk,
                         })}
                       >
                         {showScrollBtn && (
                           <div
-                            className={cls(styles.scrollBtn, {
-                              [styles.scrollBtnBm]: showMultiView,
-                            })}
+                            className={styles.scrollBtn}
                             onClick={onClickScrollBtn}
                           >
                             <img src="/img/icon_roll.svg" />
@@ -1567,9 +1563,7 @@ const CredentialView = ({
                 <div key={tab.id} id={tab.id} label={tab.label}>
                   {showScrollBtn && (
                     <div
-                      className={cls(styles.scrollBtn, {
-                        [styles.scrollBtnBm]: showMultiView,
-                      })}
+                      className={styles.scrollBtn}
                       onClick={onClickScrollBtn}
                     >
                       <img src="/img/icon_roll.svg" />
@@ -1611,7 +1605,7 @@ const StyledSelectRow = styled.label`
 `;
 const StyledTipContent = styled.p`
   width: fit-content;
-  padding: 10px 0px;
+  padding-top: 10px;
 `;
 const StyledCredentialRow = styled.div`
   font-weight: 600;
@@ -1622,6 +1616,16 @@ const StyledCredentialRow = styled.div`
 const StyledDivideLine = styled.div`
   height: 3px;
   background: #000000;
+  position: relative;
+`;
+const StyledDivideLineFull = styled.div`
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 0;
+  height: 0.5px;
+  background: rgba(0, 0, 0, 0.1);
+  width: calc(100vw - 40px);
 `;
 const StyledRequirementWrapper = styled.div`
   margin-top: 10px;
@@ -1828,9 +1832,7 @@ const PresentationView = ({
                 <div key={tab.id} id={tab.id} label={tab.label}>
                   {showScrollBtn && (
                     <div
-                      className={cls(styles.scrollBtn, {
-                        [styles.scrollBtnBm]: showMultiView,
-                      })}
+                      className={styles.scrollBtn}
                       onClick={onClickScrollBtn}
                     >
                       <img src="/img/icon_roll.svg" />
@@ -1862,10 +1864,10 @@ const PresentationView = ({
         return (
           <StyledRequirementWrapper key={requirement.inputKey + "_" + index}>
             <StyledTipContent>
-              <StyledCredentialRow>
-                {i18n.t("credential")}
-              </StyledCredentialRow>
-              <StyledDivideLine />
+              <StyledCredentialRow>{i18n.t("credential")}</StyledCredentialRow>
+              <StyledDivideLine>
+                <StyledDivideLineFull />
+              </StyledDivideLine>
             </StyledTipContent>
             <StyledJsonViewSmall $ismulti={showMultiView}>
               <div>
