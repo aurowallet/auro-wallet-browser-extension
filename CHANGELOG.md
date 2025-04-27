@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 
 ## [Un-Released]
+### Enhancements
+- Credentials icon
 
 ## [2.3.3]
 ### Fixes
