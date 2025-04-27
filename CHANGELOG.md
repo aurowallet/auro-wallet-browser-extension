@@ -4,21 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.3.3]
+### Fixes
+- Transaction time format
+
 ## [2.3.2]
-- Enhancements
-    - TokenDetail Page UI
-    - Transaction time format
-    - TransactionDetail Page item sort
-    - zkApp to address
-    - Add zkApp get wallet info
-    - Add isTrusted verify
-    - Add paymentId to transaction
-    - Add support of credentials
-    - Autolock UI
-- Fix 
-    - Popup issue
-    - Small amount token transfer
-    - Ledger name
+### Enhancements
+- Token detail page UI
+- Transaction time format
+- Transaction detail page item sorting
+- zkApp to address conversion
+- Add zkApp wallet info
+- Add `isTrusted` verification
+- Add `paymentId` to transactions
+- Add support for credentials
+- Auto-lock UI
+
+### Fixes
+- Popup issue
+- Small-amount token transfer
+- Ledger name
 
 ## [2.3.1]
 - Enhancements

@@ -312,13 +312,13 @@ export function sendNetworkChangeMsg(netConfig) {
  * @param {*} time
  * @returns
  */
-export function getShowTime(time) {
+export function getShowTime(time, needParse = false) {
   try {
     if (!time) {
       return "date-time";
     }
     let nextTime = time;
-    if (typeof time === "string") {
+    if (typeof time === "string" && needParse) {
       nextTime = parseInt(time);
     }
     const date = new Date(nextTime);
@@ -515,7 +515,7 @@ export function getCredentialDisplayData(data) {
         result[key] = JSON.stringify(value);
       }
       if (key === "expiresAt") {
-        result[key] = getShowTime(value);
+        result[key] = getShowTime(value, true);
       }
     } catch (e) {
       result[key] = "";
