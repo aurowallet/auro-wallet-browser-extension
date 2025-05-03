@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Un-Released]
 ### Enhancements
 - Credentials icon
+- Add support for revoke permissions
 
 ## [2.3.3]
 ### Fixes

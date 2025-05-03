@@ -523,3 +523,20 @@ export function getCredentialDisplayData(data) {
   }
   return result;
 }
+
+/**
+ * for revoke permissions
+ * @param {*} data
+ * @param {*} urlToRemove
+ * @returns
+ */
+export function removeUrlFromArrays(data, urlToRemove) {
+  const filteredData = {};
+  for (const key in data) {
+    // Filter out the specified URL and any undefined/null elements
+    filteredData[key] = data[key].filter(
+      (url) => url !== undefined && url !== null && url !== urlToRemove
+    );
+  }
+  return filteredData;
+}

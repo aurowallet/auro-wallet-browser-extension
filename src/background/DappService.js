@@ -3,7 +3,7 @@ import extension from 'extensionizer';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_REQUEST_PRESENTATION, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_STORE_CREDENTIAL, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
 import { checkAndTop, checkAndTopV2, closePopupWindow, lastWindowIds, openPopupWindow, PopupSize, startExtensionPopup, startPopupWindow } from "../utils/popup";
-import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getExtensionAction, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
+import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getExtensionAction, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, removeUrlFromArrays, urlValid } from '../utils/utils';
 import { addressValid } from '../utils/validator';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
@@ -177,6 +177,13 @@ class DappService {
           sendResponse
         )
         break
+      case DAppActions.wallet_revokePermissions: 
+        this.requestCallback(
+          () => this.revokePermissions(message.payload),
+          id,
+          sendResponse
+        )
+        break;
       default:
         this.requestCallback(
           async ()=>{
@@ -1193,6 +1200,13 @@ class DappService {
       init:isCreate
     }
     return baseWalletInfo
+  }
+  async revokePermissions(params) {
+    const targetOrigin = params.site.origin
+    const accountApprovedUrlList = this.dappStore.getState().accountApprovedUrlList
+    const res = removeUrlFromArrays(accountApprovedUrlList, targetOrigin)
+    this.updateApproveConnect(res)
+    return [];
   }
 }
 const dappService = new DappService()
