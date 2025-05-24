@@ -30,6 +30,7 @@ let approveRequests = [];
 let chainRequests = []
 
 let tokenSigneRequests = [];
+let isHaveTabPermissions = false;
 
 export const windowId = {
   approve_page: "approve_page",
@@ -858,7 +859,23 @@ class DappService {
     }
     return
   }
-  notifyAccountChange(siteUrlList, connectAccount) {
+  getTabPermission (){
+    return new Promise(()=>{
+      chrome.permissions.contains(
+        {
+          permissions: ["tabs"],
+        },
+        (result) => {
+          isHaveTabPermissions = result;
+          return result
+        }
+      );
+    })
+  }
+ async notifyAccountChange(siteUrlList, connectAccount) {
+    if(!isHaveTabPermissions){
+      await getTabPermission()
+    }
     let account = !connectAccount ? [] : [connectAccount]
     extension.tabs.query({}, (tabs) => {
       let message = {
@@ -867,17 +884,24 @@ class DappService {
       }
       for (let tabIndex = 0; tabIndex < tabs.length; tabIndex++) {
         const tab = tabs[tabIndex];
-        let origin = getOriginFromUrl(tab.url)
+          if(isHaveTabPermissions){
+            let origin = getOriginFromUrl(tab.url)
 
-        let tabConnectIndex = siteUrlList.indexOf(origin)
-        if(tabConnectIndex !== -1){
-          extension.tabs.sendMessage(tab.id, message, res => { })
+            let tabConnectIndex = siteUrlList.indexOf(origin)
+            if(tabConnectIndex !== -1){
+              extension.tabs.sendMessage(tab.id, message, res => { })
+            }
+          }else{
+            extension.tabs.sendMessage(tab.id, message, res => { })
+          }
           continue;
-        }
       }
     })
   }
-  notifyNetworkChange(currentNet) {
+  async notifyNetworkChange(currentNet) {
+    if(!isHaveTabPermissions){
+      await getTabPermission()
+    }
     let networkID = currentNet.networkID || ""
     let message = {
       action: "chainChanged",
@@ -893,8 +917,11 @@ class DappService {
       let currentConnect = this.getDappStore().currentConnect
       for (let index = 0; index < tabs.length; index++) {
         const tab = tabs[index];
-
-        if (currentConnect[tab.id]) {
+        if(isHaveTabPermissions){
+          if (currentConnect[tab.id]) {
+            extension.tabs.sendMessage(tab.id, message, res => { })
+          }
+        }else{
           extension.tabs.sendMessage(tab.id, message, res => { })
         }
       }

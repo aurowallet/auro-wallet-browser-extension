@@ -1,3 +1,4 @@
+import { ENTRY_WITCH_ROUTE } from "@/reducers/entryRouteReducer";
 import { updateApproveStatus } from "@/reducers/popupReducer";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -13,7 +14,8 @@ import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
 import styles from "./index.module.scss";
-import { ENTRY_WITCH_ROUTE } from "@/reducers/entryRouteReducer";
+import { REQUEST_TAB_MESSION } from "@/constant/storageKey";
+import { getLocal, saveLocal } from "@/background/localStorage";
 
 const ApprovePage = () => {
   const dispatch = useDispatch();
@@ -26,6 +28,7 @@ const ApprovePage = () => {
   );
 
   const [params, setParams] = useState({});
+  const [hasTabPermission, setHasTabPermission] = useState(false);
 
   useEffect(() => {
     sendMsg(
@@ -75,6 +78,17 @@ const ApprovePage = () => {
     }
   }, [entryWitchRoute, getConnectAfterLock]);
 
+  useEffect(() => {
+    chrome.permissions.contains(
+      {
+        permissions: ["tabs"],
+      },
+      (result) => {
+        setHasTabPermission(result);
+      }
+    );
+  }, []);
+
   const onCancel = useCallback(() => {
     sendMsg(
       {
@@ -93,6 +107,38 @@ const ApprovePage = () => {
   }, [currentAccount, params]);
 
   const onConfirm = useCallback(() => {
+    let request = getLocal(REQUEST_TAB_MESSION);
+    if (!hasTabPermission && !request) {
+      chrome.permissions.request(
+        {
+          permissions: ["tabs"],
+        },
+        (granted) => {
+          if (granted) {
+            console.log("Tabs permission granted");
+          } else {
+            console.log("Tabs permission denied");
+            saveLocal(REQUEST_TAB_MESSION, true);
+          }
+          let selectAccount = [currentAccount];
+          sendMsg(
+            {
+              action: DAPP_ACTION_GET_ACCOUNT,
+              payload: {
+                selectAccount,
+                resultOrigin: params?.site?.origin,
+                id: params.id,
+              },
+            },
+            () => {
+              dispatch(updateApproveStatus(false));
+            }
+          );
+        }
+      );
+      return;
+    }
+
     let selectAccount = [currentAccount];
     sendMsg(
       {
@@ -107,7 +153,7 @@ const ApprovePage = () => {
         dispatch(updateApproveStatus(false));
       }
     );
-  }, [params, currentAccount]);
+  }, [params, currentAccount, hasTabPermission]);
 
   const showAccountInfo = useMemo(() => {
     return (
