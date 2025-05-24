@@ -3,7 +3,7 @@
   "short_name": "__MSG_appName__",
   "description": "__MSG_appDescription__",
   "manifest_version": 3,
-  "version": "2.3.4",
+  "version": "2.3.4.1",
   "default_locale": "en",
   "icons": {
     "16": "img/logo/16.png",
@@ -14,9 +14,9 @@
   "permissions": [
     "storage",
     "notifications",
-    "activeTab",
-    "tabs"
+    "activeTab"
   ],
+  "optional_permissions": ["tabs"],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   },
