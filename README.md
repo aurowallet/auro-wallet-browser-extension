@@ -40,11 +40,6 @@ Extension's build output is placed in `/dist`, and you can check out [this page]
 
 ## Test
 
-### UI Test
-
-```sh
-yarn storybook
-``` 
 ### LIB Test
 
 run bottom sh and will open url in the chrome http://localhost:6006/
