@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Remove storybook
 - Legder confirm button ui
 - Hide the staking entry of non-Mina network
+- Default node issue after delete custom network
 
 ## [2.3.3]
 ### Fixes
