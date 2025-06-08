@@ -1,7 +1,7 @@
 import { ACCOUNT_NAME_FROM_TYPE } from "@/constant/commonType";
 import Toast from "@/popup/component/Toast";
 import { updateAccountType } from "@/reducers/cache";
-import extension from "extensionizer";
+import browser from 'webextension-polyfill';
 import i18n from "i18next";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,7 +26,7 @@ const AddAccount = ({}) => {
       return;
     }
     dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.LEDGER));
-    extension.tabs.create({
+    browser.tabs.create({
       url: "popup.html#/ledger_page",
     });
     window.close();

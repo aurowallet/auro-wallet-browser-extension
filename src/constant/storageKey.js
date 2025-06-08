@@ -91,12 +91,6 @@ export const STABLE_LOCAL_ACCOUNT_CACHE_KEYS = {
     "SHOWED_TOKEN": "SHOWED_TOKEN",
 }
 
-
-/**
- * STORAGE_UPGRADE from v2->v3
- */
-export const STORAGE_UPGRADE_STATUS = "STORAGE_UPGRADE_STATUS"
-
 /**
  * recommend fee list
  */

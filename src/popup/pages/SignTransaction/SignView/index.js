@@ -56,6 +56,7 @@ import { updateShouldRequest } from "../../../../reducers/accountReducer";
 import { getBalanceForUI } from "../../../../utils/utils";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
+import browser from "webextension-polyfill";
 
 const ZkAppValueType = {
   site: "RECOMMEND_SITE",
@@ -673,7 +674,7 @@ const SignView = ({
         if (event.data.type === "init-sandbox-extension-id") {
           if (sandbox) {
             Toast.info(i18n.t("tryAgain"));
-            const allowedOrigin = `chrome-extension://${chrome.runtime.id}`;
+            const allowedOrigin = `chrome-extension://${browser.runtime.id}`;
             sandbox.contentWindow.postMessage(
               {
                 type: "init-sandbox",
@@ -1498,9 +1499,8 @@ const CredentialView = ({
   const { displayCredentialData, tabList, tabInitId } = useMemo(() => {
     let displayCredentialData = credentialData;
     if (Object.keys(credentialData).length > 0) {
-      displayCredentialData = PrettyPrinter.simplifyCredentialData(
-        credentialData
-      );
+      displayCredentialData =
+        PrettyPrinter.simplifyCredentialData(credentialData);
     }
 
     let tabList = [];
@@ -1736,9 +1736,8 @@ const PresentationView = ({
   const { credentials, requirements } = useMemo(() => {
     try {
       const { presentationRequest, zkAppAccount } = presentationData;
-      const credentialRequirements = getCredentialRequirements(
-        presentationRequest
-      );
+      const credentialRequirements =
+        getCredentialRequirements(presentationRequest);
       const parsedStoredCredentials = storedCredentials.map((credentials) => {
         return {
           credential: JSON.parse(credentials.credential),

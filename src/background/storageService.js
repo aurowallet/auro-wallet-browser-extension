@@ -1,20 +1,25 @@
-import extension from "extensionizer";
+import browser from "webextension-polyfill";
 import { produce } from "immer";
-
-const extensionStorage = extension.storage && extension.storage.local;
+const extensionStorage = browser.storage && browser.storage.local;
 
 /**
  * save local in storage
  */
 export function save(value) {
   return new Promise((resolve, reject) => {
-    extensionStorage.set(value, () => {
-      let error = extension.runtime.lastError;
-      if (error) {
+    extensionStorage
+      .set(value)
+      .then(() => {
+        let error = browser.runtime.lastError;
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      })
+      .catch((error) => {
         reject(error);
-      }
-      resolve();
-    });
+      });
   });
 }
 
@@ -24,13 +29,19 @@ export function save(value) {
  */
 export function get(value) {
   return new Promise((resolve, reject) => {
-    extensionStorage.get(value, (items) => {
-      let error = extension.runtime.lastError;
-      if (error) {
+    extensionStorage
+      .get(value)
+      .then((items) => {
+        let error = browser.runtime.lastError;
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(items);
+      })
+      .catch((error) => {
         reject(error);
-      }
-      resolve(items);
-    });
+      });
   });
 }
 
@@ -40,13 +51,19 @@ export function get(value) {
  */
 export function removeValue(value) {
   return new Promise((resolve, reject) => {
-    extensionStorage.remove(value, () => {
-      let error = extension.runtime.lastError;
-      if (error) {
+    extensionStorage
+      .remove(value)
+      .then(() => {
+        let error = browser.runtime.lastError;
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      })
+      .catch((error) => {
         reject(error);
-      }
-      resolve();
-    });
+      });
   });
 }
 
@@ -59,7 +76,7 @@ export function clearStorage() {
 
 export const getStoredCredentials = () => {
   return new Promise((resolve) => {
-    extensionStorage.get("credentials", (result) => {
+    extensionStorage.get("credentials").then((result) => {
       resolve({
         credentials: result.credentials || {},
       });
@@ -69,7 +86,7 @@ export const getStoredCredentials = () => {
 
 const setStoredData = (data) => {
   return new Promise((resolve) => {
-    extensionStorage.set(data, () => {
+    extensionStorage.set(data).then(() => {
       resolve();
     });
   });

@@ -19,10 +19,8 @@ import CreatePassword from '../pages/CreatePassword';
 import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
 import ImportKeypair from '../pages/ImportKeypair';
-import ImportPage from '../pages/ImportPage';
 import LanguageManagement from '../pages/LanguageManage';
 import LedgerConnect from '../pages/LedgerConnect';
-import LedgerImport from '../pages/LedgerImport';
 import { LedgerPage } from '../pages/LedgerPage';
 import {LockPage} from '../pages/Lock';
 import HomePage from '../pages/Main';
@@ -87,9 +85,7 @@ export function getAllRouter() {
         <Route path="/staking_list" component={StakingList} />
         <Route path="/staking_transfer" component={StakingTransfer} />
         <Route path="/ledger_connect" component={LedgerConnect} />
-        <Route path="/ledger_import" component={LedgerImport} />
 
-        <Route path="/import_page" component={ImportPage} />
         <Route path="/import_keypair" component={ImportKeypair} />
 
         <Route path="/setting" component={Setting} />

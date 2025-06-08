@@ -1,5 +1,5 @@
 import cls from "classnames";
-import extension from "extensionizer";
+import browser from "webextension-polyfill";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { Trans } from "react-i18next";
@@ -9,7 +9,54 @@ import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { getLedgerStatus } from "../../../utils/ledger";
 import Button from "../Button";
 import styles from "./index.module.scss";
+import styled, { keyframes } from "styled-components";
 
+const openModal = keyframes`
+  from {
+    bottom: -50%;
+  }
+  to {
+    bottom: 0;
+  }
+`;
+
+const StyledInnerContent = styled.div`
+  background: #ffffff;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  animation: ${openModal} 0.35s;
+  animation-fill-mode: forwards;
+  min-height: 358px;
+`;
+const StyledBottonWrapper = styled.div`
+  padding: 12px 38px 20px;
+  position: fixed;
+  bottom: 0;
+  width: calc(100%);
+  background-color: white;
+
+  animation: ${openModal} 0.35s;
+  animation-fill-mode: forwards;
+`;
+const StyledReminderContainer = styled.div`
+  animation: ${openModal} 0.35s;
+  animation-fill-mode: forwards;
+  position: fixed;
+  z-index: 2;
+  margin: 0px 20px 90px;
+
+  background: rgba(214, 90, 90, 0.1);
+  border: 1px solid #d65a5a;
+  border-radius: 10px;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 17px;
+  color: #d65a5a;
+  padding: 12px 10px;
+`;
 export const LedgerInfoModal = ({
   modalVisible = false,
   title = "",
@@ -40,7 +87,7 @@ export const LedgerInfoModal = ({
   const onClickReminder = useCallback(() => {
     const ledgerPageType = LEDGER_PAGE_TYPE.permissionGrant;
     let openParams = new URLSearchParams({ ledgerPageType }).toString();
-    extension.tabs.create({
+    browser.tabs.create({
       url: "popup.html#/ledger_page?" + openParams,
     });
   }, [ledgerStatus]);
@@ -57,7 +104,7 @@ export const LedgerInfoModal = ({
     <>
       {modalVisible && (
         <div className={styles.outerContainer}>
-          <div className={styles.innerContent}>
+          <StyledInnerContent>
             <div className={styles.contentContainer}>
               <div className={styles.titleRow}>
                 <span className={styles.rowTitle}>
@@ -94,7 +141,7 @@ export const LedgerInfoModal = ({
               </div>
             </div>
             {nextLedgerTip && (
-              <div className={styles.reminderContainer}>
+              <StyledReminderContainer>
                 <Trans
                   i18nKey={nextLedgerTip}
                   components={{
@@ -106,12 +153,12 @@ export const LedgerInfoModal = ({
                     ),
                   }}
                 />
-              </div>
+              </StyledReminderContainer>
             )}
-            <div className={cls(styles.bottomContainer)}>
+            <StyledBottonWrapper>
               <Button onClick={onClickConfirm}>{i18n.t("confirm")}</Button>
-            </div>
-          </div>
+            </StyledBottonWrapper>
+          </StyledInnerContent>
         </div>
       )}
     </>

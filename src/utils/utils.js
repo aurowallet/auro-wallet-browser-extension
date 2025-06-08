@@ -3,7 +3,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
 import BigNumber from "bignumber.js";
 import bs58check from "bs58check";
-import extension from "extensionizer";
+import browser from 'webextension-polyfill';
 import validUrl from "valid-url";
 import { extGetLocal } from "../background/extensionStorage";
 import { removeLocal } from "../background/localStorage";
@@ -468,8 +468,8 @@ export function getReadableNetworkId(networkId) {
 }
 
 export function getExtensionAction() {
-  let isManifestV3 = extension.runtime.getManifest().manifest_version === 3;
-  const action = isManifestV3 ? chrome.action : chrome.browserAction;
+  let isManifestV3 = browser.runtime.getManifest().manifest_version === 3;
+  const action = isManifestV3 ? browser.action : browser.browserAction;
   return action;
 }
 

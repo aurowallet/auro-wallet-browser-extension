@@ -1,4 +1,4 @@
-import extension from 'extensionizer'
+import browser from 'webextension-polyfill';
 /**
  * sending messages
  * @param {*} message 
@@ -6,39 +6,36 @@ import extension from 'extensionizer'
  */
 export function sendMsg(message, sendResponse,errorCallback) {
   const { action } = message
-  extension.runtime.sendMessage(
+  browser.runtime.sendMessage(
     {
-      // messageSource, action, payload
       ...message,
     },
-    async (params) => {
+  ).then((params)=>{
       sendResponse && sendResponse(params)
-      if (extension.runtime.lastError) {
-        console.error("send message error",action,extension.runtime.lastError);
+      if (browser.runtime.lastError) {
+        console.error("send message error",action,browser.runtime.lastError);
         if(errorCallback){
           errorCallback()
         }
       }
-    }
-  );
+  });
 }
 
 export function sendMsgV2(message) {
   return new Promise((resolve, reject) => {
     const { action } = message;
-    extension.runtime.sendMessage(
+    browser.runtime.sendMessage(
       {
         ...message,
       },
-      (response) => {
-        if (extension.runtime.lastError) {
-          console.error("send message error", action, extension.runtime.lastError);
-          reject(extension.runtime.lastError);
-        } else {
-          resolve(response);
-        }
+    ).then((response)=>{
+      if (browser.runtime.lastError) {
+        console.error("send message error", action, browser.runtime.lastError);
+        reject(browser.runtime.lastError);
+      } else {
+        resolve(response);
       }
-    );
+  });
   });
 }
 
@@ -47,7 +44,7 @@ export function sendMsgV2(message) {
  * @param {*} url 
  */
 export function openTab(url){
-  extension.tabs.create({
+  browser.tabs.create({
     url: url,
   });
 }

@@ -1,7 +1,5 @@
 import FooterPopup from "@/popup/component/FooterPopup";
 import { PopupModalV2 } from "@/popup/component/PopupModalV2";
-import Tooltip from "@/popup/component/ToolTip/Tooltip";
-import extensionizer from "extensionizer";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";

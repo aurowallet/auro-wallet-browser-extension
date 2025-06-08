@@ -16,6 +16,7 @@ import DappWebsite from "../../component/DappWebsite";
 import styles from "./index.module.scss";
 import { REQUEST_TAB_MESSION } from "@/constant/storageKey";
 import { getLocal, saveLocal } from "@/background/localStorage";
+import browser from "webextension-polyfill";
 
 const ApprovePage = () => {
   const dispatch = useDispatch();
@@ -79,14 +80,13 @@ const ApprovePage = () => {
   }, [entryWitchRoute, getConnectAfterLock]);
 
   useEffect(() => {
-    chrome.permissions.contains(
-      {
+    browser.permissions
+      .contains({
         permissions: ["tabs"],
-      },
-      (result) => {
+      })
+      .then((result) => {
         setHasTabPermission(result);
-      }
-    );
+      });
   }, []);
 
   const onCancel = useCallback(() => {
@@ -109,11 +109,11 @@ const ApprovePage = () => {
   const onConfirm = useCallback(() => {
     let request = getLocal(REQUEST_TAB_MESSION);
     if (!hasTabPermission && !request) {
-      chrome.permissions.request(
-        {
+      browser.permissions
+        .request({
           permissions: ["tabs"],
-        },
-        (granted) => {
+        })
+        .then((granted) => {
           if (granted) {
             console.log("Tabs permission granted");
           } else {
@@ -134,8 +134,7 @@ const ApprovePage = () => {
               dispatch(updateApproveStatus(false));
             }
           );
-        }
-      );
+        });
       return;
     }
 

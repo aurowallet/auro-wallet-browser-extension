@@ -1,4 +1,4 @@
-import extension from "extensionizer";
+import browser from 'webextension-polyfill';
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
@@ -18,7 +18,6 @@ import {
   CURRENCY_UNIT_CONFIG,
   NET_WORK_CHANGE_FLAG,
   NET_WORK_CONFIG_V2,
-  STORAGE_UPGRADE_STATUS,
 } from "./constant/storageKey";
 import { languageInit } from "./i18n";
 import App from "./popup/App";
@@ -174,7 +173,7 @@ export const applicationEntry = {
   async initSandbox() {
     const sandbox = document.getElementById("o1jssandbox");
     if (sandbox) {
-      const allowedOrigin = `chrome-extension://${chrome.runtime.id}`;
+      const allowedOrigin = `chrome-extension://${browser.runtime.id}`;
       sandbox.contentWindow.postMessage(
         {
           type: "init-sandbox",
@@ -185,8 +184,8 @@ export const applicationEntry = {
     }
   },
   async appInit(store) {
-    extension.runtime.connect({ name: WALLET_CONNECT_TYPE.WALLET_APP_CONNECT });
-
+    browser.runtime.connect({ name: WALLET_CONNECT_TYPE.WALLET_APP_CONNECT });
+    
     // init netRequest
     await getLocalNetConfig(store);
 

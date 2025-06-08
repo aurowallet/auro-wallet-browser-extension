@@ -11,7 +11,7 @@ import styled from "styled-components";
 import { ACCOUNT_ACTIONS, POPUP_ACTIONS, WALLET_GET_CURRENT_ACCOUNT, WORKER_ACTIONS } from "../constant/msgTypes";
 import { updateSignZkModalStatus } from "../reducers/popupReducer";
 import SignTransaction from "../popup/pages/SignTransaction";
-import extension from 'extensionizer'
+import browser from 'webextension-polyfill';
 import { updateCurrentAccount } from "@/reducers/accountReducer";
 // Styled-component for the popup
 const FullScreenPopup = styled.div`
@@ -110,11 +110,11 @@ function PopupMonitor() {
       return true;
     };
 
-    extension.runtime.onMessage.addListener(messageListener);
+    browser.runtime.onMessage.addListener(messageListener);
     sendMsg({ action: POPUP_ACTIONS.POPUP_NOTIFACATION });
 
     return () => {
-      extension.runtime.onMessage.removeListener(messageListener);
+      browser.runtime.onMessage.removeListener(messageListener);
     };
   }, []);
 

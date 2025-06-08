@@ -13,7 +13,7 @@
     "bip39": "3.0.2",
     "bs58check": "2.1.2",
     "classnames": "2.2.6",
-    "extensionizer": "1.0.1",
+    "webextension-polyfill": "0.12.0",
     "i18next": "19.8.4",
     "libsodium-wrappers": "0.7.9",
     "mina-ledger-js": "1.0.6",

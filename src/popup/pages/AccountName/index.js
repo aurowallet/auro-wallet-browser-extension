@@ -7,8 +7,6 @@ import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/commonType";
 import { WALLET_CREATE_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import { checkLedgerConnect } from "../../../utils/ledger";
-import { isNumber } from "../../../utils/utils";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
@@ -86,19 +84,6 @@ const AccountName = ({}) => {
         pathname: "import_account",
         params: { accountName: accountText },
       });
-    } else if (fromType === ACCOUNT_NAME_FROM_TYPE.LEDGER) {
-      if (isNumber(accountIndex) && accountIndex >= 0) {
-        await checkLedgerConnect();
-        history.replace({
-          pathname: "ledger_import",
-          params: {
-            accountName: accountText,
-            accountIndex: accountIndex,
-          },
-        });
-      } else {
-        Toast.info(i18n.t("pathError"));
-      }
     } else if (fromType === ACCOUNT_NAME_FROM_TYPE.KEYPAIR) {
       history.push({
         pathname: "import_keypair",

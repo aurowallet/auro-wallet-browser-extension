@@ -2,7 +2,7 @@ import IconDelegation from "@/popup/component/SVG/icon_delegation";
 import IconPayment from "@/popup/component/SVG/icon_payment";
 import IconZkApp from "@/popup/component/SVG/icon_zkApp";
 import cls from "classnames";
-import extension from "extensionizer";
+import browser from 'webextension-polyfill';
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -214,9 +214,9 @@ const Record = ({}) => {
       }
       return true;
     };
-    extension.runtime.onMessage.addListener(onMessageListening);
+    browser.runtime.onMessage.addListener(onMessageListening);
     return () => {
-      extension.runtime.onMessage.removeListener(onMessageListening);
+      browser.runtime.onMessage.removeListener(onMessageListening);
     };
   }, []);
 

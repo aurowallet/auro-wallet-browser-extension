@@ -31,7 +31,7 @@ import {
 import apiService from "./APIService";
 import * as storage from "./storageService";
 import dappService from "./DappService";
-import extension from 'extensionizer'
+import browser from 'webextension-polyfill';
 import { POPUP_CHANNEL_KEYS, WALLET_CONNECT_TYPE } from "../constant/commonType";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import { createOrActivateTab, lastWindowIds, startExtensionPopup } from "../utils/popup";
@@ -303,12 +303,11 @@ function removeListener (tabId, changeInfo) {
   }
 }
 export function setupMessageListeners() {
-  extension.runtime.onMessage.addListener(internalMessageListener);
-  extension.runtime.onConnect.addListener(onConnectListener);
-  // browser.browserAction.onClicked.addListener
+  browser.runtime.onMessage.addListener(internalMessageListener);
+  browser.runtime.onConnect.addListener(onConnectListener);
   const action = getExtensionAction()
   action.onClicked.addListener(onClickIconListener)
-  extension.tabs.onRemoved.addListener(removeListener);
+  browser.tabs.onRemoved.addListener(removeListener);
 }
 
 async function createOffscreen() {
@@ -320,6 +319,6 @@ async function createOffscreen() {
     }).catch(() => {});
   }
 }
-chrome.runtime.onStartup.addListener(createOffscreen);
+browser.runtime.onStartup.addListener(createOffscreen);
 self.onmessage = e => {};
 createOffscreen();

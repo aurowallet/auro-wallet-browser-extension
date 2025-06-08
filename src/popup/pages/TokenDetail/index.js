@@ -34,7 +34,8 @@ import TokenIcon from "../Wallet/component/TokenIcon";
 import TxListView from "../Wallet/component/TxListView";
 import useFetchAccountData from "../../../hooks/useUpdateAccount";
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
-import extension from "extensionizer";
+import browser from 'webextension-polyfill';
+
 const StyledTopWrapper = styled.div`
   background: #f9fafc;
   display: flex;
@@ -300,9 +301,9 @@ const TokenDetail = () => {
       }
       return true;
     };
-    extension.runtime.onMessage.addListener(onMessageListening);
+    browser.runtime.onMessage.addListener(onMessageListening);
     return () => {
-      extension.runtime.onMessage.removeListener(onMessageListening);
+      browser.runtime.onMessage.removeListener(onMessageListening);
     };
   }, []);
 

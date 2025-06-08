@@ -5,7 +5,7 @@ import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './ap
 import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, getCredentialById, getStoredCredentials, removeCredential, removeValue, save, searchCredential, storeCredential } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
-import extension from 'extensionizer'
+import browser from 'webextension-polyfill';
 import { decodeMemo, getCurrentNodeConfig, getExtensionAction } from '../utils/utils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
@@ -793,11 +793,11 @@ class APIService {
     notification = async (hash) => {
         let netConfig = await getCurrentNodeConfig()
         let myNotificationID
-        extension.notifications &&
-            extension.notifications.onClicked.addListener(function (clickId) {
+        browser.notifications &&
+        browser.notifications.onClicked.addListener(function (clickId) {
                 if(myNotificationID === clickId){
                     let url = netConfig.explorer +"/tx/"+ clickId
-                    extension.tabs.create({ url: url });
+                    browser.tabs.create({ url: url });
                 }
             });
         const i18nLanguage = i18n.language
@@ -807,12 +807,12 @@ class APIService {
         }
         let title = i18n.t('notificationTitle')
         let message = i18n.t('notificationContent')
-        extension.notifications.create(hash, {
+        browser.notifications.create(hash,{
             title: title,
             message: message,
             iconUrl: '/img/logo/128.png',
             type: 'basic'
-        },(notificationItem)=>{
+        }).then((notificationItem)=>{
             myNotificationID = notificationItem
         });
         return
@@ -836,7 +836,7 @@ class APIService {
             if (data && data.transactionStatus && (
                 (data.transactionStatus === STATUS.TX_STATUS_INCLUDED)
             )) {
-                extension.runtime.sendMessage({
+                browser.runtime.sendMessage({
                     type: FROM_BACK_TO_RECORD,
                     action: TX_SUCCESS,
                     hash:hash
