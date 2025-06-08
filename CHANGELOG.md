@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Fixes
 - Remove storybook
 - Legder confirm button ui
+- Hide the staking entry of non-Mina network
 
 ## [2.3.3]
 ### Fixes

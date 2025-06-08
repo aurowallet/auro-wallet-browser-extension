@@ -313,6 +313,14 @@ const TokenDetail = () => {
     };
   }, []);
 
+  const { showStaking } = useMemo(() => {
+    const networkID = currentNode.networkID;
+    let showStaking = networkID?.startsWith("mina");
+    return {
+      showStaking,
+    };
+  }, [currentNode.networkID]);
+
   return (
     <CustomViewV2
       title={tokenSymbol}
@@ -336,7 +344,7 @@ const TokenDetail = () => {
             type={token_action_type.receive}
             isFungibleToken={isFungibleToken}
           />
-          {!isFungibleToken && (
+          {!isFungibleToken && showStaking && (
             <TokenAction
               type={token_action_type.delegation}
               isFungibleToken={isFungibleToken}
