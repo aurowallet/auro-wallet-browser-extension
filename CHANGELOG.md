@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Legder confirm button ui
 - Hide the staking entry of non-Mina network
 - Default node issue after delete custom network
+- Ledger index input issue
 
 ## [2.3.3]
 ### Fixes

@@ -237,10 +237,10 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     getLedgerAccountNumber();
   }, []);
 
-  const [accountIndex, setAccountIndex] = useState(0);
+  const [accountIndex, setAccountIndex] = useState("");
   const placeholderText = useMemo(() => {
     return "Ledger " + nextAccountIndex;
-  }, [accountIndex, nextAccountIndex]);
+  }, [nextAccountIndex]);
   const [accountName, setAccountName] = useState("");
 
   const [tipModalVisible, setTipModalVisible] = useState(false);
@@ -258,9 +258,13 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     }
     setTipModalVisible(true);
     if (ledgerApp) {
+      let nextIndex = accountIndex;
+      if (nextIndex <= 0) {
+        nextIndex = 0;
+      }
       const { publicKey, rejected } = await requestAccount(
         ledgerApp,
-        accountIndex
+        nextIndex
       );
       setTipModalVisible(false);
       if (rejected) {
@@ -270,7 +274,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
           {
             payload: {
               address: publicKey,
-              accountIndex: accountIndex,
+              accountIndex: nextIndex,
               accountName: accountName || placeholderText,
             },
             action: WALLET_IMPORT_LEDGER,
@@ -313,10 +317,15 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
   }, []);
 
   const onAdd = useCallback(() => {
-    setAccountIndex(accountIndex + 1);
+    let nextIndex = accountIndex;
+    if (nextIndex <= 0) {
+      nextIndex = 0;
+    }
+    setAccountIndex(nextIndex + 1);
   }, [accountIndex]);
   const onMinus = useCallback(() => {
     if (accountIndex <= 0) {
+      setAccountIndex(0);
       return;
     }
     setAccountIndex(accountIndex - 1);
@@ -401,6 +410,7 @@ const InputNumber = ({
         step="1"
         onChange={onChange}
         value={value}
+        placeholder="0"
         className={styles.customInput}
       />
       <div className={styles.imgContainer}>
