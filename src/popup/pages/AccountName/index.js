@@ -4,7 +4,10 @@ import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/commonType";
-import { WALLET_CREATE_HD_ACCOUNT } from "../../../constant/msgTypes";
+import {
+  DAPP_CHANGE_CONNECTING_ADDRESS,
+  WALLET_CREATE_HD_ACCOUNT,
+} from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
@@ -16,6 +19,9 @@ import styles from "./index.module.scss";
 
 const AccountName = ({}) => {
   const cache = useSelector((state) => state.cache);
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
 
   const dispatch = useDispatch();
   const history = useHistory();
@@ -104,6 +110,16 @@ const AccountName = ({}) => {
               setRepeatAccount(account.account);
             }
           } else {
+            sendMsg(
+              {
+                action: DAPP_CHANGE_CONNECTING_ADDRESS,
+                payload: {
+                  address: currentAddress,
+                  currentAddress: account.address,
+                },
+              },
+              (status) => {}
+            );
             dispatch(updateCurrentAccount(account));
             if (history.length >= 3) {
               history.go(-2);
@@ -114,7 +130,14 @@ const AccountName = ({}) => {
         }
       );
     }
-  }, [accountName, placeholderText, fromType, accountIndex, history]);
+  }, [
+    accountName,
+    placeholderText,
+    fromType,
+    accountIndex,
+    history,
+    currentAddress,
+  ]);
 
   const onCloseModal = useCallback(() => {
     setReminderModalStatus(false);

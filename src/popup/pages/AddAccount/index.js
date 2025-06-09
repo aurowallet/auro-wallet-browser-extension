@@ -1,7 +1,7 @@
 import { ACCOUNT_NAME_FROM_TYPE } from "@/constant/commonType";
 import Toast from "@/popup/component/Toast";
 import { updateAccountType } from "@/reducers/cache";
-import browser from 'webextension-polyfill';
+import browser from "webextension-polyfill";
 import i18n from "i18next";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -32,17 +32,11 @@ const AddAccount = ({}) => {
     window.close();
   }, [i18n]);
 
-  const goImport = useCallback(() => {
-    dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.INSIDE));
-  }, []);
-
   const onPrivateKey = useCallback(() => {
-    goImport();
     dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.OUTSIDE));
     history.push("account_name");
   }, []);
   const onKeystore = useCallback(() => {
-    goImport();
     dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR));
     history.push("account_name");
   }, []);

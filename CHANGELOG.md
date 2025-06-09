@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Hide the staking entry of non-Mina network
 - Default node issue after delete custom network
 - Ledger index input issue
+- Add new account triggers accountsChanged
 
 ## [2.3.3]
 ### Fixes

@@ -2,10 +2,11 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { LEDGER_PAGE_TYPE } from "../../../constant/commonType";
 import {
   ACCOUNT_ACTIONS,
+  DAPP_CHANGE_CONNECTING_ADDRESS,
   GET_LEDGER_ACCOUNT_NUMBER,
   GET_WALLET_LOCK_STATUS,
   WALLET_IMPORT_LEDGER,
@@ -222,6 +223,10 @@ const LedgerConnectView = ({
   );
 };
 const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
+
   const [nextAccountIndex, setNextAccountIndex] = useState(0);
   const getLedgerAccountNumber = useCallback(() => {
     sendMsg(
@@ -287,6 +292,16 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
                 setErrorMsg(account.error);
               }
             } else {
+              sendMsg(
+                {
+                  action: DAPP_CHANGE_CONNECTING_ADDRESS,
+                  payload: {
+                    address: currentAddress,
+                    currentAddress: account.address,
+                  },
+                },
+                (status) => {}
+              );
               dispatch(updateCurrentAccount(account));
               sendMsg({
                 action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,
