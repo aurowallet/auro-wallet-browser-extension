@@ -1603,7 +1603,7 @@ const StyledSelectRow = styled.label`
     background: rgba(0, 0, 0, 0.05);
   }
 `;
-const StyledTipContent = styled.p`
+const StyledTipContent = styled.div`
   width: fit-content;
   padding-top: 10px;
 `;
@@ -1645,7 +1645,6 @@ const PresentationView = ({
 
   const [storedCredentials, setStoredCredentials] = useState([]);
   const [selectedCredentials, setSelectedCredentials] = useState(new Map());
-  const [checkStatus, setCheckStatus] = useState(false);
   useEffect(() => {
     sendMsg(
       {

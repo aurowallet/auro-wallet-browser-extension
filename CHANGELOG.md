@@ -11,11 +11,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixes
 - Remove storybook
-- Legder confirm button ui
+- Legder confirm button UI
 - Hide the staking entry of non-Mina network
 - Default node issue after delete custom network
 - Ledger index input issue
 - Add new account triggers accountsChanged
+- Signature dialog UI
 
 ## [2.3.3]
 ### Fixes
