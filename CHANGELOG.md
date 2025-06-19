@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Add support for revoke permissions
 - Add permission `tabs` to fix [#50](https://github.com/aurowallet/auro-wallet-browser-extension/issues/50)
 - Update `extensionizer` to `webextension-polyfill`
+- Update zeko network icon
 
 ### Fixes
 - Remove storybook
