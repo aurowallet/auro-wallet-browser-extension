@@ -322,6 +322,49 @@ function formatZkTx(zkAppList, isPending = false) {
   }
   return newList;
 }
+/**
+ * @param {*} zkAppList 
+ * @returns 
+ */
+function formatCompleteTx(zkAppList) {
+  let newList = [];
+  for (let index = 0; index < zkAppList.length; index++) {
+    const txBody = zkAppList[index];
+    if(txBody.kind !== 'zkApp'){
+      newList.push({
+        ...txBody.body
+      })
+    }else{
+      let zkAppBody = txBody.zkAppBody ?? {}
+      let failureReason = zkAppBody.failureReasons ?? []
+      let isFailed =
+        Array.isArray(failureReason) && failureReason.length > 0;
+      let status = isFailed ? "failed" : "applied";
+      let newItem = {
+        id: "",
+        hash: zkAppBody.hash,
+        kind: "zkApp",
+        dateTime: zkAppBody.dateTime || "",
+        from: zkAppBody.zkappCommand.feePayer.body.publicKey,
+        to: getZkOtherAccount(zkAppBody),
+        amount: "0",
+        fee: zkAppBody.zkappCommand.feePayer.body.fee,
+        nonce: zkAppBody.zkappCommand.feePayer.body.nonce,
+        memo: zkAppBody.zkappCommand.memo,
+        status: status,
+        type: "zkApp",
+        body: zkAppBody,
+        timestamp: new Date(zkAppBody.dateTime).getTime(),
+        failureReason: isFailed ? failureReason:"",
+      }
+      newList.push({
+        ...newItem
+      });
+    }
+    
+  }
+  return newList;
+}
 
 export function formatTxTime(list) {
   return list.map((item) => {
@@ -364,22 +407,16 @@ function tokenHistoryFilter(list, tokenId) {
 }
 
 export function formatAllTxHistory(action) {
-  let txList = action.txList || [];
   let txPendingList = action.txPendingList || [];
-  let zkAppList = action.zkAppList || [];
   let zkPendingList = action.zkPendingList || [];
-
+  let fullTxList = action.fullTxList || [];
   let tokenId = action.tokenId;
 
   txPendingList = txPendingList.reverse();
   txPendingList = formatPendingTx(txPendingList);
-  zkAppList = formatZkTx(zkAppList);
+  fullTxList = formatCompleteTx(fullTxList);
   zkPendingList = formatZkTx(zkPendingList, true);
 
-  txList = formatTxTime(txList);
-
-  const commonList = [...txList, ...zkAppList];
-  commonList.sort(txSort);
 
   const commonPendingList = [...txPendingList, ...zkPendingList];
   commonPendingList.sort((a, b) => b.nonce - a.nonce);
@@ -392,7 +429,7 @@ export function formatAllTxHistory(action) {
     nextPendingList = tokenHistoryFilter(nextPendingList, tokenId);
   }
 
-  let newList = [...nextPendingList, ...commonList];
+  let newList = [...nextPendingList, ...fullTxList];
   if (newList.length > 0) {
     newList.push({
       showExplorer: true,

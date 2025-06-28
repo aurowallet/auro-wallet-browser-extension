@@ -60,18 +60,16 @@ export function updateCurrentPrice(tokenPrice, isCachePrice) {
 }
 
 export function updateAccountTxV2({
-  txList,
   txPendingList,
-  zkAppList,
-  zkPendingList
+  zkPendingList,
+  fullTxList
 },tokenId,
 ) {
   return {
     type: CHANGE_ACCOUNT_TX_HISTORY_V2,
-    txList,
     txPendingList,
-    zkAppList,
     zkPendingList,
+    fullTxList,
     tokenId,
   };
 }

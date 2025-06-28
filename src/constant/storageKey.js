@@ -79,7 +79,9 @@ export const LOCAL_CACHE_KEYS = {
     /**
      * save all token tx history
      */
-    "ALL_TX_HISTORY":"ALL_TX_HISTORY"
+    "ALL_TX_HISTORY":"ALL_TX_HISTORY",
+
+    "ALL_TX_HISTORY_V2":"ALL_TX_HISTORY_V2"
 }
 
 /**

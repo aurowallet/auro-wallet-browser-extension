@@ -22,7 +22,7 @@ const HomePage = () => {
     }
   }
   const shouldUpdateTxList = useCallback((address) => {
-    const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY);
+    const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
     const currentHistory = JSON.parse(txHistory);
     if (currentHistory?.[address]) {
       const targetHistory = currentHistory?.[address]

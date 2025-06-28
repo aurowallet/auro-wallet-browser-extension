@@ -21,6 +21,7 @@ import {
   startFetchMyQuery,
 } from "../request";
 import {
+  getAllTransactionListBody,
   getBalanceBatchBody,
   getBlockInfoBody,
   getDaemonStatusBody,
@@ -312,6 +313,38 @@ export async function getZkAppTxHistory(address, tokenId, limit) {
   }
   let txList = result?.zkapps || [];
   return { txList, address, tokenId };
+}
+/**
+ * get full type transaction, contains payment, delegation,zkapp, 
+ * @param {*} address 
+ * @param {*} tokenId 
+ * @param {*} limit 
+ * @returns 
+ */
+export async function getAllTxHistory(address, tokenId, limit) {
+  let netConfig = await getCurrentNodeConfig();
+  let gqlTxUrl = netConfig.gqlTxUrl;
+  if (!gqlTxUrl) {
+    return [];
+  }
+  const nextTokenId = tokenId == ZK_DEFAULT_TOKEN_ID ? "" : tokenId;
+  let txBody = getAllTransactionListBody();
+  let result = await startFetchMyQuery(
+    txBody,
+    {
+      publicKey: address,
+      tokenId: nextTokenId,
+      limit: limit || DEFAULT_TX_REQUEST_LENGTH,
+    },
+    gqlTxUrl
+  ).catch((error) => error);
+
+  if (result.error) {
+    throw new Error(String(result.error));
+  }
+  let txList = result?.fullTransactions || [];
+  return { txList, address, tokenId };
+
 }
 
 export async function getZkAppPendingTx(address, limit) {

@@ -1,9 +1,3 @@
-import {
-  getPendingTxList,
-  getTxHistory,
-  getZkAppPendingTx,
-  getZkAppTxHistory,
-} from "@/background/api";
 import { getLocal, saveLocal } from "@/background/localStorage";
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
@@ -35,6 +29,10 @@ import TxListView from "../Wallet/component/TxListView";
 import useFetchAccountData from "../../../hooks/useUpdateAccount";
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
 import browser from 'webextension-polyfill';
+import { getAllTxHistory,
+  getPendingTxList,
+  getZkAppPendingTx,
+ } from "../../../background/api";
 
 const StyledTopWrapper = styled.div`
   background: #f9fafc;
@@ -170,7 +168,7 @@ const TokenDetail = () => {
 
   const saveToLocal = useCallback(
     (newHistory) => {
-      const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY);
+      const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
       const currentHistory = JSON.parse(txHistory);
       if (currentHistory?.[currentAccount.address]) {
         let newSaveHistory = {
@@ -178,14 +176,14 @@ const TokenDetail = () => {
           [token.tokenId]: newHistory,
         };
         saveLocal(
-          LOCAL_CACHE_KEYS.ALL_TX_HISTORY,
+          LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
           JSON.stringify({
             [currentAccount.address]: newSaveHistory,
           })
         );
       } else {
         saveLocal(
-          LOCAL_CACHE_KEYS.ALL_TX_HISTORY,
+          LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
           JSON.stringify({
             [currentAccount.address]: {
               [token.tokenId]: newHistory,
@@ -202,24 +200,23 @@ const TokenDetail = () => {
         return;
       }
       isRequest = true;
-
-      let zkAppTxList = getZkAppTxHistory(address, token.tokenId).catch(
+      let fullTxRequest = getAllTxHistory(address, token.tokenId).catch(
         (err) => err
       );
-      let getZkAppPending = getZkAppPendingTx(address, token.tokenId).catch(
+      let getZkAppPendingRequest = getZkAppPendingTx(address, token.tokenId).catch(
         (err) => err
       );
       let txResponse;
       if (isFungibleToken) {
-        txResponse = await Promise.all([zkAppTxList, getZkAppPending]); //.catch(err=>err);
+        txResponse = await Promise.all([fullTxRequest, getZkAppPendingRequest]);
         let zkStatus = txResponse[0]?.address == currentAccount.address;
         let zkPendingStatus = txResponse[1]?.address == currentAccount.address;
-        let zkAppList = zkStatus ? txResponse[0].txList : [];
+        let fullTxList = zkStatus ? txResponse[0].txList : [];
         let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
 
         let history = {};
         if (zkStatus) {
-          history.zkAppList = zkAppList;
+          history.fullTxList = fullTxList;
         }
         if (zkPendingStatus) {
           history.zkPendingList = zkPendingList;
@@ -228,34 +225,25 @@ const TokenDetail = () => {
         dispatch(updateShouldRequest(false));
         saveToLocal(history);
       } else {
-        let pendingTxList = getPendingTxList(address).catch((err) => err);
-        let gqlTxList = getTxHistory(address).catch((err) => err);
+        let pendingTxRequest = getPendingTxList(address).catch((err) => err);
         txResponse = await Promise.all([
-          gqlTxList,
-          pendingTxList,
-          zkAppTxList,
-          getZkAppPending,
+          pendingTxRequest,
+          getZkAppPendingRequest,
+          fullTxRequest,
         ]).catch((err) => err);
-        let dataStatus_tx = txResponse[0]?.address == currentAccount.address;
         let dataStatus_txPending =
-          txResponse[1]?.address == currentAccount.address;
-
-        let zkStatus = txResponse[2]?.address == currentAccount.address;
-        let zkPendingStatus = txResponse[3]?.address == currentAccount.address;
-
-        let txList = dataStatus_tx ? txResponse[0].txList : [];
-        let txPendingList = dataStatus_txPending ? txResponse[1].txList : [];
-        let zkAppList = zkStatus ? txResponse[2].txList : [];
-        let zkPendingList = zkPendingStatus ? txResponse[3].txList : [];
+          txResponse[0]?.address == currentAccount.address;
+        let zkPendingStatus = txResponse[1]?.address == currentAccount.address;
+        let dataStatus_tx = txResponse[2]?.address == currentAccount.address;
+        let txPendingList = dataStatus_txPending ? txResponse[0].txList : [];
+        let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
+        let fullTxList = dataStatus_tx ? txResponse[2].txList : [];
         let history = {};
-        if (dataStatus_tx) {
-          history.txList = txList;
-        }
         if (dataStatus_txPending) {
           history.txPendingList = txPendingList;
         }
-        if (zkStatus) {
-          history.zkAppList = zkAppList;
+        if (dataStatus_tx) {
+          history.fullTxList = fullTxList;
         }
         if (zkPendingStatus) {
           history.zkPendingList = zkPendingList;
