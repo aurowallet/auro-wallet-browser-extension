@@ -142,7 +142,7 @@ export const signDataV2 = {
       },
       signResult: {
         signature:
-          "7mXRWjfzTJvpsWTKZWQF6LXVEgqu4Ejvuw9xWTmHnExZmuLx3xDDs978s7vB1FdXJtn9VkQACJ6VU8DKdfnXFg4fV3Eno9xb",
+          "7mX5nK8c1r36SwE9K7jngqiNuWXCHqPywNQndT1oX55czyghY3zRnoigDZemgf5KHSPSihLS9VrLnTt2m9kWaYUHeJBoKaDs",
         publicKey: "B62qkVs6zgN84e1KjFxurigqTQ57FqV3KnWubV3t77E9R6uBm4DmkPi",
         data: {
           zkappCommand: {
@@ -155,7 +155,7 @@ export const signDataV2 = {
                 nonce: "5",
               },
               authorization:
-                "7mXRWjfzTJvpsWTKZWQF6LXVEgqu4Ejvuw9xWTmHnExZmuLx3xDDs978s7vB1FdXJtn9VkQACJ6VU8DKdfnXFg4fV3Eno9xb",
+                "7mX5nK8c1r36SwE9K7jngqiNuWXCHqPywNQndT1oX55czyghY3zRnoigDZemgf5KHSPSihLS9VrLnTt2m9kWaYUHeJBoKaDs",
             },
             accountUpdates: [
               {
