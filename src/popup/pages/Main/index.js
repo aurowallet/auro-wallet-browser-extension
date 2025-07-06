@@ -4,7 +4,6 @@ import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "../../../constant/storageKey";
 import { updateAccountTx, updateAccountTxV2, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
-import { isNumber } from "../../../utils/utils";
 import Wallet from "../Wallet";
 
 const HomePage = () => {

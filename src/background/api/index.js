@@ -9,10 +9,13 @@ import {
   SUPPORT_TOKEN_LIST,
 } from "../../constant/storageKey";
 import {
-  getCurrentNodeConfig,
   getReadableNetworkId,
   parseStakingList,
 } from "../../utils/utils";
+import {
+  getCurrentNodeConfig,
+} from "../../utils/browserUtils";
+
 import { saveLocal } from "../localStorage";
 import {
   commonFetch,

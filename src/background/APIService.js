@@ -6,7 +6,8 @@ import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, si
 import { get, getCredentialById, getStoredCredentials, removeCredential, removeValue, save, searchCredential, storeCredential } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
 import browser from 'webextension-polyfill';
-import { decodeMemo, getCurrentNodeConfig, getExtensionAction } from '../utils/utils';
+import { decodeMemo } from '../utils/utils';
+import { getExtensionAction,getCurrentNodeConfig } from '../utils/browserUtils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { changeLanguage } from '../i18n';

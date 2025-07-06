@@ -8,7 +8,7 @@ import { useCallback, useState } from "react";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { BackView } from ".";
-import { matchList } from "../../../utils/validator";
+import { PasswordValidationList } from "../../../utils/utils";
 
 const StyledPwdContainer = styled.div`
   margin-top: 20px;
@@ -48,7 +48,7 @@ export const CreatePwdView = ({ onClickNextTab, onClickPre }) => {
   const [inputPwd, setInputPwd] = useState("");
 
   const [rulesMet, setRulesMet] = useState(
-    matchList.map((rule) => ({ ...rule, bool: false }))
+    PasswordValidationList.map((rule) => ({ ...rule, bool: false }))
   );
 
   const [confirmPwd, setConfirmPwd] = useState("");

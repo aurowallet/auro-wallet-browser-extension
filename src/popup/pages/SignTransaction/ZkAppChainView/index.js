@@ -18,7 +18,6 @@ import {
   updateCustomNodeList,
 } from "@/reducers/network";
 import { sendMsg } from "@/utils/commonMsg";
-import { clearLocalCache, sendNetworkChangeMsg } from "@/utils/utils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import cls from "classnames";
 import i18n from "i18next";
@@ -27,6 +26,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { NET_CONFIG_VERSION } from "../../../../../config";
 import styles from "./index.module.scss";
 import { Default_Network_List } from "@/constant/network";
+import { clearLocalCache } from "../../../../background/localStorage";
+import { sendNetworkChangeMsg } from "../../../../utils/commonMsg";
 
 const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
   const dispatch = useDispatch();

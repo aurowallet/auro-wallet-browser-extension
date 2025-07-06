@@ -1,3 +1,4 @@
+import { DAPP_CHANGE_NETWORK } from '@/constant/msgTypes';
 import browser from 'webextension-polyfill';
 /**
  * sending messages
@@ -47,4 +48,22 @@ export function openTab(url){
   browser.tabs.create({
     url: url,
   });
+}
+
+/**
+ * send network change message
+ * @param {*} netConfig
+ */
+export function sendNetworkChangeMsg(netConfig) {
+  if (netConfig.networkID) {
+    sendMsg(
+      {
+        action: DAPP_CHANGE_NETWORK,
+        payload: {
+          netConfig: netConfig,
+        },
+      },
+      () => {}
+    );
+  }
 }

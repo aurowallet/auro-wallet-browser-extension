@@ -31,7 +31,7 @@ import {
 } from "@/utils/ledger";
 import {
   addressSlice,
-  copyText,
+  addressValid,
   createCredentialHash,
   exportFile,
   getRealErrorMsg,
@@ -40,7 +40,9 @@ import {
   toNonExponential,
   trimSpace,
 } from "@/utils/utils";
-import { addressValid } from "@/utils/validator";
+import {
+  copyText,
+} from "@/utils/browserUtils";
 import { getAccountUpdateCount, getZkFee, getZkInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";

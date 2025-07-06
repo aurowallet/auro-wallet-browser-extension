@@ -8,16 +8,6 @@ export default {
   encrypt,
   decrypt,
 
-  // More advanced encryption methods:
-  keyFromPassword,
-  encryptWithKey,
-  decryptWithKey,
-
-  // Buffer <-> Hex string methods
-  serializeBufferForStorage,
-  serializeBufferFromStorage,
-
-  generateSalt,
 }
 
 // Takes a Pojo, returns cypher text.

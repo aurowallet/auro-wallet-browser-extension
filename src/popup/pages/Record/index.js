@@ -13,12 +13,14 @@ import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { openTab } from "../../../utils/commonMsg";
 import {
-  copyText,
   decodeMemo,
   getBalanceForUI,
   getShowTime,
   getTimeGMT,
 } from "../../../utils/utils";
+import {
+  copyText,
+} from "../../../utils/browserUtils";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";

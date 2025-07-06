@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Update `extensionizer` to `webextension-polyfill`
 - Update zeko network icon
 - Update transaction request
+- Add test cases to utils
 
 ### Fixes
 - Remove storybook

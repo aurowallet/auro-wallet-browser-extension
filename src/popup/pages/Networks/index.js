@@ -1,26 +1,23 @@
+import { clearLocalCache } from "@/background/localStorage";
+import { NetworkID_MAP } from "@/constant/network";
+import { sendNetworkChangeMsg } from "@/utils/commonMsg";
+import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
+import styled from "styled-components";
 import { NET_CONFIG_VERSION } from "../../../../config";
+import { extSaveLocal } from "../../../background/extensionStorage";
 import { NET_WORK_CONFIG_V2 } from "../../../constant/storageKey";
 import {
   updateShouldRequest,
   updateStakingRefresh,
 } from "../../../reducers/accountReducer";
 import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/network";
-import {
-  addressSlice,
-  clearLocalCache,
-  sendNetworkChangeMsg,
-} from "../../../utils/utils";
-import i18n from "i18next";
-import { useHistory } from "react-router-dom";
-import { extSaveLocal } from "../../../background/extensionStorage";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
 import NetworkItem from "./NetworkItem";
-import styled from "styled-components";
-import { NetworkID_MAP } from "@/constant/network";
 
 const StyledItemWrapper = styled.div`
   margin-top: 10px;

@@ -35,8 +35,7 @@ import {
   updateCurrentNode,
   updateCustomNodeList,
 } from "../../../reducers/network";
-import { sendMsg } from "../../../utils/commonMsg";
-import { sendNetworkChangeMsg } from "../../../utils/utils";
+import { sendMsg, sendNetworkChangeMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";

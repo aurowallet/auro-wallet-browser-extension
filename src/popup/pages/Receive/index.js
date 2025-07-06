@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { MAIN_COIN_CONFIG, POWER_BY } from "../../../constant";
-import { copyText } from "../../../utils/utils";
+import { copyText } from "../../../utils/browserUtils";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 const StyledPageWrapper = styled.div`

@@ -35,7 +35,7 @@ import browser from 'webextension-polyfill';
 import { POPUP_CHANNEL_KEYS, WALLET_CONNECT_TYPE } from "../constant/commonType";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import { createOrActivateTab, lastWindowIds, startExtensionPopup } from "../utils/popup";
-import { getExtensionAction } from "../utils/utils";
+import { getExtensionAction } from "../utils/browserUtils";
 
 function internalMessageListener(message, sender, sendResponse) {
   const { messageSource, action, payload } = message;

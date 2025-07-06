@@ -21,7 +21,6 @@ import {
 } from "../../../../reducers/network";
 import {
   checkNodeExist,
-  sendNetworkChangeMsg,
   trimSpace,
   urlValid,
 } from "../../../../utils/utils";
@@ -31,6 +30,7 @@ import Input from "../../../component/Input";
 import { PopupModal } from "../../../component/PopupModal";
 import TextArea from "../../../component/TextArea";
 import styles from "./index.module.scss";
+import { sendNetworkChangeMsg } from "@/utils/commonMsg";
 
 const NodeEditor = () => {
   const history = useHistory();

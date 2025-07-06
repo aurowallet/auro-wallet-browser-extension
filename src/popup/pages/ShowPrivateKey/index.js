@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { SEC_FROM_TYPE } from "../../../constant/commonType";
 import { WALLET_GET_PRIVATE_KEY } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
-import { copyText } from '../../../utils/utils';
+import { copyText } from '../../../utils/browserUtils';
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
 import Button from "../../component/Button";

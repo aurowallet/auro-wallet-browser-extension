@@ -8,7 +8,9 @@ import { LEDGER_STATUS } from "../constant/commonType";
 import { NetworkID_MAP } from "../constant/network";
 import Loading from "../popup/component/Loading";
 import { closePopupWindow } from "./popup";
-import { getCurrentNodeConfig } from "./utils";
+import {
+  getCurrentNodeConfig,
+} from "./browserUtils";
 
 const status = {
   rejected: "CONDITIONS_OF_USE_NOT_SATISFIED",

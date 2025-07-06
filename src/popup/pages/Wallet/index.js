@@ -27,10 +27,11 @@ import { setAccountInfo } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import {
   addressSlice,
-  copyText,
   getAmountForUI,
-  getOriginFromUrl,
 } from "../../../utils/utils";
+import {
+  copyText,
+} from "../../../utils/browserUtils";
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import NetworkSelect from "../Networks/NetworkSelect";
