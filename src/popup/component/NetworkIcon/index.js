@@ -47,7 +47,7 @@ export const NetworkIcon = ({ nodeItem, size }) => {
         ? "img/mina_color.svg"
         : "img/icon_mina_gray.svg";
     if (isZeko) {
-      iconSource = "img/icon_zeko_network.png";
+      iconSource = "img/icon_zeko_testnet.svg";
     }
     let holderIconName = "";
     if (isCustomNet) {
