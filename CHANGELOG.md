@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Update zeko network icon
 - Update transaction request
 - Add test cases to utils
+- Update dependencies
 
 ### Fixes
 - Remove storybook

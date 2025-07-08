@@ -1,5 +1,5 @@
 import i18n from "i18next";
-import QRCode from "qrcode.react";
+import {QRCodeSVG} from 'qrcode.react';
 import { useCallback, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
@@ -133,7 +133,7 @@ const ReceivePage = ({}) => {
           />
         </StyledReceiveTip>
         <div className={styles.qrCodeContainer}>
-          <QRCode
+          <QRCodeSVG
             value={currentAccount.address}
             size={150}
             level={"H"}
