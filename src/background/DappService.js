@@ -30,7 +30,6 @@ let approveRequests = [];
 let chainRequests = []
 
 let tokenSigneRequests = [];
-let isHaveTabPermissions = false;
 
 export const windowId = {
   approve_page: "approve_page",
@@ -859,24 +858,7 @@ class DappService {
     }
     return
   }
-  getTabPermission (){
-    return new Promise((resolve)=>{
-      browser.permissions.contains(
-        {
-          permissions: ["tabs"],
-        },
-      ).then((result)=>{
-        isHaveTabPermissions = result;
-        return result
-      }).finally(()=>{
-        resolve()
-      });
-    })
-  }
- async notifyAccountChange(siteUrlList, connectAccount) {
-    if(!isHaveTabPermissions){
-      await this.getTabPermission()
-    }
+ notifyAccountChange(siteUrlList, connectAccount) {
     let account = !connectAccount ? [] : [connectAccount]
     browser.tabs.query({}).then((tabs)=>{
       let message = {
@@ -885,24 +867,17 @@ class DappService {
       }
       for (let tabIndex = 0; tabIndex < tabs.length; tabIndex++) {
         const tab = tabs[tabIndex];
-          if(isHaveTabPermissions){
             let origin = getOriginFromUrl(tab.url)
 
             let tabConnectIndex = siteUrlList.indexOf(origin)
             if(tabConnectIndex !== -1){
               browser.tabs.sendMessage(tab.id, message)
             }
-          }else{
-            browser.tabs.sendMessage(tab.id, message)
-          }
           continue;
       }
     })
   }
-  async notifyNetworkChange(currentNet) {
-    if(!isHaveTabPermissions){
-      await this.getTabPermission()
-    }
+  notifyNetworkChange(currentNet) {
     let networkID = currentNet.networkID || ""
     let message = {
       action: "chainChanged",
@@ -917,11 +892,7 @@ class DappService {
         let currentConnect = this.getDappStore().currentConnect
         for (let index = 0; index < tabs.length; index++) {
           const tab = tabs[index];
-          if(isHaveTabPermissions){
-            if (currentConnect[tab.id]) {
-              browser.tabs.sendMessage(tab.id, message)
-            }
-          }else{
+          if (currentConnect[tab.id]) {
             browser.tabs.sendMessage(tab.id, message)
           }
         }
