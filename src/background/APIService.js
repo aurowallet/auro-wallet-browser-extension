@@ -227,7 +227,7 @@ class APIService {
     }
     createAccount = async (mnemonic) => {
         this.memStore.updateState({ mne: "" })
-        let wallet = await importWalletByMnemonic(mnemonic)
+        let wallet = importWalletByMnemonic(mnemonic)
         let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
         const account = {
             address: wallet.pubKey,
@@ -308,7 +308,7 @@ class APIService {
 
             let mnemonicEn = data[0].mnemonic
             let mnemonic = await encryptUtils.decrypt(this.getStore().password, mnemonicEn)
-            let wallet = await importWalletByMnemonic(mnemonic, lastHdIndex)
+            let wallet = importWalletByMnemonic(mnemonic, lastHdIndex)
 
             let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
 

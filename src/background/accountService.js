@@ -1,13 +1,13 @@
-import * as bip32 from 'bip32';
-import * as bip39 from 'bip39';
-import { generateMnemonic } from "bip39";
 import bs58check from "bs58check";
-import { Buffer } from 'safe-buffer';
+import { Buffer } from 'buffer';
 import Client from 'mina-signer';
 import { MAIN_COIN_CONFIG } from '../constant';
+import { HDKey } from "@scure/bip32";
+import * as bip39 from '@scure/bip39';
+import { wordlist } from "@scure/bip39/wordlists/english";
 
 export function validateMnemonic(mnemonic) {
-    return bip39.validateMnemonic(mnemonic);
+    return bip39.validateMnemonic(mnemonic,wordlist);
 }
 
 export function getHDpath(account = 0) {
@@ -19,7 +19,7 @@ export function getHDpath(account = 0) {
 }
 
 export function generateMne() {
-    let mne = generateMnemonic();
+    let mne = bip39.generateMnemonic(wordlist, 256);
     return mne
 }
 
@@ -33,17 +33,17 @@ export function decodeAddress(address) {
 }
 
 function reverse(bytes) {
-    const reversed = new Buffer(bytes.length);
+    const reversed = new Buffer.alloc(bytes.length);
     for (let i = bytes.length; i > 0; i--) {
         reversed[bytes.length - i] = bytes[i - 1];
     }
     return reversed;
 }
-export async function importWalletByMnemonic(mnemonic, index = 0) {
-    const seed = await bip39.mnemonicToSeedSync(mnemonic)
-    const masterNode = bip32.fromSeed(seed)
+export function importWalletByMnemonic(mnemonic, index = 0) {
+    const seed = bip39.mnemonicToSeedSync(mnemonic)
+    const masterNode = HDKey.fromMasterSeed(seed)
     let hdPath = getHDpath(index)
-    const child0 = masterNode.derivePath(hdPath)
+    const child0 = masterNode.derive(hdPath);
     child0.privateKey[0] &= 0x3f;
     const childPrivateKey = reverse(child0.privateKey)
     const privateKeyHex = `5a01${childPrivateKey.toString('hex')}`

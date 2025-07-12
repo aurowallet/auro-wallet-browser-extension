@@ -152,7 +152,7 @@ module.exports = (env, argv) => {
         crypto: require.resolve("crypto-browserify"),
         stream: require.resolve("stream-browserify"),
         path: require.resolve("path-browserify"),
-        buffer: require.resolve("safe-buffer"),
+        buffer: require.resolve("buffer"),
       },
       alias: {
         "@": path.resolve(__dirname, "src"),

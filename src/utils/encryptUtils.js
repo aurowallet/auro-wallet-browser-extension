@@ -1,5 +1,5 @@
 import sodium from 'libsodium-wrappers'
-import { Buffer } from 'safe-buffer';
+import { Buffer } from 'buffer';
 
 
 export default {

@@ -1,9 +1,11 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
-
 ## [Un-Released]
+
 ### Enhancements
+
 - Credentials icon
 - Add support for revoke permissions
 - Add permission `tabs` to fix [#50](https://github.com/aurowallet/auro-wallet-browser-extension/issues/50)
@@ -11,9 +13,10 @@ All notable changes to this project will be documented in this file.
 - Update zeko network icon
 - Update transaction request
 - Add test cases to utils
-- Update dependencies
+- Update dependencies (bip32, bip39, buffer, react-scripts, etc.).
 
 ### Fixes
+
 - Remove storybook
 - Legder confirm button UI
 - Hide the staking entry of non-Mina network
@@ -23,11 +26,15 @@ All notable changes to this project will be documented in this file.
 - Signature dialog UI
 
 ## [2.3.3]
+
 ### Fixes
+
 - Transaction time format
 
 ## [2.3.2]
+
 ### Enhancements
+
 - Token detail page UI
 - Transaction time format
 - Transaction detail page item sorting
@@ -39,72 +46,79 @@ All notable changes to this project will be documented in this file.
 - Auto-lock UI
 
 ### Fixes
+
 - Popup issue
 - Small-amount token transfer
 - Ledger name
 
 ## [2.3.1]
+
 - Enhancements
-    - Support import 24 words mnemonics
-    - Update networkID of testnet
+  - Support import 24 words mnemonics
+  - Update networkID of testnet
 
 ## [2.3.0]
+
 - Enhancements
-    - Add token support
-    - Add support for Zeko testnet
-    - Upgrade request config
-    - Remove support for Berkeley network
-    - Update lock icon
-    - zkApp fee recommendation
-    - zkApp recommend nonce
+  - Add token support
+  - Add support for Zeko testnet
+  - Upgrade request config
+  - Remove support for Berkeley network
+  - Update lock icon
+  - zkApp fee recommendation
+  - zkApp recommend nonce
 
 ## [2.2.17]
-- Enhancements
-    - Upgrade network config
-    - Transaction history
-    - Icon lock status
-- Fixed
-    - zkApp recommend fee
 
+- Enhancements
+  - Upgrade network config
+  - Transaction history
+  - Icon lock status
+- Fixed
+  - zkApp recommend fee
 
 ## [2.2.16]
+
 - Enhancements
-    - Add code-spell check.
-    - Upgrade mina-signer to v3.0.7.
-    - Add support to return signed zk.
+  - Add code-spell check.
+  - Upgrade mina-signer to v3.0.7.
+  - Add support to return signed zk.
 
 ## [2.2.15]
+
 - Enhancements
-    - Upgrade mina-signer to v3.0.6.
-    - Upgrade parts of devDependencies versions to be compatible with Node.js v20.
-    - Add zkApp transaction history to devnet.
+  - Upgrade mina-signer to v3.0.6.
+  - Upgrade parts of devDependencies versions to be compatible with Node.js v20.
+  - Add zkApp transaction history to devnet.
 
 ## [2.2.14]
+
 - Enhancements
-    - Network Management
-    - Account Management
-    - Create & Restore process
-    - Windows UI
-    - zkApp approve
-    - zkApp fee 
+  - Network Management
+  - Account Management
+  - Create & Restore process
+  - Windows UI
+  - zkApp approve
+  - zkApp fee
 - Fixed
-    - Setting popup UI
-    - Ledger UI
-    - TxList delegation show address
-
-
+  - Setting popup UI
+  - Ledger UI
+  - TxList delegation show address
 
 ## [2.2.13]
+
 - Upgrade mina-signer to 3.0.0
-- Update some i18n 
+- Update some i18n
 - Add Russian language support
 - Merge pull request [#21](https://github.com/aurowallet/auro-wallet-browser-extension/pull/21)
 
 ## [2.2.12]
+
 - Fix account init
-- Update aboutPage 
+- Update aboutPage
 
 ## [2.2.11]
+
 - Enhanced security process for wallet create and restore
 - Added Ukrainian language support
 - Optimized loading
@@ -113,111 +127,133 @@ All notable changes to this project will be documented in this file.
 - Fixed onMessage errors during lock
 
 ## [2.2.10]
+
 - Fix zkTx show status
 - UI enhancements
 - add language:Turkish
 
 ## [2.2.9]
+
 - Logo enhancements
 - Update tx history source
 - UI enhancements
 - Fix zkApp switch chain refresh issue
 
 ## [2.2.8]
+
 - Deprecated legacy method
 - UI enhancements
 
 ## [2.2.7]
-- New features:
-    - Add advance in cancel tx
-    - Add zkApp multiple transactions at the same time
-    - Add zkApp switch chain
-    - Add zkApp add chain
-    - Add zkApp sign json messgae
-    - Add nullifier support
-    - Add zk-commond parse
-- Network config enhancements 
 
+- New features:
+  - Add advance in cancel tx
+  - Add zkApp multiple transactions at the same time
+  - Add zkApp switch chain
+  - Add zkApp add chain
+  - Add zkApp sign json messgae
+  - Add nullifier support
+  - Add zk-commond parse
+- Network config enhancements
 
 ## [2.2.6]
+
 - Add support for Testworld2.0 network
 
 ## [2.2.5]
+
 - Add transaction speed-up and cancel
 - Ledger enhancements
 
 ## [2.2.4]
+
 - Upgrade mina-signer to 2.1.1
 - Add internal transfer
 - Bug fixes
 
 ## [2.2.3]
+
 - Firefox manifest version to V2
 - Staking page optimization under unknown network
 
 ## [2.2.2]
+
 - Upgrade mina-provider to 0.2.1
 - Recover Auto Lock feature
 - Bug fixes
 
 ## [2.2.1]
+
 - Add scam-address match
 - Ledger enhancements
 - UI enhancements
 - Bug fixes
 
 ## [2.2.0]
+
 - Upgrade to manifest v3
 - Upgrade mina-provider to 0.2.0
 - Bug fixes
 
 ## [2.1.10]
+
 - Staking UI enhancements
 - Bug fixes
 
 ## [2.1.9]
+
 - Upgrade mina-signer to 2.0.3
 
 ## [2.1.8]
+
 - Upgrade mina-provider to 0.1.7
 - Ledger enhancements
 
 ## [2.1.7]
+
 - Upgrade mina-provider to 0.1.6
 
 ## [2.1.6]
+
 - Upgrade mina-signer to 2.0.2
 - Bug fixes
 
 ## [2.1.5]
+
 - Optimize Ledger UX
 
 ## [2.1.4]
+
 - Upgrade mina-signer to v1.7.0
 - Upgrade webpack to v5
 - Bug fix
 
 ## [2.1.3]
+
 - Add transaction memo parse
-- Update some i18n 
+- Update some i18n
 - Fix some ui (contains windows ui)
 
 ## [2.1.2]
+
 - Upgrade mina-signer to v1.6.0
 - Add support for Berkeley network
 
 ## [2.1.1]
+
 - Update transaction history provider
 - Update delegation detail provider
 
 ## [2.1.0]
+
 - New UI
 - New features:
-    - Add popup window
-    - Add Auto-lock
-    - Add Connect DApp List
+  - Add popup window
+  - Add Auto-lock
+  - Add Connect DApp List
 
 ## [2.0.6]
+
 - fix (ledger): signing not working on testnet
 - fix change password failed when have ledger account
 
@@ -225,38 +261,39 @@ All notable changes to this project will be documented in this file.
 
 - fix DApp default icon
 - change DApp message request page title
-- fix address-book 
+- fix address-book
 - update auro-web3-provider to @aurowallet/mina-provider
 - add gql params type
 - update build production scripts
 - update the page display logic of network control
 - update mina-signer init params to mainnet
 - update signMessage params name to message
-- fix update the current network url not timely problem 
+- fix update the current network url not timely problem
 
 ## [2.0.4]
 
-- Re-encode raw signature to fix ledger transation signature  (https://github.com/jspada/ledger-app-mina/pull/22)
+- Re-encode raw signature to fix ledger transation signature (https://github.com/jspada/ledger-app-mina/pull/22)
 - fix no-balance account tip
 
 ## [2.0.3]
 
 ### Fixed
+
 - add old version network default-name [`Unknown`]
 - add ledger transaction tip when waiting sign in ledger
-- fix send default button status 
-- fix networkPage delete button 
- 
+- fix send default button status
+- fix networkPage delete button
 
 ## [2.0.2]
 
 ### Changed
-- change permission `tabs` to `activeTab`
 
+- change permission `tabs` to `activeTab`
 
 ## [2.0.1]
 
 ### Added
+
 - Support Dapp
 - Support Devnet
 - Improve user experience and features optimization:
@@ -264,4 +301,5 @@ All notable changes to this project will be documented in this file.
 - Deprecated import watch account(Forced).
 
 ### Fixed
+
 - Bug fix
