@@ -14,7 +14,7 @@ import i18n from "i18next";
 import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 
-const useFetchAccountData = (currentAccount) => {
+const useFetchAccountData = (currentAccount, isDev = false) => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const dispatch = useDispatch();
@@ -46,31 +46,46 @@ const useFetchAccountData = (currentAccount) => {
               let tokenConfigMap = JSON.parse(localTokenConfig);
               if (tokenConfigMap && tokenConfigMap[address]) {
                 let tokenConfig = tokenConfigMap[address];
-                dispatch(updateLocalTokenConfig(tokenConfig));
+                if (!isDev) {
+                  dispatch(updateLocalTokenConfig(tokenConfig));
+                }
               }
             }
-            dispatch(updateTokenAssets(lastTokenList));
-            setResult(lastTokenList);
-            saveLocal(
-              LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
-              JSON.stringify({ [currentAccount.address]: lastTokenList })
-            );
+            if (!isDev) {
+              dispatch(updateTokenAssets(lastTokenList));
+              setResult(lastTokenList);
+              saveLocal(
+                LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
+                JSON.stringify({ [currentAccount.address]: lastTokenList })
+              );
+            } else {
+              return lastTokenList;
+            }
           }
         } else {
-          dispatch(updateTokenAssets([]));
-          setResult([]);
-          saveLocal(
-            LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
-            JSON.stringify({ [currentAccount.address]: [] })
-          );
+          if (!isDev) {
+            dispatch(updateTokenAssets([]));
+            setResult([]);
+            saveLocal(
+              LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
+              JSON.stringify({ [currentAccount.address]: [] })
+            );
+          } else {
+            return [];
+          }
         }
       }
     } catch (error) {
       console.error(error);
+      if (isDev) {
+        return error;
+      }
     } finally {
-      dispatch(updateShouldRequest(false));
-      setIsLoading(false);
-      isRequest = false;
+      if (!isDev) {
+        dispatch(updateShouldRequest(false));
+        setIsLoading(false);
+        isRequest = false;
+      }
     }
   }, [currentAccount, dispatch]);
 

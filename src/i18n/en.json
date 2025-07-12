@@ -306,5 +306,8 @@
   "tryAgain":"Please try again",
   "credentialExist":"Credential already exist",
   "perferences":"Perferences",
-  "credential":"Credential"
+  "credential":"Credential",
+  "pendingTx": "Pending Transaction",
+  "response":"Response",
+  "retry":"Retry"
 }

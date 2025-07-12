@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Update transaction request
 - Add test cases to utils
 - Update dependencies (bip32, bip39, buffer, react-scripts, etc.).
+- Add DevPage
 
 ### Fixes
 
