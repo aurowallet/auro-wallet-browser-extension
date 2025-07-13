@@ -65,7 +65,7 @@ export const AUTO_LOCK_TIME_LIST = [
 export const DEFAULT_LANGUAGE = "en";
 
 /** default tx length */
-export const DEFAULT_TX_REQUEST_LENGTH = 20;
+export const DEFAULT_TX_REQUEST_LENGTH = 30;
 
 /** used for default zk zpp feePayer address, generate by PublicKey.empty().toBase58() that from o1js */
 export const ZK_EMPTY_PUBLICKEY =

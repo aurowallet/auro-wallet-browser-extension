@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
-### Enhancements
+## [2.3.4]
 
+### Enhancements
 - Credentials icon
 - Add support for revoke permissions
 - Add permission `tabs` to fix [#50](https://github.com/aurowallet/auro-wallet-browser-extension/issues/50)

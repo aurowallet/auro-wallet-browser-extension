@@ -4,9 +4,9 @@ import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import {
-    getAllTxHistory,
-    getPendingTxList,
-    getZkAppPendingTx,
+  getAllTxHistory,
+  getPendingTxList,
+  getZkAppPendingTx,
 } from "../../../background/api";
 import { ZK_DEFAULT_TOKEN_ID } from "../../../constant";
 import useFetchAccountData from "../../../hooks/useUpdateAccount";
@@ -110,7 +110,7 @@ const DevDetail = ({}) => {
       setResponseBody(balanceResponse);
       setIsLoading(false);
     }
-  }, [pageType, currentAccount]);
+  }, [pageType, currentAccount, fetchAccountData]);
   useEffect(() => {
     if (pageType) {
       fetchData();

@@ -84,8 +84,8 @@ const useFetchAccountData = (currentAccount, isDev = false) => {
       if (!isDev) {
         dispatch(updateShouldRequest(false));
         setIsLoading(false);
-        isRequest = false;
       }
+      isRequest = false;
     }
   }, [currentAccount, dispatch]);
 
