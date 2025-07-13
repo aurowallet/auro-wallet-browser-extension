@@ -19,7 +19,7 @@ export function getHDpath(account = 0) {
 }
 
 export function generateMne() {
-    let mne = bip39.generateMnemonic(wordlist, 256);
+    let mne = bip39.generateMnemonic(wordlist, 128);
     return mne
 }
 
