@@ -40,15 +40,13 @@ import {
   toNonExponential,
   trimSpace,
 } from "@/utils/utils";
-import {
-  copyText,
-} from "@/utils/browserUtils";
+import { copyText } from "@/utils/browserUtils";
 import { getAccountUpdateCount, getZkFee, getZkInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
-import { PrettyPrinter } from "mina-attestations";
+// import { PrettyPrinter } from "mina-attestations";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { serializeError } from "serialize-error";
@@ -852,7 +850,17 @@ const SignView = ({
         }
       }
       const isEdge = /Edg\//i.test(navigator.userAgent);
+      const isFirefox = /Firefox/i.test(navigator.userAgent);
+
       if (sendAction === DAppActions.mina_requestPresentation && isEdge) {
+        Toast.info(i18n.t("notSupportNow"));
+        return;
+      }
+      if (
+        (sendAction === DAppActions.mina_requestPresentation ||
+          sendAction === DAppActions.mina_storePrivateCredential) &&
+        isFirefox
+      ) {
         Toast.info(i18n.t("notSupportNow"));
         return;
       }
@@ -1500,10 +1508,10 @@ const CredentialView = ({
 
   const { displayCredentialData, tabList, tabInitId } = useMemo(() => {
     let displayCredentialData = credentialData;
-    if (Object.keys(credentialData).length > 0) {
-      displayCredentialData =
-        PrettyPrinter.simplifyCredentialData(credentialData);
-    }
+    // if (Object.keys(credentialData).length > 0) {
+    // displayCredentialData =
+    //   PrettyPrinter.simplifyCredentialData(credentialData);
+    // }
 
     let tabList = [];
     let tabInitId = "tab1";
@@ -1664,13 +1672,14 @@ const PresentationView = ({
     const { presentationRequest, zkAppAccount } = presentationData;
     const verifierIdentity =
       presentationRequest.type === "zk-app" ? zkAppAccount : origin;
-    const formatted = [
-      PrettyPrinter.printPresentationRequest(presentationRequest),
-      PrettyPrinter.printVerifierIdentity(
-        presentationRequest.type,
-        verifierIdentity
-      ),
-    ].join("\n");
+    // const formatted = [
+    //   PrettyPrinter.printPresentationRequest(presentationRequest),
+    //   PrettyPrinter.printVerifierIdentity(
+    //     presentationRequest.type,
+    //     verifierIdentity
+    //   ),
+    // ].join("\n");
+    const formatted = []
 
     let tabList = [];
     let tabInitId = "tab1";
@@ -1922,7 +1931,8 @@ const StyledTipWrapper = styled.div`
 `;
 const CredentialDisplay = ({ credential, matchingRequirements }) => {
   const witnessType = credential.witness?.type || "unknown";
-  const simplifiedData = PrettyPrinter.simplifyCredentialData(credential);
+  // const simplifiedData = PrettyPrinter.simplifyCredentialData(credential);
+  const simplifiedData = {};
   const description = credential.metadata?.description;
 
   return (
