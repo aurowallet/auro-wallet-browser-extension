@@ -19,11 +19,7 @@ import {
   updateCurrentNode,
   updateCustomNodeList,
 } from "../../../../reducers/network";
-import {
-  checkNodeExist,
-  trimSpace,
-  urlValid,
-} from "../../../../utils/utils";
+import { checkNodeExist, trimSpace, urlValid } from "../../../../utils/utils";
 import Button from "../../../component/Button";
 import CustomView from "../../../component/CustomView";
 import Input from "../../../component/Input";
@@ -68,7 +64,6 @@ const NodeEditor = () => {
   });
 
   const { title, showDeleteBtn } = useMemo(() => {
-
     let showDeleteBtn = true;
     let title = i18n.t("editNode");
     if (!isEdit) {
@@ -270,11 +265,11 @@ const NodeEditor = () => {
     if (isDeleteCurrentNode) {
       clearLocalCache();
       dispatch(updateCurrentNode(newConfig.currentNode));
-
-      if (editItem.networkID !== currentNode.networkID){
+      if (editItem.networkID !== currentConfigTemp.networkID) {
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
       }
+
       sendNetworkChangeMsg(newConfig.currentNode);
     }
     setReminderModalStatus(false);

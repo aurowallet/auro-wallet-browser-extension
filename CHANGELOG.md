@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Ledger index input issue
 - Add new account triggers accountsChanged
 - Signature dialog UI
+- Refresh after delete a node
 
 ## [2.3.3]
 
