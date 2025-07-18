@@ -31,7 +31,7 @@ import {
 } from "@/utils/ledger";
 import {
   addressSlice,
-  copyText,
+  addressValid,
   createCredentialHash,
   exportFile,
   getRealErrorMsg,
@@ -40,7 +40,9 @@ import {
   toNonExponential,
   trimSpace,
 } from "@/utils/utils";
-import { addressValid } from "@/utils/validator";
+import {
+  copyText,
+} from "@/utils/browserUtils";
 import { getAccountUpdateCount, getZkFee, getZkInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
@@ -56,6 +58,7 @@ import { updateShouldRequest } from "../../../../reducers/accountReducer";
 import { getBalanceForUI } from "../../../../utils/utils";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
+import browser from "webextension-polyfill";
 
 const ZkAppValueType = {
   site: "RECOMMEND_SITE",
@@ -673,7 +676,7 @@ const SignView = ({
         if (event.data.type === "init-sandbox-extension-id") {
           if (sandbox) {
             Toast.info(i18n.t("tryAgain"));
-            const allowedOrigin = `chrome-extension://${chrome.runtime.id}`;
+            const allowedOrigin = `chrome-extension://${browser.runtime.id}`;
             sandbox.contentWindow.postMessage(
               {
                 type: "init-sandbox",
@@ -1498,9 +1501,8 @@ const CredentialView = ({
   const { displayCredentialData, tabList, tabInitId } = useMemo(() => {
     let displayCredentialData = credentialData;
     if (Object.keys(credentialData).length > 0) {
-      displayCredentialData = PrettyPrinter.simplifyCredentialData(
-        credentialData
-      );
+      displayCredentialData =
+        PrettyPrinter.simplifyCredentialData(credentialData);
     }
 
     let tabList = [];
@@ -1603,7 +1605,7 @@ const StyledSelectRow = styled.label`
     background: rgba(0, 0, 0, 0.05);
   }
 `;
-const StyledTipContent = styled.p`
+const StyledTipContent = styled.div`
   width: fit-content;
   padding-top: 10px;
 `;
@@ -1645,7 +1647,6 @@ const PresentationView = ({
 
   const [storedCredentials, setStoredCredentials] = useState([]);
   const [selectedCredentials, setSelectedCredentials] = useState(new Map());
-  const [checkStatus, setCheckStatus] = useState(false);
   useEffect(() => {
     sendMsg(
       {
@@ -1736,9 +1737,8 @@ const PresentationView = ({
   const { credentials, requirements } = useMemo(() => {
     try {
       const { presentationRequest, zkAppAccount } = presentationData;
-      const credentialRequirements = getCredentialRequirements(
-        presentationRequest
-      );
+      const credentialRequirements =
+        getCredentialRequirements(presentationRequest);
       const parsedStoredCredentials = storedCredentials.map((credentials) => {
         return {
           credential: JSON.parse(credentials.credential),

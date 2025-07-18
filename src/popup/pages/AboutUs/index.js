@@ -6,8 +6,17 @@ import { LANG_SUPPORT_LIST } from "../../../i18n";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import styled from "styled-components";
+import { useHistory } from "react-router-dom";
 
+const StyledDevWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
 const AboutUs = ({}) => {
+  const history = useHistory();
+
   const [baseAboutInfo, setBaseAboutInfo] = useState({
     terms_and_contions: "",
     terms_and_contions_cn: "",
@@ -66,16 +75,16 @@ const AboutUs = ({}) => {
     const getCurrentUrl = (type) => {
       let lan = i18n.language;
       let url = "";
-       if (lan === LANG_SUPPORT_LIST.zh_CN) {
+      if (lan === LANG_SUPPORT_LIST.zh_CN) {
         url =
           type == "terms"
             ? baseAboutInfo.terms_and_contions_cn
             : baseAboutInfo.privacy_policy_cn;
-      }else{
+      } else {
         url =
-        type == "terms"
-          ? baseAboutInfo.terms_and_contions
-          : baseAboutInfo.privacy_policy;
+          type == "terms"
+            ? baseAboutInfo.terms_and_contions
+            : baseAboutInfo.privacy_policy;
       }
       return url;
     };
@@ -97,12 +106,18 @@ const AboutUs = ({}) => {
     return { followList, linkInfoList };
   }, [i18n, baseAboutInfo]);
 
+  const onClickIcon = useCallback(() => {
+    history.push("devpage");
+  }, []);
+
   return (
     <CustomView
       title={i18n.t("about")}
       contentClassName={styles.aboutContainer}
     >
-      <img src="/img/logo/128.png" className={styles.icon} />
+      <StyledDevWrapper onDoubleClick={onClickIcon}>
+        <img src="/img/logo/128.png" className={styles.icon} />
+      </StyledDevWrapper>
       <p className={styles.walletName}>{i18n.t("walletName")}</p>
       <p className={styles.walletVersion}>{"V" + pkg.version}</p>
       <p className={styles.walletTip}>{i18n.t("walletAbout")}</p>

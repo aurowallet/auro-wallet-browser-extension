@@ -128,20 +128,6 @@ function getFormatAccountUpdate(jsonUpdate, index) {
   pretty = { label: "AccountUpdates:(" + (index + 1) + ")", ...pretty };
   return pretty;
 }
-/**
- * format zkCommond
- * @returns
- */
-export function toPretty(zkappCommand) {
-  const nextZkCommond = JSON.parse(zkappCommand);
-  const feePayerBody = getFormatFeePayer(nextZkCommond);
-  return [
-    feePayerBody,
-    ...nextZkCommond.accountUpdates.map((accountUpdates, index) =>
-      getFormatAccountUpdate(accountUpdates, index)
-    ),
-  ];
-}
 
 function getFormatFeePayerV2(zkappCommand, currentAddress) {
   let feePayer = zkappCommand.feePayer;

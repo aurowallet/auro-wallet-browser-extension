@@ -3,14 +3,8 @@ import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
 import BigNumber from "bignumber.js";
 import bs58check from "bs58check";
-import extension from "extensionizer";
 import validUrl from "valid-url";
-import { extGetLocal } from "../background/extensionStorage";
-import { removeLocal } from "../background/localStorage";
 import { MAIN_COIN_CONFIG } from "../constant";
-import { DAPP_CHANGE_NETWORK } from "../constant/msgTypes";
-import { LOCAL_CACHE_KEYS, NET_WORK_CONFIG_V2 } from "../constant/storageKey";
-import { sendMsg } from "./commonMsg";
 
 /**
  * address slice
@@ -178,36 +172,16 @@ export function nameLengthCheck(name, defaultLength = 16) {
   return true;
 }
 
-/**
- * copy text
- */
-export function copyText(text) {
-  return navigator.clipboard.writeText(text).catch((error) => {
-    alert(`Copy failed! ${error}`);
-  });
-}
-
-/**
- * format connectAccount
- * @param {*} account
- * @returns
- */
-export function connectAccountDataFilter(account) {
-  return {
-    address: account.address,
-    accountName: account.accountName,
-    type: account.type,
-    isConnected: account.isConnected,
-    isConnecting: account.isConnecting,
-  };
-}
-
 export function getOriginFromUrl(url) {
-  if (!url) {
-    return "";
+  try {
+    if (!url) {
+      return "";
+    }
+    var origin = new URL(url).origin;
+    return origin;
+  } catch (error) {
+    return url;
   }
-  var origin = new URL(url).origin;
-  return origin;
 }
 /**
  * get params from input url
@@ -228,21 +202,6 @@ export function getQueryStringArgs(queryUrl = "") {
   return args;
 }
 
-export async function getCurrentNodeConfig() {
-  let localNetConfig = await extGetLocal(NET_WORK_CONFIG_V2);
-  if (localNetConfig) {
-    return localNetConfig.currentNode;
-  }
-  return {};
-}
-/** get all network that contains custom add */
-export async function getLocalNetworkList() {
-  let localNetConfig = await extGetLocal(NET_WORK_CONFIG_V2);
-  if (localNetConfig) {
-    return localNetConfig.customNodeList;
-  }
-  return [];
-}
 /**
  * Return errors for processing transfers, etc.
  * @param {*} error
@@ -287,24 +246,6 @@ export function parseStakingList(stakingListFromServer) {
       icon: node.validator_logo || "",
     };
   });
-}
-
-/**
- * send network change message
- * @param {*} netConfig
- */
-export function sendNetworkChangeMsg(netConfig) {
-  if (netConfig.networkID) {
-    sendMsg(
-      {
-        action: DAPP_CHANGE_NETWORK,
-        payload: {
-          netConfig: netConfig,
-        },
-      },
-      () => {}
-    );
-  }
 }
 
 /**
@@ -384,29 +325,12 @@ export function getTimeGMT(time) {
     let str = date.slice(gmtIndex, gmtIndex + 8);
     return str;
   } catch (error) {
-    return "";
+    return time;
   }
 }
 
 export function numberFormat(str) {
   return str.replace(/[^\d^\.]+/g, "").replace(/\.{2,}/, "");
-}
-
-/** tx sort */
-export function txSort(preTx, nextTx) {
-  if (preTx.timestamp !== nextTx.timestamp) {
-    return nextTx.timestamp - preTx.timestamp;
-  } else {
-    return nextTx.nonce - preTx.nonce;
-  }
-}
-export function clearLocalCache() {
-  let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS);
-  for (let index = 0; index < localCacheKeys.length; index++) {
-    const keys = localCacheKeys[index];
-    let localKey = LOCAL_CACHE_KEYS[keys];
-    removeLocal(localKey);
-  }
 }
 
 /** check url is exist in netConfig */
@@ -462,15 +386,8 @@ export function mergeLocalConfigToNetToken(newTokens, localTokens) {
     }
   });
 }
-
 export function getReadableNetworkId(networkId) {
   return networkId.replace(/:/g, "_");
-}
-
-export function getExtensionAction() {
-  let isManifestV3 = extension.runtime.getManifest().manifest_version === 3;
-  const action = isManifestV3 ? chrome.action : chrome.browserAction;
-  return action;
 }
 
 export const createCredentialHash = (credential) => {
@@ -540,3 +457,48 @@ export function removeUrlFromArrays(data, urlToRemove) {
   }
   return filteredData;
 }
+
+/**
+ * Check if the address is valid
+ * @param {*} address
+ */
+export function addressValid(address) {
+  try {
+    if (!address.toLowerCase().startsWith("b62")) {
+      return false;
+    }
+    const decodedAddress = bs58check.decode(address).toString("hex");
+    return !!decodedAddress && decodedAddress.length === 72;
+  } catch (ex) {
+    return false;
+  }
+}
+export const PasswordValidationList = [
+  {
+    text: "passwordRequires",
+    expression: /^.{8,32}$/,
+    bool: false,
+  },
+  {
+    text: "atLeastOneUppercaseLetter",
+    expression: /[A-Z]+/,
+    bool: false,
+  },
+  {
+    text: "atLeastOneLowercaseLetter",
+    expression: /[a-z]+/,
+    bool: false,
+  },
+  {
+    text: "atLeastOneNumber",
+    expression: /[0-9]+/,
+    bool: false,
+  },
+];
+
+export const validatePassword = (password) => {
+  return PasswordValidationList.map((rule) => ({
+    ...rule,
+    bool: rule.expression.test(password),
+  }));
+};

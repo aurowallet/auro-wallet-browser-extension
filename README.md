@@ -1,72 +1,115 @@
 # Auro Wallet Browser Extension
 
-## Introduction
+## Overview
 
-Auro Wallet provide one-stop management for MINA assets, convenient staking, and the private key is self-owned. Auro Wallet is aiming to provide a more convenient entrance of the Mina protocol.
+Auro Wallet is a secure and user-friendly browser extension designed for managing MINA assets. It offers seamless asset management, convenient staking, and self-custody of private keys, serving as an intuitive gateway to the Mina Protocol ecosystem.
 
-- Friendly UI/UX.
-- Secure local accounts storage.
-- Intuitive Assets management.
-- Simplified staking.
-- Available for Chrome&Firefox.
-- Support English and Chineses.
+### Key Features
+- **Intuitive UI/UX**: A clean and user-friendly interface for effortless navigation.
+- **Secure Local Storage**: Private keys are stored locally, ensuring user control and security.
+- **Asset Management**: Simplified tools for managing MINA assets.
+- **Easy Staking**: Streamlined staking process for Mina Protocol.
+- **Cross-Browser Support**: Compatible with Chrome and Firefox.
+- **Multilingual**: Supports English and Chinese, with additional languages in progress.
 
-<!-- ## Architecture
-[![Architecture Diagram](./docs/auro-extension-wallet.png)][1] -->
+## Architecture
 
-## Building
+The Auro Wallet extension is built with a modular architecture to ensure scalability and maintainability. Below is a high-level overview of the system:
 
-### Dependencies
+<!-- ![Architecture Diagram](docs/auro-extension-wallet.png) -->
 
-- `react 17.x.x` 
-- `npm 10.5.0` 
-- `yarn 1.22.19`
-- `node v20.12.2`
+- **Auro-UI**: The front-end interface built with React, Redux, and Thunk, featuring components like `app`, `account-info`, `accounts-manage`, `send-page`, `stake-page`, `setting-page`, and `locked-page`. It interacts with actions and reducers for state management.
+- **Auro-Background**: Manages background processes, including the `id store` and `config manager` (handling service-data config, encrypted keys, and account lists).
+- **Service-Data**: Interfaces with external services like `mina-graphql` (for balance, transactions, staking, and block info) and `mina-indexer` (for validator details, fee recommendations, and transaction results).
 
-### Build
-Auro Wallet extension repo uses git-secret to encrypt the endpoints and the api keys. So, you can't build this without creating your own config file. You should create your own `config.js` file in the folder. Refer to the `config.example.js` sample file to create your own configuration.
+## Getting Started
 
-Dev
-```sh
-yarn dev
-```
+### Prerequisites
 
-Production
-```sh
-yarn build
-``` 
+To build and run the Auro Wallet extension, ensure you have the following dependencies installed:
 
-Extension's build output is placed in `/dist`, and you can check out [this page](https://developer.chrome.com/extensions/getstarted) for installing the developing extension.  
+- **React**: 17.x.x
+- **npm**: 10.5.0
+- **Yarn**: 1.22.19
+- **Node.js**: v20.12.2
 
-## Test
+### Installation
 
-### UI Test
+1. **Clone the Repository**:
+   ```sh
+   git clone https://github.com/aurowallet/auro-wallet-browser-extension.git
+   cd auro-wallet-browser-extension
+   ```
 
-```sh
-yarn storybook
-``` 
-### LIB Test
+2. **Install Dependencies**:
+   ```sh
+   yarn install
+   ```
 
-run bottom sh and will open url in the chrome http://localhost:6006/
+3. **Configure the Environment**:
+   - The repository uses `git-secret` to encrypt sensitive endpoints and API keys.
+   - Create a `config.js` file in the root directory based on the provided `config.example.js` template.
+   - Update `config.js` with your own configuration details.
+
+### Building the Extension
+
+- **Development Build**:
+   ```sh
+   yarn dev
+   ```
+   This generates a development build in the `/dist` directory.
+
+- **Production Build**:
+   ```sh
+   yarn build
+   ```
+   This creates an optimized production build in the `/dist` directory.
+
+To install the extension in your browser, follow the [Chrome Developer Guide](https://developer.chrome.com/extensions/getstarted) for loading an unpacked extension.
+
+## Testing
+
+### Library Tests
+
+Run the following command to execute tests and launch a local test server at `http://localhost:6006`:
 
 ```sh
 yarn test
-``` 
+```
 
-## Contributing for Translation
-We are thrilled that you like to contribute to Auro Wallet. Your contribution is essential for keeping Auro Wallet great. We currently have [auro-wallet-browser-extension](https://github.com/aurowallet/auro-wallet-browser-extension) and [auro-wallet-mobile-app](https://github.com/aurowallet/auro-wallet-mobile-app) .
+## Contributing
 
-### File structure
-Our languages are stored in `src/i18n` directory. The naming rule of the language is [language code standard](https://developers.google.com/admin-sdk/directory/v1/languages). If language code contains `-`, you need to change the `-` to ` _`.
+We welcome contributions to Auro Wallet to make it even better! Contributions can be made to both the [browser extension](https://github.com/aurowallet/auro-wallet-browser-extension) and the [mobile app](https://github.com/aurowallet/auro-wallet-mobile-app).
 
-### For all people
-You can use weblate to add new translations to [Auro Wallet](https://hosted.weblate.org/projects/aurowallet) or update existing translations. if you want to add more languages, please join [telegram](https://t.me/aurowallet) and ping admin.
+### Translation Contributions
 
-#### For developer
-You need to pull the code from github first, and then switch to the `feature/translate` branch. If you need to update the existing translation, directly edit the content of the target file. If you need to add a new language file, please add a new language file according to the language encoding requirements, such as `tr.json`. After completion, you need to submit a PR to the `feature/translate` branch for merging.
+We encourage adding or updating translations to support a global audience.
 
-## LICENSE
+#### For Non-Developers
+- Use [Weblate](https://hosted.weblate.org/projects/aurowallet) to add or update translations.
+- To propose a new language, join our [Telegram community](https://t.me/aurowallet) and contact an admin.
 
-[Apache License 2.0](LICENSE)
+#### For Developers
+1. **Clone and Prepare**:
+   ```sh
+   git clone https://github.com/aurowallet/auro-wallet-browser-extension.git
+   cd auro-wallet-browser-extension
+   git checkout feature/translate
+   ```
 
-[1]:https://www.nomnoml.com/#view/%5B<actor>user%5D%0A%0A%5BAuro-ui%7C%0A%20%20%20%5Btools%7C%0A%20%20%20%20%20react%0A%20%20%20%20%20redux%0A%20%20%20%20%20thunk%0A%20%20%20%5D%0A%20%20%20%5Bcomponents%7C%0A%20%20%20%20%20app%0A%20%20%20%20%20account-info%0A%20%20%20%20%20accounts-manage%0A%20%20%20%20%20send-page%0A%20%20%20%20%20stake-page%0A%20%20%20%20%20setting-page%0A%20%20%20%20%20locked-page%0A%20%20%20%20%20...%0A%20%20%20%5D%0A%20%20%20%5Breducers%7C%0A%20%20%20%20%20app%0A%20%20%20%20%20account%0A%20%20%20%20%20entry-route%0A%20%20%20%20%20cache%0A%20%20%20%20%20...%0A%20%20%20%5D%0A%20%20%20%5Bactions%7C%0A%20%20%20%20%20update-account%0A%20%20%20%20%20update-route%0A%20%20%20%20%20...%0A%20%20%20%5D%0A%20%20%20%5Bcomponents%5D%3A->%5Bactions%5D%0A%20%20%20%5Bactions%5D%3A->%5Breducers%5D%0A%20%20%20%5Breducers%5D%3A->%5Bcomponents%5D%0A%5D%0A%5Buser%5D<->%5BAuro-ui%5D%0A%0A%0A%5BAuro-background%7C%0A%20%20%0A%20%20%5Bid%20store%5D%0A%20%20%0A%20%20%5Bconfig%20manager%7C%0A%20%20%20%20%5Bservice-data%20config%5D%0A%20%20%20%20%5Bencrypted%20keys%5D%0A%20%20%20%20%5Baccount%20list%5D%0A%20%20%5D%0A%20%20%0A%20%20%5Bid%20store%5D<->%5Bconfig%20manager%5D%0A%5D%0A%0A%5Bservice-data%20%7C%0A%20%20%5Bmina-graphql%20%7C%0A%20%20%20%20balance%0A%20%20%20%20send-tx%0A%20%20%20%20pending-tx%0A%20%20%20%20tx-status%0A%20%20%20%20stake-info%0A%20%20%20%20block-info%0A%20%20%5D%0A%20%20%5Bmina-indexer%20%7C%0A%20%20%20%20validator-Detail%0A%20%20%20%20validator-list%0A%20%20%20%20fee-recommend%0A%20%20%20%20about-info%0A%20%20%20%20result-tx%0A%20%20%5D%0A%5D%0A%0A%5BAuro-background%5D<->%5BAuro-ui%5D%0A%5BAuro-background%5D<->%5Bservice-data%5D%0A
+2. **Translation Files**:
+   - Language files are stored in the `src/i18n` directory.
+   - File names follow the [language code standard](https://developers.google.com/admin-sdk/directory/v1/languages) (e.g., `en.json` for English, `zh.json` for Chinese). Replace `-` with `_` in language codes (e.g., `zh-CN` becomes `zh_CN.json`).
+   - To update translations, edit the relevant `.json` file.
+   - To add a new language, create a new file (e.g., `tr.json` for Turkish).
+
+3. **Submit Changes**:
+   - Commit your changes and submit a pull request to the `feature/translate` branch.
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
+
+## Support
+
+For questions, feedback, or support, join our [Telegram community](https://t.me/aurowallet) or open an issue on the [GitHub repository](https://github.com/aurowallet/auro-wallet-browser-extension).

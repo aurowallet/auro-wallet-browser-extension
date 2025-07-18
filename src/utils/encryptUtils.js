@@ -1,5 +1,5 @@
 import sodium from 'libsodium-wrappers'
-import { Buffer } from 'safe-buffer';
+import { Buffer } from 'buffer';
 
 
 export default {
@@ -8,16 +8,6 @@ export default {
   encrypt,
   decrypt,
 
-  // More advanced encryption methods:
-  keyFromPassword,
-  encryptWithKey,
-  decryptWithKey,
-
-  // Buffer <-> Hex string methods
-  serializeBufferForStorage,
-  serializeBufferFromStorage,
-
-  generateSalt,
 }
 
 // Takes a Pojo, returns cypher text.

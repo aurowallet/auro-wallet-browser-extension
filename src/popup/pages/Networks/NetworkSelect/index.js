@@ -1,24 +1,24 @@
 import { extSaveLocal } from "@/background/extensionStorage";
 import { getLocal, saveLocal } from "@/background/localStorage";
-import { NETWORK_SHOW_TESTNET, NET_WORK_CONFIG_V2 } from "@/constant/storageKey";
+import { NetworkID_MAP } from "@/constant/network";
+import {
+  NETWORK_SHOW_TESTNET,
+  NET_WORK_CONFIG_V2,
+} from "@/constant/storageKey";
 import IOSSwitch from "@/popup/component/Switch";
 import {
   updateShouldRequest,
   updateStakingRefresh,
 } from "@/reducers/accountReducer";
 import { updateCurrentNode, updateCustomNodeList } from "@/reducers/network";
-import {
-  addressSlice,
-  clearLocalCache,
-  sendNetworkChangeMsg,
-} from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { css, keyframes } from "styled-components";
-import NetworkItem from "../NetworkItem";
-import { NetworkID_MAP } from "@/constant/network";
 import { NET_CONFIG_VERSION } from "../../../../../config";
+import { clearLocalCache } from "../../../../background/localStorage";
+import { sendNetworkChangeMsg } from "../../../../utils/commonMsg";
+import NetworkItem from "../NetworkItem";
 
 const NetworkSelect = ({}) => {
   const dispatch = useDispatch();
@@ -37,7 +37,7 @@ const NetworkSelect = ({}) => {
 
   const onClickNetItem = useCallback(
     async (data) => {
-      const { currentNode, allNodeList,customNodeList } = netConfig;
+      const { currentNode, allNodeList, customNodeList } = netConfig;
       if (data.url !== currentNode.url) {
         let newConfig = {};
         for (let index = 0; index < allNodeList.length; index++) {
@@ -48,15 +48,15 @@ const NetworkSelect = ({}) => {
           }
         }
         let config = {
-            currentNode: newConfig,
-            customNodeList: customNodeList,
-            nodeConfigVersion:NET_CONFIG_VERSION
+          currentNode: newConfig,
+          customNodeList: customNodeList,
+          nodeConfigVersion: NET_CONFIG_VERSION,
         };
         await extSaveLocal(NET_WORK_CONFIG_V2, config);
-        dispatch(updateCurrentNode(config.currentNode))
-        dispatch(updateCustomNodeList(config.customNodeList))
+        dispatch(updateCurrentNode(config.currentNode));
+        dispatch(updateCustomNodeList(config.customNodeList));
 
-        if(newConfig.networkID !== currentNode.networkID){
+        if (newConfig.networkID !== currentNode.networkID) {
           dispatch(updateStakingRefresh(true));
           dispatch(updateShouldRequest(true));
         }

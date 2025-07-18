@@ -15,7 +15,7 @@ describe('Account Util Test', function () {
 
     describe('import Wallet By Mnemonic', function () {
         it('importWalletByMnemonic', async function () {
-            let account = await Account.importWalletByMnemonic(mnemonic)
+            let account = Account.importWalletByMnemonic(mnemonic)
             assert.strictEqual(
                 JSON.stringify(account),
                 JSON.stringify(accountData.importWalletByMnemonic)

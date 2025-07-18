@@ -1,0 +1,37 @@
+.container{
+    padding: 10px 0px 0px;
+    .rowLeft {
+        display: flex;
+        align-items: center;
+    }
+    .rowContent {
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 100%;
+        color: rgba(0, 0, 0, 0.3);
+        margin: 0;
+        
+        white-space: nowrap; 
+        text-overflow: ellipsis;
+        max-width: 120px;
+        
+    }
+}
+.rowContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    cursor: pointer;
+    padding: 0px 20px;
+    &:hover{
+        background-color: rgba(0, 0, 0, 0.05);;
+    }
+}
+.rowTitle {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 100%;
+    color: #000000;
+    margin: 0;
+}

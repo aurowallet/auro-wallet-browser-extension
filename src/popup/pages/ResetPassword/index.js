@@ -4,12 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useHistory } from 'react-router-dom';
 import { WALLET_CHANGE_SEC_PASSWORD } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
-import { matchList } from "../../../utils/validator";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
+import { PasswordValidationList } from "../../../utils/utils";
 
 const Reset = ({ }) => {
 
@@ -17,7 +17,7 @@ const Reset = ({ }) => {
     const [oldPassword, setOldPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [pwdMatchList, setPwdMatchList] = useState(matchList)
+    const [pwdMatchList, setPwdMatchList] = useState(PasswordValidationList)
     const [matchRenderList, setMatchRenderList] = useState([])
     const [errorTip, setErrorTip] = useState(false)
     const [btnClick, setBtnClick] = useState(false)

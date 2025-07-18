@@ -1,47 +1,20 @@
 import { ledgerUSBVendorId } from "@ledgerhq/devices";
 import Transport from "@ledgerhq/hw-transport-webusb";
 import BigNumber from "bignumber.js";
-import extension from "extensionizer";
 import i18n from "i18next";
 import { MinaLedgerJS, Networks, TxType } from "mina-ledger-js";
 import { MAIN_COIN_CONFIG } from "../constant";
 import { LEDGER_STATUS } from "../constant/commonType";
-import { LEDGER_CONNECTED_SUCCESSFULLY } from "../constant/msgTypes";
 import { NetworkID_MAP } from "../constant/network";
 import Loading from "../popup/component/Loading";
-import Toast from "../popup/component/Toast";
-import { closePopupWindow, openPopupWindow } from "./popup";
-import { getCurrentNodeConfig } from "./utils";
-
-export const LEDGER_CONNECT_TYPE = {
-  isPage: "isPage",
-};
+import { closePopupWindow } from "./popup";
+import {
+  getCurrentNodeConfig,
+} from "./browserUtils";
 
 const status = {
   rejected: "CONDITIONS_OF_USE_NOT_SATISFIED",
 };
-function initLedgerWindowListener() {
-  return new Promise((resolve) => {
-    async function onMessage(message, sender, sendResponse) {
-      const { action } = message;
-      switch (action) {
-        case LEDGER_CONNECTED_SUCCESSFULLY:
-          extension.runtime.onMessage.removeListener(onMessage);
-          resolve();
-          sendResponse && sendResponse();
-          break;
-      }
-      return true;
-    }
-    extension.runtime.onMessage.addListener(onMessage);
-  });
-}
-async function openLedgerWindow() {
-  openPopupWindow("./popup.html#/ledger_connect", "ledger");
-  await initLedgerWindowListener();
-  Toast.info(i18n.t("ledgerConnectSuccess"));
-  return { connected: true };
-}
 async function getPort() {
   const transport = await Transport.create().catch((e) => {
     return null;
@@ -50,7 +23,8 @@ async function getPort() {
 }
 let appInstance = null;
 let portInstance = null;
-export async function getApp(type) {
+
+async function getApp() {
   let app = null;
   if (!appInstance) {
     const transport = await getPort();
@@ -59,14 +33,12 @@ export async function getApp(type) {
       portInstance = transport;
       appInstance = app;
     } else {
-      if (type !== LEDGER_CONNECT_TYPE.isPage) {
-        await openLedgerWindow();
-      }
       return { manualConnected: true, app: null };
     }
   } else {
     app = appInstance;
   }
+
   let timer = null;
   const result = await Promise.race([
     app.getAppName(),
@@ -85,9 +57,6 @@ export async function getApp(type) {
     portInstance.close();
     portInstance = null;
     appInstance = null;
-    if (type !== LEDGER_CONNECT_TYPE.isPage) {
-      await openLedgerWindow();
-    }
     let openApp = !!result.version;
     return { manualConnected: true, app: null, openApp: openApp };
   }
@@ -97,7 +66,7 @@ export async function getApp(type) {
   return { app };
 }
 
-export async function ensureUSBPermission() {
+async function ensureUSBPermission() {
   try {
     let devices = await navigator.usb.getDevices();
     if (Array.isArray(devices) && devices.length >= 1) {
@@ -120,8 +89,8 @@ export async function ensureUSBPermission() {
   }
 }
 
-export async function checkLedgerConnect(type, permissionsCheck) {
-  if (type === LEDGER_CONNECT_TYPE.isPage && permissionsCheck) {
+export async function checkLedgerConnect(permissionsCheck) {
+  if (permissionsCheck) {
     let result = await ensureUSBPermission();
     if (result?.error) {
       return result;
@@ -131,7 +100,7 @@ export async function checkLedgerConnect(type, permissionsCheck) {
     timer = null;
     Loading.show();
   }, 1000);
-  const { app, manualConnected, openApp } = await getApp(type);
+  const { app, manualConnected, openApp } = await getApp();
   if (timer) {
     clearTimeout(timer);
   } else {
@@ -177,7 +146,7 @@ function reEncodeRawSignature(rawSignature) {
   return shuffleBytes(field) + shuffleBytes(scalar);
 }
 async function networkId() {
-  const networkConfig = await getCurrentNodeConfig()
+  const networkConfig = await getCurrentNodeConfig();
   const networkID = networkConfig.networkID;
   if (networkID === NetworkID_MAP.mainnet) {
     return Networks.MAINNET;
@@ -230,7 +199,7 @@ async function requestSign(app, body, type, ledgerAccountIndex) {
   };
 }
 
-export async function getLedgerStatus(){
+export async function getLedgerStatus() {
   let app = null;
   if (!appInstance) {
     const transport = await getPort();
@@ -238,8 +207,8 @@ export async function getLedgerStatus(){
       app = new MinaLedgerJS(transport);
       portInstance = transport;
       appInstance = app;
-    }else{
-      return {status:LEDGER_STATUS.LEDGER_DISCONNECT}
+    } else {
+      return { status: LEDGER_STATUS.LEDGER_DISCONNECT };
     }
   } else {
     app = appInstance;
@@ -262,7 +231,7 @@ export async function getLedgerStatus(){
     portInstance.close();
     portInstance = null;
     appInstance = null;
-    return { status: LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN};
+    return { status: LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN };
   }
-  return { app,status:LEDGER_STATUS.READY };
+  return { app, status: LEDGER_STATUS.READY };
 }

@@ -1,6 +1,6 @@
 import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "@/constant";
 import BigNumber from "bignumber.js";
-import { amountDecimals, mergeLocalConfigToNetToken, toNonExponential, txSort } from "./utils";
+import { amountDecimals, toNonExponential } from "./utils";
 
 // ============================token action================================
 const defaultMinaAssets = {
@@ -19,7 +19,7 @@ const defaultMinaAssets = {
     isMainToken: true,
     showBalance: "0",
     showAmount: "0",
-    iconUrl:"img/mina_color.svg"
+    iconUrl: "img/mina_color.svg",
   },
   localConfig: {
     hideToken: false,
@@ -81,12 +81,14 @@ export function processTokenList(
     let hideTokenStatus = false;
     if (localTokenConfig[tokenItem.tokenId]) {
       hideTokenStatus = localTokenConfig[tokenItem.tokenId].hideToken;
-    }else{
-      const supportInfo = supportTokenList.find((token) => token.tokenId == tokenItem.tokenId)
-      hideTokenStatus = !supportInfo
+    } else {
+      const supportInfo = supportTokenList.find(
+        (token) => token.tokenId == tokenItem.tokenId
+      );
+      hideTokenStatus = !supportInfo;
     }
-    if(tokenItem.tokenId==ZK_DEFAULT_TOKEN_ID){
-      hideTokenStatus = false
+    if (tokenItem.tokenId == ZK_DEFAULT_TOKEN_ID) {
+      hideTokenStatus = false;
     }
     return {
       ...tokenItem,
@@ -97,8 +99,10 @@ export function processTokenList(
     };
   });
   const nextTokenList = tokenListWithLocalConfig.map((tokenItem) => {
-    const isMainToken = tokenItem.tokenId === ZK_DEFAULT_TOKEN_ID
-    const supportInfo = supportTokenList.find((token) => token.tokenId == tokenItem.tokenId)
+    const isMainToken = tokenItem.tokenId === ZK_DEFAULT_TOKEN_ID;
+    const supportInfo = supportTokenList.find(
+      (token) => token.tokenId == tokenItem.tokenId
+    );
     const tempToken = {
       ...tokenItem,
       tokenBaseInfo: { ...tokenItem.tokenBaseInfo },
@@ -109,13 +113,13 @@ export function processTokenList(
     tokenBaseInfo.iconUrl = supportInfo?.iconUrl ?? "";
     let decimals = 0;
 
-    if(supportInfo?.tokenId){
-      decimals = supportInfo.decimal
-    }else{
-      if(isMainToken){
+    if (supportInfo?.tokenId) {
+      decimals = supportInfo.decimal;
+    } else {
+      if (isMainToken) {
         decimals = MAIN_COIN_CONFIG.decimals;
-      }else{
-        if(tokenItem.tokenNetInfo?.publicKey){
+      } else {
+        if (tokenItem.tokenNetInfo?.publicKey) {
           const zkappState = tokenItem.tokenNetInfo.zkappState || [];
           if (Array.isArray(zkappState)) {
             decimals = zkappState[0] || 0;
@@ -125,26 +129,23 @@ export function processTokenList(
     }
     tokenBaseInfo.decimals = decimals;
     if (tokenItem.tokenNetInfo?.publicKey) {
-      tokenBaseInfo.showBalance = toNonExponential(amountDecimals(
-        tokenItem.balance.total,
-        decimals
-      ));
+      tokenBaseInfo.showBalance = toNonExponential(
+        amountDecimals(tokenItem.balance.total, decimals)
+      );
     } else {
       if (isMainToken) {
         tokenBaseInfo.isMainToken = true;
         const delegateAccount = tokenItem.delegateAccount?.publicKey;
         tokenBaseInfo.isDelegation =
           delegateAccount && delegateAccount !== tokenItem.publicKey;
-        tokenBaseInfo.showBalance = toNonExponential(amountDecimals(
-          tokenItem.balance.total,
-          tokenBaseInfo.decimals
-        ));
+        tokenBaseInfo.showBalance = toNonExponential(
+          amountDecimals(tokenItem.balance.total, tokenBaseInfo.decimals)
+        );
         tokenBaseInfo.iconUrl = "img/mina_color.svg";
       } else {
-        tokenBaseInfo.showBalance = toNonExponential(amountDecimals(
-          tokenItem.balance.total,
-          decimals
-        ));
+        tokenBaseInfo.showBalance = toNonExponential(
+          amountDecimals(tokenItem.balance.total, decimals)
+        );
       }
     }
 
@@ -168,6 +169,7 @@ export function processTokenList(
     ) {
       newTokenCount = newTokenCount + 1;
     }
+
     return tempToken;
   });
 
@@ -198,14 +200,18 @@ export function processTokenList(
   };
 }
 
-export function processTokenShowStatus(tokenAssetsList, tokenConfig,clickTokenID) {
+export function processTokenShowStatus(
+  tokenAssetsList,
+  tokenConfig,
+  clickTokenID
+) {
   let tokenShowList = [];
   let totalShowAmount = 0;
 
   const nextTokenList = tokenAssetsList.map((tokenItem) => {
-    if(tokenItem.tokenId == clickTokenID){
+    if (tokenItem.tokenId == clickTokenID) {
       let tempLocalConfig = tokenConfig[clickTokenID];
-      if(!tempLocalConfig?.hideToken){
+      if (!tempLocalConfig?.hideToken) {
         tokenShowList.push(tokenItem);
         let tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
         totalShowAmount = new BigNumber(totalShowAmount)
@@ -216,7 +222,7 @@ export function processTokenShowStatus(tokenAssetsList, tokenConfig,clickTokenID
         ...tokenItem,
         localConfig: tempLocalConfig,
       };
-    }else{
+    } else {
       if (!tokenItem.localConfig?.hideToken) {
         tokenShowList.push(tokenItem);
         let tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
@@ -233,7 +239,7 @@ export function processTokenShowStatus(tokenAssetsList, tokenConfig,clickTokenID
 export function processNewTokenStatus(tokenAssetsList, showedTokenIdList) {
   let newTokenCount = 0;
   const nextTokenList = tokenAssetsList.map((tokenItem) => {
-    const tokenNew = showedTokenIdList.indexOf(tokenItem.tokenId) === -1; // -1 证明没展示过
+    const tokenNew = showedTokenIdList.indexOf(tokenItem.tokenId) === -1;
     if (tokenNew) {
       newTokenCount = newTokenCount + 1;
     }
@@ -273,7 +279,6 @@ export function formatPendingTx(pendingTxList) {
       id: detail.id,
       hash: detail.hash,
       kind: detail.kind,
-      dateTime: detail.time,
       from: detail.from,
       to: detail.to,
       amount: detail.amount,
@@ -281,7 +286,6 @@ export function formatPendingTx(pendingTxList) {
       nonce: detail.nonce,
       memo: detail.memo,
       status: "PENDING",
-      timestamp: new Date(detail.time).getTime(),
     });
   }
   return newList;
@@ -322,12 +326,46 @@ function formatZkTx(zkAppList, isPending = false) {
   }
   return newList;
 }
-
-export function formatTxTime(list) {
-  return list.map((item) => {
-    item.timestamp = new Date(item.dateTime).getTime();
-    return item;
-  });
+/**
+ * @param {*} zkAppList
+ * @returns
+ */
+function formatCompleteTx(zkAppList) {
+  let newList = [];
+  for (let index = 0; index < zkAppList.length; index++) {
+    const txBody = zkAppList[index];
+    if (txBody.kind !== "zkApp") {
+      newList.push({
+        ...txBody.body,
+      });
+    } else {
+      let zkAppBody = txBody.zkAppBody ?? {};
+      let failureReason = zkAppBody.failureReasons ?? [];
+      let isFailed = Array.isArray(failureReason) && failureReason.length > 0;
+      let status = isFailed ? "failed" : "applied";
+      let newItem = {
+        id: "",
+        hash: zkAppBody.hash,
+        kind: "zkApp",
+        dateTime: zkAppBody.dateTime || "",
+        from: zkAppBody.zkappCommand.feePayer.body.publicKey,
+        to: getZkOtherAccount(zkAppBody),
+        amount: "0",
+        fee: zkAppBody.zkappCommand.feePayer.body.fee,
+        nonce: zkAppBody.zkappCommand.feePayer.body.nonce,
+        memo: zkAppBody.zkappCommand.memo,
+        status: status,
+        type: "zkApp",
+        body: zkAppBody,
+        timestamp: new Date(zkAppBody.dateTime).getTime(),
+        failureReason: isFailed ? failureReason : "",
+      };
+      newList.push({
+        ...newItem,
+      });
+    }
+  }
+  return newList;
 }
 
 export function setScamAndTxList(scamList, txList) {
@@ -364,22 +402,15 @@ function tokenHistoryFilter(list, tokenId) {
 }
 
 export function formatAllTxHistory(action) {
-  let txList = action.txList || [];
   let txPendingList = action.txPendingList || [];
-  let zkAppList = action.zkAppList || [];
   let zkPendingList = action.zkPendingList || [];
-
+  let fullTxList = action.fullTxList || [];
   let tokenId = action.tokenId;
 
   txPendingList = txPendingList.reverse();
   txPendingList = formatPendingTx(txPendingList);
-  zkAppList = formatZkTx(zkAppList);
+  fullTxList = formatCompleteTx(fullTxList);
   zkPendingList = formatZkTx(zkPendingList, true);
-
-  txList = formatTxTime(txList);
-
-  const commonList = [...txList, ...zkAppList];
-  commonList.sort(txSort);
 
   const commonPendingList = [...txPendingList, ...zkPendingList];
   commonPendingList.sort((a, b) => b.nonce - a.nonce);
@@ -392,7 +423,7 @@ export function formatAllTxHistory(action) {
     nextPendingList = tokenHistoryFilter(nextPendingList, tokenId);
   }
 
-  let newList = [...nextPendingList, ...commonList];
+  let newList = [...nextPendingList, ...fullTxList];
   if (newList.length > 0) {
     newList.push({
       showExplorer: true,

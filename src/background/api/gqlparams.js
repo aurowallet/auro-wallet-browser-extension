@@ -678,3 +678,64 @@ export function getTokenStateBody() {
   }
   `;
 }
+export function getAllTransactionListBody() {
+  return`
+  query fetchTxListQuery($publicKey: String,$limit:Int,$tokenId: String) {
+  fullTransactions(
+    limit: $limit
+    query: {
+      publicKey: $publicKey,
+    tokenId:$tokenId}
+  ) {
+    nonce
+    timestamp
+    kind
+    body {
+      fee
+      from
+      to
+      nonce
+      amount
+      memo
+      hash
+      kind
+      dateTime
+      failureReason
+    }
+    zkAppBody {
+       hash
+    dateTime
+    failureReasons {
+      index
+      failures
+    }
+    zkappCommand {
+      feePayer {
+        body {
+          nonce
+          publicKey
+          fee
+        }
+      }
+      memo
+      accountUpdates {
+        body {
+          publicKey
+         	tokenId 
+          balanceChange{
+            magnitude
+            sgn
+          }
+          update{
+            appState
+            tokenSymbol
+            zkappUri
+          }
+        }
+      }
+    }
+    }
+  }
+}
+  `
+}

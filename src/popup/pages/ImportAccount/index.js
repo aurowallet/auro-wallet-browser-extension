@@ -1,8 +1,11 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useHistory } from 'react-router-dom';
-import { WALLET_IMPORT_HD_ACCOUNT } from "../../../constant/msgTypes";
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
+import {
+  DAPP_CHANGE_CONNECTING_ADDRESS,
+  WALLET_IMPORT_HD_ACCOUNT,
+} from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
@@ -11,84 +14,94 @@ import TextArea from "../../component/TextArea";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 
-const ImportAccount = ({ }) => {
+const ImportAccount = ({}) => {
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
 
-  const [inputValue, setInputValue] = useState('')
-  const [btnStatus, setBtnStatus] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [inputValue, setInputValue] = useState("");
+  const [btnStatus, setBtnStatus] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const history = useHistory()
+  const history = useHistory();
 
-  const dispatch = useDispatch()
-  const accountName = useMemo(()=>{
+  const dispatch = useDispatch();
+  const accountName = useMemo(() => {
     return history.location?.params?.accountName ?? "";
-  },[history])
+  }, [history]);
 
   const onInput = useCallback((e) => {
     let privateKey = e.target.value;
-    setInputValue(privateKey)
-  }, [])
+    setInputValue(privateKey);
+  }, []);
   useEffect(() => {
     if (inputValue.length > 0) {
-      setBtnStatus(true)
+      setBtnStatus(true);
     } else {
-      setBtnStatus(false)
+      setBtnStatus(false);
     }
-  }, [inputValue])
+  }, [inputValue]);
   const onConfirm = useCallback(() => {
-    setLoading(true)
+    setLoading(true);
 
-    sendMsg({
-      action: WALLET_IMPORT_HD_ACCOUNT,
-      payload: {
-        privateKey: inputValue.replace(/[\r\n]/g, ""),
-        accountName: accountName
-      }
-    }, (account) => {
-      setLoading(false)
-      if (account.error) {
-        if (account.type === "local") {
-          Toast.info(i18n.t(account.error))
-        } else {
-          Toast.info(account.error)
-        }
-        return
-      } else {
-        dispatch(updateCurrentAccount(account))
-        setTimeout(() => {
-          if(history.length>=5){
-            history.go(-4)
-          }else{
-            history.replace("/")
+    sendMsg(
+      {
+        action: WALLET_IMPORT_HD_ACCOUNT,
+        payload: {
+          privateKey: inputValue.replace(/[\r\n]/g, ""),
+          accountName: accountName,
+        },
+      },
+      (account) => {
+        setLoading(false);
+        if (account.error) {
+          if (account.type === "local") {
+            Toast.info(i18n.t(account.error));
+          } else {
+            Toast.info(account.error);
           }
-        }, 50);
+          return;
+        } else {
+          sendMsg(
+            {
+              action: DAPP_CHANGE_CONNECTING_ADDRESS,
+              payload: {
+                address: currentAddress,
+                currentAddress: account.address,
+              },
+            },
+            (status) => {}
+          );
+          dispatch(updateCurrentAccount(account));
+          setTimeout(() => {
+            if (history.length >= 5) {
+              history.go(-4);
+            } else {
+              history.replace("/");
+            }
+          }, 50);
+        }
       }
-    })
-  }, [inputValue, accountName,history])
-  return (<CustomView title={i18n.t('importPrivateKey')} >
+    );
+  }, [inputValue, accountName, history, currentAddress]);
+  return (
+    <CustomView title={i18n.t("importPrivateKey")}>
+      <p className={styles.title}>{i18n.t("pleaseInputPriKey")}</p>
 
-    <p className={styles.title}>{i18n.t('pleaseInputPriKey')}</p>
+      <div className={styles.imTextAreaContainer}>
+        <TextArea onChange={onInput} value={inputValue} />
+      </div>
+      <span className={styles.desc}>{i18n.t("importAccount_3")}</span>
+      <span className={styles.desc}>{i18n.t("importAccount_2")}</span>
 
-    <div className={styles.imTextAreaContainer}>
-      <TextArea
-        onChange={onInput}
-        value={inputValue}
-      />
+      <div className={styles.hold} />
+      <div className={styles.bottomContainer}>
+        <Button disable={!btnStatus} loading={loading} onClick={onConfirm}>
+          {i18n.t("confirm")}
+        </Button>
+      </div>
+    </CustomView>
+  );
+};
 
-    </div>
-    <span className={styles.desc}>{i18n.t('importAccount_3')}</span>
-    <span className={styles.desc}>{i18n.t('importAccount_2')}</span>
-
-    <div className={styles.hold} />
-    <div className={styles.bottomContainer}>
-      <Button
-        disable={!btnStatus}
-        loading={loading}
-        onClick={onConfirm}>
-        {i18n.t('confirm')}
-      </Button>
-    </div>
-  </CustomView>)
-}
-
-export default ImportAccount 
+export default ImportAccount;

@@ -1,6 +1,9 @@
 import BigNumber from "bignumber.js";
 import { MAIN_COIN_CONFIG } from "../../constant";
-import { getCurrentNodeConfig, getMessageFromCode, getRealErrorMsg } from '../../utils/utils';
+import { getMessageFromCode, getRealErrorMsg } from '../../utils/utils';
+import {
+  getCurrentNodeConfig,
+} from "../../utils/browserUtils";
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { errorCodes } from "@/constant/dappError";

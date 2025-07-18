@@ -1,4 +1,4 @@
-import { wordlists } from "bip39";
+import { wordlist } from "@scure/bip39/wordlists/english";
 import i18n from "i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -41,7 +41,7 @@ const RestoreAccount = () => {
       let targetMne = getNeedMatchWord(mneList)
       if (lowMne.indexOf(targetMne) <= position) {
         if (targetMne.length >= 1) {
-          let list = wordlists.english.filter((item) => {
+          let list = wordlist.filter((item) => {
             return item.indexOf(targetMne) === 0;
           });
           list = list.slice(0, 10)

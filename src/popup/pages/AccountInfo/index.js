@@ -11,10 +11,11 @@ import { ACCOUNT_TYPE, SEC_FROM_TYPE } from "../../../constant/commonType";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import {
-  amountDecimals,
-  copyText,
   nameLengthCheck,
 } from "../../../utils/utils";
+import {
+  copyText,
+} from "../../../utils/browserUtils";
 import Loading from "../../component/Loading";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";

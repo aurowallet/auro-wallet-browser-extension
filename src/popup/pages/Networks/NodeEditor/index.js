@@ -19,18 +19,14 @@ import {
   updateCurrentNode,
   updateCustomNodeList,
 } from "../../../../reducers/network";
-import {
-  checkNodeExist,
-  sendNetworkChangeMsg,
-  trimSpace,
-  urlValid,
-} from "../../../../utils/utils";
+import { checkNodeExist, trimSpace, urlValid } from "../../../../utils/utils";
 import Button from "../../../component/Button";
 import CustomView from "../../../component/CustomView";
 import Input from "../../../component/Input";
 import { PopupModal } from "../../../component/PopupModal";
 import TextArea from "../../../component/TextArea";
 import styles from "./index.module.scss";
+import { sendNetworkChangeMsg } from "@/utils/commonMsg";
 
 const NodeEditor = () => {
   const history = useHistory();
@@ -68,7 +64,6 @@ const NodeEditor = () => {
   });
 
   const { title, showDeleteBtn } = useMemo(() => {
-
     let showDeleteBtn = true;
     let title = i18n.t("editNode");
     if (!isEdit) {
@@ -158,7 +153,7 @@ const NodeEditor = () => {
       dispatch(updateCurrentNode(newConfig.currentNode));
       dispatch(updateCustomNodeList(newConfig.customNodeList));
 
-      if(addItem.networkID !== currentNode.networkID){
+      if (addItem.networkID !== currentNode.networkID) {
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
       }
@@ -201,7 +196,7 @@ const NodeEditor = () => {
         dispatch(updateCurrentNode(newConfig.currentNode));
         dispatch(updateCustomNodeList(newConfig.customNodeList));
 
-        if(newConfig.currentNode.networkID !== currentNode.networkID){
+        if (newConfig.currentNode.networkID !== currentNode.networkID) {
           dispatch(updateStakingRefresh(true));
           dispatch(updateShouldRequest(true));
         }
@@ -252,7 +247,7 @@ const NodeEditor = () => {
     let isDeleteCurrentNode = false;
     let list = customNodeList;
     if (editItem.url === currentNode.url) {
-      currentConfigTemp = list[0];
+      currentConfigTemp = Default_Network_List[0];
       isDeleteCurrentNode = true;
     }
     list = list.filter((item) => {
@@ -270,11 +265,11 @@ const NodeEditor = () => {
     if (isDeleteCurrentNode) {
       clearLocalCache();
       dispatch(updateCurrentNode(newConfig.currentNode));
-      
-      if(editItem.networkID !== currentNode.networkID){
+      if (editItem.networkID !== currentConfigTemp.networkID) {
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
       }
+
       sendNetworkChangeMsg(newConfig.currentNode);
     }
     setReminderModalStatus(false);

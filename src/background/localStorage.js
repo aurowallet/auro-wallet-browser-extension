@@ -1,3 +1,4 @@
+import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
 
 /**
  * save local
@@ -56,3 +57,12 @@ export function clearLocal() {
      }
 }
 
+
+export function clearLocalCache() {
+  let localCacheKeys = Object.keys(LOCAL_CACHE_KEYS);
+  for (let index = 0; index < localCacheKeys.length; index++) {
+    const keys = localCacheKeys[index];
+    let localKey = LOCAL_CACHE_KEYS[keys];
+    removeLocal(localKey);
+  }
+}

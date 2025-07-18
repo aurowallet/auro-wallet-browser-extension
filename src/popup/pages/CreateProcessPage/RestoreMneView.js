@@ -10,7 +10,7 @@ import {
 } from "@/reducers/entryRouteReducer";
 import { sendMsg } from "@/utils/commonMsg";
 import { checkValidStrInList } from "@/utils/utils";
-import { wordlists } from "bip39";
+import { wordlist } from "@scure/bip39/wordlists/english";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -91,7 +91,7 @@ export const RestoreMneView = ({
   const dispatch = useDispatch();
   const getSimilarWord = useCallback(() => {
     if (mneInput.word.length > 0) {
-      let list = wordlists.english.filter((item) => {
+      let list = wordlist.filter((item) => {
         return item.indexOf(mneInput.word) === 0;
       });
       list = list.slice(0, 10);

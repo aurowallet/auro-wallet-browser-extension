@@ -1,4 +1,4 @@
-import { copyText } from "@/utils/utils";
+import { copyText } from "@/utils/browserUtils";
 import i18n from "i18next";
 import { useCallback } from "react";
 import { useHistory } from "react-router-dom";
