@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
-## [2.3.4]
+## [2.4.0]
 
 ### Enhancements
 - Credentials icon
