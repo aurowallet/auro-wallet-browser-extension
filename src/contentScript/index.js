@@ -1,4 +1,4 @@
-import extensionizer from "extensionizer";
+import browser from 'webextension-polyfill';
 import { sendMsg } from "../utils/commonMsg";
 import { MessageChannel, getSiteIcon } from "@aurowallet/mina-provider";
 import { WALLET_CONNECT_TYPE } from "../constant/commonType";
@@ -12,7 +12,7 @@ const contentScript = {
     this.reportUrl();
   },
   reportUrl() {
-    extensionizer.runtime.connect({ name: CONTENT_SCRIPT });
+    browser.runtime.connect({ name: CONTENT_SCRIPT });
   },
   registerListeners() {
     window.addEventListener("message", (event) => {
@@ -42,7 +42,7 @@ const contentScript = {
       );
     });
 
-    extensionizer.runtime.onMessage.addListener(
+    browser.runtime.onMessage.addListener(
       (message, sender, sendResponse) => {
         if (message.id) {
           this.channel.send("messageFromWallet", message);
@@ -58,8 +58,8 @@ const contentScript = {
   inject() {
     const hostPage = document.head || document.documentElement;
     const script = document.createElement("script");
-
-    script.src = extensionizer.runtime.getURL("webhook.js");
+    
+    script.src = browser.runtime.getURL("webhook.js");
     script.onload = function () {
       this.parentNode.removeChild(this);
     };

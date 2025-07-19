@@ -41,10 +41,14 @@ const StyledHolderIcon = styled.div`
 export const NetworkIcon = ({ nodeItem, size }) => {
   const { isCustomNet, iconSource, holderIconName } = useMemo(() => {
     let isCustomNet = !nodeItem.isDefaultNode;
+    let isZeko = nodeItem.networkID?.startsWith("zeko");
     let iconSource =
       nodeItem.networkID == NetworkID_MAP.mainnet
         ? "img/mina_color.svg"
         : "img/icon_mina_gray.svg";
+    if (isZeko) {
+      iconSource = "img/icon_zeko_testnet.svg";
+    }
     let holderIconName = "";
     if (isCustomNet) {
       holderIconName = nodeItem.name?.slice(0, 1) || "";

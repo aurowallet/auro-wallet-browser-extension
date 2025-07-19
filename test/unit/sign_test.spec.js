@@ -1,10 +1,10 @@
 const sinon = require("sinon");
 const proxyquire = require("proxyquire").noCallThru();
 const assert = require("assert");
-import { signDataV2 } from "../data/sign_data_v2";
+const { signDataV2 } = require("../data/sign_data_v2");
 
 const pathToModule = "../../src/background/lib";
-const utilsPath = "../../utils/utils";
+const utilsPath = "../../utils/browserUtils";
 
 describe("Functionality on mainnet", function () {
   let getCurrentNetConfigStub;
@@ -18,11 +18,24 @@ describe("Functionality on mainnet", function () {
       [utilsPath]: {
         getCurrentNodeConfig: getCurrentNetConfigStub,
       },
+      "webextension-polyfill": {
+        storage: {
+          local: {
+            set: sinon.stub().resolves(),
+            get: sinon.stub().resolves({}),
+            remove: sinon.stub().resolves(),
+          },
+        },
+      },
     });
   });
 
+  afterEach(function () {
+    sinon.restore();
+  });
+
   describe("signTransaction on mainnet", function () {
-    it("should correctly send payment", async function () {
+    it("should correctly send payment on mainnet", async function () {
       const signResult = await this.module.signTransaction(
         signDataV2.testAccount.privateKey,
         {
@@ -68,7 +81,8 @@ describe("Functionality on mainnet", function () {
       assert.strictEqual(verifyResult, true);
     });
   });
-  describe("signFeilds on mainnet", function () {
+
+  describe("signFields on mainnet", function () {
     it("should correctly sign fields", async function () {
       const signResult = await this.module.signFieldsMessage(
         signDataV2.testAccount.privateKey,
@@ -83,12 +97,15 @@ describe("Functionality on mainnet", function () {
 
       const verifyResult = await this.module.verifyFieldsMessage(
         signResult.publicKey,
-        signResult.signature,
-        signResult.data,
+       
+
+ signResult.signature,
+        signResult.data
       );
       assert.strictEqual(verifyResult, true);
     });
   });
+
   describe("create nullifier on mainnet", function () {
     it("should correctly create nullifier", async function () {
       const signResult = await this.module.createNullifier(
@@ -114,11 +131,24 @@ describe("Functionality on testnet", function () {
       [utilsPath]: {
         getCurrentNodeConfig: getCurrentNetConfigStub,
       },
+      "webextension-polyfill": {
+        storage: {
+          local: {
+            set: sinon.stub().resolves(),
+            get: sinon.stub().resolves({}),
+            remove: sinon.stub().resolves(),
+          },
+        },
+      },
     });
   });
 
+  afterEach(function () {
+    sinon.restore();
+  });
+
   describe("signTransaction on testnet", function () {
-    it("should correctly send payment", async function () {
+    it("should correctly send payment on testnet", async function () {
       const signResult = await this.module.signTransaction(
         signDataV2.testAccount.privateKey,
         {
@@ -151,11 +181,12 @@ describe("Functionality on testnet", function () {
           ...signDataV2.signZkTransaction.testnet.signParams,
         }
       );
-      assert.strictEqual(
-        JSON.stringify(signResult),
-        JSON.stringify(signDataV2.signZkTransaction.testnet.signResult)
+      assert.deepStrictEqual(
+        signResult,
+        signDataV2.signZkTransaction.testnet.signResult
       );
     });
+
     it("should correctly sign message & verify message", async function () {
       const signResult = await this.module.signTransaction(
         signDataV2.testAccount.privateKey,
@@ -176,7 +207,8 @@ describe("Functionality on testnet", function () {
       assert.strictEqual(verifyResult, true);
     });
   });
-  describe("signFeilds on testnet", function () {
+
+  describe("signFields on testnet", function () {
     it("should correctly sign fields", async function () {
       const signResult = await this.module.signFieldsMessage(
         signDataV2.testAccount.privateKey,
@@ -188,15 +220,16 @@ describe("Functionality on testnet", function () {
         signResult.signature,
         signDataV2.signFileds.testnet.signResult.signature
       );
-      
+
       const verifyResult = await this.module.verifyFieldsMessage(
         signResult.publicKey,
         signResult.signature,
-        signResult.data,
+        signResult.data
       );
       assert.strictEqual(verifyResult, true);
     });
   });
+
   describe("create nullifier on testnet", function () {
     it("should correctly create nullifier", async function () {
       const signResult = await this.module.createNullifier(

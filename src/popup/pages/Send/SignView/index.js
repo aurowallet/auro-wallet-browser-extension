@@ -14,13 +14,15 @@ import { sendMsg } from "@/utils/commonMsg";
 import {
   addressSlice,
   amountDecimals,
-  copyText,
   getBalanceForUI,
   getRealErrorMsg,
   isNaturalNumber,
   isNumber,
   trimSpace,
 } from "@/utils/utils";
+import {
+  copyText,
+} from "@/utils/browserUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";

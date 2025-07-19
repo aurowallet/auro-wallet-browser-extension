@@ -1,5 +1,5 @@
 import { DefaultMainnetConfig } from "@/constant/network";
-import extension from "extensionizer";
+import browser from 'webextension-polyfill';
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -35,8 +35,7 @@ import {
   updateCurrentNode,
   updateCustomNodeList,
 } from "../../../reducers/network";
-import { sendMsg } from "../../../utils/commonMsg";
-import { sendNetworkChangeMsg } from "../../../utils/utils";
+import { sendMsg, sendNetworkChangeMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
@@ -162,7 +161,7 @@ export const LockPage = ({}) => {
         dispatch(updateCurrencyConfig(currencyList));
         saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(currencyList[0].key));
 
-        extension.tabs.create({
+        browser.tabs.create({
           url: "popup.html#/register_page",
         });
         setResetModalStatus(false);

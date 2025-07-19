@@ -79,7 +79,9 @@ export const LOCAL_CACHE_KEYS = {
     /**
      * save all token tx history
      */
-    "ALL_TX_HISTORY":"ALL_TX_HISTORY"
+    "ALL_TX_HISTORY":"ALL_TX_HISTORY",
+
+    "ALL_TX_HISTORY_V2":"ALL_TX_HISTORY_V2"
 }
 
 /**
@@ -90,12 +92,6 @@ export const STABLE_LOCAL_ACCOUNT_CACHE_KEYS = {
 
     "SHOWED_TOKEN": "SHOWED_TOKEN",
 }
-
-
-/**
- * STORAGE_UPGRADE from v2->v3
- */
-export const STORAGE_UPGRADE_STATUS = "STORAGE_UPGRADE_STATUS"
 
 /**
  * recommend fee list

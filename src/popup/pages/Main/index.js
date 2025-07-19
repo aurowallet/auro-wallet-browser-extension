@@ -4,7 +4,6 @@ import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "../../../constant/storageKey";
 import { updateAccountTx, updateAccountTxV2, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
-import { isNumber } from "../../../utils/utils";
 import Wallet from "../Wallet";
 
 const HomePage = () => {
@@ -22,7 +21,7 @@ const HomePage = () => {
     }
   }
   const shouldUpdateTxList = useCallback((address) => {
-    const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY);
+    const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
     const currentHistory = JSON.parse(txHistory);
     if (currentHistory?.[address]) {
       const targetHistory = currentHistory?.[address]

@@ -12,7 +12,8 @@ import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo } from "../../..
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationKey } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, copyText, isNumber } from "../../../utils/utils";
+import { addressSlice, isNumber } from "../../../utils/utils";
+import { copyText } from "../../../utils/browserUtils";
 import Button, { button_size } from "../../component/Button";
 import Clock from "../../component/Clock";
 import CustomView from "../../component/CustomView";

@@ -24,12 +24,12 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { getLedgerStatus, requestSignPayment } from "../../../utils/ledger";
 import {
   addressSlice,
+  addressValid,
   getRealErrorMsg,
   isNaturalNumber,
   isNumber,
   trimSpace,
 } from "../../../utils/utils";
-import { addressValid } from "../../../utils/validator";
 import AdvanceMode from "../../component/AdvanceMode";
 import Button from "../../component/Button";
 import { ConfirmModal } from "../../component/ConfirmModal";

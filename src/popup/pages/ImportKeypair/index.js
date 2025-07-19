@@ -1,8 +1,11 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { WALLET_IMPORT_KEY_STORE } from "../../../constant/msgTypes";
+import {
+  DAPP_CHANGE_CONNECTING_ADDRESS,
+  WALLET_IMPORT_KEY_STORE,
+} from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import Toast from "../../component/Toast";
@@ -13,6 +16,10 @@ import TextArea from "../../component/TextArea";
 import styles from "./index.module.scss";
 
 const ImportKeypair = ({}) => {
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
+
   const [keystoreValue, setKeystoreValue] = useState("");
   const [pwdValue, setPwdValue] = useState("");
   const [btnStatus, setBtnStatus] = useState(false);
@@ -21,9 +28,9 @@ const ImportKeypair = ({}) => {
   const history = useHistory();
   const dispatch = useDispatch();
 
-  const accountName = useMemo(()=>{
+  const accountName = useMemo(() => {
     return history.location?.params?.accountName ?? "";
-  },[history])
+  }, [history]);
 
   useEffect(() => {
     if (keystoreValue.length > 0 && pwdValue.length > 0) {
@@ -63,6 +70,16 @@ const ImportKeypair = ({}) => {
             }
             return;
           } else {
+            sendMsg(
+              {
+                action: DAPP_CHANGE_CONNECTING_ADDRESS,
+                payload: {
+                  address: currentAddress,
+                  currentAddress: account.address,
+                },
+              },
+              (status) => {}
+            );
             dispatch(updateCurrentAccount(account));
             setTimeout(() => {
               if (history.length >= 5) {

@@ -5,12 +5,12 @@ import { useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { WALLET_CREATE_PWD } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
-import { matchList as matchRuleList } from "../../../utils/validator";
 import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import { ReminderTip } from "../../component/ReminderTip";
 import styles from "./index.module.scss";
+import { PasswordValidationList } from "../../../utils/utils";
 
 const CreatePassword = () => {
 
@@ -21,7 +21,7 @@ const CreatePassword = () => {
   const [confirmPwd, setConfirmPwd] = useState("")
   const [errorTip, setErrorTip] = useState(false)
   const [btnClick, setBtnClick] = useState(false)
-  const [matchList, setMatchList] = useState(matchRuleList)
+  const [matchList, setMatchList] = useState(PasswordValidationList)
   const [matchRenderList, setMatchRenderList] = useState([])
 
   useEffect(() => {

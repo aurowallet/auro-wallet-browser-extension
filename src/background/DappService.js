@@ -1,10 +1,10 @@
 import { DAppActions } from '@aurowallet/mina-provider';
-import extension from 'extensionizer';
+import browser from 'webextension-polyfill';
 import ObservableStore from "obs-store";
 import { DAPP_ACTION_CANCEL_ALL, DAPP_ACTION_CLOSE_WINDOW, DAPP_ACTION_CREATE_NULLIFIER, DAPP_ACTION_GET_ACCOUNT, DAPP_ACTION_REQUEST_PRESENTATION, DAPP_ACTION_SEND_TRANSACTION, DAPP_ACTION_SIGN_MESSAGE, DAPP_ACTION_STORE_CREDENTIAL, DAPP_ACTION_SWITCH_CHAIN, WORKER_ACTIONS } from '../constant/msgTypes';
-import { checkAndTop, checkAndTopV2, closePopupWindow, lastWindowIds, openPopupWindow, PopupSize, startExtensionPopup, startPopupWindow } from "../utils/popup";
-import { checkNodeExist, getArrayDiff, getCurrentNodeConfig, getExtensionAction, getLocalNetworkList, getMessageFromCode, getOriginFromUrl, isNumber, urlValid } from '../utils/utils';
-import { addressValid } from '../utils/validator';
+import { checkAndTopV2, closePopupWindow, lastWindowIds, PopupSize, startExtensionPopup, startPopupWindow } from "../utils/popup";
+import { addressValid, checkNodeExist, getArrayDiff, getMessageFromCode, getOriginFromUrl, isNumber, removeUrlFromArrays, urlValid } from '../utils/utils';
+import { getExtensionAction, getCurrentNodeConfig,getLocalNetworkList } from '../utils/browserUtils';
 import apiService from './APIService';
 import { verifyFieldsMessage, verifyMessage } from './lib';
 import { get, save } from './storageService';
@@ -177,6 +177,13 @@ class DappService {
           sendResponse
         )
         break
+      case DAppActions.wallet_revokePermissions: 
+        this.requestCallback(
+          () => this.revokePermissions(message.payload),
+          id,
+          sendResponse
+        )
+        break;
       default:
         this.requestCallback(
           async ()=>{
@@ -327,7 +334,7 @@ class DappService {
             that.setBadgeContent()
             if(chainRequests.length === 0){
               closePopupWindow(windowId.request_sign) 
-              extension.runtime.onMessage.removeListener(onMessage)
+              browser.runtime.onMessage.removeListener(onMessage)
               that.signEventListener = undefined
             }
             return 
@@ -350,7 +357,7 @@ class DappService {
                   nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                   that.removeSignParamsByOpenId(payload.id)
                   if(signRequests.length == 0 && chainRequests.length ===0){
-                    extension.runtime.onMessage.removeListener(onMessage)
+                    browser.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
                   that.setBadgeContent()
@@ -360,7 +367,7 @@ class DappService {
                   })
                   that.removeSignParamsByOpenId(payload.id)
                   if(signRequests.length == 0 && chainRequests.length ===0){
-                    extension.runtime.onMessage.removeListener(onMessage)
+                    browser.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
                   that.setBadgeContent()
@@ -379,7 +386,7 @@ class DappService {
                   nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                   that.removeSignParamsByOpenId(payload.id)
                   if(signRequests.length == 0 && chainRequests.length ===0){
-                    extension.runtime.onMessage.removeListener(onMessage)
+                    browser.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
                   that.setBadgeContent()
@@ -389,7 +396,7 @@ class DappService {
                   })
                   that.removeSignParamsByOpenId(payload.id)
                   if(signRequests.length == 0 && chainRequests.length ===0){
-                    extension.runtime.onMessage.removeListener(onMessage)
+                    browser.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
                   that.setBadgeContent()
@@ -417,7 +424,7 @@ class DappService {
                     }
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && chainRequests.length ===0){
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
@@ -425,7 +432,7 @@ class DappService {
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && chainRequests.length ===0){
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
@@ -444,7 +451,7 @@ class DappService {
                     nextResolve(payload)
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && chainRequests.length ===0){
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
@@ -454,7 +461,7 @@ class DappService {
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeSignParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && chainRequests.length ===0){
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
@@ -471,7 +478,7 @@ class DappService {
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeNotifyParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && chainRequests.length ===0){
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
@@ -479,7 +486,7 @@ class DappService {
                     nextResolve(payload.nextConfig)
                     that.removeNotifyParamsByOpenId(payload.id)
                     if(signRequests.length == 0 && chainRequests.length ===0){
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.signEventListener = undefined
                     }
                     that.setBadgeContent()
@@ -499,7 +506,7 @@ class DappService {
                   nextResolve(payload)
                   that.removeSignParamsByOpenId(payload.id)
                   if(signRequests.length == 0 && chainRequests.length ===0){
-                    extension.runtime.onMessage.removeListener(onMessage)
+                    browser.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
                   that.setBadgeContent()
@@ -509,7 +516,7 @@ class DappService {
                   nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                   that.removeSignParamsByOpenId(payload.id)
                   if(signRequests.length == 0 && chainRequests.length ===0){
-                    extension.runtime.onMessage.removeListener(onMessage)
+                    browser.runtime.onMessage.removeListener(onMessage)
                     that.signEventListener = undefined
                   }
                   that.setBadgeContent()
@@ -520,7 +527,7 @@ class DappService {
           return false
         }
         if(!that.signEventListener){
-          that.signEventListener = extension.runtime.onMessage.addListener(onMessage)
+          that.signEventListener = browser.runtime.onMessage.addListener(onMessage)
         }
         let time = new Date().getTime()
         if(ZKAPP_CHAIN_ACTION.indexOf(sendAction)!==-1){
@@ -650,7 +657,7 @@ class DappService {
                   nextReject({ message: getMessageFromCode(errorCodes.originDismatch),code:errorCodes.originDismatch })
                   return
                 }
-                extension.runtime.onMessage.removeListener(onMessage)
+                browser.runtime.onMessage.removeListener(onMessage)
                 nextResolve([payload.account])
                 approveRequests = []
                 that.setBadgeContent()
@@ -661,7 +668,7 @@ class DappService {
           }
           return false
         }
-        extension.runtime.onMessage.addListener(onMessage)
+        browser.runtime.onMessage.addListener(onMessage)
         approveRequests.push({ id, site,resolve,reject })
         this.setBadgeContent()
         sendMsg({
@@ -851,22 +858,22 @@ class DappService {
     }
     return
   }
-  notifyAccountChange(siteUrlList, connectAccount) {
+ notifyAccountChange(siteUrlList, connectAccount) {
     let account = !connectAccount ? [] : [connectAccount]
-    extension.tabs.query({}, (tabs) => {
+    browser.tabs.query({}).then((tabs)=>{
       let message = {
         action: "accountsChanged",
         result: account
       }
       for (let tabIndex = 0; tabIndex < tabs.length; tabIndex++) {
         const tab = tabs[tabIndex];
-        let origin = getOriginFromUrl(tab.url)
+            let origin = getOriginFromUrl(tab.url)
 
-        let tabConnectIndex = siteUrlList.indexOf(origin)
-        if(tabConnectIndex !== -1){
-          extension.tabs.sendMessage(tab.id, message, res => { })
+            let tabConnectIndex = siteUrlList.indexOf(origin)
+            if(tabConnectIndex !== -1){
+              browser.tabs.sendMessage(tab.id, message)
+            }
           continue;
-        }
       }
     })
   }
@@ -881,16 +888,14 @@ class DappService {
     this.tabNotify(message)
   }
   tabNotify(message){
-    extension.tabs.query({
-    }, (tabs) => {
-      let currentConnect = this.getDappStore().currentConnect
-      for (let index = 0; index < tabs.length; index++) {
-        const tab = tabs[index];
-
-        if (currentConnect[tab.id]) {
-          extension.tabs.sendMessage(tab.id, message, res => { })
+    browser.tabs.query({}).then((tabs)=>{
+        let currentConnect = this.getDappStore().currentConnect
+        for (let index = 0; index < tabs.length; index++) {
+          const tab = tabs[index];
+          if (currentConnect[tab.id]) {
+            browser.tabs.sendMessage(tab.id, message)
+          }
         }
-      }
     })
   }
   portDisconnectListener(port) {
@@ -989,7 +994,7 @@ class DappService {
         top: buildParams.top  + PopupSize.exitSize,
       }
     }
-    startPopupWindow(targetUrl, "tokenSign_"+buildID, "buildDapp", {
+    startPopupWindow(targetUrl, "tokenSign_"+buildID, {
       ...nextOption
     });
     return buildID
@@ -1085,7 +1090,7 @@ class DappService {
             that.setBadgeContent()
             if(tokenSigneRequests.length === 0){
               closePopupWindow(windowId.token_sign) 
-              extension.runtime.onMessage.removeListener(onMessage)
+              browser.runtime.onMessage.removeListener(onMessage)
               that.tokenSignListener = undefined
             }
             return 
@@ -1120,7 +1125,7 @@ class DappService {
                     that.removeTokenBuildById(payload.id)
                     if(tokenSigneRequests.length == 0){
                       closePopupWindow(windowId.token_sign)
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.tokenSignListener = undefined
                     }
                     that.setBadgeContent()
@@ -1129,7 +1134,7 @@ class DappService {
                     that.removeTokenBuildById(payload.id)
                     if(tokenSigneRequests.length == 0 ){
                       closePopupWindow(windowId.token_sign)
-                      extension.runtime.onMessage.removeListener(onMessage)
+                      browser.runtime.onMessage.removeListener(onMessage)
                       that.tokenSignListener = undefined
                     }
                     that.setBadgeContent()
@@ -1159,7 +1164,7 @@ class DappService {
         nextParams.buildData = buildData;
         nextParams.result = decryptData.transaction
         if(!that.tokenSignListener){ 
-          that.tokenSignListener = extension.runtime.onMessage.addListener(onMessage)
+          that.tokenSignListener = browser.runtime.onMessage.addListener(onMessage)
         }
         let time = new Date().getTime()
         tokenSigneRequests.push({ id, params:nextParams, site,resolve,reject,time })
@@ -1193,6 +1198,13 @@ class DappService {
       init:isCreate
     }
     return baseWalletInfo
+  }
+  async revokePermissions(params) {
+    const targetOrigin = params.site.origin
+    const accountApprovedUrlList = this.dappStore.getState().accountApprovedUrlList
+    const res = removeUrlFromArrays(accountApprovedUrlList, targetOrigin)
+    this.updateApproveConnect(res)
+    return [];
   }
 }
 const dappService = new DappService()

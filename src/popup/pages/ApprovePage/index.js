@@ -1,3 +1,4 @@
+import { ENTRY_WITCH_ROUTE } from "@/reducers/entryRouteReducer";
 import { updateApproveStatus } from "@/reducers/popupReducer";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -13,7 +14,6 @@ import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
 import styles from "./index.module.scss";
-import { ENTRY_WITCH_ROUTE } from "@/reducers/entryRouteReducer";
 
 const ApprovePage = () => {
   const dispatch = useDispatch();

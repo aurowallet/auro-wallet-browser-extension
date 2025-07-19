@@ -5,8 +5,9 @@ import { getQATxStatus, getTxStatus, sendParty, sendStakeTx, sendTx } from './ap
 import { createNullifier, signFieldsMessage, signMessagePayment, signPayment, signTransaction, stakePayment } from './lib';
 import { get, getCredentialById, getStoredCredentials, removeCredential, removeValue, save, searchCredential, storeCredential } from './storageService';
 import { ACCOUNT_TYPE } from '../constant/commonType';
-import extension from 'extensionizer'
-import { decodeMemo, getCurrentNodeConfig, getExtensionAction } from '../utils/utils';
+import browser from 'webextension-polyfill';
+import { decodeMemo } from '../utils/utils';
+import { getExtensionAction,getCurrentNodeConfig } from '../utils/browserUtils';
 import i18n from "i18next"
 import { DAppActions } from '@aurowallet/mina-provider';
 import { changeLanguage } from '../i18n';
@@ -226,7 +227,7 @@ class APIService {
     }
     createAccount = async (mnemonic) => {
         this.memStore.updateState({ mne: "" })
-        let wallet = await importWalletByMnemonic(mnemonic)
+        let wallet = importWalletByMnemonic(mnemonic)
         let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
         const account = {
             address: wallet.pubKey,
@@ -307,7 +308,7 @@ class APIService {
 
             let mnemonicEn = data[0].mnemonic
             let mnemonic = await encryptUtils.decrypt(this.getStore().password, mnemonicEn)
-            let wallet = await importWalletByMnemonic(mnemonic, lastHdIndex)
+            let wallet = importWalletByMnemonic(mnemonic, lastHdIndex)
 
             let priKeyEncrypt = await encryptUtils.encrypt(this.getStore().password, wallet.priKey)
 
@@ -793,11 +794,11 @@ class APIService {
     notification = async (hash) => {
         let netConfig = await getCurrentNodeConfig()
         let myNotificationID
-        extension.notifications &&
-            extension.notifications.onClicked.addListener(function (clickId) {
+        browser.notifications &&
+        browser.notifications.onClicked.addListener(function (clickId) {
                 if(myNotificationID === clickId){
                     let url = netConfig.explorer +"/tx/"+ clickId
-                    extension.tabs.create({ url: url });
+                    browser.tabs.create({ url: url });
                 }
             });
         const i18nLanguage = i18n.language
@@ -807,12 +808,12 @@ class APIService {
         }
         let title = i18n.t('notificationTitle')
         let message = i18n.t('notificationContent')
-        extension.notifications.create(hash, {
+        browser.notifications.create(hash,{
             title: title,
             message: message,
             iconUrl: '/img/logo/128.png',
             type: 'basic'
-        },(notificationItem)=>{
+        }).then((notificationItem)=>{
             myNotificationID = notificationItem
         });
         return
@@ -836,7 +837,7 @@ class APIService {
             if (data && data.transactionStatus && (
                 (data.transactionStatus === STATUS.TX_STATUS_INCLUDED)
             )) {
-                extension.runtime.sendMessage({
+                browser.runtime.sendMessage({
                     type: FROM_BACK_TO_RECORD,
                     action: TX_SUCCESS,
                     hash:hash

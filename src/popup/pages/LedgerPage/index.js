@@ -2,21 +2,18 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { LEDGER_PAGE_TYPE } from "../../../constant/commonType";
 import {
   ACCOUNT_ACTIONS,
-    GET_LEDGER_ACCOUNT_NUMBER,
-    GET_WALLET_LOCK_STATUS,
-    WALLET_IMPORT_LEDGER
+  DAPP_CHANGE_CONNECTING_ADDRESS,
+  GET_LEDGER_ACCOUNT_NUMBER,
+  GET_WALLET_LOCK_STATUS,
+  WALLET_IMPORT_LEDGER,
 } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
-import {
-    checkLedgerConnect,
-    LEDGER_CONNECT_TYPE,
-    requestAccount
-} from "../../../utils/ledger";
+import { checkLedgerConnect, requestAccount } from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
@@ -30,22 +27,23 @@ const Tip_Type = {
   openLedgerApp: "openLedgerApp",
   openLockStatus: "openLockStatus",
 
-  grantSuccess:"grantSuccess"
+  grantSuccess: "grantSuccess",
 };
-export const LedgerPage = ({}) => { 
+export const LedgerPage = ({}) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);
-  const [isShowSuccessTip,setIsShowSuccessTip] = useState(false)
+  const [isShowSuccessTip, setIsShowSuccessTip] = useState(false);
 
-  const {isLedgerPermission} = useMemo(() => {
-    const url = window.location?.href || ""
-    const params = getQueryStringArgs(url)
-    const ledgerPageType = params.ledgerPageType||""
-    const isLedgerPermission = ledgerPageType === LEDGER_PAGE_TYPE.permissionGrant
+  const { isLedgerPermission } = useMemo(() => {
+    const url = window.location?.href || "";
+    const params = getQueryStringArgs(url);
+    const ledgerPageType = params.ledgerPageType || "";
+    const isLedgerPermission =
+      ledgerPageType === LEDGER_PAGE_TYPE.permissionGrant;
     return {
-      isLedgerPermission
-    }
-  },[])
+      isLedgerPermission,
+    };
+  }, []);
   const onClickNextTab = useCallback(() => {
     setTabIndex((state) => state + 1);
   }, []);
@@ -63,60 +61,56 @@ export const LedgerPage = ({}) => {
     });
   }, []);
 
-  const onClickConnect = useCallback(async (permissionsCheck = true) => {
-    if(isShowSuccessTip){
-      window.close();
-      return 
-    }
-    setTipType(Tip_Type.init);
-    const walletLockStatus = await getWalletLockStatus();
-    if (!walletLockStatus) {
-      setTipType(Tip_Type.openLockStatus);
-      return false;
-    }
-    try {
-      const {
-        ledgerApp,
-        manualConnected,
-        error,
-        openApp,
-      } = await checkLedgerConnect(
-        LEDGER_CONNECT_TYPE.isPage,
-        permissionsCheck
-      );
-      if (error) {
-        setTipType(Tip_Type.openLedger);
+  const onClickConnect = useCallback(
+    async (permissionsCheck = true) => {
+      if (isShowSuccessTip) {
+        window.close();
+        return;
+      }
+      setTipType(Tip_Type.init);
+      const walletLockStatus = await getWalletLockStatus();
+      if (!walletLockStatus) {
+        setTipType(Tip_Type.openLockStatus);
         return false;
       }
-      if (ledgerApp) {
-        const result = await ledgerApp.getAppName();
-        if (result.name === "Mina") {
-          if (permissionsCheck && !isLedgerPermission) {
-            onClickNextTab();
+      try {
+        const { ledgerApp, manualConnected, error, openApp } =
+          await checkLedgerConnect(permissionsCheck);
+        if (error) {
+          setTipType(Tip_Type.openLedger);
+          return false;
+        }
+        if (ledgerApp) {
+          const result = await ledgerApp.getAppName();
+          if (result.name === "Mina") {
+            if (permissionsCheck && !isLedgerPermission) {
+              onClickNextTab();
+            }
+            if (isLedgerPermission) {
+              setIsShowSuccessTip(true);
+              setTipType(Tip_Type.grantSuccess);
+            }
+            return ledgerApp;
+          } else {
+            setTipType(Tip_Type.openLedgerApp);
+            return false;
           }
-          if(isLedgerPermission){
-            setIsShowSuccessTip(true)
-            setTipType(Tip_Type.grantSuccess);
-          }
-          return ledgerApp;
-        } else {
+        }
+        if (openApp) {
           setTipType(Tip_Type.openLedgerApp);
           return false;
         }
-      }
-      if (openApp) {
-        setTipType(Tip_Type.openLedgerApp);
-        return false;
-      }
 
-      if (manualConnected) {
+        if (manualConnected) {
+          setTipType(Tip_Type.openLedger);
+        }
+        return false;
+      } catch (error) {
         setTipType(Tip_Type.openLedger);
       }
-      return false;
-    } catch (error) {
-      setTipType(Tip_Type.openLedger);
-    }
-  }, [isShowSuccessTip,isLedgerPermission]);
+    },
+    [isShowSuccessTip, isLedgerPermission]
+  );
   const onClickImport = useCallback(() => {
     onClickNextTab();
   }, []);
@@ -156,33 +150,40 @@ export const LedgerPage = ({}) => {
               isShowSuccessTip={isShowSuccessTip}
             />
           </div>
-          {!isLedgerPermission &&
-          <div className={styles.innerContent} id={2}>
-            <AccountNameView
-              onClickNext={onClickImport}
-              tipContent={tipContent}
-              onClickConnect={onClickConnect}
-            />
-          </div>}
-          {!isLedgerPermission &&
-          <div className={styles.innerContent} id={3}>
-            <SuccessView onClickNext={onClickDone} />
-          </div>}
+          {!isLedgerPermission && (
+            <div className={styles.innerContent} id={2}>
+              <AccountNameView
+                onClickNext={onClickImport}
+                tipContent={tipContent}
+                onClickConnect={onClickConnect}
+              />
+            </div>
+          )}
+          {!isLedgerPermission && (
+            <div className={styles.innerContent} id={3}>
+              <SuccessView onClickNext={onClickDone} />
+            </div>
+          )}
         </Tabs>
       </div>
     </div>
   );
 };
 
-const LedgerConnectView = ({ onClickNext, tipContent,isShowSuccessTip,isLedgerPermission }) => {
-  const viewTitle = useMemo(()=>{
-      const title = isLedgerPermission ?"grantLedger":"connectHardwareWallet"
-      return i18n.t(title)
-  },[isLedgerPermission,i18n])
-  const btnTxt = useMemo(()=>{
-    const txt = isShowSuccessTip ?"done":"next"
-    return i18n.t(txt)
-  },[isShowSuccessTip,i18n])
+const LedgerConnectView = ({
+  onClickNext,
+  tipContent,
+  isShowSuccessTip,
+  isLedgerPermission,
+}) => {
+  const viewTitle = useMemo(() => {
+    const title = isLedgerPermission ? "grantLedger" : "connectHardwareWallet";
+    return i18n.t(title);
+  }, [isLedgerPermission, i18n]);
+  const btnTxt = useMemo(() => {
+    const txt = isShowSuccessTip ? "done" : "next";
+    return i18n.t(txt);
+  }, [isShowSuccessTip, i18n]);
   return (
     <div className={styles.viewOuter}>
       <div className={styles.viewTitle}>{viewTitle}</div>
@@ -207,10 +208,14 @@ const LedgerConnectView = ({ onClickNext, tipContent,isShowSuccessTip,isLedgerPe
         </span>
       </div>
       <div className={cls(styles.bottomContainer)}>
-        {tipContent && ( 
-          <div className={cls(styles.accountWarningTip,{
-            [styles.ledgerSuccessTip]:isShowSuccessTip
-          })}>{tipContent}</div>
+        {tipContent && (
+          <div
+            className={cls(styles.accountWarningTip, {
+              [styles.ledgerSuccessTip]: isShowSuccessTip,
+            })}
+          >
+            {tipContent}
+          </div>
         )}
         <Button onClick={onClickNext}>{btnTxt}</Button>
       </div>
@@ -218,6 +223,10 @@ const LedgerConnectView = ({ onClickNext, tipContent,isShowSuccessTip,isLedgerPe
   );
 };
 const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
+  const currentAddress = useSelector(
+    (state) => state.accountInfo.currentAccount.address
+  );
+
   const [nextAccountIndex, setNextAccountIndex] = useState(0);
   const getLedgerAccountNumber = useCallback(() => {
     sendMsg(
@@ -233,10 +242,10 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     getLedgerAccountNumber();
   }, []);
 
-  const [accountIndex, setAccountIndex] = useState(0);
+  const [accountIndex, setAccountIndex] = useState("");
   const placeholderText = useMemo(() => {
     return "Ledger " + nextAccountIndex;
-  }, [accountIndex, nextAccountIndex]);
+  }, [nextAccountIndex]);
   const [accountName, setAccountName] = useState("");
 
   const [tipModalVisible, setTipModalVisible] = useState(false);
@@ -254,9 +263,13 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     }
     setTipModalVisible(true);
     if (ledgerApp) {
+      let nextIndex = accountIndex;
+      if (nextIndex <= 0) {
+        nextIndex = 0;
+      }
       const { publicKey, rejected } = await requestAccount(
         ledgerApp,
-        accountIndex
+        nextIndex
       );
       setTipModalVisible(false);
       if (rejected) {
@@ -266,7 +279,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
           {
             payload: {
               address: publicKey,
-              accountIndex: accountIndex,
+              accountIndex: nextIndex,
               accountName: accountName || placeholderText,
             },
             action: WALLET_IMPORT_LEDGER,
@@ -279,15 +292,28 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
                 setErrorMsg(account.error);
               }
             } else {
+              sendMsg(
+                {
+                  action: DAPP_CHANGE_CONNECTING_ADDRESS,
+                  payload: {
+                    address: currentAddress,
+                    currentAddress: account.address,
+                  },
+                },
+                (status) => {}
+              );
               dispatch(updateCurrentAccount(account));
-              sendMsg({ action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,payload:account.address }); 
+              sendMsg({
+                action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,
+                payload: account.address,
+              });
               onClickNext && onClickNext();
             }
           }
         );
       }
     }
-  }, [onClickNext, accountIndex, placeholderText,accountName]);
+  }, [onClickNext, accountIndex, placeholderText, accountName]);
   const onNameInput = useCallback((e) => {
     let value = e.target.value;
     if (value.length <= 16) {
@@ -306,10 +332,15 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
   }, []);
 
   const onAdd = useCallback(() => {
-    setAccountIndex(accountIndex + 1);
+    let nextIndex = accountIndex;
+    if (nextIndex <= 0) {
+      nextIndex = 0;
+    }
+    setAccountIndex(nextIndex + 1);
   }, [accountIndex]);
   const onMinus = useCallback(() => {
     if (accountIndex <= 0) {
+      setAccountIndex(0);
       return;
     }
     setAccountIndex(accountIndex - 1);
@@ -394,6 +425,7 @@ const InputNumber = ({
         step="1"
         onChange={onChange}
         value={value}
+        placeholder="0"
         className={styles.customInput}
       />
       <div className={styles.imgContainer}>

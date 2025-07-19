@@ -19,10 +19,8 @@ import CreatePassword from '../pages/CreatePassword';
 import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
 import ImportKeypair from '../pages/ImportKeypair';
-import ImportPage from '../pages/ImportPage';
 import LanguageManagement from '../pages/LanguageManage';
 import LedgerConnect from '../pages/LedgerConnect';
-import LedgerImport from '../pages/LedgerImport';
 import { LedgerPage } from '../pages/LedgerPage';
 import {LockPage} from '../pages/Lock';
 import HomePage from '../pages/Main';
@@ -49,6 +47,9 @@ import TokenDetail from '../pages/TokenDetail';
 import TokenSignPage from '../pages/Send/tokenSign';
 
 import Perferences from '../pages/Perferences';
+import DevPage from '../pages/DevPage';
+import DevDetailPage from '../pages/DevPage/DevDetail';
+
 
 
 
@@ -87,9 +88,7 @@ export function getAllRouter() {
         <Route path="/staking_list" component={StakingList} />
         <Route path="/staking_transfer" component={StakingTransfer} />
         <Route path="/ledger_connect" component={LedgerConnect} />
-        <Route path="/ledger_import" component={LedgerImport} />
 
-        <Route path="/import_page" component={ImportPage} />
         <Route path="/import_keypair" component={ImportKeypair} />
 
         <Route path="/setting" component={Setting} />
@@ -116,6 +115,8 @@ export function getAllRouter() {
         <Route path={"/credential_detail"} component={CredentialDetail}/>
 
         <Route path="/perferences_page" component={Perferences} />
+        <Route path="/devpage" component={DevPage} />
+        <Route path="/dev_detail_page" component={DevDetailPage} />
       </Switch>
     </HashRouter>
   );
