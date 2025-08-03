@@ -28,6 +28,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import {
   addressSlice,
   getAmountForUI,
+  isZekoNet,
 } from "../../../utils/utils";
 import {
   copyText,
@@ -479,7 +480,7 @@ const WalletInfo = () => {
       netcolor = "#594AF1";
     }
     let showStaking = networkID?.startsWith("mina");
-    let isZeko = networkID?.startsWith("zeko");
+    let isZeko = isZekoNet(networkID)
     let nextChainIcon = isZeko ? "/img/icon_zeko.svg" : "/img/icon_mina.svg";
     return {
       netcolor,

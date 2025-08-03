@@ -8,13 +8,8 @@ import {
   SCAM_LIST,
   SUPPORT_TOKEN_LIST,
 } from "../../constant/storageKey";
-import {
-  getReadableNetworkId,
-  parseStakingList,
-} from "../../utils/utils";
-import {
-  getCurrentNodeConfig,
-} from "../../utils/browserUtils";
+import { getCurrentNodeConfig } from "../../utils/browserUtils";
+import { getReadableNetworkId, parseStakingList } from "../../utils/utils";
 
 import { saveLocal } from "../localStorage";
 import {
@@ -42,6 +37,7 @@ import {
   getTxHistoryBody,
   getTxSend,
   getTxStatusBody,
+  getZekoFeeBody,
   getZkAppTransactionListBody,
 } from "./gqlparams";
 
@@ -318,11 +314,11 @@ export async function getZkAppTxHistory(address, tokenId, limit) {
   return { txList, address, tokenId };
 }
 /**
- * get full type transaction, contains payment, delegation,zkapp, 
- * @param {*} address 
- * @param {*} tokenId 
- * @param {*} limit 
- * @returns 
+ * get full type transaction, contains payment, delegation,zkapp,
+ * @param {*} address
+ * @param {*} tokenId
+ * @param {*} limit
+ * @returns
  */
 export async function getAllTxHistory(address, tokenId, limit) {
   let netConfig = await getCurrentNodeConfig();
@@ -347,7 +343,6 @@ export async function getAllTxHistory(address, tokenId, limit) {
   }
   let txList = result?.fullTransactions || [];
   return { txList, address, tokenId };
-
 }
 
 export async function getZkAppPendingTx(address, limit) {
@@ -461,4 +456,16 @@ export async function fetchSupportTokenInfo() {
     );
   }
   return data;
+}
+
+/**
+ * get zeko recommend fee
+ */
+export async function getZekoNetFee(weight = 1) {
+  let queryBody = getZekoFeeBody();
+  let result = await startFetchMyQuery(queryBody, {
+    weight: weight,
+  }).catch((error) => error);
+  let feePerWeightUnit = result?.feePerWeightUnit;
+  return feePerWeightUnit;
 }

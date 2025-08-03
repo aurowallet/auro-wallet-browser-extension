@@ -10,33 +10,47 @@ import DAppAdvance from "@/popup/component/DAppAdvance";
 import DappWebsite from "@/popup/component/DappWebsite";
 import NetworkStatusView from "@/popup/component/StatusView/NetworkStatusView";
 import Toast from "@/popup/component/Toast";
+import { copyText } from "@/utils/browserUtils";
 import { sendMsg } from "@/utils/commonMsg";
 import {
   addressSlice,
   amountDecimals,
   getBalanceForUI,
   getRealErrorMsg,
-  isNaturalNumber,
   isNumber,
   trimSpace,
 } from "@/utils/utils";
-import {
-  copyText,
-} from "@/utils/browserUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import styles from "./index.module.scss";
+import styled from "styled-components";
+import { getZekoNetFee } from "../../../../background/api";
+import { TRANSACTION_FEE, ZEKO_FEE_INTERVAL_TIME } from "../../../../constant";
+import { TimerProvider } from "../../../../hooks/TimerContext";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
+import {
+  isNaturalNumber,
+  isZekoNet,
+  parsedZekoFee,
+} from "../../../../utils/utils";
+import CountdownTimer from "../../../component/CountdownTimer";
+import styles from "./index.module.scss";
 
 const TX_CLICK_TYPE = {
   CONFIRM: "TX_CLICK_TYPE_CONFIRM",
   CANCEL: "TX_CLICK_TYPE_CANCEL",
 };
 
+const StyledFeeWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+`;
 const SignView = ({
   signParams,
   showMultiView,
@@ -55,13 +69,12 @@ const SignView = ({
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
-  const [feeValue, setFeeValue] = useState("");
-  const [nonceValue, setNonceValue] = useState("");
   const [feeErrorTip, setFeeErrorTip] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
 
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
+  const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
 
   const {
     sendAction,
@@ -75,6 +88,7 @@ const SignView = ({
     currentToken,
     availableBalance,
     sourceFee,
+    isZeko,
   } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     let id = signParams?.id || "";
@@ -99,6 +113,7 @@ const SignView = ({
       (tokenItem) => tokenItem.tokenId === buildData.tokenId
     );
     let availableBalance = currentToken?.tokenBaseInfo?.showBalance || 0;
+    let isZeko = isZekoNet(buildData?.networkID);
     return {
       sendAction,
       currentAdvanceData,
@@ -111,20 +126,55 @@ const SignView = ({
       currentToken,
       availableBalance,
       sourceFee,
+      isZeko,
     };
   }, [signParams, advanceData, tokenList]);
 
   useEffect(() => {
-    setFeeValue(sourceFee);
-  }, [sourceFee]);
-  useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
-      setFeeValue(currentAdvanceData.fee);
+      setAdvanceFee(currentAdvanceData.fee);
     }
     if (isNaturalNumber(currentAdvanceData.nonce)) {
-      setNonceValue(currentAdvanceData.nonce);
+      setAdvanceNonce(currentAdvanceData.nonce);
     }
-  }, [currentAdvanceData]);
+  }, [currentAdvanceData.nonce, currentAdvanceData.fee]);
+
+  useEffect(async () => {
+    if (isZeko) {
+      const fee = await getZekoNetFee();
+      setZekoPerFee(parsedZekoFee(fee));
+    }
+  }, [isZeko]);
+
+  const feeIntervalTime = useMemo(() => {
+    if (!isZeko) {
+      return 0;
+    }
+    if (isNumber(advanceFee) && advanceFee > 0) {
+      return 0;
+    }
+    return ZEKO_FEE_INTERVAL_TIME;
+  }, [isZeko, advanceFee]);
+
+  const nextFee = useMemo(() => {
+    if (isNumber(advanceFee) && advanceFee > 0) {
+      return advanceFee;
+    }
+    if (isZeko) {
+      return zekoPerFee;
+    }
+    if (isNumber(sourceFee) && advanceFee > 0) {
+      return sourceFee;
+    }
+    return TRANSACTION_FEE;
+  }, [advanceFee, zekoPerFee, isZeko, sourceFee]);
+
+  const onFeeTimerComplete = useCallback(async () => {
+    if (isZeko) {
+      const fee = await getZekoNetFee();
+      setZekoPerFee(parsedZekoFee(fee));
+    }
+  }, [isZeko]);
 
   const onCancel = useCallback(() => {
     sendMsg(
@@ -186,11 +236,11 @@ const SignView = ({
     }
 
     let { params } = signParams;
-    let validNonce = nonceValue || inferredNonce;
+    let validNonce = advanceNonce || inferredNonce;
     let nonce = trimSpace(validNonce);
 
     let toAddress = receiveAddress;
-    let fee = trimSpace(feeValue);
+    let fee = trimSpace(nextFee);
     let memo = nextMemo;
     let fromAddress = sender;
 
@@ -220,8 +270,8 @@ const SignView = ({
   }, [
     currentAccount,
     signParams,
-    nonceValue,
-    feeValue,
+    advanceNonce,
+    nextFee,
     onSubmitSuccess,
     sendAction,
     inferredNonce,
@@ -231,23 +281,23 @@ const SignView = ({
 
   const onConfirm = useCallback(async () => {
     if (sender !== currentAccount.address) {
-      Toast.info(i18n.t('updateAccount'));
-      return; 
+      Toast.info(i18n.t("updateAccount"));
+      return;
     }
     const buildData = signParams?.params?.buildData ?? {};
-    let validNonce = nonceValue || inferredNonce;
+    let validNonce = advanceNonce || inferredNonce;
     let nonce = trimSpace(validNonce) || "";
     if (nonce.length > 0 && !isNumber(nonce)) {
       Toast.info(i18n.t("waitNonce"));
       return;
     }
-    let fee = trimSpace(feeValue);
+    let fee = trimSpace(nextFee);
     if (fee.length > 0 && !isNumber(fee)) {
       Toast.info(i18n.t("inputFeeError"));
       return;
     }
     const sendAmount = buildData.amount;
-    let amount = amountDecimals(sendAmount,tokenDecimal)
+    let amount = amountDecimals(sendAmount, tokenDecimal);
 
     let mainTokenBalance = mainTokenNetInfo.tokenBaseInfo.showBalance;
     if (
@@ -263,13 +313,13 @@ const SignView = ({
     currentAccount,
     signParams,
     mainTokenNetInfo,
-    nonceValue,
-    feeValue,
+    advanceNonce,
+    nextFee,
     clickNextStep,
     inferredNonce,
     sender,
     availableBalance,
-    tokenDecimal
+    tokenDecimal,
   ]);
 
   const onClickAdvance = useCallback(() => {
@@ -295,12 +345,6 @@ const SignView = ({
   }, []);
 
   const onConfirmAdvance = useCallback(() => {
-    if (advanceFee) {
-      setFeeValue(advanceFee);
-    }
-    if (advanceNonce) {
-      setNonceValue(advanceNonce);
-    }
     setAdvanceStatus(false);
     onUpdateAdvance({
       id: signParams.id,
@@ -310,99 +354,109 @@ const SignView = ({
   }, [advanceFee, advanceNonce, onUpdateAdvance, signParams]);
 
   const checkFeeHigh = useCallback(() => {
-    let checkFee = feeValue;
+    let checkFee = nextFee;
     if (BigNumber(checkFee).gt(10)) {
       setFeeErrorTip(i18n.t("feeTooHigh"));
     } else {
       setFeeErrorTip("");
     }
-  }, [feeValue, i18n, signParams]);
+  }, [nextFee, i18n, signParams]);
 
   useEffect(() => {
     checkFeeHigh();
-  }, [feeValue]);
+  }, [nextFee]);
 
   return (
-    <section className={styles.sectionSign}>
-      <div className={styles.titleRow}>
-        <p className={styles.title}>{pageTitle}</p>
-        <div className={styles.titleRight}>
-          <div style={{ marginRight: "6px" }} />
-          <NetworkStatusView />
+    <TimerProvider
+      intervalTime={feeIntervalTime}
+      onTimerComplete={onFeeTimerComplete}
+    >
+      <section className={styles.sectionSign}>
+        <div className={styles.titleRow}>
+          <p className={styles.title}>{pageTitle}</p>
+          <div className={styles.titleRight}>
+            <div style={{ marginRight: "6px" }} />
+            <NetworkStatusView />
+          </div>
         </div>
-      </div>
-      <div className={styles.content}>
-        <div className={styles.websiteContainer}>
-          <DappWebsite
-            siteIcon={signParams?.site?.webIcon}
-            siteUrl={signParams?.site?.origin}
-          />
-        </div>
+        <div className={styles.content}>
+          <div className={styles.websiteContainer}>
+            <DappWebsite
+              siteIcon={signParams?.site?.webIcon}
+              siteUrl={signParams?.site?.origin}
+            />
+          </div>
 
-        <>
-          <CommonRow
-            leftTitle={currentAccount.accountName}
-            leftContent={addressSlice(sender, 6, 6)}
-            rightTitle={i18n.t("to")}
-            rightContent={addressSlice(receiveAddress, 6)}
-            leftCopyContent={currentAccount.address}
-            rightCopyContent={receiveAddress}
-            showArrow={true}
-          />
+          <>
+            <CommonRow
+              leftTitle={currentAccount.accountName}
+              leftContent={addressSlice(sender, 6, 6)}
+              rightTitle={i18n.t("to")}
+              rightContent={addressSlice(receiveAddress, 6)}
+              leftCopyContent={currentAccount.address}
+              rightCopyContent={receiveAddress}
+              showArrow={true}
+            />
 
-          <CommonRow leftTitle={i18n.t("amount")} leftContent={showAmount} />
-          {nextMemo && <CommonRow leftTitle={"Memo"} leftContent={nextMemo} />}
-          <div className={styles.accountRow}>
-            <div className={styles.rowLeft}>
-              <p className={styles.rowTitle}>{i18n.t("transactionFee")}</p>
-              <div className={styles.feeCon}>
-                <p className={cls(styles.rowContent, styles.feeContent)}>
-                  {feeValue + " " + MAIN_COIN_CONFIG.symbol}
+            <CommonRow leftTitle={i18n.t("amount")} leftContent={showAmount} />
+            {nextMemo && (
+              <CommonRow leftTitle={"Memo"} leftContent={nextMemo} />
+            )}
+            <div className={styles.accountRow}>
+              <div className={styles.rowLeft}>
+                <p className={styles.rowTitle}>{i18n.t("transactionFee")}</p>
+                <div className={styles.feeCon}>
+                  <p className={cls(styles.rowContent, styles.feeContent)}>
+                    {nextFee + " " + MAIN_COIN_CONFIG.symbol}
+                  </p>
+                  <StyledFeeWrapper>
+                    <CountdownTimer />
+                  </StyledFeeWrapper>
+                </div>
+              </div>
+              <div className={styles.modeWrapper}>
+                <p className={styles.rowPurpleContent} onClick={onClickAdvance}>
+                  {i18n.t("advanceMode")}
                 </p>
               </div>
             </div>
-            <div className={styles.modeWrapper}>
-              <p className={styles.rowPurpleContent} onClick={onClickAdvance}>
-                {i18n.t("advanceMode")}
-              </p>
-            </div>
-          </div>
-          <div className={styles.highFeeTip}>{feeErrorTip}</div>
-        </>
-      </div>
-      <div
-        className={cls(styles.btnGroup, {
-          [styles.multiBottomBtn]: showMultiView,
-        })}
-      >
-        <Button
-          onClick={onCancel}
-          theme={button_theme.BUTTON_THEME_LIGHT}
-          size={button_size.middle}
+            <div className={styles.highFeeTip}>{feeErrorTip}</div>
+          </>
+        </div>
+        <div
+          className={cls(styles.btnGroup, {
+            [styles.multiBottomBtn]: showMultiView,
+          })}
         >
-          {i18n.t("cancel")}
-        </Button>
-        <Button
-          loading={btnLoading}
-          size={button_size.middle}
-          onClick={onConfirm}
-        >
-          {i18n.t("confirm")}
-        </Button>
-      </div>
-      <DAppAdvance
-        modalVisible={advanceStatus}
-        title={i18n.t("advanceMode")}
-        onClickClose={onClickClose}
-        feeValue={advanceFee}
-        feePlaceHolder={feeValue}
-        onFeeInput={onFeeInput}
-        nonceValue={advanceNonce}
-        onNonceInput={onNonceInput}
-        onConfirm={onConfirmAdvance}
-        feeErrorTip={feeErrorTip}
-      />
-    </section>
+          <Button
+            onClick={onCancel}
+            theme={button_theme.BUTTON_THEME_LIGHT}
+            size={button_size.middle}
+          >
+            {i18n.t("cancel")}
+          </Button>
+          <Button
+            loading={btnLoading}
+            size={button_size.middle}
+            onClick={onConfirm}
+          >
+            {i18n.t("confirm")}
+          </Button>
+        </div>
+        <DAppAdvance
+          modalVisible={advanceStatus}
+          title={i18n.t("advanceMode")}
+          onClickClose={onClickClose}
+          feeValue={advanceFee}
+          feePlaceHolder={nextFee}
+          onFeeInput={onFeeInput}
+          nonceValue={advanceNonce}
+          onNonceInput={onNonceInput}
+          onConfirm={onConfirmAdvance}
+          feeErrorTip={feeErrorTip}
+        />
+      </section>
+    </TimerProvider>
   );
 };
 

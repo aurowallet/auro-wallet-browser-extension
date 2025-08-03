@@ -111,7 +111,6 @@ const TokenItem = ({ token, isInModal }) => {
     isFungibleToken,
     delegationText,
   } = useMemo(() => {
-
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
     let delegationText = token.tokenBaseInfo.isDelegation
@@ -122,7 +121,10 @@ const TokenItem = ({ token, isInModal }) => {
     let tokenSymbol;
     let tokenName;
     if (isFungibleToken) {
-      tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
+      tokenSymbol =
+        token?.tokenNetInfo?.tokenSymbol.length > 0
+          ? token?.tokenNetInfo?.tokenSymbol
+          : "UNKNOWN";
       tokenName = addressSlice(token.tokenId, 6);
     } else {
       tokenSymbol = MAIN_COIN_CONFIG.symbol;

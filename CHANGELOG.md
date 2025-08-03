@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
+### Enhancements
+- Update Zeko transaction fee
 
 ## [2.4.0]
 
@@ -11,7 +13,7 @@ All notable changes to this project will be documented in this file.
 - Add support for revoke permissions
 - Add permission `tabs` to fix [#50](https://github.com/aurowallet/auro-wallet-browser-extension/issues/50)
 - Update `extensionizer` to `webextension-polyfill`
-- Update zeko network icon
+- Update Zeko network icon
 - Update transaction request
 - Add test cases to utils
 - Update dependencies (bip32, bip39, buffer, react-scripts, etc.).

@@ -11,11 +11,14 @@
             color: rgba(0, 0, 0, 0.85);
             margin: 0;
         }
-        .feeAmount {
+        .feeAmountWrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
             font-size: 12px;
             line-height: 17px;
             color: rgba(0, 0, 0, 0.5);
-            margin: 0;
         }
     }
     .btnGroup {

@@ -18,6 +18,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import styled, { css } from "styled-components";
+import browser from "webextension-polyfill";
+import {
+  getAllTxHistory,
+  getPendingTxList,
+  getZkAppPendingTx,
+} from "../../../background/api";
+import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
+import useFetchAccountData from "../../../hooks/useUpdateAccount";
 import {
   EmptyTxListView,
   HistoryHeader,
@@ -26,13 +34,6 @@ import {
 } from "../Wallet/component/StatusView";
 import TokenIcon from "../Wallet/component/TokenIcon";
 import TxListView from "../Wallet/component/TxListView";
-import useFetchAccountData from "../../../hooks/useUpdateAccount";
-import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
-import browser from 'webextension-polyfill';
-import { getAllTxHistory,
-  getPendingTxList,
-  getZkAppPendingTx,
- } from "../../../background/api";
 
 const StyledTopWrapper = styled.div`
   background: #f9fafc;
@@ -118,7 +119,10 @@ const TokenDetail = () => {
     let tokenSymbol;
     let tokenName;
     if (isFungibleToken) {
-      tokenSymbol = nextTokenInfo?.tokenNetInfo?.tokenSymbol;
+      tokenSymbol =
+        nextTokenInfo?.tokenNetInfo?.tokenSymbol?.length > 0
+          ? nextTokenInfo?.tokenNetInfo?.tokenSymbol
+          : "UNKNOWN";
       tokenName = addressSlice(nextTokenInfo.tokenId, 6);
     } else {
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
@@ -203,9 +207,10 @@ const TokenDetail = () => {
       let fullTxRequest = getAllTxHistory(address, token.tokenId).catch(
         (err) => err
       );
-      let getZkAppPendingRequest = getZkAppPendingTx(address, token.tokenId).catch(
-        (err) => err
-      );
+      let getZkAppPendingRequest = getZkAppPendingTx(
+        address,
+        token.tokenId
+      ).catch((err) => err);
       let txResponse;
       if (isFungibleToken) {
         txResponse = await Promise.all([fullTxRequest, getZkAppPendingRequest]);
@@ -279,7 +284,7 @@ const TokenDetail = () => {
       fetchAccountData();
     }
   }, [shouldRefresh, fetchAccountData]);
- 
+
   useEffect(() => {
     let onMessageListening = (message, sender, sendResponse) => {
       const { type, action, hash } = message;

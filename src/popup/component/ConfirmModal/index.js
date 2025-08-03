@@ -1,31 +1,32 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { Trans } from "react-i18next";
+import styled from "styled-components";
 import Button, { button_theme } from "../Button";
+import CountdownTimer from "../CountdownTimer";
 import LedgerStatusView from "../StatusView/LedgerStatusView";
 import NetworkStatusView from "../StatusView/NetworkStatusView";
 import styles from "./index.module.scss";
-import styled from "styled-components";
 
 const StyledWrapper = styled.div`
-display: flex;
-align-items: center;
-`
+  display: flex;
+  align-items: center;
+  margin: 4px 0px 0px;
+`;
+
 export const ConfirmModal = ({
   modalVisible = false,
   title = "",
   highlightTitle = "",
   highlightContent = "",
   subHighlightContent = "",
-
   contentList = [],
-
   onConfirm = () => {},
   loadingStatus = false,
   onClickClose = () => {},
   waitingLedger = false,
   showCloseIcon = false,
-  rightBtnCom = <></>
+  rightBtnCom = <></>,
 }) => {
   return (
     <>
@@ -35,7 +36,6 @@ export const ConfirmModal = ({
             <div className={styles.contentContainer}>
               <div className={styles.titleRow}>
                 <span className={styles.rowTitle}>{title}</span>
-
                 {!waitingLedger && (
                   <div className={styles.rightRow}>
                     <LedgerStatusView />
@@ -81,7 +81,7 @@ export const ConfirmModal = ({
             )}
 
             {!waitingLedger && (
-              <div className={cls(styles.bottomContent, {})}>
+              <div className={cls(styles.bottomContent)}>
                 <div className={styles.highlightContainer}>
                   <span className={styles.highlightTitle}>
                     {highlightTitle}
@@ -95,14 +95,15 @@ export const ConfirmModal = ({
                     </p>
                   </div>
                 </div>
-                {contentList.map((content, index) => {
-                  return (
-                    <div key={index} className={styles.contentItemContainer}>
-                      <p className={styles.contentTitle}>{content.label}</p>
+                {contentList.map((content, index) => (
+                  <div key={index} className={styles.contentItemContainer}>
+                    <p className={styles.contentTitle}>{content.label}</p>
+                    <StyledWrapper>
                       <p className={styles.contentValue}>{content.value}</p>
-                    </div>
-                  );
-                })}
+                      {content.showTimer && <CountdownTimer />}
+                    </StyledWrapper>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -116,8 +117,8 @@ export const ConfirmModal = ({
                 </Button>
                 <Button loading={loadingStatus} onClick={onConfirm}>
                   <StyledWrapper>
-                  {i18n.t("confirm")}
-                  {rightBtnCom}
+                    {i18n.t("confirm")}
+                    {rightBtnCom}
                   </StyledWrapper>
                 </Button>
               </div>
@@ -128,3 +129,5 @@ export const ConfirmModal = ({
     </>
   );
 };
+
+export default ConfirmModal;
