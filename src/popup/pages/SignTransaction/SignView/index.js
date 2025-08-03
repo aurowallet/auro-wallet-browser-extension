@@ -235,12 +235,13 @@ const SignView = ({
     zkOnlySign,
     defaultRecommandFee,
     zkAppNonce,
+    zkAppUpdateCount
   } = useMemo(() => {
     const isSendZk = sendAction === DAppActions.mina_sendTransaction;
     let zkShowData = "",
       zkSourceData = "",
       zkFormatData = [],
-      count = 0;
+      count = 1;
 
     if (isSendZk) {
       zkShowData = signParams.params?.transaction;
@@ -274,6 +275,7 @@ const SignView = ({
       zkOnlySign,
       defaultRecommandFee,
       zkAppNonce,
+      zkAppUpdateCount: count,
     };
   }, [sendAction, signParams, currentAccount, netFeeList]);
 
@@ -318,17 +320,17 @@ const SignView = ({
 
   useEffect(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee();
+      const fee = await getZekoNetFee(zkAppUpdateCount);
       setZekoPerFee(parsedZekoFee(fee));
     }
-  }, [isZeko]);
+  }, [isZeko,zkAppUpdateCount]);
 
   const onFeeTimerComplete = useCallback(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee();
+      const fee = await getZekoNetFee(zkAppUpdateCount);
       setZekoPerFee(parsedZekoFee(fee));
     }
-  }, [isZeko]);
+  }, [isZeko,zkAppUpdateCount]);
 
   const feeIntervalTime = useMemo(() => {
     if (!isZeko) {
@@ -1318,7 +1320,7 @@ const SignView = ({
                       {nextFee + " " + MAIN_COIN_CONFIG.symbol}
                     </p>
                     {feeType !== ZkAppValueType.custom && (
-                      <span
+                      <div
                         className={cls(
                           feeType === ZkAppValueType.site
                             ? styles.feeTypeSite
@@ -1328,7 +1330,7 @@ const SignView = ({
                         {feeType === ZkAppValueType.site
                           ? i18n.t("siteSuggested")
                           : i18n.t("fee_default")}
-                      </span>
+                      </div>
                     )}
                     <StyledFeeWrapper>
                       <CountdownTimer />

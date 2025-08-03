@@ -38,6 +38,7 @@ import {
 } from "../../../../utils/utils";
 import CountdownTimer from "../../../component/CountdownTimer";
 import styles from "./index.module.scss";
+import { getAccountUpdateCount } from "../../../../utils/zkUtils";
 
 const TX_CLICK_TYPE = {
   CONFIRM: "TX_CLICK_TYPE_CONFIRM",
@@ -89,10 +90,12 @@ const SignView = ({
     availableBalance,
     sourceFee,
     isZeko,
+    zkAppUpdateCount,
   } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     let id = signParams?.id || "";
     let currentAdvanceData = advanceData[id] || {};
+    let zkAppUpdateCount = 1;
 
     const buildData = signParams?.params?.buildData ?? {};
     const showSymbol = buildData.symbol ?? "UNKNOWN";
@@ -112,6 +115,12 @@ const SignView = ({
     let currentToken = tokenList.find(
       (tokenItem) => tokenItem.tokenId === buildData.tokenId
     );
+    if (signParams?.params?.result) {
+      zkAppUpdateCount = getAccountUpdateCount(
+        JSON.stringify(signParams?.params?.result)
+      );
+    }
+
     let availableBalance = currentToken?.tokenBaseInfo?.showBalance || 0;
     let isZeko = isZekoNet(buildData?.networkID);
     return {
@@ -127,6 +136,7 @@ const SignView = ({
       availableBalance,
       sourceFee,
       isZeko,
+      zkAppUpdateCount,
     };
   }, [signParams, advanceData, tokenList]);
 
@@ -141,10 +151,10 @@ const SignView = ({
 
   useEffect(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee();
+      const fee = await getZekoNetFee(zkAppUpdateCount);
       setZekoPerFee(parsedZekoFee(fee));
     }
-  }, [isZeko]);
+  }, [isZeko, zkAppUpdateCount]);
 
   const feeIntervalTime = useMemo(() => {
     if (!isZeko) {
@@ -171,10 +181,10 @@ const SignView = ({
 
   const onFeeTimerComplete = useCallback(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee();
+      const fee = await getZekoNetFee(zkAppUpdateCount);
       setZekoPerFee(parsedZekoFee(fee));
     }
-  }, [isZeko]);
+  }, [isZeko, zkAppUpdateCount]);
 
   const onCancel = useCallback(() => {
     sendMsg(
