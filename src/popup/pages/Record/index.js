@@ -210,7 +210,6 @@ const Record = ({}) => {
         action === TX_SUCCESS &&
         hash === txDetail.hash
       ) {
-        setTxStatus(STATUS.TX_STATUS_INCLUDED);
         dispatch(updateShouldRequest(true, true));
         sendResponse();
       }

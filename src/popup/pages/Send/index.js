@@ -196,7 +196,7 @@ const SendPage = ({}) => {
   }, [isZeko]);
 
   const onFeeTimerComplete = useCallback(
-    async (type) => {
+    async () => {
       if (isZeko) {
         const fee = await getZekoNetFee();
         setZekoPerFee(parsedZekoFee(fee));

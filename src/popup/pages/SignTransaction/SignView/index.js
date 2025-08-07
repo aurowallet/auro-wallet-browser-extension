@@ -235,13 +235,13 @@ const SignView = ({
     zkOnlySign,
     defaultRecommandFee,
     zkAppNonce,
-    zkAppUpdateCount
+    zkAppUpdateCount,
   } = useMemo(() => {
     const isSendZk = sendAction === DAppActions.mina_sendTransaction;
     let zkShowData = "",
       zkSourceData = "",
       zkFormatData = [],
-      count = 1;
+      count = 0;
 
     if (isSendZk) {
       zkShowData = signParams.params?.transaction;
@@ -320,17 +320,17 @@ const SignView = ({
 
   useEffect(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount);
+      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
       setZekoPerFee(parsedZekoFee(fee));
     }
-  }, [isZeko,zkAppUpdateCount]);
+  }, [isZeko, zkAppUpdateCount]);
 
   const onFeeTimerComplete = useCallback(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount);
+      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
       setZekoPerFee(parsedZekoFee(fee));
     }
-  }, [isZeko,zkAppUpdateCount]);
+  }, [isZeko, zkAppUpdateCount]);
 
   const feeIntervalTime = useMemo(() => {
     if (!isZeko) {

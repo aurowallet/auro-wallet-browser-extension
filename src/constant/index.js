@@ -108,4 +108,4 @@ export const TokenLaunch = "https://github.com/aurowallet/launch/tree/master/tok
 
 export const TRANSACTION_FEE = 0.1001;
 
-export const ZEKO_FEE_INTERVAL_TIME = 30;
+export const ZEKO_FEE_INTERVAL_TIME = 5;

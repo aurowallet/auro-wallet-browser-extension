@@ -68,6 +68,7 @@ const SignView = ({
     (state) => state.accountInfo.mainTokenNetInfo
   );
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
+  const netFeeList = useSelector((state) => state.cache.feeRecommend);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
   const [feeErrorTip, setFeeErrorTip] = useState("");
@@ -151,7 +152,7 @@ const SignView = ({
 
   useEffect(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount);
+      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
       setZekoPerFee(parsedZekoFee(fee));
     }
   }, [isZeko, zkAppUpdateCount]);
@@ -176,12 +177,21 @@ const SignView = ({
     if (isNumber(sourceFee) && advanceFee > 0) {
       return sourceFee;
     }
+    if (netFeeList.length >= 6) {
+      const zkAccountFee = new BigNumber(netFeeList[5].value).multipliedBy(
+        zkAppUpdateCount
+      );
+      let defaultRecommandFee = new BigNumber(netFeeList[1].value)
+        .plus(zkAccountFee)
+        .toNumber();
+      return defaultRecommandFee;
+    }
     return TRANSACTION_FEE;
-  }, [advanceFee, zekoPerFee, isZeko, sourceFee]);
+  }, [advanceFee, zekoPerFee, isZeko, sourceFee, zkAppUpdateCount, netFeeList]);
 
   const onFeeTimerComplete = useCallback(async () => {
     if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount);
+      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
       setZekoPerFee(parsedZekoFee(fee));
     }
   }, [isZeko, zkAppUpdateCount]);

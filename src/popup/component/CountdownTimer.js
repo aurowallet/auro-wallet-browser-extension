@@ -48,19 +48,20 @@ const StyledIntervalWrapper = styled.div`
 const CountdownTimer = () => {
   const { countdown, isRefreshing, intervalTime } = useTimer();
 
-  return intervalTime > 0 ? (
-    <StyledIntervalWrapper>
-      {isRefreshing ? (
-        <StyledRefreshWrapper>
-          <StyledRefreshIcon src="/img/loading_purple.svg" />
-        </StyledRefreshWrapper>
-      ) : (
-        ` (${countdown})`
-      )}
-    </StyledIntervalWrapper>
-  ) : (
-    <></>
-  );
+  return <></>;
+  // return intervalTime > 0 ? (
+  //   <StyledIntervalWrapper>
+  //     {isRefreshing ? (
+  //       <StyledRefreshWrapper>
+  //         <StyledRefreshIcon src="/img/loading_purple.svg" />
+  //       </StyledRefreshWrapper>
+  //     ) : (
+  //       ` (${countdown})`
+  //     )}
+  //   </StyledIntervalWrapper>
+  // ) : (
+  //   <></>
+  // );
 };
 
 export default CountdownTimer;
