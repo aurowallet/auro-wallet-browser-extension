@@ -75,8 +75,8 @@ $validUntil: UInt32, $scalar: String, $field: String) {
 }
 /**
  * get delegation mutation body, for ledger and common account
- * @param {*} isRawSignature 
- * @returns 
+ * @param {*} isRawSignature
+ * @returns
  */
 export function getStakeTxSend(isRawSignature) {
   if (isRawSignature) {
@@ -171,7 +171,7 @@ export function getTxSend(isRawSignature) {
 }
 /**
  * get pending transaction, payment, delegation
- * @returns 
+ * @returns
  */
 export function getPendingTxBody() {
   return `
@@ -205,8 +205,8 @@ function balanceBodyBase(index) {
 }
 /**
  * get account balance for batch request
- * @param {*} addressArrayLength 
- * @returns 
+ * @param {*} addressArrayLength
+ * @returns
  */
 export function getBalanceBatchBody(addressArrayLength) {
   const variablesDeclare = new Array(addressArrayLength)
@@ -225,7 +225,7 @@ export function getBalanceBatchBody(addressArrayLength) {
 
 /**
  * get daemon epoch and slot info
- * @returns 
+ * @returns
  */
 export function getDaemonStatusBody() {
   return `
@@ -244,7 +244,7 @@ export function getDaemonStatusBody() {
 }
 /**
  * get current block info
- * @returns 
+ * @returns
  */
 export function getBlockInfoBody() {
   return `
@@ -262,7 +262,7 @@ export function getBlockInfoBody() {
 }
 /**
  * get delegation state by publicKey
- * @returns 
+ * @returns
  */
 export function getDelegationInfoBody() {
   return `
@@ -276,7 +276,7 @@ export function getDelegationInfoBody() {
 
 /**
  * get zkApp mutation body
- * @returns 
+ * @returns
  */
 export function getPartyBody() {
   return `
@@ -297,9 +297,9 @@ export function getPartyBody() {
 }
 
 /**
- * get transtion history 
+ * get transtion history
  * archive node
- * @returns 
+ * @returns
  */
 export function getTxHistoryBody() {
   return `query txHistory($publicKey: String,$limit:Int) {
@@ -328,7 +328,7 @@ export function getTxHistoryBody() {
 
 /**
  * get zkApp transaction status
- * @returns 
+ * @returns
  */
 export function getQATxStatusBody() {
   return `
@@ -339,8 +339,8 @@ export function getQATxStatusBody() {
 }
 /**
  * get zkApp transaction
- * archive node 
- * @returns 
+ * archive node
+ * @returns
  */
 export function getZkAppTransactionListBody() {
   return `
@@ -384,7 +384,7 @@ export function getZkAppTransactionListBody() {
 }
 /**
  * get pending tx history by publicKey
- * @returns 
+ * @returns
  */
 export function getPendingZkAppTxBody() {
   return `
@@ -616,7 +616,7 @@ export function getNetworkIDBody() {
 }
 /**
  * get all token assets by publicKey
- * @returns 
+ * @returns
  */
 export function getTokenQueryBody() {
   return `
@@ -640,8 +640,8 @@ export function getTokenQueryBody() {
 
 /**
  * get token info by tokenIds
- * @param {*} tokenIds 
- * @returns 
+ * @param {*} tokenIds
+ * @returns
  */
 export function getTokenInfoBodyV2(tokenIds) {
   let queryFields = tokenIds
@@ -665,7 +665,7 @@ export function getTokenInfoBodyV2(tokenIds) {
 
 /**
  * get token state between token and account
- * @returns 
+ * @returns
  */
 export function getTokenStateBody() {
   return `
@@ -679,7 +679,7 @@ export function getTokenStateBody() {
   `;
 }
 export function getAllTransactionListBody() {
-  return`
+  return `
   query fetchTxListQuery($publicKey: String,$limit:Int,$tokenId: String) {
   fullTransactions(
     limit: $limit
@@ -737,5 +737,11 @@ export function getAllTransactionListBody() {
     }
   }
 }
-  `
+  `;
+}
+
+export function getZekoFeeBody() {
+  return `
+  query FeePerWeight($weight: Int!) { feePerWeightUnit(weight: $weight) }
+  `;
 }

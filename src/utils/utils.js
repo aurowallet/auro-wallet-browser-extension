@@ -4,7 +4,7 @@ import { utf8ToBytes } from "@noble/hashes/utils";
 import BigNumber from "bignumber.js";
 import bs58check from "bs58check";
 import validUrl from "valid-url";
-import { MAIN_COIN_CONFIG } from "../constant";
+import { MAIN_COIN_CONFIG, TRANSACTION_FEE } from "../constant";
 
 /**
  * address slice
@@ -501,4 +501,35 @@ export const validatePassword = (password) => {
     ...rule,
     bool: rule.expression.test(password),
   }));
+};
+/**
+ * @param {*} fee
+ * @returns
+ */
+export const parsedZekoFee = (fee, buffer = 0.1) => {
+  let feePerWeightUnit = fee;
+  if (feePerWeightUnit) {
+    feePerWeightUnit = amountDecimals(
+      feePerWeightUnit,
+      MAIN_COIN_CONFIG.decimals
+    );
+    if (buffer) {
+      feePerWeightUnit = new BigNumber(feePerWeightUnit)
+        .multipliedBy(buffer + 1)
+        .toString();
+    }
+    feePerWeightUnit = new BigNumber(feePerWeightUnit)
+      .decimalPlaces(4, BigNumber.ROUND_DOWN)
+      .toString();
+  } else {
+    feePerWeightUnit = TRANSACTION_FEE;
+  }
+  return feePerWeightUnit;
+};
+
+export const isZekoNet = (networkID) => {
+  if (!networkID || typeof networkID !== "string") {
+    return false;
+  }
+  return networkID.startsWith("zeko");
 };

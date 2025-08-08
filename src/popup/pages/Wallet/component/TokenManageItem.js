@@ -1,4 +1,6 @@
+import { saveLocal } from "@/background/localStorage";
 import { MAIN_COIN_CONFIG } from "@/constant";
+import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import IconAdd from "@/popup/component/SVG/icon_add";
 import { updateLocalTokenConfig } from "@/reducers/accountReducer";
 import { addressSlice, getBalanceForUI } from "@/utils/utils";
@@ -7,8 +9,6 @@ import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import TokenIcon from "./TokenIcon";
-import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
-import { saveLocal } from "@/background/localStorage";
 
 const StyledTokenItemWrapper = styled.div`
   display: flex;
@@ -85,11 +85,14 @@ const TokenManageItem = ({ token }) => {
   } = useMemo(() => {
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
 
-    let tokenIconUrl  = token.tokenBaseInfo.iconUrl;
+    let tokenIconUrl = token.tokenBaseInfo.iconUrl;
     let tokenSymbol;
     let tokenName;
     if (isFungibleToken) {
-      tokenSymbol = token?.tokenNetInfo?.tokenSymbol;
+      tokenSymbol =
+        token?.tokenNetInfo?.tokenSymbol?.length > 0
+          ? token?.tokenNetInfo?.tokenSymbol
+          : "UNKNOWN";
       tokenName = addressSlice(token.tokenId, 6);
     } else {
       tokenSymbol = MAIN_COIN_CONFIG.symbol;
@@ -137,7 +140,7 @@ const TokenManageItem = ({ token }) => {
       STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG,
       JSON.stringify({ [currentAccount.address]: tempConfig })
     );
-    dispatch(updateLocalTokenConfig(tempConfig,token.tokenId));
+    dispatch(updateLocalTokenConfig(tempConfig, token.tokenId));
   }, [token, tokenList, currentAccount, localTokenConfig]);
 
   return (

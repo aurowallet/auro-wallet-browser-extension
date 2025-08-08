@@ -98,6 +98,7 @@
             font-size: 16px;
             color: #000000;
             margin: 0;
+            align-content: center;
         }
         .rowDescContent {
             font-size: 12px;
@@ -111,7 +112,7 @@
         }
         .feeCon {
             display: flex;
-            align-content: center;
+            align-items: center;
         }
         .feeTypeBase {
             background: rgba(0, 0, 0, 0.1);
@@ -126,11 +127,14 @@
             @extend .feeTypeBase;
             background: rgba(0, 0, 0, 0.1);
             color: rgba(0, 0, 0, 0.3);
+            height: fit-content;
+            text-align: center
         }
         .feeTypeSite {
             @extend .feeTypeBase;
             background: rgba(13, 178, 124, 0.1);
             color: #0db27c;
+            height: fit-content;
         }
         .feeContent {
             margin-right: 4px;

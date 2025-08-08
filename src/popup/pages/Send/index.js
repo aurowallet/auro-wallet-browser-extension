@@ -1,5 +1,5 @@
+import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
-import { verifyTokenCommand } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -7,9 +7,14 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
-import { buildTokenBody, getTokenState, sendTx } from "../../../background/api";
+import styled from "styled-components";
+import { getTokenState, getZekoNetFee, sendTx } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
-import { MAIN_COIN_CONFIG } from "../../../constant";
+import {
+  MAIN_COIN_CONFIG,
+  TRANSACTION_FEE,
+  ZEKO_FEE_INTERVAL_TIME,
+} from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import {
   QA_SIGN_TRANSACTION,
@@ -28,6 +33,8 @@ import {
   getRealErrorMsg,
   isNaturalNumber,
   isNumber,
+  isZekoNet,
+  parsedZekoFee,
   trimSpace,
 } from "../../../utils/utils";
 import AdvanceMode from "../../component/AdvanceMode";
@@ -41,10 +48,7 @@ import ICON_Address from "../../component/SVG/ICON_Address";
 import ICON_Wallet from "../../component/SVG/ICON_Wallet";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
-import { decryptData, encryptData } from "@/utils/fore";
-import { node_public_keys, react_private_keys } from "../../../../config";
-import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
-import styled from "styled-components";
+import { TimerProvider } from "../../../hooks/TimerContext";
 
 const StyledWrapper = styled.div`
   display: flex;
@@ -68,6 +72,10 @@ const SendPage = ({}) => {
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
   const token = useSelector((state) => state.cache.nextTokenDetail);
+
+  const isZeko = useMemo(() => {
+    return isZekoNet(currentNode.networkID);
+  }, [currentNode]);
 
   const { fetchAccountData } = useFetchAccountData(currentAccount);
 
@@ -102,7 +110,10 @@ const SendPage = ({}) => {
       availableBalance = mainTokenInfo.tokenBaseInfo.showBalance;
       availableDecimals = mainTokenInfo.tokenBaseInfo.decimals;
     } else {
-      tokenSymbol = token.tokenNetInfo.tokenSymbol ?? "UNKNOWN";
+      tokenSymbol =
+        token.tokenNetInfo.tokenSymbol?.length > 0
+          ? token.tokenNetInfo.tokenSymbol
+          : "UNKNOWN";
       fungibleTokenInfo = tokenList.find(
         (tokenItem) => tokenItem.tokenId === token.tokenId
       );
@@ -129,7 +140,7 @@ const SendPage = ({}) => {
 
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
-  const [feeAmount, setFeeAmount] = useState(0.1);
+  const [feeAmount, setFeeAmount] = useState("");
   const [advanceInputFee, setAdvanceInputFee] = useState("");
   const [inputNonce, setInputNonce] = useState("");
   const [feeErrorTip, setFeeErrorTip] = useState("");
@@ -148,10 +159,57 @@ const SendPage = ({}) => {
   const [addressOptionList, setAddressOptionList] = useState([]);
   const [addressOptionStatus, setAddressOptionStatus] = useState(false);
 
+  const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
+
+  const nextFee = useMemo(() => {
+    if (isNumber(advanceInputFee) && advanceInputFee > 0) {
+      return advanceInputFee;
+    }
+    if (isZeko) {
+      return zekoPerFee;
+    }
+    if (isNumber(feeAmount) && feeAmount > 0) {
+      // button fee
+      return feeAmount;
+    }
+    if (netFeeList.length > 0) {
+      return netFeeList[1].value;
+    }
+    return TRANSACTION_FEE;
+  }, [advanceInputFee, isZeko, zekoPerFee, netFeeList, feeAmount]);
+
+  const feeIntervalTime = useMemo(() => {
+    if (!isZeko) {
+      return 0;
+    }
+    if (isNumber(advanceInputFee) && advanceInputFee > 0) {
+      return 0;
+    }
+    return ZEKO_FEE_INTERVAL_TIME;
+  }, [isZeko, advanceInputFee]);
+
+  useEffect(async () => {
+    if (isZeko) {
+      const fee = await getZekoNetFee();
+      setZekoPerFee(parsedZekoFee(fee));
+    }
+  }, [isZeko]);
+
+  const onFeeTimerComplete = useCallback(
+    async () => {
+      if (isZeko) {
+        const fee = await getZekoNetFee();
+        setZekoPerFee(parsedZekoFee(fee));
+      }
+    },
+    [isZeko]
+  );
+
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value);
     setToAddressName("");
   }, []);
+
   const onAmountInput = useCallback(
     (e) => {
       let value = e.target.value;
@@ -178,14 +236,6 @@ const SendPage = ({}) => {
     setFeeAmount(item.fee);
   }, []);
 
-  useEffect(() => {
-    if (feeAmount === 0.1) {
-      if (netFeeList.length > 0) {
-        setFeeAmount(netFeeList[1].value);
-      }
-    }
-  }, [feeAmount, netFeeList]);
-
   const fetchAccountInfo = useCallback(async () => {
     dispatch(updateShouldRequest(true, true));
   }, []);
@@ -200,7 +250,6 @@ const SendPage = ({}) => {
 
   const onFeeInput = useCallback(
     (e) => {
-      setFeeAmount(e.target.value);
       setAdvanceInputFee(e.target.value);
       if (BigNumber(e.target.value).gt(10)) {
         setFeeErrorTip(i18n.t("feeTooHigh"));
@@ -219,7 +268,7 @@ const SendPage = ({}) => {
   }, [amount, availableBalance]);
 
   const getRealTransferAmount = useCallback(() => {
-    let fee = trimSpace(feeAmount);
+    let fee = trimSpace(nextFee);
     let realAmount = 0;
     if (isAllTransfer() && isSendMainToken) {
       realAmount = new BigNumber(amount).minus(fee).toNumber();
@@ -227,7 +276,7 @@ const SendPage = ({}) => {
       realAmount = new BigNumber(amount).toNumber();
     }
     return realAmount;
-  }, [feeAmount, amount, isSendMainToken]);
+  }, [nextFee, amount, isSendMainToken]);
 
   const onSubmitTx = useCallback(
     (data, type) => {
@@ -276,16 +325,12 @@ const SendPage = ({}) => {
       const nextLedgerApp = preLedgerApp || ledgerApp;
       if (nextLedgerApp) {
         setWaitLedgerStatus(true);
-        const {
-          signature,
-          payload,
-          error,
-          rejected,
-        } = await requestSignPayment(
-          nextLedgerApp,
-          params,
-          currentAccount.hdPath
-        );
+        const { signature, payload, error, rejected } =
+          await requestSignPayment(
+            nextLedgerApp,
+            params,
+            currentAccount.hdPath
+          );
         if (rejected) {
           setConfirmModalStatus(false);
         }
@@ -302,41 +347,6 @@ const SendPage = ({}) => {
       }
     },
     [currentAccount, onSubmitTx, ledgerApp, fetchAccountData]
-  );
-
-  const buildBodyInServer = useCallback(
-    async (buildTokenData) => {
-      const data = encryptData(
-        JSON.stringify(buildTokenData),
-        node_public_keys
-      );
-      const buildData = await buildTokenBody(data);
-      if (buildData.unSignTx) {
-        let realUnSignTxStr = decryptData(
-          buildData.unSignTx.encryptedData,
-          buildData.unSignTx.encryptedAESKey,
-          buildData.unSignTx.iv,
-          react_private_keys
-        );
-        let realUnSignTx = JSON.stringify(realUnSignTxStr);
-        const checkChangeStatus = verifyTokenCommand(
-          buildTokenData,
-          token.tokenId,
-          realUnSignTx
-        );
-        if (!checkChangeStatus) {
-          setConfirmBtnStatus(false);
-          Toast.info(i18n.t("buildFailed"));
-          return;
-        }
-        return realUnSignTx;
-      } else {
-        setConfirmBtnStatus(false);
-        Toast.info(buildData.error || String(buildData));
-        return;
-      }
-    },
-    [token]
   );
   const buildBodyInLocal = useCallback((buildTokenData) => {
     sendMsg(
@@ -398,8 +408,6 @@ const SendPage = ({}) => {
       } else {
         history.goBack();
       }
-      // setConfirmBtnStatus(false);
-      // buildBodyInServer(buildTokenData)
     },
     [
       tokenPublicKey,
@@ -429,7 +437,7 @@ const SendPage = ({}) => {
       let amount = getRealTransferAmount();
       let nonce = trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce;
       let realMemo = memo || "";
-      let fee = trimSpace(feeAmount);
+      let fee = trimSpace(nextFee);
       let payload = {
         fromAddress,
         toAddress: toAddressValue,
@@ -475,7 +483,7 @@ const SendPage = ({}) => {
       toAddress,
       inputNonce,
       memo,
-      feeAmount,
+      nextFee,
       isSendMainToken,
       getTokenBody,
     ]
@@ -502,7 +510,7 @@ const SendPage = ({}) => {
         Toast.info(i18n.t("amountError"));
         return;
       }
-      let inputFee = trimSpace(feeAmount);
+      let inputFee = trimSpace(nextFee);
       if (inputFee.length > 0 && !isNumber(inputFee)) {
         Toast.info(i18n.t("inputFeeError"));
         return;
@@ -543,6 +551,7 @@ const SendPage = ({}) => {
         {
           label: i18n.t("fee"),
           value: inputFee + " " + MAIN_COIN_CONFIG.symbol,
+          showTimer: feeIntervalTime > 0,
         },
       ];
       if (isNaturalNumber(nonce)) {
@@ -569,7 +578,7 @@ const SendPage = ({}) => {
         let amount = getRealTransferAmount();
         let nonce = trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce;
         let realMemo = memo || "";
-        let fee = trimSpace(feeAmount);
+        let fee = trimSpace(nextFee);
         let payload = {
           fromAddress,
           toAddress: toAddressValue,
@@ -598,7 +607,7 @@ const SendPage = ({}) => {
       i18n,
       toAddress,
       amount,
-      feeAmount,
+      nextFee,
       inputNonce,
       currentAddress,
       memo,
@@ -609,7 +618,8 @@ const SendPage = ({}) => {
       ledgerStatus,
       availableBalance,
       mainTokenBalance,
-      mainTokenNetInfo
+      mainTokenNetInfo,
+      feeIntervalTime,
     ]
   );
 
@@ -672,132 +682,141 @@ const SendPage = ({}) => {
       title={i18n.t("send") + " " + tokenSymbol}
       contentClassName={styles.container}
     >
-      <div className={styles.contentContainer}>
-        <div className={styles.inputContainer}>
-          <Input
-            label={i18n.t("to")}
-            onChange={onToAddressInput}
-            value={toAddress}
-            inputType={"text"}
-            subLabel={toAddressName}
-            placeholder={i18n.t("address")}
-            rightStableComponent={
-              <div className={styles.addressCon}>
-                <div
-                  className={styles.iconAddressCon}
-                  onClick={onShowAddressList}
-                >
-                  <img src="/img/icon_address.svg" />
-                </div>
-                {addressOptionStatus && (
-                  <>
-                    <div
-                      className={styles.closeMode}
-                      onClick={onClickCloseMode}
-                    />
-                    <div className={styles.optionOuter}>
-                      <div className={styles.optionContainer}>
-                        {addressOptionList.length > 0 ? (
-                          addressOptionList.map((data, index) => {
-                            return (
-                              <AddressRowItem
-                                data={data}
-                                onClickRowAddress={onClickRowAddress}
-                                key={index}
-                              />
-                            );
-                          })
-                        ) : (
-                          <div className={styles.emptyCon}>
-                            {i18n.t("noAddressSaved")}
-                          </div>
-                        )}
+      <TimerProvider
+        intervalTime={feeIntervalTime}
+        onTimerComplete={onFeeTimerComplete}
+      >
+        <div className={styles.contentContainer}>
+          <div className={styles.inputContainer}>
+            <Input
+              label={i18n.t("to")}
+              onChange={onToAddressInput}
+              value={toAddress}
+              inputType={"text"}
+              subLabel={toAddressName}
+              placeholder={i18n.t("address")}
+              rightStableComponent={
+                <div className={styles.addressCon}>
+                  <div
+                    className={styles.iconAddressCon}
+                    onClick={onShowAddressList}
+                  >
+                    <img src="/img/icon_address.svg" />
+                  </div>
+                  {addressOptionStatus && (
+                    <>
+                      <div
+                        className={styles.closeMode}
+                        onClick={onClickCloseMode}
+                      />
+                      <div className={styles.optionOuter}>
+                        <div className={styles.optionContainer}>
+                          {addressOptionList.length > 0 ? (
+                            addressOptionList.map((data, index) => {
+                              return (
+                                <AddressRowItem
+                                  data={data}
+                                  onClickRowAddress={onClickRowAddress}
+                                  key={index}
+                                />
+                              );
+                            })
+                          ) : (
+                            <div className={styles.emptyCon}>
+                              {i18n.t("noAddressSaved")}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            }
-          />
-          <Input
-            label={i18n.t("amount")}
-            onChange={onAmountInput}
-            value={amount}
-            inputType={"numric"}
-            placeholder={0}
-            rightComponent={
-              <div className={styles.balance}>
-                {availableBalance + " " + tokenSymbol}
-              </div>
-            }
-            rightStableComponent={
-              <div onClick={onClickAll} className={styles.max}>
-                {i18n.t("max")}
-              </div>
-            }
-          />
-          <Input
-            label={i18n.t("memo")}
-            onChange={onMemoInput}
-            value={memo}
-            inputType={"text"}
-          />
+                    </>
+                  )}
+                </div>
+              }
+            />
+            <Input
+              label={i18n.t("amount")}
+              onChange={onAmountInput}
+              value={amount}
+              inputType={"numric"}
+              placeholder={0}
+              rightComponent={
+                <div className={styles.balance}>
+                  {availableBalance + " " + tokenSymbol}
+                </div>
+              }
+              rightStableComponent={
+                <div onClick={onClickAll} className={styles.max}>
+                  {i18n.t("max")}
+                </div>
+              }
+            />
+            <Input
+              label={i18n.t("memo")}
+              onChange={onMemoInput}
+              value={memo}
+              inputType={"text"}
+            />
+          </div>
+          <div className={styles.feeContainer}>
+            <FeeGroup
+              onClickFee={onClickFeeGroup}
+              currentFee={nextFee}
+              netFeeList={netFeeList}
+              showFeeGroup={!isZeko}
+              hideTimer={false}
+            />
+          </div>
+
+          <div className={styles.dividedLine}>
+            <p className={styles.dividedContent}>-</p>
+          </div>
+
+          <div>
+            <AdvanceMode
+              onClickAdvance={onClickAdvance}
+              isOpenAdvance={isOpenAdvance}
+              feeValue={advanceInputFee}
+              feePlaceholder={nextFee}
+              onFeeInput={onFeeInput}
+              feeErrorTip={feeErrorTip}
+              nonceValue={inputNonce}
+              onNonceInput={onNonceInput}
+            />
+          </div>
+          <div className={styles.hold} />
         </div>
-        <div className={styles.feeContainer}>
-          <FeeGroup
-            onClickFee={onClickFeeGroup}
-            currentFee={feeAmount}
-            netFeeList={netFeeList}
-          />
+        <div className={cls(styles.bottomContainer)}>
+          <Button disable={btnDisableStatus} onClick={onConfirm}>
+            <StyledWrapper>
+              {i18n.t("next")}
+              {!isSendMainToken && (
+                <StyledWrapper>
+                  <img src="/img/icon_popnewwindow.svg" />
+                </StyledWrapper>
+              )}
+            </StyledWrapper>
+          </Button>
         </div>
 
-        <div className={styles.dividedLine}>
-          <p className={styles.dividedContent}>-</p>
-        </div>
-
-        <div>
-          <AdvanceMode
-            onClickAdvance={onClickAdvance}
-            isOpenAdvance={isOpenAdvance}
-            feeValue={advanceInputFee}
-            feePlaceholder={feeAmount}
-            onFeeInput={onFeeInput}
-            feeErrorTip={feeErrorTip}
-            nonceValue={inputNonce}
-            onNonceInput={onNonceInput}
-          />
-        </div>
-        <div className={styles.hold} />
-      </div>
-      <div className={cls(styles.bottomContainer)}>
-        <Button disable={btnDisableStatus} onClick={onConfirm}>
-          <StyledWrapper>
-            {i18n.t("next")}
-            {!isSendMainToken && <StyledWrapper>
-              <img src="/img/icon_popnewwindow.svg" />
-            </StyledWrapper>}
-          </StyledWrapper>
-        </Button>
-      </div>
-
-      <ConfirmModal
-        modalVisible={confirmModalStatus}
-        title={i18n.t("transactionDetails")}
-        highlightTitle={i18n.t("amount")}
-        highlightContent={getRealTransferAmount()}
-        subHighlightContent={tokenSymbol}
-        onConfirm={clickNextStep}
-        loadingStatus={confirmBtnStatus}
-        onClickClose={onClickClose}
-        waitingLedger={waitLedgerStatus}
-        contentList={contentList}
-        showCloseIcon={waitLedgerStatus}
-      />
-      <LedgerInfoModal
-        modalVisible={ledgerModalStatus}
-        onClickClose={() => setLedgerModalStatus(false)}
-        onConfirm={onLedgerInfoModalConfirm}
-      />
+        <ConfirmModal
+          modalVisible={confirmModalStatus}
+          title={i18n.t("transactionDetails")}
+          highlightTitle={i18n.t("amount")}
+          highlightContent={getRealTransferAmount()}
+          subHighlightContent={tokenSymbol}
+          onConfirm={clickNextStep}
+          loadingStatus={confirmBtnStatus}
+          onClickClose={onClickClose}
+          waitingLedger={waitLedgerStatus}
+          contentList={contentList}
+          showCloseIcon={waitLedgerStatus}
+        />
+        <LedgerInfoModal
+          modalVisible={ledgerModalStatus}
+          onClickClose={() => setLedgerModalStatus(false)}
+          onConfirm={onLedgerInfoModalConfirm}
+        />
+      </TimerProvider>
     </CustomView>
   );
 };

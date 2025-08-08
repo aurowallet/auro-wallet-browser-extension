@@ -23,6 +23,7 @@ import NetworkStatusView from "@/popup/component/StatusView/NetworkStatusView";
 import Tabs from "@/popup/component/Tabs";
 import Toast from "@/popup/component/Toast";
 import { updateLedgerConnectStatus } from "@/reducers/ledger";
+import { copyText } from "@/utils/browserUtils";
 import { sendMsg, sendMsgV2 } from "@/utils/commonMsg";
 import {
   getLedgerStatus,
@@ -40,7 +41,6 @@ import {
   toNonExponential,
   trimSpace,
 } from "@/utils/utils";
-import { copyText } from "@/utils/browserUtils";
 import { getAccountUpdateCount, getZkFee, getZkInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
@@ -51,12 +51,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { serializeError } from "serialize-error";
 import styled from "styled-components";
+import browser from "webextension-polyfill";
+import { getZekoNetFee } from "../../../../background/api";
+import { TRANSACTION_FEE, ZEKO_FEE_INTERVAL_TIME } from "../../../../constant";
 import { CredentialMsg } from "../../../../constant/msgTypes";
+import { TimerProvider } from "../../../../hooks/TimerContext";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
-import { getBalanceForUI } from "../../../../utils/utils";
+import {
+  getBalanceForUI,
+  isZekoNet,
+  parsedZekoFee,
+} from "../../../../utils/utils";
+import CountdownTimer from "../../../component/CountdownTimer";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
-import browser from "webextension-polyfill";
 
 const ZkAppValueType = {
   site: "RECOMMEND_SITE",
@@ -116,6 +124,13 @@ const StyledJsonViewSmall = styled(StyledJsonView)`
   padding: 0px;
   width: 100%;
 `;
+const StyledFeeWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+`;
 
 const SignView = ({
   signParams,
@@ -133,14 +148,13 @@ const SignView = ({
     (state) => state.accountInfo.mainTokenNetInfo
   );
   const netFeeList = useSelector((state) => state.cache.feeRecommend);
+  const currentNode = useSelector((state) => state.network.currentNode);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
-  const [feeValue, setFeeValue] = useState("");
-  const [feeDefault, setFeeDefault] = useState("");
   const [customFeeStatus, setCustomFeeStatus] = useState(false);
-  const [feeType, setFeeType] = useState("");
+  const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
+
   const [nonceType, setNonceType] = useState("");
-  const [nonceValue, setNonceValue] = useState("");
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [feeErrorTip, setFeeErrorTip] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
@@ -159,6 +173,9 @@ const SignView = ({
   const [ledgerApp, setLedgerApp] = useState();
   const [selectedCredentials, setSelectedCredentials] = useState({});
 
+  const isZeko = useMemo(() => {
+    return isZekoNet(currentNode.networkID);
+  }, [currentNode]);
   const {
     sendAction,
     siteRecommendFee,
@@ -218,6 +235,7 @@ const SignView = ({
     zkOnlySign,
     defaultRecommandFee,
     zkAppNonce,
+    zkAppUpdateCount,
   } = useMemo(() => {
     const isSendZk = sendAction === DAppActions.mina_sendTransaction;
     let zkShowData = "",
@@ -238,7 +256,7 @@ const SignView = ({
       ? signParams?.params?.nonce
       : "";
 
-    let defaultRecommandFee = 0.1;
+    let defaultRecommandFee = TRANSACTION_FEE;
     if (netFeeList.length >= 2) {
       defaultRecommandFee = netFeeList[1].value;
     }
@@ -257,18 +275,72 @@ const SignView = ({
       zkOnlySign,
       defaultRecommandFee,
       zkAppNonce,
+      zkAppUpdateCount: count,
     };
   }, [sendAction, signParams, currentAccount, netFeeList]);
 
   useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
       setCustomFeeStatus(true);
-      setFeeValue(currentAdvanceData.fee);
+      setAdvanceFee(currentAdvanceData.fee);
     }
     if (isNaturalNumber(currentAdvanceData.nonce)) {
-      setNonceValue(currentAdvanceData.nonce);
+      setAdvanceNonce(currentAdvanceData.nonce);
     }
   }, [currentAdvanceData]);
+
+  const { nextFee, feeType } = useMemo(() => {
+    let nextFee = "";
+    let feeType = "";
+    if (isNumber(advanceFee) && advanceFee > 0) {
+      nextFee = advanceFee;
+      feeType = ZkAppValueType.custom;
+    } else {
+      if (
+        isNumber(siteRecommendFee) &&
+        siteRecommendFee > 0 &&
+        !customFeeStatus
+      ) {
+        nextFee = siteRecommendFee;
+        feeType = ZkAppValueType.site;
+      } else {
+        feeType = ZkAppValueType.default;
+        if (isZeko) {
+          nextFee = zekoPerFee;
+        } else {
+          nextFee = defaultRecommandFee;
+        }
+      }
+    }
+    return {
+      nextFee,
+      feeType,
+    };
+  }, [advanceFee, siteRecommendFee, isZeko, zekoPerFee, customFeeStatus]);
+
+  useEffect(async () => {
+    if (isZeko) {
+      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
+      setZekoPerFee(parsedZekoFee(fee));
+    }
+  }, [isZeko, zkAppUpdateCount]);
+
+  const onFeeTimerComplete = useCallback(async () => {
+    if (isZeko) {
+      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
+      setZekoPerFee(parsedZekoFee(fee));
+    }
+  }, [isZeko, zkAppUpdateCount]);
+
+  const feeIntervalTime = useMemo(() => {
+    if (!isZeko) {
+      return 0;
+    }
+    if (feeType !== ZkAppValueType.default) {
+      return 0;
+    }
+    return ZEKO_FEE_INTERVAL_TIME;
+  }, [isZeko, feeType]);
 
   useEffect(() => {
     setIsLedgerAccount(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER);
@@ -506,7 +578,7 @@ const SignView = ({
         return;
       }
       let { params } = signParams;
-      let validNonce = nonceValue || zkAppNonce || inferredNonce;
+      let validNonce = advanceNonce || zkAppNonce || inferredNonce;
       let nonce = trimSpace(validNonce);
 
       let toAddress = "";
@@ -514,7 +586,7 @@ const SignView = ({
       let memo = "";
       if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
         toAddress = trimSpace(params.to);
-        fee = trimSpace(feeValue);
+        fee = trimSpace(nextFee);
         memo = params?.feePayer?.memo || params?.memo || "";
       }
       let fromAddress = currentAccount.address;
@@ -569,8 +641,8 @@ const SignView = ({
     [
       currentAccount,
       signParams,
-      nonceValue,
-      feeValue,
+      advanceNonce,
+      nextFee,
       onSubmitSuccess,
       sendAction,
       inferredNonce,
@@ -827,13 +899,13 @@ const SignView = ({
         }
       }
       if (COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1) {
-        let validNonce = nonceValue || zkAppNonce || inferredNonce;
+        let validNonce = advanceNonce || zkAppNonce || inferredNonce;
         let nonce = trimSpace(validNonce) || "";
         if (nonce.length > 0 && !isNumber(nonce)) {
           Toast.info(i18n.t("waitNonce"));
           return;
         }
-        let fee = trimSpace(feeValue);
+        let fee = trimSpace(nextFee);
         if (fee.length > 0 && !isNumber(fee)) {
           Toast.info(i18n.t("inputFeeError"));
           return;
@@ -892,8 +964,8 @@ const SignView = ({
       currentAccount,
       signParams,
       mainTokenNetInfo,
-      nonceValue,
-      feeValue,
+      advanceNonce,
+      nextFee,
       clickNextStep,
       sendAction,
       inferredNonce,
@@ -913,6 +985,9 @@ const SignView = ({
 
   const onFeeInput = useCallback(
     (e) => {
+      if (!customFeeStatus) {
+        setCustomFeeStatus(true);
+      }
       setAdvanceFee(e.target.value);
       if (BigNumber(e.target.value).gt(10)) {
         setFeeErrorTip(i18n.t("feeTooHigh"));
@@ -920,20 +995,13 @@ const SignView = ({
         setFeeErrorTip("");
       }
     },
-    [i18n]
+    [i18n, customFeeStatus]
   );
   const onNonceInput = useCallback((e) => {
     setAdvanceNonce(e.target.value);
   }, []);
 
   const onConfirmAdvance = useCallback(() => {
-    if (advanceFee) {
-      setCustomFeeStatus(true);
-      setFeeValue(advanceFee);
-    }
-    if (advanceNonce) {
-      setNonceValue(advanceNonce);
-    }
     setAdvanceStatus(false);
     onUpdateAdvance({
       id: signParams.id,
@@ -941,14 +1009,6 @@ const SignView = ({
       nonce: advanceNonce,
     });
   }, [advanceFee, advanceNonce, onUpdateAdvance, signParams]);
-
-  useEffect(() => {
-    if (!feeDefault) {
-      if (defaultRecommandFee) {
-        setFeeDefault(defaultRecommandFee);
-      }
-    }
-  }, [feeDefault, defaultRecommandFee]);
 
   const getContractAddress = useCallback((tx) => {
     try {
@@ -1047,46 +1107,24 @@ const SignView = ({
   ]);
 
   useEffect(() => {
-    if (customFeeStatus) {
-      setFeeType(ZkAppValueType.custom);
-      return;
-    }
-    if (siteRecommendFee) {
-      setFeeType(ZkAppValueType.site);
-      setFeeValue(siteRecommendFee);
-      return;
-    }
-    if (feeDefault) {
-      setFeeType(ZkAppValueType.default);
-      setFeeValue(feeDefault);
-    }
-  }, [feeDefault, feeValue, customFeeStatus, siteRecommendFee]);
-
-  useEffect(() => {
-    if (nonceValue) {
+    if (advanceNonce) {
       setNonceType(ZkAppValueType.custom);
     } else if (zkAppNonce) {
       setNonceType(ZkAppValueType.site);
     }
-  }, [nonceValue, zkAppNonce]);
+  }, [advanceNonce, zkAppNonce]);
 
   const checkFeeHigh = useCallback(() => {
-    let checkFee = "";
-    if (customFeeStatus) {
-      checkFee = feeValue;
-    } else {
-      checkFee = siteRecommendFee;
-    }
-    if (BigNumber(checkFee).gt(10)) {
+    if (BigNumber(nextFee).gt(10)) {
       setFeeErrorTip(i18n.t("feeTooHigh"));
     } else {
       setFeeErrorTip("");
     }
-  }, [feeValue, i18n, signParams, customFeeStatus, siteRecommendFee]);
+  }, [nextFee, i18n]);
 
   useEffect(() => {
     checkFeeHigh();
-  }, [feeValue]);
+  }, [checkFeeHigh]);
 
   const onClickContent = useCallback(
     (clickAble) => {
@@ -1159,7 +1197,7 @@ const SignView = ({
   );
   const onResetNonce = useCallback(() => {
     setNonceType(ZkAppValueType.custom);
-    setNonceValue(inferredNonce);
+    setAdvanceNonce("");
   }, [inferredNonce]);
   const onSelectCredential = (credentialData) => {
     setSelectedCredentials({
@@ -1168,250 +1206,264 @@ const SignView = ({
   };
 
   return (
-    <section className={styles.sectionSign}>
-      <div className={styles.titleRow}>
-        <p className={styles.title}>{pageTitle}</p>
-        <div className={styles.titleRight}>
-          <LedgerStatusView />
-          <div style={{ marginRight: "6px" }} />
-          <NetworkStatusView />
+    <TimerProvider
+      intervalTime={feeIntervalTime}
+      onTimerComplete={onFeeTimerComplete}
+    >
+      <section className={styles.sectionSign}>
+        <div className={styles.titleRow}>
+          <p className={styles.title}>{pageTitle}</p>
+          <div className={styles.titleRight}>
+            <LedgerStatusView />
+            <div style={{ marginRight: "6px" }} />
+            <NetworkStatusView />
+          </div>
         </div>
-      </div>
-      <div
-        className={cls(styles.content, {
-          [styles.multiContentWrapper]: showMultiView,
-        })}
-      >
-        <div className={styles.websiteContainer}>
-          <DappWebsite
-            siteIcon={signParams?.site?.webIcon}
-            siteUrl={signParams?.site?.origin}
-          />
-        </div>
-        {sendAction === DAppActions.mina_storePrivateCredential ? (
-          <CredentialView
-            currentAccount={currentAccount}
-            showAccountAddress={showAccountAddress}
-            credentialData={credentialData}
-            mainTokenNetInfo={mainTokenNetInfo}
-            showMultiView={showMultiView}
-          />
-        ) : (
-          <></>
-        )}
-        {sendAction === DAppActions.mina_requestPresentation ? (
-          <PresentationView
-            currentAccount={currentAccount}
-            showAccountAddress={showAccountAddress}
-            presentationData={presentationData}
-            origin={signParams?.site?.origin}
-            onSelectCredential={onSelectCredential}
-            showMultiView={showMultiView}
-            mainTokenNetInfo={mainTokenNetInfo}
-          />
-        ) : (
-          <></>
-        )}
-        {SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1 ? (
-          <CommonRow
-            leftTitle={currentAccount.accountName}
-            leftContent={showAccountAddress}
-            leftCopyContent={currentAccount.address}
-            rightTitle={i18n.t("amount")}
-            rightContent={
-              getBalanceForUI(mainTokenNetInfo?.tokenBaseInfo?.showBalance) +
-              " " +
-              MAIN_COIN_CONFIG.symbol
-            }
-          />
-        ) : (
-          <></>
-        )}
-        {COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1 ? (
-          <>
+        <div
+          className={cls(styles.content, {
+            [styles.multiContentWrapper]: showMultiView,
+          })}
+        >
+          <div className={styles.websiteContainer}>
+            <DappWebsite
+              siteIcon={signParams?.site?.webIcon}
+              siteUrl={signParams?.site?.origin}
+            />
+          </div>
+          {sendAction === DAppActions.mina_storePrivateCredential ? (
+            <CredentialView
+              currentAccount={currentAccount}
+              showAccountAddress={showAccountAddress}
+              credentialData={credentialData}
+              mainTokenNetInfo={mainTokenNetInfo}
+              showMultiView={showMultiView}
+            />
+          ) : (
+            <></>
+          )}
+          {sendAction === DAppActions.mina_requestPresentation ? (
+            <PresentationView
+              currentAccount={currentAccount}
+              showAccountAddress={showAccountAddress}
+              presentationData={presentationData}
+              origin={signParams?.site?.origin}
+              onSelectCredential={onSelectCredential}
+              showMultiView={showMultiView}
+              mainTokenNetInfo={mainTokenNetInfo}
+            />
+          ) : (
+            <></>
+          )}
+          {SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1 ? (
             <CommonRow
               leftTitle={currentAccount.accountName}
               leftContent={showAccountAddress}
-              rightTitle={i18n.t("to")}
-              rightContent={showToAddress}
               leftCopyContent={currentAccount.address}
-              rightCopyContent={realToAddress}
-              showArrow={true}
-              toTypeName={transactionTypeName}
+              rightTitle={i18n.t("amount")}
+              rightContent={
+                getBalanceForUI(mainTokenNetInfo?.tokenBaseInfo?.showBalance) +
+                " " +
+                MAIN_COIN_CONFIG.symbol
+              }
             />
-            {sendAction === DAppActions.mina_sendPayment && (
-              <CommonRow leftTitle={i18n.t("amount")} leftContent={toAmount} />
-            )}
-            {zkAppNonce && (
+          ) : (
+            <></>
+          )}
+          {COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1 ? (
+            <>
+              <CommonRow
+                leftTitle={currentAccount.accountName}
+                leftContent={showAccountAddress}
+                rightTitle={i18n.t("to")}
+                rightContent={showToAddress}
+                leftCopyContent={currentAccount.address}
+                rightCopyContent={realToAddress}
+                showArrow={true}
+                toTypeName={transactionTypeName}
+              />
+              {sendAction === DAppActions.mina_sendPayment && (
+                <CommonRow
+                  leftTitle={i18n.t("amount")}
+                  leftContent={toAmount}
+                />
+              )}
+              {zkAppNonce && (
+                <div className={styles.accountRow}>
+                  <div className={styles.rowLeft}>
+                    <p className={styles.rowTitle}>{"Nonce"}</p>
+                    <div className={styles.feeCon}>
+                      <p className={cls(styles.rowContent, styles.feeContent)}>
+                        {advanceNonce || zkAppNonce}
+                      </p>
+                      {nonceType !== ZkAppValueType.custom && (
+                        <span
+                          className={cls(
+                            nonceType === ZkAppValueType.site
+                              ? styles.feeTypeSite
+                              : styles.feeTypeDefault
+                          )}
+                        >
+                          {nonceType === ZkAppValueType.site
+                            ? i18n.t("siteSuggested")
+                            : i18n.t("fee_default")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {nonceType === ZkAppValueType.site && (
+                    <div className={styles.modeWrapper}>
+                      <p
+                        className={styles.rowPurpleContent}
+                        onClick={onResetNonce}
+                      >
+                        {i18n.t("reset")}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className={styles.accountRow}>
                 <div className={styles.rowLeft}>
-                  <p className={styles.rowTitle}>{"Nonce"}</p>
+                  <p className={styles.rowTitle}>{i18n.t("transactionFee")}</p>
                   <div className={styles.feeCon}>
                     <p className={cls(styles.rowContent, styles.feeContent)}>
-                      {nonceValue || zkAppNonce}
+                      {nextFee + " " + MAIN_COIN_CONFIG.symbol}
                     </p>
-                    {nonceType !== ZkAppValueType.custom && (
-                      <span
+                    {feeType !== ZkAppValueType.custom && (
+                      <div
                         className={cls(
-                          nonceType === ZkAppValueType.site
+                          feeType === ZkAppValueType.site
                             ? styles.feeTypeSite
                             : styles.feeTypeDefault
                         )}
                       >
-                        {nonceType === ZkAppValueType.site
+                        {feeType === ZkAppValueType.site
                           ? i18n.t("siteSuggested")
                           : i18n.t("fee_default")}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {nonceType === ZkAppValueType.site && (
-                  <div className={styles.modeWrapper}>
-                    <p
-                      className={styles.rowPurpleContent}
-                      onClick={onResetNonce}
-                    >
-                      {i18n.t("reset")}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className={styles.accountRow}>
-              <div className={styles.rowLeft}>
-                <p className={styles.rowTitle}>{i18n.t("transactionFee")}</p>
-                <div className={styles.feeCon}>
-                  <p className={cls(styles.rowContent, styles.feeContent)}>
-                    {feeValue + " " + MAIN_COIN_CONFIG.symbol}
-                  </p>
-                  {feeType !== ZkAppValueType.custom && (
-                    <span
-                      className={cls(
-                        feeType === ZkAppValueType.site
-                          ? styles.feeTypeSite
-                          : styles.feeTypeDefault
-                      )}
-                    >
-                      {feeType === ZkAppValueType.site
-                        ? i18n.t("siteSuggested")
-                        : i18n.t("fee_default")}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className={styles.modeWrapper}>
-                <p className={styles.rowPurpleContent} onClick={onClickAdvance}>
-                  {i18n.t("advanceMode")}
-                </p>
-              </div>
-            </div>
-            <div className={styles.highFeeTip}>{feeErrorTip}</div>
-          </>
-        ) : (
-          <></>
-        )}
-        {tabList.length > 0 && (
-          <div className={styles.accountRowTab}>
-            <Tabs
-              selected={selectedTabIndex}
-              initId={tabInitId}
-              onSelect={onSelectedTab}
-              customTabPanelCss={styles.customTabPanelCss}
-              customBtnCss={styles.customBtnCss}
-              btnRightComponent={
-                showRawData && (
-                  <div className={styles.rowData} onClick={onClickRawData}>
-                    {showRawTitle}
-                  </div>
-                )
-              }
-            >
-              {tabList.map((tab, index) => {
-                const clickAble = tab.contentClick;
-                return (
-                  <div key={tab.id} id={tab.id} label={tab.label}>
-                    {
-                      <div
-                        onClick={() => onClickContent(clickAble)}
-                        ref={(element) =>
-                          (tabContentRef.current[index] = element)
-                        }
-                        className={cls(styles.tabContent, {
-                          [styles.clickCss]: clickAble,
-                        })}
-                      >
-                        {showScrollBtn && (
-                          <div
-                            className={styles.scrollBtn}
-                            onClick={onClickScrollBtn}
-                          >
-                            <img src="/img/icon_roll.svg" />
-                          </div>
-                        )}
-                        {tab.isJsonData || tab.isZkData ? (
-                          <TypeRowInfo
-                            data={tab.content}
-                            isZkData={tab.isZkData}
-                          />
-                        ) : (
-                          tab.content
-                        )}
                       </div>
-                    }
+                    )}
+                    <StyledFeeWrapper>
+                      <CountdownTimer />
+                    </StyledFeeWrapper>
                   </div>
-                );
-              })}
-            </Tabs>
-          </div>
-        )}
-      </div>
-      <div
-        className={cls(styles.btnGroup, {
-          [styles.multiBottomBtn]: showMultiView,
-        })}
-      >
-        <Button
-          onClick={onCancel}
-          theme={button_theme.BUTTON_THEME_LIGHT}
-          size={button_size.middle}
+                </div>
+                <div className={styles.modeWrapper}>
+                  <p
+                    className={styles.rowPurpleContent}
+                    onClick={onClickAdvance}
+                  >
+                    {i18n.t("advanceMode")}
+                  </p>
+                </div>
+              </div>
+              <div className={styles.highFeeTip}>{feeErrorTip}</div>
+            </>
+          ) : (
+            <></>
+          )}
+          {tabList.length > 0 && (
+            <div className={styles.accountRowTab}>
+              <Tabs
+                selected={selectedTabIndex}
+                initId={tabInitId}
+                onSelect={onSelectedTab}
+                customTabPanelCss={styles.customTabPanelCss}
+                customBtnCss={styles.customBtnCss}
+                btnRightComponent={
+                  showRawData && (
+                    <div className={styles.rowData} onClick={onClickRawData}>
+                      {showRawTitle}
+                    </div>
+                  )
+                }
+              >
+                {tabList.map((tab, index) => {
+                  const clickAble = tab.contentClick;
+                  return (
+                    <div key={tab.id} id={tab.id} label={tab.label}>
+                      {
+                        <div
+                          onClick={() => onClickContent(clickAble)}
+                          ref={(element) =>
+                            (tabContentRef.current[index] = element)
+                          }
+                          className={cls(styles.tabContent, {
+                            [styles.clickCss]: clickAble,
+                          })}
+                        >
+                          {showScrollBtn && (
+                            <div
+                              className={styles.scrollBtn}
+                              onClick={onClickScrollBtn}
+                            >
+                              <img src="/img/icon_roll.svg" />
+                            </div>
+                          )}
+                          {tab.isJsonData || tab.isZkData ? (
+                            <TypeRowInfo
+                              data={tab.content}
+                              isZkData={tab.isZkData}
+                            />
+                          ) : (
+                            tab.content
+                          )}
+                        </div>
+                      }
+                    </div>
+                  );
+                })}
+              </Tabs>
+            </div>
+          )}
+        </div>
+        <div
+          className={cls(styles.btnGroup, {
+            [styles.multiBottomBtn]: showMultiView,
+          })}
         >
-          {i18n.t("cancel")}
-        </Button>
-        <Button
-          loading={btnLoading}
-          size={button_size.middle}
-          onClick={onConfirm}
-        >
-          {i18n.t(nextBtnTxt)}
-        </Button>
-      </div>
-      <DAppAdvance
-        modalVisible={advanceStatus}
-        title={i18n.t("advanceMode")}
-        onClickClose={onClickClose}
-        feeValue={advanceFee}
-        feePlaceHolder={feeValue}
-        onFeeInput={onFeeInput}
-        nonceValue={advanceNonce}
-        onNonceInput={onNonceInput}
-        onConfirm={onConfirmAdvance}
-        feeErrorTip={feeErrorTip}
-        zkAppNonce={nonceValue || zkAppNonce}
-      />
-      <ConfirmModal
-        modalVisible={confirmModalStatus}
-        title={i18n.t("transactionDetails")}
-        waitingLedger={isLedgerAccount}
-        showCloseIcon={isLedgerAccount}
-        onClickClose={() => setConfirmModalStatus(false)}
-      />
+          <Button
+            onClick={onCancel}
+            theme={button_theme.BUTTON_THEME_LIGHT}
+            size={button_size.middle}
+          >
+            {i18n.t("cancel")}
+          </Button>
+          <Button
+            loading={btnLoading}
+            size={button_size.middle}
+            onClick={onConfirm}
+          >
+            {i18n.t(nextBtnTxt)}
+          </Button>
+        </div>
+        <DAppAdvance
+          modalVisible={advanceStatus}
+          title={i18n.t("advanceMode")}
+          onClickClose={onClickClose}
+          feeValue={advanceFee}
+          feePlaceHolder={nextFee}
+          onFeeInput={onFeeInput}
+          nonceValue={advanceNonce}
+          onNonceInput={onNonceInput}
+          onConfirm={onConfirmAdvance}
+          feeErrorTip={feeErrorTip}
+          zkAppNonce={advanceNonce || zkAppNonce}
+        />
+        <ConfirmModal
+          modalVisible={confirmModalStatus}
+          title={i18n.t("transactionDetails")}
+          waitingLedger={isLedgerAccount}
+          showCloseIcon={isLedgerAccount}
+          onClickClose={() => setConfirmModalStatus(false)}
+        />
 
-      <LedgerInfoModal
-        modalVisible={ledgerModalStatus}
-        onClickClose={() => setLedgerModalStatus(false)}
-        onConfirm={onLedgerInfoModalConfirm}
-      />
-    </section>
+        <LedgerInfoModal
+          modalVisible={ledgerModalStatus}
+          onClickClose={() => setLedgerModalStatus(false)}
+          onConfirm={onLedgerInfoModalConfirm}
+        />
+      </section>
+    </TimerProvider>
   );
 };
 

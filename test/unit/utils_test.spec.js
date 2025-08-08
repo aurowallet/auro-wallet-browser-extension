@@ -20,9 +20,11 @@ import {
   isNaturalNumber,
   isNumber,
   isTrueNumber,
+  isZekoNet,
   mergeLocalConfigToNetToken,
   nameLengthCheck,
   numberFormat,
+  parsedZekoFee,
   parseStakingList,
   removeUrlFromArrays,
   showNameSlice,
@@ -31,6 +33,8 @@ import {
   urlValid,
   validatePassword,
 } from "../../src/utils/utils";
+
+const TRANSACTION_FEE = 0.1001;
 
 describe("Utils Test", function () {
   describe("addressSlice", () => {
@@ -101,7 +105,7 @@ describe("Utils Test", function () {
     });
   });
 
-  describe("urlValid", () => {
+  describe("isNumber", () => {
     it("should return without isNumber true", () => {
       assert.strictEqual(isNumber("1938.204987"), true);
     });
@@ -223,11 +227,6 @@ describe("Utils Test", function () {
     });
   });
 
-  //   describe("getArrayDiff", () => {
-  //   it("should return without getArrayDiff true", () => {
-  //     assert.strictEqual(getArrayDiff("mina:mainnet"), "mina_mainnet");
-  //   });
-  // });
   describe("decodeMemo", () => {
     it("should return without decodeMemo true", () => {
       assert.strictEqual(
@@ -386,6 +385,7 @@ describe("Utils Test", function () {
       );
     });
   });
+
   describe("getReadableNetworkId", () => {
     it("should return without getReadableNetworkId true", () => {
       assert.strictEqual(getReadableNetworkId("mina:mainnet"), "mina_mainnet");
@@ -635,6 +635,69 @@ describe("Utils Test", function () {
         expression: /[0-9]+/,
         bool: true,
       });
+    });
+  });
+
+  describe("parsedZekoFee", () => {
+    it("should correctly parse fee with buffer and 4 decimal places", () => {
+      const fee = "11051709180756478";
+      const result = parsedZekoFee(fee, 0.1);
+      assert.strictEqual(result, "12156880.0988");
+    });
+
+    it("should handle fee as number input", () => {
+      const fee = 11051709180756478;
+      const result = parsedZekoFee(fee, 0.1);
+      assert.strictEqual(result, "12156880.0988");
+    });
+
+    it("should return default TRANSACTION_FEE when fee is undefined", () => {
+      const result = parsedZekoFee(undefined);
+      assert.strictEqual(result, TRANSACTION_FEE);
+    });
+
+    it("should handle zero buffer correctly", () => {
+      const fee = "1000000000";
+      const result = parsedZekoFee(fee, 0);
+      assert.strictEqual(result, "1");
+    });
+
+    it("should handle string fee with decimals", () => {
+      const fee = "123456789.123456789";
+      const result = parsedZekoFee(fee, 0.1);
+      assert.strictEqual(result, "0.1358");
+    });
+
+    it("should handle small fee values", () => {
+      const fee = "1000";
+      const result = parsedZekoFee(fee, 0.1);
+      assert.strictEqual(result, "0");
+    });
+  });
+
+  describe("isZekoNet", () => {
+    it("should return true for networkID starting with 'zeko'", () => {
+      assert.strictEqual(isZekoNet("zeko:mainnet"), true);
+    });
+
+    it("should return true for networkID starting with 'zeko' with different case", () => {
+      assert.strictEqual(isZekoNet("Zeko:testnet"), false);
+    });
+
+    it("should return false for networkID not starting with 'zeko'", () => {
+      assert.strictEqual(isZekoNet("mina:mainnet"), false);
+    });
+
+    it("should return false for undefined networkID", () => {
+      assert.strictEqual(isZekoNet(undefined), false);
+    });
+
+    it("should return false for empty string", () => {
+      assert.strictEqual(isZekoNet(""), false);
+    });
+
+    it("should return false for non-string input", () => {
+      assert.strictEqual(isZekoNet(123), false);
     });
   });
 });

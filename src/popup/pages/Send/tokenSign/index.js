@@ -1,7 +1,4 @@
-import {
-  DAPP_ACTION_CANCEL_ALL,
-  WALLET_GET_CURRENT_ACCOUNT,
-} from "@/constant/msgTypes";
+import { DAPP_ACTION_CANCEL_ALL } from "@/constant/msgTypes";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Loading from "@/popup/component/Loading";
@@ -50,9 +47,8 @@ const TokenSignPage = () => {
 
   const popupLockStatus = useSelector((state) => state.cache.popupLockStatus);
 
-  const [nextUseInferredNonce, setNextUseInferredNonce] = useState(
-    inferredNonce
-  );
+  const [nextUseInferredNonce, setNextUseInferredNonce] =
+    useState(inferredNonce);
 
   const tokenSignRefresh = useSelector(
     (state) => state.popupReducer.tokenSignRefresh

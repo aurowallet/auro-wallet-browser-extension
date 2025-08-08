@@ -104,3 +104,8 @@ export const Default_Follow_Link = [
 
 export const ValidatorsLaunch = 'https://github.com/aurowallet/launch/tree/master/validators'
 export const TokenLaunch = "https://github.com/aurowallet/launch/tree/master/token"
+
+
+export const TRANSACTION_FEE = 0.1001;
+
+export const ZEKO_FEE_INTERVAL_TIME = 5;

@@ -1,4 +1,5 @@
 import { NetworkID_MAP } from "@/constant/network";
+import { isZekoNet } from "@/utils/utils";
 import { useMemo } from "react";
 import styled from "styled-components";
 
@@ -41,7 +42,7 @@ const StyledHolderIcon = styled.div`
 export const NetworkIcon = ({ nodeItem, size }) => {
   const { isCustomNet, iconSource, holderIconName } = useMemo(() => {
     let isCustomNet = !nodeItem.isDefaultNode;
-    let isZeko = nodeItem.networkID?.startsWith("zeko");
+    let isZeko = isZekoNet(nodeItem.networkID)
     let iconSource =
       nodeItem.networkID == NetworkID_MAP.mainnet
         ? "img/mina_color.svg"
