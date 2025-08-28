@@ -922,7 +922,17 @@ const SignView = ({
         }
       }
       const isEdge = /Edg\//i.test(navigator.userAgent);
+      const isFirefox = /Firefox/i.test(navigator.userAgent);
+
       if (sendAction === DAppActions.mina_requestPresentation && isEdge) {
+        Toast.info(i18n.t("notSupportNow"));
+        return;
+      }
+      if (
+        (sendAction === DAppActions.mina_requestPresentation ||
+          sendAction === DAppActions.mina_storePrivateCredential) &&
+        isFirefox
+      ) {
         Toast.info(i18n.t("notSupportNow"));
         return;
       }
