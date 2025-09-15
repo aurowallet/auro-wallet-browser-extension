@@ -41,7 +41,7 @@ import {
   toNonExponential,
   trimSpace,
 } from "@/utils/utils";
-import { getAccountUpdateCount, getZkFee, getZkInfo } from "@/utils/zkUtils";
+import { getAccountUpdateCount, getZkAppFeePayerAddress, getZkFee, getZkInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -609,6 +609,7 @@ const SignView = ({
       if (isSendZk) {
         payload.transaction = params.transaction;
         memo = params.feePayer?.memo || "";
+        payload.feePayerAddress = getZkAppFeePayerAddress(params.transaction)
         payload.zkOnlySign = zkOnlySign;
       }
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
@@ -914,7 +915,7 @@ const SignView = ({
         let maxAmount = new BigNumber(amount).plus(fee).toString();
         if (
           new BigNumber(maxAmount).gt(
-            mainTokenNetInfo?.tokenBaseInfo.showBalance
+            mainTokenNetInfo?.tokenBaseInfo.showBalance && !zkOnlySign
           )
         ) {
           Toast.info(i18n.t("balanceNotEnough"));
@@ -973,6 +974,7 @@ const SignView = ({
       selectedCredentials,
       credentialData,
       presentationData,
+      zkOnlySign,
     ]
   );
 

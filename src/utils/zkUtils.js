@@ -405,3 +405,16 @@ export function getZkAppUpdateInfo(
     };
   }
 }
+
+export const getZkAppFeePayerAddress = (tx) => {
+  try {
+    if (tx) {
+      let realTx = JSON.parse(tx);
+      let feePayer = realTx?.feePayer;
+      return feePayer?.body?.publicKey;
+    }
+    return "";
+  } catch (error) {
+    return "";
+  }
+};

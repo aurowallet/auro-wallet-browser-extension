@@ -3,8 +3,17 @@
 All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
+
+## [2.4.2]
+### Enhancements
+- Add firefox check
+- Upgrade mina-signer to v3.1.0.
+- Add Non-feePayer sign
+
+## [2.4.1]
 ### Enhancements
 - Update Zeko transaction fee
+
 
 ## [2.4.0]
 
