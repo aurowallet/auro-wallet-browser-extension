@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { MAIN_COIN_CONFIG } from "../../constant";
+import { MAIN_COIN_CONFIG, ZK_EMPTY_PUBLICKEY } from "../../constant";
 import { getMessageFromCode, getRealErrorMsg } from '../../utils/utils';
 import {
   getCurrentNodeConfig,
@@ -143,16 +143,33 @@ export async function signTransaction(privateKey,params){
         if(params.sendAction === DAppActions.mina_signMessage){
             signBody = params.message
         }else if (params.sendAction === DAppActions.mina_sendTransaction){
-            let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
-            let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
-            signBody={
-                zkappCommand: JSON.parse(params.transaction),
-                feePayer: {
-                    feePayer: params.fromAddress,
-                    fee: sendFee,
-                    nonce: params.nonce,
-                    memo:params.memo||""
-                },
+            const parseTx = JSON.parse(params.transaction)
+            if(params.feePayerAddress && (params.feePayerAddress!==ZK_EMPTY_PUBLICKEY) && (params.feePayerAddress!==params.fromAddress) ){
+                let memo = ""
+                try {
+                    memo = decodeMemo(parseTx.zkappCommand.memo)||""
+                } catch (error) {}
+                signBody={
+                    zkappCommand: parseTx,
+                    feePayer: {
+                        feePayer: parseTx.feePayer.body.publicKey,
+                        fee: parseTx.feePayer.body.fee, 
+                        nonce: parseTx.feePayer.body.nonce,
+                        memo:memo,
+                    },
+                }
+            } else{
+                let decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals)
+                let sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber()
+                signBody={
+                    zkappCommand: parseTx,
+                    feePayer: {
+                        feePayer: params.fromAddress,
+                        fee: sendFee,
+                        nonce: params.nonce,
+                        memo:params.memo||""
+                    },
+                }
             }
         }else{
             signBody = buildSignTxBody(params)
