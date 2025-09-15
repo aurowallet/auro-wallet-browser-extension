@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.4.2]
 ### Enhancements
 - Add firefox check
 - Upgrade mina-signer to v3.1.0.
