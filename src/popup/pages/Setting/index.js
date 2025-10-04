@@ -73,9 +73,9 @@ const Setting = ({}) => {
     };
     let routeList = [
       {
-        icon: "/img/ic_perference.svg",
-        title: i18n.t("perferences"),
-        targetRoute: "perferences_page",
+        icon: "/img/ic_preference.svg",
+        title: i18n.t("preferences"),
+        targetRoute: "preferences_page",
       },
       {
         icon: "/img/icon_security.svg",
