@@ -3,7 +3,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { LEDGER_PAGE_TYPE } from "../../../constant/commonType";
+import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import {
   ACCOUNT_ACTIONS,
   DAPP_CHANGE_CONNECTING_ADDRESS,
@@ -13,7 +13,7 @@ import {
 } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
-import { checkLedgerConnect, requestAccount } from "../../../utils/ledger";
+import { checkLedgerConnect, getLedgerStatus, requestAccount } from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
@@ -272,6 +272,10 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
         nextIndex
       );
       setTipModalVisible(false);
+      if(!publicKey){
+        setErrorMsg(i18n.t("ledgerConnectOpenTip"));
+        return;
+      }
       if (rejected) {
         setErrorMsg(i18n.t("ledgerRejected"));
       } else {

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.4.3]
+### Enhancements
+- Upgrade the ledger to support non-zero transfer.
+- Support ledger sign message
+- Update `mina-ledger-js` to `@zondax/ledger-mina-js`
+
+
 ## [2.4.2]
 ### Enhancements
 - Add firefox check

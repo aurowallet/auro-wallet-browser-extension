@@ -1,19 +1,30 @@
 import { ledgerUSBVendorId } from "@ledgerhq/devices";
 import Transport from "@ledgerhq/hw-transport-webusb";
+import { MinaApp } from "@zondax/ledger-mina-js";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
-import { MinaLedgerJS, Networks, TxType } from "mina-ledger-js";
 import { MAIN_COIN_CONFIG } from "../constant";
 import { LEDGER_STATUS } from "../constant/commonType";
 import { NetworkID_MAP } from "../constant/network";
 import Loading from "../popup/component/Loading";
-import { closePopupWindow } from "./popup";
-import {
-  getCurrentNodeConfig,
-} from "./browserUtils";
+import { getCurrentNodeConfig } from "./browserUtils";
+
+const Networks = {
+  MAINNET: 0x01,
+  DEVNET: 0x00,
+};
+
+const TxType = {
+  PAYMENT: 0x00,
+  DELEGATION: 0x04,
+};
+
+export const LEDGER_CONNECT_TYPE = {
+  isPage: "isPage",
+};
 
 const status = {
-  rejected: "CONDITIONS_OF_USE_NOT_SATISFIED",
+  rejectCode: "27013",
 };
 async function getPort() {
   const transport = await Transport.create().catch((e) => {
@@ -29,7 +40,7 @@ async function getApp() {
   if (!appInstance) {
     const transport = await getPort();
     if (transport) {
-      app = new MinaLedgerJS(transport);
+      app = new MinaApp(transport);
       portInstance = transport;
       appInstance = app;
     } else {
@@ -38,34 +49,43 @@ async function getApp() {
   } else {
     app = appInstance;
   }
+  try {
+    let timer = null;
+    const result = await Promise.race([
+      app.getAppName(),
+      new Promise((resolve) => {
+        timer = setTimeout(() => {
+          timer = null;
+          resolve({ timeout: true });
+        }, 300);
+      }),
+    ]);
 
-  let timer = null;
-  const result = await Promise.race([
-    app.getAppName(),
-    new Promise((resolve) => {
-      timer = setTimeout(() => {
-        timer = null;
-        resolve({ timeout: true });
-      }, 300);
-    }),
-  ]);
-  if (timer) {
-    clearTimeout(timer);
-    timer = null;
-  }
-  if (result.returnCode === "5000" || !result.name || result.timeout) {
-    portInstance.close();
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+
+    if (result.returnCode === "5000" || !result.name || result.timeout) {
+      if (portInstance) {
+        await portInstance.close();
+      }
+      portInstance = null;
+      appInstance = null;
+      return { manualConnected: true, app: null };
+    }
+
+    return { app, appName: result.name };
+  } catch (err) {
+    console.error("Error in getApp:", err);
+    if (portInstance) {
+      await portInstance.close();
+    }
     portInstance = null;
     appInstance = null;
-    let openApp = !!result.version;
-    return { manualConnected: true, app: null, openApp: openApp };
+    return { manualConnected: true, app: null };
   }
-  if (app) {
-    closePopupWindow("ledger");
-  }
-  return { app };
 }
-
 async function ensureUSBPermission() {
   try {
     let devices = await navigator.usb.getDevices();
@@ -113,11 +133,11 @@ export async function requestAccount(app, accountIndex) {
   const { publicKey, returnCode, statusText, ...others } = await app.getAddress(
     accountIndex
   );
-  if (statusText === status.rejected) {
+  if (returnCode === status.rejectCode) {
     return { rejected: true, publicKey: null };
   }
   if (publicKey) {
-    return { publicKey };
+    return { publicKey: publicKey };
   } else {
     return { publicKey: null };
   }
@@ -129,6 +149,42 @@ export async function requestSignDelegation(app, body, ledgerAccountIndex) {
 
 export async function requestSignPayment(app, body, ledgerAccountIndex) {
   return requestSign(app, body, TxType.PAYMENT, ledgerAccountIndex);
+}
+/**
+ * @param {*} app
+ * @param {*} body
+ * @param {*} ledgerAccountIndex
+ * @returns
+ */
+export async function requestLedgerSignMessage(
+  app,
+  message,
+  ledgerAccountIndex
+) {
+  return ledgerSignMessage(app, message, ledgerAccountIndex);
+}
+
+async function ledgerSignMessage(app, body, ledgerAccountIndex) {
+  const networkId = await getNetworkId();
+  const { returnCode, field, scalar, signed_message, statusText, message } =
+    await app.signMessage(ledgerAccountIndex, networkId, body);
+  if (returnCode === status.rejectCode) {
+    return {
+      rejected: true,
+      publicKey: null,
+      error: { message: i18n.t("ledgerRejected") },
+    };
+  }
+  if (returnCode !== "9000") {
+    return { signature: null, error: { message: statusText || message } };
+  }
+  return {
+    signature: {
+      field,
+      scalar,
+    },
+    signedMessage: signed_message,
+  };
 }
 
 function reEncodeRawSignature(rawSignature) {
@@ -145,7 +201,7 @@ function reEncodeRawSignature(rawSignature) {
   const scalar = rawSignature.substring(64);
   return shuffleBytes(field) + shuffleBytes(scalar);
 }
-async function networkId() {
+async function getNetworkId() {
   const networkConfig = await getCurrentNodeConfig();
   const networkID = networkConfig.networkID;
   if (networkID === NetworkID_MAP.mainnet) {
@@ -168,13 +224,13 @@ async function requestSign(app, body, type, ledgerAccountIndex) {
     fee: sendFee,
     nonce: +body.nonce,
     memo: body.memo || "",
-    networkId: await networkId(),
+    networkId: await getNetworkId(),
     validUntil: 4294967295,
   };
   const { signature, returnCode, statusText } = await app.signTransaction(
     payload
   );
-  if (statusText === status.rejected) {
+  if (returnCode === status.rejectCode) {
     return {
       rejected: true,
       publicKey: null,
@@ -204,7 +260,7 @@ export async function getLedgerStatus() {
   if (!appInstance) {
     const transport = await getPort();
     if (transport) {
-      app = new MinaLedgerJS(transport);
+      app = new MinaApp(transport);
       portInstance = transport;
       appInstance = app;
     } else {
