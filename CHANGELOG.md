@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 - Support ledger sign message
 - Update `mina-ledger-js` to `@zondax/ledger-mina-js`
 
+### Fixes
+- Update default display symbol for transaction records to "sent"
+
 
 ## [2.4.2]
 ### Enhancements

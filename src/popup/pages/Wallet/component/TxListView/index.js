@@ -434,8 +434,8 @@ const TxItem = ({
     const txKindLow = txData.kind?.toLowerCase();
     let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
     if (txKindLow === "payment") {
-      isReceive =
-        txData.to.toLowerCase() === currentAccount.address.toLowerCase();
+      let isOut = txData.from.toLowerCase() === currentAccount.address.toLowerCase();
+      isReceive = !isOut
       statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
     } else if (txKindLow === "stake_delegation" || txKindLow === "delegation") {
       isReceive = false;
