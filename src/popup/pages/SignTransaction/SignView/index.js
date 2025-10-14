@@ -236,7 +236,7 @@ const SignView = ({
     zkSourceData,
     zkFormatData,
     zkOnlySign,
-    defaultRecommandFee,
+    defaultRecommendFee,
     zkAppNonce,
     zkAppUpdateCount,
   } = useMemo(() => {
@@ -259,15 +259,15 @@ const SignView = ({
       ? signParams?.params?.nonce
       : "";
 
-    let defaultRecommandFee = TRANSACTION_FEE;
+    let defaultRecommendFee = TRANSACTION_FEE;
     if (netFeeList.length >= 2) {
-      defaultRecommandFee = netFeeList[1].value;
+      defaultRecommendFee = netFeeList[1].value;
     }
     if (isSendZk && netFeeList.length >= 6) {
       const zkAccountFee = new BigNumber(netFeeList[5].value).multipliedBy(
         count
       );
-      defaultRecommandFee = new BigNumber(netFeeList[1].value)
+      defaultRecommendFee = new BigNumber(netFeeList[1].value)
         .plus(zkAccountFee)
         .toNumber();
     }
@@ -276,7 +276,7 @@ const SignView = ({
       zkSourceData,
       zkFormatData,
       zkOnlySign,
-      defaultRecommandFee,
+      defaultRecommendFee,
       zkAppNonce,
       zkAppUpdateCount: count,
     };
@@ -311,7 +311,7 @@ const SignView = ({
         if (isZeko) {
           nextFee = zekoPerFee;
         } else {
-          nextFee = defaultRecommandFee;
+          nextFee = defaultRecommendFee;
         }
       }
     }
@@ -1661,7 +1661,7 @@ const CredentialView = ({
                       ref={(element) =>
                         (tabContentRef.current[index] = element)
                       }
-                      className={styles.tabContentv2}
+                      className={styles.tabContentV2}
                     >
                       <pre>
                         {JSON.stringify(displayCredentialData, null, 4)}
@@ -1928,7 +1928,7 @@ const PresentationView = ({
                       ref={(element) =>
                         (tabContentRef.current[index] = element)
                       }
-                      className={styles.tabContentPresen}
+                      className={styles.tabContentPresentation}
                     >
                       <pre>{displayPresentation ?? ""}</pre>
                     </StyledJsonWrapper>

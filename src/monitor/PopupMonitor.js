@@ -59,12 +59,12 @@ function PopupMonitor() {
           signRequests,
           chainRequests,
           approveRequests,
-          tokenSigneRequests,
+          tokenSignRequests,
         } = task;
         if (approveRequests.length > 0) {
           dispatch(updateApproveStatus(true));
         }
-        if (tokenSigneRequests.length > 0) {
+        if (tokenSignRequests.length > 0) {
           dispatch(updateTokenSignStatus(true));
         }
         let list = [...signRequests,...chainRequests]
@@ -111,7 +111,7 @@ function PopupMonitor() {
     };
 
     browser.runtime.onMessage.addListener(messageListener);
-    sendMsg({ action: POPUP_ACTIONS.POPUP_NOTIFACATION });
+    sendMsg({ action: POPUP_ACTIONS.POPUP_NOTIFICATION });
 
     return () => {
       browser.runtime.onMessage.removeListener(messageListener);

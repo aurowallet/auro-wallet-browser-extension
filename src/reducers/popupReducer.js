@@ -3,7 +3,7 @@ const TOKEN_MODAL = {
   TOKEN_MODAL_REFRESH: "TOKEN_MODAL_REFRESH",
 };
 
-const APPRPVE_MODAL = {
+const APPROVE_MODAL = {
   APPROVE_MODAL_STATUS: "APPROVE_MODAL_STATUS",
 };
 
@@ -28,7 +28,7 @@ export function refreshTokenSignPopup(status) {
 
 export function updateApproveStatus(status) {
   return {
-    type: APPRPVE_MODAL.APPROVE_MODAL_STATUS,
+    type: APPROVE_MODAL.APPROVE_MODAL_STATUS,
     status,
   };
 }
@@ -70,7 +70,7 @@ function popupReducer(state = initialState, action) {
         ...state,
         tokenSignRefresh: action.status,
       };
-    case APPRPVE_MODAL.APPROVE_MODAL_STATUS:
+    case APPROVE_MODAL.APPROVE_MODAL_STATUS:
       return {
         ...state,
         approveModalStatus: action.status,

@@ -93,10 +93,10 @@ const DevDetail = ({}) => {
       setResponseBody(fullTxRequestResponse);
       setIsLoading(false);
     } else if (pageType === "pendingTx") {
-      let pendingTxReponse = await getPendingTxList(
+      let pendingTxResponse = await getPendingTxList(
         currentAccount.address
       ).catch((err) => err);
-      setResponseBody(pendingTxReponse);
+      setResponseBody(pendingTxResponse);
       setIsLoading(false);
     } else if (pageType === "pendingZkTx") {
       let zkAppPendingResponse = await getZkAppPendingTx(

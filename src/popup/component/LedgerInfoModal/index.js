@@ -31,7 +31,7 @@ const StyledInnerContent = styled.div`
   animation-fill-mode: forwards;
   min-height: 358px;
 `;
-const StyledBottonWrapper = styled.div`
+const StyledButtonWrapper = styled.div`
   padding: 12px 38px 20px;
   position: fixed;
   bottom: 0;
@@ -155,9 +155,9 @@ export const LedgerInfoModal = ({
                 />
               </StyledReminderContainer>
             )}
-            <StyledBottonWrapper>
+            <StyledButtonWrapper>
               <Button onClick={onClickConfirm}>{i18n.t("confirm")}</Button>
-            </StyledBottonWrapper>
+            </StyledButtonWrapper>
           </StyledInnerContent>
         </div>
       )}

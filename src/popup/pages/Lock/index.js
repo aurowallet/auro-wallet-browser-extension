@@ -42,7 +42,7 @@ import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 
-const StyledFormWrapp = styled.form`
+const StyledFormWrapper = styled.form`
   width: calc(100% - 40px);
 `;
 const LockedPageWrapper = styled.div`
@@ -210,7 +210,7 @@ export const LockPage = ({}) => {
             <img src="/img/colorful_logo.svg" className={styles.logo} />
           </div>
           <p className={styles.welcomeBack}>{i18n.t("welcomeBack")}</p>
-          <StyledFormWrapp onSubmit={onSubmit}>
+          <StyledFormWrapper onSubmit={onSubmit}>
             <div className={styles.pwdInputContainer}>
               <Input
                 label={i18n.t("password")}
@@ -230,7 +230,7 @@ export const LockPage = ({}) => {
                 <p className={styles.bottomUrl}>{POWER_BY}</p>
               </div>
             </div>
-          </StyledFormWrapp>
+          </StyledFormWrapper>
         </StyledLockContent>
       </LockedPageWrapper>
       <PopupModal

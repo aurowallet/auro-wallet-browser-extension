@@ -148,7 +148,7 @@ export function startExtensionPopup(withListener = false) {
         const onMessage = (message, sender, sendResponse) => {
           const { action } = message;
           switch (action) {
-            case POPUP_ACTIONS.POPUP_NOTIFACATION:
+            case POPUP_ACTIONS.POPUP_NOTIFICATION:
               sendResponse("page live");
               browser.runtime.onMessage.removeListener(onMessage);
               resolve(id);

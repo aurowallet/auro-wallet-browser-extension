@@ -297,7 +297,7 @@ export function getPartyBody() {
 }
 
 /**
- * get transtion history
+ * get transaction history
  * archive node
  * @returns
  */

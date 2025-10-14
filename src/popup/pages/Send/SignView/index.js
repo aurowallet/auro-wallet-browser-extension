@@ -181,10 +181,10 @@ const SignView = ({
       const zkAccountFee = new BigNumber(netFeeList[5].value).multipliedBy(
         zkAppUpdateCount
       );
-      let defaultRecommandFee = new BigNumber(netFeeList[1].value)
+      let defaultRecommendFee = new BigNumber(netFeeList[1].value)
         .plus(zkAccountFee)
         .toNumber();
-      return defaultRecommandFee;
+      return defaultRecommendFee;
     }
     return TRANSACTION_FEE;
   }, [advanceFee, zekoPerFee, isZeko, sourceFee, zkAppUpdateCount, netFeeList]);
