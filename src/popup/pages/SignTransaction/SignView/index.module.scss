@@ -215,10 +215,10 @@
         overflow-wrap: break-word;
         white-space: pre-wrap;
     }
-    .tabContentv2 {
+    .tabContentV2 {
         @extend .tabContent;
     }
-    .tabContentPresen{
+    .tabContentPresentation{
         @extend .tabContent;
         pre{
             margin: 0;

@@ -63,6 +63,7 @@ import {
   parsedZekoFee,
 } from "../../../../utils/utils";
 import CountdownTimer from "../../../component/CountdownTimer";
+import { requestLedgerSignMessage } from "../../../../utils/ledger";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
 
@@ -95,6 +96,8 @@ const COMMON_TRANSACTION_ACTION = [
 const Ledger_support_action = [
   DAppActions.mina_sendPayment,
   DAppActions.mina_sendStakeDelegation,
+  DAppActions.mina_signMessage,
+  DAppActions.mina_sign_JsonMessage,
 ];
 
 const StyledJsonView = styled.div`
@@ -233,7 +236,7 @@ const SignView = ({
     zkSourceData,
     zkFormatData,
     zkOnlySign,
-    defaultRecommandFee,
+    defaultRecommendFee,
     zkAppNonce,
     zkAppUpdateCount,
   } = useMemo(() => {
@@ -256,15 +259,15 @@ const SignView = ({
       ? signParams?.params?.nonce
       : "";
 
-    let defaultRecommandFee = TRANSACTION_FEE;
+    let defaultRecommendFee = TRANSACTION_FEE;
     if (netFeeList.length >= 2) {
-      defaultRecommandFee = netFeeList[1].value;
+      defaultRecommendFee = netFeeList[1].value;
     }
     if (isSendZk && netFeeList.length >= 6) {
       const zkAccountFee = new BigNumber(netFeeList[5].value).multipliedBy(
         count
       );
-      defaultRecommandFee = new BigNumber(netFeeList[1].value)
+      defaultRecommendFee = new BigNumber(netFeeList[1].value)
         .plus(zkAccountFee)
         .toNumber();
     }
@@ -273,7 +276,7 @@ const SignView = ({
       zkSourceData,
       zkFormatData,
       zkOnlySign,
-      defaultRecommandFee,
+      defaultRecommendFee,
       zkAppNonce,
       zkAppUpdateCount: count,
     };
@@ -308,7 +311,7 @@ const SignView = ({
         if (isZeko) {
           nextFee = zekoPerFee;
         } else {
-          nextFee = defaultRecommandFee;
+          nextFee = defaultRecommendFee;
         }
       }
     }
@@ -514,6 +517,30 @@ const SignView = ({
           postRes = await sendStakeTx(payload, {
             rawSignature: signature,
           }).catch((error) => error);
+        } else if (
+          sendAction === DAppActions.mina_signMessage ||
+          sendAction === DAppActions.mina_sign_JsonMessage
+        ) {
+          let nextMsg = params.message;
+          if (sendAction === DAppActions.mina_sign_JsonMessage) {
+            nextMsg = JSON.stringify(params.message);
+          }
+          signResult = await requestLedgerSignMessage(
+            nextLedgerApp,
+            nextMsg,
+            currentAccount.hdPath
+          );
+          const { signature, signedMessage, error } = signResult;
+          if (error) {
+            setConfirmModalStatus(false);
+            Toast.info(error.message);
+            return;
+          }
+          postRes = {
+            data: signedMessage,
+            publicKey: params.fromAddress,
+            signature: signature,
+          };
         }
 
         setConfirmModalStatus(false);
@@ -669,10 +696,6 @@ const SignView = ({
           break;
         case DAppActions.mina_createNullifier:
           resultAction = DAPP_ACTION_CREATE_NULLIFIER;
-          break;
-        case DAppActions.mina_signMessage:
-        case DAppActions.mina_sign_JsonMessage:
-          resultAction = DAPP_ACTION_SIGN_MESSAGE;
           break;
         case DAppActions.mina_storePrivateCredential:
           resultAction = DAPP_ACTION_STORE_CREDENTIAL;
@@ -1638,7 +1661,7 @@ const CredentialView = ({
                       ref={(element) =>
                         (tabContentRef.current[index] = element)
                       }
-                      className={styles.tabContentv2}
+                      className={styles.tabContentV2}
                     >
                       <pre>
                         {JSON.stringify(displayCredentialData, null, 4)}
@@ -1906,7 +1929,7 @@ const PresentationView = ({
                       ref={(element) =>
                         (tabContentRef.current[index] = element)
                       }
-                      className={styles.tabContentPresen}
+                      className={styles.tabContentPresentation}
                     >
                       <pre>{displayPresentation ?? ""}</pre>
                     </StyledJsonWrapper>

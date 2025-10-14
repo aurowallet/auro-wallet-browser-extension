@@ -1,9 +1,9 @@
 {
   "name": "auro-wallet",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "private": true,
   "dependencies": {
-    "@ledgerhq/hw-transport-webusb": "5.46.0",
+    "@ledgerhq/hw-transport-webusb": "6.29.4",
     "@reduxjs/toolkit": "1.4.0",
     "@aurowallet/mina-provider": "1.0.12",
     "axios": "1.10.0",
@@ -16,8 +16,8 @@
     "webextension-polyfill": "0.12.0",
     "i18next": "19.8.4",
     "libsodium-wrappers": "0.7.9",
-    "mina-ledger-js": "1.0.6",
     "mina-signer": "3.1.0",
+    "@zondax/ledger-mina-js":"0.1.1",
     "obs-store": "4.0.3",
     "react": "17.0.1",
     "react-circular-progressbar": "2.0.3",

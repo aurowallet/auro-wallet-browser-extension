@@ -791,7 +791,7 @@ const SendPage = ({}) => {
               {i18n.t("next")}
               {!isSendMainToken && (
                 <StyledWrapper>
-                  <img src="/img/icon_popnewwindow.svg" />
+                  <img src="/img/icon_window.svg" />
                 </StyledWrapper>
               )}
             </StyledWrapper>

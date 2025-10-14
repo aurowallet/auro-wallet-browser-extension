@@ -46,7 +46,7 @@ import AddAccount from '../pages/AddAccount';
 import TokenDetail from '../pages/TokenDetail';
 import TokenSignPage from '../pages/Send/tokenSign';
 
-import Perferences from '../pages/Perferences';
+import Preferences from '../pages/Preferences';
 import DevPage from '../pages/DevPage';
 import DevDetailPage from '../pages/DevPage/DevDetail';
 
@@ -114,7 +114,7 @@ export function getAllRouter() {
         <Route path="/credential_manage" component={CredentialManage} />
         <Route path={"/credential_detail"} component={CredentialDetail}/>
 
-        <Route path="/perferences_page" component={Perferences} />
+        <Route path="/preferences_page" component={Preferences} />
         <Route path="/devpage" component={DevPage} />
         <Route path="/dev_detail_page" component={DevDetailPage} />
       </Switch>

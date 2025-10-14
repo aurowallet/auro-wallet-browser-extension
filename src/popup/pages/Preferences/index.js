@@ -9,7 +9,7 @@ import { sendMsg } from "../../../utils/commonMsg";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
 
-const Perferences = ({}) => {
+const Preferences = ({}) => {
   const history = useHistory();
   const currency = useSelector((state) => state.currencyConfig.currentCurrency);
   const [currentLockTime, setCurrentLockTime] = useState("");
@@ -54,7 +54,7 @@ const Perferences = ({}) => {
 
   return (
     <CustomView
-      title={i18n.t("perferences")}
+      title={i18n.t("preferences")}
       contentClassName={styles.container}
     >
       <RowItem
@@ -95,4 +95,4 @@ const RowItem = ({ title = "", content = "", onClickItem = () => {} }) => {
     </div>
   );
 };
-export default Perferences;
+export default Preferences;

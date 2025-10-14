@@ -29,7 +29,7 @@ let signRequests = [];
 let approveRequests = [];
 let chainRequests = []
 
-let tokenSigneRequests = [];
+let tokenSignRequests = [];
 
 export const windowId = {
   approve_page: "approve_page",
@@ -555,14 +555,14 @@ class DappService {
     })
   }
   clearAllPendingZk(){
-    let requestList = [...signRequests,...approveRequests,...chainRequests,...tokenSigneRequests]
+    let requestList = [...signRequests,...approveRequests,...chainRequests,...tokenSignRequests]
     requestList.map((item)=>{
       item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
     })
     signRequests = []
     approveRequests = []
     chainRequests = []
-    tokenSigneRequests = []
+    tokenSignRequests = []
     this.setBadgeContent()
   }
   async checkLocalWallet() {
@@ -686,7 +686,7 @@ class DappService {
 
   }
   setBadgeContent() {
-    const list = [...approveRequests,...signRequests,...chainRequests,...tokenSigneRequests]
+    const list = [...approveRequests,...signRequests,...chainRequests,...tokenSignRequests]
     const action = getExtensionAction()
     if (list.length > 0) {
       action.setBadgeText({ text: list.length.toString() });
@@ -1001,10 +1001,10 @@ class DappService {
   }
 
   removeTokenBuildById(buildID){
-    const newBuildList = tokenSigneRequests.filter((item) => {
+    const newBuildList = tokenSignRequests.filter((item) => {
       return item.id !== buildID
   })
-    tokenSigneRequests = newBuildList
+    tokenSignRequests = newBuildList
     const nextTokenBuildList = this.getDappStore().tokenBuildList
     delete nextTokenBuildList[buildID];
     this.dappStore.updateState({
@@ -1023,7 +1023,7 @@ class DappService {
 
 
   getAllTokenSignParams() {
-    let list = [...tokenSigneRequests]
+    let list = [...tokenSignRequests]
     list.sort((a,b)=>a.time-b.time)
     return list
   }
@@ -1079,23 +1079,23 @@ class DappService {
         function onMessage(message, sender, sendResponse) {
           const { action, payload } = message;
           if(action === DAPP_ACTION_CANCEL_ALL){ 
-            let requestList = tokenSigneRequests
+            let requestList = tokenSignRequests
             requestList.map((item)=>{
                 item.reject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
             })
-            tokenSigneRequests=[]
+            tokenSignRequests=[]
             that.dappStore.updateState({
               tokenBuildList:{}
             })
             that.setBadgeContent()
-            if(tokenSigneRequests.length === 0){
+            if(tokenSignRequests.length === 0){
               closePopupWindow(windowId.token_sign) 
               browser.runtime.onMessage.removeListener(onMessage)
               that.tokenSignListener = undefined
             }
             return 
           }
-          let currentSignParams = [...tokenSigneRequests].find((item) => {
+          let currentSignParams = [...tokenSignRequests].find((item) => {
             if (item.id === payload?.id) {
               return item
             }
@@ -1123,7 +1123,7 @@ class DappService {
                       })
                     }
                     that.removeTokenBuildById(payload.id)
-                    if(tokenSigneRequests.length == 0){
+                    if(tokenSignRequests.length == 0){
                       closePopupWindow(windowId.token_sign)
                       browser.runtime.onMessage.removeListener(onMessage)
                       that.tokenSignListener = undefined
@@ -1132,7 +1132,7 @@ class DappService {
                   } else if (payload && payload.cancel) {
                     nextReject({code: errorCodes.userRejectedRequest , message:getMessageFromCode(errorCodes.userRejectedRequest)})
                     that.removeTokenBuildById(payload.id)
-                    if(tokenSigneRequests.length == 0 ){
+                    if(tokenSignRequests.length == 0 ){
                       closePopupWindow(windowId.token_sign)
                       browser.runtime.onMessage.removeListener(onMessage)
                       that.tokenSignListener = undefined
@@ -1167,7 +1167,7 @@ class DappService {
           that.tokenSignListener = browser.runtime.onMessage.addListener(onMessage)
         }
         let time = new Date().getTime()
-        tokenSigneRequests.push({ id, params:nextParams, site,resolve,reject,time })
+        tokenSignRequests.push({ id, params:nextParams, site,resolve,reject,time })
         this.setBadgeContent()
         sendMsg({
           action: WORKER_ACTIONS.BUILD_TOKEN_SEND,
@@ -1187,7 +1187,7 @@ class DappService {
       signRequests,
       chainRequests,
       approveRequests,
-      tokenSigneRequests,
+      tokenSignRequests,
     }
   }
   async getWalletInfo(){

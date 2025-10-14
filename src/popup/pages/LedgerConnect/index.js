@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import Transport from "@ledgerhq/hw-transport-webusb";
-import { MinaLedgerJS } from "mina-ledger-js";
+import { MinaApp } from "@zondax/ledger-mina-js";
 import { LEDGER_CONNECTED_SUCCESSFULLY } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 
@@ -63,7 +63,7 @@ const LedgerConnect = ({ }) => {
       tempConnected = false
     }
     try {
-      var app = new MinaLedgerJS(transport)
+      var app = new MinaApp(transport)
       const result = await app.getAppName()
       if (result.name === 'Mina') {
         tempOpened = true

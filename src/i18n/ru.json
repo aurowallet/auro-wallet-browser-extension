@@ -305,7 +305,7 @@
   "credentalSelectTip": "Пожалуйста, выберите учетные данные",
   "tryAgain": "Пожалуйста, попробуйте снова",
   "credentialExist": "Учетные данные уже существуют",
-  "perferences": "Настройки",
+  "preferences": "Настройки",
   "credential": "Учетные данные",
   "pendingTx": "Ожидаемая транзакция",
   "response": "Ответ",

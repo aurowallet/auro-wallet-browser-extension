@@ -282,7 +282,7 @@ export function verifyTokenCommand(sourceData, sendTokenId, buildZkCommand) {
 }
 
 /**
- * get accoutUpdate count to calc zk tx fee
+ * get accountUpdate count to calc zk tx fee
  * @param {*} zkappCommand
  * @returns
  */
