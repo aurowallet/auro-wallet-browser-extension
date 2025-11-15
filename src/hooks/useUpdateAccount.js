@@ -34,6 +34,7 @@ const useFetchAccountData = (currentAccount, isDev = false) => {
           const accountsWithTokenInfoV2 = await getAllTokenInfoV2(tokenIds);
           if (accountsWithTokenInfoV2.error) {
             Toast.info(i18n.t("nodeError"));
+            dispatch(updateTokenAssets([]));
           } else {
             const lastTokenList = account.accounts.map((token) => ({
               ...token,
@@ -74,9 +75,12 @@ const useFetchAccountData = (currentAccount, isDev = false) => {
             return [];
           }
         }
+      } else {
+        dispatch(updateTokenAssets([]));
       }
     } catch (error) {
       console.error(error);
+      dispatch(updateTokenAssets([]));
       if (isDev) {
         return error;
       }
