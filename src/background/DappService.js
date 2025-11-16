@@ -263,7 +263,7 @@ class DappService {
         }
         if(sendAction === DAppActions.mina_addChain){
           const realAddUrl = decodeURIComponent(params.url)
-          if (!urlValid(realAddUrl) || !params.name) {
+          if (!urlValid(realAddUrl)) {
             reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
             return
           }
