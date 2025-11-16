@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
 
+## [2.4.4]
+### Enhancements
+- Token asset request error
+
+### Fixes
+
 ## [2.4.3]
 ### Enhancements
 - Upgrade the ledger to support non-zero transfer.
