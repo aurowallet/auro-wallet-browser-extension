@@ -31,6 +31,11 @@ import {
   requestSignPayment,
 } from "@/utils/ledger";
 import {
+  getPrintPresentationRequest,
+  getPrintVerifierIdentity,
+  getSimplifyCredentialData,
+} from "@/utils/o1jsUtils";
+import {
   addressSlice,
   addressValid,
   createCredentialHash,
@@ -41,12 +46,16 @@ import {
   toNonExponential,
   trimSpace,
 } from "@/utils/utils";
-import { getAccountUpdateCount, getZkAppFeePayerAddress, getZkFee, getZkInfo } from "@/utils/zkUtils";
+import {
+  getAccountUpdateCount,
+  getZkAppFeePayerAddress,
+  getZkFee,
+  getZkInfo,
+} from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
-import { PrettyPrinter } from "mina-attestations";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { serializeError } from "serialize-error";
@@ -57,16 +66,15 @@ import { TRANSACTION_FEE, ZEKO_FEE_INTERVAL_TIME } from "../../../../constant";
 import { CredentialMsg } from "../../../../constant/msgTypes";
 import { TimerProvider } from "../../../../hooks/TimerContext";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
+import { requestLedgerSignMessage } from "../../../../utils/ledger";
 import {
   getBalanceForUI,
   isZekoNet,
   parsedZekoFee,
 } from "../../../../utils/utils";
 import CountdownTimer from "../../../component/CountdownTimer";
-import { requestLedgerSignMessage } from "../../../../utils/ledger";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
-
 const ZkAppValueType = {
   site: "RECOMMEND_SITE",
   default: "RECOMMEND_DEFAULT",
@@ -636,7 +644,7 @@ const SignView = ({
       if (isSendZk) {
         payload.transaction = params.transaction;
         memo = params.feePayer?.memo || "";
-        payload.feePayerAddress = getZkAppFeePayerAddress(params.transaction)
+        payload.feePayerAddress = getZkAppFeePayerAddress(params.transaction);
         payload.zkOnlySign = zkOnlySign;
       }
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
@@ -1586,8 +1594,7 @@ const CredentialView = ({
   const { displayCredentialData, tabList, tabInitId } = useMemo(() => {
     let displayCredentialData = credentialData;
     if (Object.keys(credentialData).length > 0) {
-      displayCredentialData =
-        PrettyPrinter.simplifyCredentialData(credentialData);
+      displayCredentialData = getSimplifyCredentialData(credentialData);
     }
 
     let tabList = [];
@@ -1750,11 +1757,8 @@ const PresentationView = ({
     const verifierIdentity =
       presentationRequest.type === "zk-app" ? zkAppAccount : origin;
     const formatted = [
-      PrettyPrinter.printPresentationRequest(presentationRequest),
-      PrettyPrinter.printVerifierIdentity(
-        presentationRequest.type,
-        verifierIdentity
-      ),
+      getPrintPresentationRequest(presentationRequest),
+      getPrintVerifierIdentity(presentationRequest.type, verifierIdentity),
     ].join("\n");
 
     let tabList = [];
@@ -2007,7 +2011,7 @@ const StyledTipWrapper = styled.div`
 `;
 const CredentialDisplay = ({ credential, matchingRequirements }) => {
   const witnessType = credential.witness?.type || "unknown";
-  const simplifiedData = PrettyPrinter.simplifyCredentialData(credential);
+  const simplifiedData = getSimplifyCredentialData(credential);
   const description = credential.metadata?.description;
 
   return (

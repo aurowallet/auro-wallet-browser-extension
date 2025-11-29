@@ -1,146 +1,145 @@
-const exec = require("child_process").exec;
-const deepmerge = require("deepmerge");
 const fs = require("fs");
 const path = require("path");
-const webExt = require("web-ext");
+const { execSync } = require("child_process");
 const gulp = require("gulp");
 const zip = require("gulp-zip");
-
+const webExt = require("web-ext");
 const pck = require("../package.json");
+const deepmerge = require("deepmerge");
 
-async function execShell(cmd) {
-  return new Promise((resolve) => {
-    exec(cmd, (error, stdout, stderr) => {
-      resolve({
-        error,
-        stdout,
-        stderr,
-      });
-    });
-  });
-}
+const ID = "1001";
+const version = pck.version;
+const baseName = pck.name;
 
+const chromeName = `${baseName}-chrome-edge-${version}-${ID}`;
+const firefoxName = `${baseName}-firefox-${version}-${ID}`;
+const sourceName = `${baseName}-source-${version}-${ID}`;
+const publishName = `${baseName}-${version}-${ID}`;
+
+const zipDir = path.resolve(__dirname, "../zip");
+const chromeDir = path.join(zipDir, chromeName);
+const firefoxDir = path.join(zipDir, firefoxName);
+
+// check zip exist
+[zipDir, chromeDir, firefoxDir].forEach((dir) =>
+  fs.mkdirSync(dir, { recursive: true })
+);
+
+console.log("copying to zip...");
+execSync(`cp -r dist-chrome/* "${chromeDir}/"`);
+execSync(`cp -r dist-firefox/* "${firefoxDir}/"`);
+
+// write manifest.json
 const baseManifest = require("../src/manifest/manifest.json");
-const firefoxManifestProperties = require("../src/manifest/firefox.json");
-const chromeManifestProperties = require("../src/manifest/chrome.json");
+const chromeManifestProps = require("../src/manifest/chrome.json");
+const firefoxManifestProps = require("../src/manifest/firefox.json");
 
-const firefoxManifest = deepmerge(baseManifest, firefoxManifestProperties, {
-  // arrayMerge: (_, source) => source,
-});
-const chromeManifest = deepmerge(baseManifest, chromeManifestProperties, {
-  // arrayMerge: (_, source) => source,
-});
+const chromeManifest = deepmerge(baseManifest, chromeManifestProps);
+const firefoxManifest = deepmerge(baseManifest, firefoxManifestProps);
 
-async function copyFilesToMultipleFolders(sourceFolder, targetFolders) {
-  for (const destFolder of targetFolders) {
-    try {
-      await execShell(`cp -r ${sourceFolder}/* ${destFolder}/`);
-      console.log(`Files copied from ${sourceFolder} to ${destFolder}`);
-    } catch (error) {
-      console.error(`Error copying files to ${destFolder}:`, error);
-    }
-  }
-}
-async function simpleZipFolder(sourceFolder, outputZipName, outputFilePath) {
-  return new Promise((resolve) => {
-    gulp
-      .src(sourceFolder)
-      .pipe(zip(outputZipName))
-      .pipe(gulp.dest(outputFilePath))
-      .on("end", () => {
-        resolve();
-      });
-  });
-}
+// write to zip folder（for build）
+fs.writeFileSync(
+  path.join(chromeDir, "manifest.json"),
+  JSON.stringify(chromeManifest, null, 2)
+);
+fs.writeFileSync(
+  path.join(firefoxDir, "manifest.json"),
+  JSON.stringify(firefoxManifest, null, 2)
+);
 
-async function writeManifestFile(targetPath, fileContent) {
-  return new Promise((resolve) => {
-    fs.writeFile(
-      targetPath + "/manifest.json",
-      JSON.stringify(fileContent, null, 2),
-      (err) => {
-        if (err) {
-          console.error(err);
-          process.exit(1);
-        } else {
-          console.log("write distManifest success !", targetPath);
-          resolve();
-        }
-      }
-    );
-  });
-}
+// write to dist folder（for unpacked debug)
+fs.writeFileSync(
+  path.join(__dirname, "../dist-chrome/manifest.json"),
+  JSON.stringify(chromeManifest, null, 2)
+);
+fs.writeFileSync(
+  path.join(__dirname, "../dist-firefox/manifest.json"),
+  JSON.stringify(firefoxManifest, null, 2)
+);
+
+console.log("manifest.json write to: dist-chrome/、dist-firefox/、zip/ ");
 
 (async () => {
   try {
-    const id = "1001";
-
-    const chromeFileName = `${pck.name}-chrome-edge-${pck.version}-${id}`;
-    const firefoxFileName = `${pck.name}-firefox-${pck.version}-${id}`;
-    const sourceFileName = `${pck.name}-source-${pck.version}-${id}`;
-    const publishFileName = `${pck.name}-${pck.version}-${id}`;
-
-    const zipPath = path.resolve(__dirname, `../zip`);
-    const chromePath = path.resolve(__dirname, `../zip/${chromeFileName}`);
-    const firefoxPath = path.resolve(__dirname, `../zip/${firefoxFileName}`);
-    const distPath = path.resolve(__dirname, `../dist`);
-
-    await execShell(`mkdir -p ${chromePath}`);
-    await execShell(`mkdir -p ${firefoxPath}`);
-
-    const sourceFolder = "dist";
-    const targetFolders = [chromePath, firefoxPath];
-    await copyFilesToMultipleFolders(sourceFolder, targetFolders);
-
-    await writeManifestFile(distPath, chromeManifest);
-    await writeManifestFile(chromePath, chromeManifest);
-    await writeManifestFile(firefoxPath, firefoxManifest);
-
-    // zip firefox add-on
-    // or await execShell(`web-ext build --source-dir=zip/${firefoxFileName} -artifacts-dir ./zip -filename ${firefoxFileName}.zip`);
+    console.log("packing Firefox webExt...");
     await webExt.cmd.build({
-      sourceDir: firefoxPath,
-      artifactsDir: zipPath,
-      filename: `${firefoxFileName}.zip`,
+      sourceDir: firefoxDir,
+      artifactsDir: zipDir,
+      filename: `${firefoxName}.zip`,
+      overwriteDest: true,
     });
 
-    //  zip chrome folder
-    // gulp
-    //   .src(`${chromePath}/**`)
-    //   .pipe(zip(`${chromeFileName}.zip`))
-    //   .pipe(gulp.dest(zipPath));
-    await simpleZipFolder(`${chromePath}/**`, `${chromeFileName}.zip`, zipPath);
+    console.log("packing Chrome extension...");
+    await new Promise((resolve, reject) => {
+      gulp
+        .src(`${chromeDir}/**/*`, { dot: true })
+        .pipe(zip(`${chromeName}.zip`))
+        .pipe(gulp.dest(zipDir))
+        .on("end", resolve)
+        .on("error", reject);
+    });
 
-    // zip source
-    const ignoreFileList = [
-      "!.git/*",
-      "!dist/**",
-      "!node_modules/**",
-      "!zip/**",
-    ];
-    let pathName = path.resolve(__dirname, '..')
-    const sourceFilelist = [
-      pathName+"/**",
-      pathName+"/.*",
-    ];
-    // gulp
-    //   .src([...sourceFileList, ...ignoreFileList])
-    //   .pipe(zip(`${sourceFileName}.zip`))
-    //   .pipe(gulp.dest(zipPath));
-    await simpleZipFolder(
-      [...sourceFilelist, ...ignoreFileList],
-      `${sourceFileName}.zip`,
-      zipPath
+    console.log("build source code...");
+    await new Promise((resolve, reject) => {
+      const rootPath = path.resolve(__dirname, "..");
+      gulp
+        .src(
+          [
+            `${rootPath}/**`,
+            `${rootPath}/.*`,
+            `!${rootPath}/node_modules/**`,
+            `!${rootPath}/dist/**`,
+            `!${rootPath}/dist-chrome/**`,
+            `!${rootPath}/dist-firefox/**`,
+            `!${rootPath}/zip/**`,
+            `!${rootPath}/.git/**`,
+          ],
+          { dot: true }
+        )
+        .pipe(zip(`${sourceName}.zip`))
+        .pipe(gulp.dest(zipDir))
+        .on("end", () => {
+          console.log("source code zip build complete.");
+          resolve();
+        })
+        .on("error", reject);
+    });
+
+    console.log("build finally publish package...");
+    await new Promise((resolve, reject) => {
+      gulp
+        .src(`${zipDir}/*.zip`)
+        .pipe(zip(`${publishName}.zip`))
+        .pipe(gulp.dest(zipDir))
+        .on("end", resolve)
+        .on("error", reject);
+    });
+
+    console.log("updating dist(for chrome dev)...");
+    const rootDist = path.resolve(__dirname, "../dist");
+    if (fs.existsSync(rootDist)) {
+      execSync(`rm -rf "${rootDist}"`);
+    }
+    fs.mkdirSync(rootDist, { recursive: true });
+    execSync(`cp -r "${chromeDir}"/* "${rootDist}/"`);
+
+    console.log("dist updated for chrome dev.");
+
+    console.log("\nall done!");
+    console.log(
+      "  dist-chrome/    → Load as unpacked extension (Chrome debugging)"
     );
-
-    // /zip publish
-    gulp
-      .src([`${zipPath}/**.zip`])
-      // .src([`zip/${chromeFileName}.zip`, `zip/${firefoxFileName}.zip`,`zip/${sourceFileName}.zip`])
-      .pipe(zip(`${publishFileName}.zip`))
-      .pipe(gulp.dest(zipPath));
-  } catch (e) {
-    console.error(e);
+    console.log(
+      "  dist-firefox/   → Load as unpacked extension (Firefox debugging)"
+    );
+    console.log(
+      "  dist/           → Identical to the final Chrome release build (for debugging)"
+    );
+    console.log(
+      "  zip/            → 6 standard files ready for store submission"
+    );
+  } catch (err) {
+    console.error("build failed:", err);
     process.exit(1);
   }
 })();

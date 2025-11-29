@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [Un-Released]
+### Enhancements
+- Firefox build scripts
+
 
 ## [2.4.4]
 ### Enhancements
