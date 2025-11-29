@@ -47,8 +47,10 @@
     "build:firefox": "rimraf dist dist-firefox && webpack --mode production --env BROWSER=firefox && mv dist dist-firefox",
     "build": "npm run clean && npm run build:chrome && npm run build:firefox",
     "postbuild": "node scripts/post-build.js",
-    "dev": "BROWSER=chrome node scripts/post-dev.js && webpack --mode development --env BROWSER=chrome   --watch",
-    "dev:ff": "BROWSER=firefox node scripts/post-dev.js && webpack --mode development --env BROWSER=firefox  --watch",
+    "predev": "rimraf dist && node scripts/pre-dev.js",
+    "dev": "webpack --mode development --env BROWSER=chrome   --watch",
+    "predev:ff": "rimraf dist-firefox && BROWSER=firefox node scripts/pre-dev.js",
+    "dev:ff": "webpack --mode development --env BROWSER=firefox  --watch --output-path=dist-firefox",
     "test": "mocha --timeout 5000 --require ./test/babel-register.js 'test/unit/**/*.js'",
     "cspell":"cspell \"src/**\""
   },
