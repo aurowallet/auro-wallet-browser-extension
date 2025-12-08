@@ -1,3 +1,5 @@
+import ledgerManager from "@/utils/ledger";
+import { getZkAppUpdateInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -19,11 +21,6 @@ import { updateShouldRequest } from "../../../../../reducers/accountReducer";
 import { updateLedgerConnectStatus } from "../../../../../reducers/ledger";
 import { openTab, sendMsg } from "../../../../../utils/commonMsg";
 import {
-  getLedgerStatus,
-  requestSignDelegation,
-  requestSignPayment,
-} from "../../../../../utils/ledger";
-import {
   addressSlice,
   amountDecimals,
   decodeMemo,
@@ -40,7 +37,6 @@ import {
   TransactionModalType,
 } from "../../../../component/TransactionModal";
 import styles from "./index.module.scss";
-import { getZkAppUpdateInfo } from "@/utils/zkUtils";
 
 /**
  *
@@ -77,7 +73,6 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
   const [currentFee, setCurrentFee] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
 
-  const [ledgerApp, setLedgerApp] = useState();
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
 
@@ -107,15 +102,14 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
 
   const checkLedgerStatus = useCallback(async () => {
     if (isLedgerAccount) {
-      const ledger = await getLedgerStatus();
-      dispatch(updateLedgerConnectStatus(ledger.status));
-      setLedgerApp(ledger.app);
+      const { status } = await ledgerManager.ensureConnect();
+      dispatch(updateLedgerConnectStatus(status));
     }
-  }, [isLedgerAccount]);
+  }, [isLedgerAccount, dispatch]);
 
   const onClickSpeedUp = useCallback(
-    (txData) => {
-      checkLedgerStatus();
+    async (txData) => {
+      await checkLedgerStatus();
       setModalType(TransactionModalType.speedUp);
       setTransactionModalData(txData);
 
@@ -131,8 +125,8 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
   );
 
   const onClickCancel = useCallback(
-    (txData) => {
-      checkLedgerStatus();
+    async (txData) => {
+      await checkLedgerStatus();
       setTransactionModalStatus(true);
       setModalType(TransactionModalType.cancel);
       let localFee = setCurrentTransactionFee(txData);
@@ -208,44 +202,65 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
     async (nextPayload) => {
       const nextAction = nextPayload.sendAction;
       setWaitLedgerStatus(true);
-      let ledgerNextPayload = nextPayload;
+
+      let ledgerNextPayload = { ...nextPayload };
       if (modalType === TransactionModalType.cancel) {
-        ledgerNextPayload = {
-          ...nextPayload,
-          amount: 1e-9,
-        };
+        ledgerNextPayload.amount = 0;
       } else {
-        ledgerNextPayload = {
-          ...nextPayload,
-          memo: decodeMemo(nextPayload.memo),
-        };
+        ledgerNextPayload.memo = decodeMemo(nextPayload.memo);
       }
-      const nextFunc =
-        nextAction === DAppActions.mina_sendStakeDelegation
-          ? requestSignDelegation
-          : requestSignPayment;
-      const { signature, payload, error, rejected } = await nextFunc(
-        ledgerApp,
-        ledgerNextPayload,
-        accountInfo.currentAccount.hdPath,
-        true
-      );
-      if (error) {
-        setBtnLoading(false);
-        setTransactionModalStatus(false);
-        Toast.info(error.message);
-        return;
+
+      try {
+        let signResult;
+        if (nextAction === DAppActions.mina_sendStakeDelegation) {
+          signResult = await ledgerManager.signDelegation(
+            ledgerNextPayload,
+            accountInfo.currentAccount.hdPath
+          );
+        } else {
+          signResult = await ledgerManager.signPayment(
+            ledgerNextPayload,
+            accountInfo.currentAccount.hdPath
+          );
+        }
+
+        console.log("signResult,", signResult);
+
+        if (signResult.rejected) {
+          Toast.info(i18n.t("ledgerRejected"));
+          setBtnLoading(false)
+          return;
+        }
+        if (signResult.error) {
+          setBtnLoading(false)
+          Toast.info(signResult.error.message || "Signature failed");
+          return;
+        }
+
+        const sendFunc =
+          nextAction === DAppActions.mina_sendStakeDelegation
+            ? sendStakeTx
+            : sendTx;
+
+        const postRes = await sendFunc(signResult.payload, {
+          rawSignature: signResult.signature,
+        });
+
+        onSubmitTx(postRes, "ledger");
+      } catch (err) {
+        console.error("Ledger transfer failed:", err);
+        Toast.info(err.message || "Transaction failed");
+      } finally {
+        setWaitLedgerStatus(false);
       }
-      const nextPostFunc =
-        nextAction === DAppActions.mina_sendStakeDelegation
-          ? sendStakeTx
-          : sendTx;
-      let postRes = await nextPostFunc(payload, {
-        rawSignature: signature,
-      }).catch((error) => error);
-      onSubmitTx(postRes, "ledger");
     },
-    [ledgerApp, modalType, accountInfo]
+    [
+      modalType,
+      accountInfo.currentAccount.hdPath,
+      ledgerManager.signDelegation,
+      ledgerManager.signPayment,
+      onSubmitTx,
+    ]
   );
 
   const onClickConfirm = useCallback(
@@ -346,9 +361,12 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
       ledgerTransfer,
     ]
   );
-  const onLedgerInfoModalConfirm = useCallback((ledger) => {
-    setLedgerApp(ledger.app);
-    setLedgerModalStatus(false);
+  const onLedgerInfoModalConfirm = useCallback(async () => {
+    const { status } = await ledgerManager.ensureConnect();
+    if (status === LEDGER_STATUS.READY) {
+      setLedgerModalStatus(false);
+      onConfirm();
+    }
   }, []);
   return (
     <div className={cls(styles.historyContainer, styles.holderContainer)}>
@@ -434,8 +452,9 @@ const TxItem = ({
     const txKindLow = txData.kind?.toLowerCase();
     let isMainCoin = tokenInfo?.tokenBaseInfo?.isMainToken;
     if (txKindLow === "payment") {
-      let isOut = txData.from.toLowerCase() === currentAccount.address.toLowerCase();
-      isReceive = !isOut
+      let isOut =
+        txData.from.toLowerCase() === currentAccount.address.toLowerCase();
+      isReceive = !isOut;
       statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
     } else if (txKindLow === "stake_delegation" || txKindLow === "delegation") {
       isReceive = false;
@@ -457,10 +476,11 @@ const TxItem = ({
       const tokenDecimal = tokenInfo?.tokenBaseInfo?.decimals;
       amount = getBalanceForUI(result.totalBalanceChange, tokenDecimal, 4);
       amount = result.symbol + amount;
-      let isZkReceive = result.symbol !== "-"
+      let isZkReceive = result.symbol !== "-";
       statusIcon = isZkReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
-      showAddress = isZkReceive ? addressSlice(result.from, 8):addressSlice(result.to, 8)
-
+      showAddress = isZkReceive
+        ? addressSlice(result.from, 8)
+        : addressSlice(result.to, 8);
     } else {
       if (isMainCoin && txKindLow === "zkapp") {
         const accountUpdates = txData.body.zkappCommand?.accountUpdates;
@@ -471,14 +491,18 @@ const TxItem = ({
           ZK_DEFAULT_TOKEN_ID
         );
 
-        amount = getBalanceForUI(result.totalBalanceChange, MAIN_COIN_CONFIG.decimals, 4);
+        amount = getBalanceForUI(
+          result.totalBalanceChange,
+          MAIN_COIN_CONFIG.decimals,
+          4
+        );
         amount = result.symbol + amount;
-        if(result.symbol == "-"){
-          showAddress = addressSlice(result.to, 8)
-        }else if(result.symbol == "+"){
-          showAddress = addressSlice(result.from, 8)
-        }else{
-          showAddress = addressSlice(result.to, 8)
+        if (result.symbol == "-") {
+          showAddress = addressSlice(result.to, 8);
+        } else if (result.symbol == "+") {
+          showAddress = addressSlice(result.from, 8);
+        } else {
+          showAddress = addressSlice(result.to, 8);
         }
       }
     }

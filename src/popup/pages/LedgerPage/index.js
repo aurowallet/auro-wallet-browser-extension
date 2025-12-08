@@ -13,7 +13,7 @@ import {
 } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
-import { checkLedgerConnect, getLedgerStatus, requestAccount } from "../../../utils/ledger";
+import ledgerManager from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
@@ -61,56 +61,33 @@ export const LedgerPage = ({}) => {
     });
   }, []);
 
-  const onClickConnect = useCallback(
-    async (permissionsCheck = true) => {
-      if (isShowSuccessTip) {
-        window.close();
+  const onClickConnect = useCallback(() => {
+    if (isShowSuccessTip) {
+      window.close();
+      return;
+    }
+    setTipType(Tip_Type.init);
+    getWalletLockStatus().then((ok) => {
+      if (!ok) {
+        setTipType(Tip_Type.openLockStatus);
         return;
       }
-      setTipType(Tip_Type.init);
-      const walletLockStatus = await getWalletLockStatus();
-      if (!walletLockStatus) {
-        setTipType(Tip_Type.openLockStatus);
-        return false;
-      }
-      try {
-        const { ledgerApp, manualConnected, error, openApp } =
-          await checkLedgerConnect(permissionsCheck);
-        if (error) {
-          setTipType(Tip_Type.openLedger);
-          return false;
-        }
-        if (ledgerApp) {
-          const result = await ledgerApp.getAppName();
-          if (result.name === "Mina") {
-            if (permissionsCheck && !isLedgerPermission) {
-              onClickNextTab();
-            }
-            if (isLedgerPermission) {
-              setIsShowSuccessTip(true);
-              setTipType(Tip_Type.grantSuccess);
-            }
-            return ledgerApp;
-          } else {
-            setTipType(Tip_Type.openLedgerApp);
-            return false;
-          }
-        }
-        if (openApp) {
-          setTipType(Tip_Type.openLedgerApp);
-          return false;
-        }
 
-        if (manualConnected) {
+      ledgerManager.requestConnect().then(({ status }) => {
+        if (status === LEDGER_STATUS.READY) {
+          if (!isLedgerPermission) onClickNextTab();
+          if (isLedgerPermission) {
+            setIsShowSuccessTip(true);
+            setTipType(Tip_Type.grantSuccess);
+          }
+        } else if (status === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
+          setTipType(Tip_Type.openLedgerApp);
+        } else {
           setTipType(Tip_Type.openLedger);
         }
-        return false;
-      } catch (error) {
-        setTipType(Tip_Type.openLedger);
-      }
-    },
-    [isShowSuccessTip, isLedgerPermission]
-  );
+      });
+    });
+  }, [isShowSuccessTip, isLedgerPermission, onClickNextTab]);
   const onClickImport = useCallback(() => {
     onClickNextTab();
   }, []);
@@ -257,67 +234,68 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
   const dispatch = useDispatch();
 
   const onConfirm = useCallback(async () => {
-    const ledgerApp = await onClickConnect(false);
-    if (typeof ledgerApp === "boolean") {
+    let nextIndex = accountIndex;
+    if (nextIndex <= 0) {
+      nextIndex = 0;
+    }
+    const { status } = await ledgerManager.ensureConnect();
+
+    if (status !== LEDGER_STATUS.READY) {
+      setErrorMsg(i18n.t("pleaseOpenInLedger"));
       return;
     }
     setTipModalVisible(true);
-    if (ledgerApp) {
-      let nextIndex = accountIndex;
-      if (nextIndex <= 0) {
-        nextIndex = 0;
-      }
-      const { publicKey, rejected } = await requestAccount(
-        ledgerApp,
-        nextIndex
-      );
+    try {
+      const { publicKey, rejected } = await ledgerManager.getAddress(nextIndex);
       setTipModalVisible(false);
-      if(!publicKey){
-        setErrorMsg(i18n.t("ledgerConnectOpenTip"));
+      if (rejected || !publicKey) {
+        setErrorMsg(
+          rejected ? i18n.t("ledgerRejected") : "Failed to get address"
+        );
         return;
       }
-      if (rejected) {
-        setErrorMsg(i18n.t("ledgerRejected"));
-      } else {
-        sendMsg(
-          {
-            payload: {
-              address: publicKey,
-              accountIndex: nextIndex,
-              accountName: accountName || placeholderText,
-            },
-            action: WALLET_IMPORT_LEDGER,
+      sendMsg(
+        {
+          action: WALLET_IMPORT_LEDGER,
+          payload: {
+            address: publicKey,
+            accountIndex: nextIndex,
+            accountName: accountName || placeholderText,
           },
-          (account) => {
-            if (account.error) {
-              if (account.type === "local") {
-                setErrorMsg(i18n.t(account.error));
+        },
+        (res) => {
+          if (res.error) {
+            if (res.error) {
+              if (res.type === "local") {
+                setErrorMsg(i18n.t(res.error));
               } else {
-                setErrorMsg(account.error);
+                setErrorMsg(res.error);
               }
-            } else {
-              sendMsg(
-                {
-                  action: DAPP_CHANGE_CONNECTING_ADDRESS,
-                  payload: {
-                    address: currentAddress,
-                    currentAddress: account.address,
-                  },
-                },
-                (status) => {}
-              );
-              dispatch(updateCurrentAccount(account));
-              sendMsg({
-                action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,
-                payload: account.address,
-              });
-              onClickNext && onClickNext();
             }
+          } else {
+            sendMsg(
+              {
+                action: DAPP_CHANGE_CONNECTING_ADDRESS,
+                payload: {
+                  address: currentAddress,
+                  currentAddress: res.address,
+                },
+              },
+              (status) => {}
+            );
+            dispatch(updateCurrentAccount(res));
+            sendMsg({
+              action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,
+              payload: res.address,
+            });
+            onClickNext && onClickNext();
           }
-        );
-      }
+        }
+      );
+    } catch (err) {
+      setErrorMsg("Connection lost", err);
     }
-  }, [onClickNext, accountIndex, placeholderText, accountName]);
+  }, [accountIndex, accountName, placeholderText, onClickNext, currentAddress]);
   const onNameInput = useCallback((e) => {
     let value = e.target.value;
     if (value.length <= 16) {

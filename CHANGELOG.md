@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Firefox build scripts
 - Debug scripts
+- Ledger connect
 
 
 ## [2.4.4]

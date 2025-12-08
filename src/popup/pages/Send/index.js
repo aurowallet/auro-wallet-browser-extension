@@ -22,11 +22,12 @@ import {
   WALLET_GET_ALL_ACCOUNT,
 } from "../../../constant/msgTypes";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
+import { TimerProvider } from "../../../hooks/TimerContext";
 import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateAddressDetail } from "../../../reducers/cache";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { sendMsg } from "../../../utils/commonMsg";
-import { getLedgerStatus, requestSignPayment } from "../../../utils/ledger";
+import ledgerManager from "../../../utils/ledger";
 import {
   addressSlice,
   addressValid,
@@ -48,7 +49,6 @@ import ICON_Address from "../../component/SVG/ICON_Address";
 import ICON_Wallet from "../../component/SVG/ICON_Wallet";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
-import { TimerProvider } from "../../../hooks/TimerContext";
 
 const StyledWrapper = styled.div`
   display: flex;
@@ -152,7 +152,6 @@ const SendPage = ({}) => {
 
   const [contentList, setContentList] = useState([]);
   const [btnDisableStatus, setBtnDisableStatus] = useState(true);
-  const [ledgerApp, setLedgerApp] = useState();
 
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
 
@@ -195,15 +194,12 @@ const SendPage = ({}) => {
     }
   }, [isZeko]);
 
-  const onFeeTimerComplete = useCallback(
-    async () => {
-      if (isZeko) {
-        const fee = await getZekoNetFee();
-        setZekoPerFee(parsedZekoFee(fee));
-      }
-    },
-    [isZeko]
-  );
+  const onFeeTimerComplete = useCallback(async () => {
+    if (isZeko) {
+      const fee = await getZekoNetFee();
+      setZekoPerFee(parsedZekoFee(fee));
+    }
+  }, [isZeko]);
 
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value);
@@ -321,32 +317,43 @@ const SendPage = ({}) => {
     }
   }, [confirmModalStatus]);
   const ledgerTransfer = useCallback(
-    async (params, preLedgerApp) => {
-      const nextLedgerApp = preLedgerApp || ledgerApp;
-      if (nextLedgerApp) {
-        setWaitLedgerStatus(true);
-        const { signature, payload, error, rejected } =
-          await requestSignPayment(
-            nextLedgerApp,
-            params,
-            currentAccount.hdPath
-          );
-        if (rejected) {
-          setConfirmModalStatus(false);
-        }
-        if (error) {
-          Toast.info(error.message);
+    async (params) => {
+      if (!ledgerManager.app || ledgerManager.status !== LEDGER_STATUS.READY) {
+        setLedgerModalStatus(true);
+        return;
+      }
+
+      setWaitLedgerStatus(true);
+      setConfirmBtnStatus(true);
+
+      try {
+        const result = await ledgerManager.signPayment(
+          params,
+          currentAccount.hdPath || 0
+        );
+        if (result.rejected) {
+          Toast.info(i18n.t("ledgerRejected"));
           return;
         }
-        let postRes = await sendTx(payload, { rawSignature: signature }).catch(
-          (error) => error
-        );
-        setConfirmModalStatus(false);
+        if (result.error) {
+          Toast.info(result.error.message || "Signature failed");
+          return;
+        }
+
+        const postRes = await sendTx(result.payload, {
+          rawSignature: result.signature,
+        });
 
         onSubmitTx(postRes, "ledger");
+      } catch (err) {
+        Toast.info("Transaction failed", err);
+      } finally {
+        setWaitLedgerStatus(false);
+        setConfirmBtnStatus(false);
+        setConfirmModalStatus(false);
       }
     },
-    [currentAccount, onSubmitTx, ledgerApp, fetchAccountData]
+    [currentAccount, onSubmitTx]
   );
   const buildBodyInLocal = useCallback((buildTokenData) => {
     sendMsg(
@@ -419,18 +426,152 @@ const SendPage = ({}) => {
       i18n,
     ]
   );
-  const clickNextStep = useCallback(
-    async (ledgerReady = false, preLedgerApp) => {
+  const clickNextStep = useCallback(async () => {
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      const { status } = await ledgerManager.ensureConnect();
+      dispatch(updateLedgerConnectStatus(status));
+      if (status !== LEDGER_STATUS.READY) {
+        setLedgerModalStatus(true);
+        return;
+      }
+    }
+    let fromAddress = currentAddress;
+    let toAddressValue = trimSpace(toAddress);
+    let amount = getRealTransferAmount();
+    let nonce = trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce;
+    let realMemo = memo || "";
+    let fee = trimSpace(nextFee);
+    const payload = {
+      fromAddress,
+      toAddress: toAddressValue,
+      amount,
+      fee,
+      nonce,
+      memo: realMemo,
+    };
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      return ledgerTransfer(payload);
+    }
+    setConfirmBtnStatus(true);
+    if (!isSendMainToken) {
+      payload.sendAction = DAppActions.mina_sendTransaction;
+      const tokenBody = await getTokenBody(payload);
+      if (!tokenBody) {
+        return;
+      }
+      payload.transaction = tokenBody;
+    } else {
+      payload.sendAction = DAppActions.mina_sendPayment;
+    }
+
+    sendMsg(
+      {
+        action: QA_SIGN_TRANSACTION,
+        payload,
+      },
+      (data) => {
+        setConfirmBtnStatus(false);
+        onSubmitTx(data);
+      }
+    );
+  }, [
+    getRealTransferAmount,
+    onSubmitTx,
+    ledgerTransfer,
+    ledgerStatus,
+    currentAccount,
+    currentAddress,
+    mainTokenNetInfo,
+    toAddress,
+    inputNonce,
+    memo,
+    nextFee,
+    isSendMainToken,
+    getTokenBody,
+  ]);
+
+  const onClickClose = useCallback(() => {
+    setConfirmModalStatus(false);
+  }, []);
+
+  useEffect(() => {
+    if (!confirmModalStatus) {
+      setConfirmBtnStatus(false);
+    }
+  }, [confirmModalStatus]);
+  const onConfirm = useCallback(async () => {
+    let toAddressValue = trimSpace(toAddress);
+    if (!addressValid(toAddressValue)) {
+      Toast.info(i18n.t("sendAddressError"));
+      return;
+    }
+    let amountValue = trimSpace(amount);
+    if (!isNumber(amountValue) || !new BigNumber(amountValue).gte(0)) {
+      Toast.info(i18n.t("amountError"));
+      return;
+    }
+    let inputFee = trimSpace(nextFee);
+    if (inputFee.length > 0 && !isNumber(inputFee)) {
+      Toast.info(i18n.t("inputFeeError"));
+      return;
+    }
+    if (!isSendMainToken && new BigNumber(inputFee).gt(mainTokenBalance)) {
+      Toast.info(i18n.t("balanceNotEnough"));
+      return;
+    }
+    if (isAllTransfer()) {
+      let maxAmount = getRealTransferAmount();
+      if (new BigNumber(maxAmount).lt(0)) {
+        Toast.info(i18n.t("balanceNotEnough"));
+        return;
+      }
+    } else {
+      let maxAmount = isSendMainToken
+        ? new BigNumber(amount).plus(inputFee).toString()
+        : new BigNumber(amount).toString();
+      if (new BigNumber(maxAmount).gt(availableBalance)) {
+        Toast.info(i18n.t("balanceNotEnough"));
+        return;
+      }
+    }
+    let nonce = trimSpace(inputNonce);
+    if (nonce.length > 0 && !isNaturalNumber(nonce)) {
+      Toast.info(i18n.t("inputNonceError", { nonce: "Nonce" }));
+      return;
+    }
+    let list = [
+      {
+        label: i18n.t("to"),
+        value: toAddress,
+      },
+      {
+        label: i18n.t("from"),
+        value: currentAddress,
+      },
+      {
+        label: i18n.t("fee"),
+        value: inputFee + " " + MAIN_COIN_CONFIG.symbol,
+        showTimer: feeIntervalTime > 0,
+      },
+    ];
+    if (isNaturalNumber(nonce)) {
+      list.push({
+        label: "Nonce",
+        value: nonce,
+      });
+    }
+    if (memo) {
+      list.push({
+        label: "Memo",
+        value: memo,
+      });
+    }
+    setContentList(list);
+
+    if (!isSendMainToken) {
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        if (!ledgerReady) {
-          const ledger = await getLedgerStatus();
-          dispatch(updateLedgerConnectStatus(ledger.status));
-          if (ledger.status !== LEDGER_STATUS.READY) {
-            setLedgerModalStatus(true);
-            return;
-          }
-          setLedgerApp(ledger.app);
-        }
+        Toast.info(i18n.t("notSupportNow"));
+        return;
       }
       let fromAddress = currentAddress;
       let toAddressValue = trimSpace(toAddress);
@@ -446,191 +587,45 @@ const SendPage = ({}) => {
         nonce,
         memo: realMemo,
       };
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        return ledgerTransfer(payload, preLedgerApp);
-      }
-      setConfirmBtnStatus(true);
-      if (!isSendMainToken) {
-        payload.sendAction = DAppActions.mina_sendTransaction;
-        const tokenBody = await getTokenBody(payload);
-        if (!tokenBody) {
-          return;
-        }
-        payload.transaction = tokenBody;
-      } else {
-        payload.sendAction = DAppActions.mina_sendPayment;
-      }
-
-      sendMsg(
-        {
-          action: QA_SIGN_TRANSACTION,
-          payload,
-        },
-        (data) => {
-          setConfirmBtnStatus(false);
-          onSubmitTx(data);
-        }
-      );
-    },
-    [
-      getRealTransferAmount,
-      onSubmitTx,
-      ledgerTransfer,
-      ledgerStatus,
-      currentAccount,
-      currentAddress,
-      mainTokenNetInfo,
-      toAddress,
-      inputNonce,
-      memo,
-      nextFee,
-      isSendMainToken,
-      getTokenBody,
-    ]
-  );
-
-  const onClickClose = useCallback(() => {
-    setConfirmModalStatus(false);
-  }, []);
-
-  useEffect(() => {
-    if (!confirmModalStatus) {
-      setConfirmBtnStatus(false);
+      await getTokenBody(payload);
+      return;
     }
-  }, [confirmModalStatus]);
-  const onConfirm = useCallback(
-    async (ledgerReady = false) => {
-      let toAddressValue = trimSpace(toAddress);
-      if (!addressValid(toAddressValue)) {
-        Toast.info(i18n.t("sendAddressError"));
-        return;
-      }
-      let amountValue = trimSpace(amount);
-      if (!isNumber(amountValue) || !new BigNumber(amountValue).gte(0)) {
-        Toast.info(i18n.t("amountError"));
-        return;
-      }
-      let inputFee = trimSpace(nextFee);
-      if (inputFee.length > 0 && !isNumber(inputFee)) {
-        Toast.info(i18n.t("inputFeeError"));
-        return;
-      }
-      if (!isSendMainToken && new BigNumber(inputFee).gt(mainTokenBalance)) {
-        Toast.info(i18n.t("balanceNotEnough"));
-        return;
-      }
-      if (isAllTransfer()) {
-        let maxAmount = getRealTransferAmount();
-        if (new BigNumber(maxAmount).lt(0)) {
-          Toast.info(i18n.t("balanceNotEnough"));
-          return;
-        }
-      } else {
-        let maxAmount = isSendMainToken
-          ? new BigNumber(amount).plus(inputFee).toString()
-          : new BigNumber(amount).toString();
-        if (new BigNumber(maxAmount).gt(availableBalance)) {
-          Toast.info(i18n.t("balanceNotEnough"));
-          return;
-        }
-      }
-      let nonce = trimSpace(inputNonce);
-      if (nonce.length > 0 && !isNaturalNumber(nonce)) {
-        Toast.info(i18n.t("inputNonceError", { nonce: "Nonce" }));
-        return;
-      }
-      let list = [
-        {
-          label: i18n.t("to"),
-          value: toAddress,
-        },
-        {
-          label: i18n.t("from"),
-          value: currentAddress,
-        },
-        {
-          label: i18n.t("fee"),
-          value: inputFee + " " + MAIN_COIN_CONFIG.symbol,
-          showTimer: feeIntervalTime > 0,
-        },
-      ];
-      if (isNaturalNumber(nonce)) {
-        list.push({
-          label: "Nonce",
-          value: nonce,
-        });
-      }
-      if (memo) {
-        list.push({
-          label: "Memo",
-          value: memo,
-        });
-      }
-      setContentList(list);
 
-      if (!isSendMainToken) {
-        if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-          Toast.info(i18n.t("notSupportNow"));
-          return;
-        }
-        let fromAddress = currentAddress;
-        let toAddressValue = trimSpace(toAddress);
-        let amount = getRealTransferAmount();
-        let nonce = trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce;
-        let realMemo = memo || "";
-        let fee = trimSpace(nextFee);
-        let payload = {
-          fromAddress,
-          toAddress: toAddressValue,
-          amount,
-          fee,
-          nonce,
-          memo: realMemo,
-        };
-        await getTokenBody(payload);
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      const { status } = await ledgerManager.ensureConnect();
+      dispatch(updateLedgerConnectStatus(status));
+      if (status !== LEDGER_STATUS.READY) {
+        setLedgerModalStatus(true);
         return;
       }
+    }
+    setConfirmModalStatus(true);
+  }, [
+    i18n,
+    toAddress,
+    amount,
+    nextFee,
+    inputNonce,
+    currentAddress,
+    memo,
+    currentAccount,
+    isAllTransfer,
+    getRealTransferAmount,
+    clickNextStep,
+    ledgerStatus,
+    availableBalance,
+    mainTokenBalance,
+    mainTokenNetInfo,
+    feeIntervalTime,
+  ]);
 
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        if (!ledgerReady) {
-          const ledger = await getLedgerStatus();
-          setLedgerApp(ledger.app);
-          dispatch(updateLedgerConnectStatus(ledger.status));
-        }
-        setConfirmModalStatus(true);
-      } else {
-        dispatch(updateLedgerConnectStatus(""));
-        setConfirmModalStatus(true);
-      }
-    },
-    [
-      i18n,
-      toAddress,
-      amount,
-      nextFee,
-      inputNonce,
-      currentAddress,
-      memo,
-      currentAccount,
-      isAllTransfer,
-      getRealTransferAmount,
-      clickNextStep,
-      ledgerStatus,
-      availableBalance,
-      mainTokenBalance,
-      mainTokenNetInfo,
-      feeIntervalTime,
-    ]
-  );
-
-  const onLedgerInfoModalConfirm = useCallback(
-    (ledger) => {
-      setLedgerApp(ledger.app);
+  const onLedgerInfoModalConfirm = useCallback(async () => {
+    const { status } = await ledgerManager.ensureConnect();
+    if (status === LEDGER_STATUS.READY) {
       setLedgerModalStatus(false);
-      onConfirm(true);
-    },
-    [confirmModalStatus, clickNextStep, onConfirm]
-  );
+      onConfirm();
+    }
+  }, [onConfirm]);
 
   useEffect(() => {
     if (trimSpace(toAddress).length > 0 && trimSpace(amount).length > 0) {

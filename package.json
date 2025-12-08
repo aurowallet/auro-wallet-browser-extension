@@ -1,9 +1,10 @@
 {
   "name": "auro-wallet",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "private": true,
   "dependencies": {
-    "@ledgerhq/hw-transport-webusb": "6.29.4",
+    "@ledgerhq/hw-transport-webhid":"6.30.9",
+    "@ledgerhq/devices":"8.7.0",
     "@reduxjs/toolkit": "1.4.0",
     "@aurowallet/mina-provider": "1.0.12",
     "axios": "1.10.0",

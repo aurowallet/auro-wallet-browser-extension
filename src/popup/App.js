@@ -13,6 +13,7 @@ import { RECOMMEND_FEE, SCAM_LIST, SUPPORT_TOKEN_LIST } from "../constant/storag
 import { updateScamList, updateSupportTokenList } from "../reducers/accountReducer";
 import { NetworkID_MAP } from "@/constant/network";
 import { getReadableNetworkId } from "@/utils/utils";
+import LedgerStatusSyncer from "./component/LedgerStatusSyncer";
 
 function setLastActiveTime() {
   sendMsg(
@@ -135,6 +136,7 @@ function App() {
 
   return (
     <div className="App">
+      <LedgerStatusSyncer />
       <IdleTimer onAction={setLastActiveTime} throttle={1000}>
         <header
           className={cls("App-header", {

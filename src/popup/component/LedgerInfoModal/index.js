@@ -1,166 +1,213 @@
-import cls from "classnames";
-import browser from "webextension-polyfill";
+import ledgerManager from "@/utils/ledger";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { Trans } from "react-i18next";
-import { useDispatch, useSelector } from "react-redux";
-import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
-import { updateLedgerConnectStatus } from "../../../reducers/ledger";
-import { getLedgerStatus } from "../../../utils/ledger";
-import Button from "../Button";
-import styles from "./index.module.scss";
+import { useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
+import browser from "webextension-polyfill";
+import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
+import Button from "../Button";
 
-const openModal = keyframes`
-  from {
-    bottom: -50%;
-  }
-  to {
-    bottom: 0;
-  }
+const slideUp = keyframes`
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 `;
 
-const StyledInnerContent = styled.div`
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 10;
+`;
+
+const ModalContainer = styled.div`
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 11;
   background: #ffffff;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-  animation: ${openModal} 0.35s;
-  animation-fill-mode: forwards;
-  min-height: 358px;
-`;
-const StyledButtonWrapper = styled.div`
-  padding: 12px 38px 20px;
-  position: fixed;
-  bottom: 0;
-  width: calc(100%);
-  background-color: white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: ${slideUp} 0.35s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 
-  animation: ${openModal} 0.35s;
-  animation-fill-mode: forwards;
+  display: flex;
+  flex-direction: column;
 `;
-const StyledReminderContainer = styled.div`
-  animation: ${openModal} 0.35s;
-  animation-fill-mode: forwards;
-  position: fixed;
-  z-index: 2;
-  margin: 0px 20px 90px;
 
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+  flex-shrink: 0;
+`;
+
+const Title = styled.div`
+  font-weight: 600;
+  font-size: 18px;
+  color: #222;
+`;
+
+const CloseBtn = styled.img`
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+`;
+
+const Divider = styled.div`
+  height: 0.5px;
+  background: #f2f2f2;
+  margin: 0 20px;
+`;
+
+const Steps = styled.div`
+  padding: 20px 20px 16px;
+  flex: 1;
+`;
+
+const Step = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const StepNumber = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #594af1;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`;
+
+const StepText = styled.div`
+  margin-left: 12px;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+  b {
+    font-weight: 700;
+  }
+`;
+
+const Reminder = styled.div`
+  margin: 0 20px 30px;
+  padding: 12px;
   background: rgba(214, 90, 90, 0.1);
   border: 1px solid #d65a5a;
   border-radius: 10px;
-  font-weight: 400;
   font-size: 14px;
-  line-height: 17px;
   color: #d65a5a;
-  padding: 12px 10px;
+  line-height: 1.5;
 `;
+
+const Clickable = styled.span`
+  color: #594af1;
+  cursor: pointer;
+  text-decoration: underline;
+`;
+
+const ButtonArea = styled.div`
+  padding: 12px 20px 30px;
+  background: #ffffff;
+  margin-top: auto;
+  flex-shrink: 0;
+`;
+
 export const LedgerInfoModal = ({
   modalVisible = false,
   title = "",
   onConfirm = () => {},
   onClickClose = () => {},
 }) => {
-  const dispatch = useDispatch();
-
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
 
   const { nextLedgerTip } = useMemo(() => {
-    let nextLedgerTip = "";
-    switch (ledgerStatus) {
-      case LEDGER_STATUS.LEDGER_DISCONNECT:
-        nextLedgerTip = "ledgerNotConnectTip";
-        break;
-      case LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN:
-        nextLedgerTip = "ledgerAppConnectTip";
-        break;
-      default:
-        break;
+    let tip = "";
+
+    if (ledgerStatus === LEDGER_STATUS.LEDGER_DISCONNECT) {
+      tip = "ledgerNotConnectTip";
     }
-    return {
-      nextLedgerTip,
-    };
+    if (ledgerStatus === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
+      tip = "ledgerAppConnectTip";
+    }
+    return { nextLedgerTip: tip };
   }, [ledgerStatus]);
 
   const onClickReminder = useCallback(() => {
-    const ledgerPageType = LEDGER_PAGE_TYPE.permissionGrant;
-    let openParams = new URLSearchParams({ ledgerPageType }).toString();
-    browser.tabs.create({
-      url: "popup.html#/ledger_page?" + openParams,
+    const params = new URLSearchParams({
+      ledgerPageType: LEDGER_PAGE_TYPE.permissionGrant,
     });
-  }, [ledgerStatus]);
+    browser.tabs.create({ url: `popup.html#/ledger_page?${params}` });
+  }, []);
 
-  const onClickConfirm = useCallback(async () => {
-    const ledger = await getLedgerStatus();
-    dispatch(updateLedgerConnectStatus(ledger.status));
-    if (ledger.status === LEDGER_STATUS.READY) {
-      onConfirm(ledger);
+  const onClickConfirm = async () => {
+    const { status } = await ledgerManager.ensureConnect();
+    if (status === LEDGER_STATUS.READY) {
+      onConfirm();
     }
-  }, [onConfirm]);
+  };
+
+  if (!modalVisible) return null;
 
   return (
     <>
-      {modalVisible && (
-        <div className={styles.outerContainer}>
-          <StyledInnerContent>
-            <div className={styles.contentContainer}>
-              <div className={styles.titleRow}>
-                <span className={styles.rowTitle}>
-                  {title || i18n.t("connectHardwareWallet")}
-                </span>
+      <Overlay onClick={onClickClose} />
 
-                <div className={styles.rightRow}>
-                  <img
-                    onClick={onClickClose}
-                    className={styles.rowClose}
-                    src="/img/icon_nav_close.svg"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className={styles.dividedLine} />
-            <div className={styles.stepOuterContainer}>
-              <div className={styles.stepContainer}>
-                <div className={styles.stepNumber}>1</div>
-                <span className={styles.stepContent}>
-                  {i18n.t("ledgerConnect_1")}
-                </span>
-              </div>
-              <div className={styles.stepContainer}>
-                <div className={styles.stepNumber}>2</div>
-                <span className={styles.stepContent}>
-                  <Trans
-                    i18nKey={"ledgerConnect_2"}
-                    components={{
-                      b: <span className={styles.stepContentLight} />,
-                    }}
-                  />
-                </span>
-              </div>
-            </div>
-            {nextLedgerTip && (
-              <StyledReminderContainer>
-                <Trans
-                  i18nKey={nextLedgerTip}
-                  components={{
-                    click: (
-                      <span
-                        onClick={onClickReminder}
-                        className={styles.clickItem}
-                      />
-                    ),
-                  }}
-                />
-              </StyledReminderContainer>
-            )}
-            <StyledButtonWrapper>
-              <Button onClick={onClickConfirm}>{i18n.t("confirm")}</Button>
-            </StyledButtonWrapper>
-          </StyledInnerContent>
-        </div>
-      )}
+      <ModalContainer>
+        <Header>
+          <Title>{title || i18n.t("connectHardwareWallet")}</Title>
+          <CloseBtn
+            src="/img/icon_nav_close.svg"
+            onClick={onClickClose}
+            alt="close"
+          />
+        </Header>
+
+        <Divider />
+
+        <Steps>
+          <Step>
+            <StepNumber>1</StepNumber>
+            <StepText>{i18n.t("ledgerConnect_1")}</StepText>
+          </Step>
+          <Step>
+            <StepNumber>2</StepNumber>
+            <StepText>
+              <Trans i18nKey="ledgerConnect_2" components={{ b: <b /> }} />
+            </StepText>
+          </Step>
+        </Steps>
+
+        {nextLedgerTip && (
+          <Reminder>
+            <Trans
+              i18nKey={nextLedgerTip}
+              components={{ click: <Clickable onClick={onClickReminder} /> }}
+            />
+          </Reminder>
+        )}
+
+        <ButtonArea>
+          <Button onClick={onClickConfirm} fullWidth>
+            {i18n.t("confirm")}
+          </Button>
+        </ButtonArea>
+      </ModalContainer>
     </>
   );
 };
