@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 const gulp = require("gulp");
-const zip = require("gulp-zip");
+const zip = require("gulp-zip").default;
 const pck = require("../package.json");
 const deepmerge = require("deepmerge");
 
@@ -63,7 +63,7 @@ console.log("manifest.json write to: dist-chrome/、dist-firefox/、zip/ ");
     console.log("packing Firefox extension...");
     await new Promise((resolve, reject) => {
       gulp
-        .src(`${firefoxDir}/**/*`, { dot: true })
+        .src(`${firefoxDir}/**/*`, { dot: true, encoding: false })
         .pipe(zip(`${firefoxName}.zip`))
         .pipe(gulp.dest(zipDir))
         .on("end", resolve)
@@ -73,7 +73,7 @@ console.log("manifest.json write to: dist-chrome/、dist-firefox/、zip/ ");
     console.log("packing Chrome extension...");
     await new Promise((resolve, reject) => {
       gulp
-        .src(`${chromeDir}/**/*`, { dot: true })
+        .src(`${chromeDir}/**/*`, { dot: true, encoding: false })
         .pipe(zip(`${chromeName}.zip`))
         .pipe(gulp.dest(zipDir))
         .on("end", resolve)
@@ -95,7 +95,7 @@ console.log("manifest.json write to: dist-chrome/、dist-firefox/、zip/ ");
             `!${rootPath}/zip/**`,
             `!${rootPath}/.git/**`,
           ],
-          { dot: true }
+          { dot: true, encoding: false }
         )
         .pipe(zip(`${sourceName}.zip`))
         .pipe(gulp.dest(zipDir))
@@ -109,7 +109,7 @@ console.log("manifest.json write to: dist-chrome/、dist-firefox/、zip/ ");
     console.log("build finally publish package...");
     await new Promise((resolve, reject) => {
       gulp
-        .src(`${zipDir}/*.zip`)
+        .src(`${zipDir}/*.zip`, { encoding: false })
         .pipe(zip(`${publishName}.zip`))
         .pipe(gulp.dest(zipDir))
         .on("end", resolve)

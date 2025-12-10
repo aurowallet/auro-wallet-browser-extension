@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 - Debug scripts
 - Ledger connect
 - Upgrade node-forge to v1.3.3
-- Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli
+- Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, gulp, gulp-zip
 - Remove react-scripts, web-ext, url-loader
 - Add resolutions: cross-spawn
 
