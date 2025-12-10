@@ -3,7 +3,6 @@ const path = require("path");
 const { execSync } = require("child_process");
 const gulp = require("gulp");
 const zip = require("gulp-zip");
-const webExt = require("web-ext");
 const pck = require("../package.json");
 const deepmerge = require("deepmerge");
 
@@ -61,12 +60,14 @@ console.log("manifest.json write to: dist-chrome/、dist-firefox/、zip/ ");
 
 (async () => {
   try {
-    console.log("packing Firefox webExt...");
-    await webExt.cmd.build({
-      sourceDir: firefoxDir,
-      artifactsDir: zipDir,
-      filename: `${firefoxName}.zip`,
-      overwriteDest: true,
+    console.log("packing Firefox extension...");
+    await new Promise((resolve, reject) => {
+      gulp
+        .src(`${firefoxDir}/**/*`, { dot: true })
+        .pipe(zip(`${firefoxName}.zip`))
+        .pipe(gulp.dest(zipDir))
+        .on("end", resolve)
+        .on("error", reject);
     });
 
     console.log("packing Chrome extension...");

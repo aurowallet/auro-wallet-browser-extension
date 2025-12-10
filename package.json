@@ -42,14 +42,14 @@
     "immer": "10.1.1"
   },
   "scripts": {
-    "clean": "rimraf dist dist-chrome dist-firefox zip",
-    "build:chrome": "rimraf dist dist-chrome && webpack --mode production --env BROWSER=chrome && mv dist dist-chrome",
-    "build:firefox": "rimraf dist dist-firefox && webpack --mode production --env BROWSER=firefox && mv dist dist-firefox",
+    "clean": "rm -rf dist dist-chrome dist-firefox zip",
+    "build:chrome": "rm -rf dist dist-chrome && webpack --mode production --env BROWSER=chrome && mv dist dist-chrome",
+    "build:firefox": "rm -rf dist dist-firefox && webpack --mode production --env BROWSER=firefox && mv dist dist-firefox",
     "build": "npm run clean && npm run build:chrome && npm run build:firefox",
     "postbuild": "node scripts/post-build.js",
-    "predev": "rimraf dist && node scripts/pre-dev.js",
+    "predev": "rm -rf dist && node scripts/pre-dev.js",
     "dev": "webpack --mode development --env BROWSER=chrome   --watch",
-    "predev:ff": "rimraf dist-firefox && BROWSER=firefox node scripts/pre-dev.js",
+    "predev:ff": "rm -rf dist-firefox && BROWSER=firefox node scripts/pre-dev.js",
     "dev:ff": "webpack --mode development --env BROWSER=firefox  --watch --output-path=dist-firefox",
     "test": "mocha --timeout 5000 --require ./test/babel-register.js 'test/unit/**/*.js'",
     "cspell":"cspell \"src/**\""
@@ -104,7 +104,6 @@
     "url-loader": "4.1.1",
     "webpack": "5.91.0",
     "webpack-cli": "5.1.4",
-    "web-ext": "6.5.0",
     "gulp": "4.0.2",
     "gulp-zip": "5.1.0",
     "deepmerge": "4.2.2",
