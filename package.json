@@ -7,7 +7,7 @@
     "@ledgerhq/devices":"8.7.0",
     "@reduxjs/toolkit": "1.4.0",
     "@aurowallet/mina-provider": "1.0.12",
-    "axios": "1.10.0",
+    "axios": "1.13.2",
     "axios-retry": "4.5.0",
     "bignumber.js": "9.3.0",
     "@scure/bip32": "1.7.0",

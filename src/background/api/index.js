@@ -14,7 +14,6 @@ import { getReadableNetworkId, parseStakingList } from "../../utils/utils";
 import { saveLocal } from "../localStorage";
 import {
   commonFetch,
-  postRequest,
   startFetchMyMutation,
   startFetchMyQuery,
 } from "../request";
@@ -397,14 +396,7 @@ export async function getAccountInfo(address, tokenId) {
     return { error: result.error };
   }
 }
-export async function buildTokenBody(params) {
-  const requestUrl = TokenBuildUrl + "/tokenbuild";
-  const timeout = 3 * 60 * 1000;
-  const result = await postRequest(requestUrl, params, timeout).catch(
-    (err) => err
-  );
-  return result;
-}
+
 export async function getAllTokenAssets(address) {
   let txBody = getTokenQueryBody();
   let result = await startFetchMyQuery(txBody, {
