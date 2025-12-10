@@ -8,7 +8,9 @@ All notable changes to this project will be documented in this file.
 - Debug scripts
 - Ledger connect
 - Upgrade node-forge to v1.3.3
+- Upgrade react-idle-timer, react-circular-progressbar
 - Remove react-scripts,web-ext
+
 
 
 ## [2.4.4]

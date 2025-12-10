@@ -1,7 +1,6 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
-import 'react-circular-progressbar/dist/styles.css';
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from 'react-router-dom';
 import { ValidatorsLaunch } from "../../../constant";

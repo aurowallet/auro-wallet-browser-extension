@@ -1,16 +1,27 @@
 import "./App.scss";
 import { getAllRouter as AllRouter } from "./router";
-import IdleTimer from "react-idle-timer";
+import { useIdleTimer } from "react-idle-timer";
 import { sendMsg } from "../utils/commonMsg";
 import { WALLET_RESET_LAST_ACTIVE_TIME } from "../constant/msgTypes";
 import { useCallback, useEffect, useState } from "react";
 import cls from "classnames";
-import { fetchSupportTokenInfo, getRecommendFee, getScamList } from "../background/api";
+import {
+  fetchSupportTokenInfo,
+  getRecommendFee,
+  getScamList,
+} from "../background/api";
 import { updateRecommendFee } from "../reducers/cache";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../background/localStorage";
-import { RECOMMEND_FEE, SCAM_LIST, SUPPORT_TOKEN_LIST } from "../constant/storageKey";
-import { updateScamList, updateSupportTokenList } from "../reducers/accountReducer";
+import {
+  RECOMMEND_FEE,
+  SCAM_LIST,
+  SUPPORT_TOKEN_LIST,
+} from "../constant/storageKey";
+import {
+  updateScamList,
+  updateSupportTokenList,
+} from "../reducers/accountReducer";
 import { NetworkID_MAP } from "@/constant/network";
 import { getReadableNetworkId } from "@/utils/utils";
 import LedgerStatusSyncer from "./component/LedgerStatusSyncer";
@@ -38,7 +49,11 @@ function App() {
       "popup.html#/register_page",
       "popup.html#/createprocess",
     ];
-    const zkPage = ["popup.html#/approve_page", "popup.html#/request_sign","popup.html#/token_sign"];
+    const zkPage = [
+      "popup.html#/approve_page",
+      "popup.html#/request_sign",
+      "popup.html#/token_sign",
+    ];
 
     zkPage.map((path) => {
       if (url.href.indexOf(path) !== -1) {
@@ -90,12 +105,12 @@ function App() {
     }
   }, []);
 
-  const initTokenNetInfo = useCallback(async()=>{
+  const initTokenNetInfo = useCallback(async () => {
     let tokenInfoList = await fetchSupportTokenInfo();
     if (tokenInfoList.length > 0) {
       dispatch(updateSupportTokenList(tokenInfoList));
     }
-  },[])
+  }, []);
 
   const initNetData = useCallback(() => {
     fetchFeeData();
@@ -116,37 +131,41 @@ function App() {
     initNetData();
   }, []);
 
-  const loadLocalSupportToken = useCallback(()=>{
+  const loadLocalSupportToken = useCallback(() => {
     const readableNetworkId = getReadableNetworkId(currentNode.networkID);
-   let supportList = getLocal(SUPPORT_TOKEN_LIST + "_" + readableNetworkId)
-   if (supportList) {
-     let supportListJson = JSON.parse(supportList)
-     if (supportListJson) {
-       dispatch(updateSupportTokenList(supportListJson));
-     }
-   }
- },[currentNode])
+    let supportList = getLocal(SUPPORT_TOKEN_LIST + "_" + readableNetworkId);
+    if (supportList) {
+      let supportListJson = JSON.parse(supportList);
+      if (supportListJson) {
+        dispatch(updateSupportTokenList(supportListJson));
+      }
+    }
+  }, [currentNode]);
 
   useEffect(() => {
-    if(shouldRefresh && currentNode?.networkID){
-      loadLocalSupportToken()
+    if (shouldRefresh && currentNode?.networkID) {
+      loadLocalSupportToken();
       initTokenNetInfo();
     }
-  }, [shouldRefresh,currentNode]);
+  }, [shouldRefresh, currentNode]);
+
+  useIdleTimer({
+    onAction: setLastActiveTime,
+    throttle: 1000,
+    timeout: 1000 * 60 * 30,
+  });
 
   return (
     <div className="App">
       <LedgerStatusSyncer />
-      <IdleTimer onAction={setLastActiveTime} throttle={1000}>
-        <header
-          className={cls("App-header", {
-            "App-header-full": showFullStatus,
-            AppAutoWidth: autoWidthStatus,
-          })}
-        >
-          <AllRouter />
-        </header>
-      </IdleTimer>
+      <header
+        className={cls("App-header", {
+          "App-header-full": showFullStatus,
+          AppAutoWidth: autoWidthStatus,
+        })}
+      >
+        <AllRouter />
+      </header>
     </div>
   );
 }
