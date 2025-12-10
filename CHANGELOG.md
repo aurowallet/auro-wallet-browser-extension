@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Firefox build scripts
 - Debug scripts
 - Ledger connect
+- Upgrade node-forge to v1.3.3
 
 
 ## [2.4.4]
