@@ -28,7 +28,6 @@
     "react-idle-timer": "4.2.5",
     "react-redux": "7.2.2",
     "react-router-dom": "5.1.2",
-    "react-scripts": "5.0.1",
     "redux": "4.0.5",
     "buffer": "6.0.3",
     "uuid": "11.1.0",

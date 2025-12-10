@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Debug scripts
 - Ledger connect
 - Upgrade node-forge to v1.3.3
+- Remove react-scripts
 
 
 ## [2.4.4]
