@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade libsodium-wrappers to libsodium-wrappers-sumo
 - Upgrade node-forge to v1.3.3
 - Upgrade gulp, gulp-zip to jszip
-- Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit
+- Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit, sinon
 - Remove react-scripts, web-ext, url-loader, crypto-browserify
 - Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check), lodash
 
