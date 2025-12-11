@@ -1,8 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
-const gulp = require("gulp");
-const zip = require("gulp-zip").default;
+const JSZip = require("jszip");
 const pck = require("../package.json");
 const deepmerge = require("deepmerge");
 
@@ -20,9 +19,9 @@ const chromeDir = path.join(zipDir, chromeName);
 const firefoxDir = path.join(zipDir, firefoxName);
 
 // check zip exist
-[zipDir, chromeDir, firefoxDir].forEach((dir) =>
-  fs.mkdirSync(dir, { recursive: true })
-);
+[zipDir, chromeDir, firefoxDir].forEach((dir) => {
+  fs.mkdirSync(dir, { recursive: true });
+});
 
 console.log("copying to zip...");
 execSync(`cp -r dist-chrome/* "${chromeDir}/"`);
@@ -56,71 +55,103 @@ fs.writeFileSync(
   JSON.stringify(firefoxManifest, null, 2)
 );
 
-console.log("manifest.json write to: dist-chrome/、dist-firefox/、zip/ ");
+// exclude file/folder
+const EXCLUDED_DIR_NAMES = [
+  "node_modules",
+  "dist",
+  "dist-chrome",
+  "dist-firefox",
+  "zip",
+  ".git",
+];
+
+/**
+ * check exclude
+ */
+function shouldExclude(itemName, isDirectory) {
+  if (!isDirectory) return false;
+  return EXCLUDED_DIR_NAMES.includes(itemName);
+}
+
+function addFilesToZip(zip, dir, zipPathPrefix = "") {
+  const items = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    const relativeInZip = zipPathPrefix
+      ? path.join(zipPathPrefix, item.name)
+      : item.name;
+
+    if (shouldExclude(item.name, item.isDirectory())) {
+      console.log(`excluded: ${relativeInZip}`);
+      continue;
+    }
+
+    if (item.isDirectory()) {
+      addFilesToZip(zip, fullPath, relativeInZip);
+    } else {
+      zip.file(relativeInZip, fs.readFileSync(fullPath), {
+        binary: true,
+        compression: "DEFLATE",
+        compressionOptions: { level: 9 },
+        date: fs.statSync(fullPath).mtime,
+      });
+    }
+  }
+}
+
+async function packExtension(sourceDir, zipName) {
+  console.log(`packing ${zipName}...`);
+  const zip = new JSZip();
+  addFilesToZip(zip, sourceDir);
+  const buffer = await zip.generateAsync({
+    type: "nodebuffer",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
+  const outputPath = path.join(zipDir, zipName);
+  fs.writeFileSync(outputPath, buffer);
+  console.log(`${zipName} → ${(buffer.length / 1024 / 1024).toFixed(2)} MB`);
+}
 
 (async () => {
   try {
-    console.log("packing Firefox extension...");
-    await new Promise((resolve, reject) => {
-      gulp
-        .src(`${firefoxDir}/**/*`, { dot: true, encoding: false })
-        .pipe(zip(`${firefoxName}.zip`))
-        .pipe(gulp.dest(zipDir))
-        .on("end", resolve)
-        .on("error", reject);
-    });
-
-    console.log("packing Chrome extension...");
-    await new Promise((resolve, reject) => {
-      gulp
-        .src(`${chromeDir}/**/*`, { dot: true, encoding: false })
-        .pipe(zip(`${chromeName}.zip`))
-        .pipe(gulp.dest(zipDir))
-        .on("end", resolve)
-        .on("error", reject);
-    });
+    await packExtension(firefoxDir, `${firefoxName}.zip`);
+    await packExtension(chromeDir, `${chromeName}.zip`);
 
     console.log("build source code...");
-    await new Promise((resolve, reject) => {
-      const rootPath = path.resolve(__dirname, "..");
-      gulp
-        .src(
-          [
-            `${rootPath}/**`,
-            `${rootPath}/.*`,
-            `!${rootPath}/node_modules/**`,
-            `!${rootPath}/dist/**`,
-            `!${rootPath}/dist-chrome/**`,
-            `!${rootPath}/dist-firefox/**`,
-            `!${rootPath}/zip/**`,
-            `!${rootPath}/.git/**`,
-          ],
-          { dot: true, encoding: false }
-        )
-        .pipe(zip(`${sourceName}.zip`))
-        .pipe(gulp.dest(zipDir))
-        .on("end", () => {
-          console.log("source code zip build complete.");
-          resolve();
-        })
-        .on("error", reject);
+    const rootPath = path.resolve(__dirname, "..");
+    const sourceZip = new JSZip();
+    addFilesToZip(sourceZip, rootPath);
+
+    const sourceBuffer = await sourceZip.generateAsync({
+      type: "nodebuffer",
+      compression: "DEFLATE",
+      compressionOptions: { level: 9 },
     });
+    const sourceOutput = path.join(zipDir, `${sourceName}.zip`);
+    fs.writeFileSync(sourceOutput, sourceBuffer);
+    console.log(
+      `source code zip → ${(sourceBuffer.length / 1024 / 1024).toFixed(2)} MB`
+    );
 
     console.log("build finally publish package...");
-    await new Promise((resolve, reject) => {
-      gulp
-        .src(`${zipDir}/*.zip`, { encoding: false })
-        .pipe(zip(`${publishName}.zip`))
-        .pipe(gulp.dest(zipDir))
-        .on("end", resolve)
-        .on("error", reject);
+    const publishZip = new JSZip();
+    fs.readdirSync(zipDir)
+      .filter((f) => f.endsWith(".zip"))
+      .forEach((file) => {
+        publishZip.file(file, fs.readFileSync(path.join(zipDir, file)));
+      });
+    const publishBuffer = await publishZip.generateAsync({
+      type: "nodebuffer",
+      compression: "DEFLATE",
+      compressionOptions: { level: 9 },
     });
+    fs.writeFileSync(path.join(zipDir, `${publishName}.zip`), publishBuffer);
 
     console.log("updating dist(for chrome dev)...");
     const rootDist = path.resolve(__dirname, "../dist");
-    if (fs.existsSync(rootDist)) {
-      execSync(`rm -rf "${rootDist}"`);
-    }
+    if (fs.existsSync(rootDist)) execSync(`rm -rf "${rootDist}"`);
     fs.mkdirSync(rootDist, { recursive: true });
     execSync(`cp -r "${chromeDir}"/* "${rootDist}/"`);
 
