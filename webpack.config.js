@@ -136,7 +136,7 @@ module.exports = (env, argv) => {
     resolve: {
       fallback: {
         child_process: "empty",
-        crypto: require.resolve("crypto-browserify"),
+        crypto: false,
         stream: require.resolve("stream-browserify"),
         path: require.resolve("path-browserify"),
         buffer: require.resolve("buffer"),

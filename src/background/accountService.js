@@ -53,7 +53,7 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
         if (typeof keyfile === 'string') {
             keyfile = JSON.parse(keyfile)
         }
-        const _sodium = (await import('libsodium-wrappers')).default
+        const _sodium = (await import('libsodium-wrappers-sumo')).default
         await _sodium.ready
         const sodium = _sodium
         let key = sodium.crypto_pwhash(

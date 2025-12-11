@@ -7,9 +7,10 @@ All notable changes to this project will be documented in this file.
 - Firefox build scripts
 - Debug scripts
 - Ledger connect
+- Upgrade libsodium-wrappers to libsodium-wrappers-sumo
 - Upgrade node-forge to v1.3.3
 - Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, gulp, gulp-zip
-- Remove react-scripts, web-ext, url-loader
+- Remove react-scripts, web-ext, url-loader, crypto-browserify
 - Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
 
 
