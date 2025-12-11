@@ -111,10 +111,12 @@
   },
   "resolutions": {
     "cross-spawn": "^7.0.5",
-    "base-x": "^3.0.11"
+    "base-x": "^3.0.11",
+    "lodash": "4.17.21"
   },
   "overrides": {
     "cross-spawn": "^7.0.5",
-    "base-x": "^3.0.11"
+    "base-x": "^3.0.11",
+    "lodash": "4.17.21"
   }
 }

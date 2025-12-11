@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade gulp, gulp-zip to jszip
 - Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit
 - Remove react-scripts, web-ext, url-loader, crypto-browserify
-- Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
+- Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check), lodash
 
 
 ## [2.4.4]
