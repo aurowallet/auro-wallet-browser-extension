@@ -5,7 +5,7 @@
   "dependencies": {
     "@ledgerhq/hw-transport-webhid": "6.30.9",
     "@ledgerhq/devices": "8.7.0",
-    "@reduxjs/toolkit": "1.4.0",
+    "@reduxjs/toolkit": "2.11.1",
     "@aurowallet/mina-provider": "1.0.12",
     "axios": "1.13.2",
     "axios-retry": "4.5.0",
