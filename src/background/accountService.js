@@ -23,15 +23,6 @@ export function generateMne() {
     return mne
 }
 
-export function decodeAddress(address) {
-    try {
-        const decodedAddress = bs58check.decode(address).toString('hex');
-        return decodedAddress;
-    } catch (ex) {
-        return null
-    }
-}
-
 function reverse(bytes) {
     const reversed = new Buffer.alloc(bytes.length);
     for (let i = bytes.length; i > 0; i--) {
@@ -65,7 +56,7 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
         const _sodium = (await import('libsodium-wrappers')).default
         await _sodium.ready
         const sodium = _sodium
-        let key = await sodium.crypto_pwhash(
+        let key = sodium.crypto_pwhash(
           32,
           keyfilePassword,
           bs58check.decode(keyfile.pwsalt).slice(1),
