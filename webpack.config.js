@@ -3,7 +3,6 @@ const path = require("path");
 const fs = require("fs");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = (env, argv) => {
   console.log("argv.mode:", argv.mode);
@@ -186,6 +185,7 @@ function getPlugins(browser) {
         { from: "./public/static", to: "./" },
         { from: "./public/img", to: "./img" },
         { from: "./src/_locales", to: "./_locales" },
+        { from: "./public/static/popup.html", to: "popup.html" },
       ],
     }),
     new webpack.ProvidePlugin({
@@ -195,10 +195,6 @@ function getPlugins(browser) {
     }),
     new webpack.DefinePlugin({
       "process.env.BROWSER": JSON.stringify(browser),
-    }),
-    new HtmlWebpackPlugin({
-      template: "./public/static/popup.html",
-      chunks: ["popup"],
     }),
     new webpack.NormalModuleReplacementPlugin(
       /[/\\]o1jsUtils(\.js)?$/,

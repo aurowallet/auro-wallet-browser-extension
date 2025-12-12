@@ -12,8 +12,8 @@ All notable changes to this project will be documented in this file.
 - Upgrade node-forge to v1.3.3
 - Upgrade gulp, gulp-zip to jszip
 - Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit, sinon
-- Remove react-scripts, web-ext, url-loader, crypto-browserify
-- Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check), lodash
+- Remove react-scripts, web-ext, url-loader, crypto-browserify, html-webpack-plugin
+- Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
 
 
 ## [2.4.4]
