@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Firefox build scripts
 - Debug scripts
 - Ledger connect
+- Update babel config and dependencies
 - Upgrade libsodium-wrappers to libsodium-wrappers-sumo
 - Upgrade node-forge to v1.3.3
 - Upgrade gulp, gulp-zip to jszip

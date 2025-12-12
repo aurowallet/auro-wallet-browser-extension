@@ -32,7 +32,10 @@ module.exports = (env, argv) => {
       if (missing.length === 0) {
         console.log("o1jsUtils.firefox.js is cover all methods.");
       } else {
-        console.warn("o1jsUtils.firefox.js less these methods:", missing.join(", "));
+        console.warn(
+          "o1jsUtils.firefox.js less these methods:",
+          missing.join(", ")
+        );
         console.warn("please add, or Firefox will load error!");
       }
     } else if (fs.existsSync(mainFile)) {
@@ -42,7 +45,7 @@ module.exports = (env, argv) => {
 
   const config = {
     mode,
-    devtool: false,
+    devtool: isDev ? "cheap-module-source-map" : false,
     optimization: {
       minimizer: [new TerserPlugin({ extractComments: false })],
       splitChunks: {
@@ -67,6 +70,7 @@ module.exports = (env, argv) => {
           },
         },
       },
+      minimize: !isDev,
     },
     entry: {
       background: [
@@ -92,7 +96,7 @@ module.exports = (env, argv) => {
           exclude: /\.module\.css$/,
           use: [
             "style-loader",
-            { loader: "css-loader", options: { url: false, sourceMap: true } },
+            { loader: "css-loader", options: { url: false, sourceMap: isDev } },
           ],
         },
         {
@@ -102,7 +106,21 @@ module.exports = (env, argv) => {
         {
           test: /\.(js|jsx)$/,
           exclude: /node_modules/,
-          loader: "babel-loader",
+          use: {
+            loader: "babel-loader",
+            options: {
+              cacheDirectory: true,
+              presets: [
+                ["@babel/preset-env", { targets: "defaults" }],
+                ["@babel/preset-react", { runtime: "automatic" }],
+              ],
+              plugins: [
+                "@babel/plugin-transform-class-properties",
+                ["@babel/plugin-transform-runtime", { regenerator: true }],
+                ["module-resolver", { alias: { "@": "./src" } }],
+              ],
+            },
+          },
         },
         {
           test: /\.s[ac]ss$/i,
@@ -126,7 +144,7 @@ module.exports = (env, argv) => {
           ],
         },
         {
-          test: /\.(png|jpe?g|svg|gif)$/,
+          test: /\.(png|jpe?g|svg|gif)$/i,
           type: "asset/resource",
         },
       ],
@@ -140,6 +158,8 @@ module.exports = (env, argv) => {
         stream: require.resolve("stream-browserify"),
         path: require.resolve("path-browserify"),
         buffer: require.resolve("buffer"),
+
+        util: require.resolve("util/"),
       },
       alias: {
         "@": path.resolve(__dirname, "src"),
@@ -147,12 +167,7 @@ module.exports = (env, argv) => {
       extensions: [".js", ".jsx", ".json"],
     },
   };
-  if (isDev) {
-    config.devtool = "cheap-module-source-map";
-    config.optimization = {
-      minimize: false,
-    };
-  }
+
   return config;
 };
 
