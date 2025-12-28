@@ -375,7 +375,7 @@ class APIService {
         return typeIndex;
     }
     /**
-     *  私钥导入
+     *  import private key
      */
     addImportAccount = async (privateKey, accountName) => {
         try {
@@ -453,7 +453,7 @@ class APIService {
         }
     }
     /**
-     * 导入ledger钱包
+     * import ledger wallet
      */
     addLedgerAccount = async (address, accountName, ledgerPathAccountIndex) => {
         try {
@@ -485,7 +485,7 @@ class APIService {
         }
     }
     /**
-     * 设置当前账户
+     * set current account
      */
     setCurrentAccount = async (address) => {
         let data = this.getStore().data
@@ -647,33 +647,6 @@ class APIService {
         delete newAccount.privateKey;
         return newAccount
     }
-    sendLegacyPayment = async (params) => {
-        try {
-            let fromAddress = params.fromAddress
-            let toAddress = params.toAddress
-            let amount = params.amount
-            let fee = params.fee
-            let nonce = params.nonce
-            let memo = params.memo
-            const isSpeedUp = params.isSpeedUp
-            if(isSpeedUp){
-                memo = decodeMemo(params.memo)
-            }
-            const privateKey = await this.getCurrentPrivateKey()
-            let signedTx = await signPayment(privateKey, fromAddress, toAddress, amount, fee, nonce, memo)
-            if (signedTx.error) {
-                return { error: signedTx.error }
-            }
-            let postRes = await sendTx(signedTx.data, signedTx.signature).catch(error => { error })
-            let payment = postRes.sendPayment && postRes.sendPayment.payment || {}
-            if (payment.hash && payment.id) {
-                this.checkTxStatus(payment.id,payment.hash)
-            }
-            return { ...postRes }
-        } catch (err) {
-            return { error: err }
-        }
-    }
     signMessage = async(params) => {
         try {
             let message = params.message
@@ -683,28 +656,6 @@ class APIService {
                 return { error: signedTx.error }
             }
             return signedTx
-        } catch (err) {
-            return { error: err }
-        }
-    }
-    sendLegacyStakeDelegation = async (params) => {
-        try {
-            let { fromAddress, toAddress, fee, nonce,isSpeedUp } = params;
-            let memo = params.memo
-            if(isSpeedUp){
-                memo = decodeMemo(params.memo)
-            }
-            const privateKey = await this.getCurrentPrivateKey()
-            let signedTx = await stakePayment(privateKey, fromAddress, toAddress, fee, nonce, memo)
-            if (signedTx.error) {
-                return { error: signedTx.error }
-            }
-            let postRes = await sendStakeTx(signedTx.data, signedTx.signature).catch(error => { error })
-            let delegation = postRes.sendDelegation && postRes.sendDelegation.delegation || {}
-            if (delegation.hash && delegation.id) {
-                this.checkTxStatus(delegation.id,delegation.hash)
-            }
-            return { ...postRes }
         } catch (err) {
             return { error: err }
         }

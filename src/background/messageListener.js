@@ -15,8 +15,6 @@ import {
   WALLET_GET_PRIVATE_KEY,
   WALLET_CHANGE_SEC_PASSWORD,
   WALLET_GET_CURRENT_PRIVATE_KEY,
-  WALLET_SEND_TRANSACTION,
-  WALLET_SEND_STAKE_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
   WALLET_IMPORT_LEDGER,
   WALLET_IMPORT_KEY_STORE,
@@ -125,16 +123,6 @@ function internalMessageListener(message, sender, sendResponse) {
     case WALLET_GET_CURRENT_PRIVATE_KEY:
       apiService.getCurrentPrivateKey().then((privateKey) => {
         sendResponse(privateKey);
-      })
-      break;
-    case WALLET_SEND_TRANSACTION:
-      apiService.sendLegacyPayment(payload).then((result) => {
-        sendResponse(result);
-      })
-      break;
-    case WALLET_SEND_STAKE_TRANSACTION:
-      apiService.sendLegacyStakeDelegation(payload).then((result) => {
-        sendResponse(result);
       })
       break;
     case WALLET_CHECK_TX_STATUS:

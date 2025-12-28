@@ -75,11 +75,6 @@ export const WALLET_GET_CURRENT_PRIVATE_KEY = "WALLET_GET_CURRENT_PRIVATE_KEY"
 
 
 /**
- * send transaction
- */
-export const WALLET_SEND_TRANSACTION = "WALLET_SEND_TRANSACTION"
-
-/**
  * send message transaction
  */
 export const WALLET_SEND_MESSAGE_TRANSACTION = "WALLET_SEND_MESSAGE_TRANSACTION"
@@ -89,11 +84,6 @@ export const WALLET_SEND_MESSAGE_TRANSACTION = "WALLET_SEND_MESSAGE_TRANSACTION"
  * sign fields
  */
 export const WALLET_SEND_FIELDS_MESSAGE_TRANSACTION = "WALLET_SEND_FIELDS_MESSAGE_TRANSACTION"
-
-/**
- * Send a stake transaction
- */
-export const WALLET_SEND_STAKE_TRANSACTION = "WALLET_SEND_STAKE_TRANSACTION"
 
 /**
  * Query stake status
