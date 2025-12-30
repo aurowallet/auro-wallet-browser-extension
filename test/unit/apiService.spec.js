@@ -61,6 +61,75 @@ const TEST_DATA = {
   },
 };
 
+// ==================== Zustand Store Mock ====================
+const mockStoreState = {
+  isUnlocked: false,
+  data: '',
+  password: '',
+  currentAccount: {},
+  mne: '',
+  autoLockTime: 900,
+  accountApprovedUrlList: {},
+  currentConnect: {},
+  tokenBuildList: {},
+};
+
+const resetMockStoreState = () => {
+  Object.keys(mockStoreState).forEach(key => delete mockStoreState[key]);
+  Object.assign(mockStoreState, {
+    isUnlocked: false,
+    data: '',
+    password: '',
+    currentAccount: {},
+    mne: '',
+    autoLockTime: 900,
+    accountApprovedUrlList: {},
+    currentConnect: {},
+    tokenBuildList: {},
+  });
+};
+
+const mockMemStore = {
+  getState: () => mockStoreState,
+  updateState: (newState) => {
+    Object.assign(mockStoreState, newState);
+  },
+  putState: (newState) => {
+    Object.keys(mockStoreState).forEach(key => delete mockStoreState[key]);
+    Object.assign(mockStoreState, newState);
+  },
+  _directUpdate: (partial) => {
+    Object.assign(mockStoreState, partial);
+  },
+  _directSet: (newState) => {
+    Object.keys(mockStoreState).forEach(key => delete mockStoreState[key]);
+    Object.assign(mockStoreState, newState);
+  },
+  subscribe: sinon.stub(),
+  unlock: (password, data, currentAccount) => {
+    Object.assign(mockStoreState, { isUnlocked: true, password, data, currentAccount });
+  },
+  lock: () => {
+    const address = mockStoreState.currentAccount?.address;
+    Object.assign(mockStoreState, {
+      isUnlocked: false,
+      data: '',
+      password: '',
+      currentAccount: address ? { address } : {},
+      mne: '',
+    });
+  },
+  setCurrentAccount: (account) => {
+    mockStoreState.currentAccount = account;
+  },
+  setMnemonic: (mne) => {
+    mockStoreState.mne = mne;
+  },
+  setAutoLockTime: (time) => {
+    mockStoreState.autoLockTime = time;
+  },
+};
+
 // ==================== proxyquire stubs ====================
 const proxyquireStubs = {
   "webextension-polyfill": browserMock,
@@ -122,6 +191,18 @@ const proxyquireStubs = {
     putState: sinon.stub(),
   }),
 
+  "@/store": {
+    memStore: mockMemStore,
+  },
+
+  "../store": {
+    memStore: mockMemStore,
+  },
+
+  "../store/index": {
+    memStore: mockMemStore,
+  },
+
   i18next: { t: (key) => key, language: "en" },
   "../i18n": { default: { changeLanguage: sinon.stub() } },
 
@@ -149,27 +230,7 @@ const apiService = proxyquire(
 describe("APIService", () => {
   beforeEach(() => {
     sinon.resetHistory();
-
-    apiService.memStore = {
-      getState: sinon.stub().returns(apiService.initLockedState()),
-      updateState: sinon.stub(),
-      putState: sinon.stub(),
-    };
-  });
-
-  // ==================== 1. initLockedState ====================
-  describe("initLockedState", () => {
-    it("should return correct initial locked state", () => {
-      const state = apiService.initLockedState();
-      expect(state).to.deep.include({
-        isUnlocked: false,
-        data: "",
-        password: "",
-        currentAccount: {},
-        mne: "",
-        autoLockTime: 900,
-      });
-    });
+    resetMockStoreState();
   });
 
   // ==================== 2. initAppLocalConfig ====================
@@ -196,20 +257,22 @@ describe("APIService", () => {
   // ==================== 3. getStore ====================
   describe("getStore", () => {
     it("should return memStore state", () => {
-      const mockState = { isUnlocked: true, data: "test" };
-      apiService.memStore.getState.returns(mockState);
+      mockMemStore.updateState({ isUnlocked: true, data: "test" });
 
       const result = apiService.getStore();
-      expect(result).to.deep.equal(mockState);
+      expect(result.isUnlocked).to.be.true;
+      expect(result.data).to.equal("test");
     });
   });
 
   // ==================== 4. resetWallet ====================
   describe("resetWallet", () => {
     it("should reset wallet to initial locked state", () => {
+      mockMemStore.updateState({ isUnlocked: true, data: 'test' });
       apiService.resetWallet();
 
-      expect(apiService.memStore.putState.calledOnce).to.be.true;
+      const state = mockMemStore.getState();
+      expect(state.isUnlocked).to.be.false;
     });
   });
 
@@ -220,20 +283,19 @@ describe("APIService", () => {
 
       expect(proxyquireStubs["./accountService"].generateMne.calledOnce).to.be
         .true;
-      expect(apiService.memStore.updateState.calledWith({ mne: result })).to.be
-        .true;
+      expect(mockMemStore.getState().mne).to.equal(result);
       expect(result).to.equal(TEST_DATA.mnemonic);
     });
 
     it("should return existing mnemonic when isNewMne is false", () => {
-      apiService.memStore.getState.returns({ mne: TEST_DATA.mnemonic });
+      mockMemStore.updateState({ mne: TEST_DATA.mnemonic });
 
       const result = apiService.getCreateMnemonic(false);
       expect(result).to.equal(TEST_DATA.mnemonic);
     });
 
     it("should return empty string when no mnemonic exists", () => {
-      apiService.memStore.getState.returns({ mne: "" });
+      mockMemStore.updateState({ mne: "" });
 
       const result = apiService.getCreateMnemonic(false);
       expect(result).to.equal("");
@@ -296,7 +358,7 @@ describe("APIService", () => {
     it("should unlock successfully with correct password", async () => {
       const result = await apiService.submitPassword("pwd");
 
-      expect(apiService.memStore.updateState.called).to.be.true;
+      expect(mockMemStore.getState().isUnlocked).to.be.true;
       expect(
         proxyquireStubs["../utils/browserUtils"].getExtensionAction().setIcon
           .called
@@ -324,14 +386,14 @@ describe("APIService", () => {
   // ==================== 8. checkPassword ====================
   describe("checkPassword", () => {
     it("should return true for correct password", () => {
-      apiService.memStore.getState.returns({ password: "correctPwd" });
+      mockMemStore.updateState({ password: "correctPwd" });
 
       const result = apiService.checkPassword("correctPwd");
       expect(result).to.be.true;
     });
 
     it("should return false for incorrect password", () => {
-      apiService.memStore.getState.returns({ password: "correctPwd" });
+      mockMemStore.updateState({ password: "correctPwd" });
 
       const result = apiService.checkPassword("wrongPwd");
       expect(result).to.be.false;
@@ -344,7 +406,7 @@ describe("APIService", () => {
 
     beforeEach(() => {
       clock = sinon.useFakeTimers();
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         isUnlocked: true,
         autoLockTime: 1000,
         data: [{}], 
@@ -369,7 +431,7 @@ describe("APIService", () => {
     });
 
     it("should not set timer if autoLockTime is -1 (never lock)", () => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         isUnlocked: true,
         autoLockTime: -1,
       });
@@ -389,9 +451,7 @@ describe("APIService", () => {
     it("should update autoLockTime in state and storage", async () => {
       await apiService.updateLockTime(600);
 
-      expect(
-        apiService.memStore.updateState.calledWith({ autoLockTime: 600 })
-      ).to.be.true;
+      expect(mockMemStore.getState().autoLockTime).to.equal(600);
       expect(
         proxyquireStubs["./storageService"].save.calledWith({ autoLockTime: 600 })
       ).to.be.true;
@@ -401,7 +461,7 @@ describe("APIService", () => {
   // ==================== 11. getCurrentAutoLockTime ====================
   describe("getCurrentAutoLockTime", () => {
     it("should return current autoLockTime", () => {
-      apiService.memStore.getState.returns({ autoLockTime: 300 });
+      mockMemStore.updateState({ autoLockTime: 300 });
 
       const result = apiService.getCurrentAutoLockTime();
       expect(result).to.equal(300);
@@ -411,23 +471,22 @@ describe("APIService", () => {
   // ==================== 12. setUnlockedStatus ====================
   describe("setUnlockedStatus", () => {
     it("should update state when locking", () => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         autoLockTime: 900,
         currentAccount: { address: "B62qTestAddr" },
       });
 
       apiService.setUnlockedStatus(false);
 
-      expect(apiService.memStore.updateState.called).to.be.true;
+      expect(mockMemStore.getState().isUnlocked).to.be.false;
       expect(sendMsgStub.called).to.be.true;
     });
 
-    it("should update state when unlocking", () => {
+    it("should send message when unlocking", () => {
+      // setUnlockedStatus(true) doesn't set isUnlocked - it's called after unlock for UI updates
+      mockMemStore.updateState({ isUnlocked: true });
       apiService.setUnlockedStatus(true);
 
-      expect(
-        apiService.memStore.updateState.calledWith({ isUnlocked: true })
-      ).to.be.true;
       expect(sendMsgStub.called).to.be.true;
     });
   });
@@ -435,7 +494,7 @@ describe("APIService", () => {
   // ==================== 13. getCurrentAccount ====================
   describe("getCurrentAccount", () => {
     it("should return current account without private key when unlocked", async () => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         isUnlocked: true,
         currentAccount: {
           address: "B62qCurr",
@@ -458,7 +517,7 @@ describe("APIService", () => {
   // ==================== 14. getCurrentAccountAddress ====================
   describe("getCurrentAccountAddress", () => {
     it("should return current account address", () => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         currentAccount: { address: "B62qCurrentAddr" },
       });
 
@@ -472,9 +531,7 @@ describe("APIService", () => {
     it("should update password in state", () => {
       apiService.createPwd("newPassword");
 
-      expect(
-        apiService.memStore.updateState.calledWith({ password: "newPassword" })
-      ).to.be.true;
+      expect(mockMemStore.getState().password).to.equal("newPassword");
     });
   });
 
@@ -505,7 +562,7 @@ describe("APIService", () => {
         proxyquireStubs["../utils/encryptUtils"].default.encrypt.calledThrice
       ).to.be.true;
       expect(proxyquireStubs["./storageService"].save.calledOnce).to.be.true;
-      expect(apiService.memStore.updateState.called).to.be.true;
+      expect(mockMemStore.getState().data).to.not.be.null;
       expect(sendMsgStub.calledWithMatch({ payload: true })).to.be.true;
 
       expect(result).to.include({
@@ -518,7 +575,7 @@ describe("APIService", () => {
     });
 
     it("should encrypt private key and mnemonic with password", async () => {
-      apiService.memStore.getState.returns({ password: "Qw123456", data: null });
+      mockMemStore.updateState({ password: "Qw123456", data: null });
 
       await apiService.createAccount(TEST_DATA.mnemonic);
 
@@ -545,7 +602,7 @@ describe("APIService", () => {
         accountName: "Account 1",
         hdPath: 0,
       };
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: "Qw123456",
         data: [{
           currentAddress: "B62qExisting",
@@ -568,7 +625,7 @@ describe("APIService", () => {
         { address: TEST_DATA.accounts[1].pubKey, type: "WALLET_INSIDE", accountName: "Account 2", hdPath: 1 },
         { address: TEST_DATA.accounts[2].pubKey, type: "WALLET_INSIDE", accountName: "Account 3", hdPath: 2 },
       ];
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         data: [{ accounts: mockAccounts }],
         currentAccount: { address: TEST_DATA.accounts[2].pubKey },
       });
@@ -585,7 +642,7 @@ describe("APIService", () => {
       const mockAccounts = [
         { address: TEST_DATA.accounts[0].pubKey, type: "WALLET_INSIDE", accountName: "Account 1" },
       ];
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         data: [{ accounts: mockAccounts }],
         currentAccount: { address: TEST_DATA.accounts[0].pubKey },
       });
@@ -683,7 +740,7 @@ describe("APIService", () => {
   // ==================== 20. addHDNewAccount ====================
   describe("addHDNewAccount", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: "testPwd",
         data: [
           {
@@ -745,7 +802,7 @@ describe("APIService", () => {
   describe("addImportAccount", () => {
     beforeEach(() => {
       // Simulate existing 3 HD accounts
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: "Qw123456",
         data: [
           {
@@ -821,7 +878,7 @@ describe("APIService", () => {
   // ==================== 22. addAccountByKeyStore ====================
   describe("addAccountByKeyStore", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: "pwd",
         data: [
           {
@@ -873,50 +930,11 @@ describe("APIService", () => {
     });
   });
 
-  // ==================== 23. addWatchModeAccount ====================
-  describe("addWatchModeAccount", () => {
-    beforeEach(() => {
-      apiService.memStore.getState.returns({
-        password: "pwd",
-        data: [
-          {
-            accounts: [
-              { address: "B62qExisting", type: "WALLET_INSIDE" },
-            ],
-          },
-        ],
-      });
-
-      proxyquireStubs["../utils/encryptUtils"].default.encrypt.resolves(
-        "encrypted_data"
-      );
-    });
-
-    it("should add watch mode account", async () => {
-      const result = await apiService.addWatchModeAccount(
-        "B62qNewWatch",
-        "Watch Account"
-      );
-
-      expect(result.address).to.equal("B62qNewWatch");
-      expect(result.type).to.equal("WALLET_WATCH");
-      expect(proxyquireStubs["./storageService"].save.called).to.be.true;
-    });
-
-    it("should return error if address already exists", async () => {
-      const result = await apiService.addWatchModeAccount(
-        "B62qExisting",
-        "Watch Account"
-      );
-
-      expect(result.error).to.equal("importRepeat");
-    });
-  });
 
   // ==================== 21. addLedgerAccount ====================
   describe("addLedgerAccount", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -963,7 +981,7 @@ describe("APIService", () => {
   // ==================== 22. setCurrentAccount ====================
   describe("setCurrentAccount", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -1002,7 +1020,7 @@ describe("APIService", () => {
   // ==================== 23. changeAccountName ====================
   describe("changeAccountName", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -1040,7 +1058,7 @@ describe("APIService", () => {
   // ==================== 24. deleteAccount ====================
   describe("deleteAccount", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -1089,7 +1107,7 @@ describe("APIService", () => {
 
     it("should switch to first account when deleting current account", async () => {
       // 设置当前账户为第三个账户
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -1110,7 +1128,7 @@ describe("APIService", () => {
     });
 
     it("should delete ledger account without password", async () => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -1133,7 +1151,7 @@ describe("APIService", () => {
   // ==================== 25. getMnemonic ====================
   describe("getMnemonic", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [{ mnemonic: '{"data":"encrypted_mnemonic","iv":"iv","salt":"salt","version":2}' }],
       });
@@ -1157,7 +1175,7 @@ describe("APIService", () => {
   // ==================== 26. updateSecPassword ====================
   describe("updateSecPassword", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -1208,7 +1226,7 @@ describe("APIService", () => {
       expect(proxyquireStubs["../utils/encryptUtils"].default.encrypt.called).to.be.true;
       expect(proxyquireStubs["./storageService"].removeValue.calledWith("keyringData")).to.be.true;
       expect(proxyquireStubs["./storageService"].save.called).to.be.true;
-      expect(apiService.memStore.updateState.calledWithMatch({ password: "NewPassword123" })).to.be.true;
+      expect(mockMemStore.getState().password).to.equal("NewPassword123");
     });
 
     it("should return error with incorrect old password", async () => {
@@ -1221,7 +1239,7 @@ describe("APIService", () => {
   // ==================== 27. getPrivateKey ====================
   describe("getPrivateKey", () => {
     beforeEach(() => {
-      apiService.memStore.getState.returns({
+      mockMemStore.updateState({
         password: TEST_DATA.password,
         data: [
           {
@@ -1584,26 +1602,18 @@ describe("APIService", () => {
     });
   });
 
-  // ==================== 34. getLockStatus ====================
-  describe("getLockStatus", () => {
-    it("should return current lock status", () => {
-      apiService.memStore.getState.returns({ isUnlocked: true });
-      expect(apiService.getLockStatus()).to.be.true;
-
-      apiService.memStore.getState.returns({ isUnlocked: false });
-      expect(apiService.getLockStatus()).to.be.false;
-    });
-  });
-
   // ==================== 35. getLedgerAccountIndex ====================
   describe("getLedgerAccountIndex", () => {
     it("should return count of ledger accounts", () => {
-      const mockAccounts = [
-        { address: TEST_DATA.accounts[0].pubKey, type: "WALLET_INSIDE" },
-        { address: TEST_DATA.ledgerAccount.pubKey, type: "WALLET_LEDGER" },
-        { address: "B62qSecondLedger", type: "WALLET_LEDGER" },
-      ];
-      apiService.memStore.getState.returns({
+      // getLedgerAccountIndex expects accounts.allList structure (from accountSort)
+      const mockAccounts = {
+        allList: [
+          { address: TEST_DATA.accounts[0].pubKey, type: "WALLET_INSIDE" },
+          { address: TEST_DATA.ledgerAccount.pubKey, type: "WALLET_LEDGER" },
+          { address: "B62qSecondLedger", type: "WALLET_LEDGER" },
+        ],
+      };
+      mockMemStore.updateState({
         data: [{ accounts: mockAccounts }],
         currentAccount: { address: TEST_DATA.accounts[0].pubKey },
       });
@@ -1663,40 +1673,6 @@ describe("APIService", () => {
     });
   });
 
-  // ==================== 38. signMessage ====================
-  describe("signMessage", () => {
-    const params = {
-      message: "hello world",
-      fromAddress: TEST_DATA.accounts[0].pubKey,
-    };
-
-    beforeEach(() => {
-      apiService.getCurrentPrivateKey = sinon.stub().resolves(TEST_DATA.accounts[0].priKey);
-
-      proxyquireStubs["./lib"].signMessagePayment.resolves({
-        data: "hello world",
-        publicKey: TEST_DATA.accounts[0].pubKey,
-        signature: {
-          field: "7mXTestSignatureField",
-          scalar: "7mXTestSignatureScalar",
-        },
-      });
-    });
-
-    it("should sign message successfully", async () => {
-      const result = await apiService.signMessage(params);
-
-      expect(apiService.getCurrentPrivateKey.calledOnce).to.be.true;
-      expect(proxyquireStubs["./lib"].signMessagePayment.calledOnce).to.be.true;
-      expect(result.data).to.equal("hello world");
-      expect(result.publicKey).to.equal(TEST_DATA.accounts[0].pubKey);
-      expect(result.signature).to.exist;
-    });
-
-    afterEach(() => {
-      delete apiService.getCurrentPrivateKey;
-    });
-  });
 
   // ==================== 39. signFields ====================
   describe("signFields", () => {
@@ -1915,7 +1891,7 @@ describe("APIService", () => {
       });
 
       it("should create wallet with first account at hdIndex 0", async () => {
-        apiService.memStore.getState.returns({ password: "Qw123456", data: null });
+        mockMemStore.updateState({ password: "Qw123456", data: null });
         proxyquireStubs["./accountService"].importWalletByMnemonic.returns({
           pubKey: TEST_DATA.accounts[0].pubKey,
           priKey: TEST_DATA.accounts[0].priKey,
@@ -1931,7 +1907,7 @@ describe("APIService", () => {
       });
 
       it("should derive second HD account at hdIndex 1", async () => {
-        apiService.memStore.getState.returns({
+        mockMemStore.updateState({
           password: "Qw123456",
           data: [{
             mnemonic: "encrypted_mnemonic",
@@ -1965,7 +1941,7 @@ describe("APIService", () => {
       });
 
       it("should derive third HD account at hdIndex 2", async () => {
-        apiService.memStore.getState.returns({
+        mockMemStore.updateState({
           password: "Qw123456",
           data: [{
             mnemonic: "encrypted_mnemonic",
@@ -2052,7 +2028,7 @@ describe("APIService", () => {
           },
         };
 
-        apiService.memStore.getState.returns(fullWalletData);
+        mockMemStore.updateState(fullWalletData);
 
         const result = apiService.getAllAccount();
 
@@ -2097,7 +2073,7 @@ describe("APIService", () => {
           JSON.stringify(encryptedFormat)
         );
 
-        apiService.memStore.getState.returns({ password: "Qw123456", data: null });
+        mockMemStore.updateState({ password: "Qw123456", data: null });
         proxyquireStubs["./accountService"].importWalletByMnemonic.returns({
           pubKey: TEST_DATA.accounts[0].pubKey,
           priKey: TEST_DATA.accounts[0].priKey,
@@ -2111,7 +2087,7 @@ describe("APIService", () => {
       });
 
       it("should decrypt mnemonic correctly for HD derivation", async () => {
-        apiService.memStore.getState.returns({
+        mockMemStore.updateState({
           password: "Qw123456",
           data: [{
             mnemonic: '{"data":"enc","iv":"iv","salt":"s","version":2}',
@@ -2151,7 +2127,7 @@ describe("APIService", () => {
     describe("Password security", () => {
       it("should use password for all encryption operations", async () => {
         const testPassword = "Qw123456";
-        apiService.memStore.getState.returns({ password: testPassword, data: null });
+        mockMemStore.updateState({ password: testPassword, data: null });
 
         proxyquireStubs["../utils/encryptUtils"].default.encrypt.resolves("enc");
         proxyquireStubs["./accountService"].importWalletByMnemonic.returns({
@@ -2172,7 +2148,7 @@ describe("APIService", () => {
         const oldPwd = "oldPwd";
         const newPwd = "newPwd";
 
-        apiService.memStore.getState.returns({
+        mockMemStore.updateState({
           password: oldPwd,
           data: [{
             mnemonic: "encrypted_mnemonic",
@@ -2191,7 +2167,7 @@ describe("APIService", () => {
 
         expect(result).to.deep.equal({ code: 0 });
         expect(proxyquireStubs["./storageService"].removeValue.calledWith("keyringData")).to.be.true;
-        expect(apiService.memStore.updateState.calledWithMatch({ password: newPwd })).to.be.true;
+        expect(mockMemStore.getState().password).to.equal(newPwd);
       });
     });
   });

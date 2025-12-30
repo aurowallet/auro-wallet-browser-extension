@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Ledger connect
 - Update babel config and dependencies
 - Upgrade libsodium-wrappers to libsodium-wrappers-sumo
+- Upgrade obs-store to zustand
 - Upgrade node-forge to v1.3.3
 - Upgrade gulp, gulp-zip to jszip
 - Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit, sinon

@@ -14,15 +14,14 @@ import {
   WALLET_GET_MNE,
   WALLET_GET_PRIVATE_KEY,
   WALLET_CHANGE_SEC_PASSWORD,
-  WALLET_GET_CURRENT_PRIVATE_KEY,
   WALLET_CHECK_TX_STATUS,
   WALLET_IMPORT_LEDGER,
   WALLET_IMPORT_KEY_STORE,
-  WALLET_GET_CREATE_MNEMONIC, WALLET_IMPORT_WATCH_MODE,
+  WALLET_GET_CREATE_MNEMONIC,
   WALLET_RESET_LAST_ACTIVE_TIME,
   WALLET_DELETE_WATCH_ACCOUNT,
   RESET_WALLET,
-  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_GET_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, GET_SIGN_PARAMS_BY_ID, WALLET_SEND_MESSAGE_TRANSACTION, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSACTION, GET_SIGN_PARAMS, WALLET_SEND_NULLIFIER, POPUP_ACTIONS,
+  DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, GET_SIGN_PARAMS_BY_ID, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSACTION, GET_SIGN_PARAMS, WALLET_SEND_NULLIFIER, POPUP_ACTIONS,
   GET_APPROVE_PARAMS,
   CredentialMsg
 } from "../constant/msgTypes";
@@ -120,21 +119,11 @@ function internalMessageListener(message, sender, sendResponse) {
         sendResponse(account);
       })
       break;
-    case WALLET_GET_CURRENT_PRIVATE_KEY:
-      apiService.getCurrentPrivateKey().then((privateKey) => {
-        sendResponse(privateKey);
-      })
-      break;
     case WALLET_CHECK_TX_STATUS:
       sendResponse(apiService.checkTxStatus(payload.paymentId, payload.hash));
       break;
     case WALLET_IMPORT_LEDGER:
       apiService.addLedgerAccount(payload.address, payload.accountName, payload.accountIndex).then((account) => {
-        sendResponse(account);
-      })
-      break;
-    case WALLET_IMPORT_WATCH_MODE:
-      apiService.addWatchModeAccount(payload.address, payload.accountName).then((account) => {
         sendResponse(account);
       })
       break;
@@ -176,9 +165,6 @@ function internalMessageListener(message, sender, sendResponse) {
     case DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS:
       sendResponse(dappService.getCurrentAccountConnectStatus(payload.siteUrl, payload.currentAddress))
       break
-    case DAPP_GET_CONNECT_STATUS:
-      sendResponse(dappService.getConnectStatus(payload.siteUrl, payload.address))
-      break
     case DAPP_DISCONNECT_SITE:
       sendResponse(dappService.disconnectDapp(payload.siteUrl, payload.address))
       break
@@ -191,11 +177,6 @@ function internalMessageListener(message, sender, sendResponse) {
     case DAPP_CHANGE_NETWORK:
       sendResponse(dappService.notifyNetworkChange(payload.netConfig))
       break
-    case WALLET_SEND_MESSAGE_TRANSACTION:
-      apiService.signMessage(payload).then((result) => {
-        sendResponse(result);
-      })
-      break;
     case WALLET_SEND_FIELDS_MESSAGE_TRANSACTION:
       apiService.signFields(payload).then((result) => {
         sendResponse(result);

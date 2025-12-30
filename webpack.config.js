@@ -116,7 +116,6 @@ module.exports = (env, argv) => {
               plugins: [
                 "@babel/plugin-transform-class-properties",
                 ["@babel/plugin-transform-runtime", { regenerator: true }],
-                ["module-resolver", { alias: { "@": "./src" } }],
               ],
             },
           },
@@ -157,8 +156,6 @@ module.exports = (env, argv) => {
         stream: require.resolve("stream-browserify"),
         path: require.resolve("path-browserify"),
         buffer: require.resolve("buffer"),
-
-        util: require.resolve("util/"),
       },
       alias: {
         "@": path.resolve(__dirname, "src"),

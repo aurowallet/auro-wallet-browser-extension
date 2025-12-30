@@ -7,15 +7,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
 import { getCurrencyPrice } from "../../../background/api";
 
-import { saveLocal } from "@/background/localStorage";
 import { NetworkID_MAP } from "@/constant/network";
-import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Clock from "@/popup/component/Clock";
 import styled, { css } from "styled-components";
 import {
   DAPP_DISCONNECT_SITE,
-  DAPP_GET_CONNECT_STATUS,
   WALLET_GET_ALL_ACCOUNT,
 } from "../../../constant/msgTypes";
 import {
@@ -24,15 +21,15 @@ import {
   updateShouldRequest,
 } from "../../../reducers/accountReducer";
 import { setAccountInfo } from "../../../reducers/cache";
+import {
+  copyText,
+} from "../../../utils/browserUtils";
 import { sendMsg } from "../../../utils/commonMsg";
 import {
   addressSlice,
   getAmountForUI,
   isZekoNet,
 } from "../../../utils/utils";
-import {
-  copyText,
-} from "../../../utils/browserUtils";
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import NetworkSelect from "../Networks/NetworkSelect";

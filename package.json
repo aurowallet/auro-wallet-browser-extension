@@ -19,7 +19,7 @@
     "libsodium-wrappers-sumo": "0.7.15",
     "mina-signer": "3.1.0",
     "@zondax/ledger-mina-js": "0.1.1",
-    "obs-store": "4.0.3",
+    "zustand":"5.0.9",
     "react": "17.0.1",
     "react-circular-progressbar": "2.2.0",
     "react-dom": "17.0.1",
@@ -52,6 +52,8 @@
     "predev:ff": "rm -rf dist-firefox && BROWSER=firefox node scripts/pre-dev.js",
     "dev:ff": "webpack --mode development --env BROWSER=firefox  --watch --output-path=dist-firefox",
     "test": "mocha --timeout 5000 --require ./test/babel-register.js 'test/unit/**/*.js'",
+    "testa": "mocha --timeout 5000 --require ./test/babel-register.js 'test/unit/apiService.spec.js'",
+    "testb": "mocha --timeout 5000 --require ./test/babel-register.js 'test/unit/dappService.spec.js'",
     "cspell": "cspell \"src/**\""
   },
   "eslintConfig": {
@@ -102,7 +104,8 @@
     "deepmerge": "4.2.2",
     "sinon": "21.0.0",
     "proxyquire": "2.1.3",
-    "util": "0.12.5"
+    "util": "0.12.5",
+    "chai":"6.2.1"
   },
   "resolutions": {
     "cross-spawn": "^7.0.5",

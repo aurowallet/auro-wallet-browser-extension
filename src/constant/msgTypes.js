@@ -69,18 +69,6 @@ export const WALLET_CHANGE_SEC_PASSWORD = "WALLET_CHANGE_SEC_PASSWORD"
 
 
 /**
- * Get the current private key
- */
-export const WALLET_GET_CURRENT_PRIVATE_KEY = "WALLET_GET_CURRENT_PRIVATE_KEY"
-
-
-/**
- * send message transaction
- */
-export const WALLET_SEND_MESSAGE_TRANSACTION = "WALLET_SEND_MESSAGE_TRANSACTION"
-
-
-/**
  * sign fields
  */
 export const WALLET_SEND_FIELDS_MESSAGE_TRANSACTION = "WALLET_SEND_FIELDS_MESSAGE_TRANSACTION"
@@ -94,12 +82,6 @@ export const WALLET_CHECK_TX_STATUS = "WALLET_CHECK_TX_STATUS"
  * Import ledger wallet
  */
 export const WALLET_IMPORT_LEDGER = "WALLET_IMPORT_LEDGER"
-
-/**
- * Import watch mode wallet
- */
-export const WALLET_IMPORT_WATCH_MODE = "WALLET_IMPORT_WATCH_MODE"
-
 
 /**
 * Import keystore wallet
@@ -202,11 +184,6 @@ export const DAPP_ACTION_GET_ACCOUNT = "DAPP_ACTION_GET_ACCOUNT"
  * dapp close window 
  */
 export const DAPP_ACTION_CLOSE_WINDOW = "DAPP_ACTION_CLOSE_WINDOW"
-
-/**
- * get current web connect status
- */
-export const DAPP_GET_CONNECT_STATUS = "DAPP_GET_CONNECT_STATUS"
 
 /**
  * disconnect web site

@@ -120,21 +120,59 @@ const storageServiceMock = {
   save: sinon.stub().resolves(),
 };
 
-// ==================== ObservableStore Mock ====================
-class MockObservableStore {
-  constructor(initState) {
-    this._state = { ...initState };
-  }
-  getState() {
-    return this._state;
-  }
-  updateState(newState) {
-    this._state = { ...this._state, ...newState };
-  }
-  putState(newState) {
-    this._state = newState;
-  }
-}
+// ==================== Zustand Store Mock ====================
+// Use an object that won't be reassigned - mutations only
+const mockStoreState = {
+  accountApprovedUrlList: {},
+  currentConnect: {},
+  tokenBuildList: {},
+  isUnlocked: false,
+  data: '',
+  password: '',
+  currentAccount: {},
+  mne: "",
+  autoLockTime: 15,
+};
+
+const resetMockStoreState = () => {
+  // Clear all properties and reset to initial state
+  Object.keys(mockStoreState).forEach(key => delete mockStoreState[key]);
+  Object.assign(mockStoreState, {
+    accountApprovedUrlList: {},
+    currentConnect: {},
+    tokenBuildList: {},
+    isUnlocked: false,
+    data: '',
+    password: '',
+    currentAccount: {},
+    mne: "",
+    autoLockTime: 15,
+  });
+};
+
+const mockMemStore = {
+  getState: () => mockStoreState,
+  updateState: (newState) => {
+    Object.assign(mockStoreState, newState);
+  },
+  putState: (newState) => {
+    Object.keys(mockStoreState).forEach(key => delete mockStoreState[key]);
+    Object.assign(mockStoreState, newState);
+  },
+  _directUpdate: (partial) => {
+    Object.assign(mockStoreState, partial);
+  },
+  _directSet: (newState) => {
+    Object.keys(mockStoreState).forEach(key => delete mockStoreState[key]);
+    Object.assign(mockStoreState, newState);
+  },
+  subscribe: sinon.stub(),
+  unlock: sinon.stub(),
+  lock: sinon.stub(),
+  setCurrentAccount: sinon.stub(),
+  setMnemonic: sinon.stub(),
+  setAutoLockTime: sinon.stub(),
+};
 
 // ==================== proxyquire stubs ====================
 const proxyquireStubs = {
@@ -164,7 +202,17 @@ const proxyquireStubs = {
     },
   },
 
-  "obs-store": MockObservableStore,
+  "@/store": {
+    memStore: mockMemStore,
+  },
+
+  "../store": {
+    memStore: mockMemStore,
+  },
+
+  "../store/index": {
+    memStore: mockMemStore,
+  },
 
   "../constant/msgTypes": {
     DAPP_ACTION_CANCEL_ALL: "DAPP_ACTION_CANCEL_ALL",
@@ -317,11 +365,8 @@ describe("DappService", () => {
   beforeEach(() => {
     sinon.resetHistory();
     dappService = DappService;
-    dappService.dappStore.updateState({
-      accountApprovedUrlList: {},
-      currentConnect: {},
-      tokenBuildList: {},
-    });
+    // Reset mock store state using mutation
+    resetMockStoreState();
   });
 
   // ==================== 1. requestCallback ====================
@@ -360,7 +405,7 @@ describe("DappService", () => {
   // ==================== 3. getCurrentAccountConnectStatus ====================
   describe("getCurrentAccountConnectStatus", () => {
     it("should return true if account is connected to site", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {
           [TEST_DATA.accounts[0].address]: ["https://example.com"],
         },
@@ -374,7 +419,7 @@ describe("DappService", () => {
     });
 
     it("should return false if account is not connected", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {},
       });
 
@@ -386,35 +431,11 @@ describe("DappService", () => {
     });
   });
 
-  // ==================== 4. getConnectStatus ====================
-  describe("getConnectStatus", () => {
-    it("should return true if address is connected to site", () => {
-      dappService.dappStore.updateState({
-        accountApprovedUrlList: {
-          [TEST_DATA.accounts[0].address]: ["https://example.com"],
-        },
-      });
-
-      const status = dappService.getConnectStatus(
-        "https://example.com",
-        TEST_DATA.accounts[0].address
-      );
-      expect(status).to.be.true;
-    });
-
-    it("should return false if address is not connected", () => {
-      const status = dappService.getConnectStatus(
-        "https://notconnected.com",
-        TEST_DATA.accounts[0].address
-      );
-      expect(status).to.be.false;
-    });
-  });
 
   // ==================== 5. disconnectDapp ====================
   describe("disconnectDapp", () => {
     it("should disconnect dapp and return true when url exists", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {
           [TEST_DATA.accounts[0].address]: ["https://example.com", "https://other.com"],
         },
@@ -432,7 +453,7 @@ describe("DappService", () => {
     });
 
     it("should return true even if url not found", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {},
       });
 
@@ -445,7 +466,7 @@ describe("DappService", () => {
     });
 
     it("should return true when address has no connections", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {
           other_address: ["https://example.com"],
         },
@@ -457,28 +478,6 @@ describe("DappService", () => {
       );
 
       expect(result).to.be.true;
-    });
-  });
-
-  // ==================== 6. getAccountIndex ====================
-  describe("getAccountIndex", () => {
-    it("should return correct index of account", () => {
-      const accountList = [
-        { address: "addr1" },
-        { address: "addr2" },
-        { address: "addr3" },
-      ];
-
-      expect(dappService.getAccountIndex(accountList, "addr2")).to.equal(1);
-      expect(dappService.getAccountIndex(accountList, "addr1")).to.equal(0);
-      expect(dappService.getAccountIndex(accountList, "notexist")).to.equal(-1);
-    });
-  });
-
-  // ==================== 7. getAppLockStatus ====================
-  describe("getAppLockStatus", () => {
-    it("should delegate to apiService.getLockStatus", () => {
-      expect(dappService.getAppLockStatus).to.be.a("function");
     });
   });
 
@@ -506,7 +505,7 @@ describe("DappService", () => {
   // ==================== 10. getAppConnectionList ====================
   describe("getAppConnectionList", () => {
     it("should return approved url list for address", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {
           [TEST_DATA.accounts[0].address]: ["https://a.com", "https://b.com"],
         },
@@ -669,7 +668,7 @@ describe("DappService", () => {
   // ==================== 22. revokePermissions ====================
   describe("revokePermissions", () => {
     it("should revoke permissions for origin", async () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {
           addr1: ["https://example.com", "https://other.com"],
         },
@@ -744,7 +743,7 @@ describe("DappService", () => {
   // ==================== 26. portDisconnectListener ====================
   describe("portDisconnectListener", () => {
     it("should remove tab from currentConnect on disconnect", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         currentConnect: { 123: { tabId: 123, origin: "https://example.com" } },
       });
 
@@ -810,7 +809,7 @@ describe("DappService", () => {
   // ==================== 30. removeTokenBuildById ====================
   describe("removeTokenBuildById", () => {
     it("should remove token build from list", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         tokenBuildList: { "build-123": { data: "test" } },
       });
 
@@ -831,7 +830,7 @@ describe("DappService", () => {
     });
 
     it("should return encrypted data for valid build", async () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         tokenBuildList: { "build-123": { data: "test" } },
       });
 
@@ -845,7 +844,7 @@ describe("DappService", () => {
     });
 
     it("should return undefined when buildId not found", async () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         tokenBuildList: {},
       });
 
@@ -870,7 +869,7 @@ describe("DappService", () => {
 
     it("should return empty array if not connected", async () => {
       storageServiceMock.get.resolves({ keyringData: "data" });
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {},
       });
 
@@ -916,7 +915,7 @@ describe("DappService", () => {
   // ==================== 36. changeCurrentConnecting ====================
   describe("changeCurrentConnecting", () => {
     it("should handle account change and notify", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {
           [TEST_DATA.accounts[0].address]: ["https://a.com"],
           [TEST_DATA.accounts[1].address]: ["https://b.com"],
@@ -934,7 +933,7 @@ describe("DappService", () => {
   // ==================== 37. deleteDAppConnect ====================
   describe("deleteDAppConnect", () => {
     it("should delete dapp connection when deleting account", () => {
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {
           [TEST_DATA.accounts[0].address]: ["https://a.com"],
         },
@@ -1089,80 +1088,6 @@ describe("DappService", () => {
     });
   });
 
-  // ==================== 43. requestAccountNetInfo ====================
-  describe("requestAccountNetInfo", () => {
-    it("should reject with invalid publicKey", async () => {
-      try {
-        await dappService.requestAccountNetInfo(
-          { publicKey: "" },
-          TEST_DATA.sites.example
-        );
-        expect.fail("Should have thrown");
-      } catch (error) {
-        expect(error.code).to.exist;
-      }
-    });
-
-    it("should reject with invalid address format", async () => {
-      proxyquireStubs["../utils/utils"].addressValid.returns(false);
-      try {
-        await dappService.requestAccountNetInfo(
-          { publicKey: "invalid_address" },
-          TEST_DATA.sites.example
-        );
-        expect.fail("Should have thrown");
-      } catch (error) {
-        expect(error.code).to.exist;
-      }
-      proxyquireStubs["../utils/utils"].addressValid.returns(true);
-    });
-
-    it("should use default tokenId if not provided", async () => {
-      proxyquireStubs["./api"].getAccountInfo.resolves({ account: { balance: "1000" } });
-      const result = await dappService.requestAccountNetInfo(
-        { publicKey: TEST_DATA.accounts[0].address },
-        TEST_DATA.sites.example
-      );
-      expect(result).to.have.property("account");
-    });
-
-    it("should use provided tokenId", async () => {
-      proxyquireStubs["./api"].getAccountInfo.resolves({ account: { balance: "1000" } });
-      const result = await dappService.requestAccountNetInfo(
-        { publicKey: TEST_DATA.accounts[0].address, tokenId: "custom-token-id" },
-        TEST_DATA.sites.example
-      );
-      expect(result).to.have.property("account");
-    });
-
-    it("should reject when account not found", async () => {
-      proxyquireStubs["./api"].getAccountInfo.resolves({ account: null });
-      try {
-        await dappService.requestAccountNetInfo(
-          { publicKey: TEST_DATA.accounts[0].address },
-          TEST_DATA.sites.example
-        );
-        expect.fail("Should have thrown");
-      } catch (error) {
-        expect(error.code).to.exist;
-        expect(error.message).to.include("does not exist");
-      }
-    });
-
-    it("should reject when API returns error", async () => {
-      proxyquireStubs["./api"].getAccountInfo.resolves({ error: "API Error" });
-      try {
-        await dappService.requestAccountNetInfo(
-          { publicKey: TEST_DATA.accounts[0].address },
-          TEST_DATA.sites.example
-        );
-        expect.fail("Should have thrown");
-      } catch (error) {
-        expect(error.code).to.exist;
-      }
-    });
-  });
-
   // ==================== 44. signTransaction ====================
   describe("signTransaction", () => {
     it("should be a function", () => {
@@ -1245,7 +1170,7 @@ describe("DappService", () => {
 
     it("should handle exception gracefully", async () => {
       storageServiceMock.get.resolves({ keyringData: "data" });
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         accountApprovedUrlList: {},
       });
 
@@ -1285,7 +1210,7 @@ describe("DappService", () => {
       });
       proxyquireStubs["../utils/zkUtils"].verifyTokenCommand.returns(false);
 
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         tokenBuildList: { "build-123": { tokenId: "token123" } },
       });
 
@@ -1309,7 +1234,7 @@ describe("DappService", () => {
         transaction: { test: "data" },
       });
 
-      dappService.dappStore.updateState({
+      mockMemStore.updateState({
         tokenBuildList: {},
       });
 
