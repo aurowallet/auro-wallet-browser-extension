@@ -1,10 +1,13 @@
-import bs58check from "bs58check";
 import { Buffer } from 'buffer';
 import Client from 'mina-signer';
 import { MAIN_COIN_CONFIG } from '../constant';
 import { HDKey } from "@scure/bip32";
 import * as bip39 from '@scure/bip39';
 import { wordlist } from "@scure/bip39/wordlists/english";
+import { createBase58check } from "@scure/base";
+import { sha256 } from "@noble/hashes/sha256";
+
+const bs58check = createBase58check(sha256);
 
 export function validateMnemonic(mnemonic) {
     return bip39.validateMnemonic(mnemonic,wordlist);
