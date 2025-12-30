@@ -9,42 +9,42 @@ import browser from "webextension-polyfill";
 import { LOCK_TIME_DEFAULT } from "../constant";
 import { ACCOUNT_TYPE } from "../constant/commonType";
 import {
-    FROM_BACK_TO_RECORD,
-    TX_SUCCESS,
-    WORKER_ACTIONS,
+  FROM_BACK_TO_RECORD,
+  TX_SUCCESS,
+  WORKER_ACTIONS,
 } from "../constant/msgTypes";
 import "../i18n";
 import {
-    getCurrentNodeConfig,
-    getExtensionAction,
+  getCurrentNodeConfig,
+  getExtensionAction,
 } from "../utils/browserUtils";
 import { sendMsg } from "../utils/commonMsg";
 import { decodeMemo } from "../utils/utils";
 import {
-    getQATxStatus,
-    getTxStatus,
-    sendParty,
-    sendStakeTx,
-    sendTx,
+  getQATxStatus,
+  getTxStatus,
+  sendParty,
+  sendStakeTx,
+  sendTx,
 } from "./api";
 import {
-    get,
-    getCredentialById,
-    getStoredCredentials,
-    removeCredential,
-    removeValue,
-    save,
-    searchCredential,
-    storeCredential,
+  get,
+  getCredentialById,
+  getStoredCredentials,
+  removeCredential,
+  removeValue,
+  save,
+  searchCredential,
+  storeCredential,
 } from "./storageService";
 
 import { memStore } from "@/store";
 
 import {
-    generateMne,
-    importWalletByKeystore,
-    importWalletByMnemonic,
-    importWalletByPrivateKey,
+  generateMne,
+  importWalletByKeystore,
+  importWalletByMnemonic,
+  importWalletByPrivateKey,
 } from "./accountService";
 
 const encryptUtils = require("../utils/encryptUtils").default;
@@ -242,7 +242,7 @@ class APIService {
     return currentAccount.address;
   };
   createPwd = (password) => {
-    memStore.updateState({ password });
+    memStore.updateState({ password, isUnlocked: true });
   };
   createAccount = async (mnemonic) => {
     memStore.updateState({ mne: "" });
@@ -291,6 +291,9 @@ class APIService {
         (acc) => acc.type === ACCOUNT_TYPE.WALLET_LEDGER
       ) || [];
     return ledgerList.length;
+  };
+  getLockStatus = () => {
+    return memStore.getState().isUnlocked;
   };
 
   fetchTransactionStatus = (paymentId, hash) => {
@@ -364,7 +367,10 @@ class APIService {
   getAllAccount = () => {
     let data = this.getStore().data;
     if (!data || !data[0]) {
-      return { accounts: { allList: [], commonList: [], watchList: [] }, currentAddress: '' };
+      return {
+        accounts: { allList: [], commonList: [], watchList: [] },
+        currentAddress: "",
+      };
     }
     let accountList = this.accountSort(data[0].accounts);
     let currentAccount = this.getStore().currentAccount;

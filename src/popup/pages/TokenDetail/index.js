@@ -16,7 +16,7 @@ import {
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
 import browser from "webextension-polyfill";
 import {
@@ -419,7 +419,7 @@ const StyledActionItemWrapper = styled.div`
 `;
 
 export const TokenAction = ({ type, isFungibleToken }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const { title, nextRouter, actionIconUrl, isReceive } = useMemo(() => {
     let title = "";
     let nextRouter = "";
@@ -428,18 +428,18 @@ export const TokenAction = ({ type, isFungibleToken }) => {
     switch (type) {
       case token_action_type.send:
         title = i18n.t("send");
-        nextRouter = "send_page";
+        nextRouter = "/send_page";
         actionIconUrl = "img/tx_send2.svg";
         break;
       case token_action_type.receive:
         title = i18n.t("receive");
-        nextRouter = "receive_page";
+        nextRouter = "/receive_page";
         actionIconUrl = "img/tx_send2.svg";
         isReceive = true;
         break;
       case token_action_type.delegation:
         title = i18n.t("staking");
-        nextRouter = "staking";
+        nextRouter = "/staking";
         actionIconUrl = "img/tx_delegation.svg";
         break;
 
@@ -449,10 +449,7 @@ export const TokenAction = ({ type, isFungibleToken }) => {
     return { title, nextRouter, actionIconUrl, isReceive };
   }, [type]);
   const onClickActionBtn = useCallback(() => {
-    history.push({
-      pathname: nextRouter,
-      params: { isFromTokenPage: true, isFungibleToken },
-    });
+    navigate(nextRouter, { state: { isFromTokenPage: true, isFungibleToken } });
   }, [nextRouter, isFungibleToken]);
   return (
     <StyledActionItemWrapper onClick={onClickActionBtn}>

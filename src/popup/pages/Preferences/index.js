@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AUTO_LOCK_TIME_LIST } from "../../../constant";
 import { WALLET_GET_LOCK_TIME } from "../../../constant/msgTypes";
 import { languageOption } from "../../../i18n";
@@ -10,7 +10,7 @@ import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
 
 const Preferences = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const currency = useSelector((state) => state.currencyConfig.currentCurrency);
   const [currentLockTime, setCurrentLockTime] = useState("");
   useEffect(() => {
@@ -49,7 +49,7 @@ const Preferences = ({}) => {
   }, [i18n, currency, currentLockTime]);
 
   const goToPage = useCallback((nextRoute) => {
-    history.push(nextRoute);
+    navigate(nextRoute);
   }, []);
 
   return (
@@ -61,21 +61,21 @@ const Preferences = ({}) => {
         title={i18n.t("language")}
         content={displayLanguage}
         onClickItem={() => {
-          goToPage("language_management_page");
+          goToPage("/language_management_page");
         }}
       />
       <RowItem
         title={i18n.t("currency")}
         content={displayCurrency}
         onClickItem={() => {
-          goToPage("currency_unit");
+          goToPage("/currency_unit");
         }}
       />
       <RowItem
         title={i18n.t("autoLock")}
         content={displayLockTime}
         onClickItem={() => {
-          goToPage("auto_lock");
+          goToPage("/auto_lock");
         }}
       />
     </CustomView>

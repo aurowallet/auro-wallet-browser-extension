@@ -2,7 +2,7 @@ import { wordlist } from "@scure/bip39/wordlists/english";
 import i18n from "i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { validateMnemonic } from "../../../background/accountService";
 import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
@@ -25,7 +25,7 @@ const RestoreAccount = () => {
 
 
   const dispatch = useDispatch()
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const getNeedMatchWord = useCallback((mneList) => {
     let targetMne = mneList[mneList.length - 1]
@@ -104,10 +104,7 @@ const RestoreAccount = () => {
         setBtnLoading(false)
         dispatch(updateCurrentAccount(currentAccount))
         dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
-        history.push({
-          pathname: "/backup_success",
-          params: { type: "restore" }
-        })
+        navigate("/backup_success", { state: { type: "restore" } })
       })
   }, [mneInput, i18n])
 

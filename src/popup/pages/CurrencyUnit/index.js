@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { saveLocal } from "../../../background/localStorage";
 import { CURRENCY_UNIT_CONFIG } from "../../../constant/storageKey";
 import { updateCurrencyConfig } from "../../../reducers/currency";
@@ -11,7 +11,7 @@ import styles from "./index.module.scss";
 
 const CurrencyUnit = ({ }) => {
 
-  let history = useHistory();
+  const navigate = useNavigate();
   const currencyList = useSelector(state => state.currencyConfig.currencyList)
   const oldCurrency = useMemo(()=>{
     let list = currencyList.filter((item) => {
@@ -43,7 +43,7 @@ const CurrencyUnit = ({ }) => {
       })
       dispatch(updateCurrencyConfig(list));
       saveLocal(CURRENCY_UNIT_CONFIG, JSON.stringify(item.key))
-      history.goBack()
+      navigate(-1)
     }
 
   }, [i18n,oldCurrency])

@@ -3,7 +3,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { sendStakeTx } from "../../../background/api";
 import {
   addressSlice,
@@ -38,7 +38,8 @@ import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
 const StakingTransfer = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
@@ -51,7 +52,7 @@ const StakingTransfer = () => {
   const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const { menuAdd, nodeName, nodeAddress, showNodeName } = useMemo(() => {
-    let params = history.location?.params || {};
+    let params = location?.state || {};
 
     let menuAdd = !!params.menuAdd;
     let nodeName = params.nodeName;
@@ -64,7 +65,7 @@ const StakingTransfer = () => {
       nodeAddress,
       showNodeName,
     };
-  }, [history]);
+  }, [location]);
 
   const [blockAddress, setBlockAddress] = useState("");
 
@@ -142,13 +143,13 @@ const StakingTransfer = () => {
           () => {}
         );
       }
-      if (history.length >= 4) {
-        history.go(-3);
+      if (window.history.length >= 4) {
+        navigate(-3);
       } else {
-        history.replace("/");
+        navigate("/");
       }
     },
-    [history]
+    [location]
   );
 
   useEffect(() => {
@@ -318,9 +319,8 @@ const StakingTransfer = () => {
   }, [onConfirm]);
 
   const onClickBlockProducer = useCallback(() => {
-    history.replace({
-      pathname: "/staking_list",
-      params: {
+    navigate("/staking_list", {
+      state: {
         nodeAddress: nodeAddress,
         fromPage: "stakingTransfer",
       },

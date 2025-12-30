@@ -1,7 +1,7 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { WALLET_GET_CREATE_MNEMONIC } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import BottomBtn from "../../component/BottomBtn";
@@ -24,9 +24,9 @@ export const ShowMnemonic = () => {
     })
   }, [])
 
-  let history = useHistory();
+  const navigate = useNavigate();
   const goToNext = useCallback(() => {
-    history.push("/backup_mnemonic")
+    navigate("/backup_mnemonic")
   }, [])
 
   return (

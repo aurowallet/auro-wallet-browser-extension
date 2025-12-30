@@ -1,6 +1,6 @@
 import i18n from "i18next";
-import { useCallback, useState } from "react";
-import { useHistory } from 'react-router-dom';
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SEC_FROM_TYPE } from "../../../constant/commonType";
 import { WALLET_GET_PRIVATE_KEY } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -13,13 +13,16 @@ import { PopupModal } from "../../component/PopupModal";
 import styles from "./index.module.scss";
 
 const ShowPrivateKeyPage = ({ }) => {
-  const history = useHistory()
-  const [address, setAddress] = useState(history.location.params?.address || "")
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const [showSecurity, setShowSecurity] = useState(true)
   const [priKey, setPriKey] = useState('')
   const [confirmModalStatus, setConfirmModalStatus] = useState(false)
 
+  const address = useMemo(()=>{
+    return location.state?.address || ""
+  },[location])
 
   const onClickCheck = useCallback((password) => {
     sendMsg({
@@ -47,7 +50,7 @@ const ShowPrivateKeyPage = ({ }) => {
       })
   }, [i18n])
   const onConfirm = useCallback(() => {
-    history.goBack()
+    navigate(-1)
   }, [])
   const onClickCopy = useCallback(() => {
     setConfirmModalStatus(true)

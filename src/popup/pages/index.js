@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import browser from "webextension-polyfill";
 import { getBaseInfo } from "../../background/api";
@@ -20,7 +20,7 @@ import HomePage from "./Main";
 
 const MainRouter = () => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [nextRoute, setNextRoute] = useState(<></>);
 
   const entryWitchRoute = useSelector(
@@ -34,10 +34,13 @@ const MainRouter = () => {
     }
   }, []);
 
-  useEffect(async () => {
-    let lan = await languageInit();
-    dispatch(setLanguage(lan));
-    initBaseInfo();
+  useEffect(() => {
+    const init = async () => {
+      let lan = await languageInit();
+      dispatch(setLanguage(lan));
+      initBaseInfo();
+    };
+    init();
   }, []);
 
   useEffect(() => {
@@ -46,7 +49,7 @@ const MainRouter = () => {
       if (type === FROM_BACK_TO_RECORD && action === WORKER_ACTIONS.SET_LOCK) {
         if (!payload) {
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
-          history.push("/lock_page");
+          navigate("/lock_page");
         }
         dispatch(updatePopupLockStatus(!payload));
         sendResponse();

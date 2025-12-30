@@ -2,7 +2,6 @@ import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
 import { getLocal, saveLocal } from "../../../background/localStorage";
 import { POWER_BY } from "../../../constant";
 import { USER_AGREEMENT } from "../../../constant/storageKey";
@@ -90,7 +89,6 @@ const RegisterStep = {
 const Welcome = () => {
   const cache = useSelector((state) => state.cache);
   const dispatch = useDispatch();
-  const history = useHistory();
 
   const [isGotoProtocol, setIsGotoProtocol] = useState(true);
   const [popupModalStatus, setPopupModalStatus] = useState(false);

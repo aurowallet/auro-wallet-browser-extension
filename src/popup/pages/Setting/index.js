@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getLocal } from "../../../background/localStorage";
 import {
   CredentialMsg,
@@ -21,7 +21,7 @@ const Setting = ({}) => {
   );
 
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [connectCount, setConnectCount] = useState(0);
 
   const [credentialCount, setCredentialCount] = useState(0);
@@ -75,35 +75,35 @@ const Setting = ({}) => {
       {
         icon: "/img/ic_preference.svg",
         title: i18n.t("preferences"),
-        targetRoute: "preferences_page",
+        targetRoute: "/preferences_page",
       },
       {
         icon: "/img/icon_security.svg",
         title: i18n.t("security"),
-        targetRoute: "security_page",
+        targetRoute: "/security_page",
       },
       {
         icon: "/img/icon_connect.svg",
         title: i18n.t("appConnection"),
-        targetRoute: "app_connection",
+        targetRoute: "/app_connection",
         rightContent: connectCount,
       },
       {
         icon: "/img/ic_credentials.svg",
         title: i18n.t("credentialsTitle"),
-        targetRoute: "credential_manage",
+        targetRoute: "/credential_manage",
         rightContent: credentialCount,
       },
       {
         icon: "/img/icon_network.svg",
         title: i18n.t("network"),
-        targetRoute: "network_page",
+        targetRoute: "/network_page",
         rightContent: getNetwork(),
       },
       {
         icon: "/img/icon_addressBook.svg",
         title: i18n.t("addressBook"),
-        targetRoute: "address_book",
+        targetRoute: "/address_book",
         rightContent: getAddressBook(),
         action: addressBookAction,
       },
@@ -111,7 +111,7 @@ const Setting = ({}) => {
     const rowAbout = {
       icon: "/img/icon_about.svg",
       title: i18n.t("about"),
-      targetRoute: "about_us",
+      targetRoute: "/about_us",
     };
     return {
       routeList,
@@ -120,7 +120,7 @@ const Setting = ({}) => {
   }, [i18n, currentNode, dispatch, connectCount, credentialCount]);
 
   const onClickTitle = useCallback(() => {
-    history.goBack();
+    navigate(-1);
   }, []);
 
   return (
@@ -160,18 +160,18 @@ const RowItem = ({
   rightContent = "",
   action,
 }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const onClick = useCallback(() => {
     if (action) {
       action();
     }
-    history.push(targetRoute);
+    navigate(targetRoute);
   }, [action, targetRoute]);
   return (
     <div className={styles.rowContainer} onClick={onClick}>
       <div className={styles.rowLeft}>
         <div className={styles.iconContainer}>
-          <img src={icon} />
+          {icon && <img src={icon} />}
         </div>
         <p className={styles.title}>{title}</p>
       </div>

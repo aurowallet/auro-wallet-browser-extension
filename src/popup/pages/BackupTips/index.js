@@ -1,15 +1,15 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import BottomBtn from "../../component/BottomBtn";
 import { CheckBox } from "../../component/CheckBox";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
 
 export const BackupTips = () => {
-  let history = useHistory();
+  const navigate = useNavigate();
   const goToCreate = useCallback(() => {
-    history.push("/show_mnemonic")
+    navigate("/show_mnemonic")
   }, [])
 
   const [btnClick, setBtnClick] = useState(false)

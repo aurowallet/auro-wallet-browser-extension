@@ -6,7 +6,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { getTokenState, getZekoNetFee, sendTx } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
@@ -56,7 +56,8 @@ const StyledWrapper = styled.div`
 `;
 const SendPage = ({}) => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const currentNode = useSelector((state) => state.network.currentNode);
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
@@ -80,12 +81,12 @@ const SendPage = ({}) => {
   const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const { isFromModal } = useMemo(() => {
-    let params = history.location.params || {};
+    let params = location.state || {};
     let isFromModal = params?.isFromModal;
     return {
       isFromModal,
     };
-  }, [history]);
+  }, [location]);
   const {
     tokenSymbol,
     isSendMainToken,
@@ -133,7 +134,7 @@ const SendPage = ({}) => {
 
   useEffect(() => {
     dispatch(updateAddressDetail(""));
-  }, [history]);
+  }, [location]);
 
   const [toAddress, setToAddress] = useState("");
   const [toAddressName, setToAddressName] = useState("");
@@ -187,11 +188,14 @@ const SendPage = ({}) => {
     return ZEKO_FEE_INTERVAL_TIME;
   }, [isZeko, advanceInputFee]);
 
-  useEffect(async () => {
-    if (isZeko) {
-      const fee = await getZekoNetFee();
-      setZekoPerFee(parsedZekoFee(fee));
-    }
+  useEffect(() => {
+    const fetchFee = async () => {
+      if (isZeko) {
+        const fee = await getZekoNetFee();
+        setZekoPerFee(parsedZekoFee(fee));
+      }
+    };
+    fetchFee();
   }, [isZeko]);
 
   const onFeeTimerComplete = useCallback(async () => {
@@ -301,11 +305,9 @@ const SendPage = ({}) => {
       setConfirmModalStatus(false);
       fetchAccountData();
       if (isFromModal) {
-        history.replace({
-          pathname: "token_detail",
-        });
+        navigate("/token_detail");
       } else {
-        history.goBack();
+        navigate(-1);
       }
     },
     [i18n, isFromModal]
@@ -409,11 +411,9 @@ const SendPage = ({}) => {
       setConfirmBtnStatus(false);
       fetchAccountData();
       if (isFromModal) {
-        history.replace({
-          pathname: "token_detail",
-        });
+        navigate("/token_detail");
       } else {
-        history.goBack();
+        navigate(-1);
       }
     },
     [

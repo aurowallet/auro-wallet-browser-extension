@@ -4,7 +4,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getCurrencyPrice } from "../../../background/api";
 
 import { NetworkID_MAP } from "@/constant/network";
@@ -86,16 +86,16 @@ const StyledTipsSpecial = styled.span`
   color: #d65a5a;
 `;
 const Wallet = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [watchModalStatus, setWatchModalStatus] = useState(false);
 
   const toSetting = useCallback(() => {
-    history.push("setting");
+    navigate("/setting");
   }, []);
 
   const toManagePage = useCallback(() => {
-    history.push("account_manage");
+    navigate("/account_manage");
   }, []);
 
   const onCloseWatchModal = useCallback(() => {
@@ -311,7 +311,7 @@ const WalletInfo = () => {
   const shouldRefresh = useSelector((state) => state.accountInfo.shouldRefresh);
 
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [currentAccount, setCurrentAccount] = useState(
     accountInfo.currentAccount
@@ -389,17 +389,17 @@ const WalletInfo = () => {
 
   const toAccountInfo = useCallback(() => {
     dispatch(setAccountInfo(currentAccount));
-    history.push("account_info");
+    navigate("/account_info");
   }, [currentAccount]);
 
   const toSend = useCallback(() => {
     setTokenModalStatus(true);
   }, []);
   const toReceive = useCallback(() => {
-    history.push("receive_page");
+    navigate("/receive_page");
   }, []);
   const toStaking = useCallback(() => {
-    history.push("staking");
+    navigate("/staking");
   }, []);
 
 

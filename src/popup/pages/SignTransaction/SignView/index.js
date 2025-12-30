@@ -325,11 +325,14 @@ const SignView = ({
     };
   }, [advanceFee, siteRecommendFee, isZeko, zekoPerFee, customFeeStatus]);
 
-  useEffect(async () => {
-    if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
-      setZekoPerFee(parsedZekoFee(fee));
-    }
+  useEffect(() => {
+    const fetchFee = async () => {
+      if (isZeko) {
+        const fee = await getZekoNetFee(zkAppUpdateCount + 1);
+        setZekoPerFee(parsedZekoFee(fee));
+      }
+    };
+    fetchFee();
   }, [isZeko, zkAppUpdateCount]);
 
   const onFeeTimerComplete = useCallback(async () => {

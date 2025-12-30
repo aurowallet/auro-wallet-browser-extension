@@ -150,11 +150,14 @@ const SignView = ({
     }
   }, [currentAdvanceData.nonce, currentAdvanceData.fee]);
 
-  useEffect(async () => {
-    if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
-      setZekoPerFee(parsedZekoFee(fee));
-    }
+  useEffect(() => {
+    const fetchFee = async () => {
+      if (isZeko) {
+        const fee = await getZekoNetFee(zkAppUpdateCount + 1);
+        setZekoPerFee(parsedZekoFee(fee));
+      }
+    };
+    fetchFee();
   }, [isZeko, zkAppUpdateCount]);
 
   const feeIntervalTime = useMemo(() => {

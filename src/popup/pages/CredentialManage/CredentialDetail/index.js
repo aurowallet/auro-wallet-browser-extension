@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { CredentialMsg } from "../../../../constant/msgTypes";
 import { sendMsg } from "../../../../utils/commonMsg";
@@ -38,7 +38,8 @@ const StyledDelete = styled.p`
 `;
 
 const CredentialDetail = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -46,9 +47,9 @@ const CredentialDetail = ({}) => {
   const [credential, setCredential] = useState("");
 
   const credentialId = useMemo(() => {
-    let credentialId = history.location?.params?.credentialId ?? "";
+    let credentialId = location?.state?.credentialId ?? "";
     return credentialId;
-  }, [history]);
+  }, [location]);
 
   useEffect(() => {
     sendMsg(
@@ -80,7 +81,7 @@ const CredentialDetail = ({}) => {
         },
       },
       () => {
-        history.goBack();
+        navigate(-1);
       }
     );
   }, [credentialId, currentAddress]);

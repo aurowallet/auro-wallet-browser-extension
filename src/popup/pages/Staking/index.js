@@ -7,7 +7,7 @@ import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { fetchBlockInfo, fetchDaemonStatus, fetchDelegationInfo } from "../../../background/api";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import { getStakingList, updateBlockInfo, updateDaemonStatus, updateDelegationKey } from "../../../reducers/stakingReducer";
@@ -75,7 +75,6 @@ const Staking = ({ }) => {
   }, [])
 
   const cache = useSelector(state => state.cache)
-  const history = useHistory()
 
   const onClickGuide = useCallback(() => {
     const { staking_guide, staking_guide_cn } = cache
@@ -127,11 +126,9 @@ const EmptyView = ({
   onClickGuide
 }) => {
 
-  const history = useHistory()
+  const navigate = useNavigate()
   const onChangeNode = useCallback(() => {
-    history.push({
-      pathname: "staking_list",
-    })
+    navigate("/staking_list")
   }, [])
 
   return (<div className={styles.emptyContainer}>
@@ -159,17 +156,12 @@ const DelegationInfo = ({
   onClickGuide=()=>{}
 }) => {
 
-  const history = useHistory()
+  const navigate = useNavigate()
   const stakingList = useSelector(state => state.staking.stakingList)
   const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
 
   const onChangeNode = useCallback(() => {
-    history.push({
-      pathname: "staking_list",
-      params: {
-        nodeAddress: delegatePublicKey
-      }
-    })
+    navigate("/staking_list", { state: { nodeAddress: delegatePublicKey } })
   }, [delegatePublicKey])
 
   const {
@@ -219,7 +211,6 @@ const DelegationInfo = ({
 }
 
 const EpochInfo = ({ }) => {
-  const dispatch = useDispatch()
   const daemonStatus = useSelector(state => state.staking.daemonStatus)
   const block = useSelector(state => state.staking.block)
 

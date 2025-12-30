@@ -2,7 +2,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { getBalanceBatch } from "../../../background/api";
 import { ACCOUNT_TYPE } from "../../../constant/commonType";
@@ -29,7 +29,7 @@ const AccountManagePage = ({}) => {
     (state) => state.accountInfo.currentAccount.address
   );
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
   const isMounted = useRef(true);
 
   const [commonAccountList, setCommonAccountList] = useState([]);
@@ -106,7 +106,7 @@ const AccountManagePage = ({}) => {
 
   const goToAccountInfo = useCallback((item) => {
     dispatch(setAccountInfo(item));
-    history.push("/account_info");
+    navigate("/account_info");
   }, []);
 
   const onClickAccount = useCallback(
@@ -138,7 +138,7 @@ const AccountManagePage = ({}) => {
                 },
                 (status) => {}
               );
-              history.goBack();
+              navigate(-1);
             }
           }
         );
@@ -224,9 +224,9 @@ const StyledAddRowWrapper = styled.div`
 `;
 
 const AddRow = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const onGoAdd = useCallback(() => {
-    history.push("/add_account");
+    navigate("/add_account");
   }, []);
   return (
     <StyledAddRowWrapper onClick={onGoAdd}>
@@ -242,7 +242,7 @@ const CommonAccountRow = ({
   account = {},
 }) => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
   const accountBalanceMap = useSelector(
     (state) => state.accountInfo.accountBalanceMap
   );
@@ -301,7 +301,7 @@ const CommonAccountRow = ({
 
   const goToAccountInfo = useCallback(() => {
     dispatch(setAccountInfo(account));
-    history.push("/account_info");
+    navigate("/account_info");
   }, [account]);
 
   const onClickMenu = useCallback((e) => {

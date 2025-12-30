@@ -7,7 +7,7 @@ import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import styles from "./index.module.scss";
 import styled from "styled-components";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const StyledDevWrapper = styled.div`
   display: flex;
@@ -15,7 +15,7 @@ const StyledDevWrapper = styled.div`
   justify-content: center;
 `;
 const AboutUs = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [baseAboutInfo, setBaseAboutInfo] = useState({
     terms_and_contions: "",
@@ -107,7 +107,7 @@ const AboutUs = ({}) => {
   }, [i18n, baseAboutInfo]);
 
   const onClickIcon = useCallback(() => {
-    history.push("devpage");
+    navigate("/devpage");
   }, []);
 
   return (

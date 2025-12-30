@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import styled, { css } from "styled-components";
 import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
 import { FROM_BACK_TO_RECORD, TX_SUCCESS } from "../../../constant/msgTypes";
@@ -40,22 +40,22 @@ const StyledWrapper = styled.div`
 `;
 
 const Record = ({}) => {
+  const location = useLocation();
   const netConfig = useSelector((state) => state.network);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
   const dispatch = useDispatch();
-  const history = useHistory();
 
   const { txDetail, tokenInfo } = useMemo(() => {
-    let params = history.location.params || {};
+    let params = location.state || {};
     let txDetail = params?.txDetail || {};
     let tokenInfo = params?.tokenInfo || {};
     return {
       txDetail,
       tokenInfo,
     };
-  }, [history]);
+  }, [location]);
 
   const { contentList, isZkReceive, isMainCoin } = useMemo(() => {
     let kindLow = txDetail.kind?.toLowerCase();

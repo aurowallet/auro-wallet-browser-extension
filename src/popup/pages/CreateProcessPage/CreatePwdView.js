@@ -5,7 +5,6 @@ import { ReminderTip } from "@/popup/component/ReminderTip";
 import { sendMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
 import { useCallback, useState } from "react";
-import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { BackView } from ".";
 import { PasswordValidationList } from "../../../utils/utils";
@@ -54,7 +53,6 @@ export const CreatePwdView = ({ onClickNextTab, onClickPre }) => {
   const [confirmPwd, setConfirmPwd] = useState("");
   const [passwordsMatch, setPasswordsMatch] = useState(true);
 
-  const history = useHistory();
 
   const onPwdInput = useCallback(
     (e) => {
@@ -84,9 +82,6 @@ export const CreatePwdView = ({ onClickNextTab, onClickPre }) => {
     [inputPwd]
   );
 
-  const onClickBack = useCallback(() => {
-    history.goBack();
-  }, []);
 
   const goToCreate = useCallback(() => {
     sendMsg({

@@ -5,18 +5,18 @@ import browser from "webextension-polyfill";
 import i18n from "i18next";
 import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
 
 const AddAccount = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const accountTypeCount = useSelector((state) => state.cache.accountTypeCount);
   const goToCreate = useCallback(() => {
     dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.INSIDE));
-    history.push("/account_name");
+    navigate("/account_name");
   }, [accountTypeCount]);
 
   const goAddLedger = useCallback(() => {
@@ -34,11 +34,11 @@ const AddAccount = ({}) => {
 
   const onPrivateKey = useCallback(() => {
     dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.OUTSIDE));
-    history.push("account_name");
+    navigate("/account_name");
   }, []);
   const onKeystore = useCallback(() => {
     dispatch(updateAccountType(ACCOUNT_NAME_FROM_TYPE.KEYPAIR));
-    history.push("account_name");
+    navigate("/account_name");
   }, []);
 
   return (

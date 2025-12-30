@@ -21,7 +21,7 @@ import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
 
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import styles from "./index.module.scss";
@@ -33,7 +33,7 @@ const AccountInfo = ({}) => {
   );
 
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [account, setAccount] = useState(cache.accountInfo);
   const [popupModalStatus, setPopupModalStatus] = useState(false);
 
@@ -90,10 +90,7 @@ const AccountInfo = ({}) => {
   }, [i18n]);
 
   const showPrivateKey = useCallback(() => {
-    history.push({
-      pathname: "show_privatekey_page",
-      params: { address: account.address },
-    });
+    navigate("/show_privatekey_page", { state: { address: account.address } });
   }, []);
 
   const onConfirmDeleteLedger = useCallback(()=>{
@@ -118,7 +115,7 @@ const AccountInfo = ({}) => {
           dispatch(updateCurrentAccount(currentAccount));
 
           setTimeout(() => {
-            history.goBack();
+            navigate(-1);
           }, 300);
         }
       }
@@ -203,7 +200,7 @@ const AccountInfo = ({}) => {
               (status) => {}
             );
             dispatch(updateCurrentAccount(currentAccount));
-            history.goBack();
+            navigate(-1);
           }
         }
       );

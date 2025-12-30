@@ -3,7 +3,7 @@ import browser from 'webextension-polyfill';
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { NET_CONFIG_VERSION } from "../../../../config";
 import { extSaveLocal } from "../../../background/extensionStorage";
@@ -76,7 +76,7 @@ export const LockPage = ({}) => {
   const [btnLoading, setBtnLoading] = useState(false);
 
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const onPwdInput = useCallback((e) => {
     let value = e.target.value;
@@ -109,7 +109,7 @@ export const LockPage = ({}) => {
         } else {
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
           dispatch(initCurrentAccount(account));
-          history.push("/homepage");
+          navigate("/homepage");
         }
       }
     );
@@ -165,7 +165,7 @@ export const LockPage = ({}) => {
           url: "popup.html#/register_page",
         });
         setResetModalStatus(false);
-        history.replace({ pathname: "register_page" });
+        navigate("/register_page");
         window.close();
       }
     );

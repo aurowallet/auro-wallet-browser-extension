@@ -3,7 +3,7 @@ import { getSimplifyCredentialData } from "@/utils/o1jsUtils";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CredentialMsg } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -34,7 +34,7 @@ const StyledItemWrapper = styled.div`
 `;
 
 const CredentialManage = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -67,12 +67,7 @@ const CredentialManage = ({}) => {
   }, [currentAddress]);
 
   const onClickCredentialItem = useCallback((credentialId) => {
-    history.push({
-      pathname: "credential_detail",
-      params: {
-        credentialId: credentialId,
-      },
-    });
+    navigate("/credential_detail", { state: { credentialId: credentialId } });
   }, []);
 
   return (

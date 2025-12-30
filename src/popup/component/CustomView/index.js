@@ -1,6 +1,6 @@
 import cls from "classnames";
-import { useCallback, useMemo } from "react";
-import { useHistory } from 'react-router-dom';
+import { useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
 import styles from "./index.module.scss";
 
 
@@ -19,16 +19,16 @@ const CustomView = ({
     onClickRightIcon = () => { },
     rightHoverContent=""
 }) => {
-    let history = useHistory();
+    const navigate = useNavigate();
     const goBack = useCallback(() => {
         if (onGoBack) {
             onGoBack()
             return
         }
         if (backRoute) {
-            history.push(backRoute)
+            navigate(backRoute)
         } else {
-            history.goBack()
+            navigate(-1)
         }
     }, [backRoute, onGoBack])
 

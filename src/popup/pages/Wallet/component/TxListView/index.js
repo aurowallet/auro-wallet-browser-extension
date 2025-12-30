@@ -6,7 +6,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { sendStakeTx, sendTx } from "../../../../../background/api";
 import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../../../constant";
 import {
@@ -568,12 +568,9 @@ const TxItem = ({
     }
   }, [txData, currentAccount]);
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const onToDetail = useCallback(() => {
-    history.push({
-      pathname: "/record_page",
-      params: { txDetail: txData, tokenInfo },
-    });
+    navigate("/record_page", { state: { txDetail: txData, tokenInfo } });
   }, [txData, tokenInfo]);
   const paddingLineStyle = useMemo(() => {
     return index !== 0;

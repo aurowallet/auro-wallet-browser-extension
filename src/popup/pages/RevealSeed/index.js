@@ -6,14 +6,14 @@ import Toast from "../../component/Toast";
 
 import i18n from "i18next";
 import { useCallback, useState } from "react";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import { MneItem } from "../ShowMnemonic";
 import styles from "./index.module.scss";
 
 const RevealSeedPage = ({ }) => {
-  const history = useHistory()
+  const navigate = useNavigate()
   const [mneList, setMneList] = useState([])
   const [showSecurity, setShowSecurity] = useState(true)
 
@@ -39,7 +39,7 @@ const RevealSeedPage = ({ }) => {
       })
   }, [])
   const goToNext = useCallback(() => {
-    history.goBack()
+    navigate(-1)
   }, [])
   if (showSecurity) { 
     return <SecurityPwd onClickCheck={onClickCheck} action={SEC_FROM_TYPE.SEC_SHOW_MNEMONIC} />

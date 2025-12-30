@@ -4,7 +4,7 @@ import { sendNetworkChangeMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { NET_CONFIG_VERSION } from "../../../../config";
 import { extSaveLocal } from "../../../background/extensionStorage";
@@ -31,7 +31,7 @@ const NetworkPage = ({}) => {
   const [editMode, setEditMode] = useState(false);
 
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const { nodeList, showEditBtn } = useMemo(() => {
     let defaultMainConfig;
@@ -76,9 +76,7 @@ const NetworkPage = ({}) => {
   }, []);
 
   const onAddNode = useCallback(() => {
-    history.push({
-      pathname: "node_editor",
-    });
+    navigate("/node_editor");
   }, []);
 
   const onClickRow = useCallback(
@@ -105,17 +103,16 @@ const NetworkPage = ({}) => {
       }
 
       sendNetworkChangeMsg(config.currentNode);
-      history.goBack();
+      navigate(-1);
     },
     [customNodeList, editMode,currentNode]
   );
 
   const onEditItem = useCallback(
     (nodeItem) => {
-      history.push({
-        pathname: "node_editor",
-        params: {
-          isEdit:true,
+      navigate("/node_editor", {
+        state: {
+          isEdit: true,
           editItem: nodeItem,
         },
       });
