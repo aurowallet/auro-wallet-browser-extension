@@ -3,7 +3,6 @@ import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
 import { createBase58check } from "@scure/base";
 import BigNumber from "bignumber.js";
-import validUrl from "valid-url";
 import { MAIN_COIN_CONFIG, TRANSACTION_FEE } from "../constant";
 
 const bs58check = createBase58check(sha256);
@@ -106,10 +105,12 @@ export function trimSpace(str) {
  * @param {*} url
  */
 export function urlValid(url) {
-  if (validUrl.isWebUri(url)) {
-    return true;
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  } catch {
+    return false;
   }
-  return false;
 }
 
 /**

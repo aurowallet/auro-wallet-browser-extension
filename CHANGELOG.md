@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade node-forge to v1.3.3
 - Upgrade gulp, gulp-zip to jszip
 - Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit, sinon, i18next, react, react-dom, react-i18next, react-redux, react-router-dom
-- Remove react-scripts, web-ext, url-loader, crypto-browserify, html-webpack-plugin, redux, react-helmet
+- Remove react-scripts, web-ext, url-loader, crypto-browserify, html-webpack-plugin, redux, react-helmet, valid-url
 - Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
 - Add test cases to APIService & DAppService
 
