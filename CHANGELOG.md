@@ -18,6 +18,9 @@ All notable changes to this project will be documented in this file.
 - Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
 - Add test cases to APIService & DAppService
 
+### Fixes
+- E-notation of SendPage
+
 ## [2.4.4]
 ### Enhancements
 - Token asset request error

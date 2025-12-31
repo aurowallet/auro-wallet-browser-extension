@@ -278,6 +278,17 @@ const SendPage = ({}) => {
     return realAmount;
   }, [nextFee, amount, isSendMainToken]);
 
+  const getDisplayTransferAmount = useCallback(() => {
+    let fee = trimSpace(nextFee);
+    let realAmount;
+    if (isAllTransfer() && isSendMainToken) {
+      realAmount = new BigNumber(amount).minus(fee);
+    } else {
+      realAmount = new BigNumber(amount);
+    }
+    return realAmount.toFixed();
+  }, [nextFee, amount, isSendMainToken]);
+
   const onSubmitTx = useCallback(
     (data, type) => {
       if (data.error) {
@@ -797,7 +808,7 @@ const SendPage = ({}) => {
           modalVisible={confirmModalStatus}
           title={i18n.t("transactionDetails")}
           highlightTitle={i18n.t("amount")}
-          highlightContent={getRealTransferAmount()}
+          highlightContent={getDisplayTransferAmount()}
           subHighlightContent={tokenSymbol}
           onConfirm={clickNextStep}
           loadingStatus={confirmBtnStatus}
