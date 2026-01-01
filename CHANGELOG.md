@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixes
 - E-notation of SendPage
+- Legder error message
 
 ## [2.4.4]
 ### Enhancements

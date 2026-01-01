@@ -184,8 +184,10 @@ class LedgerManager {
       validUntil: 4294967295,
     };
 
-    const { signature, returnCode, statusText } =
+    const { signature, returnCode, statusText,message } =
       await this.app.signTransaction(payload);
+      
+      
     const returnCodeStr = returnCode?.toString();
     if (returnCodeStr === statusCode.rejectCode_str) {
       return { rejected: true, error: { message: i18n.t("ledgerRejected") } };
@@ -195,7 +197,7 @@ class LedgerManager {
     if (!isSuccess) {
       return {
         signature: null,
-        error: { message: statusText || "Sign failed" },
+        error: { message: statusText|| message || "Sign failed" },
       };
     }
 
@@ -235,7 +237,7 @@ class LedgerManager {
       const resp = await this.app.signMessage(accountIndex, networkId, message);
 
       const returnCode =
-        resp.returnCode?.toString() || resp.return_code?.toString();
+        resp.returnCode?.toString() || resp?.return_code?.toString();
 
       if (returnCode === statusCode.rejectCode_str) {
         return {
