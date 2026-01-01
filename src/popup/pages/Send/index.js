@@ -160,6 +160,7 @@ const SendPage = ({}) => {
   const [addressOptionStatus, setAddressOptionStatus] = useState(false);
 
   const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
+  const [isNewAccount, setIsNewAccount] = useState(false);
 
   const nextFee = useMemo(() => {
     if (isNumber(advanceInputFee) && advanceInputFee > 0) {
@@ -208,6 +209,7 @@ const SendPage = ({}) => {
   const onToAddressInput = useCallback((e) => {
     setToAddress(e.target.value);
     setToAddressName("");
+    setIsNewAccount(false);
   }, []);
 
   const onAmountInput = useCallback(
@@ -243,6 +245,28 @@ const SendPage = ({}) => {
   useEffect(() => {
     fetchAccountInfo();
   }, []);
+
+  useEffect(() => {
+    const checkTokenAccountStatus = async () => {
+      if (isSendMainToken) {
+        setIsNewAccount(false);
+        return;
+      }
+      const trimmedAddress = trimSpace(toAddress);
+      if (!addressValid(trimmedAddress)) {
+        setIsNewAccount(false);
+        return;
+      }
+      const tokenState = await getTokenState(
+        trimmedAddress,
+        token.tokenId
+      ).catch(() => null);
+      if (tokenState && !tokenState.err) {
+        setIsNewAccount(tokenState.account == null);
+      }
+    };
+    checkTokenAccountStatus();
+  }, [toAddress, isSendMainToken, token]);
 
   const onClickAdvance = useCallback(() => {
     setIsOpenAdvance((state) => !state);
@@ -383,17 +407,7 @@ const SendPage = ({}) => {
     );
   }, []);
   const getTokenBody = useCallback(
-    async (payload) => {
-      const tokenState = await getTokenState(
-        payload.toAddress,
-        token.tokenId
-      ).catch((err) => err);
-      if (tokenState.err) {
-        Toast.info(String(tokenState.err));
-        setConfirmBtnStatus(false);
-        return;
-      }
-      let fundNewAccountStatus = tokenState.account == null;
+    (payload) => {
       let decimal = new BigNumber(10).pow(availableDecimals);
       let mainCoinDecimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
       let sendFee = new BigNumber(payload.fee)
@@ -409,7 +423,7 @@ const SendPage = ({}) => {
         amount: sendAmount,
         memo: payload.memo,
         fee: sendFee,
-        isNewAccount: fundNewAccountStatus,
+        isNewAccount: isNewAccount,
         gqlUrl: currentNode.url,
         tokenId: token.tokenId,
         symbol: tokenSymbol,
@@ -435,6 +449,7 @@ const SendPage = ({}) => {
       tokenSymbol,
       isFromModal,
       i18n,
+      isNewAccount,
     ]
   );
   const clickNextStep = useCallback(async () => {
@@ -628,6 +643,7 @@ const SendPage = ({}) => {
     mainTokenBalance,
     mainTokenNetInfo,
     feeIntervalTime,
+    isSendMainToken,
   ]);
 
   const onLedgerInfoModalConfirm = useCallback(async () => {
@@ -699,7 +715,14 @@ const SendPage = ({}) => {
               onChange={onToAddressInput}
               value={toAddress}
               inputType={"text"}
-              subLabel={toAddressName}
+              subLabel={
+                isNewAccount ? (
+                  <>
+                    {toAddressName}
+                    <span className={styles.newBadge}>{i18n.t("newAccount")}</span>
+                  </>
+                ) : toAddressName
+              }
               placeholder={i18n.t("address")}
               rightStableComponent={
                 <div className={styles.addressCon}>

@@ -309,5 +309,6 @@
   "credential": "Kimlik Bilgisi",
   "pendingTx": "Bekleyen İşlem",
   "response": "Yanıt",
-  "retry": "Tekrar Dene"
+  "retry": "Tekrar Dene",
+  "newAccount": "Yeni"
 }

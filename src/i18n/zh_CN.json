@@ -309,5 +309,6 @@
   "credential": "凭证",
   "pendingTx": "待处理的交易",
   "response": "响应",
-  "retry": "重试"
+  "retry": "重试",
+  "newAccount": "新"
 }

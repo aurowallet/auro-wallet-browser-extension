@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Remove react-scripts, web-ext, url-loader, crypto-browserify, html-webpack-plugin, redux, react-helmet, valid-url
 - Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
 - Add test cases to APIService & DAppService
+- Add new account token activation prompt
 
 ### Fixes
 - E-notation of SendPage
