@@ -343,19 +343,28 @@ describe("APIService", () => {
       },
     ];
 
+    let consoleErrorStub;
+
     beforeEach(() => {
+      consoleErrorStub = sinon.stub(console, "error");
       proxyquireStubs["./storageService"].get
         .withArgs("keyringData")
         .resolves(mockEncrypted)
         .withArgs("autoLockTime")
         .resolves({ autoLockTime: 300 });
 
-      proxyquireStubs["../utils/encryptUtils"].default.decrypt
-        .withArgs(sinon.match.any, "encrypted_data")
-        .resolves(mockVault);
+      proxyquireStubs["../utils/encryptUtils"].default.decrypt.reset();
+    });
+
+    afterEach(() => {
+      consoleErrorStub.restore();
     });
 
     it("should unlock successfully with correct password", async () => {
+      proxyquireStubs["../utils/encryptUtils"].default.decrypt
+        .withArgs(sinon.match.any, "encrypted_data")
+        .resolves(mockVault);
+
       const result = await apiService.submitPassword("pwd");
 
       expect(mockMemStore.getState().isUnlocked).to.be.true;
@@ -370,6 +379,7 @@ describe("APIService", () => {
         accountName: "Account 1",
       });
       expect(result.privateKey).to.be.undefined;
+      expect(consoleErrorStub.called).to.be.false;
     });
 
     it("should return error when password wrong", async () => {
@@ -380,6 +390,7 @@ describe("APIService", () => {
       const result = await apiService.submitPassword("wrong");
 
       expect(result).to.deep.equal({ error: "passwordError", type: "local" });
+      expect(consoleErrorStub.calledOnce).to.be.true;
     });
   });
 
