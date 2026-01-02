@@ -49,6 +49,7 @@ import {
   getZkFee,
   getZkInfo,
 } from "@/utils/zkUtils";
+import TransactionAnalysis from "@/popup/component/TransactionAnalysis";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
@@ -1371,6 +1372,13 @@ const SignView = ({
             </>
           ) : (
             <></>
+          )}
+          {isSendZk && (
+            <TransactionAnalysis
+              zkappCommand={signParams?.params?.transaction}
+              currentAddress={currentAccount.address}
+              showMediumRisk={true}
+            />
           )}
           {tabList.length > 0 && (
             <div className={styles.accountRowTab}>

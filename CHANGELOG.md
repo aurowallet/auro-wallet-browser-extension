@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
 - Add test cases to APIService & DAppService
 - Add new account token activation prompt
+- Add transaction analysis
 
 ### Fixes
 - E-notation of SendPage
