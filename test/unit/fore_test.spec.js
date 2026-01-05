@@ -1,5 +1,5 @@
 import assert from "assert";
-import { encryptData, decryptData } from "../../src/utils/fore";
+import { encryptData, decryptData } from "../../src/utils/fore.js";
 import forge from "node-forge";
 
 describe("Reducer Utils Test", function () {

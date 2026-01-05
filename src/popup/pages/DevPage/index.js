@@ -49,6 +49,12 @@ const DevPage = ({}) => {
           });
         }}
       />
+      <RowItem
+        title={"Vault debug"}
+        onClickItem={() => {
+          goToPage("/vault_debug", {});
+        }}
+      />
     </CustomView>
   );
 };

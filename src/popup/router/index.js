@@ -48,6 +48,7 @@ import TokenSignPage from '../pages/Send/tokenSign';
 import Preferences from '../pages/Preferences';
 import DevPage from '../pages/DevPage';
 import DevDetailPage from '../pages/DevPage/DevDetail';
+import VaultDebug from '../pages/DevPage/VaultDebug';
 
 
 
@@ -114,6 +115,7 @@ export function getAllRouter() {
         <Route path="/preferences_page" element={<Preferences />} />
         <Route path="/devpage" element={<DevPage />} />
         <Route path="/dev_detail_page" element={<DevDetailPage />} />
+        <Route path="/vault_debug" element={<VaultDebug />} />
       </Routes>
     </HashRouter>
   );

@@ -47,7 +47,108 @@ import {
   importWalletByPrivateKey,
 } from "./accountService";
 
+// Import vault migration utilities
+import { isLegacyVault, isV2Vault, KEYRING_TYPE } from "../constant/vaultTypes";
+import { normalizeVault, validateVault } from "./vaultMigration";
+
 const encryptUtils = require("../utils/encryptUtils").default;
+
+// ============================================
+// V2 Vault Helper Functions
+// ============================================
+
+/**
+ * check vault version
+ */
+const getVaultVersion = (data) => {
+  if (!data) return null;
+  if (isV2Vault(data)) return "v2";
+  if (Array.isArray(data)) return "v1";
+  return null;
+};
+
+/**
+ * get all vault accounts( v1 & v2)
+ */
+const getAllAccountsFromVault = (data) => {
+  if (!data) return [];
+
+  if (isV2Vault(data)) {
+    const accounts = [];
+    const typeIndexCounters = {
+      [ACCOUNT_TYPE.WALLET_INSIDE]: 0,
+      [ACCOUNT_TYPE.WALLET_OUTSIDE]: 0,
+      [ACCOUNT_TYPE.WALLET_LEDGER]: 0,
+      [ACCOUNT_TYPE.WALLET_WATCH]: 0,
+    };
+
+    data.keyrings.forEach((keyring) => {
+      keyring.accounts.forEach((acc) => {
+        const accountType = keyringTypeToAccountType(keyring.type);
+        typeIndexCounters[accountType]++;
+
+        accounts.push({
+          address: acc.address,
+          accountName: acc.name,
+          type: accountType,
+          hdPath: acc.hdIndex,
+          privateKey: acc.privateKey,
+          keyringId: keyring.id,
+          keyringType: keyring.type,
+          typeIndex: typeIndexCounters[accountType],
+        });
+      });
+    });
+    return accounts;
+  }
+
+  return data[0]?.accounts || [];
+};
+
+/**
+ * get mnemonic from vault (compatible with v1 and v2)
+ */
+const getMnemonicFromVault = (data) => {
+  if (!data) return null;
+
+  if (isV2Vault(data)) {
+    const hdKeyring = data.keyrings.find((kr) => kr.type === KEYRING_TYPE.HD);
+    return hdKeyring?.mnemonic || null;
+  }
+
+  return data[0]?.mnemonic || null;
+};
+
+/**
+ * get current address from vault (compatible with v1 and v2)
+ */
+const getCurrentAddressFromVault = (data) => {
+  if (!data) return null;
+
+  if (isV2Vault(data)) {
+    const currentKeyring =
+      data.keyrings.find((kr) => kr.id === data.currentKeyringId) ||
+      data.keyrings[0];
+    return (
+      currentKeyring?.currentAddress || currentKeyring?.accounts?.[0]?.address
+    );
+  }
+
+  return data[0]?.currentAddress || null;
+};
+
+/**
+ * keyring type to account type
+ */
+const keyringTypeToAccountType = (keyringType) => {
+  const typeMap = {
+    [KEYRING_TYPE.HD]: ACCOUNT_TYPE.WALLET_INSIDE,
+    [KEYRING_TYPE.IMPORTED]: ACCOUNT_TYPE.WALLET_OUTSIDE,
+    [KEYRING_TYPE.LEDGER]: ACCOUNT_TYPE.WALLET_LEDGER,
+    [KEYRING_TYPE.WATCH]: ACCOUNT_TYPE.WALLET_WATCH,
+  };
+  return typeMap[keyringType] || ACCOUNT_TYPE.WALLET_INSIDE;
+};
 
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
@@ -108,26 +209,43 @@ class APIService {
     }
 
     try {
-      const vault = await encryptUtils.decrypt(
+      let vault = await encryptUtils.decrypt(
         password,
         encryptedVault.keyringData
       );
 
-      if (this.migrateDate) {
-        await this.migrateDate(password, vault);
+      const {
+        data: vaultData,
+        version,
+        didMigrate,
+      } = await this.migrateData(password, vault);
+
+      // Get current account info based on version
+      let currentAddress, currentAccount;
+
+      if (version === "v2") {
+        // V2: get current account from keyrings
+        currentAddress = this.getCurrentAddressFromV2(vaultData);
+        currentAccount = this.getCurrentAccountFromV2(
+          vaultData,
+          currentAddress
+        );
+      } else {
+        // V1: legacy logic
+        currentAddress = vaultData[0]?.currentAddress;
+        currentAccount = this.filterCurrentAccount(
+          vaultData[0]?.accounts || [],
+          currentAddress
+        );
       }
 
-      const currentAddress = vault[0]?.currentAddress;
-      const currentAccount = this.filterCurrentAccount(
-        vault[0]?.accounts || [],
-        currentAddress
-      );
       const autoLockTime = await this.initAppLocalConfig();
       memStore.unlock({
         password,
-        data: vault,
+        data: vaultData,
         currentAccount,
         autoLockTime,
+        vaultVersion: version,
       });
 
       this.setPopupIcon(true);
@@ -137,14 +255,78 @@ class APIService {
         payload: true,
       });
 
-      return this.getAccountWithoutPrivate(currentAccount);
+      const result = this.getAccountWithoutPrivate(currentAccount);
+      result.vaultVersion = version;
+      result.didMigrate = didMigrate;
+      return result;
     } catch (error) {
       console.error("[aurowallet apiservice] submitPassword error:", error);
       return { error: "passwordError", type: "local" };
     }
   }
-  async migrateDate(password, vault) {
-    let didMigrated = false;
+
+  /**
+   * get current address from v2 vault
+   */
+  getCurrentAddressFromV2(vault) {
+    if (!vault || !vault.keyrings) return null;
+
+    const currentKeyring =
+      vault.keyrings.find((kr) => kr.id === vault.currentKeyringId) ||
+      vault.keyrings[0];
+
+    if (!currentKeyring) return null;
+
+    return (
+      currentKeyring.currentAddress || currentKeyring.accounts?.[0]?.address
+    );
+  }
+
+  /**
+   * Get current account from V2 vault
+   */
+  getCurrentAccountFromV2(vault, currentAddress) {
+    if (!vault || !vault.keyrings || !currentAddress) return null;
+
+    for (const keyring of vault.keyrings) {
+      const account = keyring.accounts.find(
+        (acc) => acc.address === currentAddress
+      );
+      if (account) {
+        return {
+          address: account.address,
+          accountName: account.name,
+          type: this.keyringTypeToAccountType(keyring.type),
+          hdPath: account.hdIndex,
+        };
+      }
+    }
+    return null;
+  }
+
+  keyringTypeToAccountType(keyringType) {
+    const typeMap = {
+      hd: ACCOUNT_TYPE.WALLET_INSIDE,
+      imported: ACCOUNT_TYPE.WALLET_OUTSIDE,
+      ledger: ACCOUNT_TYPE.WALLET_LEDGER,
+      watch: ACCOUNT_TYPE.WALLET_WATCH,
+    };
+    return typeMap[keyringType] || ACCOUNT_TYPE.WALLET_INSIDE;
+  }
+  /**
+   * Data migration: encryption format upgrade + V2 structure upgrade
+   * Strategy: V2 returns directly, V1 upgrades with validation, keeps V1 on failure
+   * Core principle: mnemonic/private key must never be lost
+   */
+  async migrateData(password, vault) {
+    let didMigrate = false;
+
+    // 1. Return V2 directly
+    if (isV2Vault(vault)) {
+      return { data: vault, version: "v2", didMigrate: false };
+    }
+
+    // 2. V1: upgrade encryption format
     const migrateCheck = (dataStr) => {
       try {
         return dataStr && JSON.parse(dataStr).version !== 2;
@@ -153,30 +335,90 @@ class APIService {
       }
     };
 
-    const migrate = async (data, key) => {
+    const migrateEncryption = async (data, key) => {
       if (migrateCheck(data[key])) {
         data[key] = await encryptUtils.encrypt(
           password,
           await encryptUtils.decrypt(password, data[key])
         );
-        didMigrated = true;
+        didMigrate = true;
       }
     };
 
     for (let i = 0; i < vault.length; i++) {
       let wallet = vault[i];
-      await migrate(wallet, "mnemonic");
+      await migrateEncryption(wallet, "mnemonic");
       for (let j = 0; j < wallet.accounts.length; j++) {
         let account = wallet.accounts[j];
-        await migrate(account, "privateKey");
+        await migrateEncryption(account, "privateKey");
       }
     }
-    if (didMigrated) {
-      let encryptData = await encryptUtils.encrypt(password, vault);
+
+    // 3. V2 structure upgrade: V1 -> V2
+    if (isLegacyVault(vault)) {
+      const { vault: v2Vault, migrated } = normalizeVault(vault);
+
+      if (migrated) {
+        const validation = validateVault(v2Vault);
+        if (!validation.valid) {
+          if (didMigrate) {
+            const encryptData = await encryptUtils.encrypt(password, vault);
+            await removeValue("keyringData");
+            await save({ keyringData: encryptData });
+          }
+          return { data: vault, version: "v1", didMigrate };
+        }
+
+        const originalCount = vault.reduce(
+          (sum, w) => sum + (w.accounts?.length || 0),
+          0
+        );
+        const migratedCount = v2Vault.keyrings.reduce(
+          (sum, kr) => sum + kr.accounts.length,
+          0
+        );
+        if (originalCount !== migratedCount) {
+          if (didMigrate) {
+            const encryptData = await encryptUtils.encrypt(password, vault);
+            await removeValue("keyringData");
+            await save({ keyringData: encryptData });
+          }
+          return { data: vault, version: "v1", didMigrate };
+        }
+
+        const originalMnemonics = vault
+          .filter((w) => w.mnemonic)
+          .map((w) => w.mnemonic);
+        const migratedMnemonics = v2Vault.keyrings
+          .filter((kr) => kr.mnemonic)
+          .map((kr) => kr.mnemonic);
+        if (originalMnemonics.length !== migratedMnemonics.length) {
+          if (didMigrate) {
+            const encryptData = await encryptUtils.encrypt(password, vault);
+            await removeValue("keyringData");
+            await save({ keyringData: encryptData });
+          }
+          return { data: vault, version: "v1", didMigrate };
+        }
+
+        // All validations passed, save V2
+        const encryptedV2 = await encryptUtils.encrypt(password, v2Vault);
+        await removeValue("keyringData");
+        await save({ keyringData: encryptedV2 });
+        return { data: v2Vault, version: "v2", didMigrate: true };
+      }
+    }
+
+    // 4. Only encryption format upgrade, save and return V1
+    if (didMigrate) {
+      const encryptData = await encryptUtils.encrypt(password, vault);
       await removeValue("keyringData");
       await save({ keyringData: encryptData });
     }
+
+    return { data: vault, version: "v1", didMigrate };
   }
+
   checkPassword(password) {
     return this.getStore().password === password;
   }
@@ -286,10 +528,12 @@ class APIService {
   };
   getLedgerAccountIndex = () => {
     const state = this.getStore();
-    const ledgerList =
-      state.data?.[0]?.accounts?.allList?.filter(
-        (acc) => acc.type === ACCOUNT_TYPE.WALLET_LEDGER
-      ) || [];
+    const data = state.data;
+
+    const allAccounts = getAllAccountsFromVault(data) || [];
+    const ledgerList = allAccounts.filter(
+      (acc) => acc.type === ACCOUNT_TYPE.WALLET_LEDGER
+    );
     return ledgerList.length;
   };
   getLockStatus = () => {
@@ -366,17 +610,27 @@ class APIService {
   };
   getAllAccount = () => {
     let data = this.getStore().data;
-    if (!data || !data[0]) {
+    if (!data) {
       return {
         accounts: { allList: [], commonList: [], watchList: [] },
         currentAddress: "",
       };
     }
-    let accountList = this.accountSort(data[0].accounts);
+
+    const accounts = getAllAccountsFromVault(data);
+    if (accounts.length === 0) {
+      return {
+        accounts: { allList: [], commonList: [], watchList: [] },
+        currentAddress: "",
+      };
+    }
+
+    let accountList = this.accountSort(accounts);
     let currentAccount = this.getStore().currentAccount;
     return {
       accounts: accountList,
-      currentAddress: currentAccount.address,
+      currentAddress:
+        currentAccount?.address || getCurrentAddressFromVault(data),
     };
   };
   accountSort = (accountList) => {
@@ -410,6 +664,14 @@ class APIService {
   };
   addHDNewAccount = async (accountName) => {
     let data = this.getStore().data;
+    const version = getVaultVersion(data);
+
+    if (version === "v2") {
+      // V2: add account in HD keyring
+      return this._addHDNewAccountV2(data, accountName);
+    }
+
+    // V1: legacy logic
     let accounts = data[0].accounts;
 
     let createList = accounts.filter((item, index) => {
@@ -475,6 +737,63 @@ class APIService {
       return this.getAccountWithoutPrivate(account);
     }
   };
+
+  // V2: add HD account
+  _addHDNewAccountV2 = async (data, accountName) => {
+    const hdKeyring = data.keyrings.find((kr) => kr.type === KEYRING_TYPE.HD);
+    if (!hdKeyring) {
+      return { error: "noHDKeyring", type: "local" };
+    }
+
+    const nextHdIndex = hdKeyring.nextHdIndex || hdKeyring.accounts.length;
+
+    const mnemonic = await encryptUtils.decrypt(
+      this.getStore().password,
+      hdKeyring.mnemonic
+    );
+    const wallet = importWalletByMnemonic(mnemonic, nextHdIndex);
+
+    const allAccounts = getAllAccountsFromVault(data);
+    const existingAccount = allAccounts.find(
+      (acc) => acc.address === wallet.pubKey
+    );
+    if (existingAccount) {
+      return {
+        error: "importRepeat",
+        type: "local",
+        account: {
+          accountName: existingAccount.accountName,
+          address: existingAccount.address,
+        },
+      };
+    }
+
+    const newAccount = {
+      address: wallet.pubKey,
+      name: accountName,
+      hdIndex: nextHdIndex,
+    };
+
+    hdKeyring.accounts.push(newAccount);
+    hdKeyring.nextHdIndex = nextHdIndex + 1;
+    hdKeyring.currentAddress = newAccount.address;
+
+    const encryptData = await encryptUtils.encrypt(
+      this.getStore().password,
+      data
+    );
+
+    const accountForUI = {
+      address: newAccount.address,
+      accountName: newAccount.name,
+      type: ACCOUNT_TYPE.WALLET_INSIDE,
+      hdPath: newAccount.hdIndex,
+    };
+
+    memStore.updateState({ data: data, currentAccount: accountForUI });
+    save({ keyringData: encryptData });
+    return this.getAccountWithoutPrivate(accountForUI);
+  };
   _checkWalletRepeat(accounts, address) {
     let error = {};
     for (let index = 0; index < accounts.length; index++) {
@@ -505,6 +824,13 @@ class APIService {
     try {
       let wallet = await importWalletByPrivateKey(privateKey);
       let data = this.getStore().data;
+      const version = getVaultVersion(data);
+
+      if (version === "v2") {
+        return this._addImportAccountV2(data, wallet, accountName);
+      }
+
+      // V1: legacy logic
       let accounts = data[0].accounts;
       let error = this._checkWalletRepeat(accounts, wallet.pubKey);
       if (error.error) {
@@ -522,7 +848,7 @@ class APIService {
       const account = {
         address: wallet.pubKey,
         privateKey: priKeyEncrypt,
-        type: ACCOUNT_TYPE.WALLET_OUTSIDE, //"outside",
+        type: ACCOUNT_TYPE.WALLET_OUTSIDE,
         accountName,
         typeIndex,
       };
@@ -539,6 +865,61 @@ class APIService {
     } catch (error) {
       return { error: "privateError", type: "local" };
     }
+  };
+
+  // V2: import private key account
+  _addImportAccountV2 = async (data, wallet, accountName) => {
+    const allAccounts = getAllAccountsFromVault(data);
+    const existingAccount = allAccounts.find(
+      (acc) => acc.address === wallet.pubKey
+    );
+    if (existingAccount) {
+      return { error: "importRepeat", type: "local" };
+    }
+
+    const priKeyEncrypt = await encryptUtils.encrypt(
+      this.getStore().password,
+      wallet.priKey
+    );
+
+    let importedKeyring = data.keyrings.find(
+      (kr) => kr.type === KEYRING_TYPE.IMPORTED
+    );
+    if (!importedKeyring) {
+      importedKeyring = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+        type: KEYRING_TYPE.IMPORTED,
+        name: "Imported",
+        accounts: [],
+        currentAddress: null,
+      };
+      data.keyrings.push(importedKeyring);
+    }
+
+    const newAccount = {
+      address: wallet.pubKey,
+      name: accountName,
+      privateKey: priKeyEncrypt,
+    };
+    importedKeyring.accounts.push(newAccount);
+    importedKeyring.currentAddress = newAccount.address;
+    data.currentKeyringId = importedKeyring.id;
+
+    const encryptData = await encryptUtils.encrypt(
+      this.getStore().password,
+      data
+    );
+
+    const accountForUI = {
+      address: newAccount.address,
+      accountName: newAccount.name,
+      type: ACCOUNT_TYPE.WALLET_OUTSIDE,
+      privateKey: priKeyEncrypt,
+    };
+
+    memStore.updateState({ data: data, currentAccount: accountForUI });
+    save({ keyringData: encryptData });
+    return this.getAccountWithoutPrivate(accountForUI);
   };
   /**
    * import keystore
@@ -564,6 +945,18 @@ class APIService {
   addLedgerAccount = async (address, accountName, ledgerPathAccountIndex) => {
     try {
       let data = this.getStore().data;
+      const version = getVaultVersion(data);
+
+      if (version === "v2") {
+        return this._addLedgerAccountV2(
+          data,
+          address,
+          accountName,
+          ledgerPathAccountIndex
+        );
+      }
+
+      // V1: legacy logic
       let accounts = data[0].accounts;
       let error = this._checkWalletRepeat(accounts, address);
       if (error.error) {
@@ -595,8 +988,66 @@ class APIService {
       return { error: JSON.stringify(error) };
     }
   };
+
+  // V2: add Ledger account
+  _addLedgerAccountV2 = async (
+    data,
+    address,
+    accountName,
+    ledgerPathAccountIndex
+  ) => {
+    const allAccounts = getAllAccountsFromVault(data);
+    if (allAccounts.find((acc) => acc.address === address)) {
+      return { error: "importRepeat", type: "local" };
+    }
+
+    let ledgerKeyring = data.keyrings.find(
+      (kr) => kr.type === KEYRING_TYPE.LEDGER
+    );
+    if (!ledgerKeyring) {
+      ledgerKeyring = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+        type: KEYRING_TYPE.LEDGER,
+        name: "Ledger",
+        accounts: [],
+        currentAddress: null,
+      };
+      data.keyrings.push(ledgerKeyring);
+    }
+
+    const newAccount = {
+      address: address,
+      name: accountName,
+      hdIndex: ledgerPathAccountIndex,
+    };
+    ledgerKeyring.accounts.push(newAccount);
+    ledgerKeyring.currentAddress = newAccount.address;
+    data.currentKeyringId = ledgerKeyring.id;
+
+    const encryptData = await encryptUtils.encrypt(
+      this.getStore().password,
+      data
+    );
+    const accountForUI = {
+      address: newAccount.address,
+      accountName: newAccount.name,
+      type: ACCOUNT_TYPE.WALLET_LEDGER,
+      hdPath: newAccount.hdIndex,
+    };
+
+    memStore.updateState({ data: data, currentAccount: accountForUI });
+    save({ keyringData: encryptData });
+    return this.getAccountWithoutPrivate(accountForUI);
+  };
   setCurrentAccount = async (address) => {
     let data = this.getStore().data;
+    const version = getVaultVersion(data);
+
+    if (version === "v2") {
+      return this._setCurrentAccountV2(data, address);
+    }
+
+    // V1: legacy logic
     let accounts = data[0].accounts;
     let currentAccount = {};
     for (let index = 0; index < accounts.length; index++) {
@@ -621,8 +1072,53 @@ class APIService {
       currentAddress: address,
     };
   };
+
+  // V2: set current account
+  _setCurrentAccountV2 = async (data, address) => {
+    let currentAccount = null;
+
+    for (const keyring of data.keyrings) {
+      const account = keyring.accounts.find((acc) => acc.address === address);
+      if (account) {
+        keyring.currentAddress = address;
+        data.currentKeyringId = keyring.id;
+        currentAccount = {
+          address: account.address,
+          accountName: account.name,
+          type: keyringTypeToAccountType(keyring.type),
+          hdPath: account.hdIndex,
+          privateKey: account.privateKey,
+        };
+        break;
+      }
+    }
+
+    if (currentAccount) {
+      const encryptData = await encryptUtils.encrypt(
+        this.getStore().password,
+        data
+      );
+      memStore.updateState({ data: data, currentAccount });
+      save({ keyringData: encryptData });
+    }
+
+    const allAccounts = getAllAccountsFromVault(data);
+    const accountList = this.accountSort(allAccounts);
+    return {
+      accountList: accountList,
+      currentAccount: this.getAccountWithoutPrivate(currentAccount || {}),
+      currentAddress: address,
+    };
+  };
   changeAccountName = async (address, accountName) => {
     let data = this.getStore().data;
+    const version = getVaultVersion(data);
+
+    if (version === "v2") {
+      return this._changeAccountNameV2(data, address, accountName);
+    }
+
+    // V1: legacy logic
     let accounts = data[0].accounts;
     let account;
     for (let index = 0; index < accounts.length; index++) {
@@ -642,8 +1138,44 @@ class APIService {
     let newAccount = this.getAccountWithoutPrivate(account);
     return { account: newAccount };
   };
+
+  // V2: change account name
+  _changeAccountNameV2 = async (data, address, accountName) => {
+    let account = null;
+    for (const keyring of data.keyrings) {
+      const acc = keyring.accounts.find((a) => a.address === address);
+      if (acc) {
+        acc.name = accountName;
+        account = {
+          address: acc.address,
+          accountName: acc.name,
+          type: keyringTypeToAccountType(keyring.type),
+          hdPath: acc.hdIndex,
+        };
+        break;
+      }
+    }
+
+    if (account) {
+      const encryptData = await encryptUtils.encrypt(
+        this.getStore().password,
+        data
+      );
+      memStore.updateState({ data: data });
+      save({ keyringData: encryptData });
+    }
+
+    return { account: this.getAccountWithoutPrivate(account || {}) };
+  };
   deleteAccount = async (address, password) => {
     let data = this.getStore().data;
+    const version = getVaultVersion(data);
+
+    if (version === "v2") {
+      return this._deleteAccountV2(data, address, password);
+    }
+
+    // V1: legacy logic
     let accounts = data[0].accounts;
     let deleteAccount = accounts.filter((item, index) => {
       return item.address === address;
@@ -683,11 +1215,90 @@ class APIService {
       return { error: "passwordError", type: "local" };
     }
   };
+
+  // V2: delete account
+  _deleteAccountV2 = async (data, address, password) => {
+    let targetKeyring = null;
+    let targetAccount = null;
+
+    for (const keyring of data.keyrings) {
+      const acc = keyring.accounts.find((a) => a.address === address);
+      if (acc) {
+        targetKeyring = keyring;
+        targetAccount = {
+          ...acc,
+          type: keyringTypeToAccountType(keyring.type),
+        };
+        break;
+      }
+    }
+
+    if (!targetAccount) {
+      return { error: "accountNotFound", type: "local" };
+    }
+
+    let canDelete = false;
+    if (
+      targetAccount.type === ACCOUNT_TYPE.WALLET_WATCH ||
+      targetAccount.type === ACCOUNT_TYPE.WALLET_LEDGER
+    ) {
+      canDelete = true;
+    } else {
+      canDelete = this.checkPassword(password);
+    }
+
+    if (!canDelete) {
+      return { error: "passwordError", type: "local" };
+    }
+
+    targetKeyring.accounts = targetKeyring.accounts.filter(
+      (a) => a.address !== address
+    );
+
+    if (targetKeyring.accounts.length === 0) {
+      data.keyrings = data.keyrings.filter((kr) => kr.id !== targetKeyring.id);
+    }
+
+    let currentAccount = this.getStore().currentAccount;
+
+    if (address === currentAccount.address) {
+      const allAccounts = getAllAccountsFromVault(data);
+      if (allAccounts.length > 0) {
+        const firstAcc = allAccounts[0];
+        currentAccount = {
+          address: firstAcc.address,
+          accountName: firstAcc.accountName,
+          type: firstAcc.type,
+          hdPath: firstAcc.hdPath,
+        };
+        for (const keyring of data.keyrings) {
+          if (keyring.accounts.find((a) => a.address === firstAcc.address)) {
+            data.currentKeyringId = keyring.id;
+            keyring.currentAddress = firstAcc.address;
+            break;
+          }
+        }
+      } else {
+        currentAccount = {};
+      }
+    }
+
+    const encryptData = await encryptUtils.encrypt(
+      this.getStore().password,
+      data
+    );
+    memStore.updateState({ data: data, currentAccount });
+    save({ keyringData: encryptData });
+    return this.getAccountWithoutPrivate(currentAccount);
+  };
   getMnemonic = async (pwd) => {
     let isCorrect = this.checkPassword(pwd);
     if (isCorrect) {
       let data = this.getStore().data;
-      let mnemonicEn = data[0].mnemonic;
+      let mnemonicEn = getMnemonicFromVault(data);
+      if (!mnemonicEn) {
+        return { error: "noMnemonic", type: "local" };
+      }
       let mnemonic = await encryptUtils.decrypt(
         this.getStore().password,
         mnemonicEn
@@ -702,13 +1313,17 @@ class APIService {
       let isCorrect = this.checkPassword(oldPwd);
       if (isCorrect) {
         let data = this.getStore().data;
+        const version = getVaultVersion(data);
 
+        if (version === "v2") {
+          return this._updateSecPasswordV2(data, oldPwd, pwd);
+        }
+
+        // V1: legacy logic
         let accounts = data[0].accounts;
-
         let mnemonicEn = data[0].mnemonic;
         let mnemonic = await encryptUtils.decrypt(oldPwd, mnemonicEn);
         mnemonic = await encryptUtils.encrypt(pwd, mnemonic);
-
         let currentAccount = this.getStore().currentAccount;
         let newAccounts = [];
         for (let index = 0; index < accounts.length; index++) {
@@ -722,9 +1337,7 @@ class APIService {
               currentAccount.privateKey = privateKey;
             }
           }
-          let newAccount = {
-            ...account,
-          };
+          let newAccount = { ...account };
           if (privateKey) {
             newAccount.privateKey = privateKey;
           }
@@ -745,16 +1358,69 @@ class APIService {
       return { error: "passwordError", type: "local" };
     }
   };
+
+  // V2: update password
+  _updateSecPasswordV2 = async (data, oldPwd, pwd) => {
+    let currentAccount = this.getStore().currentAccount;
+
+    for (const keyring of data.keyrings) {
+      if (keyring.mnemonic) {
+        const mnemonic = await encryptUtils.decrypt(oldPwd, keyring.mnemonic);
+        keyring.mnemonic = await encryptUtils.encrypt(pwd, mnemonic);
+      }
+
+      for (const account of keyring.accounts) {
+        if (account.privateKey) {
+          const privateKey = await encryptUtils.decrypt(
+            oldPwd,
+            account.privateKey
+          );
+          account.privateKey = await encryptUtils.encrypt(pwd, privateKey);
+          if (currentAccount.address === account.address) {
+            currentAccount.privateKey = account.privateKey;
+          }
+        }
+      }
+    }
+
+    const encryptData = await encryptUtils.encrypt(pwd, data);
+    memStore.updateState({ password: pwd, currentAccount });
+    await removeValue("keyringData");
+    await save({ keyringData: encryptData });
+    return { code: 0 };
+  };
   getPrivateKey = async (address, pwd) => {
     let isCorrect = this.checkPassword(pwd);
     if (isCorrect) {
       let data = this.getStore().data;
-      let accounts = data[0].accounts;
-      accounts = accounts.filter((item, index) => {
-        return item.address === address;
-      });
-      let nowAccount = accounts[0];
-      const privateKey = await encryptUtils.decrypt(pwd, nowAccount.privateKey);
+      const accounts = getAllAccountsFromVault(data);
+      const targetAccount = accounts.find((acc) => acc.address === address);
+
+      if (!targetAccount) {
+        return { error: "accountNotFound", type: "local" };
+      }
+
+      // V2 HD accounts derive private key from mnemonic
+      if (
+        !targetAccount.privateKey &&
+        targetAccount.type === ACCOUNT_TYPE.WALLET_INSIDE
+      ) {
+        const mnemonicEn = getMnemonicFromVault(data);
+        if (mnemonicEn) {
+          const mnemonic = await encryptUtils.decrypt(pwd, mnemonicEn);
+          const wallet = importWalletByMnemonic(
+            mnemonic,
+            targetAccount.hdPath || 0
+          );
+          return wallet.priKey;
+        }
+        return { error: "noPrivateKey", type: "local" };
+      }
+
+      const privateKey = await encryptUtils.decrypt(
+        pwd,
+        targetAccount.privateKey
+      );
       return privateKey;
     } else {
       return { error: "passwordError", type: "local" };
@@ -763,6 +1429,25 @@ class APIService {
   getCurrentPrivateKey = async () => {
     let currentAccount = this.getStore().currentAccount;
     let password = this.getStore().password;
+    let data = this.getStore().data;
+
+    // V2 HD accounts derive private key from mnemonic
+    if (
+      !currentAccount.privateKey &&
+      currentAccount.type === ACCOUNT_TYPE.WALLET_INSIDE
+    ) {
+      const mnemonicEn = getMnemonicFromVault(data);
+      if (mnemonicEn) {
+        const mnemonic = await encryptUtils.decrypt(password, mnemonicEn);
+        const wallet = importWalletByMnemonic(
+          mnemonic,
+          currentAccount.hdPath || 0
+        );
+        return wallet.priKey;
+      }
+      return null;
+    }
+
     const privateKey = await encryptUtils.decrypt(
       password,
       currentAccount.privateKey
