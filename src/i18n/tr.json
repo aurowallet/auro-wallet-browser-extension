@@ -322,7 +322,6 @@
   "upgrade": "Yükselt",
   "upgrading": "Yükseltiliyor...",
   "upgradingDesc": "Cüzdanınız yükseltilirken lütfen bekleyin.",
-  "iUnderstand": "Anlıyorum",
   "walletDetails": "Cüzdan Detayları",
   "walletNameLabel": "Cüzdan Adı",
   "seedPhrase": "Tohum İfadesi",
@@ -339,5 +338,19 @@
   "inputPrivateKey": "Lütfen özel anahtarı büyük harf, noktalama işareti veya boşluk olmadan girin.",
   "privateKeyPlaceholder": "Özel anahtarınızı girin",
   "inputKeystore": "Lütfen Keystore JSON içeriğinizi yapıştırın.",
-  "keystorePlaceholder": "Keystore JSON'u buraya yapıştırın"
+  "keystorePlaceholder": "Keystore JSON'u buraya yapıştırın",
+  "v2Required": "Bu özelliği kullanmak için lütfen cüzdanınızı yükseltin",
+  "addressExists": "Bu adres zaten cüzdanınızda mevcut",
+  "createFailed": "Cüzdan oluşturulamadı",
+  "keyringNotFound": "Cüzdan bulunamadı",
+  "renameFailed": "Cüzdan yeniden adlandırılamadı",
+  "notHDKeyring": "Bu cüzdan bu işlemi desteklemiyor",
+  "noMnemonic": "Bu cüzdan için tohum ifadesi bulunamadı",
+  "deleteFailed": "Cüzdan silinemedi",
+  "cannotAddToNonHD": "İçe aktarılan cüzdana hesap eklenemiyor",
+  "addFailed": "Hesap eklenemedi",
+  "noVaultData": "Cüzdan verisi bulunamadı",
+  "upgradeFailed": "Cüzdan yükseltilemedi",
+  "validationFailed": "Cüzdan verisi doğrulaması başarısız",
+  "noHDKeyring": "HD cüzdan bulunamadı"
 }

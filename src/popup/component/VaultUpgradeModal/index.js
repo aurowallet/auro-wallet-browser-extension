@@ -10,25 +10,6 @@ const StyledContent = styled.p`
   margin: 0;
 `;
 
-const StyledLoadingWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  
-  img {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 16px;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-`;
-
 export const VaultUpgradeModal = ({
   modalVisible = false,
   onClose = () => {},
@@ -45,7 +26,7 @@ export const VaultUpgradeModal = ({
     return (
       <PopupModalV2
         modalVisible={true}
-        modalTopIcon="/img/icon_error.svg"
+        modalTopIcon="/img/unusual.svg"
         title={i18n.t("vaultUpgradeFailed")}
         componentContent={
           <StyledContent>
@@ -53,40 +34,17 @@ export const VaultUpgradeModal = ({
           </StyledContent>
         }
         leftBtnContent=""
-        rightBtnContent={i18n.t("iUnderstand")}
+        rightBtnContent={i18n.t("ok")}
         onLeftBtnClick={() => {}}
         onRightBtnClick={onClose}
       />
     );
   }
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <PopupModalV2
-        modalVisible={true}
-        title={i18n.t("upgrading")}
-        componentContent={
-          <StyledLoadingWrapper>
-            <img src="/img/detail_pending.svg" alt="loading" />
-            <StyledContent>
-              {i18n.t("upgradingDesc")}
-            </StyledContent>
-          </StyledLoadingWrapper>
-        }
-        leftBtnContent=""
-        rightBtnContent={i18n.t("upgrading")}
-        onLeftBtnClick={() => {}}
-        onRightBtnClick={() => {}}
-      />
-    );
-  }
-
-  // Idle state - two button modal
+  // Idle and Loading state - use same modal with button loading
   return (
     <PopupModalV2
       modalVisible={true}
-      modalTopIcon="/img/icon_remind.svg"
       title={i18n.t("vaultUpgradeTitle")}
       componentContent={
         <StyledContent>
@@ -97,6 +55,8 @@ export const VaultUpgradeModal = ({
       rightBtnContent={i18n.t("upgrade")}
       onLeftBtnClick={onClose}
       onRightBtnClick={onUpgrade}
+      rightBtnLoading={isLoading}
+      btnDisabled={isLoading}
     />
   );
 };

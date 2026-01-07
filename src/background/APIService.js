@@ -51,7 +51,6 @@ import {
 import {
   countHDKeyrings,
   createHDKeyring,
-  getDefaultHDWalletName,
   isLegacyVault,
   isV2Vault,
   KEYRING_TYPE,
@@ -232,7 +231,7 @@ class APIService {
         data: vaultData,
         version,
         didMigrate,
-      } = await this.migrateData(password, vault, options);
+      } = await this.migrateData(password, vault);
 
       // Get current account based on version
       let currentAddress, currentAccount;
@@ -1054,7 +1053,7 @@ class APIService {
       }
 
       // Try to migrate
-      const { normalizedData, migrated } = normalizeVault(data, password);
+      const { vault: normalizedData, migrated } = normalizeVault(data);
 
       if (!isV2Vault(normalizedData)) {
         return { success: false, error: "upgradeFailed", type: "local" };
@@ -1063,15 +1062,11 @@ class APIService {
       // Validate the migrated data
       const validation = validateVault(normalizedData);
       if (!validation.valid) {
-        console.error(
-          "[tryUpgradeVault] Validation failed:",
-          validation.errors
-        );
         return { success: false, error: "validationFailed", type: "local" };
       }
 
       // Save upgraded data
-      const encryptData = encryptUtils.encrypt(normalizedData, password);
+      const encryptData = await encryptUtils.encrypt(password, normalizedData);
       await save({ keyringData: encryptData });
 
       // Update memory store

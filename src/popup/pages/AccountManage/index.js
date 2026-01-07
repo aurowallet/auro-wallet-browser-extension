@@ -52,6 +52,8 @@ const AccountManagePage = ({}) => {
   const [vaultVersion, setVaultVersion] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeStatus, setUpgradeStatus] = useState("idle"); // idle, loading, failed
+  const [upgradeSource, setUpgradeSource] = useState(null); // "addWallet" or "addAccount"
+  const [pendingKeyringId, setPendingKeyringId] = useState(null); // keyringId for Add Account after upgrade
 
   const getAccountTypeIndex = useCallback((list) => {
     if (list.length === 0) {
@@ -215,6 +217,8 @@ const AccountManagePage = ({}) => {
     (keyringId) => {
       // For V1 vault, show upgrade modal instead
       if (vaultVersion === "v1") {
+        setUpgradeSource("addAccount");
+        setPendingKeyringId(keyringId);
         setShowUpgradeModal(true);
         setUpgradeStatus("idle");
         return;
@@ -251,6 +255,7 @@ const AccountManagePage = ({}) => {
       if (result.version === "v1") {
         // Show upgrade modal for v1 vault
         setVaultVersion("v1");
+        setUpgradeSource("addWallet");
         setShowUpgradeModal(true);
         setUpgradeStatus("idle");
       } else {
@@ -275,21 +280,61 @@ const AccountManagePage = ({}) => {
         setShowUpgradeModal(false);
         setUpgradeStatus("idle");
         setVaultVersion("v2");
-        Toast.info(i18n.t("vaultUpgradeSuccess"));
-        // Refresh keyrings list
+        
+        // 延迟显示 toast，等待弹窗动画完成
+        setTimeout(() => {
+          Toast.info(i18n.t("vaultUpgradeSuccess"));
+        }, 300);
+        
+        // Refresh keyrings list first
         sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (res) => {
           if (res.keyrings && res.keyrings.length > 0) {
             setKeyringsList(res.keyrings);
             setUseKeyringView(true);
+            
+            // Handle different actions based on upgrade source
+            if (upgradeSource === "addWallet") {
+              // Add Wallet: Open welcome page in new tab
+              createOrActivateTab("popup.html?addWallet=true#/register_page");
+              window.close();
+            } else if (upgradeSource === "addAccount") {
+              // Add Account: Find the HD keyring and add account to it
+              const hdKeyring = res.keyrings.find(kr => kr.type === "hd");
+              if (hdKeyring) {
+                Loading.show();
+                sendMsg(
+                  {
+                    action: WALLET_ADD_ACCOUNT_TO_KEYRING,
+                    payload: { keyringId: hdKeyring.id },
+                  },
+                  (addResult) => {
+                    Loading.hide();
+                    if (addResult.error) {
+                      Toast.info(i18n.t(addResult.error));
+                    } else {
+                      // Refresh keyrings list after adding account
+                      sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (refreshRes) => {
+                        if (refreshRes.keyrings) {
+                          setKeyringsList(refreshRes.keyrings);
+                          dispatch(updateCurrentAccount(addResult.account));
+                        }
+                      });
+                    }
+                  }
+                );
+              }
+            }
           }
         });
-        // Open add wallet in new tab
-        createOrActivateTab("popup.html#/register_page");
+        
+        // Reset upgrade source
+        setUpgradeSource(null);
+        setPendingKeyringId(null);
       } else {
         setUpgradeStatus("failed");
       }
     });
-  }, []);
+  }, [upgradeSource, dispatch]);
 
   const onClickLock = useCallback(() => {
     sendMsg(
@@ -312,10 +357,11 @@ const AccountManagePage = ({}) => {
         id: keyring.id,
         name: keyring.name,
         type: keyring.type,
+        vaultVersion: vaultVersion, // Pass vault version for V1/V2 feature detection
       })
     );
     navigate("/wallet_details");
-  }, []);
+  }, [vaultVersion]);
 
   const onClickAccount = useCallback(
     (item) => {

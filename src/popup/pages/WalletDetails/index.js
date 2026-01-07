@@ -25,7 +25,7 @@ const WalletDetails = () => {
   const cache = useSelector((state) => state.cache);
   
   const keyringInfo = cache.keyringInfo || {};
-  const { id: keyringId, name: keyringName, type: keyringType } = keyringInfo;
+  const { id: keyringId, name: keyringName, type: keyringType, vaultVersion } = keyringInfo;
 
   const [walletName, setWalletName] = useState(keyringName || "");
   const [popupModalStatus, setPopupModalStatus] = useState(false);
@@ -34,6 +34,8 @@ const WalletDetails = () => {
   const [resetModalBtnStatus, setResetModalBtnStatus] = useState(true);
 
   const isHDWallet = keyringType === "hd";
+  // Check if V1 wallet by vault version (more reliable than keyringId prefix)
+  const isV1Wallet = vaultVersion === "v1";
 
   const onCloseModal = useCallback(() => {
     setPopupModalStatus(false);
@@ -92,8 +94,8 @@ const WalletDetails = () => {
       Toast.info(i18n.t("noSeedPhraseForImported"));
       return;
     }
-    navigate("/reveal_seed_page", { state: { keyringId } });
-  }, [isHDWallet, keyringId, navigate]);
+    navigate("/reveal_seed_page", { state: isV1Wallet ? {} : { keyringId } });
+  }, [isHDWallet, keyringId, isV1Wallet, navigate]);
 
   const onConfirmDeleteWallet = useCallback(() => {
     setPopupModalStatus(false);
@@ -176,7 +178,8 @@ const WalletDetails = () => {
           <WalletInfoRow
             title={i18n.t("walletNameLabel")}
             desc={walletName}
-            onClick={onClickWalletName}
+            onClick={isV1Wallet ? undefined : onClickWalletName}
+            noArrow={isV1Wallet}
           />
           {isHDWallet && (
             <WalletInfoRow

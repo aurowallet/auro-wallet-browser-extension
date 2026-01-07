@@ -91,9 +91,41 @@ const StyledRightBtnWrapper = styled(StyledBaseBtnWrapper)`
   border-bottom-right-radius: 12px;
   text-transform: capitalize;
   ${(props) => props.$rightBtnStyle}
+  ${(props) => props.$disabled && `
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  `}
 
   &:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: ${(props) => props.$disabled ? 'transparent' : 'rgba(0, 0, 0, 0.05)'};
+  }
+`;
+
+const StyledLeftBtnWrapperDisabled = styled(StyledLeftBtnWrapper)`
+  ${(props) => props.$disabled && `
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  `}
+  
+  &:hover {
+    background: ${(props) => props.$disabled ? 'transparent' : 'rgba(0, 0, 0, 0.05)'};
+  }
+`;
+
+const StyledLoadingSpinner = styled.span`
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(89, 74, 241, 0.3);
+  border-top-color: #594af1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 6px;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 `;
 export const PopupModalV2 = ({
@@ -112,6 +144,8 @@ export const PopupModalV2 = ({
   onLeftBtnClick = () => {},
   onRightBtnClick = () => {},
   rightBtnStyle = {},
+  rightBtnLoading = false,
+  btnDisabled = false,
 }) => {
   if (!modalVisible) {
     return <></>;
@@ -149,17 +183,21 @@ export const PopupModalV2 = ({
         <StyledBottomContainer>
           {leftBtnContent && (
             <>
-              <StyledLeftBtnWrapper onClick={onLeftBtnClick}>
+              <StyledLeftBtnWrapperDisabled 
+                $disabled={btnDisabled}
+                onClick={btnDisabled ? undefined : onLeftBtnClick}
+              >
                 {leftBtnContent}
-              </StyledLeftBtnWrapper>
+              </StyledLeftBtnWrapperDisabled>
               <StyledDividedLine />
             </>
           )}
           <StyledRightBtnWrapper
             $rightBtnStyle={rightBtnStyle}
-            onClick={onRightBtnClick}
+            $disabled={btnDisabled || rightBtnLoading}
+            onClick={(btnDisabled || rightBtnLoading) ? undefined : onRightBtnClick}
           >
-            {rightBtnContent}
+            {rightBtnLoading ? <StyledLoadingSpinner /> : rightBtnContent}
           </StyledRightBtnWrapper>
         </StyledBottomContainer>
       </StyledInnerContainer>

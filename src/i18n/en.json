@@ -322,7 +322,6 @@
   "upgrade": "Upgrade",
   "upgrading": "Upgrading...",
   "upgradingDesc": "Please wait while your wallet is being upgraded.",
-  "iUnderstand": "I Understand",
   "walletDetails": "Wallet Details",
   "walletNameLabel": "Wallet Name",
   "seedPhrase": "Seed Phrase",
@@ -339,5 +338,19 @@
   "inputPrivateKey": "Please enter Private Key without capitalization, punctuation symbols, or spaces.",
   "privateKeyPlaceholder": "Enter your private key",
   "inputKeystore": "Please paste your Keystore JSON content.",
-  "keystorePlaceholder": "Paste Keystore JSON here"
+  "keystorePlaceholder": "Paste Keystore JSON here",
+  "v2Required": "Please upgrade your wallet to use this feature",
+  "addressExists": "This address already exists in your wallet",
+  "createFailed": "Failed to create wallet",
+  "keyringNotFound": "Wallet not found",
+  "renameFailed": "Failed to rename wallet",
+  "notHDKeyring": "This wallet does not support this operation",
+  "noMnemonic": "No mnemonic phrase found for this wallet",
+  "deleteFailed": "Failed to delete wallet",
+  "cannotAddToNonHD": "Cannot add account to imported wallet",
+  "addFailed": "Failed to add account",
+  "noVaultData": "No wallet data found",
+  "upgradeFailed": "Failed to upgrade wallet",
+  "validationFailed": "Wallet data validation failed",
+  "noHDKeyring": "No HD wallet found"
 }

@@ -322,7 +322,6 @@
   "upgrade": "升级",
   "upgrading": "升级中...",
   "upgradingDesc": "请稍候，正在升级您的钱包。",
-  "iUnderstand": "我知道了",
   "walletDetails": "钱包详情",
   "walletNameLabel": "钱包名称",
   "seedPhrase": "助记词",
@@ -339,5 +338,19 @@
   "inputPrivateKey": "请输入私钥，不要包含大写字母、标点符号或空格。",
   "privateKeyPlaceholder": "请输入您的私钥",
   "inputKeystore": "请粘贴您的 Keystore JSON 内容。",
-  "keystorePlaceholder": "在此粘贴 Keystore JSON"
+  "keystorePlaceholder": "在此粘贴 Keystore JSON",
+  "v2Required": "请升级钱包以使用此功能",
+  "addressExists": "此地址已存在于您的钱包中",
+  "createFailed": "创建钱包失败",
+  "keyringNotFound": "未找到钱包",
+  "renameFailed": "重命名钱包失败",
+  "notHDKeyring": "此钱包不支持此操作",
+  "noMnemonic": "此钱包没有助记词",
+  "deleteFailed": "删除钱包失败",
+  "cannotAddToNonHD": "无法向导入的钱包添加账户",
+  "addFailed": "添加账户失败",
+  "noVaultData": "未找到钱包数据",
+  "upgradeFailed": "升级钱包失败",
+  "validationFailed": "钱包数据验证失败",
+  "noHDKeyring": "未找到 HD 钱包"
 }
