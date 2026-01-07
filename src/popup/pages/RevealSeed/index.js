@@ -1,12 +1,12 @@
 import { SEC_FROM_TYPE } from "../../../constant/commonType";
-import { WALLET_GET_MNE } from "../../../constant/msgTypes";
+import { WALLET_GET_MNE, WALLET_GET_KEYRING_MNEMONIC } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
 
 import i18n from "i18next";
 import { useCallback, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import { MneItem } from "../ShowMnemonic";
@@ -14,30 +14,35 @@ import styles from "./index.module.scss";
 
 const RevealSeedPage = ({ }) => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { keyringId } = location.state || {}
   const [mneList, setMneList] = useState([])
   const [showSecurity, setShowSecurity] = useState(true)
 
   const onClickCheck = useCallback((password) => {
-    sendMsg({
-      action: WALLET_GET_MNE,
-      payload: {
-        password: password
-      }
-    },
-      async (mnemonic) => {
-        if (mnemonic && mnemonic.error) {
-          if (mnemonic.type === "local") {
-            Toast.info(i18n.t(mnemonic.error))
-          } else {
-            Toast.info(mnemonic.error)
-          }
+    // If keyringId is provided, get mnemonic for specific keyring (V2)
+    // Otherwise fallback to general getMnemonic (V1 compatible)
+    const action = keyringId ? WALLET_GET_KEYRING_MNEMONIC : WALLET_GET_MNE;
+    const payload = keyringId 
+      ? { keyringId, password } 
+      : { password };
+
+    sendMsg({ action, payload }, async (result) => {
+      if (result && result.error) {
+        if (result.type === "local") {
+          Toast.info(i18n.t(result.error))
         } else {
-          let list = mnemonic.split(" ")
-          setMneList(list)
-          setShowSecurity(false)
+          Toast.info(result.error)
         }
-      })
-  }, [])
+      } else {
+        // Handle both V1 (direct mnemonic string) and V2 (object with mnemonic property)
+        const mnemonic = typeof result === 'string' ? result : result.mnemonic;
+        let list = mnemonic.split(" ")
+        setMneList(list)
+        setShowSecurity(false)
+      }
+    })
+  }, [keyringId])
   const goToNext = useCallback(() => {
     navigate(-1)
   }, [])

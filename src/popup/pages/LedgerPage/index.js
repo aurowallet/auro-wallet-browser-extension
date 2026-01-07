@@ -17,7 +17,9 @@ import ledgerManager from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
-import Tabs, { TAB_TYPE } from "../../component/Tabs";
+import ProcessLayout from "../../component/ProcessLayout";
+import StepTabs from "../../component/StepTabs";
+import { CreateResultView } from "../CreateProcessPage/CreateResultView";
 import styles from "./index.module.scss";
 import { LedgerModal } from "./LedgerModal";
 
@@ -29,7 +31,7 @@ const Tip_Type = {
 
   grantSuccess: "grantSuccess",
 };
-export const LedgerPage = ({}) => {
+export const LedgerPage = ({ onClickPre }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);
   const [isShowSuccessTip, setIsShowSuccessTip] = useState(false);
@@ -114,15 +116,16 @@ export const LedgerPage = ({}) => {
     }
     return msg;
   }, [tipType, i18n]);
-
+ 
   return (
     <div className={styles.outerContainer}>
       <div className={styles.innerContainer}>
-        <Tabs selected={tabIndex} tabType={TAB_TYPE.STEP}>
+        <StepTabs selected={tabIndex}>
           <div className={styles.innerContent} id={1}>
             <LedgerConnectView
               isLedgerPermission={isLedgerPermission}
               onClickNext={onClickConnect}
+              onClickPre={onClickPre}
               tipContent={tipContent}
               isShowSuccessTip={isShowSuccessTip}
             />
@@ -131,6 +134,7 @@ export const LedgerPage = ({}) => {
             <div className={styles.innerContent} id={2}>
               <AccountNameView
                 onClickNext={onClickImport}
+                onClickPre={onClickPre}
                 tipContent={tipContent}
                 onClickConnect={onClickConnect}
               />
@@ -138,10 +142,15 @@ export const LedgerPage = ({}) => {
           )}
           {!isLedgerPermission && (
             <div className={styles.innerContent} id={3}>
-              <SuccessView onClickNext={onClickDone} />
+              <CreateResultView
+                onClickDone={onClickDone}
+                contents={[i18n.t("ledgerSuccess"), i18n.t("returnEx")]}
+                showFollowUs={false}
+                showExtTip={false}
+              />
             </div>
           )}
-        </Tabs>
+        </StepTabs>
       </div>
     </div>
   );
@@ -149,6 +158,7 @@ export const LedgerPage = ({}) => {
 
 const LedgerConnectView = ({
   onClickNext,
+  onClickPre,
   tipContent,
   isShowSuccessTip,
   isLedgerPermission,
@@ -162,8 +172,24 @@ const LedgerConnectView = ({
     return i18n.t(txt);
   }, [isShowSuccessTip, i18n]);
   return (
-    <div className={styles.viewOuter}>
-      <div className={styles.viewTitle}>{viewTitle}</div>
+    <ProcessLayout
+      onClickBack={onClickPre}
+      title={viewTitle}
+      bottomContent={
+        <>
+          {tipContent && (
+            <div
+              className={cls(styles.accountWarningTip, {
+                [styles.ledgerSuccessTip]: isShowSuccessTip,
+              })}
+            >
+              {tipContent}
+            </div>
+          )}
+          <Button onClick={onClickNext}>{btnTxt}</Button>
+        </>
+      }
+    >
       <div className={styles.viewTip}>{i18n.t("selectHardware")}</div>
       <img src="/img/ledgerBorderLogo.svg" className={styles.ledgerIcon} />
       <div className={styles.viewTip}>{i18n.t("getStarted")}</div>
@@ -184,22 +210,15 @@ const LedgerConnectView = ({
           />
         </span>
       </div>
-      <div className={cls(styles.bottomContainer)}>
-        {tipContent && (
-          <div
-            className={cls(styles.accountWarningTip, {
-              [styles.ledgerSuccessTip]: isShowSuccessTip,
-            })}
-          >
-            {tipContent}
-          </div>
-        )}
-        <Button onClick={onClickNext}>{btnTxt}</Button>
-      </div>
-    </div>
+    </ProcessLayout>
   );
 };
-const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
+const AccountNameView = ({
+  onClickNext,
+  onClickPre,
+  tipContent,
+  onClickConnect,
+}) => {
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -328,8 +347,16 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     setAccountIndex(accountIndex - 1);
   }, [accountIndex]);
   return (
-    <div className={styles.viewOuter}>
-      <div className={styles.viewTitle}>{i18n.t("accountName")}</div>
+    <ProcessLayout
+      onClickBack={onClickPre}
+      title={i18n.t("accountName")}
+      bottomContent={
+        <>
+          {errorMsg && <div className={styles.accountWarningTip}>{errorMsg}</div>}
+          <Button onClick={onConfirm}>{i18n.t("import")}</Button>
+        </>
+      }
+    >
       <div className={styles.viewTip}>{i18n.t("inputAccountName")}</div>
       <div className={styles.inputContainer}>
         <Input
@@ -339,7 +366,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
           placeholder={placeholderText}
         />
       </div>
-      <div className={styles.viewTip}>{i18n.t("selectHDPath")}</div>
+      <div className={styles.viewTip} style={{ marginTop: "20px" }}>{i18n.t("selectHDPath")}</div>
       <div className={styles.accountNameTip}>
         <Trans
           i18nKey={"ledgerSelectPathTip"}
@@ -363,12 +390,8 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
         onAdd={onAdd}
         onMinus={onMinus}
       />
-      <div className={cls(styles.bottomContainer)}>
-        {errorMsg && <div className={styles.accountWarningTip}>{errorMsg}</div>}
-        <Button onClick={onConfirm}>{i18n.t("import")}</Button>
-      </div>
       <LedgerModal modalVisible={tipModalVisible} />
-    </div>
+    </ProcessLayout>
   );
 };
 
@@ -426,16 +449,3 @@ const InputNumber = ({
   );
 };
 
-const SuccessView = ({ onClickNext }) => {
-  return (
-    <div className={cls(styles.viewOuter, styles.innerContent)}>
-      <img src="/img/backup_success.svg" />
-      <p className={styles.importSuccess}>{i18n.t("success")}</p>
-      <p className={styles.importContent}>{i18n.t("ledgerSuccess")}</p>
-      <p className={styles.importContent}>{i18n.t("returnEx")}</p>
-      <div className={cls(styles.bottomContainer)}>
-        <Button onClick={onClickNext}>{i18n.t("done")}</Button>
-      </div>
-    </div>
-  );
-};

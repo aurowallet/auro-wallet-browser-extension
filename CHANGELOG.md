@@ -2,11 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Un-Released]
+## [2.4.5]
 ### Enhancements
+- Support multi-wallet
 - Firefox build scripts
 - Debug scripts
 - Ledger connect
+- Migrate vault from legacy array format to keyring-based structure
 - Update babel config and dependencies
 - Upgrade libsodium-wrappers to libsodium-wrappers-sumo
 - Upgrade obs-store to zustand

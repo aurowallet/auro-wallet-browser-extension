@@ -1,18 +1,16 @@
 import { Default_Follow_Link } from "@/constant";
 import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 import Button from "@/popup/component/Button";
+import ProcessLayout from "@/popup/component/ProcessLayout";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-const StyledPwdContainer = styled.div`
-  margin-top: 20px;
-  width: 100%;
-`;
-const StyledPwdContentContainer = styled.div`
+const StyledContentContainer = styled.div`
   margin: 0 auto;
+  text-align: center;
 `;
 const StyledBackupTitle = styled.div`
   color: var(--Black, #000);
@@ -35,13 +33,6 @@ const StyledFollowUs = styled.div`
   margin: 20px 0;
 `;
 
-const StyledBottomContainer = styled.div`
-  position: absolute;
-  width: 600px;
-  bottom: 30px;
-  left: 50%;
-  transform: translate(-50%);
-`;
 const StyledImgContainer = styled.div`
   margin: 20px auto 40px;
 
@@ -141,12 +132,18 @@ const StyledExtPinContent = styled.div`
   }
 `;
 
-export const CreateResultView = ({}) => {
+export const CreateResultView = ({
+  onClickDone,
+  title,
+  contents,
+  showFollowUs = true,
+  showExtTip = true,
+}) => {
   const welcomeNextType = useSelector((state) => state.cache.welcomeNextType);
 
-  const { showTip } = useMemo(() => { 
+  const { showTip } = useMemo(() => {
     let showTip = "backup_success";
-    if(welcomeNextType === WALLET_CREATE_TYPE.restore){
+    if (welcomeNextType === WALLET_CREATE_TYPE.restore) {
       showTip = "backup_success_restore";
     }
     return {
@@ -155,61 +152,78 @@ export const CreateResultView = ({}) => {
   }, [welcomeNextType]);
 
   const onClickNextTab = useCallback(() => {
-    window.close();
-  }, []);
+    if (onClickDone) {
+      onClickDone();
+    } else {
+      window.close();
+    }
+  }, [onClickDone]);
+
+  const displayTitle = title || i18n.t("success");
+  const displayContents = contents || [i18n.t(showTip), i18n.t("returnEx")];
+
   return (
-    <StyledPwdContainer>
-      <StyledPwdContentContainer>
+    <ProcessLayout
+      hideBack={true}
+      bottomContent={
+        <Button onClick={onClickNextTab}>{i18n.t("done")}</Button>
+      }
+    >
+      <StyledContentContainer>
         <StyledImgContainer>
           <StyledSuccessIcon src={"/img/backup_success.svg"} />
         </StyledImgContainer>
-        <StyledBackupTitle>{i18n.t("success")}</StyledBackupTitle>
-        <StyledBackupContent>{i18n.t(showTip)}</StyledBackupContent>
-        <StyledBackupContent>{i18n.t("returnEx")}</StyledBackupContent>
-        <StyledFollowUs>{i18n.t("followUs")}</StyledFollowUs>
-        <StyledFollowContainer>
-          {Default_Follow_Link.map((follow, index) => {
-            return (
-              <StyledFollowItemContainer
-                href={follow.website}
-                target="_blank"
-                key={index}
-              >
-                <StyledMediaIconWrapper>
-                  <StyledMediaIcon src={follow.icon} />
-                </StyledMediaIconWrapper>
-                <StyledMediaTitle>{follow.name}</StyledMediaTitle>
-              </StyledFollowItemContainer>
-            );
-          })}
-        </StyledFollowContainer>
-      </StyledPwdContentContainer>
-      <StyledBottomContainer>
-        <Button onClick={onClickNextTab}>{i18n.t("done")}</Button>
-      </StyledBottomContainer>
+        <StyledBackupTitle>{displayTitle}</StyledBackupTitle>
+        {displayContents.map((content, index) => (
+          <StyledBackupContent key={index}>{content}</StyledBackupContent>
+        ))}
+        {showFollowUs && (
+          <>
+            <StyledFollowUs>{i18n.t("followUs")}</StyledFollowUs>
+            <StyledFollowContainer>
+              {Default_Follow_Link.map((follow, index) => {
+                return (
+                  <StyledFollowItemContainer
+                    href={follow.website}
+                    target="_blank"
+                    key={index}
+                  >
+                    <StyledMediaIconWrapper>
+                      <StyledMediaIcon src={follow.icon} />
+                    </StyledMediaIconWrapper>
+                    <StyledMediaTitle>{follow.name}</StyledMediaTitle>
+                  </StyledFollowItemContainer>
+                );
+              })}
+            </StyledFollowContainer>
+          </>
+        )}
+      </StyledContentContainer>
 
-      <StyledExtTipWrapper>
-        <StyledExtIconWrapper>
-          <img src="/img/logo/128.png" />
-        </StyledExtIconWrapper>
-        <StyledExtPinTitle>{i18n.t("pinExtension")}</StyledExtPinTitle>
-        <StyledExtPinContent>
-          <Trans
-            i18nKey={"clickBrowser"}
-            components={{
-              icon: <img src="/img/ic_ext.svg" alt="ext" />,
-            }}
-          />
-        </StyledExtPinContent>
-        <StyledExtPinContent>
-          <Trans
-            i18nKey={"clickButton"}
-            components={{
-              icon: <img src="/img/ic_pin.svg" alt="pin" />,
-            }}
-          />
-        </StyledExtPinContent>
-      </StyledExtTipWrapper>
-    </StyledPwdContainer>
+      {showExtTip && (
+        <StyledExtTipWrapper>
+          <StyledExtIconWrapper>
+            <img src="/img/logo/128.png" />
+          </StyledExtIconWrapper>
+          <StyledExtPinTitle>{i18n.t("pinExtension")}</StyledExtPinTitle>
+          <StyledExtPinContent>
+            <Trans
+              i18nKey={"clickBrowser"}
+              components={{
+                icon: <img src="/img/ic_ext.svg" alt="ext" />,
+              }}
+            />
+          </StyledExtPinContent>
+          <StyledExtPinContent>
+            <Trans
+              i18nKey={"clickButton"}
+              components={{
+                icon: <img src="/img/ic_pin.svg" alt="pin" />,
+              }}
+            />
+          </StyledExtPinContent>
+        </StyledExtTipWrapper>
+      )}
+    </ProcessLayout>
   );
 };

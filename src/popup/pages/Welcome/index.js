@@ -1,22 +1,25 @@
-import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
-import { Trans } from "react-i18next";
-import { useDispatch, useSelector } from "react-redux";
-import { getLocal, saveLocal } from "../../../background/localStorage";
-import { POWER_BY } from "../../../constant";
-import { USER_AGREEMENT } from "../../../constant/storageKey";
-import { LANG_SUPPORT_LIST } from "../../../i18n";
-import { setWelcomeNextType } from "../../../reducers/cache";
-import { openTab } from "../../../utils/commonMsg";
-import Button, { button_theme } from "../../component/Button";
-import styled from "styled-components";
+import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 import { PopupModalV2 } from "@/popup/component/PopupModalV2";
 import {
   StyledPageInnerContent,
   StyledPageOuterWrapper,
 } from "@/popup/style/common";
-import { WALLET_CREATE_TYPE } from "@/constant/commonType";
+import i18n from "i18next";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Trans } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import { getLocal, saveLocal } from "../../../background/localStorage";
+import { POWER_BY } from "../../../constant";
+import { WALLET_GET_CURRENT_ACCOUNT } from "../../../constant/msgTypes";
+import { USER_AGREEMENT } from "../../../constant/storageKey";
+import { LANG_SUPPORT_LIST } from "../../../i18n";
+import { setWelcomeNextType } from "../../../reducers/cache";
+import { openTab, sendMsg } from "../../../utils/commonMsg";
+import Button, { button_theme } from "../../component/Button";
 import { CreateProcessPage } from "../CreateProcessPage";
+import { LedgerPage } from "../LedgerPage";
 
 const type_conditions = "conditions";
 const type_policy = "policy";
@@ -38,13 +41,17 @@ const StyledBtnContainer = styled.div`
     margin-bottom: 20px;
   }
 `;
-const StyledLedgerTip = styled.p`
-  margin: 30px auto 16px;
-  font-size: 12px;
+const StyledLedgerLink = styled.p`
+  margin: 20px auto 16px;
+  font-size: 14px;
+  font-weight: 500;
   text-align: center;
+  color: var(--mineBlack);
+  cursor: pointer;
 
-  color: #cccccc;
-  padding: 0px 20px;
+  &:hover {
+    color: var(--mainBlue);
+  }
 `;
 const StyledBottomContainer = styled.div`
   position: absolute;
@@ -85,16 +92,52 @@ const StyledModalTip = styled.span`
 const RegisterStep = {
   welcome: "welcome",
   process: "process",
+  ledger: "ledger",
 };
 const Welcome = () => {
   const cache = useSelector((state) => state.cache);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [isGotoProtocol, setIsGotoProtocol] = useState(true);
   const [popupModalStatus, setPopupModalStatus] = useState(false);
+  const [isCheckingWallet, setIsCheckingWallet] = useState(true);
 
   const [nextRoute, setNextRoute] = useState("");
   const [registerStep, setRegisterStep] = useState(RegisterStep.welcome);
+
+  // Check if this is an "add wallet" flow from AccountManage
+  const isAddWalletFlow = useMemo(() => {
+    const url = window.location?.href || "";
+    const searchParams = new URLSearchParams(
+      url.split("?")[1]?.split("#")[0] || ""
+    );
+    return searchParams.get("addWallet") === "true";
+  }, []);
+
+  // Check if wallet already exists on mount
+  // If wallet exists and NOT in addWallet flow, redirect to home page or lock page
+  useEffect(() => {
+    // Skip wallet check if this is an "add wallet" flow
+    if (isAddWalletFlow) {
+      setIsCheckingWallet(false);
+      return;
+    }
+
+    sendMsg({ action: WALLET_GET_CURRENT_ACCOUNT }, (currentAccount) => {
+      if (currentAccount?.localAccount?.keyringData) {
+        // Wallet exists, redirect based on lock status
+        if (currentAccount.isUnlocked) {
+          navigate("/homepage");
+        } else {
+          navigate("/lock_page");
+        }
+      } else {
+        // No wallet, show welcome page
+        setIsCheckingWallet(false);
+      }
+    });
+  }, [navigate, isAddWalletFlow]);
 
   const onClickGuide = useCallback(
     (type) => {
@@ -130,6 +173,13 @@ const Welcome = () => {
     if (type === "saveProtocol") {
       saveLocal(USER_AGREEMENT, "true");
     }
+
+    // Ledger: show ledger component inline
+    if (route === WALLET_CREATE_TYPE.ledger) {
+      setRegisterStep(RegisterStep.ledger);
+      return;
+    }
+
     dispatch(setWelcomeNextType(route));
     setRegisterStep(RegisterStep.process);
   }, []);
@@ -163,6 +213,18 @@ const Welcome = () => {
     setRegisterStep(RegisterStep.welcome);
   }, []);
 
+  if (isCheckingWallet) {
+    return (
+      <StyledPageOuterWrapper>
+        <StyledPageInnerContent>
+          <StyledLogoContainer>
+            <img src="/img/colorful_logo.svg" />
+          </StyledLogoContainer>
+        </StyledPageInnerContent>
+      </StyledPageOuterWrapper>
+    );
+  }
+
   return (
     <StyledPageOuterWrapper>
       {registerStep === RegisterStep.welcome && (
@@ -191,10 +253,14 @@ const Welcome = () => {
               >
                 {i18n.t("restoreWallet")}
               </Button>
+              <StyledLedgerLink
+                onClick={() => goNextRoute(WALLET_CREATE_TYPE.ledger)}
+              >
+                {i18n.t("connectHardwareWallet")}
+              </StyledLedgerLink>
             </StyledBtnContainer>
           </StyledTopContainer>
           <StyledBottomContainer>
-            <StyledLedgerTip>{i18n.t("ledgerUserTip")}</StyledLedgerTip>
             <StyledPowerBy>{POWER_BY}</StyledPowerBy>
           </StyledBottomContainer>
           <PopupModalV2
@@ -237,6 +303,9 @@ const Welcome = () => {
       )}
       {registerStep === RegisterStep.process && (
         <CreateProcessPage onClickPre={onClickPre} />
+      )}
+      {registerStep === RegisterStep.ledger && (
+        <LedgerPage onClickPre={onClickPre} />
       )}
     </StyledPageOuterWrapper>
   );

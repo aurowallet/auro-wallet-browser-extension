@@ -1,26 +1,14 @@
 import { WALLET_CREATE_PWD } from "@/constant/msgTypes";
 import Button from "@/popup/component/Button";
 import Input from "@/popup/component/Input";
+import ProcessLayout from "@/popup/component/ProcessLayout";
 import { ReminderTip } from "@/popup/component/ReminderTip";
 import { sendMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { BackView } from ".";
 import { PasswordValidationList } from "../../../utils/utils";
 
-const StyledPwdContainer = styled.div`
-  margin-top: 20px;
-`;
-const StyledPwdContentContainer = styled.div`
-  padding: 40px;
-`;
-const StyledProcessTitle = styled.div`
-  color: var(--Black, #000);
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 40px;
-`;
 const StyledPwdInputContainer = styled.div`
   margin-top: 20px;
   max-width: 335px;
@@ -35,13 +23,6 @@ const StyledPwdCheckSpan = styled.span`
   line-height: 17px;
   color: var(--secondaryRed);
   display: ${(props) => (props.showstatus == "true" ? "none" : "initial")};
-`;
-const StyledBottomContainer = styled.div`
-  position: absolute;
-  width: 600px;
-  bottom: 30px;
-  left: 50%;
-  transform: translate(-50%);
 `;
 export const CreatePwdView = ({ onClickNextTab, onClickPre }) => {
   const [inputPwd, setInputPwd] = useState("");
@@ -117,41 +98,40 @@ export const CreatePwdView = ({ onClickNextTab, onClickPre }) => {
     return txt;
   };
   return (
-    <StyledPwdContainer>
-      <BackView onClickBack={onClickPre} />
-      <StyledPwdContentContainer>
-        <StyledProcessTitle>{i18n.t("createPassword")}</StyledProcessTitle>
-        <ReminderTip content={i18n.t("createPasswordTip")} />
-        <StyledPwdInputContainer>
-          <Input
-            label={i18n.t("password")}
-            onChange={onPwdInput}
-            value={inputPwd}
-            inputType={"password"}
-            showBottomTip={inputPwd.length > 0}
-            bottomTip={
-              <StyledPwdCheckSpan>{getFeedbackText()}</StyledPwdCheckSpan>
-            }
-          />
-          <Input
-            label={i18n.t("confirmPassword")}
-            onChange={onPwdConfirmInput}
-            value={confirmPwd}
-            inputType={"password"}
-            showBottomTip={!passwordsMatch}
-            bottomTip={
-              <StyledPwdCheckSpan>
-                {getConfirmFeedbackText()}
-              </StyledPwdCheckSpan>
-            }
-          />
-        </StyledPwdInputContainer>
-      </StyledPwdContentContainer>
-      <StyledBottomContainer>
+    <ProcessLayout
+      onClickBack={onClickPre}
+      title={i18n.t("createPassword")}
+      bottomContent={
         <Button disable={!isButtonEnabled()} onClick={goToCreate}>
           {i18n.t("next")}
         </Button>
-      </StyledBottomContainer>
-    </StyledPwdContainer>
+      }
+    >
+      <ReminderTip content={i18n.t("createPasswordTip")} />
+      <StyledPwdInputContainer>
+        <Input
+          label={i18n.t("password")}
+          onChange={onPwdInput}
+          value={inputPwd}
+          inputType={"password"}
+          showBottomTip={inputPwd.length > 0}
+          bottomTip={
+            <StyledPwdCheckSpan>{getFeedbackText()}</StyledPwdCheckSpan>
+          }
+        />
+        <Input
+          label={i18n.t("confirmPassword")}
+          onChange={onPwdConfirmInput}
+          value={confirmPwd}
+          inputType={"password"}
+          showBottomTip={!passwordsMatch}
+          bottomTip={
+            <StyledPwdCheckSpan>
+              {getConfirmFeedbackText()}
+            </StyledPwdCheckSpan>
+          }
+        />
+      </StyledPwdInputContainer>
+    </ProcessLayout>
   );
 };

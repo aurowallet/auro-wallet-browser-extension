@@ -14,7 +14,6 @@ import ApprovePage from '../pages/ApprovePage';
 import AutoLock from '../pages/AutoLock';
 import {BackupMnemonics} from '../pages/BackupMnemonics';
 import {BackupSuccess} from '../pages/BackupSuccess';
-import {BackupTips} from '../pages/BackupTips';
 import CreatePassword from '../pages/CreatePassword';
 import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
@@ -48,6 +47,8 @@ import TokenSignPage from '../pages/Send/tokenSign';
 import Preferences from '../pages/Preferences';
 import DevPage from '../pages/DevPage';
 import DevDetailPage from '../pages/DevPage/DevDetail';
+import VaultDebug from '../pages/DevPage/VaultDebug';
+import WalletDetails from '../pages/WalletDetails';
 
 
 
@@ -80,7 +81,6 @@ export function getAllRouter() {
         <Route path="/network_page" element={<NetworkPage />} />
         <Route path="/account_name" element={<AccountName />} />
         <Route path="/reset_password" element={<ResetPassword />} />
-        <Route path="/backup_tips" element={<BackupTips />} />
 
         <Route path="/staking" element={<Staking />} />
         <Route path="/staking_list" element={<StakingList />} />
@@ -114,6 +114,8 @@ export function getAllRouter() {
         <Route path="/preferences_page" element={<Preferences />} />
         <Route path="/devpage" element={<DevPage />} />
         <Route path="/dev_detail_page" element={<DevDetailPage />} />
+        <Route path="/vault_debug" element={<VaultDebug />} />
+        <Route path="/wallet_details" element={<WalletDetails />} />
       </Routes>
     </HashRouter>
   );

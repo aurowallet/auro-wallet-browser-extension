@@ -40,10 +40,19 @@ const UPDATE_NEXT_TOKEN_DETAIL = "UPDATE_NEXT_TOKEN_DETAIL";
 
 const UPDATE_POPUP_LOCK_STATUS = "UPDATE_POPUP_LOCK_STATUS"
 
+const SET_KEYRING_INFO = "SET_KEYRING_INFO"
+
 export function updatePopupLockStatus(status) {
   return {
     type: UPDATE_POPUP_LOCK_STATUS,
     status,
+  };
+}
+
+export function setKeyringInfo(keyringInfo) {
+  return {
+    type: SET_KEYRING_INFO,
+    keyringInfo,
   };
 }
 
@@ -165,7 +174,8 @@ const initState = {
     ledger: 1,
   },
   nextTokenDetail: {},
-  popupLockStatus:false
+  popupLockStatus:false,
+  keyringInfo: {}
 };
 
 const cacheReducer = (state = initState, action) => {
@@ -258,6 +268,11 @@ const cacheReducer = (state = initState, action) => {
       return {
         ...state,
         popupLockStatus: action.status
+      };
+    case SET_KEYRING_INFO:
+      return {
+        ...state,
+        keyringInfo: action.keyringInfo
       };
     default:
       return state;
