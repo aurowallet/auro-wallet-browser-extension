@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ACCOUNT_NAME_FROM_TYPE } from "../../../constant/commonType";
 import {
   DAPP_CHANGE_CONNECTING_ADDRESS,
@@ -24,7 +24,7 @@ const AccountName = ({}) => {
   );
 
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const [accountName, setAccountName] = useState("");
   const [reminderModalStatus, setReminderModalStatus] = useState(false);
@@ -86,15 +86,9 @@ const AccountName = ({}) => {
       accountText = accountName;
     }
     if (fromType === ACCOUNT_NAME_FROM_TYPE.OUTSIDE) {
-      history.push({
-        pathname: "import_account",
-        params: { accountName: accountText },
-      });
+      navigate("/import_account", { state: { accountName: accountText } });
     } else if (fromType === ACCOUNT_NAME_FROM_TYPE.KEYPAIR) {
-      history.push({
-        pathname: "import_keypair",
-        params: { accountName: accountText },
-      });
+      navigate("/import_keypair", { state: { accountName: accountText } });
     } else {
       setBtnLoadingStatus(true);
       sendMsg(
@@ -121,10 +115,10 @@ const AccountName = ({}) => {
               (status) => {}
             );
             dispatch(updateCurrentAccount(account));
-            if (history.length >= 3) {
-              history.go(-2);
+            if (window.history.length >= 3) {
+              window.history.go(-2);
             } else {
-              history.replace("/");
+              navigate("/");
             }
           }
         }
@@ -135,7 +129,6 @@ const AccountName = ({}) => {
     placeholderText,
     fromType,
     accountIndex,
-    history,
     currentAddress,
   ]);
 

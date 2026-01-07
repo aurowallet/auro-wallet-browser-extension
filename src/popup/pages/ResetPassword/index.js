@@ -1,7 +1,7 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { WALLET_CHANGE_SEC_PASSWORD } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
@@ -13,7 +13,7 @@ import { PasswordValidationList } from "../../../utils/utils";
 
 const Reset = ({ }) => {
 
-    const history = useHistory()
+    const navigate = useNavigate()
     const [oldPassword, setOldPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -78,7 +78,7 @@ const Reset = ({ }) => {
         }, (res) => {
             if (res.code === 0) {
                 setTimeout(() => {
-                    history.goBack()
+                    navigate(-1)
                     Toast.info(i18n.t('passwordChangedSuccessful')) 
                 }, 500);
             } else {

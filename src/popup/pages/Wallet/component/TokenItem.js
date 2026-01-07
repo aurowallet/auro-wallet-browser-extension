@@ -4,7 +4,7 @@ import { addressSlice, getAmountForUI, getBalanceForUI } from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import TokenIcon from "./TokenIcon";
 
@@ -93,7 +93,7 @@ const StyledTokenBalance = styled.div`
   margin-top: 4px;
 `;
 const TokenItem = ({ token, isInModal }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const currencyConfig = useSelector((state) => state.currencyConfig);
   const currentAccount = useSelector(
@@ -153,12 +153,9 @@ const TokenItem = ({ token, isInModal }) => {
   const onClickToken = useCallback(() => {
     dispatch(updateNextTokenDetail(token));
     if (isInModal) {
-      history.push({
-        pathname: "send_page",
-        params: { isFromModal: true },
-      });
+      navigate("/send_page", { state: { isFromModal: true } });
     } else {
-      history.push("token_detail");
+      navigate("/token_detail");
     }
   }, [dispatch, token, isInModal]);
 

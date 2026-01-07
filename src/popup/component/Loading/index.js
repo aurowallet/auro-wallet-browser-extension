@@ -1,22 +1,24 @@
-import React from 'react';
-import ReactDom from 'react-dom';
+import React, { createRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import LoadingContainer from './LoadingContainer';
 
 const loadingContainerDiv = document.createElement('div');
 document.body.appendChild(loadingContainerDiv);
 
-const getLoadingContainerRef = () => {
-    return ReactDom.render(<LoadingContainer />, loadingContainerDiv);
-}
-
-let loadingContainer = getLoadingContainerRef();
+const loadingContainerRef = createRef();
+const root = createRoot(loadingContainerDiv);
+root.render(<LoadingContainer ref={loadingContainerRef} />);
 
 const show = () => {
-    loadingContainer.show()
+    if (loadingContainerRef.current) {
+        loadingContainerRef.current.show();
+    }
 }
 
 const destroy = () => {
-    loadingContainer.hide();
+    if (loadingContainerRef.current) {
+        loadingContainerRef.current.hide();
+    }
 }
 
 export default {

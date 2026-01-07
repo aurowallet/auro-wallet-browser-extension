@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AUTO_LOCK_TIME_LIST } from "../../../constant";
 import { WALLET_GET_LOCK_TIME, WALLET_UPDATE_LOCK_TIME } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -11,7 +11,7 @@ import styles from "./index.module.scss";
 
 const AutoLock = ({ }) => {
   const [currentLockDuration, setCurrentLockDuration] = useState()
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const onSelect = useCallback((data) => {
     setCurrentLockDuration(data.value)
@@ -20,7 +20,7 @@ const AutoLock = ({ }) => {
       action: WALLET_UPDATE_LOCK_TIME,
       payload: data.value
     }, () => {
-      history.goBack()
+      navigate(-1)
     })
   }, [i18n])
 

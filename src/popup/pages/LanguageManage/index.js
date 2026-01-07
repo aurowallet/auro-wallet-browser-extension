@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { changeLanguage, languageOption } from "../../../i18n";
 import { setLanguage } from "../../../reducers/appReducer";
 import CustomView from "../../component/CustomView";
@@ -14,14 +14,14 @@ const LanguageManagementPage = ({ }) => {
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language)
 
   const dispatch = useDispatch()
-  let history = useHistory();
+  const navigate = useNavigate();
 
   const onSelect = useCallback((item) => {
     setCurrentLanguage(item.key)
     if (item.key !== i18n.language) {
       changeLanguage(item.key)
       dispatch(setLanguage(item.key))
-      history.goBack()
+      navigate(-1)
     }
   }, [i18n])
 

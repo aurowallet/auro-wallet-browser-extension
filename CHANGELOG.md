@@ -2,7 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Un-Released]
+## [2.4.5]
+### Enhancements
+- Support multi-wallet
+- Firefox build scripts
+- Debug scripts
+- Ledger connect
+- Migrate vault from legacy array format to keyring-based structure
+- Update babel config and dependencies
+- Upgrade libsodium-wrappers to libsodium-wrappers-sumo
+- Upgrade obs-store to zustand
+- Upgrade bs58check to @scure/base
+- Upgrade node-forge to v1.3.3
+- Upgrade gulp, gulp-zip to jszip
+- Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit, sinon, i18next, react, react-dom, react-i18next, react-redux, react-router-dom
+- Remove react-scripts, web-ext, url-loader, crypto-browserify, html-webpack-plugin, redux, react-helmet, valid-url
+- Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
+- Add test cases to APIService & DAppService
+- Add new account token activation prompt
+- Add transaction analysis
+
+### Fixes
+- E-notation of SendPage
+- Legder error message
 
 ## [2.4.4]
 ### Enhancements

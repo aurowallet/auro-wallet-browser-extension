@@ -1,23 +1,23 @@
-import React from 'react';
-import ReactDom from 'react-dom';
+import React, { createRef } from 'react';
+import { createRoot } from 'react-dom/client';
 import ToastContainer from './ToastContainer';
 
 const toastContainerDiv = document.createElement('div');
 document.body.appendChild(toastContainerDiv);
 
-const getToastContainerRef = () => {
-    return ReactDom.render(<ToastContainer />, toastContainerDiv);
-}
-
-let toastContainer = getToastContainerRef();
+const toastContainerRef = createRef();
+const root = createRoot(toastContainerDiv);
+root.render(<ToastContainer ref={toastContainerRef} />);
 
 const destroy = () => {
-    ReactDom.unmountComponentAtNode(toastContainerDiv);
-    toastContainer = getToastContainerRef();
+    root.render(<ToastContainer ref={toastContainerRef} />);
 }
 
-
 export default {
-    info: (text, duration, isShowMask) => (toastContainer.pushToast({ type: 'info', text, duration, isShowMask })),
+    info: (text, duration, isShowMask) => {
+        if (toastContainerRef.current) {
+            toastContainerRef.current.pushToast({ type: 'info', text, duration, isShowMask });
+        }
+    },
     hide: destroy
 };

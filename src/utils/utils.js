@@ -1,10 +1,11 @@
 import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
+import { createBase58check } from "@scure/base";
 import BigNumber from "bignumber.js";
-import bs58check from "bs58check";
-import validUrl from "valid-url";
 import { MAIN_COIN_CONFIG, TRANSACTION_FEE } from "../constant";
+
+const bs58check = createBase58check(sha256);
 
 /**
  * address slice
@@ -104,10 +105,12 @@ export function trimSpace(str) {
  * @param {*} url
  */
 export function urlValid(url) {
-  if (validUrl.isWebUri(url)) {
-    return true;
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+  } catch {
+    return false;
   }
-  return false;
 }
 
 /**
@@ -311,7 +314,8 @@ export function exportFile(data, fileName) {
 export function decodeMemo(encode) {
   try {
     const encoded = bs58check.decode(encode);
-    const res = encoded.slice(3, 3 + encoded[2]).toString("utf-8");
+    const memoBytes = encoded.slice(3, 3 + encoded[2]);
+    const res = new TextDecoder('utf-8').decode(memoBytes);
     return res;
   } catch (error) {
     return encode;
@@ -467,8 +471,9 @@ export function addressValid(address) {
     if (!address.toLowerCase().startsWith("b62")) {
       return false;
     }
-    const decodedAddress = bs58check.decode(address).toString("hex");
-    return !!decodedAddress && decodedAddress.length === 72;
+    const decoded = bs58check.decode(address);
+    const decodedHex = Array.from(decoded).map(b => b.toString(16).padStart(2, '0')).join('');
+    return !!decodedHex && decodedHex.length === 72;
   } catch (ex) {
     return false;
   }

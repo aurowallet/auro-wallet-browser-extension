@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useHistory } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getLocal, saveLocal } from "../../../../background/localStorage";
 import { ADDRESS_BOOK_CONFIG } from "../../../../constant/storageKey";
 import { addressValid, trimSpace } from "../../../../utils/utils";
@@ -20,7 +20,8 @@ export const AddressEditorType = {
 const AddressEditor = ({ }) => {
 
 
-    const history = useHistory()
+    const navigate = useNavigate()
+    const location = useLocation()
     const [reminderModalStatus, setReminderModalStatus] = useState(false)
 
     const [btnStatus,setBtnStatus] = useState(true)
@@ -29,13 +30,13 @@ const AddressEditor = ({ }) => {
     const {
         editorType, editIndex, editItem
     } = useMemo(() => {
-        let editorType = history.location?.params?.editorType ?? "";
-        let editIndex = history.location?.params?.editIndex ?? "";
-        let editItem = history.location?.params?.editItem ?? "";
+        let editorType = location?.state?.editorType ?? "";
+        let editIndex = location?.state?.editIndex ?? "";
+        let editItem = location?.state?.editItem ?? "";
         return {
             editorType, editIndex, editItem
         }
-    }, [history])
+    }, [location])
 
 
     const [addressName, setAddressName] = useState(() => {
@@ -107,7 +108,7 @@ const AddressEditor = ({ }) => {
             saveLocal(ADDRESS_BOOK_CONFIG, JSON.stringify(list))
 
             setTimeout(() => {
-                history.goBack()
+                navigate(-1)
             }, 50);
 
         } else if (editorType === AddressEditorType.edit) {
@@ -123,7 +124,7 @@ const AddressEditor = ({ }) => {
             saveLocal(ADDRESS_BOOK_CONFIG, JSON.stringify(list))
 
             setTimeout(() => {
-                history.goBack()
+                navigate(-1)
             }, 50);
         }
 
@@ -155,7 +156,7 @@ const AddressEditor = ({ }) => {
         saveLocal(ADDRESS_BOOK_CONFIG, JSON.stringify(list))
         setTimeout(() => {
             setReminderModalStatus(false)
-            history.goBack()
+            navigate(-1)
         }, 50);
 
 

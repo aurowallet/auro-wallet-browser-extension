@@ -55,6 +55,7 @@ export const WALLET_CONNECT_TYPE = {
 export const WALLET_CREATE_TYPE = {
   restore: "restore",
   create: "create",
+  ledger: "ledger",
 };
 
 export const POPUP_CHANNEL_KEYS = {

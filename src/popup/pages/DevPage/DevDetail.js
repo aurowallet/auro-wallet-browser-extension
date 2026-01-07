@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import {
   getAllTxHistory,
@@ -69,7 +69,7 @@ const StyledBottomContainer = styled.div`
   align-items: center;
 `;
 const DevDetail = ({}) => {
-  const history = useHistory();
+  const location = useLocation();
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -78,10 +78,10 @@ const DevDetail = ({}) => {
   const [responseBody, setResponseBody] = useState("");
 
   const { pageType, title } = useMemo(() => {
-    const pageType = history.location?.params?.pageType ?? "";
-    const title = history.location?.params?.title ?? "";
+    const pageType = location?.state?.pageType ?? "";
+    const title = location?.state?.title ?? "";
     return { pageType, title };
-  }, [history]);
+  }, [location]);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);

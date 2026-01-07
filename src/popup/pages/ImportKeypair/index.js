@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   DAPP_CHANGE_CONNECTING_ADDRESS,
   WALLET_IMPORT_KEY_STORE,
@@ -25,12 +25,13 @@ const ImportKeypair = ({}) => {
   const [btnStatus, setBtnStatus] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
   const accountName = useMemo(() => {
-    return history.location?.params?.accountName ?? "";
-  }, [history]);
+    return location?.state?.accountName ?? "";
+  }, [location]);
 
   useEffect(() => {
     if (keystoreValue.length > 0 && pwdValue.length > 0) {
@@ -82,10 +83,10 @@ const ImportKeypair = ({}) => {
             );
             dispatch(updateCurrentAccount(account));
             setTimeout(() => {
-              if (history.length >= 5) {
-                history.go(-4);
+              if (window.history.length >= 5) {
+                navigate(-4);
               } else {
-                history.replace("/");
+                navigate("/");
               }
             }, 300);
           }

@@ -1,10 +1,13 @@
-import bs58check from "bs58check";
 import { Buffer } from 'buffer';
 import Client from 'mina-signer';
 import { MAIN_COIN_CONFIG } from '../constant';
 import { HDKey } from "@scure/bip32";
 import * as bip39 from '@scure/bip39';
 import { wordlist } from "@scure/bip39/wordlists/english";
+import { createBase58check } from "@scure/base";
+import { sha256 } from "@noble/hashes/sha256";
+
+const bs58check = createBase58check(sha256);
 
 export function validateMnemonic(mnemonic) {
     return bip39.validateMnemonic(mnemonic,wordlist);
@@ -21,15 +24,6 @@ export function getHDpath(account = 0) {
 export function generateMne() {
     let mne = bip39.generateMnemonic(wordlist, 128);
     return mne
-}
-
-export function decodeAddress(address) {
-    try {
-        const decodedAddress = bs58check.decode(address).toString('hex');
-        return decodedAddress;
-    } catch (ex) {
-        return null
-    }
 }
 
 function reverse(bytes) {
@@ -62,10 +56,10 @@ export async function importWalletByKeystore(keyfile, keyfilePassword) {
         if (typeof keyfile === 'string') {
             keyfile = JSON.parse(keyfile)
         }
-        const _sodium = (await import('libsodium-wrappers')).default
+        const _sodium = (await import('libsodium-wrappers-sumo')).default
         await _sodium.ready
         const sodium = _sodium
-        let key = await sodium.crypto_pwhash(
+        let key = sodium.crypto_pwhash(
           32,
           keyfilePassword,
           bs58check.decode(keyfile.pwsalt).slice(1),

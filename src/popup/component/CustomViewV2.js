@@ -1,7 +1,7 @@
 import { copyText } from "@/utils/browserUtils";
 import i18n from "i18next";
 import { useCallback } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Toast from "./Toast";
 
@@ -68,9 +68,9 @@ const CustomViewV2 = ({
   subTitle = "",
   copyContent = "",
 }) => {
-  let history = useHistory();
+  const navigate = useNavigate();
   const goBack = useCallback(() => {
-    history.goBack();
+    navigate(-1);
   }, []);
   const onCopySubTitle = useCallback(() => {
     if (copyContent) {

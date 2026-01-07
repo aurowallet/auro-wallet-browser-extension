@@ -31,7 +31,7 @@ To build and run the Auro Wallet extension, ensure you have the following depend
 - **React**: 17.x.x
 - **npm**: 10.5.0
 - **Yarn**: 1.22.19
-- **Node.js**: v20.12.2
+- **Node.js**: v22.12.0
 
 ### Installation
 

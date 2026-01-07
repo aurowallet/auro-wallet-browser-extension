@@ -2,7 +2,7 @@ import cls from 'classnames';
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { WALLET_GET_CREATE_MNEMONIC, WALLET_NEW_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
@@ -25,7 +25,7 @@ export const BackupMnemonics = () => {
   const [loadingStatus, setLoadingStatus] = useState(false)
 
   const dispatch = useDispatch()
-  let history = useHistory();
+  const navigate = useNavigate();
 
   useEffect(() => {
     sendMsg({
@@ -113,7 +113,7 @@ export const BackupMnemonics = () => {
           setLoadingStatus(false)
           dispatch(updateCurrentAccount(currentAccount))
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
-          history.push("/backup_success")
+          navigate("/backup_success")
         })
     } else {
       Toast.info(i18n.t("seed_error"))

@@ -1,7 +1,14 @@
 import { validateMnemonic } from "@/background/accountService";
-import { WALLET_NEW_HD_ACCOUNT } from "@/constant/msgTypes";
+import {
+  WALLET_IMPORT_HD_ACCOUNT,
+  WALLET_IMPORT_KEY_STORE,
+  WALLET_NEW_HD_ACCOUNT,
+} from "@/constant/msgTypes";
 import Button from "@/popup/component/Button";
+import Input from "@/popup/component/Input";
 import { MneItemV2 } from "@/popup/component/MneItem";
+import { PopupModal } from "@/popup/component/PopupModal";
+import ProcessLayout from "@/popup/component/ProcessLayout";
 import Toast from "@/popup/component/Toast";
 import { updateCurrentAccount } from "@/reducers/accountReducer";
 import {
@@ -9,37 +16,14 @@ import {
   updateEntryWitchRoute,
 } from "@/reducers/entryRouteReducer";
 import { sendMsg } from "@/utils/commonMsg";
-import { checkValidStrInList } from "@/utils/utils";
+import { addressSlice, checkValidStrInList } from "@/utils/utils";
 import { wordlist } from "@scure/bip39/wordlists/english";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
+import { Trans } from "react-i18next";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { BackView } from ".";
 
-const StyledPwdContainer = styled.div`
-  margin-top: 20px;
-`;
-const StyledPwdContentContainer = styled.div`
-  padding: 40px;
-`;
-const StyledProcessTitle = styled.div`
-  color: var(--Black, #000);
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const StyledBottomContainer = styled.div`
-  position: absolute;
-  width: 600px;
-  bottom: 30px;
-  left: 50%;
-  transform: translate(-50%);
-`;
 const StyledMneTip = styled.div`
   font-weight: 500;
   font-size: 14px;
@@ -64,29 +48,98 @@ const StyledBottomMneContainer = styled.div`
   flex-wrap: wrap;
   gap: 12px 20px;
 `;
-const StyledRowSwitch = styled.span`
-  color: #594af1;
+const StyledTabWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+  flex-shrink: 0;
+`;
+
+const StyledTabContainer = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 4px;
+`;
+
+const StyledTabItem = styled.div`
+  padding: 8px 16px;
   font-size: 14px;
   font-weight: 500;
+  color: ${(props) => (props.$active ? "#fff" : "rgba(0, 0, 0, 0.5)")};
+  background: ${(props) => (props.$active ? "#594af1" : "transparent")};
+  border-radius: 16px;
   cursor: pointer;
-  position: absolute;
-  right: 40px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${(props) => (props.$active ? "#fff" : "#594af1")};
+  }
 `;
+
+const StyledContentWrapper = styled.div`
+  width: 572px;
+  min-width: 572px;
+  overflow-y: auto;
+`;
+
+const StyledPasswordInputWrapper = styled.div`
+  margin-top: 20px;
+  max-width: 335px;
+`;
+
+const StyledPrivateKeyInput = styled.textarea`
+  width: 100%;
+  min-width: 540px;
+  min-height: 150px;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  margin-top: 20px;
+
+  &:focus {
+    border-color: #594af1;
+  }
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.3);
+  }
+`;
+
+const IMPORT_TAB = {
+  WORDS_12: "12words",
+  WORDS_24: "24words",
+  PRIVATE_KEY: "privateKey",
+  KEYSTORE: "keystore",
+};
 
 export const RestoreMneView = ({
   onClickPre,
   onClickNext,
   onSwitchMneCount,
 }) => {
+  const [activeTab, setActiveTab] = useState(IMPORT_TAB.WORDS_12);
   const [mneCount, setMenCount] = useState(12);
-  const [mneInputList, setMneInputList] = useState(Array(mneCount).fill(""));
+  const [mneInputList, setMneInputList] = useState(Array(12).fill(""));
   const [similarWordList, setSimilarWordList] = useState([]);
   const [btnLoading, setBtnLoading] = useState(false);
   const [btnClick, setBtnClick] = useState(true);
+  const [privateKeyInput, setPrivateKeyInput] = useState("");
+  const [keystorePassword, setKeystorePassword] = useState("");
   const [mneInput, setMneInput] = useState({
     word: "",
     index: -1,
   });
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [duplicateAccount, setDuplicateAccount] = useState(null);
 
   const dispatch = useDispatch();
   const getSimilarWord = useCallback(() => {
@@ -100,15 +153,28 @@ export const RestoreMneView = ({
       setSimilarWordList([]);
     }
   }, [mneInput]);
-  const onSwitch = useCallback(() => {
-    let nextCount = mneCount == 12 ? 24 : 12;
-    setMenCount(nextCount);
-    setMneInputList(Array(nextCount).fill(""));
-    setSimilarWordList([]);
-    if (onSwitchMneCount) {
-      onSwitchMneCount(nextCount == 24);
-    }
-  }, [mneCount, onSwitchMneCount]);
+  const onTabChange = useCallback(
+    (tab) => {
+      setActiveTab(tab);
+      setSimilarWordList([]);
+      setBtnClick(true);
+
+      if (tab === IMPORT_TAB.WORDS_12) {
+        setMenCount(12);
+        setMneInputList(Array(12).fill(""));
+        if (onSwitchMneCount) onSwitchMneCount(false);
+      } else if (tab === IMPORT_TAB.WORDS_24) {
+        setMenCount(24);
+        setMneInputList(Array(24).fill(""));
+        if (onSwitchMneCount) onSwitchMneCount(true);
+      } else {
+        setPrivateKeyInput("");
+        setKeystorePassword("");
+        if (onSwitchMneCount) onSwitchMneCount(false);
+      }
+    },
+    [onSwitchMneCount]
+  );
 
   useEffect(() => {
     getSimilarWord();
@@ -159,89 +225,287 @@ export const RestoreMneView = ({
     [mneInput, mneInputList]
   );
 
-  const goToCreate = useCallback(() => {
-    let mnemonic = mneInputList.join(" ").trim();
-    mnemonic = mnemonic.toLowerCase();
-
-    let mnemonicValid = validateMnemonic(mnemonic);
-    if (!mnemonicValid) {
-      Toast.info(i18n.t("seed_error"));
-      return;
-    }
-    setBtnLoading(true);
-    sendMsg(
-      {
-        action: WALLET_NEW_HD_ACCOUNT,
-        payload: {
-          mne: mnemonic,
-        },
-      },
-      async (currentAccount) => {
-        setBtnLoading(false);
-        dispatch(updateCurrentAccount(currentAccount));
-        dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-        onClickNext();
+  const handleImportSuccess = useCallback(
+    (account) => {
+      setBtnLoading(false);
+      if (account.error) {
+        // Check if it's a duplicate account error with account info
+        if (
+          (account.error === "addressExists" ||
+            account.error === "importRepeat") &&
+          account.existingAccount
+        ) {
+          setDuplicateAccount(account.existingAccount);
+          setDuplicateModalVisible(true);
+          return;
+        }
+        if (account.type === "local") {
+          Toast.info(i18n.t(account.error));
+        } else {
+          Toast.info(account.error);
+        }
+        return;
       }
-    );
-  }, [mneInputList, i18n, onClickNext]);
+      dispatch(updateCurrentAccount(account));
+      dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
+      onClickNext();
+    },
+    [dispatch, onClickNext]
+  );
 
-  useEffect(() => {
-    const validList = checkValidStrInList(mneInputList);
-    if (validList.length === mneCount) {
-      setBtnClick(false);
-    } else {
-      setBtnClick(true);
+  const onCloseDuplicateModal = useCallback(() => {
+    setDuplicateModalVisible(false);
+    setDuplicateAccount(null);
+  }, []);
+
+  const goToCreate = useCallback(() => {
+    const isMnemonic =
+      activeTab === IMPORT_TAB.WORDS_12 || activeTab === IMPORT_TAB.WORDS_24;
+
+    if (isMnemonic) {
+      // Mnemonic import
+      let mnemonic = mneInputList.join(" ").trim();
+      mnemonic = mnemonic.toLowerCase();
+
+      let mnemonicValid = validateMnemonic(mnemonic);
+      if (!mnemonicValid) {
+        Toast.info(i18n.t("seed_error"));
+        return;
+      }
+      setBtnLoading(true);
+      sendMsg(
+        {
+          action: WALLET_NEW_HD_ACCOUNT,
+          payload: { mne: mnemonic },
+        },
+        handleImportSuccess
+      );
+    } else if (activeTab === IMPORT_TAB.PRIVATE_KEY) {
+      // Private key import
+      if (!privateKeyInput.trim()) {
+        Toast.info(i18n.t("pleaseInputPriKey"));
+        return;
+      }
+      setBtnLoading(true);
+      sendMsg(
+        {
+          action: WALLET_IMPORT_HD_ACCOUNT,
+          payload: {
+            privateKey: privateKeyInput.replace(/[\r\n]/g, "").trim(),
+            accountName: "",
+          },
+        },
+        handleImportSuccess
+      );
+    } else if (activeTab === IMPORT_TAB.KEYSTORE) {
+      // Keystore import
+      if (!privateKeyInput.trim() || !keystorePassword) {
+        Toast.info(i18n.t("pleaseInputKeyPair"));
+        return;
+      }
+      setBtnLoading(true);
+      sendMsg(
+        {
+          action: WALLET_IMPORT_KEY_STORE,
+          payload: {
+            keypair: privateKeyInput.trim(),
+            password: keystorePassword,
+            accountName: "",
+          },
+        },
+        handleImportSuccess
+      );
     }
-  }, [mneInputList, mneCount]);
+  }, [
+    activeTab,
+    mneInputList,
+    privateKeyInput,
+    keystorePassword,
+    handleImportSuccess,
+  ]);
+  // Button validation for each tab type
+  useEffect(() => {
+    const isMnemonic =
+      activeTab === IMPORT_TAB.WORDS_12 || activeTab === IMPORT_TAB.WORDS_24;
+
+    if (isMnemonic) {
+      const validList = checkValidStrInList(mneInputList);
+      setBtnClick(validList.length !== mneCount);
+    } else if (activeTab === IMPORT_TAB.PRIVATE_KEY) {
+      setBtnClick(!privateKeyInput.trim());
+    } else if (activeTab === IMPORT_TAB.KEYSTORE) {
+      setBtnClick(!privateKeyInput.trim() || !keystorePassword);
+    }
+  }, [activeTab, mneInputList, mneCount, privateKeyInput, keystorePassword]);
+
+  const isMnemonicTab =
+    activeTab === IMPORT_TAB.WORDS_12 || activeTab === IMPORT_TAB.WORDS_24;
+  const isPrivateKeyTab = activeTab === IMPORT_TAB.PRIVATE_KEY;
+  const isKeystoreTab = activeTab === IMPORT_TAB.KEYSTORE;
 
   return (
-    <StyledPwdContainer>
-      <BackView onClickBack={onClickPre} />
-      <StyledPwdContentContainer>
-        <StyledProcessTitle>
-          {i18n.t("restoreWallet")}
-          <StyledRowSwitch onClick={onSwitch}>
-            {i18n.t("mneTip", { count: mneCount == 12 ? 24 : 12 })}
-          </StyledRowSwitch>
-        </StyledProcessTitle>
-
-        <StyledMneTip>{i18n.t("inputSeed")}</StyledMneTip>
-        <StyledTopMneContainer>
-          {mneInputList.map((mne, index) => {
-            return (
-              <MneItemV2
-                key={index}
-                useInput={true}
-                colorStatus={true}
-                index={index}
-                mne={mne}
-                onChange={onChangeMneItem}
-                onPaste={handlePaste}
-              />
-            );
-          })}
-        </StyledTopMneContainer>
-        <StyledBottomMneContainer>
-          {similarWordList.map((similarWord, index) => {
-            return (
-              <MneItemSelectedV2
-                key={index}
-                mne={similarWord}
-                index={index}
-                onClick={() => onClickSimilarWord(similarWord)}
-              />
-            );
-          })}
-        </StyledBottomMneContainer>
-      </StyledPwdContentContainer>
-      <StyledBottomContainer>
+    <ProcessLayout
+      onClickBack={onClickPre}
+      title={i18n.t("restoreWallet")}
+      bottomContent={
         <Button disable={btnClick} loading={btnLoading} onClick={goToCreate}>
           {i18n.t("next")}
         </Button>
-      </StyledBottomContainer>
-    </StyledPwdContainer>
+      }
+    >
+      <StyledTabWrapper>
+        <StyledTabContainer>
+          <StyledTabItem
+            $active={activeTab === IMPORT_TAB.WORDS_12}
+            onClick={() => onTabChange(IMPORT_TAB.WORDS_12)}
+          >
+            {i18n.t("words12")}
+          </StyledTabItem>
+          <StyledTabItem
+            $active={activeTab === IMPORT_TAB.WORDS_24}
+            onClick={() => onTabChange(IMPORT_TAB.WORDS_24)}
+          >
+            {i18n.t("words24")}
+          </StyledTabItem>
+          <StyledTabItem
+            $active={activeTab === IMPORT_TAB.PRIVATE_KEY}
+            onClick={() => onTabChange(IMPORT_TAB.PRIVATE_KEY)}
+          >
+            {i18n.t("privateKey")}
+          </StyledTabItem>
+          <StyledTabItem
+            $active={activeTab === IMPORT_TAB.KEYSTORE}
+            onClick={() => onTabChange(IMPORT_TAB.KEYSTORE)}
+          >
+            {i18n.t("keystore")}
+          </StyledTabItem>
+        </StyledTabContainer>
+      </StyledTabWrapper>
+
+      <StyledContentWrapper>
+        {isMnemonicTab && (
+          <>
+            <StyledMneTip>{i18n.t("inputSeed")}</StyledMneTip>
+            <StyledTopMneContainer>
+              {mneInputList.map((mne, index) => {
+                return (
+                  <MneItemV2
+                    key={index}
+                    useInput={true}
+                    colorStatus={true}
+                    index={index}
+                    mne={mne}
+                    onChange={onChangeMneItem}
+                    onPaste={handlePaste}
+                  />
+                );
+              })}
+            </StyledTopMneContainer>
+            <StyledBottomMneContainer>
+              {similarWordList.map((similarWord, index) => {
+                return (
+                  <MneItemSelectedV2
+                    key={index}
+                    mne={similarWord}
+                    index={index}
+                    onClick={() => onClickSimilarWord(similarWord)}
+                  />
+                );
+              })}
+            </StyledBottomMneContainer>
+          </>
+        )}
+
+        {isPrivateKeyTab && (
+          <>
+            <StyledMneTip>
+              {i18n.t("inputPrivateKey")}
+            </StyledMneTip>
+            <StyledPrivateKeyInput
+              placeholder={i18n.t("privateKeyPlaceholder")}
+              value={privateKeyInput}
+              onChange={(e) => setPrivateKeyInput(e.target.value)}
+            />
+          </>
+        )}
+
+        {isKeystoreTab && (
+          <>
+            <StyledMneTip>
+              {i18n.t("inputKeystore")}
+            </StyledMneTip>
+            <StyledPrivateKeyInput
+              placeholder={i18n.t("keystorePlaceholder")}
+              value={privateKeyInput}
+              onChange={(e) => setPrivateKeyInput(e.target.value)}
+            />
+            <StyledPasswordInputWrapper>
+              <Input
+                label={i18n.t("keystorePassword")}
+                onChange={(e) => setKeystorePassword(e.target.value)}
+                value={keystorePassword}
+                inputType="password"
+              />
+            </StyledPasswordInputWrapper>
+          </>
+        )}
+      </StyledContentWrapper>
+
+      <PopupModal
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
+        onRightBtnClick={onCloseDuplicateModal}
+        componentContent={
+          duplicateAccount && (
+            <StyledDuplicateTipContainer>
+              <p className="tip">{i18n.t("importSameAccount_1")}</p>
+              <p className="address">{duplicateAccount.address}</p>
+              <Trans
+                i18nKey={"importSameAccount_2"}
+                values={{ accountName: duplicateAccount.accountName || duplicateAccount.address }}
+                components={{
+                  b: <span className="accountRepeatName" />,
+                  click: <span className="accountRepeatClick" />,
+                }}
+              />
+            </StyledDuplicateTipContainer>
+          )
+        }
+        modalVisible={duplicateModalVisible}
+        onCloseModal={onCloseDuplicateModal}
+      />
+    </ProcessLayout>
   );
 };
+
+const StyledDuplicateTipContainer = styled.div`
+  text-align: left;
+  padding: 0;
+
+  .tip {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.5);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .address {
+    font-size: 14px;
+    color: #594af1;
+    font-weight: 500;
+    margin-bottom: 12px;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  .accountRepeatName {
+    color: #594af1;
+    font-weight: 500;
+  }
+  .accountRepeatClick {
+    color: #594af1;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+`;
 
 const StyledSelectedContainer = styled.div`
   background: rgba(0, 0, 0, 0.05);

@@ -2,7 +2,7 @@ import { Default_Network_List } from "@/constant/network";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { NET_CONFIG_VERSION } from "../../../../../config";
 import { getNodeNetworkID } from "../../../../background/api";
 import { extSaveLocal } from "../../../../background/extensionStorage";
@@ -29,7 +29,8 @@ import styles from "./index.module.scss";
 import { sendNetworkChangeMsg } from "@/utils/commonMsg";
 
 const NodeEditor = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const currentNode = useSelector((state) => state.network.currentNode);
   const allNodeList = useSelector((state) => state.network.allNodeList);
@@ -40,13 +41,13 @@ const NodeEditor = () => {
   const [errorTip, setErrorTip] = useState("");
 
   const { editItem, isEdit } = useMemo(() => {
-    let isEdit = history.location?.params?.isEdit;
-    let editItem = history.location?.params?.editItem ?? "";
+    let isEdit = location?.state?.isEdit;
+    let editItem = location?.state?.editItem ?? "";
     return {
       editItem,
       isEdit,
     };
-  }, [history]);
+  }, [location]);
 
   const [nodeName, setNodeName] = useState(() => {
     if (isEdit) {
@@ -161,7 +162,7 @@ const NodeEditor = () => {
       sendNetworkChangeMsg(newConfig.currentNode);
 
       setTimeout(() => {
-        history.goBack();
+        navigate(-1);
       }, 50);
     } else {
       let isEditCurrentNode = false;
@@ -204,7 +205,7 @@ const NodeEditor = () => {
       }
 
       setTimeout(() => {
-        history.goBack();
+        navigate(-1);
       }, 50);
     }
   }, [
@@ -273,7 +274,7 @@ const NodeEditor = () => {
       sendNetworkChangeMsg(newConfig.currentNode);
     }
     setReminderModalStatus(false);
-    history.goBack();
+    navigate(-1);
   }, [currentNode, customNodeList, editItem]);
 
   return (

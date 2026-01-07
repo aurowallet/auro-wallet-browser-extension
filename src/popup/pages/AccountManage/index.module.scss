@@ -1,4 +1,7 @@
 $bottomBtnGroupHeight: 80px;
+$primary-color: #594af1;
+$bg-secondary: #f9fafc;
+$border-light: rgba(0, 0, 0, 0.1);
 
 .customContainerClass {
     justify-content: space-between;
@@ -13,11 +16,11 @@ $bottomBtnGroupHeight: 80px;
     padding: 0px 20px;
 }
 .rowCommonContainer {
-    background: #f9fafc;
-    border-radius: 12px;
+    background: $bg-secondary;
+    border-radius: 10px;
     padding: 10px 20px 10px;
     margin-bottom: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 0.5px solid $border-light;
     
     height: 80px;
     display: flex;
@@ -101,7 +104,7 @@ $bottomBtnGroupHeight: 80px;
 }
 
 .rowSelected {
-    background: #594af1 !important;
+    background: $primary-color !important;
     border: none;
 }
 .accountNameSelected {
@@ -141,4 +144,135 @@ $bottomBtnGroupHeight: 80px;
     color: #594af1;
     margin: 0;
     cursor: pointer;
+}
+
+// Multi-Wallet Keyring Group Styles
+.keyringGroup {
+    margin-bottom: 20px;
+}
+
+.keyringHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 4px;
+}
+
+.keyringName {
+    font-weight: 600;
+    font-size: 14px;
+    color: #000000;
+    margin: 0;
+}
+
+.keyringMenu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    &:hover {
+        background: rgba(89, 74, 241, 0.05);
+        border-color: #594af1;
+    }
+    img {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+.keyringAccounts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.keyringAccountRow {
+    background: $bg-secondary;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border: 1px solid $border-light;
+    border-radius: 10px;
+    
+    &:hover {
+        border-color: rgba(89, 74, 241, 0.3);
+    }
+    
+    .rowLeft {
+        flex: 1;
+        
+        .accountName {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 1);
+            margin: 0;
+        }
+        
+        .address {
+            font-size: 12px;
+            color: rgba(128, 128, 128, 1);
+            margin: 2px 0px 0px;
+        }
+        
+        .accountBalance {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.8);
+            margin: 4px 0 0;
+        }
+    }
+    
+    .pointMenuContainer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        
+        &:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .pointMenu {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+.keyringAccountRowSelected {
+    background: $primary-color !important;
+    
+    .rowLeft {
+        .accountName, .accountBalance {
+            color: #ffffff !important;
+        }
+        .address {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+    }
+}
+
+
+
+.addWalletBtn {
+    background: #594af1;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 14px 20px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    margin: 20px 18px 0px;
+    
+    &:hover {
+        background: #4a3dd4;
+    }
 }

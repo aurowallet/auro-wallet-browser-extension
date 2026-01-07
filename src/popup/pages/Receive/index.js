@@ -3,7 +3,7 @@ import {QRCodeSVG} from 'qrcode.react';
 import { useCallback, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { MAIN_COIN_CONFIG, POWER_BY } from "../../../constant";
 import { copyText } from "../../../utils/browserUtils";
@@ -70,7 +70,8 @@ const StyledReceiveTip = styled.p`
 `;
 
 const ReceivePage = ({}) => {
-  let history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
   const accountInfo = useSelector((state) => state.accountInfo);
   const token = useSelector((state) => state.cache.nextTokenDetail);
   const currentAccount = useMemo(()=>{
@@ -78,10 +79,10 @@ const ReceivePage = ({}) => {
   },[accountInfo])
 
   const isShowToken = useMemo(() => {
-    let isFungibleToken = history.location.params?.isFungibleToken;
-    let isFromTokenPage = history.location.params?.isFromTokenPage;
+    let isFungibleToken = location.state?.isFungibleToken;
+    let isFromTokenPage = location.state?.isFromTokenPage;
     return isFungibleToken && isFromTokenPage;
-  }, []);
+  }, [location]);
 
   
   const { tokenSymbol } = useMemo(() => {
@@ -99,8 +100,8 @@ const ReceivePage = ({}) => {
   }, [i18n, currentAccount]);
 
   const onClickBack = useCallback(() => {
-    history.goBack();
-  }, [history]);
+    navigate(-1);
+  }, []);
 
   const { mainPart, lastPart } = useMemo(() => {
     const address = currentAccount.address;

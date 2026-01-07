@@ -25,11 +25,13 @@ import Toast from "@/popup/component/Toast";
 import { updateLedgerConnectStatus } from "@/reducers/ledger";
 import { copyText } from "@/utils/browserUtils";
 import { sendMsg, sendMsgV2 } from "@/utils/commonMsg";
+
+import ledgerManager from "@/utils/ledger";
 import {
-  getLedgerStatus,
-  requestSignDelegation,
-  requestSignPayment,
-} from "@/utils/ledger";
+  getPrintPresentationRequest,
+  getPrintVerifierIdentity,
+  getSimplifyCredentialData,
+} from "@/utils/o1jsUtils";
 import {
   addressSlice,
   addressValid,
@@ -41,12 +43,17 @@ import {
   toNonExponential,
   trimSpace,
 } from "@/utils/utils";
-import { getAccountUpdateCount, getZkAppFeePayerAddress, getZkFee, getZkInfo } from "@/utils/zkUtils";
+import {
+  getAccountUpdateCount,
+  getZkAppFeePayerAddress,
+  getZkFee,
+  getZkInfo,
+} from "@/utils/zkUtils";
+import TransactionAnalysis from "@/popup/component/TransactionAnalysis";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import cls from "classnames";
 import i18n from "i18next";
-import { PrettyPrinter } from "mina-attestations";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { serializeError } from "serialize-error";
@@ -63,7 +70,6 @@ import {
   parsedZekoFee,
 } from "../../../../utils/utils";
 import CountdownTimer from "../../../component/CountdownTimer";
-import { requestLedgerSignMessage } from "../../../../utils/ledger";
 import { TypeRowInfo } from "../TypeRowInfo";
 import styles from "./index.module.scss";
 
@@ -173,7 +179,6 @@ const SignView = ({
 
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
-  const [ledgerApp, setLedgerApp] = useState();
   const [selectedCredentials, setSelectedCredentials] = useState({});
 
   const isZeko = useMemo(() => {
@@ -321,11 +326,14 @@ const SignView = ({
     };
   }, [advanceFee, siteRecommendFee, isZeko, zekoPerFee, customFeeStatus]);
 
-  useEffect(async () => {
-    if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
-      setZekoPerFee(parsedZekoFee(fee));
-    }
+  useEffect(() => {
+    const fetchFee = async () => {
+      if (isZeko) {
+        const fee = await getZekoNetFee(zkAppUpdateCount + 1);
+        setZekoPerFee(parsedZekoFee(fee));
+      }
+    };
+    fetchFee();
   }, [isZeko, zkAppUpdateCount]);
 
   const onFeeTimerComplete = useCallback(async () => {
@@ -480,120 +488,146 @@ const SignView = ({
     setShowRawData(isSendZk && selectedTabIndex === 0);
   }, [isSendZk, selectedTabIndex]);
 
-  const ledgerTransfer = useCallback(
-    async (params, preLedgerApp) => {
-      const nextLedgerApp = preLedgerApp || ledgerApp;
-      if (nextLedgerApp) {
-        let signResult;
-        let postRes;
-        setConfirmModalStatus(true);
+  const handleLedgerSign = useCallback(
+    async (params) => {
+      const { status } = await ledgerManager.ensureConnect();
+      if (status !== LEDGER_STATUS.READY) {
+        setLedgerModalStatus(true);
+        return false;
+      }
+
+      setBtnLoading(true);
+      try {
+        let result;
+        let response;
         if (sendAction === DAppActions.mina_sendPayment) {
-          signResult = await requestSignPayment(
-            nextLedgerApp,
+          result = await ledgerManager.signPayment(
             params,
-            currentAccount.hdPath
-          );
-          const { signature, payload, error } = signResult;
-          if (error) {
-            setConfirmModalStatus(false);
-            Toast.info(error.message);
-            return;
-          }
-          postRes = await sendTx(payload, { rawSignature: signature }).catch(
-            (error) => error
+            currentAccount.hdPath || 0
           );
         } else if (sendAction === DAppActions.mina_sendStakeDelegation) {
-          signResult = await requestSignDelegation(
-            nextLedgerApp,
+          result = await ledgerManager.signDelegation(
             params,
-            currentAccount.hdPath
+            currentAccount.hdPath || 0
           );
-          const { signature, payload, error } = signResult;
-          if (error) {
-            setConfirmModalStatus(false);
-            Toast.info(error.message);
-            return;
-          }
-          postRes = await sendStakeTx(payload, {
-            rawSignature: signature,
-          }).catch((error) => error);
-        } else if (
-          sendAction === DAppActions.mina_signMessage ||
-          sendAction === DAppActions.mina_sign_JsonMessage
-        ) {
+        } else if (SIGN_MESSAGE_EVENT.includes(sendAction)) {
           let nextMsg = params.message;
           if (sendAction === DAppActions.mina_sign_JsonMessage) {
             nextMsg = JSON.stringify(params.message);
           }
-          signResult = await requestLedgerSignMessage(
-            nextLedgerApp,
+          result = await ledgerManager.signMessage(
             nextMsg,
-            currentAccount.hdPath
+            currentAccount.hdPath || 0
           );
-          const { signature, signedMessage, error } = signResult;
+          const { signature, signedMessage, error } = result;
           if (error) {
             setConfirmModalStatus(false);
             Toast.info(error.message);
             return;
           }
-          postRes = {
+          response = {
             data: signedMessage,
             publicKey: params.fromAddress,
             signature: signature,
           };
+        } else if (sendAction === DAppActions.mina_sendTransaction) {
+          return true;
+        } else {
+          Toast.info(i18n.t("notSupportNow"));
+          return false;
         }
 
-        setConfirmModalStatus(false);
-        onSubmitSuccess(postRes, params.nonce, "ledger");
-      }
-    },
-    [signParams, currentAccount, sendAction]
-  );
+        if (result?.rejected) {
+          Toast.info(i18n.t("ledgerRejected"));
+          return false;
+        }
+        if (result?.error) {
+          Toast.info(result.error.message || "Signature failed");
+          return false;
+        }
 
-  const clickNextStep = useCallback(
-    async (ledgerReady = false, preLedgerApp) => {
-      let ledgerTemp = preLedgerApp;
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        if (!ledgerReady) {
-          const ledger = await getLedgerStatus();
-          ledgerTemp = ledger.app;
-          dispatch(updateLedgerConnectStatus(ledger.status));
-          if (ledger.status !== LEDGER_STATUS.READY) {
-            setLedgerModalStatus(true);
+        if (result?.signature && result?.payload) {
+          const sendFn =
+            sendAction === DAppActions.mina_sendStakeDelegation
+              ? sendStakeTx
+              : sendTx;
+
+          response = await sendFn(result.payload, {
+            rawSignature: result.signature,
+          });
+
+          if (response.error) {
+            Toast.info(getRealErrorMsg(response.error) || i18n.t("postFailed"));
             return;
           }
-          setLedgerApp(ledger.app);
         }
+        setConfirmModalStatus(false);
+        onSubmitSuccess(response, params.nonce, "ledger");
+
+        return true;
+      } catch (err) {
+        Toast.info("Transaction failed");
+        return false;
+      } finally {
+        setBtnLoading(false);
       }
-      if (sendAction === DAppActions.mina_storePrivateCredential) {
-        const res = await onStoreInfo();
-        if (!res) {
+    },
+    [signParams, currentAccount, inferredNonce, nextFee]
+  );
+  const onStoreInfo = async () => {
+    const stringifiedCredential = JSON.stringify(credentialData);
+    let credentialToStore;
+
+    try {
+      setBtnLoading(true);
+      const credentialWitnessType = credentialData.witness.type;
+      if (credentialWitnessType === "unsigned") {
+        credentialToStore = stringifiedCredential;
+      } else {
+        const result = await sendSandboxMessage({
+          type: "validate-credential",
+          payload: stringifiedCredential,
+        });
+
+        if (result?.error || !result?.result) {
+          Toast.info(result.error?.message || "validate credential failed");
+          setBtnLoading(false);
           return;
         }
+        credentialToStore = result.result;
+      }
+
+      const newCredentialHash = createCredentialHash(credentialData);
+      const existingCredentials = await sendMsgV2({
+        action: CredentialMsg.get_credentials,
+        payload: currentAccount.address,
+      });
+      const isDuplicate = existingCredentials.some((existing) => {
+        const existingHash = createCredentialHash(
+          JSON.parse(existing.credential)
+        );
+        return existingHash === newCredentialHash;
+      });
+      if (isDuplicate) {
+        Toast.info(i18n.t("credentialExist"));
+        setBtnLoading(false);
+        return;
+      }
+
+      try {
+        const parsedResult = credentialToStore;
+        await sendMsgV2({
+          action: CredentialMsg.store_credential,
+          payload: {
+            credential: parsedResult,
+            address: currentAccount.address,
+          },
+        });
         sendMsg(
           {
             action: DAPP_ACTION_STORE_CREDENTIAL,
             payload: {
-              ...res,
-            },
-          },
-          async (params) => {
-            onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
-          }
-        );
-        return;
-      }
-      if (sendAction === DAppActions.mina_requestPresentation) {
-        const res = await onPresentation();
-
-        if (!res) {
-          return;
-        }
-        sendMsg(
-          {
-            action: DAPP_ACTION_REQUEST_PRESENTATION,
-            payload: {
-              presentation: res,
+              credential: parsedResult,
               resultOrigin: signParams?.site?.origin,
               id: signParams.id,
             },
@@ -602,86 +636,163 @@ const SignView = ({
             onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
           }
         );
-        return;
+        setBtnLoading(true);
+        return { success: parsedResult };
+      } catch (error) {
+        const err = serializeError(error);
+        Toast.info(
+          `Failed to store private credential: ${
+            err.message || error.message || JSON.stringify(error)
+          }`
+        );
       }
-      let { params } = signParams;
-      let validNonce = advanceNonce || zkAppNonce || inferredNonce;
-      let nonce = trimSpace(validNonce);
+    } catch (error) {
+      const err = serializeError(error);
+      Toast.info(
+        `Failed to store validate credential: ${
+          err.message || error.message || JSON.stringify(error)
+        }`
+      );
+    }
+  };
 
-      let toAddress = "";
-      let fee = "";
-      let memo = "";
-      if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
-        toAddress = trimSpace(params.to);
-        fee = trimSpace(nextFee);
-        memo = params?.feePayer?.memo || params?.memo || "";
-      }
-      let fromAddress = currentAccount.address;
-      let payload = {
-        fromAddress,
-        toAddress,
-        nonce,
-        currentAccount,
-        fee,
-        memo,
-      };
-      if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
-        payload.message = params.message;
-      }
-      if (sendAction === DAppActions.mina_sendPayment) {
-        let amount = trimSpace(params.amount);
-        amount = toNonExponential(new BigNumber(amount).toString());
-        payload.amount = amount;
-      }
-      if (isSendZk) {
-        payload.transaction = params.transaction;
-        memo = params.feePayer?.memo || "";
-        payload.feePayerAddress = getZkAppFeePayerAddress(params.transaction)
-        payload.zkOnlySign = zkOnlySign;
-      }
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        return ledgerTransfer(payload, ledgerTemp);
-      }
-      setBtnLoading(true);
-      let connectAction = QA_SIGN_TRANSACTION;
-      if (sendAction === DAppActions.mina_signFields) {
-        connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSACTION;
-      } else if (sendAction === DAppActions.mina_createNullifier) {
-        connectAction = WALLET_SEND_NULLIFIER;
-      }
-      if (sendAction === DAppActions.mina_sign_JsonMessage) {
-        payload.sendAction = DAppActions.mina_signMessage;
-        payload.message = JSON.stringify(payload.message);
-      } else {
-        payload.sendAction = sendAction;
-      }
+  const onPresentation = async () => {
+    const { presentationRequest, zkAppAccount } = presentationData;
+    const verifierIdentity =
+      presentationRequest.type === "zk-app"
+        ? zkAppAccount
+        : signParams?.site?.origin;
+
+    if (!selectedCredentials?.credential) {
+      Toast.info(i18n.t("credentalSelectTip"));
+      return;
+    }
+    setBtnLoading(true);
+    const result = await sendSandboxMessage({
+      type: "presentation",
+      payload: {
+        presentationRequest,
+        selectedCredentials: selectedCredentials.credential.credentialStr,
+        verifierIdentity,
+      },
+    });
+    if (result?.error || !result?.result) {
+      Toast.info(result.error?.message || "validate credential failed");
+      setBtnLoading(false);
+      return;
+    }
+    return result?.result;
+  };
+
+  const clickNextStep = useCallback(async () => {
+    if (sendAction === DAppActions.mina_storePrivateCredential) {
+      const res = await onStoreInfo();
+      if (!res) return;
       sendMsg(
-        {
-          action: connectAction,
-          payload,
-        },
-        (data) => {
-          setBtnLoading(false);
-          onSubmitSuccess(data, payload.nonce);
+        { action: DAPP_ACTION_STORE_CREDENTIAL, payload: { ...res } },
+        () => {
+          onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
         }
       );
-    },
-    [
+      return;
+    }
+
+    if (sendAction === DAppActions.mina_requestPresentation) {
+      const res = await onPresentation();
+      if (!res) return;
+      sendMsg(
+        {
+          action: DAPP_ACTION_REQUEST_PRESENTATION,
+          payload: {
+            presentation: res,
+            resultOrigin: signParams?.site?.origin,
+            id: signParams.id,
+          },
+        },
+        () => {
+          onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
+        }
+      );
+      return;
+    }
+
+    // ==================== 构造 payload（你原有逻辑完全保留） ====================
+    let { params } = signParams;
+    let validNonce = advanceNonce || zkAppNonce || inferredNonce;
+    let nonce = trimSpace(validNonce);
+
+    let toAddress = "";
+    let fee = "";
+    let memo = "";
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) === -1) {
+      toAddress = trimSpace(params.to);
+      fee = trimSpace(nextFee);
+      memo = params?.feePayer?.memo || params?.memo || "";
+    }
+
+    let fromAddress = currentAccount.address;
+    let payload = {
+      fromAddress,
+      toAddress,
+      nonce,
       currentAccount,
-      signParams,
-      advanceNonce,
-      nextFee,
-      onSubmitSuccess,
-      sendAction,
-      inferredNonce,
-      isSendZk,
-      zkOnlySign,
-      zkAppNonce,
-      selectedCredentials,
-      credentialData,
-      presentationData,
-    ]
-  );
+      fee,
+      memo,
+    };
+
+    if (SIGN_MESSAGE_EVENT.indexOf(sendAction) !== -1) {
+      payload.message = params.message;
+    }
+
+    if (sendAction === DAppActions.mina_sendPayment) {
+      let amount = trimSpace(params.amount);
+      amount = toNonExponential(new BigNumber(amount).toString());
+      payload.amount = amount;
+    }
+
+    if (isSendZk) {
+      payload.transaction = params.transaction;
+      memo = params.feePayer?.memo || "";
+      payload.feePayerAddress = getZkAppFeePayerAddress(params.transaction);
+      payload.zkOnlySign = zkOnlySign;
+    }
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      return handleLedgerSign(payload);
+    }
+
+    setBtnLoading(true);
+    let connectAction = QA_SIGN_TRANSACTION;
+    if (sendAction === DAppActions.mina_signFields) {
+      connectAction = WALLET_SEND_FIELDS_MESSAGE_TRANSACTION;
+    } else if (sendAction === DAppActions.mina_createNullifier) {
+      connectAction = WALLET_SEND_NULLIFIER;
+    }
+
+    if (sendAction === DAppActions.mina_sign_JsonMessage) {
+      payload.sendAction = DAppActions.mina_signMessage;
+      payload.message = JSON.stringify(payload.message);
+    } else {
+      payload.sendAction = sendAction;
+    }
+    sendMsg({ action: connectAction, payload }, (data) => {
+      setBtnLoading(false);
+      onSubmitSuccess(data, payload.nonce);
+    });
+  }, [
+    currentAccount,
+    signParams,
+    advanceNonce,
+    nextFee,
+    onSubmitSuccess,
+    sendAction,
+    inferredNonce,
+    isSendZk,
+    zkOnlySign,
+    zkAppNonce,
+    onStoreInfo,
+    onPresentation,
+    onRemoveTx,
+  ]);
 
   const checkLedgerSupport = useCallback(() => {
     if (Ledger_support_action.indexOf(sendAction) === -1) {
@@ -716,7 +827,7 @@ const SignView = ({
       return false;
     }
     return true;
-  }, []);
+  }, [sendAction]);
 
   const sendSandboxMessage = (payload) => {
     return new Promise((resolve, reject) => {
@@ -791,215 +902,91 @@ const SignView = ({
     });
   };
 
-  const onStoreInfo = async () => {
-    const stringifiedCredential = JSON.stringify(credentialData);
-    let credentialToStore;
-
-    try {
-      setBtnLoading(true);
-      const credentialWitnessType = credentialData.witness.type;
-      if (credentialWitnessType === "unsigned") {
-        credentialToStore = stringifiedCredential;
-      } else {
-        const result = await sendSandboxMessage({
-          type: "validate-credential",
-          payload: stringifiedCredential,
-        });
-
-        if (result?.error || !result?.result) {
-          Toast.info(result.error?.message || "validate credential failed");
-          setBtnLoading(false);
-          return;
-        }
-        credentialToStore = result.result;
-      }
-
-      const newCredentialHash = createCredentialHash(credentialData);
-      const existingCredentials = await sendMsgV2({
-        action: CredentialMsg.get_credentials,
-        payload: currentAccount.address,
-      });
-      const isDuplicate = existingCredentials.some((existing) => {
-        const existingHash = createCredentialHash(
-          JSON.parse(existing.credential)
-        );
-        return existingHash === newCredentialHash;
-      });
-      if (isDuplicate) {
-        Toast.info(i18n.t("credentialExist"));
-        setBtnLoading(false);
+  const onConfirm = useCallback(async () => {
+    let params = signParams.params;
+    if (
+      sendAction == DAppActions.mina_sendPayment ||
+      sendAction == DAppActions.mina_sendStakeDelegation
+    ) {
+      let toAddress = trimSpace(params.to);
+      if (!addressValid(toAddress)) {
+        Toast.info(i18n.t("sendAddressError"));
         return;
       }
-
-      try {
-        const parsedResult = credentialToStore;
-        await sendMsgV2({
-          action: CredentialMsg.store_credential,
-          payload: {
-            credential: parsedResult,
-            address: currentAccount.address,
-          },
-        });
-        sendMsg(
-          {
-            action: DAPP_ACTION_STORE_CREDENTIAL,
-            payload: {
-              credential: parsedResult,
-              resultOrigin: signParams?.site?.origin,
-              id: signParams.id,
-            },
-          },
-          async (params) => {
-            onRemoveTx(signParams.id, TX_CLICK_TYPE.CONFIRM);
-          }
-        );
-        setBtnLoading(true);
-        return { success: parsedResult };
-      } catch (error) {
-        const err = serializeError(error);
-        Toast.info(
-          `Failed to store private credential: ${
-            err.message || error.message || JSON.stringify(error)
-          }`
-        );
-      }
-    } catch (error) {
-      console.log(" onStoreInfo error", error);
-      const err = serializeError(error);
-      Toast.info(
-        `Failed to store validate credential: ${
-          err.message || error.message || JSON.stringify(error)
-        }`
-      );
     }
-  };
+    if (sendAction == DAppActions.mina_sendPayment) {
+      let amount = trimSpace(params.amount);
+      if (!isNumber(amount) || !new BigNumber(amount).gte(0)) {
+        Toast.info(i18n.t("amountError"));
+        return;
+      }
+    }
+    if (COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1) {
+      let validNonce = advanceNonce || zkAppNonce || inferredNonce;
+      let nonce = trimSpace(validNonce) || "";
+      if (nonce.length > 0 && !isNumber(nonce)) {
+        Toast.info(i18n.t("waitNonce"));
+        return;
+      }
+      let fee = trimSpace(nextFee);
+      if (fee.length > 0 && !isNumber(fee)) {
+        Toast.info(i18n.t("inputFeeError"));
+        return;
+      }
+      let amount = trimSpace(params.amount) || 0;
+      let maxAmount = new BigNumber(amount).plus(fee).toString();
+      if (
+        new BigNumber(maxAmount).gt(
+          mainTokenNetInfo?.tokenBaseInfo.showBalance && !zkOnlySign
+        )
+      ) {
+        Toast.info(i18n.t("balanceNotEnough"));
+        return;
+      }
+    }
+    const isEdge = /Edg\//i.test(navigator.userAgent);
+    const isFirefox = /Firefox/i.test(navigator.userAgent);
 
-  const onPresentation = async () => {
-    const { presentationRequest, zkAppAccount } = presentationData;
-    const verifierIdentity =
-      presentationRequest.type === "zk-app"
-        ? zkAppAccount
-        : signParams?.site?.origin;
-
-    if (!selectedCredentials?.credential) {
-      Toast.info(i18n.t("credentalSelectTip"));
+    if (sendAction === DAppActions.mina_requestPresentation && isEdge) {
+      Toast.info(i18n.t("notSupportNow"));
       return;
     }
-    setBtnLoading(true);
-    const result = await sendSandboxMessage({
-      type: "presentation",
-      payload: {
-        presentationRequest,
-        selectedCredentials: selectedCredentials.credential.credentialStr,
-        verifierIdentity,
-      },
-    });
-    if (result?.error || !result?.result) {
-      Toast.info(result.error?.message || "validate credential failed");
-      setBtnLoading(false);
+    if (
+      (sendAction === DAppActions.mina_requestPresentation ||
+        sendAction === DAppActions.mina_storePrivateCredential) &&
+      isFirefox
+    ) {
+      Toast.info(i18n.t("notSupportNow"));
       return;
     }
-    return result?.result;
-  };
-
-  const onConfirm = useCallback(
-    async (ledgerReady = false) => {
-      let params = signParams.params;
-      if (
-        sendAction == DAppActions.mina_sendPayment ||
-        sendAction == DAppActions.mina_sendStakeDelegation
-      ) {
-        let toAddress = trimSpace(params.to);
-        if (!addressValid(toAddress)) {
-          Toast.info(i18n.t("sendAddressError"));
-          return;
-        }
-      }
-      if (sendAction == DAppActions.mina_sendPayment) {
-        let amount = trimSpace(params.amount);
-        if (!isNumber(amount) || !new BigNumber(amount).gte(0)) {
-          Toast.info(i18n.t("amountError"));
-          return;
-        }
-      }
-      if (COMMON_TRANSACTION_ACTION.indexOf(sendAction) !== -1) {
-        let validNonce = advanceNonce || zkAppNonce || inferredNonce;
-        let nonce = trimSpace(validNonce) || "";
-        if (nonce.length > 0 && !isNumber(nonce)) {
-          Toast.info(i18n.t("waitNonce"));
-          return;
-        }
-        let fee = trimSpace(nextFee);
-        if (fee.length > 0 && !isNumber(fee)) {
-          Toast.info(i18n.t("inputFeeError"));
-          return;
-        }
-        let amount = trimSpace(params.amount) || 0;
-        let maxAmount = new BigNumber(amount).plus(fee).toString();
-        if (
-          new BigNumber(maxAmount).gt(
-            mainTokenNetInfo?.tokenBaseInfo.showBalance && !zkOnlySign
-          )
-        ) {
-          Toast.info(i18n.t("balanceNotEnough"));
-          return;
-        }
-      }
-      const isEdge = /Edg\//i.test(navigator.userAgent);
-      const isFirefox = /Firefox/i.test(navigator.userAgent);
-
-      if (sendAction === DAppActions.mina_requestPresentation && isEdge) {
-        Toast.info(i18n.t("notSupportNow"));
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      let support = checkLedgerSupport();
+      if (!support) {
         return;
       }
-      if (
-        (sendAction === DAppActions.mina_requestPresentation ||
-          sendAction === DAppActions.mina_storePrivateCredential) &&
-        isFirefox
-      ) {
-        Toast.info(i18n.t("notSupportNow"));
-        return;
-      }
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        let support = checkLedgerSupport();
-        if (!support) {
-          return;
-        }
-        if (!ledgerReady) {
-          const ledger = await getLedgerStatus();
-          setLedgerApp(ledger.app);
-          dispatch(updateLedgerConnectStatus(ledger.status));
-
-          if (ledger.status == LEDGER_STATUS.READY) {
-            clickNextStep(true, ledger.app);
-          } else {
-            setLedgerModalStatus(true);
-          }
-        } else {
-          clickNextStep();
-        }
-      } else {
-        dispatch(updateLedgerConnectStatus(""));
-        clickNextStep();
-      }
-    },
-    [
-      i18n,
-      currentAccount,
-      signParams,
-      mainTokenNetInfo,
-      advanceNonce,
-      nextFee,
-      clickNextStep,
-      sendAction,
-      inferredNonce,
-      zkAppNonce,
-      selectedCredentials,
-      credentialData,
-      presentationData,
-      zkOnlySign,
-    ]
-  );
+      clickNextStep();
+    } else {
+      dispatch(updateLedgerConnectStatus(""));
+      clickNextStep();
+    }
+  }, [
+    i18n,
+    currentAccount,
+    signParams,
+    mainTokenNetInfo,
+    advanceNonce,
+    nextFee,
+    clickNextStep,
+    sendAction,
+    inferredNonce,
+    zkAppNonce,
+    selectedCredentials,
+    credentialData,
+    presentationData,
+    zkOnlySign,
+    handleLedgerSign,
+    checkLedgerSupport,
+  ]);
 
   const onClickAdvance = useCallback(() => {
     setAdvanceStatus((state) => !state);
@@ -1212,14 +1199,14 @@ const SignView = ({
     return title;
   }, [sendAction, zkOnlySign]);
 
-  const onLedgerInfoModalConfirm = useCallback(
-    (ledger) => {
-      setLedgerApp(ledger.app);
+  const onLedgerInfoModalConfirm = useCallback(async () => {
+    const { status } = await ledgerManager.ensureConnect();
+    if (status === LEDGER_STATUS.READY) {
       setLedgerModalStatus(false);
       onConfirm(true);
-    },
-    [onConfirm]
-  );
+    }
+  }, [onConfirm]);
+
   const onResetNonce = useCallback(() => {
     setNonceType(ZkAppValueType.custom);
     setAdvanceNonce("");
@@ -1385,6 +1372,13 @@ const SignView = ({
             </>
           ) : (
             <></>
+          )}
+          {isSendZk && (
+            <TransactionAnalysis
+              zkappCommand={signParams?.params?.transaction}
+              currentAddress={currentAccount.address}
+              showMediumRisk={true}
+            />
           )}
           {tabList.length > 0 && (
             <div className={styles.accountRowTab}>
@@ -1586,8 +1580,7 @@ const CredentialView = ({
   const { displayCredentialData, tabList, tabInitId } = useMemo(() => {
     let displayCredentialData = credentialData;
     if (Object.keys(credentialData).length > 0) {
-      displayCredentialData =
-        PrettyPrinter.simplifyCredentialData(credentialData);
+      displayCredentialData = getSimplifyCredentialData(credentialData);
     }
 
     let tabList = [];
@@ -1750,11 +1743,8 @@ const PresentationView = ({
     const verifierIdentity =
       presentationRequest.type === "zk-app" ? zkAppAccount : origin;
     const formatted = [
-      PrettyPrinter.printPresentationRequest(presentationRequest),
-      PrettyPrinter.printVerifierIdentity(
-        presentationRequest.type,
-        verifierIdentity
-      ),
+      getPrintPresentationRequest(presentationRequest),
+      getPrintVerifierIdentity(presentationRequest.type, verifierIdentity),
     ].join("\n");
 
     let tabList = [];
@@ -2007,7 +1997,7 @@ const StyledTipWrapper = styled.div`
 `;
 const CredentialDisplay = ({ credential, matchingRequirements }) => {
   const witnessType = credential.witness?.type || "unknown";
-  const simplifiedData = PrettyPrinter.simplifyCredentialData(credential);
+  const simplifiedData = getSimplifyCredentialData(credential);
   const description = credential.metadata?.description;
 
   return (

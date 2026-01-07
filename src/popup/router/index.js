@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Route, Switch, useHistory } from 'react-router-dom';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 import MainRouter from '../pages';
 import AboutUs from '../pages/AboutUs';
 import AccountInfo from '../pages/AccountInfo';
@@ -14,13 +14,11 @@ import ApprovePage from '../pages/ApprovePage';
 import AutoLock from '../pages/AutoLock';
 import {BackupMnemonics} from '../pages/BackupMnemonics';
 import {BackupSuccess} from '../pages/BackupSuccess';
-import {BackupTips} from '../pages/BackupTips';
 import CreatePassword from '../pages/CreatePassword';
 import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
 import ImportKeypair from '../pages/ImportKeypair';
 import LanguageManagement from '../pages/LanguageManage';
-import LedgerConnect from '../pages/LedgerConnect';
 import { LedgerPage } from '../pages/LedgerPage';
 import {LockPage} from '../pages/Lock';
 import HomePage from '../pages/Main';
@@ -49,75 +47,76 @@ import TokenSignPage from '../pages/Send/tokenSign';
 import Preferences from '../pages/Preferences';
 import DevPage from '../pages/DevPage';
 import DevDetailPage from '../pages/DevPage/DevDetail';
+import VaultDebug from '../pages/DevPage/VaultDebug';
+import WalletDetails from '../pages/WalletDetails';
 
 
 
 
 export function getAllRouter() {
   return (
-    <HashRouter useHistory={useHistory} >
-      <Switch>
-        <Route path="/" exact component={MainRouter} />
-        <Route path="/create_password" component={CreatePassword} />
-        <Route path="/show_mnemonic" component={ShowMnemonic} />
-        <Route path="/backup_mnemonic" component={BackupMnemonics} />
-        <Route path="/backup_success" component={BackupSuccess} />
-        <Route path="/homepage" component={HomePage} />
-        <Route path="/send_page" component={SendPage} />
-        <Route path="/receive_page" component={ReceivePage} />
-        <Route path="/record_page" component={RecordPage} />
-        <Route path="/restore_account" component={RestoreAccount} />
-        <Route path="/import_account" component={ImportAccount} />
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<MainRouter />} />
+        <Route path="/create_password" element={<CreatePassword />} />
+        <Route path="/show_mnemonic" element={<ShowMnemonic />} />
+        <Route path="/backup_mnemonic" element={<BackupMnemonics />} />
+        <Route path="/backup_success" element={<BackupSuccess />} />
+        <Route path="/homepage" element={<HomePage />} />
+        <Route path="/send_page" element={<SendPage />} />
+        <Route path="/receive_page" element={<ReceivePage />} />
+        <Route path="/record_page" element={<RecordPage />} />
+        <Route path="/restore_account" element={<RestoreAccount />} />
+        <Route path="/import_account" element={<ImportAccount />} />
 
+        <Route path="/account_manage" element={<AccountManagePage />} />
+        <Route path="/account_info" element={<AccountInfo />} />
+        <Route path="/security_page" element={<SecurityPage />} />
+        <Route path="/language_management_page" element={<LanguageManagement />} />
+        <Route path="/reveal_seed_page" element={<RevealSeedPage />} />
+        <Route path="/show_privatekey_page" element={<ShowPrivateKeyPage />} />
 
-        <Route path="/account_manage" component={AccountManagePage} />
-        <Route path="/account_info" component={AccountInfo} />
-        <Route path="/security_page" component={SecurityPage} />
-        <Route path="/language_management_page" component={LanguageManagement} />
-        <Route path="/reveal_seed_page" component={RevealSeedPage} />
-        <Route path="/show_privatekey_page" component={ShowPrivateKeyPage} />
+        <Route path="/lock_page" element={<LockPage />} />
+        <Route path="/about_us" element={<AboutUs />} />
+        <Route path="/network_page" element={<NetworkPage />} />
+        <Route path="/account_name" element={<AccountName />} />
+        <Route path="/reset_password" element={<ResetPassword />} />
 
-        <Route path="/lock_page" component={LockPage} />
-        <Route path="/about_us" component={AboutUs} />
-        <Route path="/network_page" component={NetworkPage} />
-        <Route path="/account_name" component={AccountName} />
-        <Route path="/reset_password" component={ResetPassword} />
-        <Route path="/backup_tips" component={BackupTips} />
+        <Route path="/staking" element={<Staking />} />
+        <Route path="/staking_list" element={<StakingList />} />
+        <Route path="/staking_transfer" element={<StakingTransfer />} />
 
-        <Route path="/staking" component={Staking} />
-        <Route path="/staking_list" component={StakingList} />
-        <Route path="/staking_transfer" component={StakingTransfer} />
-        <Route path="/ledger_connect" component={LedgerConnect} />
+        <Route path="/import_keypair" element={<ImportKeypair />} />
 
-        <Route path="/import_keypair" component={ImportKeypair} />
+        <Route path="/setting" element={<Setting />} />
+        <Route path="/address_book" element={<AddressBook />} />
+        <Route path="/currency_unit" element={<CurrencyUnit />} />
+        <Route path="/register_page" element={<Welcome />} />
 
-        <Route path="/setting" component={Setting} />
-        <Route path="/address_book" component={AddressBook} />
-        <Route path="/currency_unit" component={CurrencyUnit} />
-        <Route path="/register_page" component={Welcome} />
-
-        <Route path="/request_sign" component={SignTransaction} />
-        <Route path="/approve_page" component={ApprovePage} />
-        <Route path="/token_sign" component={TokenSignPage} />
+        <Route path="/request_sign" element={<SignTransaction />} />
+        <Route path="/approve_page" element={<ApprovePage />} />
+        <Route path="/token_sign" element={<TokenSignPage />} />
         
-        <Route path={"/app_connection"} component={AppConnection}/>
-        <Route path={"/auto_lock"} component={AutoLock}/>
-        <Route path={"/address_editor"} component={AddressEditor}/>
-        <Route path={"/node_editor"} component={NodeEditor}/>
-        <Route path={"/ledger_page"} component={LedgerPage}/>
+        <Route path="/app_connection" element={<AppConnection />} />
+        <Route path="/auto_lock" element={<AutoLock />} />
+        <Route path="/address_editor" element={<AddressEditor />} />
+        <Route path="/node_editor" element={<NodeEditor />} />
+        <Route path="/ledger_page" element={<LedgerPage />} />
 
-        <Route path={"/createprocess"} component={CreateProcessPage}/>
-        <Route path={"/add_account"} component={AddAccount}/>
+        <Route path="/createprocess" element={<CreateProcessPage />} />
+        <Route path="/add_account" element={<AddAccount />} />
         
-        <Route path={"/token_detail"} component={TokenDetail}/>
+        <Route path="/token_detail" element={<TokenDetail />} />
 
-        <Route path="/credential_manage" component={CredentialManage} />
-        <Route path={"/credential_detail"} component={CredentialDetail}/>
+        <Route path="/credential_manage" element={<CredentialManage />} />
+        <Route path="/credential_detail" element={<CredentialDetail />} />
 
-        <Route path="/preferences_page" component={Preferences} />
-        <Route path="/devpage" component={DevPage} />
-        <Route path="/dev_detail_page" component={DevDetailPage} />
-      </Switch>
+        <Route path="/preferences_page" element={<Preferences />} />
+        <Route path="/devpage" element={<DevPage />} />
+        <Route path="/dev_detail_page" element={<DevDetailPage />} />
+        <Route path="/vault_debug" element={<VaultDebug />} />
+        <Route path="/wallet_details" element={<WalletDetails />} />
+      </Routes>
     </HashRouter>
   );
 }

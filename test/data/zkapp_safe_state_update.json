@@ -1,0 +1,84 @@
+{
+  "description": "No risk - Safe state update (appState change only)",
+  "currentAddress": "B62qixTyDVYV31LaU6GNToHXm9GfXoYfiHAvm8rNpnaw3QKytWQDzAW",
+  "expectedRisk": "none",
+  "zkappCommand": {
+    "feePayer": {
+      "body": {
+        "publicKey": "B62qixTyDVYV31LaU6GNToHXm9GfXoYfiHAvm8rNpnaw3QKytWQDzAW",
+        "fee": "0",
+        "validUntil": null,
+        "nonce": "4"
+      },
+      "authorization": "7mWxjLYgbJUkZNcGouvhVj5tJ8yu9hoexb9ntvPK8t5LHqzmrL6QJjjKtf5SgmxB4QWkDw7qoMMbbNGtHVpsbJHPyTy2EzRQ"
+    },
+    "accountUpdates": [
+      {
+        "body": {
+          "publicKey": "B62qo7ffG1Bcj1J3DNncrzA5xvJu5xvrpXqa5ZK6BcajhL6Pcezs59x",
+          "tokenId": "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf",
+          "update": {
+            "appState": ["456", null, null, null, null, null, null, null],
+            "delegate": null,
+            "verificationKey": null,
+            "permissions": null,
+            "zkappUri": null,
+            "tokenSymbol": null,
+            "timing": null,
+            "votingFor": null
+          },
+          "balanceChange": { "magnitude": "0", "sgn": "Positive" },
+          "incrementNonce": false,
+          "events": [],
+          "actions": [],
+          "callData": "16283661922735239685520617525672095012882847429483703086970297309977734835528",
+          "callDepth": 0,
+          "preconditions": {
+            "network": {
+              "snarkedLedgerHash": null,
+              "blockchainLength": null,
+              "minWindowDensity": null,
+              "totalCurrency": null,
+              "globalSlotSinceGenesis": null,
+              "stakingEpochData": {
+                "ledger": { "hash": null, "totalCurrency": null },
+                "seed": null,
+                "startCheckpoint": null,
+                "lockCheckpoint": null,
+                "epochLength": null
+              },
+              "nextEpochData": {
+                "ledger": { "hash": null, "totalCurrency": null },
+                "seed": null,
+                "startCheckpoint": null,
+                "lockCheckpoint": null,
+                "epochLength": null
+              }
+            },
+            "account": {
+              "balance": null,
+              "nonce": null,
+              "receiptChainHash": null,
+              "delegate": null,
+              "state": [null, null, null, null, null, null, null, null],
+              "actionState": null,
+              "provedState": null,
+              "isNew": null
+            },
+            "validWhile": null
+          },
+          "useFullCommitment": false,
+          "implicitAccountCreationFee": false,
+          "mayUseToken": { "parentsOwnToken": false, "inheritFromParent": false },
+          "authorizationKind": {
+            "isSigned": false,
+            "isProved": true,
+            "verificationKeyHash": "10151822083368864595534665951255134082782148675629435893642357746200021481604"
+          }
+        },
+        "authorization": { "proof": "==", "signature": null }
+      }
+    ],
+    "memo": "E4YM2vTHhWEg66xpj52JErHUBU4pZ1yageL4TVDDpTTSsv8mK6YaH"
+  }
+}

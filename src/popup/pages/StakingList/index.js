@@ -1,9 +1,8 @@
 import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
-import 'react-circular-progressbar/dist/styles.css';
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ValidatorsLaunch } from "../../../constant";
 import { addressSlice, showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
@@ -13,8 +12,8 @@ import { NetworkID_MAP } from "@/constant/network";
 
 const StakingList = ({ }) => {
 
-  const history = useHistory()
-  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
   const networkID = useSelector(state => state.network.currentNode.networkID)
   const stakingList = useSelector(state => {
     if(networkID === NetworkID_MAP.mainnet){
@@ -27,7 +26,7 @@ const StakingList = ({ }) => {
   const [currentSelectAddress, setCurrentSelectAddress] = useState("")
 
   const [fromPage,] = useState(() => {
-    let fromPage = history.location?.params?.fromPage ?? "";
+    let fromPage = location?.state?.fromPage ?? "";
     return fromPage
   })
 
@@ -38,24 +37,11 @@ const StakingList = ({ }) => {
 
   const onClickRow = useCallback((nodeItem) => {
     setCurrentSelectAddress(nodeItem.nodeAddress)
-    let nextParams = {
-      pathname: "/staking_transfer",
-      params: nodeItem
-    }
-    if (fromPage === 'stakingTransfer') {
-      history.replace(nextParams);
-    } else {
-      history.push(nextParams);
-    }
+    navigate("/staking_transfer", { state: nodeItem, replace: fromPage === 'stakingTransfer' });
   }, [fromPage])
 
   const onClickManual = useCallback(() => {
-    history.push({
-      pathname: "/staking_transfer",
-      params: {
-        menuAdd: true
-      }
-    });
+    navigate("/staking_transfer", { state: { menuAdd: true } });
   }, [])
 
   return (<CustomView

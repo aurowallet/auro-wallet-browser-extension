@@ -2,7 +2,7 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { WALLET_CREATE_PWD } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import BottomBtn from "../../component/BottomBtn";
@@ -14,7 +14,7 @@ import { PasswordValidationList } from "../../../utils/utils";
 
 const CreatePassword = () => {
 
-  const history = useHistory()
+  const navigate = useNavigate()
   const welcomeNextRoute = useSelector(state => state.cache.welcomeNextRoute)
 
   const [inputPwd, setInputPwd] = useState("")
@@ -78,12 +78,7 @@ const CreatePassword = () => {
     }, (res) => { })
     let nextRoute = welcomeNextRoute
 
-    history.push({
-      pathname: nextRoute,
-      params: {
-        "pwd": confirmPwd,
-      },
-    })
+    navigate(nextRoute, { state: { pwd: confirmPwd } })
   }, [welcomeNextRoute, confirmPwd])
 
   const onPwdConfirmInput = useCallback((e) => {

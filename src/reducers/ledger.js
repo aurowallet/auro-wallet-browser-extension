@@ -1,3 +1,5 @@
+import { LEDGER_STATUS } from "@/constant/commonType";
+
 const UPDATE_LEDGER_CONNECT_STATUS = "UPDATE_LEDGER_CONNECT_STATUS";
 
 /**
@@ -12,7 +14,7 @@ export function updateLedgerConnectStatus(status) {
 }
 
 const initState = {
-  ledgerConnectStatus: "",
+  ledgerConnectStatus: LEDGER_STATUS.LEDGER_DISCONNECT,
 };
 
 const ledger = (state = initState, action) => {

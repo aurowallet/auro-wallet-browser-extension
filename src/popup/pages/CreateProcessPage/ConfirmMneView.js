@@ -4,6 +4,7 @@ import {
 } from "@/constant/msgTypes";
 import Button from "@/popup/component/Button";
 import { MneItemV2 } from "@/popup/component/MneItem";
+import ProcessLayout from "@/popup/component/ProcessLayout";
 import Toast from "@/popup/component/Toast";
 import { updateCurrentAccount } from "@/reducers/accountReducer";
 import {
@@ -15,28 +16,6 @@ import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { BackView } from ".";
-
-const StyledPwdContainer = styled.div`
-  margin-top: 20px;
-`;
-const StyledPwdContentContainer = styled.div`
-  padding: 40px;
-`;
-const StyledProcessTitle = styled.div`
-  color: var(--Black, #000);
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 40px;
-`;
-
-const StyledBottomContainer = styled.div`
-  position: absolute;
-  width: 600px;
-  bottom: 30px;
-  left: 50%;
-  transform: translate(-50%);
-`;
 
 const StyledMneTip = styled.div`
   font-weight: 500;
@@ -61,7 +40,6 @@ const StyledBottomMneContainer = styled.div`
   flex-wrap: wrap;
   gap: 12px 20px;
 `;
-
 
 export const ConfirmMneView = ({ onClickPre, onClickNext }) => {
   const [currentMneLength, setCurrentMneLength] = useState(12);
@@ -189,49 +167,46 @@ export const ConfirmMneView = ({ onClickPre, onClickNext }) => {
   }, [mnemonicRandomList, i18n, onClickNext]);
 
   return (
-    <StyledPwdContainer>
-      <BackView onClickBack={onClickPre} />
-      <StyledPwdContentContainer>
-        <StyledProcessTitle>
-          {i18n.t("backupMnemonicPhrase")}
-        </StyledProcessTitle>
-        <StyledMneTip>{i18n.t("confirmMneTip")}</StyledMneTip>
-        <StyledTopMneContainer>
-          {mneSelectList.map((mne, index) => {
-            return (
-              <MneItemV2
-                key={index}
-                mne={mne?.name || ""}
-                colorStatus={!mne}
-                index={index}
-                onClick={() => onClickTopItem(mne, index)}
-                canClick={true}
-              />
-            );
-          })}
-        </StyledTopMneContainer>
-        <StyledBottomMneContainer>
-          {mnemonicRandomList.map((mne, index) => {
-            if (mne.selected) {
-              return null;
-            }
-            return (
-              <MneItemSelectedV2
-                key={index}
-                mne={mne.name}
-                index={index}
-                onClick={() => onClickBottomItem(mne, index)}
-              />
-            );
-          })}
-        </StyledBottomMneContainer>
-      </StyledPwdContentContainer>
-      <StyledBottomContainer>
+    <ProcessLayout
+      onClickBack={onClickPre}
+      title={i18n.t("backupMnemonicPhrase")}
+      bottomContent={
         <Button disable={!btnClick} loading={loadingStatus} onClick={goToNext}>
           {i18n.t("show_seed_button")}
         </Button>
-      </StyledBottomContainer>
-    </StyledPwdContainer>
+      }
+    >
+      <StyledMneTip>{i18n.t("confirmMneTip")}</StyledMneTip>
+      <StyledTopMneContainer>
+        {mneSelectList.map((mne, index) => {
+          return (
+            <MneItemV2
+              key={index}
+              mne={mne?.name || ""}
+              colorStatus={!mne}
+              index={index}
+              onClick={() => onClickTopItem(mne, index)}
+              canClick={true}
+            />
+          );
+        })}
+      </StyledTopMneContainer>
+      <StyledBottomMneContainer>
+        {mnemonicRandomList.map((mne, index) => {
+          if (mne.selected) {
+            return null;
+          }
+          return (
+            <MneItemSelectedV2
+              key={index}
+              mne={mne.name}
+              index={index}
+              onClick={() => onClickBottomItem(mne, index)}
+            />
+          );
+        })}
+      </StyledBottomMneContainer>
+    </ProcessLayout>
   );
 };
 

@@ -13,11 +13,13 @@ import {
 } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
-import { checkLedgerConnect, getLedgerStatus, requestAccount } from "../../../utils/ledger";
+import ledgerManager from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
 import Button from "../../component/Button";
 import Input from "../../component/Input";
-import Tabs, { TAB_TYPE } from "../../component/Tabs";
+import ProcessLayout from "../../component/ProcessLayout";
+import StepTabs from "../../component/StepTabs";
+import { CreateResultView } from "../CreateProcessPage/CreateResultView";
 import styles from "./index.module.scss";
 import { LedgerModal } from "./LedgerModal";
 
@@ -29,7 +31,7 @@ const Tip_Type = {
 
   grantSuccess: "grantSuccess",
 };
-export const LedgerPage = ({}) => {
+export const LedgerPage = ({ onClickPre }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);
   const [isShowSuccessTip, setIsShowSuccessTip] = useState(false);
@@ -61,56 +63,33 @@ export const LedgerPage = ({}) => {
     });
   }, []);
 
-  const onClickConnect = useCallback(
-    async (permissionsCheck = true) => {
-      if (isShowSuccessTip) {
-        window.close();
+  const onClickConnect = useCallback(() => {
+    if (isShowSuccessTip) {
+      window.close();
+      return;
+    }
+    setTipType(Tip_Type.init);
+    getWalletLockStatus().then((ok) => {
+      if (!ok) {
+        setTipType(Tip_Type.openLockStatus);
         return;
       }
-      setTipType(Tip_Type.init);
-      const walletLockStatus = await getWalletLockStatus();
-      if (!walletLockStatus) {
-        setTipType(Tip_Type.openLockStatus);
-        return false;
-      }
-      try {
-        const { ledgerApp, manualConnected, error, openApp } =
-          await checkLedgerConnect(permissionsCheck);
-        if (error) {
-          setTipType(Tip_Type.openLedger);
-          return false;
-        }
-        if (ledgerApp) {
-          const result = await ledgerApp.getAppName();
-          if (result.name === "Mina") {
-            if (permissionsCheck && !isLedgerPermission) {
-              onClickNextTab();
-            }
-            if (isLedgerPermission) {
-              setIsShowSuccessTip(true);
-              setTipType(Tip_Type.grantSuccess);
-            }
-            return ledgerApp;
-          } else {
-            setTipType(Tip_Type.openLedgerApp);
-            return false;
-          }
-        }
-        if (openApp) {
-          setTipType(Tip_Type.openLedgerApp);
-          return false;
-        }
 
-        if (manualConnected) {
+      ledgerManager.requestConnect().then(({ status }) => {
+        if (status === LEDGER_STATUS.READY) {
+          if (!isLedgerPermission) onClickNextTab();
+          if (isLedgerPermission) {
+            setIsShowSuccessTip(true);
+            setTipType(Tip_Type.grantSuccess);
+          }
+        } else if (status === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
+          setTipType(Tip_Type.openLedgerApp);
+        } else {
           setTipType(Tip_Type.openLedger);
         }
-        return false;
-      } catch (error) {
-        setTipType(Tip_Type.openLedger);
-      }
-    },
-    [isShowSuccessTip, isLedgerPermission]
-  );
+      });
+    });
+  }, [isShowSuccessTip, isLedgerPermission, onClickNextTab]);
   const onClickImport = useCallback(() => {
     onClickNextTab();
   }, []);
@@ -137,15 +116,16 @@ export const LedgerPage = ({}) => {
     }
     return msg;
   }, [tipType, i18n]);
-
+ 
   return (
     <div className={styles.outerContainer}>
       <div className={styles.innerContainer}>
-        <Tabs selected={tabIndex} tabType={TAB_TYPE.STEP}>
+        <StepTabs selected={tabIndex}>
           <div className={styles.innerContent} id={1}>
             <LedgerConnectView
               isLedgerPermission={isLedgerPermission}
               onClickNext={onClickConnect}
+              onClickPre={onClickPre}
               tipContent={tipContent}
               isShowSuccessTip={isShowSuccessTip}
             />
@@ -154,6 +134,7 @@ export const LedgerPage = ({}) => {
             <div className={styles.innerContent} id={2}>
               <AccountNameView
                 onClickNext={onClickImport}
+                onClickPre={onClickPre}
                 tipContent={tipContent}
                 onClickConnect={onClickConnect}
               />
@@ -161,10 +142,15 @@ export const LedgerPage = ({}) => {
           )}
           {!isLedgerPermission && (
             <div className={styles.innerContent} id={3}>
-              <SuccessView onClickNext={onClickDone} />
+              <CreateResultView
+                onClickDone={onClickDone}
+                contents={[i18n.t("ledgerSuccess"), i18n.t("returnEx")]}
+                showFollowUs={false}
+                showExtTip={false}
+              />
             </div>
           )}
-        </Tabs>
+        </StepTabs>
       </div>
     </div>
   );
@@ -172,6 +158,7 @@ export const LedgerPage = ({}) => {
 
 const LedgerConnectView = ({
   onClickNext,
+  onClickPre,
   tipContent,
   isShowSuccessTip,
   isLedgerPermission,
@@ -185,8 +172,24 @@ const LedgerConnectView = ({
     return i18n.t(txt);
   }, [isShowSuccessTip, i18n]);
   return (
-    <div className={styles.viewOuter}>
-      <div className={styles.viewTitle}>{viewTitle}</div>
+    <ProcessLayout
+      onClickBack={onClickPre}
+      title={viewTitle}
+      bottomContent={
+        <>
+          {tipContent && (
+            <div
+              className={cls(styles.accountWarningTip, {
+                [styles.ledgerSuccessTip]: isShowSuccessTip,
+              })}
+            >
+              {tipContent}
+            </div>
+          )}
+          <Button onClick={onClickNext}>{btnTxt}</Button>
+        </>
+      }
+    >
       <div className={styles.viewTip}>{i18n.t("selectHardware")}</div>
       <img src="/img/ledgerBorderLogo.svg" className={styles.ledgerIcon} />
       <div className={styles.viewTip}>{i18n.t("getStarted")}</div>
@@ -207,22 +210,15 @@ const LedgerConnectView = ({
           />
         </span>
       </div>
-      <div className={cls(styles.bottomContainer)}>
-        {tipContent && (
-          <div
-            className={cls(styles.accountWarningTip, {
-              [styles.ledgerSuccessTip]: isShowSuccessTip,
-            })}
-          >
-            {tipContent}
-          </div>
-        )}
-        <Button onClick={onClickNext}>{btnTxt}</Button>
-      </div>
-    </div>
+    </ProcessLayout>
   );
 };
-const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
+const AccountNameView = ({
+  onClickNext,
+  onClickPre,
+  tipContent,
+  onClickConnect,
+}) => {
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -257,67 +253,68 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
   const dispatch = useDispatch();
 
   const onConfirm = useCallback(async () => {
-    const ledgerApp = await onClickConnect(false);
-    if (typeof ledgerApp === "boolean") {
+    let nextIndex = accountIndex;
+    if (nextIndex <= 0) {
+      nextIndex = 0;
+    }
+    const { status } = await ledgerManager.ensureConnect();
+
+    if (status !== LEDGER_STATUS.READY) {
+      setErrorMsg(i18n.t("pleaseOpenInLedger"));
       return;
     }
     setTipModalVisible(true);
-    if (ledgerApp) {
-      let nextIndex = accountIndex;
-      if (nextIndex <= 0) {
-        nextIndex = 0;
-      }
-      const { publicKey, rejected } = await requestAccount(
-        ledgerApp,
-        nextIndex
-      );
+    try {
+      const { publicKey, rejected } = await ledgerManager.getAddress(nextIndex);
       setTipModalVisible(false);
-      if(!publicKey){
-        setErrorMsg(i18n.t("ledgerConnectOpenTip"));
+      if (rejected || !publicKey) {
+        setErrorMsg(
+          rejected ? i18n.t("ledgerRejected") : "Failed to get address"
+        );
         return;
       }
-      if (rejected) {
-        setErrorMsg(i18n.t("ledgerRejected"));
-      } else {
-        sendMsg(
-          {
-            payload: {
-              address: publicKey,
-              accountIndex: nextIndex,
-              accountName: accountName || placeholderText,
-            },
-            action: WALLET_IMPORT_LEDGER,
+      sendMsg(
+        {
+          action: WALLET_IMPORT_LEDGER,
+          payload: {
+            address: publicKey,
+            accountIndex: nextIndex,
+            accountName: accountName || placeholderText,
           },
-          (account) => {
-            if (account.error) {
-              if (account.type === "local") {
-                setErrorMsg(i18n.t(account.error));
+        },
+        (res) => {
+          if (res.error) {
+            if (res.error) {
+              if (res.type === "local") {
+                setErrorMsg(i18n.t(res.error));
               } else {
-                setErrorMsg(account.error);
+                setErrorMsg(res.error);
               }
-            } else {
-              sendMsg(
-                {
-                  action: DAPP_CHANGE_CONNECTING_ADDRESS,
-                  payload: {
-                    address: currentAddress,
-                    currentAddress: account.address,
-                  },
-                },
-                (status) => {}
-              );
-              dispatch(updateCurrentAccount(account));
-              sendMsg({
-                action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,
-                payload: account.address,
-              });
-              onClickNext && onClickNext();
             }
+          } else {
+            sendMsg(
+              {
+                action: DAPP_CHANGE_CONNECTING_ADDRESS,
+                payload: {
+                  address: currentAddress,
+                  currentAddress: res.address,
+                },
+              },
+              (status) => {}
+            );
+            dispatch(updateCurrentAccount(res));
+            sendMsg({
+              action: ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT,
+              payload: res.address,
+            });
+            onClickNext && onClickNext();
           }
-        );
-      }
+        }
+      );
+    } catch (err) {
+      setErrorMsg("Connection lost", err);
     }
-  }, [onClickNext, accountIndex, placeholderText, accountName]);
+  }, [accountIndex, accountName, placeholderText, onClickNext, currentAddress]);
   const onNameInput = useCallback((e) => {
     let value = e.target.value;
     if (value.length <= 16) {
@@ -350,8 +347,16 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
     setAccountIndex(accountIndex - 1);
   }, [accountIndex]);
   return (
-    <div className={styles.viewOuter}>
-      <div className={styles.viewTitle}>{i18n.t("accountName")}</div>
+    <ProcessLayout
+      onClickBack={onClickPre}
+      title={i18n.t("accountName")}
+      bottomContent={
+        <>
+          {errorMsg && <div className={styles.accountWarningTip}>{errorMsg}</div>}
+          <Button onClick={onConfirm}>{i18n.t("import")}</Button>
+        </>
+      }
+    >
       <div className={styles.viewTip}>{i18n.t("inputAccountName")}</div>
       <div className={styles.inputContainer}>
         <Input
@@ -361,7 +366,7 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
           placeholder={placeholderText}
         />
       </div>
-      <div className={styles.viewTip}>{i18n.t("selectHDPath")}</div>
+      <div className={styles.viewTip} style={{ marginTop: "20px" }}>{i18n.t("selectHDPath")}</div>
       <div className={styles.accountNameTip}>
         <Trans
           i18nKey={"ledgerSelectPathTip"}
@@ -385,12 +390,8 @@ const AccountNameView = ({ onClickNext, tipContent, onClickConnect }) => {
         onAdd={onAdd}
         onMinus={onMinus}
       />
-      <div className={cls(styles.bottomContainer)}>
-        {errorMsg && <div className={styles.accountWarningTip}>{errorMsg}</div>}
-        <Button onClick={onConfirm}>{i18n.t("import")}</Button>
-      </div>
       <LedgerModal modalVisible={tipModalVisible} />
-    </div>
+    </ProcessLayout>
   );
 };
 
@@ -448,16 +449,3 @@ const InputNumber = ({
   );
 };
 
-const SuccessView = ({ onClickNext }) => {
-  return (
-    <div className={cls(styles.viewOuter, styles.innerContent)}>
-      <img src="/img/backup_success.svg" />
-      <p className={styles.importSuccess}>{i18n.t("success")}</p>
-      <p className={styles.importContent}>{i18n.t("ledgerSuccess")}</p>
-      <p className={styles.importContent}>{i18n.t("returnEx")}</p>
-      <div className={cls(styles.bottomContainer)}>
-        <Button onClick={onClickNext}>{i18n.t("done")}</Button>
-      </div>
-    </div>
-  );
-};

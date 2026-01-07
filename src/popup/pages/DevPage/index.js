@@ -1,19 +1,14 @@
 import i18n from "i18next";
 import { useCallback } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
 
 const DevPage = ({}) => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const goToPage = useCallback((nextRoute, { pageType, title }) => {
-    const params = { pageType: pageType, title: title };
-
-    history.push({
-      pathname: nextRoute,
-      params: params,
-    });
+    navigate(nextRoute, { state: { pageType, title } });
   }, []);
 
   return (
@@ -21,7 +16,7 @@ const DevPage = ({}) => {
       <RowItem
         title={i18n.t("history")}
         onClickItem={() => {
-          goToPage("dev_detail_page", {
+          goToPage("/dev_detail_page", {
             pageType: "transaction",
             title: i18n.t("history"),
           });
@@ -30,7 +25,7 @@ const DevPage = ({}) => {
       <RowItem
         title={i18n.t("pendingTx")}
         onClickItem={() => {
-          goToPage("dev_detail_page", {
+          goToPage("/dev_detail_page", {
             pageType: "pendingTx",
             title: i18n.t("pendingTx"),
           });
@@ -39,7 +34,7 @@ const DevPage = ({}) => {
       <RowItem
         title={"zkApp-" + i18n.t("pendingTx")}
         onClickItem={() => {
-          goToPage("dev_detail_page", {
+          goToPage("/dev_detail_page", {
             pageType: "pendingZkTx",
             title: "zkApp-" + i18n.t("pendingTx"),
           });
@@ -48,10 +43,16 @@ const DevPage = ({}) => {
       <RowItem
         title={i18n.t("tokens")}
         onClickItem={() => {
-          goToPage("dev_detail_page", {
+          goToPage("/dev_detail_page", {
             pageType: "balance",
             title: i18n.t("tokens"),
           });
+        }}
+      />
+      <RowItem
+        title={"Vault debug"}
+        onClickItem={() => {
+          goToPage("/vault_debug", {});
         }}
       />
     </CustomView>

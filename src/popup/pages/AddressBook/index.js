@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getLocal } from "../../../background/localStorage";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
 import { updateAddressDetail } from "../../../reducers/cache";
@@ -12,7 +12,7 @@ import styles from "./index.module.scss";
 
 const AddressBook = ({ }) => {
 
-    const history = useHistory()
+    const navigate = useNavigate()
     const dispatch = useDispatch()
 
     const addressBookFrom = useSelector(state => state.cache.addressBookFrom)
@@ -45,20 +45,16 @@ const AddressBook = ({ }) => {
 
 
     const onAddAddress = useCallback(() => {
-        history.push({
-            pathname: "address_editor",
-            params: { editorType: AddressEditorType.add }
-        })
+        navigate("/address_editor", { state: { editorType: AddressEditorType.add } })
     }, [])
 
     const onClickAddressItem = useCallback((localAddress, editIndex) => {
         if (addressBookFrom) {
-            history.goBack()
+            navigate(-1)
             dispatch(updateAddressDetail(localAddress))
         } else {
-            history.push({
-                pathname: "address_editor",
-                params: {
+            navigate("/address_editor", {
+                state: {
                     editorType: AddressEditorType.edit,
                     editItem: localAddress,
                     editIndex: editIndex

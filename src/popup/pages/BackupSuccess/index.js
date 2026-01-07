@@ -1,16 +1,16 @@
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
-import { useHistory } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import BottomBtn from "../../component/BottomBtn";
 import styles from "./index.module.scss";
 
 export const BackupSuccess = () => {
-  let history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
   const {
     showTip
   } = useMemo(() => {
-    let location = history.location
-    let type = location?.params?.type ?? "";
+    let type = location?.state?.type ?? "";
 
     let showTip = ""
     if (type === "restore") {
@@ -24,11 +24,11 @@ export const BackupSuccess = () => {
     return {
       showTip
     }
-  }, [history])
+  }, [location])
 
   const goToNext = useCallback(() => {
-    history.push("/homepage")
-  }, [history])
+    navigate("/homepage")
+  }, [navigate])
 
   return (
     <div className={styles.container}>
