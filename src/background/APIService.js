@@ -55,6 +55,7 @@ import {
   isV2Vault,
   KEYRING_TYPE,
   sortKeyringsByCreatedAt,
+  getDefaultHDWalletName
 } from "../constant/vaultTypes";
 import { normalizeVault, validateVault } from "./vaultMigration";
 
