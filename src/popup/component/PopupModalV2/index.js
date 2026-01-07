@@ -147,10 +147,14 @@ export const PopupModalV2 = ({
           )}
         </StyledTopContainer>
         <StyledBottomContainer>
-          <StyledLeftBtnWrapper onClick={onLeftBtnClick}>
-            {leftBtnContent}
-          </StyledLeftBtnWrapper>
-          <StyledDividedLine />
+          {leftBtnContent && (
+            <>
+              <StyledLeftBtnWrapper onClick={onLeftBtnClick}>
+                {leftBtnContent}
+              </StyledLeftBtnWrapper>
+              <StyledDividedLine />
+            </>
+          )}
           <StyledRightBtnWrapper
             $rightBtnStyle={rightBtnStyle}
             onClick={onRightBtnClick}

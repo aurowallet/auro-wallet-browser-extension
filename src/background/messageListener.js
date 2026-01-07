@@ -23,7 +23,16 @@ import {
   RESET_WALLET,
   DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS, DAPP_DISCONNECT_SITE, DAPP_DELETE_ACCOUNT_CONNECT_HIS, DAPP_CHANGE_CONNECTING_ADDRESS, GET_SIGN_PARAMS_BY_ID, DAPP_CHANGE_NETWORK,WALLET_UPDATE_LOCK_TIME, WALLET_GET_LOCK_TIME, DAPP_CONNECTION_LIST, QA_SIGN_TRANSACTION,GET_WALLET_LOCK_STATUS, GET_LEDGER_ACCOUNT_NUMBER, WALLET_SEND_FIELDS_MESSAGE_TRANSACTION, GET_SIGN_PARAMS, WALLET_SEND_NULLIFIER, POPUP_ACTIONS,
   GET_APPROVE_PARAMS,
-  CredentialMsg
+  CredentialMsg,
+  // Multi-wallet message types
+  WALLET_GET_KEYRINGS_LIST,
+  WALLET_ADD_HD_KEYRING,
+  WALLET_RENAME_KEYRING,
+  WALLET_GET_KEYRING_MNEMONIC,
+  WALLET_DELETE_KEYRING,
+  WALLET_ADD_ACCOUNT_TO_KEYRING,
+  WALLET_GET_VAULT_VERSION,
+  WALLET_TRY_UPGRADE_VAULT,
 } from "../constant/msgTypes";
 import apiService from "./APIService";
 import * as storage from "./storageService";
@@ -228,6 +237,45 @@ function internalMessageListener(message, sender, sendResponse) {
       apiService.removeTargetCredential(payload.address,payload.credentialId).then((res, err) => {
         sendResponse(res);
       })
+      break;
+    // ============================================
+    // Multi-Wallet Message Handlers
+    // ============================================
+    case WALLET_GET_KEYRINGS_LIST:
+      sendResponse(apiService.getKeyringsList());
+      break;
+    case WALLET_ADD_HD_KEYRING:
+      apiService.addHDKeyring(payload.mnemonic, payload.walletName).then((res) => {
+        sendResponse(res);
+      });
+      break;
+    case WALLET_RENAME_KEYRING:
+      apiService.renameKeyring(payload.keyringId, payload.name).then((res) => {
+        sendResponse(res);
+      });
+      break;
+    case WALLET_GET_KEYRING_MNEMONIC:
+      apiService.getKeyringMnemonic(payload.keyringId, payload.password).then((res) => {
+        sendResponse(res);
+      });
+      break;
+    case WALLET_DELETE_KEYRING:
+      apiService.deleteKeyring(payload.keyringId, payload.password).then((res) => {
+        sendResponse(res);
+      });
+      break;
+    case WALLET_ADD_ACCOUNT_TO_KEYRING:
+      apiService.addAccountToKeyring(payload.keyringId, payload.accountName).then((res) => {
+        sendResponse(res);
+      });
+      break;
+    case WALLET_GET_VAULT_VERSION:
+      sendResponse(apiService.getVaultVersion());
+      break;
+    case WALLET_TRY_UPGRADE_VAULT:
+      apiService.tryUpgradeVault().then((res) => {
+        sendResponse(res);
+      });
       break;
     default:
       break;

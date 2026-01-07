@@ -44,30 +44,23 @@ function App() {
   const [autoWidthStatus, setAutoWidthStatus] = useState(false);
   useEffect(() => {
     const url = new URL(window.location.href);
-    const ledgerPageList = ["popup.html#/ledger_page"];
-    const initPageList = [
-      "popup.html#/register_page",
-      "popup.html#/createprocess",
-    ];
-    const zkPage = [
-      "popup.html#/approve_page",
-      "popup.html#/request_sign",
-      "popup.html#/token_sign",
-    ];
+    // Extract hash path without query parameters (e.g., "#/register_page?addWallet=true" -> "/register_page")
+    const hashPath = url.hash.split("?")[0].replace("#", "");
 
-    zkPage.map((path) => {
-      if (url.href.indexOf(path) !== -1) {
-        setAutoWidthStatus(true);
-      }
-    });
-    let findIndex = false;
-    [...ledgerPageList, ...initPageList].map((path) => {
-      if (url.href.indexOf(path) !== -1) {
-        findIndex = true;
-      }
-    });
+    const fullPageRoutes = ["/ledger_page", "/register_page", "/createprocess"];
+    const zkPageRoutes = ["/approve_page", "/request_sign", "/token_sign"];
+
+    const isZkPage = zkPageRoutes.some((route) => hashPath.startsWith(route));
+    const isFullPage = fullPageRoutes.some((route) =>
+      hashPath.startsWith(route)
+    );
+
+    if (isZkPage) {
+      setAutoWidthStatus(true);
+    }
+
     if (
-      (url.pathname.indexOf("popup.html") !== -1 && !findIndex) ||
+      (url.pathname.indexOf("popup.html") !== -1 && !isFullPage) ||
       url.pathname.indexOf("notification.html") !== -1
     ) {
       setShowFullStatus(false);

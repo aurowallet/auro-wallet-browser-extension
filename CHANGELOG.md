@@ -2,8 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Un-Released]
+## [2.4.5]
 ### Enhancements
+- Support multi-wallet
 - Firefox build scripts
 - Debug scripts
 - Ledger connect

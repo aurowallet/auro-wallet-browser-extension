@@ -190,6 +190,20 @@ const proxyquireStubs = {
     isV2Vault: sinon.stub().returns(false),
     VAULT_VERSION: 2,
     KEYRING_TYPE: { HD: "hd", IMPORTED: "imported", LEDGER: "ledger", WATCH: "watch" },
+    KEYRING_DEFAULT_NAME: { HD: "Wallet", IMPORTED: "Imported Wallet", LEDGER: "Hardware Wallet", WATCH: "Watch" },
+    getDefaultHDWalletName: sinon.stub().callsFake((index) => `Wallet ${index}`),
+    createHDKeyring: sinon.stub().callsFake((name, encryptedMnemonic) => ({
+      id: "mock-keyring-id-" + Date.now(),
+      type: "hd",
+      name: name,
+      mnemonic: encryptedMnemonic,
+      accounts: [],
+      nextHdIndex: 0,
+      currentAddress: null,
+      createdAt: Date.now(),
+    })),
+    countHDKeyrings: sinon.stub().returns(0),
+    sortKeyringsByCreatedAt: sinon.stub().callsFake((keyrings) => keyrings),
   },
 
   "../utils/encryptUtils": {
@@ -627,8 +641,9 @@ describe("APIService", () => {
       expect(
         proxyquireStubs["./accountService"].importWalletByMnemonic.calledOnce
       ).to.be.true;
+      // V2 format: encrypt called twice (mnemonic, then vault data)
       expect(
-        proxyquireStubs["../utils/encryptUtils"].default.encrypt.calledThrice
+        proxyquireStubs["../utils/encryptUtils"].default.encrypt.calledTwice
       ).to.be.true;
       expect(proxyquireStubs["./storageService"].save.calledOnce).to.be.true;
       expect(mockMemStore.getState().data).to.not.be.null;
@@ -643,24 +658,27 @@ describe("APIService", () => {
       expect(result.privateKey).to.be.undefined;
     });
 
-    it("should encrypt private key and mnemonic with password", async () => {
+    it("should encrypt mnemonic and vault data with password (V2 format)", async () => {
       mockMemStore.updateState({ password: "Qw123456", data: null });
 
       await apiService.createAccount(TEST_DATA.mnemonic);
 
+      // V2 format: first encrypt mnemonic, then encrypt entire vault
       expect(
         proxyquireStubs["../utils/encryptUtils"].default.encrypt.getCall(0).args[0]
       ).to.equal("Qw123456");
       expect(
         proxyquireStubs["../utils/encryptUtils"].default.encrypt.getCall(0).args[1]
-      ).to.equal(TEST_DATA.accounts[0].priKey);
+      ).to.equal(TEST_DATA.mnemonic);
 
+      // Second call encrypts the entire vault data
       expect(
         proxyquireStubs["../utils/encryptUtils"].default.encrypt.getCall(1).args[0]
       ).to.equal("Qw123456");
-      expect(
-        proxyquireStubs["../utils/encryptUtils"].default.encrypt.getCall(1).args[1]
-      ).to.equal(TEST_DATA.mnemonic);
+      // Vault should have version 2 structure
+      const encryptedVault = proxyquireStubs["../utils/encryptUtils"].default.encrypt.getCall(1).args[1];
+      expect(encryptedVault.version).to.equal(2);
+      expect(encryptedVault.keyrings).to.be.an("array");
     });
 
     it("should add account to existing data when data exists", async () => {

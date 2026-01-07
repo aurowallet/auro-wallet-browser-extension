@@ -19,7 +19,9 @@ import {
 } from "../../src/background/vaultMigration.js";
 
 import {
+  countHDKeyrings,
   KEYRING_TYPE,
+  sortKeyringsByCreatedAt,
   VAULT_VERSION,
   createEmptyVault,
   createHDKeyring,
@@ -121,6 +123,56 @@ describe("Vault Types", () => {
       expect(keyring.nextHdIndex).to.equal(0);
       expect(keyring.accounts).to.be.an("array").that.is.empty;
     });
+
+    it("should create HD keyring with createdAt timestamp", () => {
+      const before = Date.now();
+      const keyring = createHDKeyring("Test Wallet", "encrypted_mnemonic");
+      const after = Date.now();
+      
+      expect(keyring.createdAt).to.be.a("number");
+      expect(keyring.createdAt).to.be.at.least(before);
+      expect(keyring.createdAt).to.be.at.most(after);
+    });
+  });
+
+  describe("countHDKeyrings", () => {
+    it("should count HD keyrings in vault", () => {
+      const vault = migrateToV2(sampleLegacyData);
+      const count = countHDKeyrings(vault);
+      expect(count).to.be.at.least(1);
+    });
+
+    it("should return 0 for empty vault", () => {
+      const vault = createEmptyVault();
+      const count = countHDKeyrings(vault);
+      expect(count).to.equal(0);
+    });
+  });
+
+  describe("sortKeyringsByCreatedAt", () => {
+    it("should sort keyrings by creation time (oldest first)", () => {
+      const keyrings = [
+        { id: "1", createdAt: 3000, type: KEYRING_TYPE.HD },
+        { id: "2", createdAt: 1000, type: KEYRING_TYPE.HD },
+        { id: "3", createdAt: 2000, type: KEYRING_TYPE.IMPORTED },
+      ];
+      
+      const sorted = sortKeyringsByCreatedAt(keyrings);
+      
+      expect(sorted[0].id).to.equal("2");
+      expect(sorted[1].id).to.equal("3");
+      expect(sorted[2].id).to.equal("1");
+    });
+
+    it("should handle keyrings without createdAt", () => {
+      const keyrings = [
+        { id: "1", type: KEYRING_TYPE.HD },
+        { id: "2", createdAt: 1000, type: KEYRING_TYPE.HD },
+      ];
+      
+      const sorted = sortKeyringsByCreatedAt(keyrings);
+      expect(sorted).to.have.length(2);
+    });
   });
 });
 
@@ -151,7 +203,7 @@ describe("Vault Migration", () => {
       expect(ledgerKeyrings.length).to.be.at.least(1);
     });
 
-    it("should NOT store privateKey for HD accounts (MetaMask pattern)", () => {
+    it("should NOT store privateKey for HD accounts", () => {
       const vault = migrateToV2(sampleLegacyData);
       const hdKeyring = vault.keyrings.find(kr => kr.type === KEYRING_TYPE.HD);
 

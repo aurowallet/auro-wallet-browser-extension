@@ -273,3 +273,31 @@ export const CredentialMsg = {
 }
 export const DAPP_ACTION_STORE_CREDENTIAL = "DAPP_ACTION_STORE_CREDENTIAL"
 export const DAPP_ACTION_REQUEST_PRESENTATION = "DAPP_ACTION_REQUEST_PRESENTATION"
+
+// ============================================
+// Multi-Wallet Message Types
+// ============================================
+
+/** Get all keyrings (wallet groups) sorted by creation time */
+export const WALLET_GET_KEYRINGS_LIST = "WALLET_GET_KEYRINGS_LIST"
+
+/** Add a new HD wallet with its own mnemonic */
+export const WALLET_ADD_HD_KEYRING = "WALLET_ADD_HD_KEYRING"
+
+/** Rename a keyring (wallet group) */
+export const WALLET_RENAME_KEYRING = "WALLET_RENAME_KEYRING"
+
+/** Get mnemonic for a specific HD keyring */
+export const WALLET_GET_KEYRING_MNEMONIC = "WALLET_GET_KEYRING_MNEMONIC"
+
+/** Delete a keyring (wallet group) */
+export const WALLET_DELETE_KEYRING = "WALLET_DELETE_KEYRING"
+
+/** Add account to a specific HD keyring */
+export const WALLET_ADD_ACCOUNT_TO_KEYRING = "WALLET_ADD_ACCOUNT_TO_KEYRING"
+
+/** Get current vault version (v1 or v2) */
+export const WALLET_GET_VAULT_VERSION = "WALLET_GET_VAULT_VERSION"
+
+/** Try to upgrade vault from v1 to v2 */
+export const WALLET_TRY_UPGRADE_VAULT = "WALLET_TRY_UPGRADE_VAULT"

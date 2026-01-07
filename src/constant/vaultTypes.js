@@ -1,22 +1,41 @@
 /**
  * Multi-Keyring Vault Types (Optimized)
  * 
- * Design follows MetaMask pattern:
  * - HD Keyring: stores mnemonic only, private keys derived on-demand
- * - Simple Key Pair: stores private keys (only for imported accounts)
- * - Ledger/Watch: no private key storage
+ *   - Each HD wallet is independent with its own mnemonic
+ * - Imported Keyring: single group for all imported private key accounts
+ * - Ledger Keyring: single group for all hardware wallet accounts
+ * - Watch Keyring: single group for all watch-only addresses
+ * 
+ * Sorting: keyrings are sorted by createdAt timestamp
  */
 
 /** Vault version constant */
 export const VAULT_VERSION = 2;
 
-/** Keyring types (following MetaMask naming) */
 export const KEYRING_TYPE = {
   HD: "hd",                    // HD wallet from mnemonic
   IMPORTED: "imported",        // Imported private key
   LEDGER: "ledger",           // Hardware wallet
   WATCH: "watch",             // Watch-only address
 };
+
+/** Default keyring names (for non-i18n contexts like migration) */
+export const KEYRING_DEFAULT_NAME = {
+  HD: "Wallet",                // Will be appended with index, e.g., "Wallet 1"
+  IMPORTED: "Imported Wallet",
+  LEDGER: "Hardware Wallet",
+  WATCH: "Watch",
+};
+
+/**
+ * Get default HD wallet name with index
+ * @param {number} index - Wallet index (1-based)
+ * @returns {string}
+ */
+export function getDefaultHDWalletName(index) {
+  return `${KEYRING_DEFAULT_NAME.HD} ${index}`;
+}
 
 /**
  * Generate a UUID v4
@@ -34,19 +53,20 @@ export function generateUUID() {
 }
 
 /**
- * Optimized Vault Structure:
+ * Optimized Vault Structure (Multi-Wallet):
  * 
  * {
  *   version: 2,
  *   currentKeyringId: "uuid",
  *   keyrings: [
  *     {
- *       // HD Keyring - private keys derived from mnemonic on-demand
+ *       // HD Keyring - each is an independent wallet with its own mnemonic
  *       id: "uuid",
  *       type: "hd",
  *       name: "Wallet 1",
  *       mnemonic: "encrypted_mnemonic",
- *       nextHdIndex: 2,  // Next index to derive (tracks how many HD accounts)
+ *       nextHdIndex: 2,
+ *       createdAt: 1704067200000,  // Timestamp for sorting
  *       accounts: [
  *         { address: "B62q...", hdIndex: 0, name: "Account 1" },
  *         { address: "B62q...", hdIndex: 1, name: "Account 2" },
@@ -54,37 +74,45 @@ export function generateUUID() {
  *       currentAddress: "B62q..."
  *     },
  *     {
- *       // Imported Keyring - must store private keys
+ *       // Another HD Keyring (different mnemonic)
+ *       id: "uuid2",
+ *       type: "hd",
+ *       name: "Wallet 2",
+ *       mnemonic: "another_encrypted_mnemonic",
+ *       nextHdIndex: 1,
+ *       createdAt: 1704153600000,
+ *       accounts: [...],
+ *       currentAddress: "B62q..."
+ *     },
+ *     {
+ *       // Imported Keyring - SINGLE group for all imported accounts
  *       id: "uuid",
  *       type: "imported",
- *       name: "Imported",
+ *       name: "Imported Wallet",
+ *       createdAt: 1704240000000,
  *       accounts: [
  *         { address: "B62q...", privateKey: "encrypted_key", name: "Imported 1" }
  *       ],
  *       currentAddress: "B62q..."
  *     },
  *     {
- *       // Ledger Keyring
+ *       // Ledger Keyring - SINGLE group for all hardware accounts
  *       id: "uuid",
  *       type: "ledger",
- *       name: "Ledger",
+ *       name: "Hardware Wallet",
+ *       createdAt: 1704326400000,
  *       accounts: [
  *         { address: "B62q...", hdIndex: 0, name: "Ledger 1" }
- *       ],
- *       currentAddress: "B62q..."
- *     },
- *     {
- *       // Watch Keyring
- *       id: "uuid",
- *       type: "watch",
- *       name: "Watch",
- *       accounts: [
- *         { address: "B62q...", name: "Watch 1" }
  *       ],
  *       currentAddress: "B62q..."
  *     }
  *   ]
  * }
+ * 
+ * Sorting: keyrings are displayed in order of createdAt timestamp
+ * - Each HD wallet is its own group (can have multiple HD keyrings)
+ * - Only ONE imported keyring for all private key imports
+ * - Only ONE ledger keyring for all hardware wallet accounts
  */
 
 /**
@@ -96,6 +124,7 @@ export function createEmptyVault() {
     version: VAULT_VERSION,
     currentKeyringId: "",
     keyrings: [],
+    nextWalletIndex: 1,  // Tracks next default wallet name number (never decreases)
   };
 }
 
@@ -113,8 +142,9 @@ export function createHDKeyring(name, encryptedMnemonic) {
     type: KEYRING_TYPE.HD,
     name,
     mnemonic: encryptedMnemonic,
-    nextHdIndex: 0,        // Tracks next derivation index
-    accounts: [],          // HD accounts don't store private keys
+    nextHdIndex: 0,
+    createdAt: Date.now(),  // Timestamp for sorting
+    accounts: [],
     currentAddress: "",
   };
 }
@@ -122,15 +152,17 @@ export function createHDKeyring(name, encryptedMnemonic) {
 /**
  * Create an Imported keyring (for private key imports)
  * These accounts MUST store encrypted private keys
+ * Note: There should be only ONE imported keyring in the vault
  * 
  * @param {string} name - Keyring name
  * @returns {Object}
  */
-export function createImportedKeyring(name) {
+export function createImportedKeyring(name = KEYRING_DEFAULT_NAME.IMPORTED) {
   return {
     id: generateUUID(),
     type: KEYRING_TYPE.IMPORTED,
     name,
+    createdAt: Date.now(),
     accounts: [],
     currentAddress: "",
   };
@@ -138,14 +170,16 @@ export function createImportedKeyring(name) {
 
 /**
  * Create a Ledger keyring
+ * Note: There should be only ONE ledger keyring in the vault
  * @param {string} name - Keyring name
  * @returns {Object}
  */
-export function createLedgerKeyring(name) {
+export function createLedgerKeyring(name = "Hardware Wallet") {
   return {
     id: generateUUID(),
     type: KEYRING_TYPE.LEDGER,
     name,
+    createdAt: Date.now(),
     accounts: [],
     currentAddress: "",
   };
@@ -156,14 +190,33 @@ export function createLedgerKeyring(name) {
  * @param {string} name - Keyring name
  * @returns {Object}
  */
-export function createWatchKeyring(name) {
+export function createWatchKeyring(name = "Watch") {
   return {
     id: generateUUID(),
     type: KEYRING_TYPE.WATCH,
     name,
+    createdAt: Date.now(),
     accounts: [],
     currentAddress: "",
   };
+}
+
+/**
+ * Sort keyrings by creation time
+ * @param {Array} keyrings - Array of keyrings
+ * @returns {Array} Sorted keyrings
+ */
+export function sortKeyringsByCreatedAt(keyrings) {
+  return [...keyrings].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+}
+
+/**
+ * Count HD keyrings in vault
+ * @param {Object} vault - V2 vault structure
+ * @returns {number} Number of HD keyrings
+ */
+export function countHDKeyrings(vault) {
+  return vault.keyrings.filter(kr => kr.type === KEYRING_TYPE.HD).length;
 }
 
 /**

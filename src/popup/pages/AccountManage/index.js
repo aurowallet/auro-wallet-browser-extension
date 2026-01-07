@@ -2,27 +2,39 @@ import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { MAIN_COIN_CONFIG } from "../../../constant";
+import { useLocation, useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import { getBalanceBatch } from "../../../background/api";
+import { MAIN_COIN_CONFIG } from "../../../constant";
 import { ACCOUNT_TYPE } from "../../../constant/commonType";
+import { getDefaultHDWalletName } from "../../../constant/vaultTypes";
 import {
   DAPP_CHANGE_CONNECTING_ADDRESS,
+  WALLET_ADD_ACCOUNT_TO_KEYRING,
   WALLET_CHANGE_CURRENT_ACCOUNT,
   WALLET_GET_ALL_ACCOUNT,
+  WALLET_GET_KEYRINGS_LIST,
+  WALLET_GET_VAULT_VERSION,
   WALLET_SET_UNLOCKED_STATUS,
+  WALLET_TRY_UPGRADE_VAULT,
 } from "../../../constant/msgTypes";
 import {
   updateAccountList,
   updateCurrentAccount,
 } from "../../../reducers/accountReducer";
-import { setAccountInfo, updateAccountTypeCount } from "../../../reducers/cache";
+import {
+  setAccountInfo,
+  setKeyringInfo,
+  updateAccountTypeCount,
+} from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
-import { addressSlice, amountDecimals, isNumber } from "../../../utils/utils";
+import { createOrActivateTab } from "../../../utils/popup";
+import { addressSlice, amountDecimals } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Loading from "../../component/Loading";
+import Toast from "../../component/Toast";
+import VaultUpgradeModal from "../../component/VaultUpgradeModal";
 import styles from "./index.module.scss";
-import styled from "styled-components";
 
 const AccountManagePage = ({}) => {
   const currentAddress = useSelector(
@@ -30,11 +42,16 @@ const AccountManagePage = ({}) => {
   );
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMounted = useRef(true);
 
   const [commonAccountList, setCommonAccountList] = useState([]);
   const [watchModeAccountList, setWatchModeAccountList] = useState([]);
-
+  const [keyringsList, setKeyringsList] = useState([]);
+  const [useKeyringView, setUseKeyringView] = useState(false);
+  const [vaultVersion, setVaultVersion] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeStatus, setUpgradeStatus] = useState("idle"); // idle, loading, failed
 
   const getAccountTypeIndex = useCallback((list) => {
     if (list.length === 0) {
@@ -44,13 +61,10 @@ const AccountManagePage = ({}) => {
     }
   }, []);
 
-  const fetchBalance = useCallback(
-    async (addressList) => {
-      let tempBalanceList = await getBalanceBatch(addressList);
-      dispatch(updateAccountList(tempBalanceList));
-    },
-    []
-  );
+  const fetchBalance = useCallback(async (addressList) => {
+    let tempBalanceList = await getBalanceBatch(addressList);
+    dispatch(updateAccountList(tempBalanceList));
+  }, []);
 
   const onUpdateAccountTypeCount = useCallback((allAccountList) => {
     let createAccountTypeList = allAccountList.filter((item) => {
@@ -75,23 +89,206 @@ const AccountManagePage = ({}) => {
       })
     );
   }, []);
-  useEffect(() => {
-    sendMsg(
-      {
-        action: WALLET_GET_ALL_ACCOUNT,
-      },
-      async (account) => {
-        let listData = account.accounts;
-        onUpdateAccountTypeCount(listData.allList);
-        setCommonAccountList(listData.commonList);
-        setWatchModeAccountList(listData.watchList);
 
-        let addressList = listData.allList.map((item) => {
-          return item.address;
+  // Refetch keyrings data when navigating back to this page
+  const fetchKeyringsData = useCallback(() => {
+    sendMsg({ action: WALLET_GET_VAULT_VERSION }, (versionResult) => {
+      const version = versionResult?.version || "v1";
+      setVaultVersion(version);
+
+      if (version === "v2") {
+        sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (result) => {
+          if (result.keyrings && result.keyrings.length > 0) {
+            setKeyringsList(result.keyrings);
+            setUseKeyringView(true);
+
+            const allAddresses = result.keyrings.flatMap((kr) =>
+              kr.accounts.map((acc) => acc.address)
+            );
+            fetchBalance(allAddresses);
+          }
         });
-        fetchBalance(addressList);
       }
-    );
+    });
+  }, [fetchBalance]);
+
+  // Refresh data when location changes (e.g., navigating back from WalletDetails)
+  useEffect(() => {
+    fetchKeyringsData();
+  }, [location.key]);
+
+  useEffect(() => {
+    // Get vault version first
+    sendMsg({ action: WALLET_GET_VAULT_VERSION }, (versionResult) => {
+      const version = versionResult?.version || "v1";
+      setVaultVersion(version);
+
+      if (version === "v2") {
+        // V2: Use keyrings list directly
+        sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (result) => {
+          if (result.keyrings && result.keyrings.length > 0) {
+            setKeyringsList(result.keyrings);
+            setUseKeyringView(true);
+
+            const allAddresses = result.keyrings.flatMap((kr) =>
+              kr.accounts.map((acc) => acc.address)
+            );
+            fetchBalance(allAddresses);
+          }
+        });
+      } else {
+        // V1: Convert accounts to keyring-like structure for unified UI
+        sendMsg({ action: WALLET_GET_ALL_ACCOUNT }, async (account) => {
+          let listData = account.accounts;
+          onUpdateAccountTypeCount(listData.allList);
+          setCommonAccountList(listData.commonList);
+          setWatchModeAccountList(listData.watchList);
+
+          // Convert to keyring-like structure for unified UI
+          const hdAccounts = listData.commonList.filter(
+            (acc) => acc.type === ACCOUNT_TYPE.WALLET_INSIDE
+          );
+          const importedAccounts = listData.commonList.filter(
+            (acc) => acc.type === ACCOUNT_TYPE.WALLET_OUTSIDE
+          );
+          const ledgerAccounts = listData.commonList.filter(
+            (acc) => acc.type === ACCOUNT_TYPE.WALLET_LEDGER
+          );
+
+          const convertedKeyrings = [];
+
+          if (hdAccounts.length > 0) {
+            convertedKeyrings.push({
+              id: "v1-hd",
+              type: "hd",
+              name: getDefaultHDWalletName(1),
+              canAddAccount: true,
+              accounts: hdAccounts.map((acc) => ({
+                address: acc.address,
+                name: acc.accountName,
+                hdIndex: acc.hdPath,
+                type: acc.type,
+              })),
+            });
+          }
+
+          if (importedAccounts.length > 0) {
+            convertedKeyrings.push({
+              id: "v1-imported",
+              type: "imported",
+              name: i18n.t("importedWallet"),
+              canAddAccount: false,
+              accounts: importedAccounts.map((acc) => ({
+                address: acc.address,
+                name: acc.accountName,
+                type: acc.type,
+              })),
+            });
+          }
+
+          if (ledgerAccounts.length > 0) {
+            convertedKeyrings.push({
+              id: "v1-ledger",
+              type: "ledger",
+              name: i18n.t("hardwareWallet"),
+              canAddAccount: false,
+              accounts: ledgerAccounts.map((acc) => ({
+                address: acc.address,
+                name: acc.accountName,
+                hdIndex: acc.hdPath,
+                type: acc.type,
+              })),
+            });
+          }
+
+          setKeyringsList(convertedKeyrings);
+          setUseKeyringView(true);
+
+          let addressList = listData.allList.map((item) => item.address);
+          fetchBalance(addressList);
+        });
+      }
+    });
+  }, []);
+
+  const onAddAccountToKeyring = useCallback(
+    (keyringId) => {
+      // For V1 vault, show upgrade modal instead
+      if (vaultVersion === "v1") {
+        setShowUpgradeModal(true);
+        setUpgradeStatus("idle");
+        return;
+      }
+
+      Loading.show();
+      sendMsg(
+        {
+          action: WALLET_ADD_ACCOUNT_TO_KEYRING,
+          payload: { keyringId },
+        },
+        (result) => {
+          Loading.hide();
+          if (result.error) {
+            Toast.info(i18n.t(result.error));
+            return;
+          }
+          // Refresh keyrings list
+          sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (res) => {
+            if (res.keyrings) {
+              setKeyringsList(res.keyrings);
+              dispatch(updateCurrentAccount(result.account));
+            }
+          });
+        }
+      );
+    },
+    [vaultVersion]
+  );
+
+  const onGoAddWallet = useCallback(() => {
+    // Check vault version before allowing add wallet
+    sendMsg({ action: WALLET_GET_VAULT_VERSION }, (result) => {
+      if (result.version === "v1") {
+        // Show upgrade modal for v1 vault
+        setVaultVersion("v1");
+        setShowUpgradeModal(true);
+        setUpgradeStatus("idle");
+      } else {
+        // V2 vault, open add wallet in new tab with addWallet parameter
+        // This parameter tells Welcome page to skip the wallet existence check
+        createOrActivateTab("popup.html?addWallet=true#/register_page");
+        // Close popup window so new wallet can refresh when user returns
+        window.close();
+      }
+    });
+  }, []);
+
+  const onCloseUpgradeModal = useCallback(() => {
+    setShowUpgradeModal(false);
+    setUpgradeStatus("idle");
+  }, []);
+
+  const onUpgradeVault = useCallback(() => {
+    setUpgradeStatus("loading");
+    sendMsg({ action: WALLET_TRY_UPGRADE_VAULT }, (result) => {
+      if (result.success) {
+        setShowUpgradeModal(false);
+        setUpgradeStatus("idle");
+        setVaultVersion("v2");
+        Toast.info(i18n.t("vaultUpgradeSuccess"));
+        // Refresh keyrings list
+        sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (res) => {
+          if (res.keyrings && res.keyrings.length > 0) {
+            setKeyringsList(res.keyrings);
+            setUseKeyringView(true);
+          }
+        });
+        // Open add wallet in new tab
+        createOrActivateTab("popup.html#/register_page");
+      } else {
+        setUpgradeStatus("failed");
+      }
+    });
   }, []);
 
   const onClickLock = useCallback(() => {
@@ -107,6 +304,17 @@ const AccountManagePage = ({}) => {
   const goToAccountInfo = useCallback((item) => {
     dispatch(setAccountInfo(item));
     navigate("/account_info");
+  }, []);
+
+  const goToWalletDetails = useCallback((keyring) => {
+    dispatch(
+      setKeyringInfo({
+        id: keyring.id,
+        name: keyring.name,
+        type: keyring.type,
+      })
+    );
+    navigate("/wallet_details");
   }, []);
 
   const onClickAccount = useCallback(
@@ -165,36 +373,210 @@ const AccountManagePage = ({}) => {
       }
     >
       <div className={styles.contentContainer}>
-        {commonAccountList.map((item, index) => {
-          let isSelect = item.address === currentAddress;
-          return (
-            <CommonAccountRow
-              onClickAccount={onClickAccount}
-              isSelect={isSelect}
-              key={index}
-              account={item}
-            />
-          );
-        })}
-        <AddRow />
-        {watchModeAccountList.length > 0 && (
-          <div className={styles.notSupportContainer}>
-            <p className={styles.notSupportTitle}>{i18n.t("noSupported")}</p>
-            {watchModeAccountList.map((item, index) => {
+        {useKeyringView ? (
+          // Multi-wallet keyring view
+          <>
+            {keyringsList.map((keyring) => (
+              <KeyringGroup
+                key={keyring.id}
+                keyring={keyring}
+                currentAddress={currentAddress}
+                onClickAccount={onClickAccount}
+                onAddAccount={onAddAccountToKeyring}
+                goToAccountInfo={goToAccountInfo}
+                goToWalletDetails={goToWalletDetails}
+              />
+            ))}
+            <div className={styles.addWalletBtn} onClick={onGoAddWallet}>
+              {i18n.t("addWallet")}
+            </div>
+          </>
+        ) : (
+          // Legacy view
+          <>
+            {commonAccountList.map((item, index) => {
+              let isSelect = item.address === currentAddress;
               return (
                 <CommonAccountRow
                   onClickAccount={onClickAccount}
+                  isSelect={isSelect}
                   key={index}
-                  notSupport={true}
-                  isSelect={false}
                   account={item}
                 />
               );
             })}
+            <AddRow />
+            {watchModeAccountList.length > 0 && (
+              <div className={styles.notSupportContainer}>
+                <p className={styles.notSupportTitle}>
+                  {i18n.t("noSupported")}
+                </p>
+                {watchModeAccountList.map((item, index) => {
+                  return (
+                    <CommonAccountRow
+                      onClickAccount={onClickAccount}
+                      key={index}
+                      notSupport={true}
+                      isSelect={false}
+                      account={item}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      <VaultUpgradeModal
+        modalVisible={showUpgradeModal}
+        onClose={onCloseUpgradeModal}
+        onUpgrade={onUpgradeVault}
+        upgradeStatus={upgradeStatus}
+      />
+    </CustomView>
+  );
+};
+const StyledAddAccountBtn = styled.div`
+  color: #594af1;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 20px;
+  background-image: url("/img/addBorder.svg");
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  height: 37px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  &:hover {
+    background-image: url("/img/addBorderHover.svg");
+  }
+`;
+const StyledAddAccountBtnV2 = styled(StyledAddAccountBtn)`
+  color: rgba(128, 128, 128, 1);
+  &:hover {
+    background-image: url("/img/addBorderHover.svg");
+    color: #594af1;
+  }
+`;
+
+// Keyring Group Component for Multi-Wallet View
+const KeyringGroup = ({
+  keyring,
+  currentAddress,
+  onClickAccount,
+  onAddAccount,
+  goToAccountInfo,
+  goToWalletDetails,
+}) => {
+  const accountBalanceMap = useSelector(
+    (state) => state.accountInfo.accountBalanceMap
+  );
+
+  const getBalance = useCallback(
+    (address) => {
+      const balanceMap = accountBalanceMap[address];
+      if (balanceMap) {
+        const balance = amountDecimals(
+          balanceMap.balance?.total || 0,
+          MAIN_COIN_CONFIG.decimals
+        );
+        return `${balance} ${MAIN_COIN_CONFIG.symbol}`;
+      }
+      return `0 ${MAIN_COIN_CONFIG.symbol}`;
+    },
+    [accountBalanceMap]
+  );
+
+  const getKeyringDisplayName = useCallback(
+    (type) => {
+      switch (type) {
+        case "imported":
+          return i18n.t("importedWallet");
+        case "ledger":
+          return i18n.t("hardwareWallet");
+        default:
+          return keyring.name;
+      }
+    },
+    [keyring.name]
+  );
+
+  const isHDKeyring = keyring.type === "hd";
+
+  return (
+    <div className={styles.keyringGroup}>
+      <div className={styles.keyringHeader}>
+        <p className={styles.keyringName}>
+          {getKeyringDisplayName(keyring.type)}
+        </p>
+        {isHDKeyring && (
+          <div
+            className={styles.keyringMenu}
+            onClick={() => goToWalletDetails(keyring)}
+          >
+            <img src="/img/icon_more.svg" alt="menu" />
           </div>
         )}
       </div>
-    </CustomView>
+      <div className={styles.keyringAccounts}>
+        {keyring.accounts.map((account) => {
+          const isSelect = account.address === currentAddress;
+          return (
+            <div
+              key={account.address}
+              className={cls(styles.keyringAccountRow, {
+                [styles.keyringAccountRowSelected]: isSelect,
+              })}
+              onClick={() =>
+                onClickAccount({ ...account, accountName: account.name })
+              }
+            >
+              <div className={styles.rowLeft}>
+                <p className={styles.accountName}>{account.name}</p>
+                <p className={styles.address}>
+                  {addressSlice(account.address)}
+                </p>
+                <p className={styles.accountBalance}>
+                  {getBalance(account.address)}
+                </p>
+              </div>
+              <div
+                className={styles.pointMenuContainer}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToAccountInfo({
+                    ...account,
+                    accountName: account.name,
+                    type: account.type,
+                  });
+                }}
+              >
+                <img
+                  src={
+                    isSelect ? "/img/pointMenu.svg" : "/img/pointMenu_dark.svg"
+                  }
+                  className={styles.pointMenu}
+                  alt="menu"
+                />
+              </div>
+            </div>
+          );
+        })}
+        {keyring.canAddAccount && (
+          <StyledAddAccountBtnV2
+            className={styles.addAccountBtn}
+            onClick={() => onAddAccount(keyring.id)}
+          >
+            {i18n.t("addAccount")}
+          </StyledAddAccountBtnV2>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -216,7 +598,6 @@ const StyledAddRowWrapper = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-
 
   &:hover {
     background-image: url("/img/addBorderHover.svg");
@@ -246,19 +627,19 @@ const CommonAccountRow = ({
   const accountBalanceMap = useSelector(
     (state) => state.accountInfo.accountBalanceMap
   );
-  const{showBalance}= useMemo(()=>{
-    let showBalance = 0
-    let balanceMap = accountBalanceMap[account.address]
-    if(balanceMap){
+  const { showBalance } = useMemo(() => {
+    let showBalance = 0;
+    let balanceMap = accountBalanceMap[account.address];
+    if (balanceMap) {
       let balance = balanceMap.balance.total;
-        balance = amountDecimals(balance, MAIN_COIN_CONFIG.decimals);
-        showBalance = balance
+      balance = amountDecimals(balance, MAIN_COIN_CONFIG.decimals);
+      showBalance = balance;
     }
     showBalance = showBalance + " " + MAIN_COIN_CONFIG.symbol;
     return {
-      showBalance
-    }
-  },[accountBalanceMap,account.address])
+      showBalance,
+    };
+  }, [accountBalanceMap, account.address]);
 
   const getAccountType = useCallback(
     (item) => {

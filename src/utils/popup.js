@@ -166,18 +166,38 @@ export function startExtensionPopup(withListener = false) {
 
 // Function to create a new tab
 function createTab(url) {
-  browser.tabs.create({ url: url, active: true }).then((tab)=>{
+  return browser.tabs.create({ url: url, active: true }).then((tab) => {
     lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = tab.id;
-  })
+    return tab;
+  });
 }
+
 // Function to create or activate a tab
 export async function createOrActivateTab(url = "") {
-  if (lastWindowIds[POPUP_CHANNEL_KEYS.welcome]) {
-      await browser.tabs.update(lastWindowIds[POPUP_CHANNEL_KEYS.welcome], {
-        active: true,
-        url,
-      });
-  } else {
-    createTab(url);
+  const existingTabId = lastWindowIds[POPUP_CHANNEL_KEYS.welcome];
+  
+  if (existingTabId) {
+    try {
+      // Check if tab still exists
+      const tab = await browser.tabs.get(existingTabId);
+      if (tab) {
+        // Update tab URL and make it active
+        await browser.tabs.update(existingTabId, {
+          active: true,
+          url,
+        });
+        // Focus the window containing this tab
+        if (tab.windowId) {
+          await browser.windows.update(tab.windowId, { focused: true });
+        }
+        return;
+      }
+    } catch (e) {
+      // Tab doesn't exist anymore, clear the reference
+      lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = null;
+    }
   }
+  
+  // Create new tab if no existing tab found
+  await createTab(url);
 }

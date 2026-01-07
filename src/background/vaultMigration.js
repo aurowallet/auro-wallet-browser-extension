@@ -1,7 +1,5 @@
 /**
  * Vault Migration Service (Optimized)
- * 
- * Follows MetaMask pattern:
  * - HD accounts: no private key stored, derived on-demand
  * - Imported accounts: store encrypted private key
  * - Ledger/Watch: no private key
@@ -9,72 +7,137 @@
 
 import { ACCOUNT_TYPE } from "../constant/commonType";
 import {
-  VAULT_VERSION,
   KEYRING_TYPE,
-  isLegacyVault,
-  isV2Vault,
+  VAULT_VERSION,
   createEmptyVault,
   createHDKeyring,
   createImportedKeyring,
   createLedgerKeyring,
   createWatchKeyring,
+  isLegacyVault,
+  isV2Vault,
+  sortKeyringsByCreatedAt,
 } from "../constant/vaultTypes";
 
 // Migration logging utility - disable in production
-const MIGRATION_LOG_ENABLED = process.env.NODE_ENV === 'development';
+const MIGRATION_LOG_ENABLED = process.env.NODE_ENV === "development";
 const migrationLog = {
-  info: (msg) => MIGRATION_LOG_ENABLED && console.log('[Migration]', msg),
-  warn: (msg) => console.warn('[Migration]', msg),
-  error: (msg, err) => console.error('[Migration]', msg, err?.message || ''),
+  info: (msg) => MIGRATION_LOG_ENABLED && console.log("[Migration]", msg),
+  warn: (msg) => console.warn("[Migration]", msg),
+  error: (msg, err) => console.error("[Migration]", msg, err?.message || ""),
 };
 
 /**
  * Migrate legacy v1 data to optimized v2 vault structure
- * 
- * Key change: HD accounts no longer store private keys
- * Private keys are derived on-demand from mnemonic
- * 
+ *
+ * Key changes for multi-wallet support:
+ * - Each HD wallet becomes its own keyring (with unique mnemonic)
+ * - All imported accounts merged into ONE "Imported Wallet" keyring
+ * - All ledger accounts merged into ONE "Hardware Wallet" keyring
+ * - All watch accounts merged into ONE "Watch" keyring
+ * - Keyrings sorted by creation time
+ *
  * @param {Array} legacyData - Legacy keyring data array
  * @returns {Object} V2 vault structure
  */
 export function migrateToV2(legacyData) {
-  migrationLog.info('Starting migration from legacy to V2');
-  
+  migrationLog.info("Starting migration from legacy to V2");
+
   if (!Array.isArray(legacyData) || legacyData.length === 0) {
-    migrationLog.warn('Empty or invalid legacy data, returning empty vault');
+    migrationLog.warn("Empty or invalid legacy data, returning empty vault");
     return createEmptyVault();
   }
 
-  migrationLog.info('Found ' + legacyData.length + ' legacy wallet(s) to migrate');
+  migrationLog.info(
+    "Found " + legacyData.length + " legacy wallet(s) to migrate"
+  );
   const vault = createEmptyVault();
 
-  legacyData.forEach((legacyWallet, walletIndex) => {
-    const keyrings = migrateLegacyWallet(legacyWallet, walletIndex);
-    vault.keyrings.push(...keyrings);
+  // Single keyrings for imported/ledger/watch (shared across all legacy wallets)
+  let sharedImportedKeyring = null;
+  let sharedLedgerKeyring = null;
+  let sharedWatchKeyring = null;
+  let baseTime = Date.now();
 
-    // Set first keyring as current
-    if (walletIndex === 0 && keyrings.length > 0) {
-      vault.currentKeyringId = keyrings[0].id;
+  legacyData.forEach((legacyWallet, walletIndex) => {
+    const result = migrateLegacyWallet(
+      legacyWallet,
+      walletIndex,
+      baseTime,
+      sharedImportedKeyring,
+      sharedLedgerKeyring,
+      sharedWatchKeyring
+    );
+
+    // Add HD keyring (each wallet has its own)
+    if (result.hdKeyring) {
+      vault.keyrings.push(result.hdKeyring);
+      // Set first HD keyring as current
+      if (!vault.currentKeyringId) {
+        vault.currentKeyringId = result.hdKeyring.id;
+      }
+    }
+
+    // Update shared keyrings references
+    if (result.importedKeyring) {
+      if (!sharedImportedKeyring) {
+        sharedImportedKeyring = result.importedKeyring;
+        vault.keyrings.push(sharedImportedKeyring);
+      }
+    }
+    if (result.ledgerKeyring) {
+      if (!sharedLedgerKeyring) {
+        sharedLedgerKeyring = result.ledgerKeyring;
+        vault.keyrings.push(sharedLedgerKeyring);
+      }
+    }
+    if (result.watchKeyring) {
+      if (!sharedWatchKeyring) {
+        sharedWatchKeyring = result.watchKeyring;
+        vault.keyrings.push(sharedWatchKeyring);
+      }
     }
   });
 
-  migrationLog.info('Migration complete: ' + vault.keyrings.length + ' keyring(s)');
+  // Sort keyrings by creation time
+  vault.keyrings = sortKeyringsByCreatedAt(vault.keyrings);
+
+  migrationLog.info(
+    "Migration complete: " + vault.keyrings.length + " keyring(s)"
+  );
   return vault;
 }
 
 /**
- * Migrate a single legacy wallet to multiple keyrings by account type
- * 
- * Legacy structure mixed all account types in one wallet.
- * New structure separates them into typed keyrings.
- * 
+ * Migrate a single legacy wallet to keyrings
+ *
+ * Multi-wallet migration strategy:
+ * - HD accounts: create a NEW keyring for this wallet's mnemonic
+ * - Imported/Ledger/Watch: add to SHARED keyring (passed in)
+ *
  * @param {Object} legacyWallet - Legacy wallet object
  * @param {number} walletIndex - Index in the original array
- * @returns {Object[]} Array of keyrings
+ * @param {number} baseTime - Base timestamp for ordering
+ * @param {Object|null} sharedImportedKeyring - Existing imported keyring
+ * @param {Object|null} sharedLedgerKeyring - Existing ledger keyring
+ * @param {Object|null} sharedWatchKeyring - Existing watch keyring
+ * @returns {Object} { hdKeyring, importedKeyring, ledgerKeyring, watchKeyring }
  */
-function migrateLegacyWallet(legacyWallet, walletIndex) {
-  const keyrings = [];
+function migrateLegacyWallet(
+  legacyWallet,
+  walletIndex,
+  baseTime,
+  sharedImportedKeyring,
+  sharedLedgerKeyring,
+  sharedWatchKeyring
+) {
   const walletName = `Wallet ${walletIndex + 1}`;
+  let result = {
+    hdKeyring: null,
+    importedKeyring: sharedImportedKeyring,
+    ledgerKeyring: sharedLedgerKeyring,
+    watchKeyring: sharedWatchKeyring,
+  };
 
   // Group accounts by type
   const hdAccounts = [];
@@ -99,84 +162,93 @@ function migrateLegacyWallet(legacyWallet, walletIndex) {
     }
   });
 
-  // Create HD Keyring (if mnemonic exists)
   if (legacyWallet.mnemonic && hdAccounts.length > 0) {
     const hdKeyring = createHDKeyring(walletName, legacyWallet.mnemonic);
-    
-    // Find max hdIndex to set nextHdIndex
+    hdKeyring.createdAt = baseTime + walletIndex;
+
     let maxHdIndex = -1;
     hdAccounts.forEach((acc) => {
       const hdIndex = acc.hdPath ?? 0;
       maxHdIndex = Math.max(maxHdIndex, hdIndex);
-      
-      // HD accounts don't store private keys (derived on-demand)
+
       hdKeyring.accounts.push({
         address: acc.address,
         hdIndex: hdIndex,
         name: acc.accountName || `Account ${hdIndex + 1}`,
       });
     });
-    
+
     hdKeyring.nextHdIndex = maxHdIndex + 1;
-    hdKeyring.currentAddress = legacyWallet.currentAddress || hdAccounts[0]?.address || "";
-    keyrings.push(hdKeyring);
+    hdKeyring.currentAddress =
+      legacyWallet.currentAddress || hdAccounts[0]?.address || "";
+    result.hdKeyring = hdKeyring;
   }
 
-  // Create Imported Keyring (if imported accounts exist)
   if (importedAccounts.length > 0) {
-    const importedKeyring = createImportedKeyring(`${walletName} - Imported`);
-    
+    if (!result.importedKeyring) {
+      result.importedKeyring = createImportedKeyring();
+      result.importedKeyring.createdAt = baseTime + 1000; // After first HD wallet
+    }
+
     importedAccounts.forEach((acc) => {
-      // Imported accounts MUST store private keys
-      importedKeyring.accounts.push({
+      result.importedKeyring.accounts.push({
         address: acc.address,
         privateKey: acc.privateKey,
         name: acc.accountName || "Imported",
       });
     });
-    
-    importedKeyring.currentAddress = importedAccounts[0].address;
-    keyrings.push(importedKeyring);
+
+    if (!result.importedKeyring.currentAddress) {
+      result.importedKeyring.currentAddress = importedAccounts[0].address;
+    }
   }
 
-  // Create Ledger Keyring (if ledger accounts exist)
+  // Add ledger accounts to SHARED ledger keyring
   if (ledgerAccounts.length > 0) {
-    const ledgerKeyring = createLedgerKeyring(`${walletName} - Ledger`);
-    
+    if (!result.ledgerKeyring) {
+      result.ledgerKeyring = createLedgerKeyring();
+      result.ledgerKeyring.createdAt = baseTime + 2000;
+    }
+
     ledgerAccounts.forEach((acc) => {
-      ledgerKeyring.accounts.push({
+      result.ledgerKeyring.accounts.push({
         address: acc.address,
         hdIndex: acc.hdPath ?? 0,
         name: acc.accountName || "Ledger",
       });
     });
-    
-    ledgerKeyring.currentAddress = ledgerAccounts[0].address;
-    keyrings.push(ledgerKeyring);
+
+    if (!result.ledgerKeyring.currentAddress) {
+      result.ledgerKeyring.currentAddress = ledgerAccounts[0].address;
+    }
   }
 
-  // Create Watch Keyring (if watch accounts exist)
+  // Add watch accounts to SHARED watch keyring
   if (watchAccounts.length > 0) {
-    const watchKeyring = createWatchKeyring(`${walletName} - Watch`);
-    
+    if (!result.watchKeyring) {
+      result.watchKeyring = createWatchKeyring("Watch");
+      result.watchKeyring.createdAt = baseTime + 3000;
+    }
+
     watchAccounts.forEach((acc) => {
-      watchKeyring.accounts.push({
+      result.watchKeyring.accounts.push({
         address: acc.address,
         name: acc.accountName || "Watch",
       });
     });
-    
-    watchKeyring.currentAddress = watchAccounts[0].address;
-    keyrings.push(watchKeyring);
+
+    if (!result.watchKeyring.currentAddress) {
+      result.watchKeyring.currentAddress = watchAccounts[0].address;
+    }
   }
 
-  return keyrings;
+  return result;
 }
 
 /**
  * Convert v2 vault back to legacy format for backward compatibility
  * Used by memStore for UI compatibility
- * 
+ *
  * @param {Object} vault - V2 vault structure
  * @returns {Array} Legacy format data
  */
@@ -201,7 +273,11 @@ export function convertV2ToLegacy(vault) {
 
   vault.keyrings.forEach((keyring) => {
     // Get mnemonic from first HD keyring
-    if (keyring.type === KEYRING_TYPE.HD && keyring.mnemonic && !legacyWallet.mnemonic) {
+    if (
+      keyring.type === KEYRING_TYPE.HD &&
+      keyring.mnemonic &&
+      !legacyWallet.mnemonic
+    ) {
       legacyWallet.mnemonic = keyring.mnemonic;
     }
 
@@ -330,9 +406,11 @@ export function getCurrentAccount(vault) {
     return keyring.accounts[0] || null;
   }
 
-  return keyring.accounts.find((acc) => acc.address === keyring.currentAddress) 
-    || keyring.accounts[0] 
-    || null;
+  return (
+    keyring.accounts.find((acc) => acc.address === keyring.currentAddress) ||
+    keyring.accounts[0] ||
+    null
+  );
 }
 
 /**
@@ -372,7 +450,10 @@ export function validateVault(vault) {
           errors.push(`Keyring ${kIndex} Account ${aIndex} missing address`);
         }
         // HD accounts need hdIndex
-        if (keyring.type === KEYRING_TYPE.HD && typeof account.hdIndex !== "number") {
+        if (
+          keyring.type === KEYRING_TYPE.HD &&
+          typeof account.hdIndex !== "number"
+        ) {
           errors.push(`Keyring ${kIndex} Account ${aIndex} missing hdIndex`);
         }
         // Imported accounts need privateKey
@@ -385,4 +466,3 @@ export function validateVault(vault) {
 
   return { valid: errors.length === 0, errors };
 }
-

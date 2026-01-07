@@ -7,14 +7,10 @@ import styles from "./index.module.scss";
 
 const Security = ({ }) => {
   const navigate = useNavigate()
-  const onToSeedPage = useCallback(() => {
-    navigate('/reveal_seed_page')
-  }, [])
   const onResetPwd = useCallback(() => {
     navigate('/reset_password')
   }, [])
   return <CustomView title={i18n.t('security')} contentClassName={styles.container}>
-    <RowItem title={i18n.t('backupMnemonicPhrase')} onClickItem={onToSeedPage} />
     <RowItem title={i18n.t('changePassword')} onClickItem={onResetPwd} />
   </CustomView>
 }
