@@ -65,7 +65,6 @@ const WalletDetails = () => {
             // Update redux cache so AccountManage reflects the new name
             dispatch(setKeyringInfo({ ...keyringInfo, name: newName }));
             setPopupModalStatus(false);
-            Toast.info(i18n.t("updateSuccess"));
           }
         );
       }
@@ -91,31 +90,15 @@ const WalletDetails = () => {
 
   const onClickSeedPhrase = useCallback(() => {
     if (!isHDWallet) {
-      Toast.info(i18n.t("noSeedPhraseForImported"));
       return;
     }
     navigate("/reveal_seed_page", { state: isV1Wallet ? {} : { keyringId } });
   }, [isHDWallet, keyringId, isV1Wallet, navigate]);
 
-  const onConfirmDeleteWallet = useCallback(() => {
-    setPopupModalStatus(false);
+
+  const onClickDelete = useCallback(() => { 
     setShowSecurity(true);
   }, []);
-
-  const onClickDelete = useCallback(() => {
-    setResetModalBtnStatus(false);
-    setCurrentModal({
-      title: i18n.t("deleteWallet"),
-      leftBtnContent: i18n.t("cancel"),
-      rightBtnContent: i18n.t("deleteTag"),
-      type: PopupModal_type.common,
-      onLeftBtnClick: onCloseModal,
-      onRightBtnClick: onConfirmDeleteWallet,
-      content: i18n.t("deleteWalletTip"),
-      rightBtnStyle: styles.modalDelete,
-    });
-    setPopupModalStatus(true);
-  }, [onConfirmDeleteWallet]);
 
   const onClickCheck = useCallback(
     (password) => {
@@ -138,7 +121,6 @@ const WalletDetails = () => {
             }
             return;
           }
-          Toast.info(i18n.t("deleteSuccess"));
           
           // If last keyring deleted, open welcome page in full tab and close popup
           if (result.isLastKeyring) {
@@ -194,7 +176,7 @@ const WalletDetails = () => {
             className={cls(styles.rowTitle, styles.deleteTitle)}
             onClick={onClickDelete}
           >
-            {i18n.t("deleteWallet")}
+            {i18n.t("deleteTag")}
           </p>
         </div>
       </div>

@@ -178,7 +178,7 @@ const AccountManagePage = ({}) => {
             convertedKeyrings.push({
               id: "v1-imported",
               type: "imported",
-              name: i18n.t("importedWallet"),
+              name: i18n.t("privateKey"),
               canAddAccount: false,
               accounts: importedAccounts.map((acc) => ({
                 address: acc.address,
@@ -280,11 +280,6 @@ const AccountManagePage = ({}) => {
         setShowUpgradeModal(false);
         setUpgradeStatus("idle");
         setVaultVersion("v2");
-        
-        // 延迟显示 toast，等待弹窗动画完成
-        setTimeout(() => {
-          Toast.info(i18n.t("vaultUpgradeSuccess"));
-        }, 300);
         
         // Refresh keyrings list first
         sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (res) => {
@@ -546,7 +541,7 @@ const KeyringGroup = ({
     (type) => {
       switch (type) {
         case "imported":
-          return i18n.t("importedWallet");
+          return i18n.t("privateKey");
         case "ledger":
           return i18n.t("hardwareWallet");
         default:

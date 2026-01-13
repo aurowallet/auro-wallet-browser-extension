@@ -774,7 +774,7 @@ class APIService {
       );
       if (existingAccount) {
         return {
-          error: "addressExists",
+          error: "repeatTip",
           type: "local",
           existingAccount: {
             address: existingAccount.address,
@@ -991,7 +991,7 @@ class APIService {
       // Check for duplicate
       const allAccounts = getAllAccountsFromVault(data);
       if (allAccounts.find((acc) => acc.address === wallet.pubKey)) {
-        return { error: "addressExists", type: "local" };
+        return { error: "repeatTip", type: "local" };
       }
 
       // Add account

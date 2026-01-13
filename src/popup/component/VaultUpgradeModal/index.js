@@ -45,7 +45,7 @@ export const VaultUpgradeModal = ({
   return (
     <PopupModalV2
       modalVisible={true}
-      title={i18n.t("vaultUpgradeTitle")}
+      title={i18n.t("reminder")}
       componentContent={
         <StyledContent>
           {i18n.t("vaultUpgradeNeededDesc")}

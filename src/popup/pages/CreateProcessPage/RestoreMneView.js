@@ -231,7 +231,7 @@ export const RestoreMneView = ({
       if (account.error) {
         // Check if it's a duplicate account error with account info
         if (
-          (account.error === "addressExists" ||
+          (account.error === "repeatTip" ||
             account.error === "importRepeat") &&
           account.existingAccount
         ) {
@@ -432,10 +432,9 @@ export const RestoreMneView = ({
         {isKeystoreTab && (
           <>
             <StyledMneTip>
-              {i18n.t("inputKeystore")}
+              {i18n.t("pleaseInputKeyPair")}
             </StyledMneTip>
             <StyledPrivateKeyInput
-              placeholder={i18n.t("keystorePlaceholder")}
               value={privateKeyInput}
               onChange={(e) => setPrivateKeyInput(e.target.value)}
             />
