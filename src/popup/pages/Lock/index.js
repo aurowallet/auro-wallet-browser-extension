@@ -22,6 +22,7 @@ import {
   CURRENCY_UNIT_CONFIG,
   LOCAL_BASE_INFO,
   NET_WORK_CONFIG_V2,
+  USER_AGREEMENT,
 } from "../../../constant/storageKey";
 import { resetWallet } from "../../../reducers";
 import { initCurrentAccount } from "../../../reducers/accountReducer";
@@ -146,7 +147,7 @@ export const LockPage = ({}) => {
           nodeConfigVersion: NET_CONFIG_VERSION,
         });
         let baseInfo = getLocal(LOCAL_BASE_INFO);
-        clearLocalExcept();
+        clearLocalExcept(USER_AGREEMENT);
         dispatch(resetWallet());
         dispatch(updateCurrentNode(DefaultMainnetConfig));
         dispatch(updateCustomNodeList([]));

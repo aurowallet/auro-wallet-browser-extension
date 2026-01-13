@@ -40,15 +40,17 @@ export function clearLocal() {
 
 
 /**
- * clear local storage except some key
+ * clear local storage except some keys
+ * @param {string|string[]} targetKeys - single key or array of keys to preserve
  */
- export function clearLocalExcept(targetKey) {
-     if(targetKey){
+ export function clearLocalExcept(targetKeys) {
+     if(targetKeys){
+        const keysToKeep = Array.isArray(targetKeys) ? targetKeys : [targetKeys];
         let data = getAllLocal()
         let keys = Object.keys(data)
         for (let index = 0; index < keys.length; index++) {
             const key = keys[index];
-            if(key!== targetKey ){
+            if(!keysToKeep.includes(key)){
                 removeLocal(key)
             }
         }
