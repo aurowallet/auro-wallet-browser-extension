@@ -1187,8 +1187,17 @@ class APIService {
 
   // V2: add HD account
   _addHDNewAccountV2 = async (data, accountName) => {
-    // Find HD keyring
-    const hdKeyring = data.keyrings.find((kr) => kr.type === KEYRING_TYPE.HD);
+    // Find current HD keyring (use currentKeyringId, fallback to first HD keyring)
+    let hdKeyring = null;
+    if (data.currentKeyringId) {
+      hdKeyring = data.keyrings.find(
+        (kr) => kr.id === data.currentKeyringId && kr.type === KEYRING_TYPE.HD
+      );
+    }
+    // Fallback to first HD keyring if current is not HD or not found
+    if (!hdKeyring) {
+      hdKeyring = data.keyrings.find((kr) => kr.type === KEYRING_TYPE.HD);
+    }
     if (!hdKeyring) {
       return { error: "noHDKeyring", type: "local" };
     }
