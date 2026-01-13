@@ -433,9 +433,6 @@ const AccountManagePage = ({}) => {
                 goToWalletDetails={goToWalletDetails}
               />
             ))}
-            <div className={styles.addWalletBtn} onClick={onGoAddWallet}>
-              {i18n.t("addWallet")}
-            </div>
           </>
         ) : (
           // Legacy view
@@ -473,6 +470,13 @@ const AccountManagePage = ({}) => {
           </>
         )}
       </div>
+      {useKeyringView && (
+        <div className={styles.addWalletBtnContainer}>
+          <div className={styles.addWalletBtn} onClick={onGoAddWallet}>
+            {i18n.t("addWallet")}
+          </div>
+        </div>
+      )}
       <VaultUpgradeModal
         modalVisible={showUpgradeModal}
         onClose={onCloseUpgradeModal}

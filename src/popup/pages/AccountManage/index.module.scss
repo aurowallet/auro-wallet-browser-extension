@@ -9,11 +9,17 @@ $border-light: rgba(0, 0, 0, 0.1);
     background-color: white;
 }
 .contentClassName {
-    padding: 10px 0px 20px;
+    padding: 10px 0px 0px;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 .contentContainer {
     padding: 0px 20px;
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 80px;
 }
 .rowCommonContainer {
     background: $bg-secondary;
@@ -261,6 +267,18 @@ $border-light: rgba(0, 0, 0, 0.1);
 
 
 
+.addWalletBtnContainer {
+    padding: 12px 38px 20px;
+    position: fixed;
+    width: calc(100%);
+    background-color: white;
+
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
 .addWalletBtn {
     background: #594af1;
     color: white;
@@ -270,7 +288,6 @@ $border-light: rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     text-align: center;
     cursor: pointer;
-    margin: 20px 18px 0px;
     
     &:hover {
         background: #4a3dd4;
