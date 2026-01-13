@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.4.5]
+## [2.5.0]
 ### Enhancements
 - Support multi-wallet
 - Firefox build scripts
