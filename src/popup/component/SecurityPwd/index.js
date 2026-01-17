@@ -5,7 +5,11 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import { PopupModal } from "../../component/PopupModal";
-import styles from "./index.module.scss";
+import {
+    StyledContainer,
+    StyledPlaceholder,
+    StyledBottomContainer,
+} from "./index.styled";
 
 const SecurityPwd = ({
   onClickCheck = () => { },
@@ -65,14 +69,15 @@ const SecurityPwd = ({
     }
   }, [action])
 
-  const showBtnTxt = useMemo(()=>{
+  const showBtnTxt = useMemo(() => {
     return btnTxt || i18n.t('next')
-  },[btnTxt,i18n])
+  }, [btnTxt, i18n])
+
   return (
     <>
       <CustomView title={pageTitle || i18n.t('security')}>
-        <form onSubmit={onSubmit} className={styles.container}>
-          <div >
+        <StyledContainer onSubmit={onSubmit}>
+          <div>
             <Input
               label={i18n.t('password')}
               onChange={onPwdInput}
@@ -80,15 +85,15 @@ const SecurityPwd = ({
               inputType={'password'}
             />
           </div>
-          <div className={styles.hold} />
-          <div className={styles.bottomContainer}>
+          <StyledPlaceholder />
+          <StyledBottomContainer>
             <Button
               disable={!btnClick}
               onClick={onConfirm}>
               {showBtnTxt}
             </Button>
-          </div>
-        </form>
+          </StyledBottomContainer>
+        </StyledContainer>
       </CustomView>
       <PopupModal
         title={i18n.t('tips')}

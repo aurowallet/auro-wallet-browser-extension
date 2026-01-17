@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import "./ToastItem.scss";
+import { StyledToastItem } from './index.styled';
 
 class ToastItem extends Component {
     componentDidMount() {
@@ -20,9 +20,9 @@ class ToastItem extends Component {
             return <></>
         }
         return (
-            <div className="toast-item">
+            <StyledToastItem>
                 {text}
-            </div>
+            </StyledToastItem>
         );
     }
 }

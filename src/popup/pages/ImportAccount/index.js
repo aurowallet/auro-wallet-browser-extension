@@ -12,9 +12,16 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import TextArea from "../../component/TextArea";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
+import {
+  StyledTitle,
+  StyledTextAreaContainer,
+  StyledDesc,
+  StyledPlaceholder,
+  StyledBottomContainer,
+} from "./index.styled";
 
 const ImportAccount = ({}) => {
+
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -87,20 +94,18 @@ const ImportAccount = ({}) => {
   }, [inputValue, accountName, history, currentAddress]);
   return (
     <CustomView title={i18n.t("importPrivateKey")}>
-      <p className={styles.title}>{i18n.t("pleaseInputPriKey")}</p>
-
-      <div className={styles.imTextAreaContainer}>
+      <StyledTitle>{i18n.t("pleaseInputPriKey")}</StyledTitle>
+      <StyledTextAreaContainer>
         <TextArea onChange={onInput} value={inputValue} />
-      </div>
-      <span className={styles.desc}>{i18n.t("importAccount_3")}</span>
-      <span className={styles.desc}>{i18n.t("importAccount_2")}</span>
-
-      <div className={styles.hold} />
-      <div className={styles.bottomContainer}>
+      </StyledTextAreaContainer>
+      <StyledDesc>{i18n.t("importAccount_3")}</StyledDesc>
+      <StyledDesc>{i18n.t("importAccount_2")}</StyledDesc>
+      <StyledPlaceholder />
+      <StyledBottomContainer>
         <Button disable={!btnStatus} loading={loading} onClick={onConfirm}>
           {i18n.t("confirm")}
         </Button>
-      </div>
+      </StyledBottomContainer>
     </CustomView>
   );
 };

@@ -1,26 +1,32 @@
-import cls from "classnames";
 import { useMemo } from "react";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledRowTitle2,
+  StyledRowContent,
+  StyledMt10,
+  StyledLoopWrapper,
+  StyledViewRow,
+  StyledRowContentContainer,
+} from "./index.styled";
+
 export const TypeRowInfo = ({ data, isZkData }) => {
   return (
-    <div className={styles.container}>
+    <StyledContainer>
       {data.map((item, i) => {
         return (
           <ChildView data={item} key={i} count={0} showInLine={isZkData} />
         );
       })}
-    </div>
+    </StyledContainer>
   );
 };
+
 const ChildView = ({ data, count, showInLine }) => {
   if (data.children && data.children.length > 0) {
     let nextCount = count + 1;
+    const Wrapper = showInLine ? StyledLoopWrapper : "div";
     return (
-      <div
-        className={cls({
-          [styles.loopWrapper]: showInLine,
-        })}
-      >
+      <Wrapper>
         <ContentRow
           title={data.label}
           content={data.value}
@@ -37,7 +43,7 @@ const ChildView = ({ data, count, showInLine }) => {
             />
           );
         })}
-      </div>
+      </Wrapper>
     );
   }
   return (
@@ -73,25 +79,17 @@ const ContentRow = ({
   const showTitle = useMemo(() => {
     return withColon ? title + ": " : title;
   }, [withColon, title]);
+
+  const Container = showInLine ? StyledViewRow : StyledRowContentContainer;
+
   return (
-    <div
-      className={cls(styles.rowContentContainer, {
-        [styles.viewRow]: showInLine,
-      })}
-      style={{
-        marginLeft: marginLeftValue,
-      }}
-    >
-      <div className={styles.rowTitle2}>{showTitle}</div>
+    <Container style={{ marginLeft: marginLeftValue }}>
+      <StyledRowTitle2>{showTitle}</StyledRowTitle2>
       {showContent && (
-        <p
-          className={cls(styles.rowContent, {
-            [styles.mt10]: !showInLine,
-          })}
-        >
+        <StyledRowContent style={{ marginTop: showInLine ? 0 : "10px" }}>
           {showContent}
-        </p>
+        </StyledRowContent>
       )}
-    </div>
+    </Container>
   );
 };

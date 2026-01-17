@@ -19,15 +19,33 @@ import {
 } from "@/reducers/network";
 import { sendMsg } from "@/utils/commonMsg";
 import { DAppActions } from "@aurowallet/mina-provider";
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { NET_CONFIG_VERSION } from "../../../../../config";
-import styles from "./index.module.scss";
 import { Default_Network_List } from "@/constant/network";
 import { clearLocalCache } from "../../../../background/localStorage";
 import { sendNetworkChangeMsg } from "../../../../utils/commonMsg";
+import {
+  StyledSectionSwitch,
+  StyledTitleRow,
+  StyledTitle,
+  StyledContent,
+  StyledAccountTip,
+  StyledBtnGroup,
+  StyledAccountRow,
+  StyledRowTitle,
+  StyledRowContent,
+  StyledRowLeft,
+  StyledRowRight,
+  StyledRowArrow,
+  StyledAddTipContainer,
+  StyledAddTip,
+  StyledNodeWrapper,
+  StyledNodeTitle,
+  StyledNodeContent,
+  StyledMt20,
+} from "./index.styled";
 
 const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
   const dispatch = useDispatch();
@@ -232,11 +250,10 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
   }, [targetConfig, nextChainConfig, targetChainInfo, targetNetworkID]);
 
   return (
-    <section className={styles.sectionSwitch}>
-      <div className={styles.titleRow}>
-        <p className={styles.title}>{i18n.t(showTitle)}</p>
-      </div>
-
+    <StyledSectionSwitch>
+      <StyledTitleRow>
+        <StyledTitle>{i18n.t(showTitle)}</StyledTitle>
+      </StyledTitleRow>
       {state.switchStatus && (
         <SwitchChainView
           notifyParams={notifyParams}
@@ -247,7 +264,7 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
         />
       )}
       {state.addStatus && <AddChainView notifyParams={notifyParams} />}
-      <div className={styles.btnGroup}>
+      <StyledBtnGroup>
         <Button
           onClick={onCancel}
           theme={button_theme.BUTTON_THEME_LIGHT}
@@ -262,8 +279,8 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }) => {
         >
           {i18n.t(showBtnTxt)}
         </Button>
-      </div>
-    </section>
+      </StyledBtnGroup>
+    </StyledSectionSwitch>
   );
 };
 
@@ -277,24 +294,24 @@ const AddChainView = ({ notifyParams }) => {
     };
   }, []);
   return (
-    <div className={styles.content}>
-      <div className={styles.addTipContainer}>
-        <span className={styles.addTip}>{i18n.t("addNetworkTip")}</span>
-      </div>
-      <div className={styles.websiteContainer}>
+    <StyledContent>
+      <StyledAddTipContainer>
+        <StyledAddTip>{i18n.t("addNetworkTip")}</StyledAddTip>
+      </StyledAddTipContainer>
+      <div>
         <DappWebsite
           siteIcon={notifyParams.site?.webIcon}
           siteUrl={notifyParams.site?.origin}
         />
       </div>
-      <p className={styles.accountTip}>{i18n.t("allowAdd")}</p>
-      <div className={styles.nodeWrapper}>
-        <div className={styles.nodeTitle}>{i18n.t("nodeName")}</div>
-        <div className={styles.nodeContent}>{name}</div>
-        <div className={styles.nodeTitle}>{i18n.t("nodeAddress")}</div>
-        <div className={styles.nodeContent}>{url}</div>
-      </div>
-    </div>
+      <StyledAccountTip>{i18n.t("allowAdd")}</StyledAccountTip>
+      <StyledNodeWrapper>
+        <StyledNodeTitle>{i18n.t("nodeName")}</StyledNodeTitle>
+        <StyledNodeContent>{name}</StyledNodeContent>
+        <StyledNodeTitle>{i18n.t("nodeAddress")}</StyledNodeTitle>
+        <StyledNodeContent>{url}</StyledNodeContent>
+      </StyledNodeWrapper>
+    </StyledContent>
   );
 };
 
@@ -306,32 +323,30 @@ const SwitchChainView = ({
   targetChainName,
 }) => {
   return (
-    <div className={cls(styles.content, styles.mt20)}>
-      <div className={styles.websiteContainer}>
+    <StyledContent style={{ marginTop: "20px" }}>
+      <div>
         <DappWebsite
           siteIcon={notifyParams.site?.webIcon}
           siteUrl={notifyParams.site?.origin}
         />
       </div>
-      <p className={styles.accountTip}>{i18n.t("allowSwitch")}</p>
-      <div className={styles.accountRow}>
-        <div className={styles.rowLeft}>
-          <p className={styles.rowTitle}>{i18n.t("current")}</p>
-          <p className={styles.rowContent}>{currentChainName}</p>
-          <p className={styles.rowDesc}>{currentNetworkID}</p>
-        </div>
-        <div className={styles.rowArrow}>
+      <StyledAccountTip>{i18n.t("allowSwitch")}</StyledAccountTip>
+      <StyledAccountRow>
+        <StyledRowLeft>
+          <StyledRowTitle>{i18n.t("current")}</StyledRowTitle>
+          <StyledRowContent>{currentChainName}</StyledRowContent>
+          <StyledRowContent style={{ fontSize: "14px" }}>{currentNetworkID}</StyledRowContent>
+        </StyledRowLeft>
+        <StyledRowArrow>
           <img src="/img/icon_arrow_purple.svg" />
-        </div>
-        <div className={styles.rowRight}>
-          <p className={cls(styles.rowTitle, styles.rightTitle)}>
-            {i18n.t("target")}
-          </p>
-          <p className={styles.rowContent}>{targetChainName}</p>
-          <p className={styles.rowDesc}>{targetNetworkID}</p>
-        </div>
-      </div>
-    </div>
+        </StyledRowArrow>
+        <StyledRowRight>
+          <StyledRowTitle $rightAlign>{i18n.t("target")}</StyledRowTitle>
+          <StyledRowContent>{targetChainName}</StyledRowContent>
+          <StyledRowContent style={{ fontSize: "14px" }}>{targetNetworkID}</StyledRowContent>
+        </StyledRowRight>
+      </StyledAccountRow>
+    </StyledContent>
   );
 };
 export default ZkAppChainView;

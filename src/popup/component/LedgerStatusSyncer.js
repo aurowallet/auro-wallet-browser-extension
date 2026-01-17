@@ -27,7 +27,6 @@ export default function LedgerStatusSyncer() {
 
     return () => {
       ledgerManager.removeStatusListener(syncStatus);
-      console.log("LedgerStatusSyncer: STOP monitoring");
     };
   }, [dispatch, isLedgerAccount]);
 

@@ -1,75 +1,35 @@
 import i18n from "i18next";
 import {QRCodeSVG} from 'qrcode.react';
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { MAIN_COIN_CONFIG, POWER_BY } from "../../../constant";
 import { copyText } from "../../../utils/browserUtils";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
-const StyledPageWrapper = styled.div`
-  width: 375px;
-  height: 100vh;
-  background-image: url("/img/receivePageBg.svg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-`;
-const StyledTitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  height: 48px;
-  padding: 10px 10px 0px;
-`;
-const StyledBackWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 30px;
-  height: 30px;
-
-  cursor: pointer;
-  z-index: 1;
-`;
-const StyledBackArrow = styled.img``;
-const StyledPageTitle = styled.div`
-  margin: 0;
-  font-weight: 600;
-  font-size: 18px;
-  line-height: 21px;
-  text-align: center;
-  color: rgba(255, 255, 255, 1);
-
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, 0%);
-  white-space: nowrap;
-`;
-
-const StyledAddressContent = styled.p`
-  font-size: 14px;
-  line-height: 17px;
-  text-align: center;
-  color: #000000;
-  margin: 22px auto 40px;
-  padding: 0 20px;
-  word-break: break-all;
-`;
-const StyledBoldPart = styled.span`
-  font-weight: 700;
-`;
-const StyledReceiveTip = styled.p`
-  margin: 36px auto 22px;
-  font-size: 14px;
-  line-height: 17px;
-  text-align: center;
-  color: rgba(0, 0, 0, 0.5);
-`;
+import {
+  StyledPageWrapper,
+  StyledTitleRow,
+  StyledBackWrapper,
+  StyledBackArrow,
+  StyledPageTitle,
+  StyledContent,
+  StyledTitle,
+  StyledDividedLine,
+  StyledReceiveTip,
+  StyledReceiveBold,
+  StyledQrCodeContainer,
+  StyledAddressContent,
+  StyledBoldPart,
+  StyledDividedLine2,
+  StyledCopyOuterContainer,
+  StyledCopyContainer,
+  StyledCopyTxt,
+  StyledBottomTip,
+} from "./index.styled";
 
 const ReceivePage = ({}) => {
+
   const navigate = useNavigate();
   const location = useLocation();
   const accountInfo = useSelector((state) => state.accountInfo);
@@ -121,19 +81,19 @@ const ReceivePage = ({}) => {
         </StyledBackWrapper>
         <StyledPageTitle>{i18n.t("receive")}</StyledPageTitle>
       </StyledTitleRow>
-      <div className={styles.content}>
-        <p className={styles.title}>{i18n.t("scanPay")}</p>
-        <div className={styles.dividedLine} />
+      <StyledContent>
+        <StyledTitle>{i18n.t("scanPay")}</StyledTitle>
+        <StyledDividedLine />
         <StyledReceiveTip>
           <Trans
             i18nKey={"addressQrTip"}
             values={{ symbol: tokenSymbol }}
             components={{
-              b: <span className={styles.receiveBold} />,
+              b: <StyledReceiveBold />,
             }}
           />
         </StyledReceiveTip>
-        <div className={styles.qrCodeContainer}>
+        <StyledQrCodeContainer>
           <QRCodeSVG
             value={currentAccount.address}
             size={150}
@@ -146,20 +106,20 @@ const ReceivePage = ({}) => {
               excavate: true,
             }}
           />
-        </div>
+        </StyledQrCodeContainer>
         <StyledAddressContent>
           {mainPart}
           <StyledBoldPart>{lastPart}</StyledBoldPart>
         </StyledAddressContent>
-        <div className={styles.dividedLine2} />
-        <div className={styles.copyOuterContainer} onClick={onCopy}>
-          <div className={styles.copyContainer}>
-            <img src="/img/icon_copy.svg" className={styles.copyIcon} />
-            <p className={styles.copyTxt}>{i18n.t("copy")}</p>
-          </div>
-        </div>
-      </div>
-      <p className={styles.bottomTip}>{POWER_BY}</p>
+        <StyledDividedLine2 />
+        <StyledCopyOuterContainer onClick={onCopy}>
+          <StyledCopyContainer>
+            <img src="/img/icon_copy.svg" />
+            <StyledCopyTxt>{i18n.t("copy")}</StyledCopyTxt>
+          </StyledCopyContainer>
+        </StyledCopyOuterContainer>
+      </StyledContent>
+      <StyledBottomTip>{POWER_BY}</StyledBottomTip>
     </StyledPageWrapper>
   );
 };

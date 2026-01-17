@@ -1,6 +1,13 @@
 import i18n from "i18next";
 import styled, { css } from "styled-components";
-import styles from "./index.module.scss";
+import {
+  StyledHistoryContainer,
+  StyledLoadingCon,
+  StyledRefreshLoading,
+  StyledLoadingContent,
+  StyledEmptyIcon,
+  StyledEmptyContent,
+} from "./index.styled";
 
 const StyledHistoryHeadWrapper = styled.div`
   width: 100%;
@@ -88,20 +95,20 @@ export const HistoryHeader = ({ isRefresh, onClickRefresh, showRefresh }) => {
 
 export const LoadingView = () => {
   return (
-    <div className={styles.historyContainer}>
-      <div className={styles.loadingCon}>
-        <img className={styles.refreshLoading} src="/img/loading_purple.svg" />
-        <p className={styles.loadingContent}>{i18n.t("loading") + "..."}</p>
-      </div>
-    </div>
+    <StyledHistoryContainer>
+      <StyledLoadingCon>
+        <StyledRefreshLoading src="/img/loading_purple.svg" />
+        <StyledLoadingContent>{i18n.t("loading") + "..."}</StyledLoadingContent>
+      </StyledLoadingCon>
+    </StyledHistoryContainer>
   );
 };
 
 export const TxNotSupportView = () => {
   return (
     <StyledEmptyWrapper>
-      <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
-      <div className={styles.emptyContent}>{i18n.t("txHistoryTip")}</div>
+      <StyledEmptyIcon src="/img/icon_empty.svg" />
+      <StyledEmptyContent>{i18n.t("txHistoryTip")}</StyledEmptyContent>
     </StyledEmptyWrapper>
   );
 };
@@ -109,8 +116,8 @@ export const TxNotSupportView = () => {
 export const EmptyTxListView = () => {
   return (
     <StyledEmptyWrapper>
-        <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
-        <span className={styles.emptyContent}>{i18n.t("noTxHistory")}</span>
+      <StyledEmptyIcon src="/img/icon_empty.svg" />
+      <StyledEmptyContent>{i18n.t("noTxHistory")}</StyledEmptyContent>
     </StyledEmptyWrapper>
   );
 };

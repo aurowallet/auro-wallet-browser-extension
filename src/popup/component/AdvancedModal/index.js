@@ -1,13 +1,22 @@
 /**
  * speed up and speed cancel modal
  */
-import cls from "classnames";
 import i18n from "i18next";
 import Button from "../Button";
-import styles from "./index.module.scss";
 import AdvanceMode from "../AdvanceMode";
 import { useCallback, useEffect, useState } from "react";
 import BigNumber from "bignumber.js";
+import {
+  StyledModalOverlay,
+  StyledModalContent,
+  StyledTitleRow,
+  StyledRowTitle,
+  StyledCloseButton,
+  StyledRightRow,
+  StyledDivider,
+  StyledBottomContent,
+  StyledBottomContainer,
+} from "./index.styled";
 
 export const AdvancedModal = ({
   modalVisible = false,
@@ -43,22 +52,21 @@ export const AdvancedModal = ({
   return (
     <>
       {modalVisible && (
-        <div className={styles.outerContainer}>
-          <div className={styles.innerContent}>
-            <div className={styles.contentContainer}>
-              <div className={styles.titleRow}>
-                <span className={styles.rowTitle}>{i18n.t("advanceMode")}</span>
-                <div className={styles.rightRow}>
-                  <img
+        <StyledModalOverlay>
+          <StyledModalContent>
+            <div>
+              <StyledTitleRow>
+                <StyledRowTitle>{i18n.t("advanceMode")}</StyledRowTitle>
+                <StyledRightRow>
+                  <StyledCloseButton
                     onClick={onClickClose}
-                    className={styles.rowClose}
                     src="/img/icon_nav_close.svg"
                   />
-                </div>
-              </div>
+                </StyledRightRow>
+              </StyledTitleRow>
             </div>
-            <div className={styles.dividedLine} />
-            <div className={styles.bottomContent}>
+            <StyledDivider />
+            <StyledBottomContent>
               <AdvanceMode
                 onClickAdvance={onClickAdvance}
                 isOpenAdvance={true}
@@ -69,14 +77,14 @@ export const AdvancedModal = ({
                 nonceValue={currentNonce}
                 type={"modal"}
               />
-            </div>
-            <div className={cls(styles.bottomContainer)}>
+            </StyledBottomContent>
+            <StyledBottomContainer>
               <Button onClick={() => onConfirm(inputFee)}>
                 {i18n.t("confirm")}
               </Button>
-            </div>
-          </div>
-        </div>
+            </StyledBottomContainer>
+          </StyledModalContent>
+        </StyledModalOverlay>
       )}
     </>
   );

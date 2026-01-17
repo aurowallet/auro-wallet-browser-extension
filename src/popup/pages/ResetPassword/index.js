@@ -1,15 +1,19 @@
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { WALLET_CHANGE_SEC_PASSWORD } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
 import { PasswordValidationList } from "../../../utils/utils";
+import {
+  StyledInputContainer,
+  StyledPlaceholder,
+  StyledBottomContainer,
+  StyledCheckSpan,
+} from "./index.styled";
 
 const Reset = ({ }) => {
 
@@ -88,58 +92,58 @@ const Reset = ({ }) => {
         })
     }, [oldPassword, confirmPassword, newPassword, history, i18n])
 
-    return (<CustomView title={i18n.t('changePassword')} >
-        <div className={cls(styles.inputContainer, {
-        })}>
-            <Input
-                transLabel={('inputOldPwd')}
-                onChange={onOldPasswordInput}
-                value={oldPassword}
-                inputType={'password'}
-            />
+    return (
+        <CustomView title={i18n.t("changePassword")}>
+            <StyledInputContainer>
+                <Input
+                    transLabel={"inputOldPwd"}
+                    onChange={onOldPasswordInput}
+                    value={oldPassword}
+                    inputType={"password"}
+                />
+                <Input
+                    transLabel={"inputNewPwd"}
+                    onChange={onNewPwdInput}
+                    value={newPassword}
+                    inputType={"password"}
+                    showBottomTip={newPassword.length > 0}
+                    bottomTip={
+                        <div>
+                            {matchRenderList.map((item, index) => {
+                                let extraStr = "";
+                                if (index !== matchRenderList.length - 1) {
+                                    extraStr = " / ";
+                                }
+                                return (
+                                    <StyledCheckSpan $hidden={item.bool} key={index}>
+                                        {i18n.t(item.text) + extraStr}
+                                    </StyledCheckSpan>
+                                );
+                            })}
+                        </div>
+                    }
+                />
+                <Input
+                    transLabel={"inputNewPwdRepeat"}
+                    onChange={onPwdConfirmInput}
+                    value={confirmPassword}
+                    inputType={"password"}
+                    showBottomTip={errorTip}
+                    bottomTip={
+                        <StyledCheckSpan $hidden={!errorTip}>
+                            {i18n.t("passwordDifferent")}
+                        </StyledCheckSpan>
+                    }
+                />
+            </StyledInputContainer>
+            <StyledPlaceholder />
+            <StyledBottomContainer>
+                <Button loading={btnLoading} disable={!btnClick} onClick={onConfirm}>
+                    {i18n.t("confirm")}
+                </Button>
+            </StyledBottomContainer>
+        </CustomView>
+    );
+};
 
-            <Input
-                transLabel={('inputNewPwd')}
-                onChange={onNewPwdInput}
-                value={newPassword}
-                inputType={'password'}
-                showBottomTip={newPassword.length > 0}
-                bottomTip={<div className={styles.checkSpanCon}>
-                    {matchRenderList.map((item, index) => {
-                        let extraStr = ""
-                        if (index !== matchRenderList.length - 1) {
-                            extraStr = " / "
-                        }
-                        return <span className={cls(styles.checkSpan, {
-                            [styles.checkSpanSuc]: item.bool
-                        })} key={index}>{i18n.t(item.text) + extraStr}</span>
-                    })}
-                </div>}
-            />
- 
-            <Input
-                transLabel={('inputNewPwdRepeat')}
-                onChange={onPwdConfirmInput}
-                value={confirmPassword}
-                inputType={'password'}
-                showBottomTip={errorTip}
-                bottomTip={<>
-                    <span className={cls(styles.checkSpan, {
-                        [styles.checkSpanSuc]: !errorTip
-                    })} >{i18n.t("passwordDifferent")}</span>
-                </>}
-            />
-        </div>
-        <div className={styles.hold} />
-        <div className={styles.bottomCon}>
-            <Button
-                loading={btnLoading}
-                disable={!btnClick}
-                onClick={onConfirm}>
-                {i18n.t('confirm')}
-            </Button>
-        </div>
-
-    </CustomView>)
-}
-export default Reset
+export default Reset;

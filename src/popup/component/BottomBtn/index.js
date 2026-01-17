@@ -1,6 +1,8 @@
 import Button from "../Button";
-import styles from "./index.module.scss";
-import cls from "classnames"
+import {
+    StyledPlaceholder,
+    StyledBottomContainer,
+} from "./index.styled";
 
 const BottomBtn = ({
     disable = false,
@@ -9,21 +11,24 @@ const BottomBtn = ({
     children,
     rightLoadingStatus = false,
     containerClass,
-    noHolder=false
+    noHolder = false
 }) => {
+    const ContainerComponent = containerClass || StyledBottomContainer;
 
-    return (<>
-        {!noHolder && <div className={styles.hold} ></div>}
-        {children}
-        <div className={cls(styles.bottomCon,containerClass)}>
-            <Button
-                disable={disable}
-                loading={rightLoadingStatus}
-                onClick={onClick}>
-                {rightBtnContent}
-            </Button>
-        </div>
-    </>)
+    return (
+        <>
+            {!noHolder && <StyledPlaceholder />}
+            {children}
+            <ContainerComponent>
+                <Button
+                    disable={disable}
+                    loading={rightLoadingStatus}
+                    onClick={onClick}>
+                    {rightBtnContent}
+                </Button>
+            </ContainerComponent>
+        </>
+    )
 }
 
 export default BottomBtn

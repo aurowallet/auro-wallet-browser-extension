@@ -1,6 +1,10 @@
-import cls from "classnames";
 import { useCallback, useEffect, useImperativeHandle, useRef } from "react";
-import styles from "./index.module.scss";
+import {
+    StyledContainer,
+    StyledLabel,
+    StyledTextArea,
+    StyledBottomTip,
+} from "./index.styled";
 
 const TextArea = ({
     onChange = () => { },
@@ -39,25 +43,23 @@ const TextArea = ({
     useEffect(() => {
         getPositionForTextArea()
     }, [value])
-    return (<div className={styles.container}>
-        <div className={styles.label}>
-            {label}
-        </div>
-        <textarea
-            ref={textAreaRef}
-            className={cls(styles.textArea, className, {
-                [styles.errorTip]: showBottomTip && bottomErrorTip
-            })}
-            value={value}
-            onKeyUp={onKeyup}
-            onChange={onChange}
-            placeholder={placeholder}
-        />
-        {showBottomTip && bottomErrorTip &&
-            <div className={styles.bottomTipCon}>
-                {bottomErrorTip}
-            </div>}
-    </div>
+
+    return (
+        <StyledContainer>
+            <StyledLabel>{label}</StyledLabel>
+            <StyledTextArea
+                ref={textAreaRef}
+                className={className}
+                $hasError={showBottomTip && bottomErrorTip}
+                value={value}
+                onKeyUp={onKeyup}
+                onChange={onChange}
+                placeholder={placeholder}
+            />
+            {showBottomTip && bottomErrorTip && (
+                <StyledBottomTip>{bottomErrorTip}</StyledBottomTip>
+            )}
+        </StyledContainer>
     )
 }
 export default TextArea

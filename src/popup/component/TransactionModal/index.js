@@ -1,7 +1,6 @@
 /**
  * speed up and speed cancel modal
  */
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { Trans } from "react-i18next";
@@ -10,7 +9,32 @@ import { AdvancedModal } from "../AdvancedModal";
 import Button, { button_theme } from "../Button";
 import LedgerStatusView from "../StatusView/LedgerStatusView";
 import NetworkStatusView from "../StatusView/NetworkStatusView";
-import styles from "./index.module.scss";
+import {
+  StyledOuterContainer,
+  StyledInnerContent,
+  StyledTitleRow,
+  StyledRowTitle,
+  StyledRightRow,
+  StyledDividedLine,
+  StyledBottomContent,
+  StyledBottomContainer,
+  StyledModalContent,
+  StyledLightFont,
+  StyledFeeContainer,
+  StyledFeeItem,
+  StyledFeeTitle,
+  StyledFeeContent,
+  StyledFeeArrow,
+  StyledChangeWrapper,
+  StyledChangeCls,
+  StyledLedgerContent,
+  StyledWaitingIcon,
+  StyledWaitingTitle,
+  StyledWaitingContent,
+  StyledWaitingTip,
+  StyledAccountRepeatName,
+  StyledRedFont,
+} from "./index.styled";
 
 export const TransactionModalType = {
   speedUp: "SPEED_UP",
@@ -55,83 +79,75 @@ export const TransactionModal = ({
   return (
     <>
       {modalVisible && (
-        <div className={styles.outerContainer}>
-          <div className={styles.innerContent}>
-            <div className={styles.contentContainer}>
-              <div className={styles.titleRow}>
-                <span className={styles.rowTitle}>{title}</span>
-                <div className={styles.rightRow}>
+        <StyledOuterContainer>
+          <StyledInnerContent>
+            <div>
+              <StyledTitleRow>
+                <StyledRowTitle>{title}</StyledRowTitle>
+                <StyledRightRow>
                   <LedgerStatusView />
                   <div style={{ marginRight: "6px" }} />
                   <NetworkStatusView />
-                </div>
-              </div>
+                </StyledRightRow>
+              </StyledTitleRow>
             </div>
-            <div className={styles.dividedLine} />
+            <StyledDividedLine />
             {waitingLedger ? (
-              <div className={styles.ledgerContent}>
-                <img
-                  className={styles.waitingIcon}
-                  src="/img/detail_pending.svg"
-                />
-                <p className={styles.waitingTitle}>
+              <StyledLedgerContent>
+                <StyledWaitingIcon src="/img/detail_pending.svg" />
+                <StyledWaitingTitle>
                   {i18n.t("waitingLedgerConfirm") + "..."}
-                </p>
-                <p className={styles.waitingContent}>
+                </StyledWaitingTitle>
+                <StyledWaitingContent>
                   {i18n.t("waitingLedgerConfirmTip")}
-                </p>
-                <p className={styles.waitingTip}>
+                </StyledWaitingContent>
+                <StyledWaitingTip>
                   <Trans
                     i18nKey={"waitingLedgerConfirmTip_3"}
                     components={{
-                      b: <span className={styles.accountRepeatName} />,
-                      red: <span className={styles.redFont} />,
+                      b: <StyledAccountRepeatName />,
+                      red: <StyledRedFont />,
                     }}
                   />
-                </p>
-              </div>
+                </StyledWaitingTip>
+              </StyledLedgerContent>
             ) : (
               <>
-                <div className={styles.modalContentCls}>
+                <StyledModalContent>
                   <Trans
                     i18nKey={modalContent}
                     components={{
-                      light: <span className={styles.lightFont} />,
+                      light: <StyledLightFont />,
                     }}
                   />
-                </div>
-                <div className={styles.bottomContent}>
-                  <div className={styles.feeContainer}>
-                    <div className={styles.feeItem}>
-                      <div className={styles.feeTitle}>
-                        {i18n.t("currentFee")}
-                      </div>
-                      <div className={styles.feeContent}>
+                </StyledModalContent>
+                <StyledBottomContent>
+                  <StyledFeeContainer>
+                    <StyledFeeItem>
+                      <StyledFeeTitle>{i18n.t("currentFee")}</StyledFeeTitle>
+                      <StyledFeeContent>
                         {currentFee + " " + MAIN_COIN_CONFIG.symbol}
-                      </div>
-                    </div>
-                    <div className={styles.feeArrow}>
-                      <img
-                        className={styles.arrowCls}
-                        src="/img/icon_arrow_purple.svg"
-                      />
-                    </div>
-                    <div className={styles.feeItem}>
-                      <div className={cls(styles.feeTitle, styles.rightFee)}>
+                      </StyledFeeContent>
+                    </StyledFeeItem>
+                    <StyledFeeArrow>
+                      <img src="/img/icon_arrow_purple.svg" />
+                    </StyledFeeArrow>
+                    <StyledFeeItem>
+                      <StyledFeeTitle $rightAlign>
                         {i18n.t("newFee")}
-                      </div>
-                      <div className={cls(styles.feeContent, styles.rightFee)}>
+                      </StyledFeeTitle>
+                      <StyledFeeContent $rightAlign>
                         {nextInputFee + " " + MAIN_COIN_CONFIG.symbol}
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.changeWrapper}>
-                    <div className={styles.changeCls} onClick={onClickAdvance}>
+                      </StyledFeeContent>
+                    </StyledFeeItem>
+                  </StyledFeeContainer>
+                  <StyledChangeWrapper>
+                    <StyledChangeCls onClick={onClickAdvance}>
                       {i18n.t("change")}
-                    </div>
-                  </div>
-                </div>
-                <div className={styles.bottomContainer}>
+                    </StyledChangeCls>
+                  </StyledChangeWrapper>
+                </StyledBottomContent>
+                <StyledBottomContainer>
                   <Button
                     onClick={onClickClose}
                     theme={button_theme.BUTTON_THEME_LIGHT}
@@ -146,13 +162,12 @@ export const TransactionModal = ({
                   >
                     {i18n.t("confirm")}
                   </Button>
-                </div>
+                </StyledBottomContainer>
               </>
             )}
-          </div>
-        </div>
+          </StyledInnerContent>
+        </StyledOuterContainer>
       )}
-
       <AdvancedModal
         modalVisible={advanceModalVisible}
         onConfirm={onAdvanceConfirm}

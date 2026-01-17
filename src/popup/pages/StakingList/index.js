@@ -1,14 +1,31 @@
-import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ValidatorsLaunch } from "../../../constant";
 import { addressSlice, showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
-import styles from './index.module.scss';
 import { NetworkID_MAP } from "@/constant/network";
+import {
+  StyledContentClassName, 
+  StyledInputCon,
+  StyledListContainer,
+  StyledRowContainer,
+  StyledNodeItemContainer,
+  StyledRowLeft,
+  StyledNodeName,
+  StyledNodeAddress,
+  StyledNodeInfoCon,
+  StyledManualAddContainer,
+  StyledManualAddContent,
+  StyledManualSubmit,
+  StyledIconCon,
+  StyledHolderIconCon,
+  StyledNodeIcon,
+  searchInputContainerCss,
+  searchInputCss,
+} from "./index.styled";
 
 const StakingList = ({ }) => {
 
@@ -44,107 +61,118 @@ const StakingList = ({ }) => {
     navigate("/staking_transfer", { state: { menuAdd: true } });
   }, [])
 
-  return (<CustomView
-    title={i18n.t('blockProducers')}
-    contentClassName={styles.contentClassName}>
-    <div className={styles.inputCon}>
-      <Input
-        showSearchIcon
-        onChange={onChange}
-        value={keywords}
-        placeholder={i18n.t('searchPlaceholder')}
-        customInputContainer={styles.customInputContainer}
-        className={styles.customInput}
-      />
-    </div>
-    <div className={styles.listContainer}>
-      {
-        stakingList.filter(((node) => {
-          if (keywords) {
-            const keywordsLS = keywords.toLowerCase();
-            const addressFlag = node.nodeAddress.toLowerCase().indexOf(keywordsLS) >= 0;
-            let nameFlag = false;
-            if (node.nodeName) {
-              nameFlag = node.nodeName.toLowerCase().indexOf(keywordsLS) >= 0;
+  return (
+    <CustomView
+      title={i18n.t("blockProducers")}
+      ContentWrapper={StyledContentClassName}
+    >
+      <StyledInputCon>
+        <Input
+          showSearchIcon
+          onChange={onChange}
+          value={keywords}
+          placeholder={i18n.t("searchPlaceholder")}
+          customInputContainer={searchInputContainerCss}
+          customInputCss={searchInputCss}
+        />
+      </StyledInputCon>
+      <StyledListContainer>
+        {stakingList
+          .filter((node) => {
+            if (keywords) {
+              const keywordsLS = keywords.toLowerCase();
+              const addressFlag =
+                node.nodeAddress.toLowerCase().indexOf(keywordsLS) >= 0;
+              let nameFlag = false;
+              if (node.nodeName) {
+                nameFlag = node.nodeName.toLowerCase().indexOf(keywordsLS) >= 0;
+              }
+              return addressFlag || nameFlag;
             }
-            return addressFlag || nameFlag;
-          }
-          return true;
-        })).map((nodeItem, index) => {
-          return <NodeItem key={index} nodeItem={nodeItem} onClickRow={onClickRow} currentSelectAddress={currentSelectAddress} />
-        })
-      }
-      <div className={styles.manualAddContainer} >
-        <p onClick={onClickManual} className={styles.manualAddContent}>{i18n.t('manualAdd')}</p>
-        <a href={ValidatorsLaunch} 
-          target="_blank"
-          className={styles.manualSubmit}>
-          {i18n.t("submitNode")}
-          </a>
-      </div>
-    </div>
-  </CustomView>)
-}
+            return true;
+          })
+          .map((nodeItem, index) => {
+            return (
+              <NodeItem
+                key={index}
+                nodeItem={nodeItem}
+                onClickRow={onClickRow}
+                currentSelectAddress={currentSelectAddress}
+              />
+            );
+          })}
+        <StyledManualAddContainer>
+          <StyledManualAddContent onClick={onClickManual}>
+            {i18n.t("manualAdd")}
+          </StyledManualAddContent>
+          <StyledManualSubmit href={ValidatorsLaunch} target="_blank">
+            {i18n.t("submitNode")}
+          </StyledManualSubmit>
+        </StyledManualAddContainer>
+      </StyledListContainer>
+    </CustomView>
+  );
+};
 
-const NodeItem = ({
-  onClickRow,
-  nodeItem,
-  currentSelectAddress,
-}) => {
-  const delegationKey = useSelector(state => state.staking.delegationKey)
-  const {
-    select, showName, showAddress,isChecked
-  } = useMemo(() => {
-    let select = nodeItem.nodeAddress === currentSelectAddress
+const NodeItem = ({ onClickRow, nodeItem, currentSelectAddress }) => {
+  const delegationKey = useSelector((state) => state.staking.delegationKey);
+  const { select, showName, showAddress, isChecked } = useMemo(() => {
+    let select = nodeItem.nodeAddress === currentSelectAddress;
+    let showName = nodeItem.nodeName;
+    if (showName.length >= 16) {
+      showName = showNameSlice(nodeItem.nodeName, 16);
+    }
+    let showAddress = addressSlice(nodeItem.nodeAddress, 6);
+    let isChecked = delegationKey === nodeItem.nodeAddress;
+    return { select, showName, showAddress, isChecked };
+  }, [nodeItem, currentSelectAddress, delegationKey]);
 
-    let showName = nodeItem.nodeName
-    if(showName.length>=16){
-      showName = showNameSlice(nodeItem.nodeName,16)
-    }
-    let showAddress = addressSlice(nodeItem.nodeAddress, 6)
-    let isChecked = delegationKey === nodeItem.nodeAddress
-    return {
-      select, showName, showAddress,isChecked
-    }
-  }, [nodeItem, currentSelectAddress,i18n,delegationKey])
-  return(<div className={styles.rowContainer}>
-     <div className={cls(styles.nodeItemContainer, {
-      [styles.selectedBorder]:select
-    })} onClick={() => onClickRow(nodeItem)}>
-      <div className={styles.rowLeft}>
-          <NodeIcon nodeItem={nodeItem}/>
-          <div className={styles.nodeInfoCon}>
-            <p className={styles.nodeName}>{showName}</p>
-            <p className={styles.nodeAddress}>{showAddress}</p>
+  return (
+    <StyledRowContainer>
+      <StyledNodeItemContainer
+        $selected={select}
+        onClick={() => onClickRow(nodeItem)}
+      >
+        <StyledRowLeft>
+          <NodeIcon nodeItem={nodeItem} />
+          <StyledNodeInfoCon>
+            <StyledNodeName>{showName}</StyledNodeName>
+            <StyledNodeAddress>{showAddress}</StyledNodeAddress>
+          </StyledNodeInfoCon>
+        </StyledRowLeft>
+        {isChecked && (
+          <div>
+            <img src="/img/icon_checked.svg" />
           </div>
-      </div>
-      {isChecked && <div className={styles.rowRight}> 
-         <img src="/img/icon_checked.svg" />
-      </div>}
-    </div>
-  </div>)
-}
+        )}
+      </StyledNodeItemContainer>
+    </StyledRowContainer>
+  );
+};
 
-const NodeIcon = ({nodeItem})=>{
-  const [showHolderIcon,setShowHolderIcon] = useState(!nodeItem.icon)
-  
-  const holderIconName = useMemo(()=>{
-    let showIdentityName = nodeItem.nodeName.slice(0,1)||""
-    showIdentityName = showIdentityName.toUpperCase()
-    return showIdentityName
-  },[nodeItem])
+const NodeIcon = ({ nodeItem }) => {
+  const [showHolderIcon, setShowHolderIcon] = useState(!nodeItem.icon);
 
-  const onLoadError = useCallback(()=>{
-    setShowHolderIcon(true)
-  },[])
-  return(<div className={styles.iconCon}>
-    {showHolderIcon ?
-    <div className={styles.holderIconCon}>
-      {holderIconName}
-    </div>:
-     <img src={nodeItem.icon} className={styles.nodeIcon} onError={onLoadError}/>}
-  </div>)
-}
+  const holderIconName = useMemo(() => {
+    let showIdentityName = nodeItem.nodeName.slice(0, 1) || "";
+    showIdentityName = showIdentityName.toUpperCase();
+    return showIdentityName;
+  }, [nodeItem]);
 
-export default StakingList
+  const onLoadError = useCallback(() => {
+    setShowHolderIcon(true);
+  }, []);
+
+  return (
+    <StyledIconCon>
+      {showHolderIcon || !nodeItem.icon ? (
+        <StyledHolderIconCon>{holderIconName}</StyledHolderIconCon>
+      ) : (
+        <StyledNodeIcon src={nodeItem.icon} onError={onLoadError} />
+      )}
+    </StyledIconCon>
+  );
+};
+
+export default StakingList;
 

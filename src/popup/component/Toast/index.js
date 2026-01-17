@@ -1,5 +1,6 @@
 import React, { createRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ThemeProvider } from '@/popup/style/ThemeProvider';
 import ToastContainer from './ToastContainer';
 
 const toastContainerDiv = document.createElement('div');
@@ -7,10 +8,18 @@ document.body.appendChild(toastContainerDiv);
 
 const toastContainerRef = createRef();
 const root = createRoot(toastContainerDiv);
-root.render(<ToastContainer ref={toastContainerRef} />);
+root.render(
+  <ThemeProvider>
+    <ToastContainer ref={toastContainerRef} />
+  </ThemeProvider>
+);
 
 const destroy = () => {
-    root.render(<ToastContainer ref={toastContainerRef} />);
+    root.render(
+      <ThemeProvider>
+        <ToastContainer ref={toastContainerRef} />
+      </ThemeProvider>
+    );
 }
 
 export default {

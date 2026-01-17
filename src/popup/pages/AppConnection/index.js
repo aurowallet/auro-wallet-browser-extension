@@ -8,9 +8,15 @@ import {
 import { sendMsg } from "../../../utils/commonMsg";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
+import {
+  StyledRowContainer,
+  StyledEmptyContainer,
+  StyledEmptyIcon,
+  StyledNoDAppTip,
+} from "./index.styled";
 
 const AppConnection = ({}) => {
+
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -58,21 +64,21 @@ const AppConnection = ({}) => {
   return (
     <CustomView title={i18n.t("appConnection")}>
       {connectList.length === 0 ? (
-        <div className={styles.emptyContainer}>
-          <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
-          <p className={styles.noDAppTip}>{i18n.t("noConnectedApps")}</p>
-        </div>
+        <StyledEmptyContainer>
+          <StyledEmptyIcon src="/img/icon_empty.svg" />
+          <StyledNoDAppTip>{i18n.t("noConnectedApps")}</StyledNoDAppTip>
+        </StyledEmptyContainer>
       ) : (
         <>
           {connectList.map((item, index) => {
             return (
-              <div className={styles.rowContainer} key={index}>
+              <StyledRowContainer key={index}>
                 <span>{item}</span>
                 <img
                   src="/img/icon_delete.svg"
                   onClick={() => onDeleteConnect(item, index)}
                 />
-              </div>
+              </StyledRowContainer>
             );
           })}
         </>
@@ -80,4 +86,5 @@ const AppConnection = ({}) => {
     </CustomView>
   );
 };
+
 export default AppConnection;

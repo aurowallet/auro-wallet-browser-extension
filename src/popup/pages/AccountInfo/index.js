@@ -1,6 +1,5 @@
-import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DAPP_DELETE_ACCOUNT_CONNECT_HIS,
   WALLET_CHANGE_ACCOUNT_NAME,
@@ -10,23 +9,34 @@ import {
 import { ACCOUNT_TYPE, SEC_FROM_TYPE } from "../../../constant/commonType";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import {
-  nameLengthCheck,
-} from "../../../utils/utils";
-import {
-  copyText,
-} from "../../../utils/browserUtils";
+import { nameLengthCheck } from "../../../utils/utils";
+import { copyText } from "../../../utils/browserUtils";
 import Loading from "../../component/Loading";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
-
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledContentContainer,
+  StyledRowAddress,
+  StyledRowAddressTitle,
+  StyledRowAddressContent,
+  StyledRowInfoContainer,
+  StyledRowContainer,
+  StyledRowTitle,
+  StyledRowDesc,
+  StyledDeleteRow,
+  StyledDeleteTitle,
+  StyledDividedLine,
+  StyledWarningTip,
+  StyledModalDelete,
+} from "./index.styled";
 
 const AccountInfo = ({}) => {
+
   const cache = useSelector((state) => state.cache);
   const currentAccount = useSelector(
     (state) => state.accountInfo.currentAccount
@@ -131,7 +141,7 @@ const AccountInfo = ({}) => {
       onLeftBtnClick: onCloseModal,
       onRightBtnClick: onConfirmDeleteLedger,
       content: "",
-      rightBtnStyle:styles.modalDelete
+      rightBtnStyle:StyledModalDelete
     });
     setPopupModalStatus(true);
   },[i18n])
@@ -219,26 +229,30 @@ const AccountInfo = ({}) => {
 
   if (showSecurity) {
     return (
-      <SecurityPwd onClickCheck={onClickCheck} action={SEC_FROM_TYPE.SEC_DELETE_ACCOUNT} btnTxt={i18n.t("confirm")}/>
+      <SecurityPwd
+        onClickCheck={onClickCheck}
+        action={SEC_FROM_TYPE.SEC_DELETE_ACCOUNT}
+        btnTxt={i18n.t("confirm")}
+      />
     );
   }
   return (
     <CustomView
       title={i18n.t("accountDetails")}
-      contentClassName={styles.container}
+      ContentWrapper={StyledContainer}
     >
-      <div className={styles.contentContainer}>
-        <div className={styles.rowAddress} onClick={onCopyAddress}>
-          <p className={styles.rowAddressTitle}>{i18n.t("accountAddress")}</p>
-          <span className={styles.rowAddressContent}>{account.address}</span>
-        </div>
-        <div className={styles.rowInfoContainer}>
+      <StyledContentContainer>
+        <StyledRowAddress onClick={onCopyAddress}>
+          <StyledRowAddressTitle>{i18n.t("accountAddress")}</StyledRowAddressTitle>
+          <StyledRowAddressContent>{account.address}</StyledRowAddressContent>
+        </StyledRowAddress>
+        <StyledRowInfoContainer>
           <AccountInfoRow
             title={i18n.t("accountName")}
             desc={account.accountName}
             onClick={onClickAccountName}
           />
-           {isLedger && (
+          {isLedger && (
             <AccountInfoRow
               title={i18n.t("hdDerivedPath")}
               desc={hdPath}
@@ -251,21 +265,18 @@ const AccountInfo = ({}) => {
               onClick={showPrivateKey}
             />
           )}
-        </div>
+        </StyledRowInfoContainer>
         {!hideDelete && (
           <>
-            <div className={styles.dividedLine} />
-            <div className={styles.deleteRow}>
-              <p
-                className={cls(styles.rowTitle, styles.deleteTitle)}
-                onClick={deleteAccount}
-              >
-                {i18n.t("deleteTag")} 
-              </p>
-            </div>
+            <StyledDividedLine />
+            <StyledDeleteRow>
+              <StyledDeleteTitle onClick={deleteAccount}>
+                {i18n.t("deleteTag")}
+              </StyledDeleteTitle>
+            </StyledDeleteRow>
           </>
         )}
-      </div>
+      </StyledContentContainer>
 
       <PopupModal
         title={currentModal.title}
@@ -279,7 +290,7 @@ const AccountInfo = ({}) => {
         modalVisible={popupModalStatus}
         onCloseModal={onCloseModal}
         inputPlaceholder={currentModal?.inputPlaceholder}
-        bottomTipClass={styles.waringTip}
+        bottomTipClass={StyledWarningTip}
         maxInputLength={currentModal?.maxInputLength}
         onInputChange={onResetModalInput}
         rightBtnDisable={resetModalBtnStatus}
@@ -295,22 +306,18 @@ const AccountInfoRow = ({
   noArrow = false,
 }) => {
   return (
-    <div
-      className={cls(styles.rowContainer, {
-        [styles.clickRow]: !noArrow,
-      })}
-      onClick={onClick}
-    >
+    <StyledRowContainer $clickable={!noArrow} onClick={onClick}>
       <div>
-        <p className={styles.rowTitle}>{title}</p>
-        {desc && <p className={styles.rowDesc}>{desc}</p>}
+        <StyledRowTitle>{title}</StyledRowTitle>
+        {desc && <StyledRowDesc>{desc}</StyledRowDesc>}
       </div>
       {!noArrow && (
         <div>
           <img src="/img/icon_arrow.svg" />
         </div>
       )}
-    </div>
+    </StyledRowContainer>
   );
 };
+
 export default AccountInfo;

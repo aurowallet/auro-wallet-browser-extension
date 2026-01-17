@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 import { getLocal, saveLocal } from "../../../../background/localStorage";
 import { ADDRESS_BOOK_CONFIG } from "../../../../constant/storageKey";
 import { addressValid, trimSpace } from "../../../../utils/utils";
@@ -9,7 +9,13 @@ import CustomView from "../../../component/CustomView";
 import Input from "../../../component/Input";
 import { PopupModal } from "../../../component/PopupModal";
 import TextArea from "../../../component/TextArea";
-import styles from "./index.module.scss";
+import {
+  StyledInputContainer,
+  StyledPlaceholder,
+  StyledBottomContainer,
+  StyledDeleteBtn,
+  StyledModalDelete,
+} from "./index.styled";
 
 export const AddressEditorType = {
     add: "add",
@@ -174,51 +180,49 @@ const AddressEditor = ({ }) => {
     },[addressName,addressValue])
 
 
-    return (<CustomView title={title}
-        rightComponent={
-            editorType === AddressEditorType.edit &&
-            <p className={styles.deleteBtn}
-                onClick={onClickDelete}>
-                {i18n.t('deleteTag')}
-            </p>
-        }
-    >
-        <div className={styles.inputContainer}>
-            <Input
-                label={i18n.t('name')}
-                onChange={onInputAddressName}
-                value={addressName}
-                inputType={'text'}
-                className={styles.nameInput}
+    return (
+        <CustomView
+            title={title}
+            rightComponent={
+                editorType === AddressEditorType.edit && (
+                    <StyledDeleteBtn onClick={onClickDelete}>
+                        {i18n.t("deleteTag")}
+                    </StyledDeleteBtn>
+                )
+            }
+        >
+            <StyledInputContainer>
+                <Input
+                    label={i18n.t("name")}
+                    onChange={onInputAddressName}
+                    value={addressName}
+                    inputType={"text"}
+                />
+                <TextArea
+                    label={i18n.t("address")}
+                    onChange={onInputAddress}
+                    value={addressValue}
+                    showBottomTip={true}
+                    bottomErrorTip={errorTip}
+                />
+            </StyledInputContainer>
+            <StyledPlaceholder />
+            <StyledBottomContainer>
+                <Button disable={btnStatus} onClick={onAddAddress}>
+                    {i18n.t("confirm")}
+                </Button>
+            </StyledBottomContainer>
+            <PopupModal
+                title={i18n.t("deleteAddress")}
+                leftBtnContent={i18n.t("cancel")}
+                onLeftBtnClick={onCancel}
+                rightBtnContent={i18n.t("deleteTag")}
+                onRightBtnClick={onCloseModal}
+                rightBtnStyle={StyledModalDelete}
+                modalVisible={reminderModalStatus}
             />
-            <TextArea
-                label={i18n.t('address')}
-                onChange={onInputAddress}
-                value={addressValue}
-                className={styles.addressInput}
-                showBottomTip={true}
-                bottomErrorTip={errorTip}
-            />
-        </div>
-        <div className={styles.hold} />
-        <div className={styles.bottomContainer}>
-            <Button
-                disable={btnStatus}
-                onClick={onAddAddress}>
-                {i18n.t('confirm')}
-            </Button>
-        </div>
+        </CustomView>
+    );
+};
 
-        <PopupModal
-            title={i18n.t('deleteAddress')}
-            leftBtnContent={i18n.t('cancel')}
-            onLeftBtnClick={onCancel}
-            rightBtnContent={i18n.t('deleteTag')}
-            onRightBtnClick={onCloseModal}
-            rightBtnStyle={styles.modalDelete}
-            modalVisible={reminderModalStatus} />
-
-    </CustomView>)
-}
-
-export default AddressEditor
+export default AddressEditor;

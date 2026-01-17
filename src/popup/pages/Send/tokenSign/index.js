@@ -10,13 +10,21 @@ import {
 } from "@/reducers/popupReducer";
 import { sendMsg } from "@/utils/commonMsg";
 import BigNumber from "bignumber.js";
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import SignView from "../SignView";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledMultiTitleRow,
+  StyledMultiTitle,
+  StyledMultiTitleBold,
+  StyledMultiTitleRowRight,
+  StyledMultiRowArrow,
+  StyledMultiBottomWrapper,
+  StyledMultiBottom,
+} from "./index.styled";
 
 const ICON_COLOR = {
   black: "rgba(0, 0, 0, 1)",
@@ -211,10 +219,10 @@ const TokenSignPage = () => {
   );
 
   return (
-    <div className={styles.container}>
+    <StyledContainer>
       {showMultiView && (
-        <div className={styles.multiTitleRow}>
-          <div className={styles.multiTitle}>
+        <StyledMultiTitleRow>
+          <StyledMultiTitle>
             <Trans
               i18nKey={"pendingZkTx"}
               values={{
@@ -222,29 +230,26 @@ const TokenSignPage = () => {
                 total: pendingSignList.length,
               }}
               components={{
-                bold: <span className={styles.multiTitleBold} />,
+                bold: <StyledMultiTitleBold />,
               }}
             />
-          </div>
-          <div className={styles.multiTitleRowRight}>
-            <div
-              className={cls(styles.multiRowArrow, {
-                [styles.multiRowArrowDisable]: leftArrowStatus,
-              })}
+          </StyledMultiTitle>
+          <StyledMultiTitleRowRight>
+            <StyledMultiRowArrow
+              $disabled={leftArrowStatus}
               onClick={onClickLeftBtn}
             >
               <ICON_Arrow stroke={leftArrowColor} />
-            </div>
-            <div
-              className={cls(styles.multiRowArrow, styles.rightArrow, {
-                [styles.multiRowArrowDisable]: rightArrowStatus,
-              })}
+            </StyledMultiRowArrow>
+            <StyledMultiRowArrow
+              $disabled={rightArrowStatus}
+              $isRight
               onClick={onClickRightBtn}
             >
               <ICON_Arrow stroke={rightArrowColor} />
-            </div>
-          </div>
-        </div>
+            </StyledMultiRowArrow>
+          </StyledMultiTitleRowRight>
+        </StyledMultiTitleRow>
       )}
       <SignView
         signParams={pendingSignList[currentSignIndex]}
@@ -256,13 +261,13 @@ const TokenSignPage = () => {
         key={pendingSignList[currentSignIndex]?.id}
       />
       {showMultiView && (
-        <div className={styles.multiBottomWrapper}>
-          <div className={styles.multiBottom} onClick={onRejectAll}>
+        <StyledMultiBottomWrapper>
+          <StyledMultiBottom onClick={onRejectAll}>
             {i18n.t("rejectAllTx", { total: pendingSignList.length })}
-          </div>
-        </div>
+          </StyledMultiBottom>
+        </StyledMultiBottomWrapper>
       )}
-    </div>
+    </StyledContainer>
   );
 };
 

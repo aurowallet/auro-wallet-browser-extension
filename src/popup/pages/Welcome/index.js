@@ -95,6 +95,7 @@ const RegisterStep = {
   ledger: "ledger",
 };
 const Welcome = () => {
+
   const cache = useSelector((state) => state.cache);
   const dispatch = useDispatch();
   const navigate = useNavigate();

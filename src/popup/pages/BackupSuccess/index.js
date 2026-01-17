@@ -1,49 +1,49 @@
 import i18n from "i18next";
-import { useCallback, useMemo } from "react";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import BottomBtn from "../../component/BottomBtn";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledBackupTitle,
+  StyledBackupContent,
+  StyledBottomContainer,
+} from "./index.styled";
 
 export const BackupSuccess = () => {
+
   const navigate = useNavigate();
   const location = useLocation();
-  const {
-    showTip
-  } = useMemo(() => {
+  const { showTip } = useMemo(() => {
     let type = location?.state?.type ?? "";
 
-    let showTip = ""
+    let showTip = "";
     if (type === "restore") {
-      showTip = "backup_success_restore"
+      showTip = "backup_success_restore";
     } else if (type === "ledger") {
-      showTip = "ledgerSuccessTip"
+      showTip = "ledgerSuccessTip";
     } else {
-      showTip = "backup_success"
+      showTip = "backup_success";
     }
 
     return {
-      showTip
-    }
-  }, [location])
+      showTip,
+    };
+  }, [location]);
 
   const goToNext = useCallback(() => {
-    navigate("/homepage")
-  }, [navigate])
+    navigate("/homepage");
+  }, [navigate]);
 
   return (
-    <div className={styles.container}>
+    <StyledContainer>
       <img src="/img/backup_success.svg" />
-      <p className={styles.backupTitle}>
-        {i18n.t('success')}
-      </p>
-      <p className={styles.backupContent}>
-        {i18n.t(showTip)}
-      </p>
+      <StyledBackupTitle>{i18n.t("success")}</StyledBackupTitle>
+      <StyledBackupContent>{i18n.t(showTip)}</StyledBackupContent>
       <BottomBtn
-        containerClass={styles.bottomCon}
+        containerClass={StyledBottomContainer}
         onClick={goToNext}
-        rightBtnContent={i18n.t('start')}
+        rightBtnContent={i18n.t("start")}
       />
-    </div>
-  )
-}
+    </StyledContainer>
+  );
+};

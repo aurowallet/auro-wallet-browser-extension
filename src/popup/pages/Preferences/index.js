@@ -1,12 +1,19 @@
 import i18n from "i18next";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { languageOption } from "../../../i18n";
 import CustomView from "../../component/CustomView";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledRowContainer,
+  StyledRowTitle,
+  StyledRowLeft,
+  StyledRowContent,
+} from "./index.styled";
 
 const Preferences = ({}) => {
+
   const navigate = useNavigate();
   const currency = useSelector((state) => state.currencyConfig.currentCurrency);
 
@@ -31,7 +38,7 @@ const Preferences = ({}) => {
   return (
     <CustomView
       title={i18n.t("preferences")}
-      contentClassName={styles.container}
+      ContentWrapper={StyledContainer}
     >
       <RowItem
         title={i18n.t("language")}
@@ -53,15 +60,16 @@ const Preferences = ({}) => {
 
 const RowItem = ({ title = "", content = "", onClickItem = () => {} }) => {
   return (
-    <div className={styles.rowContainer} onClick={onClickItem}>
+    <StyledRowContainer onClick={onClickItem}>
       <div>
-        <p className={styles.rowTitle}>{title}</p>
+        <StyledRowTitle>{title}</StyledRowTitle>
       </div>
-      <div className={styles.rowLeft}>
-        <p className={styles.rowContent}>{content}</p>
+      <StyledRowLeft>
+        <StyledRowContent>{content}</StyledRowContent>
         <img src="/img/icon_arrow.svg" />
-      </div>
-    </div>
+      </StyledRowLeft>
+    </StyledRowContainer>
   );
 };
+
 export default Preferences;

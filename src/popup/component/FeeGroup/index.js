@@ -1,10 +1,16 @@
 import { MAIN_COIN_CONFIG } from "@/constant";
 import BigNumber from "bignumber.js";
-import cls from "classnames";
 import i18n from "i18next";
 import { useMemo } from "react";
 import CountdownTimer from "../CountdownTimer";
-import styles from "./index.module.scss";
+import {
+    StyledFeeContainer,
+    StyledTopContainer,
+    StyledFeeTitle,
+    StyledFeeAmount,
+    StyledBtnGroup,
+    StyledFeeButton,
+} from "./index.styled";
 
 const FeeGroup = ({
   currentFee,
@@ -40,35 +46,33 @@ const FeeGroup = ({
   }, [netFeeList]);
 
   return (
-    <div className={styles.feeContainer}>
-      <div className={styles.topContainer}>
-        <p className={styles.feeTitle}>{i18n.t("fee")}</p>
-        <div className={styles.feeAmountWrapper}>
+    <StyledFeeContainer>
+      <StyledTopContainer>
+        <StyledFeeTitle>{i18n.t("fee")}</StyledFeeTitle>
+        <StyledFeeAmount>
           <div>{currentFee + " " + MAIN_COIN_CONFIG.symbol}</div>
           {!hideTimer ? <CountdownTimer /> : <></>}
-        </div>
-      </div>
+        </StyledFeeAmount>
+      </StyledTopContainer>
       {showFeeGroup ? (
-        <div className={styles.btnGroup}>
+        <StyledBtnGroup>
           {feeList.map((fee, index) => {
             let selectStatus = new BigNumber(fee.fee).isEqualTo(currentFee);
             return (
-              <div
+              <StyledFeeButton
                 key={index}
                 onClick={() => onClickFee(fee)}
-                className={cls(styles.btn, styles.common, {
-                  [styles.checked]: selectStatus,
-                })}
+                $selected={selectStatus}
               >
                 {fee.text}
-              </div>
+              </StyledFeeButton>
             );
           })}
-        </div>
+        </StyledBtnGroup>
       ) : (
         <></>
       )}
-    </div>
+    </StyledFeeContainer>
   );
 };
 

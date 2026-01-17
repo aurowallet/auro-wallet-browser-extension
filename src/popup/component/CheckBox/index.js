@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-
+import { StyledCheckBoxWrapper } from "./index.styled";
 
 export const CheckBox = ({
     onClick = () => { },
     status = false
 }) => {
-
 
     const getBoxImage = useCallback(() => {
         if (status) {
@@ -19,14 +18,13 @@ export const CheckBox = ({
         return getBoxImage()
     })
 
-   
-
-
     useEffect(() => {
         setImgSrc(getBoxImage())
     }, [status])
 
-    return (<div onClick={onClick}>
-        <img src={imgSrc} />
-    </div>)
+    return (
+        <StyledCheckBoxWrapper onClick={onClick}>
+            <img src={imgSrc} />
+        </StyledCheckBoxWrapper>
+    )
 } 

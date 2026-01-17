@@ -1,10 +1,17 @@
 import i18n from "i18next";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledRowContainer,
+  StyledRowTitle,
+  StyledRowLeft,
+  StyledRowContent,
+} from "./index.styled";
 
 const DevPage = ({}) => {
+
   const navigate = useNavigate();
 
   const goToPage = useCallback((nextRoute, { pageType, title }) => {
@@ -12,7 +19,7 @@ const DevPage = ({}) => {
   }, []);
 
   return (
-    <CustomView title={"Auro Dev"} contentClassName={styles.container}>
+    <CustomView title={"Auro Dev"} ContentWrapper={StyledContainer}>
       <RowItem
         title={i18n.t("history")}
         onClickItem={() => {
@@ -61,15 +68,16 @@ const DevPage = ({}) => {
 
 const RowItem = ({ title = "", content = "", onClickItem = () => {} }) => {
   return (
-    <div className={styles.rowContainer} onClick={onClickItem}>
+    <StyledRowContainer onClick={onClickItem}>
       <div>
-        <p className={styles.rowTitle}>{title}</p>
+        <StyledRowTitle>{title}</StyledRowTitle>
       </div>
-      <div className={styles.rowLeft}>
-        <p className={styles.rowContent}>{content}</p>
+      <StyledRowLeft>
+        <StyledRowContent>{content}</StyledRowContent>
         <img src="/img/icon_arrow.svg" />
-      </div>
-    </div>
+      </StyledRowLeft>
+    </StyledRowContainer>
   );
 };
+
 export default DevPage;

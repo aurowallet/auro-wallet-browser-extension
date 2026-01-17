@@ -4,7 +4,6 @@ import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { NET_CONFIG_VERSION } from "../../../../config";
 import { extSaveLocal } from "../../../background/extensionStorage";
 import {
@@ -41,33 +40,20 @@ import Button from "../../component/Button";
 import Input from "../../component/Input";
 import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
-
-const StyledFormWrapper = styled.form`
-  width: calc(100% - 40px);
-`;
-const LockedPageWrapper = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 200;
-  background-color: #edeff2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const StyledLockContent = styled.div`
-  display: flex;
-  align-items: center;
-  font-size: 24px;
-  flex-direction: column;
-  background-color: white;
-  height: 100vh;
-  min-width: 375px;
-`;
+import {
+  StyledLockedPageWrapper,
+  StyledLockContent,
+  StyledResetEntryOuter,
+  StyledResetEntryButton,
+  StyledLogoContainer,
+  StyledLogo,
+  StyledWelcomeBack,
+  StyledFormWrapper,
+  StyledPwdInputContainer,
+  StyledBtnContainer,
+  StyledBottomUrl,
+  dangerButtonClassName,
+} from "./index.styled";
 
 export const LockPage = ({}) => {
   const [pwdValue, setPwdValue] = useState("");
@@ -78,6 +64,7 @@ export const LockPage = ({}) => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
 
   const onPwdInput = useCallback((e) => {
     let value = e.target.value;
@@ -197,22 +184,19 @@ export const LockPage = ({}) => {
 
   return (
     <>
-      <LockedPageWrapper>
+      <StyledLockedPageWrapper>
         <StyledLockContent>
-          <div className={styles.resetEntryOuter}>
-            <div
-              className={styles.resetEntryContainer}
-              onClick={onShowResetModal}
-            >
+          <StyledResetEntryOuter>
+            <StyledResetEntryButton onClick={onShowResetModal}>
               {i18n.t("resetWallet")}
-            </div>
-          </div>
-          <div className={styles.logoContainer}>
-            <img src="/img/colorful_logo.svg" className={styles.logo} />
-          </div>
-          <p className={styles.welcomeBack}>{i18n.t("welcomeBack")}</p>
+            </StyledResetEntryButton>
+          </StyledResetEntryOuter>
+          <StyledLogoContainer>
+            <StyledLogo src="/img/colorful_logo.svg" />
+          </StyledLogoContainer>
+          <StyledWelcomeBack>{i18n.t("welcomeBack")}</StyledWelcomeBack>
           <StyledFormWrapper onSubmit={onSubmit}>
-            <div className={styles.pwdInputContainer}>
+            <StyledPwdInputContainer>
               <Input
                 label={i18n.t("password")}
                 placeholder={i18n.t("enterPwd")}
@@ -220,7 +204,7 @@ export const LockPage = ({}) => {
                 value={pwdValue}
                 inputType={"password"}
               />
-              <div className={styles.btnContainer}>
+              <StyledBtnContainer>
                 <Button
                   loading={btnLoading}
                   disable={!unLockBtnStatus}
@@ -228,17 +212,17 @@ export const LockPage = ({}) => {
                 >
                   {i18n.t("unlock")}
                 </Button>
-                <p className={styles.bottomUrl}>{POWER_BY}</p>
-              </div>
-            </div>
+                <StyledBottomUrl>{POWER_BY}</StyledBottomUrl>
+              </StyledBtnContainer>
+            </StyledPwdInputContainer>
           </StyledFormWrapper>
         </StyledLockContent>
-      </LockedPageWrapper>
+      </StyledLockedPageWrapper>
       <PopupModal
         title={i18n.t("reset_tip_1")}
         leftBtnContent={i18n.t("cancel")}
         rightBtnContent={i18n.t("reset")}
-        rightBtnStyle={styles.rightBtn}
+        rightBtnStyle={dangerButtonClassName}
         type={PopupModal_type.warning}
         onLeftBtnClick={onCloseWarningModal}
         onRightBtnClick={onConfirmResetClick}

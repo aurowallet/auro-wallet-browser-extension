@@ -1,8 +1,7 @@
 import IconDelegation from "@/popup/component/SVG/icon_delegation";
 import IconPayment from "@/popup/component/SVG/icon_payment";
 import IconZkApp from "@/popup/component/SVG/icon_zkApp";
-import cls from "classnames";
-import browser from 'webextension-polyfill';
+import browser from "webextension-polyfill";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,13 +17,21 @@ import {
   getShowTime,
   getTimeGMT,
 } from "../../../utils/utils";
-import {
-  copyText,
-} from "../../../utils/browserUtils";
+import { copyText } from "../../../utils/browserUtils";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
 import { getZkAppUpdateInfo } from "../../../utils/zkUtils";
+import {
+  StyledContainer,
+  StyledDividedLine,
+  StyledRowContainer,
+  StyledRowTitle,
+  StyledRowContent,
+  StyledScamTag,
+  StyledExplorerOuter,
+  StyledExplorerContainer,
+  StyledExplorerTitle,
+} from "./index.styled";
 
 const STATUS = {
   TX_STATUS_PENDING: "PENDING",
@@ -40,6 +47,7 @@ const StyledWrapper = styled.div`
 `;
 
 const Record = ({}) => {
+
   const location = useLocation();
   const netConfig = useSelector((state) => state.network);
   const currentAccount = useSelector(
@@ -222,25 +230,25 @@ const Record = ({}) => {
   }, []);
 
   return (
-    <CustomView title={i18n.t("details")} contentClassName={styles.container}>
+    <CustomView title={i18n.t("details")} ContentWrapper={StyledContainer}>
       <StatusRow
         txDetail={txDetail}
         isZkReceive={isZkReceive}
         isMainCoin={isMainCoin}
       />
-      <div className={styles.dividedLine} />
+      <StyledDividedLine />
       <StyledWrapper>
         {contentList.map((item, index) => {
           return <DetailRow key={index} {...item} />;
         })}
       </StyledWrapper>
       {showExplorer && (
-        <div className={styles.explorerOuter}>
-          <div className={styles.explorerContainer} onClick={onGoExplorer}>
-            <p className={styles.explorerTitle}>{i18n.t("queryDetails")}</p>
-            <img src="/img/icon_link.svg" className={styles.iconLink} />
-          </div>
-        </div>
+        <StyledExplorerOuter>
+          <StyledExplorerContainer onClick={onGoExplorer}>
+            <StyledExplorerTitle>{i18n.t("queryDetails")}</StyledExplorerTitle>
+            <img src="/img/icon_link.svg" />
+          </StyledExplorerContainer>
+        </StyledExplorerOuter>
       )}
     </CustomView>
   );
@@ -254,19 +262,13 @@ const DetailRow = ({ title, content, showScamTag, isCamelCase }) => {
   }, [title, content]);
 
   return (
-    <div className={styles.rowContainer} onClick={onCopy}>
-      <p className={styles.rowTitle}>{title}</p>
-      <p
-        className={cls(styles.rowContent, {
-          [styles.camelCase]: isCamelCase,
-        })}
-      >
+    <StyledRowContainer onClick={onCopy}>
+      <StyledRowTitle>{title}</StyledRowTitle>
+      <StyledRowContent $camelCase={isCamelCase}>
         {content}
-        {showScamTag && (
-          <span className={styles.scamTag}>{i18n.t("scam")}</span>
-        )}
-      </p>
-    </div>
+        {showScamTag && <StyledScamTag>{i18n.t("scam")}</StyledScamTag>}
+      </StyledRowContent>
+    </StyledRowContainer>
   );
 };
 const STATUS_COLOR = {

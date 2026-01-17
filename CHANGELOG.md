@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Add test cases to APIService & DAppService
 - Add new account token activation prompt
 - Update Auto-Lock to Security page
+- Update css/scss to styled-components
 
 ### Fixes
 - E-notation of SendPage

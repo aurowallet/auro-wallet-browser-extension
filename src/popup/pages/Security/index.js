@@ -5,11 +5,18 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledRowContainer,
+  StyledRowTitle,
+  StyledRowLeft,
+  StyledRowContent,
+} from "./index.styled";
 
 const Security = ({}) => {
+
   const navigate = useNavigate();
- 
+
   const [currentLockTime, setCurrentLockTime] = useState("");
   useEffect(() => {
     sendMsg(
@@ -35,14 +42,16 @@ const Security = ({}) => {
       displayLockTime,
     };
   }, [i18n, currentLockTime]);
-   const goToPage = useCallback((nextRoute) => {
+
+  const goToPage = useCallback((nextRoute) => {
     navigate(nextRoute);
   }, []);
+
   return (
-    <CustomView title={i18n.t("security")} contentClassName={styles.container}>
+    <CustomView title={i18n.t("security")} ContentWrapper={StyledContainer}>
       <RowItem
         title={i18n.t("changePassword")}
-        onClickItem={()=>goToPage("/reset_password")}
+        onClickItem={() => goToPage("/reset_password")}
       />
       <RowItem
         title={i18n.t("autoLock")}
@@ -57,15 +66,16 @@ const Security = ({}) => {
 
 const RowItem = ({ title = "", content = "", onClickItem = () => {} }) => {
   return (
-    <div className={styles.rowContainer} onClick={onClickItem}>
+    <StyledRowContainer onClick={onClickItem}>
       <div>
-        <p className={styles.rowTitle}>{title}</p>
+        <StyledRowTitle>{title}</StyledRowTitle>
       </div>
-      <div className={styles.rowLeft}>
-        <p className={styles.rowContent}>{content}</p>
+      <StyledRowLeft>
+        <StyledRowContent>{content}</StyledRowContent>
         <img src="/img/icon_arrow.svg" />
-      </div>
-    </div>
+      </StyledRowLeft>
+    </StyledRowContainer>
   );
 };
+
 export default Security;

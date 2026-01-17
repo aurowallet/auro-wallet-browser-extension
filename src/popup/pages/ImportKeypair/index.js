@@ -13,9 +13,17 @@ import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import TextArea from "../../component/TextArea";
-import styles from "./index.module.scss";
+import {
+  StyledTitle,
+  StyledTextAreaContainer,
+  StyledDescContainer,
+  StyledDesc,
+  StyledPlaceholder,
+  StyledBottomContainer,
+} from "./index.styled";
 
 const ImportKeypair = ({}) => {
+
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
   );
@@ -97,27 +105,28 @@ const ImportKeypair = ({}) => {
   );
   return (
     <CustomView title={i18n.t("importKeystone")}>
-      <p className={styles.title}>{i18n.t("pleaseInputKeyPair")}</p>
-      <div className={styles.textAreaContainer}>
+      <StyledTitle>{i18n.t("pleaseInputKeyPair")}</StyledTitle>
+      <StyledTextAreaContainer>
         <TextArea onChange={onInputKeystore} value={keystoreValue} />
-      </div>
+      </StyledTextAreaContainer>
       <Input
         label={i18n.t("keystorePassword")}
         onChange={onInputPwd}
         value={pwdValue}
         inputType={"password"}
       />
-      <div className={styles.descContainer}>
-        <p className={styles.desc}>{i18n.t("importAccount_3")}</p>
-        <p className={styles.desc}>{i18n.t("importAccount_2")}</p>
-      </div>
-      <div className={styles.hold} />
-      <div className={styles.bottomContainer}>
+      <StyledDescContainer>
+        <StyledDesc>{i18n.t("importAccount_3")}</StyledDesc>
+        <StyledDesc>{i18n.t("importAccount_2")}</StyledDesc>
+      </StyledDescContainer>
+      <StyledPlaceholder />
+      <StyledBottomContainer>
         <Button disable={!btnStatus} loading={loading} onClick={onConfirm}>
           {i18n.t("confirm")}
         </Button>
-      </div>
+      </StyledBottomContainer>
     </CustomView>
   );
 };
+
 export default ImportKeypair;

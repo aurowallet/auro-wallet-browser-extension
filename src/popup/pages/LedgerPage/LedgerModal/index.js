@@ -1,36 +1,40 @@
 import i18n from "i18next";
 import { Trans } from "react-i18next";
-import styles from "./index.module.scss";
+import {
+  StyledOuterContainer,
+  StyledContentContainer,
+  StyledTipTitle,
+  StyledTipContent,
+  StyledRedFont,
+  StyledLedgerStep,
+  StyledDividedLine,
+  StyledLedgerLoading,
+} from "./index.styled";
 
 export const LedgerModal = ({ modalVisible }) => {
   return (
     <>
       {modalVisible && (
-        <div className={styles.outerContainer}>
-          <div className={styles.contentContainer}>
-            <div className={styles.tipTitle}>{i18n.t("tips")}</div>
-            <div className={styles.tipContent}>
-              {i18n.t("ledgerContentTip_1")}
-            </div>
-            <div className={styles.ledgerStep}>
+        <StyledOuterContainer>
+          <StyledContentContainer>
+            <StyledTipTitle>{i18n.t("tips")}</StyledTipTitle>
+            <StyledTipContent>{i18n.t("ledgerContentTip_1")}</StyledTipContent>
+            <StyledLedgerStep>
               <span>{"Get Address > Generate > Approve"}</span>
-            </div>
-            <div className={styles.tipContent}>
+            </StyledLedgerStep>
+            <StyledTipContent>
               <Trans
                 i18nKey={"ledgerCloseWarning"}
                 components={{
-                  red: <span className={styles.redFont} />,
+                  red: <StyledRedFont />,
                 }}
               />
-            </div>
-            <div className={styles.tipContent}>{i18n.t("ledgerCloseTip")}</div>
-            <div className={styles.dividedLine} />
-            <img
-              className={styles.ledgerLoading}
-              src={"/img/ledgerLoading.svg"}
-            />
-          </div>
-        </div>
+            </StyledTipContent>
+            <StyledTipContent>{i18n.t("ledgerCloseTip")}</StyledTipContent>
+            <StyledDividedLine />
+            <StyledLedgerLoading src={"/img/ledgerLoading.svg"} />
+          </StyledContentContainer>
+        </StyledOuterContainer>
       )}
     </>
   );

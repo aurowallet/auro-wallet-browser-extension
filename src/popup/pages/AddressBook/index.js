@@ -1,14 +1,25 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { getLocal } from "../../../background/localStorage";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
 import { updateAddressDetail } from "../../../reducers/cache";
 import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
 import { AddressEditorType } from "./AddressEditor";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledEmptyContainer,
+  StyledEmptyIcon,
+  StyledNoAddressTip,
+  StyledBottomContainer,
+  StyledAddressContainer,
+  StyledAddressItemContainer,
+  StyledAddressName,
+  StyledAddressValue,
+  StyledDividedLine,
+} from "./index.styled";
 
 const AddressBook = ({ }) => {
 
@@ -19,8 +30,6 @@ const AddressBook = ({ }) => {
 
     const [localAddressList, setLocalAddressList] = useState([])
     const [localAddressLength, setLocalAddressLength] = useState(0)
-
-
 
     const getLocalAddress = useCallback(() => {
         let list = getLocal(ADDRESS_BOOK_CONFIG)
@@ -64,37 +73,38 @@ const AddressBook = ({ }) => {
 
     }, [addressBookFrom])
 
-    return (<CustomView title={i18n.t('addressBook')} contentClassName={styles.addressBookContainer}>
-        {
-            localAddressList.length === 0 ?
-                <div className={styles.emptyContainer}>
-                    <img src="/img/icon_empty.svg" className={styles.emptyIcon} />
-                    <p className={styles.noAddressTip}>{i18n.t('noAddress')}</p>
-                </div>
-                :
-                <div className={styles.addressContainer}>
-                    {
-                        localAddressList.map((localAddress, index) => {
-                            return (
-                                <div key={index} className={styles.addressItemOuter}>
-                                    <div key={index} className={styles.addressItemContainer} onClick={() => onClickAddressItem(localAddress, index)}>
-                                        <p className={styles.addressName}>{localAddress.name}</p>
-                                        <p className={styles.addressValue}>{localAddress.address}</p>
-                                    </div>
-                                    {index !== (localAddressLength - 1) && <div className={styles.dividedLine} />}
-                                </div>)
-                        })
-                    }
-                </div>
-        }
+    return (
+        <CustomView title={i18n.t("addressBook")} ContentWrapper={StyledContainer}>
+            {localAddressList.length === 0 ? (
+                <StyledEmptyContainer>
+                    <StyledEmptyIcon src="/img/icon_empty.svg" />
+                    <StyledNoAddressTip>{i18n.t("noAddress")}</StyledNoAddressTip>
+                </StyledEmptyContainer>
+            ) : (
+                <StyledAddressContainer>
+                    {localAddressList.map((localAddress, index) => {
+                        return (
+                            <div key={index}>
+                                <StyledAddressItemContainer
+                                    onClick={() => onClickAddressItem(localAddress, index)}
+                                >
+                                    <StyledAddressName>{localAddress.name}</StyledAddressName>
+                                    <StyledAddressValue>{localAddress.address}</StyledAddressValue>
+                                </StyledAddressItemContainer>
+                                {index !== localAddressLength - 1 && <StyledDividedLine />}
+                            </div>
+                        );
+                    })}
+                </StyledAddressContainer>
+            )}
+            <BottomBtn
+                containerClass={StyledBottomContainer}
+                onClick={onAddAddress}
+                rightBtnContent={i18n.t("add")}
+                noHolder={true}
+            />
+        </CustomView>
+    );
+};
 
-        <BottomBtn 
-            containerClass={styles.bottomContainer}
-            onClick={onAddAddress}
-            rightBtnContent={i18n.t('add')}
-            noHolder={true}
-        />
-    </CustomView>)
-}
-
-export default AddressBook
+export default AddressBook;

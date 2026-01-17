@@ -24,6 +24,7 @@ const StyledTabContent = styled.div`
 `;
 
 export const CreateProcessPage = ({onClickPre}) => {
+
   const welcomeNextType = useSelector((state) => state.cache.welcomeNextType);
   const [tabIndex, setTabIndex] = useState(0);
   const [showMore,setShowMore] = useState(false);

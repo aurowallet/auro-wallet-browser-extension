@@ -1,15 +1,15 @@
-import "./App.scss";
 import { getAllRouter as AllRouter } from "./router";
 import { useIdleTimer } from "react-idle-timer";
 import { sendMsg } from "../utils/commonMsg";
 import { WALLET_RESET_LAST_ACTIVE_TIME } from "../constant/msgTypes";
 import { useCallback, useEffect, useState } from "react";
-import cls from "classnames";
 import {
   fetchSupportTokenInfo,
   getRecommendFee,
   getScamList,
 } from "../background/api";
+import { GlobalStyles } from "./GlobalStyles";
+import { StyledApp, StyledAppHeader } from "./App.styled";
 import { updateRecommendFee } from "../reducers/cache";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../background/localStorage";
@@ -149,17 +149,13 @@ function App() {
   });
 
   return (
-    <div className="App">
+    <StyledApp>
+      <GlobalStyles />
       <LedgerStatusSyncer />
-      <header
-        className={cls("App-header", {
-          "App-header-full": showFullStatus,
-          AppAutoWidth: autoWidthStatus,
-        })}
-      >
+      <StyledAppHeader $showFull={showFullStatus} $autoWidth={autoWidthStatus}>
         <AllRouter />
-      </header>
-    </div>
+      </StyledAppHeader>
+    </StyledApp>
   );
 }
 export default App;

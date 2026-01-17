@@ -1,14 +1,25 @@
-import cls from "classnames";
 import { useCallback, useEffect, useState } from "react";
 import { showNameSlice } from "../../../utils/utils";
-import styles from "./index.module.scss";
 import i18n from "i18next";
+import {
+    StyledModalBg,
+    StyledContainer,
+    StyledSelectContainer,
+    StyledArrowIcon,
+    StyledSelectTitle,
+    StyledOptionsOuter,
+    StyledOptionsContainer,
+    StyledOption,
+    StyledNetworkTitleWrapper,
+    StyledNodeListTitle,
+    StyledHrDotted,
+} from "./index.styled";
 
 const Select = ({
     value = "",
     optionList = [],
     onChange = () => { }
-}) => { 
+}) => {
     const [optionStatus, setOptionStatus] = useState(false)
 
     const onClickEntry = useCallback(() => {
@@ -38,54 +49,50 @@ const Select = ({
         setOptionStatus(false)
         onChange(option)
     }, [onChange])
-    
-    return (<>
-        <div className={cls(styles.commonBg, {
-            [styles.modalBg]: optionStatus
-        })} onClick={onCloseOption} />
-        <div className={styles.container}>
-            <div className={styles.selectContainer}
-                onClick={onClickEntry}
-            >
-                <p className={styles.selectTitle}>
-                    {showNameSlice(currentLabel,10)}
-                </p>
-                <div className={styles.arrowIcon}>
-                <img src="/img/icon_arrow_unfold.svg"  />
-                </div>
-            </div>
 
-            {optionStatus && <div className={styles.optionsOuter}>
-                <div className={styles.optionsContainer}>
-                    {
-                        optionList.map((option, index) => {
-                            if(option.type === 'dividedLine'){
-                                return  <div key={index} className={styles.networkTitleWrapper}>
-                                <hr className={styles.hrDotted} />
-                                <p className={styles.nodeListTitle}>{i18n.t('testnet')}</p>
-                                <hr className={styles.hrDotted} />
-                              </div>
-                            }
-                            let isSelect = value == option.value
-                            return <Option onClick={() => onClickOption(option)} isSelect={isSelect} key={index} label={option.label} value={option.value} />
-                        })
-                    }
-                </div>
-            </div>}
-        </div>
+    return (
+        <>
+            <StyledModalBg $show={optionStatus} onClick={onCloseOption} />
+            <StyledContainer>
+                <StyledSelectContainer onClick={onClickEntry}>
+                    <StyledSelectTitle>
+                        {showNameSlice(currentLabel, 10)}
+                    </StyledSelectTitle>
+                    <StyledArrowIcon>
+                        <img src="/img/icon_arrow_unfold.svg" />
+                    </StyledArrowIcon>
+                </StyledSelectContainer>
 
-    </>)
-}
-
-const Option = ({ label, value, isSelect, onClick }) => {
-
-    return (<div
-        onClick={onClick}
-        className={cls(styles.optionContainer, {
-            [styles.selectedOption]: isSelect
-        })}>
-        {showNameSlice(label,10)}
-    </div>)
+                {optionStatus && (
+                    <StyledOptionsOuter>
+                        <StyledOptionsContainer>
+                            {optionList.map((option, index) => {
+                                if (option.type === 'dividedLine') {
+                                    return (
+                                        <StyledNetworkTitleWrapper key={index}>
+                                            <StyledHrDotted />
+                                            <StyledNodeListTitle>{i18n.t('testnet')}</StyledNodeListTitle>
+                                            <StyledHrDotted />
+                                        </StyledNetworkTitleWrapper>
+                                    )
+                                }
+                                let isSelect = value == option.value
+                                return (
+                                    <StyledOption
+                                        key={index}
+                                        onClick={() => onClickOption(option)}
+                                        $selected={isSelect}
+                                    >
+                                        {showNameSlice(option.label, 10)}
+                                    </StyledOption>
+                                )
+                            })}
+                        </StyledOptionsContainer>
+                    </StyledOptionsOuter>
+                )}
+            </StyledContainer>
+        </>
+    )
 }
 
 export default Select

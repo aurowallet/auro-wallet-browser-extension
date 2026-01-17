@@ -1,6 +1,5 @@
-import cls from "classnames";
 import i18n from "i18next";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,9 +16,20 @@ import { PopupModal, PopupModal_type } from "../../component/PopupModal";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
 import Loading from "../../component/Loading";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledContentContainer,
+  StyledRowInfoContainer,
+  StyledRowContainer,
+  StyledRowTitle,
+  StyledRowDesc,
+  StyledDeleteRow,
+  StyledDeleteTitle,
+  StyledDividedLine,
+} from "./index.styled";
 
 const WalletDetails = () => {
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cache = useSelector((state) => state.cache);
@@ -153,10 +163,10 @@ const WalletDetails = () => {
   return (
     <CustomView
       title={i18n.t("walletDetails")}
-      contentClassName={styles.container}
+      ContentWrapper={StyledContainer}
     >
-      <div className={styles.contentContainer}>
-        <div className={styles.rowInfoContainer}>
+      <StyledContentContainer>
+        <StyledRowInfoContainer>
           <WalletInfoRow
             title={i18n.t("walletNameLabel")}
             desc={walletName}
@@ -169,17 +179,14 @@ const WalletDetails = () => {
               onClick={onClickSeedPhrase}
             />
           )}
-        </div>
-        <div className={styles.dividedLine} />
-        <div className={styles.deleteRow}>
-          <p
-            className={cls(styles.rowTitle, styles.deleteTitle)}
-            onClick={onClickDelete}
-          >
+        </StyledRowInfoContainer>
+        <StyledDividedLine />
+        <StyledDeleteRow>
+          <StyledDeleteTitle onClick={onClickDelete}>
             {i18n.t("deleteTag")}
-          </p>
-        </div>
-      </div>
+          </StyledDeleteTitle>
+        </StyledDeleteRow>
+      </StyledContentContainer>
 
       <PopupModal
         title={currentModal.title}
@@ -208,22 +215,17 @@ const WalletInfoRow = ({
   noArrow = false,
 }) => {
   return (
-    <div
-      className={cls(styles.rowContainer, {
-        [styles.clickRow]: !noArrow,
-      })}
-      onClick={onClick}
-    >
+    <StyledRowContainer $clickable={!noArrow} onClick={onClick}>
       <div>
-        <p className={styles.rowTitle}>{title}</p>
-        {desc && <p className={styles.rowDesc}>{desc}</p>}
+        <StyledRowTitle>{title}</StyledRowTitle>
+        {desc && <StyledRowDesc>{desc}</StyledRowDesc>}
       </div>
       {!noArrow && (
         <div>
           <img src="/img/icon_arrow.svg" />
         </div>
       )}
-    </div>
+    </StyledRowContainer>
   );
 };
 

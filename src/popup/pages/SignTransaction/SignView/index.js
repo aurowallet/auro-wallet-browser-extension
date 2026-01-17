@@ -51,7 +51,6 @@ import {
 } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -70,7 +69,35 @@ import {
 } from "../../../../utils/utils";
 import CountdownTimer from "../../../component/CountdownTimer";
 import { TypeRowInfo } from "../TypeRowInfo";
-import styles from "./index.module.scss";
+import {
+  StyledSectionSign,
+  StyledTitleRow,
+  StyledTitleRight,
+  StyledTitle,
+  StyledContent,
+  StyledAccountRow,
+  StyledRowLeft,
+  StyledRowTitle,
+  StyledRowContent,
+  StyledRowDescContent,
+  StyledFeeCon,
+  StyledFeeContent,
+  StyledFeeTypeBase,
+  StyledFeeTypeSite,
+  StyledRowArrow,
+  StyledRowRight,
+  StyledRightWrapper,
+  StyledTypeRow,
+  StyledModeWrapper,
+  StyledRowPurpleContent,
+  StyledHighFeeTip,
+  StyledBtnGroup,
+  StyledTabContent,
+  StyledClickCss,
+  StyledRowData,
+  StyledScrollBtn,
+  StyledCustomTabPanelCss,
+} from "./index.styled";
 
 const ZkAppValueType = {
   site: "RECOMMEND_SITE",
@@ -1221,21 +1248,17 @@ const SignView = ({
       intervalTime={feeIntervalTime}
       onTimerComplete={onFeeTimerComplete}
     >
-      <section className={styles.sectionSign}>
-        <div className={styles.titleRow}>
-          <p className={styles.title}>{pageTitle}</p>
-          <div className={styles.titleRight}>
+      <StyledSectionSign>
+        <StyledTitleRow>
+          <StyledTitle>{pageTitle}</StyledTitle>
+          <StyledTitleRight>
             <LedgerStatusView />
             <div style={{ marginRight: "6px" }} />
             <NetworkStatusView />
-          </div>
-        </div>
-        <div
-          className={cls(styles.content, {
-            [styles.multiContentWrapper]: showMultiView,
-          })}
-        >
-          <div className={styles.websiteContainer}>
+          </StyledTitleRight>
+        </StyledTitleRow>
+        <StyledContent $showMultiView={showMultiView}>
+          <div>
             <DappWebsite
               siteIcon={signParams?.site?.webIcon}
               siteUrl={signParams?.site?.origin}
@@ -1299,116 +1322,88 @@ const SignView = ({
                 />
               )}
               {zkAppNonce && (
-                <div className={styles.accountRow}>
-                  <div className={styles.rowLeft}>
-                    <p className={styles.rowTitle}>{"Nonce"}</p>
-                    <div className={styles.feeCon}>
-                      <p className={cls(styles.rowContent, styles.feeContent)}>
+                <StyledAccountRow>
+                  <StyledRowLeft>
+                    <StyledRowTitle>{"Nonce"}</StyledRowTitle>
+                    <StyledFeeCon>
+                      <StyledFeeContent>
                         {advanceNonce || zkAppNonce}
-                      </p>
+                      </StyledFeeContent>
                       {nonceType !== ZkAppValueType.custom && (
-                        <span
-                          className={cls(
-                            nonceType === ZkAppValueType.site
-                              ? styles.feeTypeSite
-                              : styles.feeTypeDefault
-                          )}
-                        >
-                          {nonceType === ZkAppValueType.site
-                            ? i18n.t("siteSuggested")
-                            : i18n.t("fee_default")}
-                        </span>
+                        nonceType === ZkAppValueType.site
+                          ? <StyledFeeTypeSite>{i18n.t("siteSuggested")}</StyledFeeTypeSite>
+                          : <StyledFeeTypeBase>{i18n.t("fee_default")}</StyledFeeTypeBase>
                       )}
-                    </div>
-                  </div>
+                    </StyledFeeCon>
+                  </StyledRowLeft>
                   {nonceType === ZkAppValueType.site && (
-                    <div className={styles.modeWrapper}>
-                      <p
-                        className={styles.rowPurpleContent}
-                        onClick={onResetNonce}
-                      >
+                    <StyledModeWrapper>
+                      <StyledRowPurpleContent onClick={onResetNonce}>
                         {i18n.t("reset")}
-                      </p>
-                    </div>
+                      </StyledRowPurpleContent>
+                    </StyledModeWrapper>
                   )}
-                </div>
+                </StyledAccountRow>
               )}
-              <div className={styles.accountRow}>
-                <div className={styles.rowLeft}>
-                  <p className={styles.rowTitle}>{i18n.t("transactionFee")}</p>
-                  <div className={styles.feeCon}>
-                    <p className={cls(styles.rowContent, styles.feeContent)}>
+              <StyledAccountRow>
+                <StyledRowLeft>
+                  <StyledRowTitle>{i18n.t("transactionFee")}</StyledRowTitle>
+                  <StyledFeeCon>
+                    <StyledFeeContent>
                       {nextFee + " " + MAIN_COIN_CONFIG.symbol}
-                    </p>
+                    </StyledFeeContent>
                     {feeType !== ZkAppValueType.custom && (
-                      <div
-                        className={cls(
-                          feeType === ZkAppValueType.site
-                            ? styles.feeTypeSite
-                            : styles.feeTypeDefault
-                        )}
-                      >
-                        {feeType === ZkAppValueType.site
-                          ? i18n.t("siteSuggested")
-                          : i18n.t("fee_default")}
-                      </div>
+                      feeType === ZkAppValueType.site
+                        ? <StyledFeeTypeSite>{i18n.t("siteSuggested")}</StyledFeeTypeSite>
+                        : <StyledFeeTypeBase>{i18n.t("fee_default")}</StyledFeeTypeBase>
                     )}
                     <StyledFeeWrapper>
                       <CountdownTimer />
                     </StyledFeeWrapper>
-                  </div>
-                </div>
-                <div className={styles.modeWrapper}>
-                  <p
-                    className={styles.rowPurpleContent}
-                    onClick={onClickAdvance}
-                  >
+                  </StyledFeeCon>
+                </StyledRowLeft>
+                <StyledModeWrapper>
+                  <StyledRowPurpleContent onClick={onClickAdvance}>
                     {i18n.t("advanceMode")}
-                  </p>
-                </div>
-              </div>
-              <div className={styles.highFeeTip}>{feeErrorTip}</div>
+                  </StyledRowPurpleContent>
+                </StyledModeWrapper>
+              </StyledAccountRow>
+              <StyledHighFeeTip>{feeErrorTip}</StyledHighFeeTip>
             </>
           ) : (
             <></>
           )}
           {tabList.length > 0 && (
-            <div className={styles.accountRowTab}>
+            <StyledAccountRow $noMargin>
               <Tabs
                 selected={selectedTabIndex}
                 initId={tabInitId}
                 onSelect={onSelectedTab}
-                customTabPanelCss={styles.customTabPanelCss}
-                customBtnCss={styles.customBtnCss}
+                customTabPanelCss={StyledCustomTabPanelCss}
                 btnRightComponent={
                   showRawData && (
-                    <div className={styles.rowData} onClick={onClickRawData}>
+                    <StyledRowData onClick={onClickRawData}>
                       {showRawTitle}
-                    </div>
+                    </StyledRowData>
                   )
                 }
               >
                 {tabList.map((tab, index) => {
                   const clickAble = tab.contentClick;
                   return (
-                    <div key={tab.id} id={tab.id} label={tab.label}>
+                    <div key={tab.id} id={tab.id} label={tab.label} style={{ width: '100%', minWidth: 0 }}>
                       {
-                        <div
+                        <StyledTabContent
                           onClick={() => onClickContent(clickAble)}
                           ref={(element) =>
                             (tabContentRef.current[index] = element)
                           }
-                          className={cls(styles.tabContent, {
-                            [styles.clickCss]: clickAble,
-                          })}
+                          style={{ cursor: clickAble ? 'pointer' : 'default' }}
                         >
                           {showScrollBtn && (
-                            <div
-                              className={styles.scrollBtn}
-                              onClick={onClickScrollBtn}
-                            >
+                            <StyledScrollBtn onClick={onClickScrollBtn}>
                               <img src="/img/icon_roll.svg" />
-                            </div>
+                            </StyledScrollBtn>
                           )}
                           {tab.isJsonData || tab.isZkData ? (
                             <TypeRowInfo
@@ -1418,20 +1413,16 @@ const SignView = ({
                           ) : (
                             tab.content
                           )}
-                        </div>
+                        </StyledTabContent>
                       }
                     </div>
                   );
                 })}
               </Tabs>
-            </div>
+            </StyledAccountRow>
           )}
-        </div>
-        <div
-          className={cls(styles.btnGroup, {
-            [styles.multiBottomBtn]: showMultiView,
-          })}
-        >
+        </StyledContent>
+        <StyledBtnGroup $showMultiView={showMultiView}>
           <Button
             onClick={onCancel}
             theme={button_theme.BUTTON_THEME_LIGHT}
@@ -1446,7 +1437,7 @@ const SignView = ({
           >
             {i18n.t(nextBtnTxt)}
           </Button>
-        </div>
+        </StyledBtnGroup>
         <DAppAdvance
           modalVisible={advanceStatus}
           title={i18n.t("advanceMode")}
@@ -1467,13 +1458,12 @@ const SignView = ({
           showCloseIcon={isLedgerAccount}
           onClickClose={() => setConfirmModalStatus(false)}
         />
-
         <LedgerInfoModal
           modalVisible={ledgerModalStatus}
           onClickClose={() => setLedgerModalStatus(false)}
           onConfirm={onLedgerInfoModalConfirm}
         />
-      </section>
+      </StyledSectionSign>
     </TimerProvider>
   );
 };
@@ -1514,41 +1504,29 @@ const CommonRow = ({
   }, [rightCopyAble, rightCopyContent, i18n]);
 
   return (
-    <div className={styles.accountRow}>
-      <div className={styles.rowLeft}>
-        <p className={styles.rowTitle}>{leftTitle}</p>
-        <p
-          className={cls(styles.rowContent, {
-            [styles.copyCss]: leftCopyAble,
-          })}
-          onClick={onClickLeft}
-        >
+    <StyledAccountRow>
+      <StyledRowLeft>
+        <StyledRowTitle>{leftTitle}</StyledRowTitle>
+        <StyledRowContent $canCopy={leftCopyAble} onClick={onClickLeft}>
           {leftContent}
-          <span className={styles.rowDescContent}>{leftDescContent}</span>
-        </p>
-      </div>
+          <StyledRowDescContent>{leftDescContent}</StyledRowDescContent>
+        </StyledRowContent>
+      </StyledRowLeft>
       {showArrow && (
-        <div className={styles.rowArrow}>
+        <StyledRowArrow>
           <img src="/img/icon_arrow_purple.svg" />
-        </div>
+        </StyledRowArrow>
       )}
-      <div className={styles.rowRight}>
-        <div className={styles.rightWrapper}>
-          {toTypeName && <div className={styles.typeRow}>{toTypeName}</div>}
-          <p className={cls(styles.rowTitle, styles.rightTitle)}>
-            {rightTitle}
-          </p>
-        </div>
-        <p
-          className={cls(styles.rowContent, {
-            [styles.copyCss]: rightCopyAble,
-          })}
-          onClick={onClickRight}
-        >
+      <StyledRowRight>
+        <StyledRightWrapper>
+          {toTypeName && <StyledTypeRow>{toTypeName}</StyledTypeRow>}
+          <StyledRowTitle $rightAlign>{rightTitle}</StyledRowTitle>
+        </StyledRightWrapper>
+        <StyledRowContent $canCopy={rightCopyAble} onClick={onClickRight}>
           {rightContent}
-        </p>
-      </div>
-    </div>
+        </StyledRowContent>
+      </StyledRowRight>
+    </StyledAccountRow>
   );
 };
 const StyledJsonWrapper = styled.div`
@@ -1622,42 +1600,37 @@ const CredentialView = ({
         }
       />
       {tabList.length > 0 && (
-        <div className={styles.accountRowTab}>
+        <StyledAccountRow $noMargin>
           <Tabs
             selected={0}
             initId={tabInitId}
             onSelect={onSelectedTab}
-            customTabPanelCss={styles.customTabPanelCss}
-            customBtnCss={styles.customBtnCss}
+            customTabPanelCss={StyledCustomTabPanelCss}
           >
             {tabList.map((tab, index) => {
               return (
-                <div key={tab.id} id={tab.id} label={tab.label}>
+                <div key={tab.id} id={tab.id} label={tab.label} style={{ width: '100%', minWidth: 0 }}>
                   {showScrollBtn && (
-                    <div
-                      className={styles.scrollBtn}
-                      onClick={onClickScrollBtn}
-                    >
+                    <StyledScrollBtn onClick={onClickScrollBtn}>
                       <img src="/img/icon_roll.svg" />
-                    </div>
+                    </StyledScrollBtn>
                   )}
                   {
-                    <StyledJsonWrapper
+                    <StyledTabContent
                       ref={(element) =>
                         (tabContentRef.current[index] = element)
                       }
-                      className={styles.tabContentV2}
                     >
                       <pre>
                         {JSON.stringify(displayCredentialData, null, 4)}
                       </pre>
-                    </StyledJsonWrapper>
+                    </StyledTabContent>
                   }
                 </div>
               );
             })}
           </Tabs>
-        </div>
+        </StyledAccountRow>
       )}
     </>
   );
@@ -1886,40 +1859,35 @@ const PresentationView = ({
       />
 
       {tabList.length > 0 && (
-        <div className={styles.accountRowTab}>
+        <StyledAccountRow $noMargin>
           <Tabs
             selected={0}
             initId={tabInitId}
             onSelect={onSelectedTab}
-            customTabPanelCss={styles.customTabPanelCss}
-            customBtnCss={styles.customBtnCss}
+            customTabPanelCss={StyledCustomTabPanelCss}
           >
             {tabList.map((tab, index) => {
               return (
-                <div key={tab.id} id={tab.id} label={tab.label}>
+                <div key={tab.id} id={tab.id} label={tab.label} style={{ width: '100%', minWidth: 0 }}>
                   {showScrollBtn && (
-                    <div
-                      className={styles.scrollBtn}
-                      onClick={onClickScrollBtn}
-                    >
+                    <StyledScrollBtn onClick={onClickScrollBtn}>
                       <img src="/img/icon_roll.svg" />
-                    </div>
+                    </StyledScrollBtn>
                   )}
                   {
-                    <StyledJsonWrapper
+                    <StyledTabContent
                       ref={(element) =>
                         (tabContentRef.current[index] = element)
                       }
-                      className={styles.tabContentPresentation}
                     >
                       <pre>{displayPresentation ?? ""}</pre>
-                    </StyledJsonWrapper>
+                    </StyledTabContent>
                   }
                 </div>
               );
             })}
           </Tabs>
-        </div>
+        </StyledAccountRow>
       )}
 
       {requirements.map((requirement, index) => {

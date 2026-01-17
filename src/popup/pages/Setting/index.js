@@ -12,7 +12,16 @@ import { updateAddressBookFrom } from "../../../reducers/cache";
 import { sendMsg } from "../../../utils/commonMsg";
 import { showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
-import styles from "./index.module.scss";
+import {
+  StyledContentContainer,
+  StyledCustomTitle,
+  StyledRowContainer,
+  StyledRowLeft,
+  StyledRowTitle,
+  StyledIconContainer,
+  StyledRowContent,
+  StyledDividedLine,
+} from "./index.styled";
 
 const Setting = ({}) => {
   const currentNode = useSelector((state) => state.network.currentNode);
@@ -25,6 +34,7 @@ const Setting = ({}) => {
   const [connectCount, setConnectCount] = useState(0);
 
   const [credentialCount, setCredentialCount] = useState(0);
+
 
   useEffect(() => {
     sendMsg(
@@ -126,10 +136,10 @@ const Setting = ({}) => {
   return (
     <CustomView
       title={i18n.t("setting")}
-      customTitleClass={styles.customTitleClass}
+      TitleWrapper={StyledCustomTitle}
       onClickTitle={onClickTitle}
       rightHoverContent={i18n.t("popOutWindow")}
-      contentClassName={styles.contentClassName}
+      ContentWrapper={StyledContentContainer}
     >
       {routeList.map((routeItem, index) => {
         return (
@@ -143,7 +153,7 @@ const Setting = ({}) => {
           />
         );
       })}
-      <div className={styles.dividedLine} />
+      <StyledDividedLine />
       <RowItem
         icon={rowAbout.icon}
         title={rowAbout.title}
@@ -168,18 +178,18 @@ const RowItem = ({
     navigate(targetRoute);
   }, [action, targetRoute]);
   return (
-    <div className={styles.rowContainer} onClick={onClick}>
-      <div className={styles.rowLeft}>
-        <div className={styles.iconContainer}>
+    <StyledRowContainer onClick={onClick}>
+      <StyledRowLeft>
+        <StyledIconContainer>
           {icon && <img src={icon} />}
-        </div>
-        <p className={styles.title}>{title}</p>
-      </div>
-      <div className={styles.rowLeft}>
-        <p className={styles.rowContent}>{rightContent}</p>
+        </StyledIconContainer>
+        <StyledRowTitle>{title}</StyledRowTitle>
+      </StyledRowLeft>
+      <StyledRowLeft>
+        <StyledRowContent>{rightContent}</StyledRowContent>
         <img src="/img/icon_arrow.svg" />
-      </div>
-    </div>
+      </StyledRowLeft>
+    </StyledRowContainer>
   );
 };
 

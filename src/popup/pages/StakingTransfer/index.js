@@ -1,5 +1,4 @@
 import BigNumber from "bignumber.js";
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,7 +18,21 @@ import { ConfirmModal } from "../../component/ConfirmModal";
 import CustomView from "../../component/CustomView";
 import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledContentContainer,
+  StyledInputContainer,
+  StyledFeeContainer,
+  StyledDividedLine,
+  StyledBottomContainer,
+  StyledPlaceholder,
+  StyledNodeNameContainer,
+  StyledLabel,
+  StyledLabelContainer,
+  StyledRowContainer,
+  StyledNodeName,
+  StyledArrow,
+} from "./index.styled";
 
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import {
@@ -37,6 +50,7 @@ import ledgerManager from "../../../utils/ledger";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
 const StakingTransfer = () => {
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -348,9 +362,9 @@ const StakingTransfer = () => {
   }, [menuAdd, blockAddress]);
 
   return (
-    <CustomView title={i18n.t("staking")} contentClassName={styles.container}>
-      <div className={styles.contentContainer}>
-        <div className={styles.inputContainer}>
+    <CustomView title={i18n.t("staking")} ContentWrapper={StyledContainer}>
+      <StyledContentContainer>
+        <StyledInputContainer>
           {menuAdd ? (
             <Input
               label={i18n.t("blockProducer")}
@@ -371,20 +385,16 @@ const StakingTransfer = () => {
             value={memo}
             inputType={"text"}
           />
-        </div>
-        <div className={styles.feeContainer}>
+        </StyledInputContainer>
+        <StyledFeeContainer>
           <FeeGroup
             onClickFee={onClickFeeGroup}
             currentFee={feeAmount}
             netFeeList={netFeeList}
             hideTimer={true}
           />
-        </div>
-
-        <div className={styles.dividedLine}>
-          <p className={styles.dividedContent}>-</p>
-        </div>
-
+        </StyledFeeContainer>
+        <StyledDividedLine />
         <div>
           <AdvanceMode
             onClickAdvance={onClickAdvance}
@@ -397,14 +407,13 @@ const StakingTransfer = () => {
             onNonceInput={onNonceInput}
           />
         </div>
-        <div className={styles.hold} />
-      </div>
-      <div className={cls(styles.bottomContainer)}>
+        <StyledPlaceholder />
+      </StyledContentContainer>
+      <StyledBottomContainer>
         <Button disable={btnDisableStatus} onClick={onConfirm}>
           {i18n.t("next")}
         </Button>
-      </div>
-
+      </StyledBottomContainer>
       <ConfirmModal
         modalVisible={confirmModalStatus}
         title={i18n.t("transactionDetails")}
@@ -428,17 +437,18 @@ const StakingTransfer = () => {
 
 const BlockProducer = ({ label, showNodeName, onClickBlockProducer }) => {
   return (
-    <div className={styles.nodeNameContainer}>
-      <div className={styles.label}>
-        <div className={styles.labelContainer}>
+    <StyledNodeNameContainer>
+      <StyledLabel>
+        <StyledLabelContainer>
           <span>{label}</span>
-        </div>
-      </div>
-      <div className={styles.rowContainer} onClick={onClickBlockProducer}>
-        <p className={styles.nodeName}>{showNodeName}</p>
-        <img className={styles.arrow} src={"/img/icon_arrow_unfold.svg"} />
-      </div>
-    </div>
+        </StyledLabelContainer>
+      </StyledLabel>
+      <StyledRowContainer onClick={onClickBlockProducer}>
+        <StyledNodeName>{showNodeName}</StyledNodeName>
+        <StyledArrow src={"/img/icon_arrow_unfold.svg"} />
+      </StyledRowContainer>
+    </StyledNodeNameContainer>
   );
 };
+
 export default StakingTransfer;

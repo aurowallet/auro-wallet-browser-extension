@@ -1,11 +1,20 @@
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import Button from "../Button";
 import Input from "../Input";
-import styles from "./index.module.scss";
 import { isNaturalNumber } from "@/utils/utils";
+import {
+    StyledOverlay,
+    StyledModalContent,
+    StyledTitleRow,
+    StyledRowTitle,
+    StyledCloseButton,
+    StyledDivider,
+    StyledBottomContent,
+    StyledBottomContainer,
+    StyledWarningTip,
+} from "./index.styled";
 
 const DAppAdvance = ({
     modalVisible = false,
@@ -14,22 +23,22 @@ const DAppAdvance = ({
     onClickClose = () => { },
 
     feeValue = "",
-    feePlaceHolder="",
+    feePlaceHolder = "",
     onFeeInput = () => { },
     feeErrorTip = "",
 
     nonceValue = "",
     onNonceInput = () => { },
-    zkAppNonce=""
+    zkAppNonce = ""
 }) => {
 
     const mainTokenNetInfo = useSelector(state => state.accountInfo.mainTokenNetInfo)
     const nonceHolder = useMemo(() => {
-        if(zkAppNonce){
+        if (zkAppNonce) {
             return zkAppNonce
         }
         return isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? mainTokenNetInfo.inferredNonce : ""
-    }, [mainTokenNetInfo,zkAppNonce])
+    }, [mainTokenNetInfo, zkAppNonce])
 
     const onClickOuter = useCallback((e) => {
         onClickClose()
@@ -53,22 +62,16 @@ const DAppAdvance = ({
 
     return (
         <>
-            <div className={cls(styles.outerContainer, {
-                [styles.outerContainerShow]: modalBg
-            })} onClick={onClickOuter}>
-                <div className={cls(styles.innerContent, {
-                    [styles.innerContentShow]: modalVisible
-                })} onClick={onClickContent}>
-                    <div className={styles.contentContainer}>
-                        <div className={styles.titleRow}>
-                            <span className={styles.rowTitle}>
-                                {title}
-                            </span>
-                            <img onClick={onClickClose} className={styles.rowClose} src="/img/icon_nav_close.svg" />
-                        </div>
+            <StyledOverlay $show={modalBg} onClick={onClickOuter}>
+                <StyledModalContent $visible={modalVisible} onClick={onClickContent}>
+                    <div>
+                        <StyledTitleRow>
+                            <StyledRowTitle>{title}</StyledRowTitle>
+                            <StyledCloseButton onClick={onClickClose} src="/img/icon_nav_close.svg" />
+                        </StyledTitleRow>
                     </div>
-                    <div className={styles.dividedLine} />
-                    <div className={styles.bottomContent}>
+                    <StyledDivider />
+                    <StyledBottomContent>
                         <Input
                             label={i18n.t('transactionFee')}
                             onChange={onFeeInput}
@@ -77,7 +80,7 @@ const DAppAdvance = ({
                             showBottomTip={true}
                             placeholder={feePlaceHolder}
                             bottomTip={feeErrorTip}
-                            bottomTipClass={styles.waringTip}
+                            bottomTipClass={StyledWarningTip}
                         />
                         <Input
                             label={"Nonce"}
@@ -86,18 +89,14 @@ const DAppAdvance = ({
                             inputType={'text'}
                             placeholder={nonceHolder}
                         />
-                    </div>
-
-                    <div className={cls(styles.bottomContainer, {
-                        [styles.bottomContainerShow]: modalVisible
-                    })}>
-                        <Button
-                            onClick={onConfirm}>
+                    </StyledBottomContent>
+                    <StyledBottomContainer $visible={modalVisible}>
+                        <Button onClick={onConfirm}>
                             {i18n.t('confirm')}
                         </Button>
-                    </div>
-                </div>
-            </div>
+                    </StyledBottomContainer>
+                </StyledModalContent>
+            </StyledOverlay>
         </>
     )
 }

@@ -1,4 +1,3 @@
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -9,8 +8,8 @@ import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import { ReminderTip } from "../../component/ReminderTip";
-import styles from "./index.module.scss";
 import { PasswordValidationList } from "../../../utils/utils";
+import { StyledInputContainer, StyledCheckSpan } from "./index.styled";
 
 const CreatePassword = () => {
 
@@ -86,47 +85,51 @@ const CreatePassword = () => {
   }, [])
 
   return (
-    <CustomView title={i18n.t('createPassword')}>
-      <ReminderTip
-        content={i18n.t('createPasswordTip')} />
-      <div className={cls(styles.inputContainer)}>
+    <CustomView title={i18n.t("createPassword")}>
+      <ReminderTip content={i18n.t("createPasswordTip")} />
+      <StyledInputContainer>
         <Input
-          label={i18n.t('password')}
+          label={i18n.t("password")}
           onChange={onPwdInput}
           value={inputPwd}
-          inputType={'password'}
+          inputType={"password"}
           showBottomTip={inputPwd.length > 0}
-          bottomTip={<div >
-            {matchRenderList.map((item, index) => {
-              let extraStr = ""
-              if (index !== matchRenderList.length - 1) {
-                extraStr = " / "
-              }
-              return <span className={cls(styles.checkSpan, {
-                [styles.checkSpanSuc]: item.bool
-              })} key={index}>{i18n.t(item.text) + extraStr}</span>
-            })}
-          </div>}
+          bottomTip={
+            <div>
+              {matchRenderList.map((item, index) => {
+                let extraStr = "";
+                if (index !== matchRenderList.length - 1) {
+                  extraStr = " / ";
+                }
+                return (
+                  <StyledCheckSpan $hidden={item.bool} key={index}>
+                    {i18n.t(item.text) + extraStr}
+                  </StyledCheckSpan>
+                );
+              })}
+            </div>
+          }
         />
-
         <Input
-          label={i18n.t('confirmPassword')}
+          label={i18n.t("confirmPassword")}
           onChange={onPwdConfirmInput}
           value={confirmPwd}
-          inputType={'password'}
+          inputType={"password"}
           showBottomTip={errorTip}
-          bottomTip={<>
-            <span className={cls(styles.checkSpan, {
-              [styles.checkSpanSuc]: !errorTip
-            })} >{i18n.t("passwordDifferent")}</span>
-          </>}
+          bottomTip={
+            <StyledCheckSpan $hidden={!errorTip}>
+              {i18n.t("passwordDifferent")}
+            </StyledCheckSpan>
+          }
         />
-      </div>
+      </StyledInputContainer>
       <BottomBtn
         disable={!btnClick}
         onClick={goToCreate}
-        rightBtnContent={i18n.t('next')} />
+        rightBtnContent={i18n.t("next")}
+      />
     </CustomView>
-  )
-}
-export default CreatePassword
+  );
+};
+
+export default CreatePassword;

@@ -1,17 +1,22 @@
-import cls from 'classnames';
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { WALLET_GET_CREATE_MNEMONIC, WALLET_NEW_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
 import { sendMsg } from "../../../utils/commonMsg";
-import BottomBtn from '../../component/BottomBtn';
+import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
 import { MneItem } from "../ShowMnemonic";
-import styles from "./index.module.scss";
+import {
+  StyledBackTitle,
+  StyledMneContainer,
+  StyledDividedLine,
+  StyledMneItemSelectedContainer,
+  StyledMneItemSelected,
+} from "./index.styled";
 
 
 export const BackupMnemonics = () => {
@@ -127,43 +132,53 @@ export const BackupMnemonics = () => {
   }, [mnemonicRandomList, i18n])
 
   return (
-    <CustomView title={i18n.t('backupMnemonicPhrase')}>
-      <p className={styles.backTitle}>
-        {i18n.t('confirmMneTip')}
-      </p>
-
-      <div className={styles.mne_container}>
+    <CustomView title={i18n.t("backupMnemonicPhrase")}>
+      <StyledBackTitle>{i18n.t("confirmMneTip")}</StyledBackTitle>
+      <StyledMneContainer>
         {mneSelectList.map((mne, index) => {
-          return <MneItem key={index} mne={mne?.name || ""} contentColorStatus={!mne} index={index} onClick={() => onClickTopItem(mne, index)} canClick={true} />
+          return (
+            <MneItem
+              key={index}
+              mne={mne?.name || ""}
+              contentColorStatus={!mne}
+              index={index}
+              onClick={() => onClickTopItem(mne, index)}
+              canClick={true}
+            />
+          );
         })}
-      </div>
-      <div className={styles.dividedLine} />
-      <div className={styles.mne_container}>
+      </StyledMneContainer>
+      <StyledDividedLine />
+      <StyledMneContainer>
         {mnemonicRandomList.map((mne, index) => {
           if (mne.selected) {
-            return null
+            return null;
           }
-          return <MneItemSelected key={index} mne={mne.name} index={index} onClick={() => onClickBottomItem(mne, index)} />
+          return (
+            <MneItemSelected
+              key={index}
+              mne={mne.name}
+              index={index}
+              onClick={() => onClickBottomItem(mne, index)}
+            />
+          );
         })}
-      </div>
-
+      </StyledMneContainer>
       <BottomBtn
         disable={!btnClick}
         onClick={goToNext}
         rightLoadingStatus={loadingStatus}
-        rightBtnContent={i18n.t('next')}
+        rightBtnContent={i18n.t("next")}
       />
     </CustomView>
-  )
-}
+  );
+};
 
-export const MneItemSelected = ({ mne, onClick = () => { } }) => {
-  const [showSmallMne, setShowSmallMne] = useState(mne.length >= 8)
-  return (<div className={styles.mneItemContainer} onClick={onClick}>
-    <span className={cls(styles.mneItem, {
-      [styles.smallStyle]: showSmallMne
-    })}>
-      {mne}
-    </span>
-  </div>)
-}
+export const MneItemSelected = ({ mne, onClick = () => {} }) => {
+  const [showSmallMne] = useState(mne.length >= 8);
+  return (
+    <StyledMneItemSelectedContainer onClick={onClick}>
+      <StyledMneItemSelected $small={showSmallMne}>{mne}</StyledMneItemSelected>
+    </StyledMneItemSelectedContainer>
+  );
+};

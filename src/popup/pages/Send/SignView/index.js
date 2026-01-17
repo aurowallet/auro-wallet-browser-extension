@@ -22,7 +22,6 @@ import {
 } from "@/utils/utils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,8 +36,30 @@ import {
   parsedZekoFee,
 } from "../../../../utils/utils";
 import CountdownTimer from "../../../component/CountdownTimer";
-import styles from "./index.module.scss";
 import { getAccountUpdateCount } from "../../../../utils/zkUtils";
+import {
+  StyledSectionSign,
+  StyledTitleRow,
+  StyledTitleRight,
+  StyledTitle,
+  StyledContent,
+  StyledWebsiteContainer,
+  StyledAccountRow,
+  StyledRowLeft,
+  StyledRowTitle,
+  StyledRowContent,
+  StyledRowDescContent,
+  StyledFeeCon,
+  StyledFeeContent,
+  StyledRowArrow,
+  StyledRowRight,
+  StyledRightWrapper,
+  StyledTypeRow,
+  StyledModeWrapper,
+  StyledRowPurpleContent,
+  StyledHighFeeTip,
+  StyledBtnGroup,
+} from "./index.styled";
 
 const TX_CLICK_TYPE = {
   CONFIRM: "TX_CLICK_TYPE_CONFIRM",
@@ -394,22 +415,21 @@ const SignView = ({
       intervalTime={feeIntervalTime}
       onTimerComplete={onFeeTimerComplete}
     >
-      <section className={styles.sectionSign}>
-        <div className={styles.titleRow}>
-          <p className={styles.title}>{pageTitle}</p>
-          <div className={styles.titleRight}>
+      <StyledSectionSign>
+        <StyledTitleRow>
+          <StyledTitle>{pageTitle}</StyledTitle>
+          <StyledTitleRight>
             <div style={{ marginRight: "6px" }} />
             <NetworkStatusView />
-          </div>
-        </div>
-        <div className={styles.content}>
-          <div className={styles.websiteContainer}>
+          </StyledTitleRight>
+        </StyledTitleRow>
+        <StyledContent>
+          <StyledWebsiteContainer>
             <DappWebsite
               siteIcon={signParams?.site?.webIcon}
               siteUrl={signParams?.site?.origin}
             />
-          </div>
-
+          </StyledWebsiteContainer>
           <>
             <CommonRow
               leftTitle={currentAccount.accountName}
@@ -420,37 +440,32 @@ const SignView = ({
               rightCopyContent={receiveAddress}
               showArrow={true}
             />
-
             <CommonRow leftTitle={i18n.t("amount")} leftContent={showAmount} />
             {nextMemo && (
               <CommonRow leftTitle={"Memo"} leftContent={nextMemo} />
             )}
-            <div className={styles.accountRow}>
-              <div className={styles.rowLeft}>
-                <p className={styles.rowTitle}>{i18n.t("transactionFee")}</p>
-                <div className={styles.feeCon}>
-                  <p className={cls(styles.rowContent, styles.feeContent)}>
+            <StyledAccountRow>
+              <StyledRowLeft>
+                <StyledRowTitle>{i18n.t("transactionFee")}</StyledRowTitle>
+                <StyledFeeCon>
+                  <StyledFeeContent>
                     {nextFee + " " + MAIN_COIN_CONFIG.symbol}
-                  </p>
+                  </StyledFeeContent>
                   <StyledFeeWrapper>
                     <CountdownTimer />
                   </StyledFeeWrapper>
-                </div>
-              </div>
-              <div className={styles.modeWrapper}>
-                <p className={styles.rowPurpleContent} onClick={onClickAdvance}>
+                </StyledFeeCon>
+              </StyledRowLeft>
+              <StyledModeWrapper>
+                <StyledRowPurpleContent onClick={onClickAdvance}>
                   {i18n.t("advanceMode")}
-                </p>
-              </div>
-            </div>
-            <div className={styles.highFeeTip}>{feeErrorTip}</div>
+                </StyledRowPurpleContent>
+              </StyledModeWrapper>
+            </StyledAccountRow>
+            <StyledHighFeeTip>{feeErrorTip}</StyledHighFeeTip>
           </>
-        </div>
-        <div
-          className={cls(styles.btnGroup, {
-            [styles.multiBottomBtn]: showMultiView,
-          })}
-        >
+        </StyledContent>
+        <StyledBtnGroup $showMultiView={showMultiView}>
           <Button
             onClick={onCancel}
             theme={button_theme.BUTTON_THEME_LIGHT}
@@ -465,7 +480,7 @@ const SignView = ({
           >
             {i18n.t("confirm")}
           </Button>
-        </div>
+        </StyledBtnGroup>
         <DAppAdvance
           modalVisible={advanceStatus}
           title={i18n.t("advanceMode")}
@@ -478,7 +493,7 @@ const SignView = ({
           onConfirm={onConfirmAdvance}
           feeErrorTip={feeErrorTip}
         />
-      </section>
+      </StyledSectionSign>
     </TimerProvider>
   );
 };
@@ -519,41 +534,29 @@ const CommonRow = ({
   }, [rightCopyAble, rightCopyContent, i18n]);
 
   return (
-    <div className={styles.accountRow}>
-      <div className={styles.rowLeft}>
-        <p className={styles.rowTitle}>{leftTitle}</p>
-        <p
-          className={cls(styles.rowContent, {
-            [styles.copyCss]: leftCopyAble,
-          })}
-          onClick={onClickLeft}
-        >
+    <StyledAccountRow>
+      <StyledRowLeft>
+        <StyledRowTitle>{leftTitle}</StyledRowTitle>
+        <StyledRowContent $canCopy={leftCopyAble} onClick={onClickLeft}>
           {leftContent}
-          <span className={styles.rowDescContent}>{leftDescContent}</span>
-        </p>
-      </div>
+          <StyledRowDescContent>{leftDescContent}</StyledRowDescContent>
+        </StyledRowContent>
+      </StyledRowLeft>
       {showArrow && (
-        <div className={styles.rowArrow}>
+        <StyledRowArrow>
           <img src="/img/icon_arrow_purple.svg" />
-        </div>
+        </StyledRowArrow>
       )}
-      <div className={styles.rowRight}>
-        <div className={styles.rightWrapper}>
-          {toTypeName && <div className={styles.typeRow}>{toTypeName}</div>}
-          <p className={cls(styles.rowTitle, styles.rightTitle)}>
-            {rightTitle}
-          </p>
-        </div>
-        <p
-          className={cls(styles.rowContent, {
-            [styles.copyCss]: rightCopyAble,
-          })}
-          onClick={onClickRight}
-        >
+      <StyledRowRight>
+        <StyledRightWrapper>
+          {toTypeName && <StyledTypeRow>{toTypeName}</StyledTypeRow>}
+          <StyledRowTitle $rightAlign>{rightTitle}</StyledRowTitle>
+        </StyledRightWrapper>
+        <StyledRowContent $canCopy={rightCopyAble} onClick={onClickRight}>
           {rightContent}
-        </p>
-      </div>
-    </div>
+        </StyledRowContent>
+      </StyledRowRight>
+    </StyledAccountRow>
   );
 };
 

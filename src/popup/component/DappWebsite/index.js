@@ -1,5 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
-import styles from "./index.module.scss";
+import {
+    StyledContainer,
+    StyledIcon,
+    StyledUrl,
+} from "./index.styled";
 
 const DappWebsite = ({ siteIcon, siteUrl }) => {
   const [iconStatus, setIconStatus] = useState(true);
@@ -12,18 +16,19 @@ const DappWebsite = ({ siteIcon, siteUrl }) => {
       showUrl,
     };
   }, [siteIcon, siteUrl]);
+
   const onLoadError = useCallback(() => {
     setIconStatus(false);
   }, []);
+
   return (
-    <div className={styles.container}>
-      <img
+    <StyledContainer>
+      <StyledIcon
         src={iconStatus ? showIcon : "/img/dapp_default_icon.svg"}
-        className={styles.iconContainer}
         onError={onLoadError}
       />
-      <p className={styles.url}>{showUrl}</p>
-    </div>
+      <StyledUrl>{showUrl}</StyledUrl>
+    </StyledContainer>
   );
 };
 

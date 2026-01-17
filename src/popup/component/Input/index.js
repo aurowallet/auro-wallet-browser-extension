@@ -1,11 +1,21 @@
-import cls from "classnames";
 import { useCallback, useState } from "react";
 import { Trans } from "react-i18next";
-import styles from "./index.module.scss";
 import i18n from "i18next";
 import { numberFormat } from "../../../utils/utils";
+import {
+    StyledInputContainer,
+    StyledLabelRow,
+    StyledLabelContent,
+    StyledSubLabel,
+    StyledBoldLabel,
+    StyledInputWrapper,
+    StyledInput,
+    StyledPasswordToggle,
+    StyledBottomTip,
+    StyledSearchIcon,
+} from "./index.styled";
 
-const Input = ({ 
+const Input = ({
     onChange = () => { },
     handleBtnClick = () => { },
     placeholder = "",
@@ -23,10 +33,11 @@ const Input = ({
 
     showSearchIcon = false,
     customInputContainer = "",
-    
+    customInputCss = "",
+
     transLabel = "",
-    inputDisable=false
-}) => { 
+    inputDisable = false
+}) => {
 
     const [showPwd, setShowPwd] = useState(false)
     const [realType, setRealType] = useState(inputType)
@@ -37,70 +48,72 @@ const Input = ({
         }
     }, [value])
 
-
     const onClickPwd = useCallback(() => {
         setRealType(showPwd ? "password" : "text")
         setShowPwd(!showPwd)
     }, [showPwd])
 
-    const onChangeValue=useCallback((e)=>{
-        if(onChange){
-            if(inputType === "numric"){
+    const onChangeValue = useCallback((e) => {
+        if (onChange) {
+            if (inputType === "numric") {
                 onChange({
                     ...e,
-                    target:{
-                        value:numberFormat(e.target.value)
+                    target: {
+                        value: numberFormat(e.target.value)
                     }
                 })
-            }else{
+            } else {
                 onChange(e)
             }
         }
-    },[onChange,inputType])
+    }, [onChange, inputType])
 
     return (
-        <div className={styles.container}>
-            <div className={styles.label}>
-                <div className={styles.labelContainer}>
+        <StyledInputContainer>
+            <StyledLabelRow>
+                <StyledLabelContent>
                     {label && <span>{label}</span>}
-                    {
-                        transLabel && <Trans
-                        i18nKey={i18n.t(transLabel)}
-                        components={{
-                          b: <span className={styles.boldLabel} />,
-                          bold: <span className={styles.boldLabel} />,
-                        }}
-                      /> 
-                    }
-                    <div className={styles.subLabel}>{subLabel}</div>
-                </div>
+                    {transLabel && (
+                        <Trans
+                            i18nKey={i18n.t(transLabel)}
+                            components={{
+                                b: <StyledBoldLabel />,
+                                bold: <StyledBoldLabel />,
+                            }}
+                        />
+                    )}
+                    <StyledSubLabel>{subLabel}</StyledSubLabel>
+                </StyledLabelContent>
                 {rightComponent}
-            </div>
-            <div className={cls(styles.inputCon, customInputContainer,{
-                [styles.disableCls]:inputDisable
-            })}>
-                {showSearchIcon && <img className={styles.search} src="/img/icon_search.svg" />}
-                <input
+            </StyledLabelRow>
+            <StyledInputWrapper
+                $customCss={customInputContainer}
+                $disabled={inputDisable}
+            >
+                {showSearchIcon && <StyledSearchIcon src="/img/icon_search.svg" />}
+                <StyledInput
                     onChange={onChangeValue}
                     placeholder={placeholder}
                     value={value}
                     onKeyUp={onKeyup}
                     type={realType}
                     disabled={inputDisable}
-                    className={cls(styles.input,
-                        className,{
-                            [styles.disableInput]:inputDisable
-                        }
-                    )} />
-                {inputType === "password" && <div className={styles.imgContainer} onClick={onClickPwd}>
-                    <img src={showPwd ? "/img/icon_input_show.svg" : "/img/icon_input_hide.svg"} />
-                </div>}
+                    $disabled={inputDisable}
+                    $customCss={customInputCss}
+                />
+                {inputType === "password" && (
+                    <StyledPasswordToggle onClick={onClickPwd}>
+                        <img src={showPwd ? "/img/icon_input_show.svg" : "/img/icon_input_hide.svg"} />
+                    </StyledPasswordToggle>
+                )}
                 {rightStableComponent}
-            </div>
-            {showBottomTip && <div className={cls(styles.bottomTipCon, bottomTipClass)}>
-                {bottomTip}
-            </div>}
-        </div >
+            </StyledInputWrapper>
+            {showBottomTip && (
+                <StyledBottomTip className={bottomTipClass}>
+                    {bottomTip}
+                </StyledBottomTip>
+            )}
+        </StyledInputContainer>
     )
 }
 

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import "./ToastContainer.scss";
 import ToastItem from './ToastItem';
-
+import { StyledToastContainer, StyledMask, StyledToastWrap } from './index.styled';
 
 const default_duration = 2000
 class ToastContainer extends Component {
@@ -37,12 +36,12 @@ class ToastContainer extends Component {
     render() {
         const { isShowMask, currentToast } = this.state;
         return (
-            <div className="toast-container">
-                {isShowMask && <div className="mask" />}
-                <div className="toast-wrap">
+            <StyledToastContainer>
+                {isShowMask && <StyledMask />}
+                <StyledToastWrap>
                     {currentToast.text && <ToastItem onClose={this.popToast} {...currentToast} />}
-                </div>
-            </div>
+                </StyledToastWrap>
+            </StyledToastContainer>
         );
     }
 }

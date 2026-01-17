@@ -86,6 +86,7 @@ const StyledTipsSpecial = styled.span`
   color: #d65a5a;
 `;
 const Wallet = ({}) => {
+
   const navigate = useNavigate();
 
   const [watchModalStatus, setWatchModalStatus] = useState(false);

@@ -5,16 +5,25 @@ import { getBaseInfo } from "../../../background/api";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
-import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import {
+  StyledAboutContainer,
+  StyledDevWrapper,
+  StyledIcon,
+  StyledWalletName,
+  StyledWalletVersion,
+  StyledWalletTip,
+  StyledLinkContainer,
+  StyledLinkContent,
+  StyledFollowTitle,
+  StyledFollowListContainer,
+  StyledFollowItemContainer,
+  StyledIconContainer,
+  StyledFollowItemTitle,
+} from "./index.styled";
 
-const StyledDevWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
 const AboutUs = ({}) => {
+
   const navigate = useNavigate();
 
   const [baseAboutInfo, setBaseAboutInfo] = useState({
@@ -113,50 +122,42 @@ const AboutUs = ({}) => {
   return (
     <CustomView
       title={i18n.t("about")}
-      contentClassName={styles.aboutContainer}
+      ContentWrapper={StyledAboutContainer}
     >
       <StyledDevWrapper onDoubleClick={onClickIcon}>
-        <img src="/img/logo/128.png" className={styles.icon} />
+        <StyledIcon src="/img/logo/128.png" />
       </StyledDevWrapper>
-      <p className={styles.walletName}>{i18n.t("walletName")}</p>
-      <p className={styles.walletVersion}>{"V" + pkg.version}</p>
-      <p className={styles.walletTip}>{i18n.t("walletAbout")}</p>
-      <div className={styles.linkContainer}>
+      <StyledWalletName>{i18n.t("walletName")}</StyledWalletName>
+      <StyledWalletVersion>{"V" + pkg.version}</StyledWalletVersion>
+      <StyledWalletTip>{i18n.t("walletAbout")}</StyledWalletTip>
+      <StyledLinkContainer>
         {linkInfoList.map((info, index) => {
           return (
-            <LinkContent title={info.title} key={index} link={info.link} />
+            <StyledLinkContent href={info.link} target="_blank" key={index}>
+              {info.title}
+            </StyledLinkContent>
           );
         })}
-      </div>
-      <p className={styles.followTitle}>{i18n.t("followUs")}</p>
-      <div className={styles.followListContainer}>
+      </StyledLinkContainer>
+      <StyledFollowTitle>{i18n.t("followUs")}</StyledFollowTitle>
+      <StyledFollowListContainer>
         {followList.map((follow, index) => {
           return (
-            <a
-              className={styles.followItemContainer}
+            <StyledFollowItemContainer
               href={follow.link}
               target="_blank"
               key={index}
             >
-              <div className={styles.iconContainer}>
+              <StyledIconContainer>
                 <img src={follow.icon} />
-              </div>
-              <p className={styles.followItemTitle}>{follow.title}</p>
-            </a>
+              </StyledIconContainer>
+              <StyledFollowItemTitle>{follow.title}</StyledFollowItemTitle>
+            </StyledFollowItemContainer>
           );
         })}
-      </div>
+      </StyledFollowListContainer>
     </CustomView>
   );
 };
 
-const LinkContent = ({ title, link }) => {
-  return (
-    <div>
-      <a href={link} target="_blank" className={styles.linkContent}>
-        {title}
-      </a>
-    </div>
-  );
-};
 export default AboutUs;

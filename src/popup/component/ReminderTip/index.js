@@ -1,5 +1,4 @@
-import cls from "classnames";
-import styles from "./index.module.scss";
+import { StyledTipContent } from "./index.styled";
 
 export const ReminderTip_type = {
     info: "reminderTip_type_info",
@@ -12,10 +11,8 @@ export const ReminderTip = ({
     type = ReminderTip_type.info
 }) => {
     return (
-        <div className={cls(styles.content, {
-            [styles.info]: type === ReminderTip_type.info
-        })}>
+        <StyledTipContent $type={type === ReminderTip_type.info ? 'info' : ''}>
             {content}
-        </div>
+        </StyledTipContent>
     )
 } 

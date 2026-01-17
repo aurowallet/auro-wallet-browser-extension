@@ -1,23 +1,31 @@
-import cls from "classnames";
 import { useCallback } from "react";
 import { useNavigate } from 'react-router-dom';
-import styles from "./index.module.scss";
-
+import styled from 'styled-components';
+import {
+    StyledHeaderRow,
+    StyledBackButton,
+    StyledTitle,
+    StyledContentContainer,
+    StyledRightIconContainer,
+    StyledRightIcon,
+    StyledTooltipContainer,
+    StyledTooltip,
+} from "./index.styled";
 
 const CustomView = ({
     children,
     title = "",
     backRoute = "",
     onGoBack,
-    contentClassName = "",
+    ContentWrapper,
     rightComponent = "",
-    customContainerClass = "",
+    HeaderWrapper,
     noBack = false,
-    customTitleClass = '',
-    onClickTitle=()=>{},
+    TitleWrapper,
+    onClickTitle = () => { },
     rightIcon = '',
     onClickRightIcon = () => { },
-    rightHoverContent=""
+    rightHoverContent = ""
 }) => {
     const navigate = useNavigate();
     const goBack = useCallback(() => {
@@ -32,31 +40,39 @@ const CustomView = ({
         }
     }, [backRoute, onGoBack])
 
+    const HeaderComponent = HeaderWrapper || StyledHeaderRow;
+    const TitleComponent = TitleWrapper || StyledTitle;
+    const ContentComponent = ContentWrapper || StyledContentContainer;
 
     return (
         <>
-            <div className={cls(styles.rowContainer, customContainerClass, {
-                [styles.rightIconClass]: rightIcon
-            })}>
-                {!noBack && <div className={styles.backImgCon} onClick={goBack}>
-                    <img src={"/img/icon_back.svg"} />
-                </div>}
-                <p onClick={onClickTitle} className={cls(styles.title, customTitleClass)}>
+            <HeaderComponent>
+                {!noBack && (
+                    <StyledBackButton onClick={goBack}>
+                        <img src={"/img/icon_back.svg"} />
+                    </StyledBackButton>
+                )}
+                <TitleComponent onClick={onClickTitle}>
                     {title}
-                </p>
+                </TitleComponent>
                 {rightComponent}
-                {rightIcon && <div className={styles.rightIconContainer}>
-                    <img
-                        src={rightIcon}
-                        className={styles.rightIcon} onClick={onClickRightIcon} />
-                    {rightHoverContent && <div className={styles.baseTipContainer}>
-                        <span className={styles.baseTip}>{rightHoverContent}</span>
-                    </div>}
-                </div>}
-            </div>
-            <div className={cls(styles.contentContainer, contentClassName)}>
+                {rightIcon && (
+                    <StyledRightIconContainer>
+                        <StyledRightIcon
+                            src={rightIcon}
+                            onClick={onClickRightIcon}
+                        />
+                        {rightHoverContent && (
+                            <StyledTooltipContainer>
+                                <StyledTooltip>{rightHoverContent}</StyledTooltip>
+                            </StyledTooltipContainer>
+                        )}
+                    </StyledRightIconContainer>
+                )}
+            </HeaderComponent>
+            <ContentComponent>
                 {children}
-            </div>
+            </ContentComponent>
         </>
     )
 }

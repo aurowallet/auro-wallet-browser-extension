@@ -2,7 +2,6 @@ import ledgerManager from "@/utils/ledger";
 import { getZkAppUpdateInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,7 +35,26 @@ import {
   TransactionModal,
   TransactionModalType,
 } from "../../../../component/TransactionModal";
-import styles from "./index.module.scss";
+import {
+  StyledHistoryContainer,
+  StyledHolderContainer,
+  StyledListContainer,
+  StyledExplorerContainer,
+  StyledExplorerContent,
+  StyledExplorerTitle,
+  StyledTxItemCon,
+  StyledDividedLine,
+  StyledItemContainer,
+  StyledItemLeftContainer,
+  StyledItemAccount,
+  StyledItemAccountAddress,
+  StyledScamTag,
+  StyledItemAccountInfo,
+  StyledItemRightContainer,
+  StyledItemAmount,
+  StyledItemStatus,
+  StyledSpeedBtnGroup,
+} from "./index.styled";
 
 /**
  *
@@ -224,8 +242,6 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
           );
         }
 
-        console.log("signResult,", signResult);
-
         if (signResult.rejected) {
           Toast.info(i18n.t("ledgerRejected"));
           setBtnLoading(false)
@@ -369,19 +385,17 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
     }
   }, []);
   return (
-    <div className={cls(styles.historyContainer, styles.holderContainer)}>
-      <div className={styles.listContainer}>
+    <StyledHistoryContainer as={StyledHolderContainer}>
+      <StyledListContainer>
         {history.map((item, index) => {
           if (item.showExplorer) {
             return (
-              <div key={index} className={styles.explorerContainer}>
-                <div className={styles.explorerContent} onClick={onGoExplorer}>
-                  <p className={styles.explorerTitle}>
-                    {i18n.t("goToExplorer")}
-                  </p>
+              <StyledExplorerContainer key={index}>
+                <StyledExplorerContent onClick={onGoExplorer}>
+                  <StyledExplorerTitle>{i18n.t("goToExplorer")}</StyledExplorerTitle>
                   <img src="/img/icon_link.svg" />
-                </div>
-              </div>
+                </StyledExplorerContent>
+              </StyledExplorerContainer>
             );
           }
           return (
@@ -396,7 +410,7 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
             />
           );
         })}
-      </div>
+      </StyledListContainer>
       <TransactionModal
         title={modalTitle}
         modalContent={modalDesc}
@@ -415,7 +429,7 @@ const TxListView = ({ history = [], tokenInfo = {} }) => {
         onClickClose={() => setLedgerModalStatus(false)}
         onConfirm={onLedgerInfoModalConfirm}
       />
-    </div>
+    </StyledHistoryContainer>
   );
 };
 
@@ -525,15 +539,15 @@ const TxItem = ({
     let showPendTx = false;
 
     if (txData.status === TX_STATUS.PENDING) {
-      statusStyle = styles.itemStatus_Pending;
+      statusStyle = "pending";
       showPendTx = true;
       statusText = i18n.t(txData.status && txData.status.toUpperCase());
     } else {
       if (txData.failureReason) {
-        statusStyle = styles.itemStatus_Failed;
+        statusStyle = "failed";
         statusText = i18n.t("FAILED");
       } else {
-        statusStyle = styles.itemStatus_Success;
+        statusStyle = "success";
         statusText = i18n.t("APPLIED");
       }
     }
@@ -591,62 +605,39 @@ const TxItem = ({
   );
 
   return (
-    <div
-      onClick={onToDetail}
-      className={cls(styles.txItemCon, {
-        [styles.pendingCls]: showPendTx,
-      })}
-    >
-      <div
-        className={cls(styles.dividedLine, {
-          [styles.paddingLine]: paddingLineStyle,
-        })}
-      />
-      <div
-        className={cls(styles.itemContainer, {
-          [styles.pendingContent]: showPendTx,
-        })}
-      >
-        <div className={styles.itemLeftContainer}>
+    <StyledTxItemCon onClick={onToDetail} $isPending={showPendTx}>
+      <StyledDividedLine $paddingLine={paddingLineStyle} />
+      <StyledItemContainer $isPending={showPendTx}>
+        <StyledItemLeftContainer>
           <img src={statusIcon} />
-          <div className={styles.itemAccount}>
-            <p className={styles.itemAccountAddress}>
+          <StyledItemAccount>
+            <StyledItemAccountAddress>
               {showAddress}
               {txData.isFromAddressScam && (
-                <span className={styles.scamTag}>{i18n.t("scam")}</span>
+                <StyledScamTag>{i18n.t("scam")}</StyledScamTag>
               )}
-            </p>
-            <p className={styles.itemAccountInfo}>{timeInfo}</p>
-          </div>
-        </div>
-        <div className={styles.itemRightContainer}>
-          <p className={styles.itemAmount}> {amount} </p>
-          <div className={cls(styles.itemStatus, statusStyle)}>
-            {statusText}
-          </div>
-        </div>
-      </div>
+            </StyledItemAccountAddress>
+            <StyledItemAccountInfo>{timeInfo}</StyledItemAccountInfo>
+          </StyledItemAccount>
+        </StyledItemLeftContainer>
+        <StyledItemRightContainer>
+          <StyledItemAmount>{amount}</StyledItemAmount>
+          <StyledItemStatus $status={statusStyle}>{statusText}</StyledItemStatus>
+        </StyledItemRightContainer>
+      </StyledItemContainer>
       {showPendingAction && (
-        <div className={styles.speedBtnGroup}>
+        <StyledSpeedBtnGroup>
           {txData.showSpeedUp && (
-            <Button
-              onClick={onClickItemSpeedUp}
-              withEvent={true}
-              className={styles.speedBtn}
-            >
+            <Button onClick={onClickItemSpeedUp} withEvent={true}>
               {i18n.t("speedUp")}
             </Button>
           )}
-          <Button
-            onClick={onClickItemCancel}
-            withEvent={true}
-            className={cls(styles.cancelBtn, styles.speedBtn)}
-          >
+          <Button onClick={onClickItemCancel} withEvent={true}>
             {i18n.t("cancel")}
           </Button>
-        </div>
+        </StyledSpeedBtnGroup>
       )}
-    </div>
+    </StyledTxItemCon>
   );
 };
 

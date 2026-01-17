@@ -1,4 +1,3 @@
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -34,7 +33,39 @@ import CustomView from "../../component/CustomView";
 import Loading from "../../component/Loading";
 import Toast from "../../component/Toast";
 import VaultUpgradeModal from "../../component/VaultUpgradeModal";
-import styles from "./index.module.scss";
+import {
+  StyledContentClassName,
+  StyledContentContainer,
+  StyledRowCommonContainer,
+  StyledAccountRow,
+  StyledAccountRowLeft,
+  StyledAccountName,
+  StyledAccountType,
+  StyledAddress,
+  StyledAccountBalanceRow,
+  StyledAccountBalance,
+  StyledPointMenuContainer,
+  StyledPointMenu,
+  StyledIconContainer,
+  StyledLockBtn,
+  StyledKeyringGroup,
+  StyledKeyringHeader,
+  StyledKeyringName,
+  StyledKeyringMenu,
+  StyledKeyringAccounts,
+  StyledKeyringAccountRow,
+  StyledRowLeft,
+  StyledKeyringAccountName,
+  StyledKeyringAddress,
+  StyledKeyringBalance,
+  StyledKeyringPointMenuContainer,
+  StyledKeyringPointMenu,
+  StyledNotSupportContainer,
+  StyledNotSupportTitle,
+  StyledAddWalletBtnContainer,
+  StyledAddWalletBtn,
+  StyledKeyringRightContainer,
+} from "./index.styled";
 
 const AccountManagePage = ({}) => {
   const currentAddress = useSelector(
@@ -405,17 +436,13 @@ const AccountManagePage = ({}) => {
   return (
     <CustomView
       title={i18n.t("accountManage")}
-      customContainerClass={styles.customContainerClass}
-      contentClassName={styles.contentClassName}
+      ContentWrapper={StyledContentClassName}
       rightComponent={
-        <p className={styles.lockBtn} onClick={onClickLock}>
-          {i18n.t("lock")}
-        </p>
+        <StyledLockBtn onClick={onClickLock}>{i18n.t("lock")}</StyledLockBtn>
       }
     >
-      <div className={styles.contentContainer}>
+      <StyledContentContainer>
         {useKeyringView ? (
-          // Multi-wallet keyring view
           <>
             {keyringsList.map((keyring) => (
               <KeyringGroup
@@ -430,7 +457,6 @@ const AccountManagePage = ({}) => {
             ))}
           </>
         ) : (
-          // Legacy view
           <>
             {commonAccountList.map((item, index) => {
               let isSelect = item.address === currentAddress;
@@ -445,10 +471,10 @@ const AccountManagePage = ({}) => {
             })}
             <AddRow />
             {watchModeAccountList.length > 0 && (
-              <div className={styles.notSupportContainer}>
-                <p className={styles.notSupportTitle}>
+              <StyledNotSupportContainer>
+                <StyledNotSupportTitle>
                   {i18n.t("noSupported")}
-                </p>
+                </StyledNotSupportTitle>
                 {watchModeAccountList.map((item, index) => {
                   return (
                     <CommonAccountRow
@@ -460,17 +486,17 @@ const AccountManagePage = ({}) => {
                     />
                   );
                 })}
-              </div>
+              </StyledNotSupportContainer>
             )}
           </>
         )}
-      </div>
+      </StyledContentContainer>
       {useKeyringView && (
-        <div className={styles.addWalletBtnContainer}>
-          <div className={styles.addWalletBtn} onClick={onGoAddWallet}>
+        <StyledAddWalletBtnContainer>
+          <StyledAddWalletBtn onClick={onGoAddWallet}>
             {i18n.t("addWallet")}
-          </div>
-        </div>
+          </StyledAddWalletBtn>
+        </StyledAddWalletBtnContainer>
       )}
       <VaultUpgradeModal
         modalVisible={showUpgradeModal}
@@ -554,44 +580,39 @@ const KeyringGroup = ({
   const isHDKeyring = keyring.type === "hd";
 
   return (
-    <div className={styles.keyringGroup}>
-      <div className={styles.keyringHeader}>
-        <p className={styles.keyringName}>
-          {getKeyringDisplayName(keyring.type)}
-        </p>
+    <StyledKeyringGroup>
+      <StyledKeyringHeader>
+        <StyledKeyringName>{getKeyringDisplayName(keyring.type)}</StyledKeyringName>
         {isHDKeyring && (
-          <div
-            className={styles.keyringMenu}
-            onClick={() => goToWalletDetails(keyring)}
-          >
+          <StyledKeyringMenu onClick={() => goToWalletDetails(keyring)}>
             <img src="/img/icon_more.svg" alt="menu" />
-          </div>
+          </StyledKeyringMenu>
         )}
-      </div>
-      <div className={styles.keyringAccounts}>
+      </StyledKeyringHeader>
+      <StyledKeyringAccounts>
         {keyring.accounts.map((account) => {
           const isSelect = account.address === currentAddress;
           return (
-            <div
+            <StyledKeyringAccountRow
               key={account.address}
-              className={cls(styles.keyringAccountRow, {
-                [styles.keyringAccountRowSelected]: isSelect,
-              })}
+              $isSelect={isSelect}
               onClick={() =>
                 onClickAccount({ ...account, accountName: account.name })
               }
             >
-              <div className={styles.rowLeft}>
-                <p className={styles.accountName}>{account.name}</p>
-                <p className={styles.address}>
+              <StyledRowLeft>
+                <StyledKeyringAccountName $isSelect={isSelect}>
+                  {account.name}
+                </StyledKeyringAccountName>
+                <StyledKeyringAddress $isSelect={isSelect}>
                   {addressSlice(account.address)}
-                </p>
-                <p className={styles.accountBalance}>
+                </StyledKeyringAddress>
+                <StyledKeyringBalance $isSelect={isSelect}>
                   {getBalance(account.address)}
-                </p>
-              </div>
-              <div
-                className={styles.pointMenuContainer}
+                </StyledKeyringBalance>
+              </StyledRowLeft>
+              <StyledKeyringRightContainer>
+              <StyledKeyringPointMenuContainer
                 onClick={(e) => {
                   e.stopPropagation();
                   goToAccountInfo({
@@ -601,27 +622,22 @@ const KeyringGroup = ({
                   });
                 }}
               >
-                <img
-                  src={
-                    isSelect ? "/img/pointMenu.svg" : "/img/pointMenu_dark.svg"
-                  }
-                  className={styles.pointMenu}
+                <StyledKeyringPointMenu
+                  src={isSelect ? "/img/pointMenu.svg" : "/img/pointMenu_dark.svg"}
                   alt="menu"
                 />
-              </div>
-            </div>
+              </StyledKeyringPointMenuContainer>
+            </StyledKeyringRightContainer>
+            </StyledKeyringAccountRow>
           );
         })}
         {keyring.canAddAccount && (
-          <StyledAddAccountBtnV2
-            className={styles.addAccountBtn}
-            onClick={() => onAddAccount(keyring.id)}
-          >
+          <StyledAddAccountBtnV2 onClick={() => onAddAccount(keyring.id)}>
             {i18n.t("addAccount")}
           </StyledAddAccountBtnV2>
         )}
-      </div>
-    </div>
+      </StyledKeyringAccounts>
+    </StyledKeyringGroup>
   );
 };
 
@@ -735,61 +751,43 @@ const CommonAccountRow = ({
     e.stopPropagation();
   }, []);
   return (
-    <div
+    <StyledRowCommonContainer
       onClick={onClickItem}
-      className={cls(styles.rowCommonContainer, {
-        [styles.rowSelected]: isSelect,
-        [styles.rowNotSupport]: notSupport,
-        [styles.rowCanSelect]: !notSupport && !isSelect,
-      })}
+      $isSelect={isSelect}
+      $notSupport={notSupport}
+      $canSelect={!notSupport && !isSelect}
     >
-      <div className={styles.rowLeft}>
-        <div className={styles.accountRow}>
-          <div className={styles.accountRowLeft}>
-            <p
-              className={cls(styles.accountName, {
-                [styles.accountNameSelected]: isSelect,
-              })}
-            >
+      <div>
+        <StyledAccountRow>
+          <StyledAccountRowLeft>
+            <StyledAccountName $isSelect={isSelect}>
               {account.accountName}
-            </p>
+            </StyledAccountName>
             {typeText && (
-              <div
-                className={cls(styles.accountType, {
-                  [styles.accountTypeSelected]: isSelect,
-                })}
-              >
+              <StyledAccountType $isSelect={isSelect}>
                 {getAccountType(account)}
-              </div>
+              </StyledAccountType>
             )}
-          </div>
-        </div>
-        <p
-          className={cls(styles.address, {
-            [styles.addressSelected]: isSelect,
-          })}
-        >
+          </StyledAccountRowLeft>
+        </StyledAccountRow>
+        <StyledAddress $isSelect={isSelect}>
           {addressSlice(account.address)}
-        </p>
-        <div className={styles.accountBalanceRow}>
-          <p
-            className={cls(styles.accountBalance, {
-              [styles.accountBalanceSelected]: isSelect,
-            })}
-          >
+        </StyledAddress>
+        <StyledAccountBalanceRow>
+          <StyledAccountBalance $isSelect={isSelect}>
             {showBalance}
-          </p>
-        </div>
+          </StyledAccountBalance>
+        </StyledAccountBalanceRow>
       </div>
-      <div className={styles.rowRight}>
-        <div className={styles.iconContainer}>
+      <div style={{ display: "flex", alignItems: "flex-end" }}>
+        <StyledIconContainer>
           {accountRightIcon && <img src={accountRightIcon} />}
-        </div>
-        <div onClick={onClickMenu} className={styles.pointMenuContainer}>
-          <img src={menuIcon} className={styles.pointMenu} />
-        </div>
+        </StyledIconContainer>
+        <StyledPointMenuContainer onClick={onClickMenu}>
+          <StyledPointMenu src={menuIcon} />
+        </StyledPointMenuContainer>
       </div>
-    </div>
+    </StyledRowCommonContainer>
   );
 };
 

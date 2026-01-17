@@ -1,5 +1,5 @@
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -15,9 +15,29 @@ import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledBottomContainer,
+  StyledPlaceholder,
+  StyledTipContainer,
+  StyledTip,
+  StyledAddress,
+  StyledAccountRepeatName,
+  StyledAccountRepeatClick,
+  StyledLedgerContainer,
+  StyledLedgerTitle,
+  StyledLedgerPath,
+  StyledInputNumberContainer,
+  StyledCustomInput,
+  StyledImgContainer,
+  StyledArrow,
+  StyledAdvanceEntry,
+  StyledAdvanceTitle,
+  StyledAdvanceIcon,
+} from "./index.styled";
 
 const AccountName = ({}) => {
+
   const cache = useSelector((state) => state.cache);
   const currentAddress = useSelector(
     (state) => state.accountInfo.currentAccount.address
@@ -162,7 +182,7 @@ const AccountName = ({}) => {
 
   return (
     <CustomView title={i18n.t("accountName")}>
-      <form onSubmit={onSubmit} className={styles.container}>
+      <StyledContainer onSubmit={onSubmit}>
         <div>
           <Input
             label={i18n.t("inputAccountName")}
@@ -173,15 +193,13 @@ const AccountName = ({}) => {
           />
         </div>
         {isLedger && (
-          <div className={styles.advanceEntry} onClick={onClickAdvance}>
-            <p className={styles.advanceTitle}>{i18n.t("advanceMode")}</p>
-            <img
-              className={
-                isOpenAdvance ? styles.openAdvance : styles.closeAdvance
-              }
+          <StyledAdvanceEntry onClick={onClickAdvance}>
+            <StyledAdvanceTitle>{i18n.t("advanceMode")}</StyledAdvanceTitle>
+            <StyledAdvanceIcon
+              $open={isOpenAdvance}
               src="/img/icon_unfold_Default.svg"
             />
-          </div>
+          </StyledAdvanceEntry>
         )}
         {isLedger && isOpenAdvance && (
           <LedgerAdvance
@@ -191,30 +209,30 @@ const AccountName = ({}) => {
             onMinus={onMinus}
           />
         )}
-        <div className={styles.hold} />
-        <div className={styles.bottomContainer}>
+        <StyledPlaceholder />
+        <StyledBottomContainer>
           <Button loading={btnLoadingStatus} onClick={onConfirm}>
             {buttonText}
           </Button>
-        </div>
-      </form>
+        </StyledBottomContainer>
+      </StyledContainer>
       <PopupModal
         title={i18n.t("tips")}
         rightBtnContent={i18n.t("ok")}
         onRightBtnClick={onCloseModal}
         componentContent={
-          <div className={styles.tipContainer}>
-            <p className={styles.tip}>{i18n.t("importSameAccount_1")}</p>
-            <p className={styles.address}>{repeatAccount?.address}</p>
+          <StyledTipContainer>
+            <StyledTip>{i18n.t("importSameAccount_1")}</StyledTip>
+            <StyledAddress>{repeatAccount?.address}</StyledAddress>
             <Trans
               i18nKey={"importSameAccount_2"}
               values={{ accountName: repeatAccount?.accountName }}
               components={{
-                b: <span className={styles.accountRepeatName} />,
-                click: <span className={styles.accountRepeatClick} />,
+                b: <StyledAccountRepeatName />,
+                click: <StyledAccountRepeatClick />,
               }}
             />
-          </div>
+          </StyledTipContainer>
         }
         modalVisible={reminderModalStatus}
       />
@@ -229,9 +247,9 @@ const LedgerAdvance = ({
   onMinus = () => {},
 }) => {
   return (
-    <div className={styles.ledgerContainer}>
-      <p className={styles.ledgerTitle}>{i18n.t("hdDerivedPath")}</p>
-      <div className={styles.ledgerPath}>
+    <StyledLedgerContainer>
+      <StyledLedgerTitle>{i18n.t("hdDerivedPath")}</StyledLedgerTitle>
+      <StyledLedgerPath>
         m / 44' / 12586' /
         <InputNumber
           value={value}
@@ -240,8 +258,8 @@ const LedgerAdvance = ({
           onMinus={onMinus}
         />
         ' / 0 / 0
-      </div>
-    </div>
+      </StyledLedgerPath>
+    </StyledLedgerContainer>
   );
 };
 
@@ -252,28 +270,27 @@ const InputNumber = ({
   onMinus = () => {},
 }) => {
   return (
-    <div className={styles.inputNumberContainer}>
-      <input
+    <StyledInputNumberContainer>
+      <StyledCustomInput
         type="number"
         min="0"
         step="1"
         onChange={onChange}
         value={value}
-        className={styles.customInput}
       />
-      <div className={styles.imgContainer}>
-        <img
+      <StyledImgContainer>
+        <StyledArrow
           src="/img/icon_fold_Default.svg"
-          className={styles.topArrow}
           onClick={onAdd}
         />
-        <img
+        <StyledArrow
           src="/img/icon_fold_Default.svg"
-          className={styles.bottomArrow}
+          $rotate
           onClick={onMinus}
         />
-      </div>
-    </div>
+      </StyledImgContainer>
+    </StyledInputNumberContainer>
   );
 };
+
 export default AccountName;

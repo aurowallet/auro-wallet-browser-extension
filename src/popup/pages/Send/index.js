@@ -2,7 +2,6 @@ import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,13 +47,35 @@ import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 import ICON_Address from "../../component/SVG/ICON_Address";
 import ICON_Wallet from "../../component/SVG/ICON_Wallet";
 import Toast from "../../component/Toast";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledContentContainer,
+  StyledInputContainer,
+  StyledBalance,
+  StyledMax,
+  StyledFeeContainer,
+  StyledDividedLine,
+  StyledBottomContainer,
+  StyledPlaceholder,
+  StyledAddressCon,
+  StyledIconAddressCon,
+  StyledCloseMode,
+  StyledOptionOuter,
+  StyledOptionContainer,
+  StyledEmptyCon,
+  StyledAddressRowCon,
+  StyledAddressRowLeft,
+  StyledRowIconContainer,
+  StyledAddressName,
+  StyledNewBadge,
+} from "./index.styled";
 
 const StyledWrapper = styled.div`
   display: flex;
   align-items: center;
 `;
 const SendPage = ({}) => {
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -702,14 +723,14 @@ const SendPage = ({}) => {
   return (
     <CustomView
       title={i18n.t("send") + " " + tokenSymbol}
-      contentClassName={styles.container}
+      ContentWrapper={StyledContainer}
     >
       <TimerProvider
         intervalTime={feeIntervalTime}
         onTimerComplete={onFeeTimerComplete}
       >
-        <div className={styles.contentContainer}>
-          <div className={styles.inputContainer}>
+        <StyledContentContainer>
+          <StyledInputContainer>
             <Input
               label={i18n.t("to")}
               onChange={onToAddressInput}
@@ -719,27 +740,21 @@ const SendPage = ({}) => {
                 isNewAccount ? (
                   <>
                     {toAddressName}
-                    <span className={styles.newBadge}>{i18n.t("newAccount")}</span>
+                    <StyledNewBadge>{i18n.t("newAccount")}</StyledNewBadge>
                   </>
                 ) : toAddressName
               }
               placeholder={i18n.t("address")}
               rightStableComponent={
-                <div className={styles.addressCon}>
-                  <div
-                    className={styles.iconAddressCon}
-                    onClick={onShowAddressList}
-                  >
+                <StyledAddressCon>
+                  <StyledIconAddressCon onClick={onShowAddressList}>
                     <img src="/img/icon_address.svg" />
-                  </div>
+                  </StyledIconAddressCon>
                   {addressOptionStatus && (
                     <>
-                      <div
-                        className={styles.closeMode}
-                        onClick={onClickCloseMode}
-                      />
-                      <div className={styles.optionOuter}>
-                        <div className={styles.optionContainer}>
+                      <StyledCloseMode onClick={onClickCloseMode} />
+                      <StyledOptionOuter>
+                        <StyledOptionContainer>
                           {addressOptionList.length > 0 ? (
                             addressOptionList.map((data, index) => {
                               return (
@@ -751,15 +766,15 @@ const SendPage = ({}) => {
                               );
                             })
                           ) : (
-                            <div className={styles.emptyCon}>
+                            <StyledEmptyCon>
                               {i18n.t("noAddressSaved")}
-                            </div>
+                            </StyledEmptyCon>
                           )}
-                        </div>
-                      </div>
+                        </StyledOptionContainer>
+                      </StyledOptionOuter>
                     </>
                   )}
-                </div>
+                </StyledAddressCon>
               }
             />
             <Input
@@ -769,14 +784,12 @@ const SendPage = ({}) => {
               inputType={"numric"}
               placeholder={0}
               rightComponent={
-                <div className={styles.balance}>
+                <StyledBalance>
                   {availableBalance + " " + tokenSymbol}
-                </div>
+                </StyledBalance>
               }
               rightStableComponent={
-                <div onClick={onClickAll} className={styles.max}>
-                  {i18n.t("max")}
-                </div>
+                <StyledMax onClick={onClickAll}>{i18n.t("max")}</StyledMax>
               }
             />
             <Input
@@ -785,8 +798,8 @@ const SendPage = ({}) => {
               value={memo}
               inputType={"text"}
             />
-          </div>
-          <div className={styles.feeContainer}>
+          </StyledInputContainer>
+          <StyledFeeContainer>
             <FeeGroup
               onClickFee={onClickFeeGroup}
               currentFee={nextFee}
@@ -794,12 +807,8 @@ const SendPage = ({}) => {
               showFeeGroup={!isZeko}
               hideTimer={false}
             />
-          </div>
-
-          <div className={styles.dividedLine}>
-            <p className={styles.dividedContent}>-</p>
-          </div>
-
+          </StyledFeeContainer>
+          <StyledDividedLine />
           <div>
             <AdvanceMode
               onClickAdvance={onClickAdvance}
@@ -812,9 +821,9 @@ const SendPage = ({}) => {
               onNonceInput={onNonceInput}
             />
           </div>
-          <div className={styles.hold} />
-        </div>
-        <div className={cls(styles.bottomContainer)}>
+          <StyledPlaceholder />
+        </StyledContentContainer>
+        <StyledBottomContainer>
           <Button disable={btnDisableStatus} onClick={onConfirm}>
             <StyledWrapper>
               {i18n.t("next")}
@@ -825,8 +834,7 @@ const SendPage = ({}) => {
               )}
             </StyledWrapper>
           </Button>
-        </div>
-
+        </StyledBottomContainer>
         <ConfirmModal
           modalVisible={confirmModalStatus}
           title={i18n.t("transactionDetails")}
@@ -872,20 +880,19 @@ const AddressRowItem = ({ data, onClickRowAddress }) => {
   }, []);
 
   return (
-    <div
-      className={styles.addressRowCon}
+    <StyledAddressRowCon
       onClick={() => onClickRowAddress(data)}
       onMouseEnter={showWhiteIcon}
       onMouseLeave={showBlackIcon}
     >
-      <div className={styles.addressRowLeft}>
-        <div className={styles.rowIconContainer}>
+      <StyledAddressRowLeft>
+        <StyledRowIconContainer>
           <ShowIcon stroke={iconColor} />
-        </div>
-        <span className={styles.addressName}>{showName}</span>
-      </div>
-      <div className={styles.addressRowRight}>{showAddress}</div>
-    </div>
+        </StyledRowIconContainer>
+        <StyledAddressName>{showName}</StyledAddressName>
+      </StyledAddressRowLeft>
+      <div>{showAddress}</div>
+    </StyledAddressRowCon>
   );
 };
 

@@ -2,10 +2,9 @@ import { clearLocalCache } from "@/background/localStorage";
 import { NetworkID_MAP } from "@/constant/network";
 import { sendNetworkChangeMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { NET_CONFIG_VERSION } from "../../../../config";
 import { extSaveLocal } from "../../../background/extensionStorage";
 import { NET_WORK_CONFIG_V2 } from "../../../constant/storageKey";
@@ -16,14 +15,20 @@ import {
 import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/network";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
-import styles from "./index.module.scss";
 import NetworkItem from "./NetworkItem";
-
-const StyledItemWrapper = styled.div`
-  margin-top: 10px;
-`;
+import {
+  StyledContentClassName,
+  StyledEditBtn,
+  StyledInnerContent,
+  StyledBottomContainer,
+  StyledNetworkTitleWrapper,
+  StyledNodeListTitle,
+  StyledHrDotted,
+  StyledItemWrapper,
+} from "./index.styled";
 
 const NetworkPage = ({}) => {
+
   const allNodeList = useSelector((state) => state.network.allNodeList);
   const customNodeList = useSelector((state) => state.network.customNodeList);
   const currentNode = useSelector((state) => state.network.currentNode);
@@ -123,9 +128,9 @@ const NetworkPage = ({}) => {
   const rightComponent = useMemo(() => {
     if (showEditBtn) {
       return (
-        <p className={styles.editBtn} onClick={onClickEdit}>
+        <StyledEditBtn onClick={onClickEdit}>
           {editMode ? i18n.t("done") : i18n.t("edit")}
-        </p>
+        </StyledEditBtn>
       );
     }
     return <></>;
@@ -134,10 +139,10 @@ const NetworkPage = ({}) => {
   return (
     <CustomView
       title={i18n.t("network")}
-      contentClassName={styles.contentClassName}
+      ContentWrapper={StyledContentClassName}
       rightComponent={rightComponent}
     >
-      <div className={styles.innerContent}>
+      <StyledInnerContent>
         {nodeList.map((netNode, index) => {
           if (netNode.list.length == 0) {
             return <div key={index} />;
@@ -146,11 +151,11 @@ const NetworkPage = ({}) => {
           return (
             <div key={index}>
               {showNetTitle && (
-                <div className={styles.networkTitleWrapper}>
-                  <hr className={styles.hrDotted} />
-                  <p className={styles.nodeListTitle}>{i18n.t("testnet")}</p>
-                  <hr className={styles.hrDotted} />
-                </div>
+                <StyledNetworkTitleWrapper>
+                  <StyledHrDotted />
+                  <StyledNodeListTitle>{i18n.t("testnet")}</StyledNodeListTitle>
+                  <StyledHrDotted />
+                </StyledNetworkTitleWrapper>
               )}
               {netNode.list.map((nodeItem, j) => {
                 return (
@@ -158,7 +163,7 @@ const NetworkPage = ({}) => {
                     <NetworkItem
                       nodeItem={nodeItem}
                       onClickItem={onClickRow}
-                        onEditItem={onEditItem}
+                      onEditItem={onEditItem}
                       editMode={editMode}
                     />
                   </StyledItemWrapper>
@@ -167,11 +172,10 @@ const NetworkPage = ({}) => {
             </div>
           );
         })}
-      </div>
-
-      <div className={styles.bottomContainer}>
+      </StyledInnerContent>
+      <StyledBottomContainer>
         <Button onClick={onAddNode}>{i18n.t("addNode")}</Button>
-      </div>
+      </StyledBottomContainer>
     </CustomView>
   );
 };

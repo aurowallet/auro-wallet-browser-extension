@@ -1,27 +1,25 @@
-import cls from "classnames";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isTrueNumber, nameLengthCheck } from "../../../utils/utils";
 import Input from "../Input";
-import styles from "./index.module.scss";
-import styled from "styled-components";
+import {
+    StyledModalOverlay,
+    StyledModalContent,
+    StyledTopContainer,
+    StyledIconContainer,
+    StyledModalTitle,
+    StyledContent,
+    StyledBottomContainer,
+    StyledLeftButton,
+    StyledRightButton,
+    StyledDivider,
+    StyledComponentContent,
+} from "./index.styled";
 
 export const PopupModal_type = {
     common: "popup_common",
     warning: "popup_warning",
     input: "popup_input"
 }
-const StyledOuterContainer = styled.div`
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: ${(props) => (props.$zindex ? props.$zindex : 10)};
-    background: rgba(0, 0, 0, 0.8);
-    width: 100%;
-    height: 100%;
-    
-    display: flex;
-    align-items: center;
-`
 
 export const PopupModal = ({
     title = "",
@@ -45,7 +43,7 @@ export const PopupModal = ({
     contentList = [],
     maxInputLength = -1,
 
-    rightBtnDisable=false,
+    rightBtnDisable = false,
     clearWhenClose = true,
     zIndex
 }) => {
@@ -69,12 +67,11 @@ export const PopupModal = ({
     }, [onLeftBtnClick])
 
     const onRightClick = useCallback(() => {
-        if(rightBtnDisable){
+        if (rightBtnDisable) {
             return
         }
         onRightBtnClick({ inputValue })
-    }, [onRightBtnClick, inputValue,rightBtnDisable])
-
+    }, [onRightBtnClick, inputValue, rightBtnDisable])
 
     const onInput = useCallback((e) => {
         if (maxInputLength !== -1 && isTrueNumber(maxInputLength)) {
@@ -89,53 +86,69 @@ export const PopupModal = ({
         }
     }, [onInputChange, maxInputLength])
 
-
-    useEffect(()=>{
-        if(!modalVisible && clearWhenClose){
+    useEffect(() => {
+        if (!modalVisible && clearWhenClose) {
             setInputValue("")
         }
-    },[modalVisible,clearWhenClose])
+    }, [modalVisible, clearWhenClose])
+
     return (
         <>
-            {
-                modalVisible && <StyledOuterContainer $zindex={zIndex}>
-                    <div className={styles.contentContainer}>
-                        <div className={styles.topContainer}>
-                            {modalTopIcon && <div className={styles.iconContainer}>
-                                <img src={modalTopIcon} />
-                            </div>}
-
-                            <p className={styles.modalTitle}>{title}</p>
-                            {content && <p className={styles.content}>{content}</p>}
+            {modalVisible && (
+                <StyledModalOverlay $zIndex={zIndex}>
+                    <StyledModalContent>
+                        <StyledTopContainer>
+                            {modalTopIcon && (
+                                <StyledIconContainer>
+                                    <img src={modalTopIcon} />
+                                </StyledIconContainer>
+                            )}
+                            <StyledModalTitle>{title}</StyledModalTitle>
+                            {content && <StyledContent>{content}</StyledContent>}
                             {contentList.length > 0 &&
-                                contentList.map((content, index) => {
-                                    return <p key={index} className={styles.content}>{content}</p>
+                                contentList.map((contentItem, index) => {
+                                    return <StyledContent key={index}>{contentItem}</StyledContent>
                                 })
                             }
-                            {type === PopupModal_type.input &&
+                            {type === PopupModal_type.input && (
                                 <Input
                                     placeholder={inputPlaceholder || ""}
-                                    onChange={ onInput}
+                                    onChange={onInput}
                                     value={inputValue}
                                     inputType={inputType}
                                     showBottomTip={showBottomTip}
                                     bottomTip={bottomTip}
                                     bottomTipClass={bottomTipClass}
-                                />}
-                            {componentContent && <div className={styles.componentContentContainer}>
-                                {componentContent}
-                            </div>}
-                        </div>
-                        {(leftBtnContent || rightBtnContent) && <div className={styles.bottomContainer}>
-                            {leftBtnContent && <div className={styles.leftBtn} onClick={onLeftClick}>{leftBtnContent}</div>}
-                            {leftBtnContent && rightBtnContent && <div className={styles.divideLine} />}
-                            {rightBtnContent && <div className={cls(styles.rightBtn, rightBtnStyle,{
-                                [styles.rightBtnDisable]:rightBtnDisable
-                            })} onClick={onRightClick}>{rightBtnContent}</div>}
-                        </div>}
-                    </div>
-                </StyledOuterContainer>
-            }
+                                />
+                            )}
+                            {componentContent && (
+                                <StyledComponentContent>
+                                    {componentContent}
+                                </StyledComponentContent>
+                            )}
+                        </StyledTopContainer>
+                        {(leftBtnContent || rightBtnContent) && (
+                            <StyledBottomContainer>
+                                {leftBtnContent && (
+                                    <StyledLeftButton onClick={onLeftClick}>
+                                        {leftBtnContent}
+                                    </StyledLeftButton>
+                                )}
+                                {leftBtnContent && rightBtnContent && <StyledDivider />}
+                                {rightBtnContent && (
+                                    <StyledRightButton
+                                        className={rightBtnStyle}
+                                        $disabled={rightBtnDisable}
+                                        onClick={onRightClick}
+                                    >
+                                        {rightBtnContent}
+                                    </StyledRightButton>
+                                )}
+                            </StyledBottomContainer>
+                        )}
+                    </StyledModalContent>
+                </StyledModalOverlay>
+            )}
         </>
     )
 } 

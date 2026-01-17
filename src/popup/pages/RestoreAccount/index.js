@@ -2,7 +2,7 @@ import { wordlist } from "@scure/bip39/wordlists/english";
 import i18n from "i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { validateMnemonic } from "../../../background/accountService";
 import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/msgTypes";
 import { updateCurrentAccount } from "../../../reducers/accountReducer";
@@ -12,9 +12,16 @@ import { trimSpace } from "../../../utils/utils";
 import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
 import TextArea from "../../component/TextArea";
-import styles from "./index.module.scss";
+import {
+  StyledRestoreTip,
+  StyledTextAreaContainer,
+  StyledSimilarWordOuter,
+  StyledSimilarWordContainer,
+  StyledSimilarWordItem,
+} from "./index.styled";
 
 const RestoreAccount = () => {
+
   const [mneInput, setMneInput] = useState("")
   const [similarWordList, setSimilarWordList] = useState([])
   const [btnLoading, setBtnLoading] = useState(false)
@@ -117,11 +124,9 @@ const RestoreAccount = () => {
   },[mneInput])
 
   return (
-    <CustomView title={i18n.t('restoreWallet')}>
-      <p className={styles.restoreTip}>
-        {i18n.t('inputSeed')}
-      </p>
-      <div className={styles.textAreaContainer}>
+    <CustomView title={i18n.t("restoreWallet")}>
+      <StyledRestoreTip>{i18n.t("inputSeed")}</StyledRestoreTip>
+      <StyledTextAreaContainer>
         <TextArea
           onChange={onInput}
           value={mneInput}
@@ -129,29 +134,29 @@ const RestoreAccount = () => {
           showBottomTip={true}
           bottomErrorTip={bottomTipError}
         />
-      </div>
-      <div className={styles.similarWordOuter}>
-        <div className={styles.similarWordContainer}>
-          {
-            similarWordList.map((similarWord, index) => {
-              return <div
+      </StyledTextAreaContainer>
+      <StyledSimilarWordOuter>
+        <StyledSimilarWordContainer>
+          {similarWordList.map((similarWord, index) => {
+            return (
+              <StyledSimilarWordItem
                 onClick={() => onClickSimilarWord(similarWord)}
                 key={index}
-                className={styles.similarWordItem}
               >
                 {similarWord}
-              </div>
-            })
-          }
-        </div>
-      </div>
+              </StyledSimilarWordItem>
+            );
+          })}
+        </StyledSimilarWordContainer>
+      </StyledSimilarWordOuter>
       <BottomBtn
         disable={btnDisableStatus}
         rightLoadingStatus={btnLoading}
         onClick={goToCreate}
-        rightBtnContent={i18n.t('confirm')}
+        rightBtnContent={i18n.t("confirm")}
       />
     </CustomView>
-  )
-}
-export default RestoreAccount
+  );
+};
+
+export default RestoreAccount;

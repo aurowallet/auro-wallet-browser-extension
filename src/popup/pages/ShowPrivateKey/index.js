@@ -1,18 +1,29 @@
 import i18n from "i18next";
-import { useCallback, useMemo, useState } from "react";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { SEC_FROM_TYPE } from "../../../constant/commonType";
 import { WALLET_GET_PRIVATE_KEY } from "../../../constant/msgTypes";
 import { sendMsg } from "../../../utils/commonMsg";
-import { copyText } from '../../../utils/browserUtils';
+import { copyText } from "../../../utils/browserUtils";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
 import { PopupModal } from "../../component/PopupModal";
-import styles from "./index.module.scss";
+import {
+  StyledPlaceholder,
+  StyledBottomContainer,
+  StyledAddressContainer,
+  StyledAddressTitle,
+  StyledAddressContent,
+  StyledPriContainer,
+  StyledPrivateKey,
+  StyledCopyContainer,
+  StyledCopyDesc,
+} from "./index.styled";
 
 const ShowPrivateKeyPage = ({ }) => {
+
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -66,37 +77,42 @@ const ShowPrivateKeyPage = ({ }) => {
     setConfirmModalStatus(false)
   }, [])
   if (showSecurity) {
-    return <SecurityPwd pageTitle={i18n.t('privateKey')} onClickCheck={onClickCheck} action={SEC_FROM_TYPE.SEC_SHOW_PRIVATE_KEY} />
+    return (
+      <SecurityPwd
+        pageTitle={i18n.t("privateKey")}
+        onClickCheck={onClickCheck}
+        action={SEC_FROM_TYPE.SEC_SHOW_PRIVATE_KEY}
+      />
+    );
   }
-  return (<CustomView title={i18n.t('privateKey')}>
-    <div className={styles.addressContainer}>
-      <p className={styles.addressTitle}>{i18n.t('walletAddress')}</p>
-      <p className={styles.addressContent}>{address}</p>
-    </div>
-    <div className={styles.priContainer}>
-      <p className={styles.privateKey}>{priKey}</p>
-      <div className={styles.copyContainer} onClick={onClickCopy}>
-        <img src="/img/icon_copy_purple.svg" />
-        <p className={styles.copyDesc}>{i18n.t('copyToClipboard')}</p>
-      </div>
-    </div>
-    <div className={styles.hold} />
-    <div className={styles.bottomContainer}>
-      <Button
-        onClick={onConfirm}>
-        {i18n.t('done')}
-      </Button>
-    </div>
-    <PopupModal
-      title={i18n.t('tips')}
-      leftBtnContent={i18n.t('copyAnyway')}
-      rightBtnContent={i18n.t("stopCopying")}
-      onLeftBtnClick={onConfirmCopy}
-      onRightBtnClick={onCloseModal}
-      contentList={[i18n.t('copyTipContent'), i18n.t('confirmEnv')]}
-      modalVisible={confirmModalStatus} />
-  </CustomView>
-  )
-}
+  return (
+    <CustomView title={i18n.t("privateKey")}>
+      <StyledAddressContainer>
+        <StyledAddressTitle>{i18n.t("walletAddress")}</StyledAddressTitle>
+        <StyledAddressContent>{address}</StyledAddressContent>
+      </StyledAddressContainer>
+      <StyledPriContainer>
+        <StyledPrivateKey>{priKey}</StyledPrivateKey>
+        <StyledCopyContainer onClick={onClickCopy}>
+          <img src="/img/icon_copy_purple.svg" />
+          <StyledCopyDesc>{i18n.t("copyToClipboard")}</StyledCopyDesc>
+        </StyledCopyContainer>
+      </StyledPriContainer>
+      <StyledPlaceholder />
+      <StyledBottomContainer>
+        <Button onClick={onConfirm}>{i18n.t("done")}</Button>
+      </StyledBottomContainer>
+      <PopupModal
+        title={i18n.t("tips")}
+        leftBtnContent={i18n.t("copyAnyway")}
+        rightBtnContent={i18n.t("stopCopying")}
+        onLeftBtnClick={onConfirmCopy}
+        onRightBtnClick={onCloseModal}
+        contentList={[i18n.t("copyTipContent"), i18n.t("confirmEnv")]}
+        modalVisible={confirmModalStatus}
+      />
+    </CustomView>
+  );
+};
 
-export default ShowPrivateKeyPage
+export default ShowPrivateKeyPage;

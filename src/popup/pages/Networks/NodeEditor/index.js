@@ -25,8 +25,17 @@ import CustomView from "../../../component/CustomView";
 import Input from "../../../component/Input";
 import { PopupModal } from "../../../component/PopupModal";
 import TextArea from "../../../component/TextArea";
-import styles from "./index.module.scss";
 import { sendNetworkChangeMsg } from "@/utils/commonMsg";
+import {
+  StyledContentClassName,
+  StyledAddTipContainer,
+  StyledAddTip,
+  StyledInputContainer,
+  StyledPlaceholder,
+  StyledBottomContainer,
+  StyledDeleteBtn,
+  StyledModalDelete,
+} from "./index.styled";
 
 const NodeEditor = () => {
   const navigate = useNavigate();
@@ -280,38 +289,36 @@ const NodeEditor = () => {
   return (
     <CustomView
       title={title}
-      contentClassName={styles.contentClassName}
+      ContentWrapper={StyledContentClassName}
       rightComponent={
         showDeleteBtn && (
-          <p className={styles.deleteBtn} onClick={onClickDelete}>
+          <StyledDeleteBtn onClick={onClickDelete}>
             {i18n.t("deleteTag")}
-          </p>
+          </StyledDeleteBtn>
         )
       }
     >
-      <div className={styles.addTipContainer}>
-        <span className={styles.addTip}>{i18n.t("addNetworkTip")}</span>
-      </div>
-      <div className={styles.inputContainer}>
+      <StyledAddTipContainer>
+        <StyledAddTip>{i18n.t("addNetworkTip")}</StyledAddTip>
+      </StyledAddTipContainer>
+      <StyledInputContainer>
         <Input
           label={i18n.t("nodeName")}
           onChange={onInputNodeName}
           value={nodeName}
           inputType={"text"}
-          className={styles.nameInput}
           showBottomTip={true}
         />
         <TextArea
           label={i18n.t("nodeAddress")}
           onChange={onInputNodeAddress}
           value={nodeAddressValue}
-          className={styles.addressInput}
           showBottomTip={true}
           bottomErrorTip={errorTip}
         />
-      </div>
-      <div className={styles.hold} />
-      <div className={styles.bottomContainer}>
+      </StyledInputContainer>
+      <StyledPlaceholder />
+      <StyledBottomContainer>
         <Button
           disable={!btnStatus}
           loading={btnLoadingStatus}
@@ -319,14 +326,14 @@ const NodeEditor = () => {
         >
           {i18n.t("confirm")}
         </Button>
-      </div>
+      </StyledBottomContainer>
       <PopupModal
         title={i18n.t("deleteNode")}
         leftBtnContent={i18n.t("cancel")}
         onLeftBtnClick={onCancel}
         rightBtnContent={i18n.t("deleteTag")}
         onRightBtnClick={onConfirmDelete}
-        rightBtnStyle={styles.modalDelete}
+        rightBtnStyle={StyledModalDelete}
         modalVisible={reminderModalStatus}
       />
     </CustomView>

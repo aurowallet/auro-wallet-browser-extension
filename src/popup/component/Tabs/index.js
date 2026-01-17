@@ -1,11 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import styles from "./index.module.scss";
-import cls from "classnames";
+import {
+  StyledTabContainer,
+  StyledTabBtnContainer,
+  StyledBtnRow,
+  StyledTabIndicator,
+  StyledTabBtn,
+  StyledTabPanel,
+  StyledTabsPanels,
+  StyledTabTracker,
+} from "./index.styled";
 
 export const TAB_TYPE = {
   TAB: "tab",
   STEP: "step",
 };
+
 const Tabs = (props) => {
   const {
     selected,
@@ -17,11 +26,12 @@ const Tabs = (props) => {
     customBtnCss,
     customTabPanelCss
   } = props;
-  const nextChildren = useMemo(()=>{
-    return children.filter((child)=>{
+
+  const nextChildren = useMemo(() => {
+    return children.filter((child) => {
       return typeof child !== "boolean"
     })
-  },[children])
+  }, [children])
 
   const tabButtonsRef = useRef();
   const tabIndicatorRef = useRef();
@@ -39,6 +49,7 @@ const Tabs = (props) => {
       updateStepIndicator(tabIndicatorRef.current, nextChildren.length, selected);
     }
   }, [selected]);
+
   useEffect(() => {
     if (tabType === TAB_TYPE.STEP) {
       updateStepIndicator(tabIndicatorRef.current, nextChildren.length, selected);
@@ -50,6 +61,10 @@ const Tabs = (props) => {
       );
     }
   }, [initId]);
+
+  const TabBtnComponent = customBtnCss || StyledTabBtn;
+  const TabPanelComponent = customTabPanelCss || StyledTabPanel;
+
   const buttons = React.Children.map(nextChildren, (child, index) => {
     const { id } = child.props;
     const isSelected = selected === index;
@@ -58,9 +73,13 @@ const Tabs = (props) => {
       return <></>;
     }
     return (
-      <TabButton id={id} selected={isSelected} onClick={handleClick} customBtnCss={customBtnCss}>
+      <TabBtnComponent
+        data-id={id}
+        $active={isSelected}
+        onClick={handleClick}
+      >
         {child.props.label}
-      </TabButton>
+      </TabBtnComponent>
     );
   });
 
@@ -68,79 +87,38 @@ const Tabs = (props) => {
     const id = child.props.id;
     const isSelected = selected === index;
     return (
-      <TabPanel id={id} selected={isSelected} customTabPanelCss={customTabPanelCss}>
+      <TabPanelComponent
+        data-id={id}
+        $active={isSelected}
+      >
         {child.props.children}
-      </TabPanel>
+      </TabPanelComponent>
     );
   });
+
   return (
-    <div
-      className={cls(styles.tabContainer, {
-        [styles.stepTabContainer]: tabType === TAB_TYPE.STEP,
-      })}
-    >
-      <div
-        className={cls(styles.tabBtnContainer, {
-          [styles.stepTabBtn]: tabType === TAB_TYPE.STEP,
-        })}
+    <StyledTabContainer $isStep={tabType === TAB_TYPE.STEP}>
+      <StyledTabBtnContainer
+        $isStep={tabType === TAB_TYPE.STEP}
         ref={tabButtonsRef}
       >
-        <div className={styles.btnRow}>
-        <div>
-          {buttons}
-        </div>
-        {btnRightComponent && <div>
-          {btnRightComponent}
-        </div>}
-        </div>
-        <span
+        <StyledBtnRow>
+          <div>{buttons}</div>
+          {btnRightComponent && <div>{btnRightComponent}</div>}
+        </StyledBtnRow>
+        <StyledTabIndicator
           ref={tabIndicatorRef}
-          className={cls(styles.tabIndicator, {
-            [styles.stepTabIndicator]: tabType === TAB_TYPE.STEP,
-          })}
+          $isStep={tabType === TAB_TYPE.STEP}
         />
-      </div>
-      <div
-        className={cls(styles.tabsPanels, {
-          [styles.stepTabPanels]: tabType === TAB_TYPE.STEP,
-        })}
-      >
-        <div className={styles.tabTracker}>{panels}</div>
-      </div>
-    </div>
+      </StyledTabBtnContainer>
+      <StyledTabsPanels $isStep={tabType === TAB_TYPE.STEP}>
+        <StyledTabTracker>{panels}</StyledTabTracker>
+      </StyledTabsPanels>
+    </StyledTabContainer>
   );
 };
 
 export default Tabs;
-
-const TabButton = (props) => {
-  const { id, selected, onClick, children,customBtnCss } = props;
-  return (
-    <button
-      data-id={id}
-      className={cls(styles.tabBtn,customBtnCss,{
-        [styles.tabBtnActive]: selected,
-      })}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-};
-
-const TabPanel = (props) => {
-  const { id, selected, children,customTabPanelCss } = props;
-  return (
-    <div
-      data-id={id}
-      className={cls(styles.tabPanel,customTabPanelCss,{
-        [styles.tabPanelActive]: selected,
-      })}
-    >
-      {children}
-    </div>
-  );
-};
 
 const updateTabIndicator = (tabButtons, tabIndicator, selected) => {
   const tabButton = tabButtons.querySelector(`[data-id="${selected}"]`);
@@ -151,6 +129,7 @@ const updateTabIndicator = (tabButtons, tabIndicator, selected) => {
   tabIndicator.style.width = `${width}px`;
   tabIndicator.style.left = `${left}px`;
 };
+
 const updateStepIndicator = (tabIndicator, totalIndex, currentIndex) => {
   const width = 100 / totalIndex;
   tabIndicator.style.width = width + "%";

@@ -1,4 +1,3 @@
-import cls from "classnames";
 import i18n from "i18next";
 import { Trans } from "react-i18next";
 import styled from "styled-components";
@@ -6,7 +5,32 @@ import Button, { button_theme } from "../Button";
 import CountdownTimer from "../CountdownTimer";
 import LedgerStatusView from "../StatusView/LedgerStatusView";
 import NetworkStatusView from "../StatusView/NetworkStatusView";
-import styles from "./index.module.scss";
+import {
+  StyledOuterContainer,
+  StyledInnerContent,
+  StyledTitleRow,
+  StyledRowTitle,
+  StyledRowClose,
+  StyledRightRow,
+  StyledDividedLine,
+  StyledBottomContent,
+  StyledHighlightContainer,
+  StyledHighlightTitle,
+  StyledHighlightCon,
+  StyledHighlightContent,
+  StyledSubHighlightContent,
+  StyledContentItemContainer,
+  StyledContentTitle,
+  StyledContentValue,
+  StyledLedgerContent,
+  StyledWaitingIcon,
+  StyledWaitingTitle,
+  StyledWaitingContent,
+  StyledWaitingTip,
+  StyledAccountRepeatName,
+  StyledRedFont,
+  StyledBottomContainer,
+} from "./index.styled";
 
 const StyledWrapper = styled.div`
   display: flex;
@@ -31,84 +55,75 @@ export const ConfirmModal = ({
   return (
     <>
       {modalVisible && (
-        <div className={styles.outerContainer}>
-          <div className={styles.innerContent}>
-            <div className={styles.contentContainer}>
-              <div className={styles.titleRow}>
-                <span className={styles.rowTitle}>{title}</span>
+        <StyledOuterContainer>
+          <StyledInnerContent>
+            <div>
+              <StyledTitleRow>
+                <StyledRowTitle>{title}</StyledRowTitle>
                 {!waitingLedger && (
-                  <div className={styles.rightRow}>
+                  <StyledRightRow>
                     <LedgerStatusView />
                     <div style={{ marginRight: "6px" }} />
                     <NetworkStatusView />
-                  </div>
+                  </StyledRightRow>
                 )}
                 {showCloseIcon && (
-                  <div className={styles.rightRow}>
-                    <img
+                  <StyledRightRow>
+                    <StyledRowClose
                       onClick={onClickClose}
-                      className={styles.rowClose}
                       src="/img/icon_nav_close.svg"
                     />
-                  </div>
+                  </StyledRightRow>
                 )}
-              </div>
+              </StyledTitleRow>
             </div>
-            <div className={styles.dividedLine} />
-
+            <StyledDividedLine />
             {waitingLedger && (
-              <div className={styles.ledgerContent}>
-                <img
-                  className={styles.waitingIcon}
-                  src="/img/detail_pending.svg"
-                />
-                <p className={styles.waitingTitle}>
+              <StyledLedgerContent>
+                <StyledWaitingIcon src="/img/detail_pending.svg" />
+                <StyledWaitingTitle>
                   {i18n.t("waitingLedgerConfirm") + "..."}
-                </p>
-                <p className={styles.waitingContent}>
+                </StyledWaitingTitle>
+                <StyledWaitingContent>
                   {i18n.t("waitingLedgerConfirmTip")}
-                </p>
-                <p className={styles.waitingTip}>
+                </StyledWaitingContent>
+                <StyledWaitingTip>
                   <Trans
                     i18nKey={"waitingLedgerConfirmTip_3"}
                     components={{
-                      b: <span className={styles.accountRepeatName} />,
-                      red: <span className={styles.redFont} />,
+                      b: <StyledAccountRepeatName />,
+                      red: <StyledRedFont />,
                     }}
                   />
-                </p>
-              </div>
+                </StyledWaitingTip>
+              </StyledLedgerContent>
             )}
-
             {!waitingLedger && (
-              <div className={cls(styles.bottomContent)}>
-                <div className={styles.highlightContainer}>
-                  <span className={styles.highlightTitle}>
-                    {highlightTitle}
-                  </span>
-                  <div className={styles.highlightCon}>
-                    <span className={styles.highlightContent}>
+              <StyledBottomContent>
+                <StyledHighlightContainer>
+                  <StyledHighlightTitle>{highlightTitle}</StyledHighlightTitle>
+                  <StyledHighlightCon>
+                    <StyledHighlightContent>
                       {highlightContent}
-                    </span>
-                    <p className={styles.subHighlightContent}>
+                    </StyledHighlightContent>
+                    <StyledSubHighlightContent>
                       {subHighlightContent}
-                    </p>
-                  </div>
-                </div>
+                    </StyledSubHighlightContent>
+                  </StyledHighlightCon>
+                </StyledHighlightContainer>
                 {contentList.map((content, index) => (
-                  <div key={index} className={styles.contentItemContainer}>
-                    <p className={styles.contentTitle}>{content.label}</p>
+                  <StyledContentItemContainer key={index}>
+                    <StyledContentTitle>{content.label}</StyledContentTitle>
                     <StyledWrapper>
-                      <p className={styles.contentValue}>{content.value}</p>
+                      <StyledContentValue>{content.value}</StyledContentValue>
                       {content.showTimer && <CountdownTimer />}
                     </StyledWrapper>
-                  </div>
+                  </StyledContentItemContainer>
                 ))}
-              </div>
+              </StyledBottomContent>
             )}
-
             {!waitingLedger && (
-              <div className={styles.bottomContainer}>
+              <StyledBottomContainer>
                 <Button
                   onClick={onClickClose}
                   theme={button_theme.BUTTON_THEME_LIGHT}
@@ -121,10 +136,10 @@ export const ConfirmModal = ({
                     {rightBtnCom}
                   </StyledWrapper>
                 </Button>
-              </div>
+              </StyledBottomContainer>
             )}
-          </div>
-        </div>
+          </StyledInnerContent>
+        </StyledOuterContainer>
       )}
     </>
   );

@@ -13,9 +13,20 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
-import styles from "./index.module.scss";
+import {
+  StyledContainer,
+  StyledTitleRow,
+  StyledTitle,
+  StyledContent,
+  StyledAccountTip,
+  StyledAccountAddress,
+  StyledWarningTip,
+  StyledBtnGroup,
+  StyledBottomView,
+} from "./index.styled";
 
 const ApprovePage = () => {
+
   const dispatch = useDispatch();
 
   const currentAccount = useSelector(
@@ -119,23 +130,23 @@ const ApprovePage = () => {
   }, [currentAccount]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.titleRow}>
-        <p className={styles.title}>{i18n.t("connectionRequest")}</p>
-      </div>
-      <div className={styles.content}>
-        <div className={styles.websiteContainer}>
+    <StyledContainer>
+      <StyledTitleRow>
+        <StyledTitle>{i18n.t("connectionRequest")}</StyledTitle>
+      </StyledTitleRow>
+      <StyledContent>
+        <div>
           <DappWebsite
             siteIcon={params?.site?.webIcon}
             siteUrl={params?.site?.origin}
           />
         </div>
-        <p className={styles.accountTip}>{i18n.t("approveTip") + ":"}</p>
-        <p className={styles.accountAddress}>{showAccountInfo}</p>
-      </div>
-      <div className={styles.bottomView}>
-        <p className={styles.warningTip}>{i18n.t("approveWaring")}</p>
-        <div className={styles.btnGroup}>
+        <StyledAccountTip>{i18n.t("approveTip") + ":"}</StyledAccountTip>
+        <StyledAccountAddress>{showAccountInfo}</StyledAccountAddress>
+      </StyledContent>
+      <StyledBottomView>
+        <StyledWarningTip>{i18n.t("approveWaring")}</StyledWarningTip>
+        <StyledBtnGroup>
           <Button
             onClick={onCancel}
             theme={button_theme.BUTTON_THEME_LIGHT}
@@ -146,9 +157,9 @@ const ApprovePage = () => {
           <Button size={button_size.middle} onClick={onConfirm}>
             {i18n.t("connect")}
           </Button>
-        </div>
-      </div>
-    </div>
+        </StyledBtnGroup>
+      </StyledBottomView>
+    </StyledContainer>
   );
 };
 

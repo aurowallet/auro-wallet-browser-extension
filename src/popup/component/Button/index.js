@@ -1,6 +1,10 @@
-import cls from "classnames";
 import { useEffect, useState } from "react";
-import styles from "./index.module.scss";
+import {
+    StyledButton,
+    StyledIconContainer,
+    StyledButtonIcon,
+    StyledLoadingIcon,
+} from "./index.styled";
 
 export const button_theme = {
     BUTTON_THEME_COLOR: "BUTTON_THEME_COLOR",
@@ -13,8 +17,8 @@ export const button_size = {
     middle: "button_size_middle",
     small: "button_size_small",
 }
- 
-const Button = ({ 
+
+const Button = ({
     disable = false,
     leftIcon = "",
     theme = button_theme.BUTTON_THEME_COLOR,
@@ -30,35 +34,45 @@ const Button = ({
         setBtnDisable(loading)
     }, [loading])
 
-
     const onRealClick = (e) => {
         if (!loading && !disable) {
-            if(withEvent){
+            if (withEvent) {
                 onClick(e)
-            }else{
+            } else {
                 onClick()
             }
         }
     }
 
-    return (<button className={cls(styles.button, className, {
-        [styles.noLeftIcon]: !leftIcon,
-        [styles.loadingBtn]: loading,
-        [styles.buttonDisable]: disable,
-        [styles.button_light]: theme === button_theme.BUTTON_THEME_LIGHT,
-        [styles.btn_large]: size === button_size.large || size === button_size.sub,
-        [styles.btn_middle]: size === button_size.middle,
-        [styles.btn_small]: size === button_size.small,
-    })} disabled={btnDisable} onClick={onRealClick}>
-        {leftIcon && !loading && <div className={styles.iconContainer}>
-            <img src={leftIcon} className={styles.btnIcon} />
-        </div>}
-        <img className={cls(styles.refreshLoading,{
-            [styles.refreshLoadingShow]:loading
-        })} src="/img/loading_light.svg" />
+    // Map size prop to internal size value
+    const getSizeValue = () => {
+        if (size === button_size.middle) return 'middle';
+        if (size === button_size.small) return 'small';
+        return 'large';
+    };
 
-        {!loading && children}
-    </button>)
+    return (
+        <StyledButton
+            className={className}
+            disabled={btnDisable || disable}
+            onClick={onRealClick}
+            $themeType={theme === button_theme.BUTTON_THEME_LIGHT ? 'light' : 'color'}
+            $size={getSizeValue()}
+            $noLeftIcon={!leftIcon}
+            $isLoading={loading}
+        >
+            {leftIcon && !loading && (
+                <StyledIconContainer>
+                    <StyledButtonIcon src={leftIcon} />
+                </StyledIconContainer>
+            )}
+            <StyledLoadingIcon
+                src="/img/loading_light.svg"
+                $isLoading={loading}
+            />
+            {!loading && children}
+        </StyledButton>
+    )
 }
 
 export default Button

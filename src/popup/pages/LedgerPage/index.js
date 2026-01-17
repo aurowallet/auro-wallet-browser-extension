@@ -1,4 +1,3 @@
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans } from "react-i18next";
@@ -20,8 +19,30 @@ import Input from "../../component/Input";
 import ProcessLayout from "../../component/ProcessLayout";
 import StepTabs from "../../component/StepTabs";
 import { CreateResultView } from "../CreateProcessPage/CreateResultView";
-import styles from "./index.module.scss";
 import { LedgerModal } from "./LedgerModal";
+import {
+  StyledOuterContainer,
+  StyledInnerContainer,
+  StyledInnerContent,
+  StyledViewTip,
+  StyledLedgerIcon,
+  StyledStartDesc,
+  StyledStepContainer,
+  StyledStepNumber,
+  StyledStepContent,
+  StyledStepContentLight,
+  StyledAccountWarningTip,
+  StyledAccountNameTip,
+  StyledClickIntro,
+  StyledInputContainer,
+  StyledLedgerContainer,
+  StyledLedgerPath,
+  StyledInputNumberContainer,
+  StyledCustomInput,
+  StyledImgContainer,
+  StyledTopArrow,
+  StyledBottomArrow,
+} from "./index.styled";
 
 const Tip_Type = {
   init: "init",
@@ -32,6 +53,7 @@ const Tip_Type = {
   grantSuccess: "grantSuccess",
 };
 export const LedgerPage = ({ onClickPre }) => {
+
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);
   const [isShowSuccessTip, setIsShowSuccessTip] = useState(false);
@@ -118,10 +140,10 @@ export const LedgerPage = ({ onClickPre }) => {
   }, [tipType, i18n]);
  
   return (
-    <div className={styles.outerContainer}>
-      <div className={styles.innerContainer}>
+    <StyledOuterContainer>
+      <StyledInnerContainer>
         <StepTabs selected={tabIndex}>
-          <div className={styles.innerContent} id={1}>
+          <StyledInnerContent id={1}>
             <LedgerConnectView
               isLedgerPermission={isLedgerPermission}
               onClickNext={onClickConnect}
@@ -129,30 +151,30 @@ export const LedgerPage = ({ onClickPre }) => {
               tipContent={tipContent}
               isShowSuccessTip={isShowSuccessTip}
             />
-          </div>
+          </StyledInnerContent>
           {!isLedgerPermission && (
-            <div className={styles.innerContent} id={2}>
+            <StyledInnerContent id={2}>
               <AccountNameView
                 onClickNext={onClickImport}
                 onClickPre={onClickPre}
                 tipContent={tipContent}
                 onClickConnect={onClickConnect}
               />
-            </div>
+            </StyledInnerContent>
           )}
           {!isLedgerPermission && (
-            <div className={styles.innerContent} id={3}>
+            <StyledInnerContent id={3}>
               <CreateResultView
                 onClickDone={onClickDone}
                 contents={[i18n.t("ledgerSuccess"), i18n.t("returnEx")]}
                 showFollowUs={false}
                 showExtTip={false}
               />
-            </div>
+            </StyledInnerContent>
           )}
         </StepTabs>
-      </div>
-    </div>
+      </StyledInnerContainer>
+    </StyledOuterContainer>
   );
 };
 
@@ -178,38 +200,34 @@ const LedgerConnectView = ({
       bottomContent={
         <>
           {tipContent && (
-            <div
-              className={cls(styles.accountWarningTip, {
-                [styles.ledgerSuccessTip]: isShowSuccessTip,
-              })}
-            >
+            <StyledAccountWarningTip $success={isShowSuccessTip}>
               {tipContent}
-            </div>
+            </StyledAccountWarningTip>
           )}
           <Button onClick={onClickNext}>{btnTxt}</Button>
         </>
       }
     >
-      <div className={styles.viewTip}>{i18n.t("selectHardware")}</div>
-      <img src="/img/ledgerBorderLogo.svg" className={styles.ledgerIcon} />
-      <div className={styles.viewTip}>{i18n.t("getStarted")}</div>
-      <div className={styles.startDesc}>{i18n.t("ledgerStartDesc")}</div>
+      <StyledViewTip>{i18n.t("selectHardware")}</StyledViewTip>
+      <StyledLedgerIcon src="/img/ledgerBorderLogo.svg" />
+      <StyledViewTip>{i18n.t("getStarted")}</StyledViewTip>
+      <StyledStartDesc>{i18n.t("ledgerStartDesc")}</StyledStartDesc>
 
-      <div className={styles.stepContainer}>
-        <span className={styles.stepNumber}>1</span>
-        <span className={styles.stepContent}>{i18n.t("ledgerConnect_1")}</span>
-      </div>
-      <div className={styles.stepContainer}>
-        <span className={styles.stepNumber}>2</span>
-        <span className={styles.stepContent}>
+      <StyledStepContainer>
+        <StyledStepNumber>1</StyledStepNumber>
+        <StyledStepContent>{i18n.t("ledgerConnect_1")}</StyledStepContent>
+      </StyledStepContainer>
+      <StyledStepContainer>
+        <StyledStepNumber>2</StyledStepNumber>
+        <StyledStepContent>
           <Trans
             i18nKey={"ledgerConnect_2"}
             components={{
-              b: <span className={styles.stepContentLight} />,
+              b: <StyledStepContentLight />,
             }}
           />
-        </span>
-      </div>
+        </StyledStepContent>
+      </StyledStepContainer>
     </ProcessLayout>
   );
 };
@@ -352,28 +370,31 @@ const AccountNameView = ({
       title={i18n.t("accountName")}
       bottomContent={
         <>
-          {errorMsg && <div className={styles.accountWarningTip}>{errorMsg}</div>}
+          {errorMsg && (
+            <StyledAccountWarningTip>{errorMsg}</StyledAccountWarningTip>
+          )}
           <Button onClick={onConfirm}>{i18n.t("import")}</Button>
         </>
       }
     >
-      <div className={styles.viewTip}>{i18n.t("inputAccountName")}</div>
-      <div className={styles.inputContainer}>
+      <StyledViewTip>{i18n.t("inputAccountName")}</StyledViewTip>
+      <StyledInputContainer>
         <Input
           onChange={onNameInput}
           value={accountName}
           inputType={"text"}
           placeholder={placeholderText}
         />
-      </div>
-      <div className={styles.viewTip} style={{ marginTop: "20px" }}>{i18n.t("selectHDPath")}</div>
-      <div className={styles.accountNameTip}>
+      </StyledInputContainer>
+      <StyledViewTip style={{ marginTop: "20px" }}>
+        {i18n.t("selectHDPath")}
+      </StyledViewTip>
+      <StyledAccountNameTip>
         <Trans
           i18nKey={"ledgerSelectPathTip"}
           components={{
             click: (
-              <span
-                className={styles.clickIntro}
+              <StyledClickIntro
                 onClick={() =>
                   openTab(
                     "https://www.ledger.com/academy/crypto/what-are-hierarchical-deterministic-hd-wallets"
@@ -383,7 +404,7 @@ const AccountNameView = ({
             ),
           }}
         />
-      </div>
+      </StyledAccountNameTip>
       <LedgerAdvance
         value={accountIndex}
         onChange={onAccountIndexChange}
@@ -402,8 +423,8 @@ const LedgerAdvance = ({
   onMinus = () => {},
 }) => {
   return (
-    <div className={styles.ledgerContainer}>
-      <div className={styles.ledgerPath}>
+    <StyledLedgerContainer>
+      <StyledLedgerPath>
         m / 44' / 12586' /
         <InputNumber
           value={value}
@@ -412,10 +433,11 @@ const LedgerAdvance = ({
           onMinus={onMinus}
         />
         ' / 0 / 0
-      </div>
-    </div>
+      </StyledLedgerPath>
+    </StyledLedgerContainer>
   );
 };
+
 const InputNumber = ({
   value,
   onChange = () => {},
@@ -423,29 +445,20 @@ const InputNumber = ({
   onMinus = () => {},
 }) => {
   return (
-    <div className={styles.inputNumberContainer}>
-      <input
+    <StyledInputNumberContainer>
+      <StyledCustomInput
         type="number"
         min="0"
         step="1"
         onChange={onChange}
         value={value}
         placeholder="0"
-        className={styles.customInput}
       />
-      <div className={styles.imgContainer}>
-        <img
-          src="/img/icon_fold_Default.svg"
-          className={styles.topArrow}
-          onClick={onAdd}
-        />
-        <img
-          src="/img/icon_fold_Default.svg"
-          className={styles.bottomArrow}
-          onClick={onMinus}
-        />
-      </div>
-    </div>
+      <StyledImgContainer>
+        <StyledTopArrow src="/img/icon_fold_Default.svg" onClick={onAdd} />
+        <StyledBottomArrow src="/img/icon_fold_Default.svg" onClick={onMinus} />
+      </StyledImgContainer>
+    </StyledInputNumberContainer>
   );
 };
 

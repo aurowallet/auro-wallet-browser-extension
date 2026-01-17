@@ -68,6 +68,7 @@ const StyledHistoryWrapper = styled.div`
 `;
 
 const TokenDetail = () => {
+
   const token = useSelector((state) => state.cache.nextTokenDetail);
   const tokenList = useSelector((state) => state.accountInfo.tokenList);
   const nextTokenInfo = useMemo(() => {

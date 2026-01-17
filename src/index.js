@@ -34,6 +34,8 @@ import { updateCurrentNode, updateCustomNodeList } from "./reducers/network";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
 import PopupMonitor from "./monitor/PopupMonitor";
+import { ThemeProvider } from "./popup/style/ThemeProvider";
+import { GlobalStyles } from "./popup/style/common";
 
 function getLocalNetConfig(store) {
   return new Promise(async (resolve) => {
@@ -202,8 +204,11 @@ export const applicationEntry = {
     root.render(
       <React.StrictMode>
         <Provider store={store}>
-          <PopupMonitor />
-          <App />
+          <ThemeProvider>
+            <GlobalStyles />
+            <PopupMonitor />
+            <App />
+          </ThemeProvider>
         </Provider>
       </React.StrictMode>
     );

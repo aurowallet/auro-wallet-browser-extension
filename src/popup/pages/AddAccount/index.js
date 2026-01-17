@@ -3,13 +3,14 @@ import Toast from "@/popup/component/Toast";
 import { updateAccountType } from "@/reducers/cache";
 import browser from "webextension-polyfill";
 import i18n from "i18next";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
-import styles from "./index.module.scss";
+import { StyledContainer, StyledRowContainer, StyledRowTitle } from "./index.styled";
 
 const AddAccount = ({}) => {
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -44,7 +45,7 @@ const AddAccount = ({}) => {
   return (
     <CustomView
       title={i18n.t("addAccount")}
-      contentClassName={styles.container}
+      ContentWrapper={StyledContainer}
     >
       <RowItem title={i18n.t("createAccount")} onClickItem={goToCreate} />
       <RowItem title={i18n.t("privateKey")} onClickItem={onPrivateKey} />
@@ -56,10 +57,11 @@ const AddAccount = ({}) => {
 
 const RowItem = ({ title = "", onClickItem = () => {} }) => {
   return (
-    <div className={styles.rowContainer} onClick={onClickItem}>
-      <p className={styles.rowTitle}>{title}</p>
+    <StyledRowContainer onClick={onClickItem}>
+      <StyledRowTitle>{title}</StyledRowTitle>
       <img src="/img/icon_arrow.svg" />
-    </div>
+    </StyledRowContainer>
   );
 };
+
 export default AddAccount;
