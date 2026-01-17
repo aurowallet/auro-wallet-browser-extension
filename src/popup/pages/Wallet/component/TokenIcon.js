@@ -25,7 +25,7 @@ const StyledHolderIcon = styled.div`
 `;
 
 export const TokenIcon = ({ iconUrl, tokenSymbol, size = "30px" }) => { 
-  const [showHolderIcon, setShowHolderIcon] = useState(false);
+  const [showHolderIcon, setShowHolderIcon] = useState(!iconUrl);
   useEffect(()=>{
     setShowHolderIcon(!iconUrl)
   },[iconUrl])

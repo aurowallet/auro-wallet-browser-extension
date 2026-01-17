@@ -455,7 +455,7 @@ export const TokenAction = ({ type, isFungibleToken }) => {
   return (
     <StyledActionItemWrapper onClick={onClickActionBtn}>
       <StyledIconWrapper rotate={String(isReceive)}>
-        <img src={actionIconUrl} />
+        {actionIconUrl && <img src={actionIconUrl} />}
       </StyledIconWrapper>
       <StyledActionTitle>{title}</StyledActionTitle>
     </StyledActionItemWrapper>

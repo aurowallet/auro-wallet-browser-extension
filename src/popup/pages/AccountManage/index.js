@@ -619,6 +619,7 @@ const KeyringGroup = ({
                     ...account,
                     accountName: account.name,
                     type: account.type,
+                    hdPath: account.hdIndex,
                   });
                 }}
               >

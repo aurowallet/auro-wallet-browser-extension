@@ -2272,4 +2272,60 @@ describe("APIService", () => {
       });
     });
   });
+
+  // ==================== tryUpgradeVault ====================
+  describe("tryUpgradeVault", () => {
+    // V2 vault test data
+    const mockV2Vault = {
+      version: 2,
+      currentKeyringId: "mock-keyring-id",
+      nextWalletIndex: 2,
+      keyrings: [
+        {
+          id: "mock-keyring-id",
+          type: "hd",
+          name: "Wallet 1",
+          mnemonic: "encrypted_mnemonic",
+          accounts: [
+            {
+              address: TEST_DATA.accounts[0].pubKey,
+              name: "Account 1",
+              hdIndex: 0,
+            },
+          ],
+          nextHdIndex: 1,
+          currentAddress: TEST_DATA.accounts[0].pubKey,
+          createdAt: Date.now(),
+        },
+      ],
+    };
+
+    it("should return success when vault is already V2", async () => {
+      // Configure as V2 vault
+      proxyquireStubs["../constant/vaultTypes"].isV2Vault.returns(true);
+      
+      mockMemStore.updateState({
+        password: TEST_DATA.password,
+        data: mockV2Vault,
+      });
+
+      const result = await apiService.tryUpgradeVault();
+
+      expect(result.success).to.be.true;
+      expect(result.version).to.equal("v2");
+    });
+
+    it("should return error when no vault data exists", async () => {
+      mockMemStore.updateState({
+        password: TEST_DATA.password,
+        data: null,
+      });
+
+      const result = await apiService.tryUpgradeVault();
+
+      expect(result.success).to.be.false;
+      expect(result.error).to.equal("noVaultData");
+      expect(result.type).to.equal("local");
+    });
+  });
 });

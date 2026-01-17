@@ -316,6 +316,7 @@ class APIService {
           accountName: account.name,
           type: this.keyringTypeToAccountType(keyring.type),
           hdPath: account.hdIndex,
+          keyringId: keyring.id,
           // Note: V2 HD accounts don't store private keys, derive from mnemonic
         };
       }
@@ -340,7 +341,7 @@ class APIService {
    * Strategy: V2 returns directly, V1 upgrades with validation, keeps V1 on failure
    * Core principle: mnemonic/private key must never be lost
    */
-  async migrateData(password, vault, options = {}) {
+  async migrateData(password, vault) {
     let didMigrate = false;
     // 1. Return V2 directly
     if (isV2Vault(vault)) {
@@ -556,6 +557,7 @@ class APIService {
       hdPath: 0,
       accountName: default_account_name,
       typeIndex: 1,
+      keyringId: newKeyring.id,
     };
 
     let encryptData = await encryptUtils.encrypt(password, data);
@@ -806,6 +808,7 @@ class APIService {
         accountName: "Account 1",
         type: ACCOUNT_TYPE.WALLET_INSIDE,
         hdPath: 0,
+        keyringId: newKeyring.id,
       };
 
       memStore.updateState({ data, currentAccount });
@@ -945,6 +948,7 @@ class APIService {
           accountName: firstAccount.name,
           type: keyringTypeToAccountType(newCurrentKeyring.type),
           hdPath: firstAccount.hdIndex,
+          keyringId: newCurrentKeyring.id,
         };
       }
 
@@ -1015,6 +1019,7 @@ class APIService {
         accountName: name,
         type: ACCOUNT_TYPE.WALLET_INSIDE,
         hdPath: nextIndex,
+        keyringId: keyringId,
       };
 
       memStore.updateState({ data, currentAccount });
@@ -1075,7 +1080,6 @@ class APIService {
 
       return { success: true, version: "v2" };
     } catch (error) {
-      console.error("[tryUpgradeVault] Error:", error);
       return { success: false, error: "upgradeFailed", type: "local" };
     }
   };
@@ -1252,6 +1256,7 @@ class APIService {
       accountName: newAccount.name,
       type: ACCOUNT_TYPE.WALLET_INSIDE,
       hdPath: newAccount.hdIndex,
+      keyringId: hdKeyring.id,
     };
 
     memStore.updateState({ data: data, currentAccount: accountForUI });
@@ -1396,6 +1401,7 @@ class APIService {
       accountName: newAccount.name,
       type: ACCOUNT_TYPE.WALLET_OUTSIDE,
       privateKey: priKeyEncrypt,
+      keyringId: importedKeyring.id,
     };
 
     memStore.updateState({ data: data, currentAccount: accountForUI });
@@ -1527,6 +1533,7 @@ class APIService {
       accountName: newAccount.name,
       type: ACCOUNT_TYPE.WALLET_LEDGER,
       hdPath: newAccount.hdIndex,
+      keyringId: ledgerKeyring.id,
     };
 
     memStore.updateState({ data: data, currentAccount: accountForUI });
@@ -1582,6 +1589,7 @@ class APIService {
           type: keyringTypeToAccountType(keyring.type),
           hdPath: account.hdIndex,
           privateKey: account.privateKey,
+          keyringId: keyring.id,
         };
         break;
       }
@@ -1909,7 +1917,19 @@ class APIService {
         !targetAccount.privateKey &&
         targetAccount.type === ACCOUNT_TYPE.WALLET_INSIDE
       ) {
-        const mnemonicEn = getMnemonicFromVault(data);
+        let mnemonicEn = null;
+        
+        // V2: get mnemonic from the correct keyring
+        if (isV2Vault(data) && targetAccount.keyringId) {
+          const keyring = data.keyrings.find(kr => kr.id === targetAccount.keyringId);
+          mnemonicEn = keyring?.mnemonic || null;
+        }
+        
+        // Fallback to getMnemonicFromVault for V1 or if keyringId not found
+        if (!mnemonicEn) {
+          mnemonicEn = getMnemonicFromVault(data);
+        }
+        
         if (mnemonicEn) {
           const mnemonic = await encryptUtils.decrypt(pwd, mnemonicEn);
           const wallet = importWalletByMnemonic(
@@ -1940,7 +1960,19 @@ class APIService {
       !currentAccount.privateKey &&
       currentAccount.type === ACCOUNT_TYPE.WALLET_INSIDE
     ) {
-      const mnemonicEn = getMnemonicFromVault(data);
+      let mnemonicEn = null;
+      
+      // V2: get mnemonic from the correct keyring
+      if (isV2Vault(data) && currentAccount.keyringId) {
+        const keyring = data.keyrings.find(kr => kr.id === currentAccount.keyringId);
+        mnemonicEn = keyring?.mnemonic || null;
+      }
+      
+      // Fallback to getMnemonicFromVault for V1 or if keyringId not found
+      if (!mnemonicEn) {
+        mnemonicEn = getMnemonicFromVault(data);
+      }
+      
       if (mnemonicEn) {
         const mnemonic = await encryptUtils.decrypt(password, mnemonicEn);
         const wallet = importWalletByMnemonic(

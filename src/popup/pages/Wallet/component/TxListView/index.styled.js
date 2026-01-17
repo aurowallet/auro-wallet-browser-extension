@@ -174,6 +174,12 @@ export const StyledSpeedBtn = styled.div`
   height: 21px;
   padding: 2px 4px;
   font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #594af1;
+  color: white;
 `;
 
 export const StyledCancelBtn = styled(StyledSpeedBtn)`

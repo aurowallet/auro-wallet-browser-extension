@@ -54,6 +54,8 @@ import {
   StyledItemAmount,
   StyledItemStatus,
   StyledSpeedBtnGroup,
+  StyledSpeedBtn,
+  StyledCancelBtn,
 } from "./index.styled";
 
 /**
@@ -628,13 +630,13 @@ const TxItem = ({
       {showPendingAction && (
         <StyledSpeedBtnGroup>
           {txData.showSpeedUp && (
-            <Button onClick={onClickItemSpeedUp} withEvent={true}>
+            <StyledSpeedBtn onClick={onClickItemSpeedUp}>
               {i18n.t("speedUp")}
-            </Button>
+            </StyledSpeedBtn>
           )}
-          <Button onClick={onClickItemCancel} withEvent={true}>
+          <StyledCancelBtn onClick={onClickItemCancel}>
             {i18n.t("cancel")}
-          </Button>
+          </StyledCancelBtn>
         </StyledSpeedBtnGroup>
       )}
     </StyledTxItemCon>
