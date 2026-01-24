@@ -12,8 +12,8 @@ module.exports = (env, argv) => {
 
   console.log("BROWSER:", env.BROWSER);
   if (browser === "firefox") {
-    const mainFile = path.resolve(__dirname, "src/utils/o1jsUtils.js");
-    const ffFile = path.resolve(__dirname, "src/utils/o1jsUtils.firefox.js");
+    const mainFile = path.resolve(__dirname, "src/utils/o1jsUtils.ts");
+    const ffFile = path.resolve(__dirname, "src/utils/o1jsUtils.firefox.ts");
 
     if (fs.existsSync(mainFile) && fs.existsSync(ffFile)) {
       const mainContent = fs.readFileSync(mainFile, "utf-8");
@@ -73,16 +73,16 @@ module.exports = (env, argv) => {
     },
     entry: {
       background: [
-        "./src/background/regeneratorRuntime.js",
-        "./src/background/index.js",
+        "./src/background/regeneratorRuntime.ts",
+        "./src/background/index.ts",
       ],
-      popup: "./src/index.js",
-      contentScript: "./src/contentScript/index.js",
-      webhook: "./src/webHook/index.js",
+      popup: "./src/index.tsx",
+      contentScript: "./src/contentScript/index.ts",
+      webhook: "./src/webHook/index.ts",
       sandbox:
         browser === "firefox"
-          ? "./src/sandbox/index.firefox.js"
-          : "./src/sandbox/index.js",
+          ? "./src/sandbox/index.firefox.ts"
+          : "./src/sandbox/index.ts",
     },
     output: {
       path: path.resolve(__dirname, "./dist"),
@@ -101,6 +101,27 @@ module.exports = (env, argv) => {
         {
           test: /\.module\.css$/,
           use: [{ loader: "css-loader", options: { modules: true } }],
+        },
+        {
+          test: /\.(ts|tsx)$/,
+          exclude: /node_modules/,
+          use: [
+            {
+              loader: "babel-loader",
+              options: {
+                cacheDirectory: true,
+                presets: [
+                  ["@babel/preset-env", { targets: "defaults" }],
+                  ["@babel/preset-react", { runtime: "automatic" }],
+                  "@babel/preset-typescript",
+                ],
+                plugins: [
+                  "@babel/plugin-transform-class-properties",
+                  ["@babel/plugin-transform-runtime", { regenerator: true }],
+                ],
+              },
+            },
+          ],
         },
         {
           test: /\.(js|jsx)$/,
@@ -139,7 +160,8 @@ module.exports = (env, argv) => {
       alias: {
         "@": path.resolve(__dirname, "src"),
       },
-      extensions: [".js", ".jsx", ".json"],
+      extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+      conditionNames: ["import", "module", "browser", "default"],
     },
   };
 
@@ -173,12 +195,12 @@ function getPlugins(browser) {
       "process.env.BROWSER": JSON.stringify(browser),
     }),
     new webpack.NormalModuleReplacementPlugin(
-      /[/\\]o1jsUtils(\.js)?$/,
+      /[/\\]o1jsUtils(\.(?:js|ts))?$/,
       (resource) => {
         const replacement =
           browser === "firefox"
-            ? path.resolve(__dirname, "src/utils/o1jsUtils.firefox.js")
-            : path.resolve(__dirname, "src/utils/o1jsUtils.js");
+            ? path.resolve(__dirname, "src/utils/o1jsUtils.firefox.ts")
+            : path.resolve(__dirname, "src/utils/o1jsUtils.ts");
 
         resource.request = replacement;
         resource.context = path.dirname(replacement);
