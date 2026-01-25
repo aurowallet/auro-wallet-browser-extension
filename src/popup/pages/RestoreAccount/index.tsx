@@ -1,0 +1,163 @@
+import { wordlist } from "@scure/bip39/wordlists/english";
+import i18n from "i18next";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useAppDispatch } from "@/hooks/useStore";
+import type { AccountInfo } from "../../types/account";
+import { useNavigate } from "react-router-dom";
+import { validateMnemonic } from "../../../background/accountService";
+import { WALLET_NEW_HD_ACCOUNT } from "../../../constant/msgTypes";
+import { updateCurrentAccount } from "../../../reducers/accountReducer";
+import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entryRouteReducer";
+import { sendMsg } from "../../../utils/commonMsg";
+import { trimSpace } from "../../../utils/utils";
+import BottomBtn from "../../component/BottomBtn";
+import CustomView from "../../component/CustomView";
+import TextArea from "../../component/TextArea";
+import {
+  StyledRestoreTip,
+  StyledTextAreaContainer,
+  StyledSimilarWordOuter,
+  StyledSimilarWordContainer,
+  StyledSimilarWordItem,
+} from "./index.styled";
+
+const RestoreAccount = () => {
+
+  const [mneInput, setMneInput] = useState("")
+  const [similarWordList, setSimilarWordList] = useState<string[]>([])
+  const [btnLoading, setBtnLoading] = useState(false)
+  const [bottomTipError, setBottomTipError] = useState("")
+
+  const [btnDisableStatus,setBtnDisableStatus] = useState(true)
+  const childRef = useRef<{ setFocus: () => void; getCurrentCaretPosition: () => number | undefined }>(null);
+
+
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
+
+  const getNeedMatchWord = useCallback((mneList: string[]) => {
+    let targetMne = mneList[mneList.length - 1]
+    return targetMne
+  }, [])
+
+  const getSimilarWord = useCallback(() => {
+    let lowMne = mneInput.toLowerCase()
+    let mneList = lowMne.split(" ")
+    let position = childRef.current?.getCurrentCaretPosition?.() || 0
+
+    if (mneList.length > 0) {
+      let targetMne = getNeedMatchWord(mneList) || ""
+      if (lowMne.indexOf(targetMne) <= position) {
+        if (targetMne && targetMne.length >= 1) {
+          let list = wordlist.filter((item) => {
+            return item.indexOf(targetMne) === 0;
+          });
+          list = list.slice(0, 10)
+          setSimilarWordList(list)
+        }
+      }
+    } else {
+      setSimilarWordList([])
+    }
+
+  }, [mneInput])
+
+  useEffect(() => {
+    getSimilarWord()
+  }, [mneInput])
+
+  const onInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (bottomTipError) {
+      setBottomTipError("")
+    }
+    setSimilarWordList([])
+    let mnemonic = e.target.value;
+    let _mnemonic = mnemonic.replace(/\s/g, ' ');
+    _mnemonic = _mnemonic.replace(/[\r\n]/g, "")
+    setMneInput(_mnemonic)
+  }, [bottomTipError])
+
+  const onClickSimilarWord = useCallback((similarWord: string) => {
+    let mneList = mneInput.split(" ")
+    mneList[mneList.length - 1] = similarWord
+    let newInput = mneList.join(" ")
+    newInput = newInput + " "
+    setMneInput(newInput)
+    setSimilarWordList([])
+
+    childRef.current?.setFocus?.();
+
+  }, [mneInput])
+
+  const goToCreate = useCallback(() => {
+    let mnemonic: string = mneInput
+
+    mnemonic = trimSpace(mnemonic) as string
+    mnemonic = mnemonic.toLocaleLowerCase()
+
+
+    let mnemonicValid = validateMnemonic(mnemonic)
+    if (!mnemonicValid) {
+      setBottomTipError(i18n.t('seed_error'))
+      return
+    }
+    setBtnLoading(true)
+    sendMsg({
+      action: WALLET_NEW_HD_ACCOUNT,
+      payload: {
+        mne: mnemonic
+      }
+    },
+      async (currentAccount: AccountInfo) => {
+        setBtnLoading(false)
+        dispatch(updateCurrentAccount(currentAccount))
+        dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
+        navigate("/backup_success", { state: { type: "restore" } })
+      })
+  }, [mneInput, i18n])
+
+  useEffect(()=>{
+    if((trimSpace(mneInput) as string).length>0){
+      setBtnDisableStatus(false)
+    }else{
+      setBtnDisableStatus(true)
+    }
+  },[mneInput])
+
+  return (
+    <CustomView title={i18n.t("restoreWallet")}>
+      <StyledRestoreTip>{i18n.t("inputSeed")}</StyledRestoreTip>
+      <StyledTextAreaContainer>
+        <TextArea
+          onChange={onInput}
+          value={mneInput}
+          childRef={childRef}
+          showBottomTip={true}
+          bottomErrorTip={bottomTipError}
+        />
+      </StyledTextAreaContainer>
+      <StyledSimilarWordOuter>
+        <StyledSimilarWordContainer>
+          {similarWordList.map((similarWord, index) => {
+            return (
+              <StyledSimilarWordItem
+                onClick={() => onClickSimilarWord(similarWord)}
+                key={index}
+              >
+                {similarWord}
+              </StyledSimilarWordItem>
+            );
+          })}
+        </StyledSimilarWordContainer>
+      </StyledSimilarWordOuter>
+      <BottomBtn
+        disable={btnDisableStatus}
+        rightLoadingStatus={btnLoading}
+        onClick={goToCreate}
+        rightBtnContent={i18n.t("confirm")}
+      />
+    </CustomView>
+  );
+};
+
+export default RestoreAccount;
