@@ -39,9 +39,9 @@ import type {
   TxData,
   TokenInfo,
   AccountInfo,
-  RootState,
   FeeRecommendItem,
 } from "../../../../../types/tx.types";
+import type { RootState } from "@/reducers";
 import { TX_STATUS } from "../../../../../types/tx.types";
 import type { TxStatusStyle } from "./index.styled";
 import {
@@ -76,7 +76,7 @@ interface TxListViewProps {
 
 interface TxItemProps {
   txData: TxData;
-  currentAccount: AccountInfo;
+  currentAccount: AccountInfo | { address?: string; type?: string; hdPath?: string; accountName?: string };
   index: number;
   onClickSpeedUp: (txData: TxData) => void;
   onClickCancel: (txData: TxData) => void;
@@ -365,7 +365,7 @@ const TxListView: React.FC<TxListViewProps> = ({
         return;
       }
       setBtnLoading(true);
-      const currentAddress = accountInfo.currentAccount.address;
+      const currentAddress = accountInfo.currentAccount.address || '';
       let nextAction = "";
       let nextPayload: TransactionPayload = {} as TransactionPayload;
 
@@ -561,7 +561,7 @@ const TxItem: React.FC<TxItemProps> = ({
 
     if (txKindLow === "payment") {
       const isOut =
-        txData.from.toLowerCase() === currentAccount.address.toLowerCase();
+        txData.from.toLowerCase() === (currentAccount.address || '').toLowerCase();
       isReceive = !isOut;
       statusIcon = isReceive ? "/img/tx_receive.svg" : "/img/tx_send.svg";
     } else if (txKindLow === "stake_delegation" || txKindLow === "delegation") {
@@ -578,7 +578,7 @@ const TxItem: React.FC<TxItemProps> = ({
       const accountUpdates = txData.body?.zkappCommand?.accountUpdates;
       const result = getZkAppUpdateInfo(
         accountUpdates as Parameters<typeof getZkAppUpdateInfo>[0],
-        currentAccount.address,
+        currentAccount.address || '',
         txData.from,
         tokenInfo.tokenId || ''
       );
@@ -595,7 +595,7 @@ const TxItem: React.FC<TxItemProps> = ({
         const accountUpdates = txData.body?.zkappCommand?.accountUpdates;
         const result = getZkAppUpdateInfo(
           accountUpdates as Parameters<typeof getZkAppUpdateInfo>[0],
-          currentAccount.address,
+          currentAccount.address || '',
           txData.from,
           ZK_DEFAULT_TOKEN_ID
         );

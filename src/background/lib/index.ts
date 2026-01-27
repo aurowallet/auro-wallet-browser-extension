@@ -9,6 +9,18 @@ import { NetworkID_MAP } from "@/constant/network";
 
 // ============ Types ============
 
+// mina-signer Client interface
+interface MinaSignerClient {
+  signPayment(payment: Record<string, unknown>, privateKey: string): SignedPayment;
+  signStakeDelegation(delegation: Record<string, unknown>, privateKey: string): SignedPayment;
+  signMessage(message: string, privateKey: string): SignedPayment;
+  verifyMessage(verifyBody: Record<string, unknown>): boolean;
+  signTransaction(body: unknown, privateKey: string): SignedPayment;
+  signFields(fields: bigint[], privateKey: string): SignedPayment & { data?: string[] };
+  verifyFields(verifyBody: Record<string, unknown>): boolean;
+  createNullifier(fields: bigint[], privateKey: string): SignedPayment & { data?: string[] };
+}
+
 interface SignedPayment {
   signature?: unknown;
   data?: unknown;
@@ -35,7 +47,7 @@ interface VerifyResult {
 
 // ============ Functions ============
 
-export async function getSignClient(): Promise<unknown> {
+export async function getSignClient(): Promise<MinaSignerClient> {
   const netConfig = await getCurrentNodeConfig();
   let networkID = "";
   const { default: Client } = await import("mina-signer");
@@ -48,7 +60,7 @@ export async function getSignClient(): Promise<unknown> {
   } else {
     client = new Client({ network: "testnet" });
   }
-  return client;
+  return client as unknown as MinaSignerClient;
 }
 
 /**
@@ -72,8 +84,7 @@ export async function signPayment(
 ): Promise<SignedPayment> {
   let signedPayment: SignedPayment;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
 
     const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
     const sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber();
@@ -106,8 +117,7 @@ export async function stakePayment(
 ): Promise<SignedPayment> {
   let signedStakingPayment: SignedPayment;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
     const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
     const sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber();
     signedStakingPayment = signClient.signStakeDelegation(
@@ -139,8 +149,7 @@ export async function signMessagePayment(
 ): Promise<SignedPayment> {
   let signedResult: SignedPayment;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
     signedResult = signClient.signMessage(message, privateKey);
   } catch {
     signedResult = { error: { message: i18n.t("buildFailed") } };
@@ -157,8 +166,7 @@ export async function verifyMessage(
   try {
     const nextSignature =
       typeof signature === "string" ? JSON.parse(signature) : signature;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
     const verifyBody = {
       data: verifyMessageData,
       publicKey: publicKey,
@@ -202,8 +210,7 @@ export async function signTransaction(
 ): Promise<SignedPayment> {
   let signResult: SignedPayment;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
     let signBody: unknown = {};
 
     if (params.sendAction === DAppActions.mina_signMessage) {
@@ -262,8 +269,7 @@ export async function signFieldsMessage(
   try {
     const fields = params.message;
     const nextFields = fields.map(BigInt);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
     signResult = signClient.signFields(nextFields, privateKey);
     signResult.data = fields;
   } catch (err) {
@@ -280,8 +286,7 @@ export async function verifyFieldsMessage(
 ): Promise<boolean | VerifyResult> {
   let verifyResult: boolean | VerifyResult;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
 
     const nextFields = fields.map(BigInt);
     const verifyBody = {
@@ -307,8 +312,7 @@ export async function createNullifier(
   try {
     const fields = params.message;
     const nextFields = fields.map(BigInt);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const signClient = (await getSignClient()) as any;
+    const signClient = await getSignClient();
     createResult = signClient.createNullifier(nextFields, privateKey);
     createResult.data = fields;
   } catch (err) {
