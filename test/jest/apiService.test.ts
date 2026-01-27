@@ -127,49 +127,6 @@ jest.mock('../../src/utils/browserUtils', () => ({
   getCurrentNodeConfig: jest.fn().mockResolvedValue({ explorer: 'https://minascan.io' }),
 }));
 
-jest.mock('../../src/background/apiService/accountOperations', () => mockAccountOperations);
-
-jest.mock('../../src/background/apiService/keyringService', () => ({
-  getKeyringsListFn: mockKeyringService.getKeyringsListFn,
-  addHDKeyringFn: mockKeyringService.addHDKeyringFn,
-  renameKeyringFn: mockKeyringService.renameKeyringFn,
-  getKeyringMnemonicFn: mockKeyringService.getKeyringMnemonicFn,
-  deleteKeyringFn: mockKeyringService.deleteKeyringFn,
-  addAccountToKeyringFn: mockKeyringService.addAccountToKeyringFn,
-  getVaultVersionFromStore: mockKeyringService.getVaultVersionFromStore,
-  tryUpgradeVaultFn: mockKeyringService.tryUpgradeVaultFn,
-}));
-
-jest.mock('../../src/background/apiService/transactionService', () => ({
-  sendTransaction: mockTransactionService.sendTransaction,
-  signFields: mockTransactionService.signFields,
-  createNullifierByApi: mockTransactionService.createNullifierByApi,
-  createTransactionStatusChecker: mockTransactionService.createTransactionStatusChecker,
-  createNotification: jest.fn(),
-  postStakeTx: jest.fn(),
-  postPaymentTx: jest.fn(),
-  postZkTx: jest.fn(),
-}));
-
-jest.mock('../../src/background/apiService/credentialService', () => ({
-  storePrivateCredential: jest.fn(),
-  getPrivateCredential: jest.fn(),
-  getCredentialIdList: jest.fn(),
-  getTargetCredential: jest.fn(),
-  removeTargetCredential: jest.fn(),
-}));
-
-jest.mock('../../src/background/apiService/vaultHelpers', () => ({
-  getAllAccountsFromVault: jest.fn(() => []),
-  getMnemonicFromVault: jest.fn(),
-  getCurrentAddressFromVault: jest.fn(() => ''),
-  getVaultVersion: jest.fn(() => 'v1'),
-  keyringTypeToAccountType: jest.fn((type: string) => {
-    const map: Record<string, string> = { hd: 'WALLET_INSIDE', imported: 'WALLET_OUTSIDE', ledger: 'WALLET_LEDGER', watch: 'WALLET_WATCH' };
-    return map[type] || 'WALLET_INSIDE';
-  }),
-  DEFAULT_ACCOUNT_NAME: 'Account',
-}));
 
 jest.mock('../../src/constant/vaultTypes', () => ({
   isLegacyVault: jest.fn((v: any) => Array.isArray(v)),

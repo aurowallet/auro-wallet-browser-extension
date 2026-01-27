@@ -409,10 +409,14 @@ const AccountManagePage = () => {
             action: WALLET_CHANGE_CURRENT_ACCOUNT,
             payload: { address: item.address },
           },
-          (account: GetAllAccountResponse) => {
+          (account: GetAllAccountResponse & { accountList?: AccountInfo[] }) => {
             Loading.hide();
-            const listData = account.accountList;
-            if (listData?.allList && listData.allList.length > 0 && account.currentAccount) {
+            // Handle both response formats: { accountList: { allList } } and { accountList: [] }
+            const hasAccounts = account.currentAccount && (
+              (account.accountList && Array.isArray(account.accountList) && account.accountList.length > 0) ||
+              (account.accountList && 'allList' in account.accountList && (account.accountList as { allList?: AccountInfo[] }).allList?.length)
+            );
+            if (hasAccounts) {
               dispatch(updateCurrentAccount(account.currentAccount as AccountInfo));
               sendMsg(
                 {

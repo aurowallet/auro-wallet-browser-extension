@@ -3,7 +3,7 @@ import { WALLET_GET_LOCK_TIME } from "@/constant/msgTypes";
 import { sendMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import CustomView from "../../component/CustomView";
 import {
   StyledContainer,
@@ -16,6 +16,7 @@ import {
 const Security = () => {
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [currentLockTime, setCurrentLockTime] = useState<string | number>("");
   useEffect(() => {
@@ -27,7 +28,7 @@ const Security = () => {
         setCurrentLockTime(time);
       }
     );
-  }, []);
+  }, [location.key]);
   const { displayLockTime } = useMemo(() => {
     let displayLockTime = "";
     let lockTime = AUTO_LOCK_TIME_LIST.filter((time) => {

@@ -114,6 +114,9 @@ export const StyledPasswordToggle = styled.div`
 
 export const StyledBottomTip = styled.div`
   margin-top: ${({ theme }) => theme.spacing.xs};
+  font-size: ${({ theme }) => theme.typography.fontSizeDesc};
+  line-height: ${({ theme }) => theme.typography.lineHeightDesc};
+  color: ${({ theme }) => theme.colors.error};
 `;
 
 export const StyledSearchIcon = styled.img`

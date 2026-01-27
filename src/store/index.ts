@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { LOCK_TIME_DEFAULT } from '../constant';
-import type { VaultData } from '../background/apiService/vaultHelpers';
+import type { Vault } from '../constant/vaultTypes';
+
+// VaultData can be V2 Vault, V1 array format, or null
+type V1Wallet = { mnemonic?: string; accounts: unknown[]; currentAddress?: string };
+type VaultData = Vault | V1Wallet[] | null;
 
 // Types
 export interface AccountInfo {

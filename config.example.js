@@ -23,7 +23,7 @@ export const DevnetUrlConfig = {
   tx: "",
 };
 
-export const TokenBuildUrl = ""
+export const TOKEN_BUILD_URL = ""
 /**berkeley net url */
 // export const BerkeleyUrlConfig = {
 //   gql: "",

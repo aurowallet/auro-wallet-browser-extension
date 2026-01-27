@@ -14,7 +14,7 @@ import browser from "webextension-polyfill";
 import {
   node_public_keys,
   react_private_keys,
-  TokenBuildUrl,
+  TOKEN_BUILD_URL,
 } from "../../config";
 import {
   DAPP_ACTION_CANCEL_ALL,
@@ -1098,7 +1098,7 @@ class DappService {
   }
 
   getCurrentAccountAddress(): string {
-    return apiService.getCurrentAccountAddress();
+    return apiService.getCurrentAccountAddress() || "";
   }
 
   changeCurrentConnecting(address: string, currentAddress: string): void {
@@ -1276,7 +1276,7 @@ class DappService {
     if (languageCode) {
       languageCode = `/${languageCode}`;
     }
-    const targetUrl = TokenBuildUrl + languageCode + "?buildid=" + buildID;
+    const targetUrl = TOKEN_BUILD_URL + languageCode + "?buildid=" + buildID;
     let nextOption: Record<string, number> = {};
     if (buildParams?.left && buildParams?.top) {
       nextOption = {
@@ -1306,7 +1306,7 @@ class DappService {
   checkSafeBuild(site: Site): boolean {
     const buildUrl = new URL(site.origin);
     const hostname = buildUrl.hostname;
-    const whiteUrl = new URL(TokenBuildUrl);
+    const whiteUrl = new URL(TOKEN_BUILD_URL);
     if (hostname !== whiteUrl.hostname) {
       return false;
     }

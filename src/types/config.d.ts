@@ -9,7 +9,7 @@ declare module '*/config' {
   export const MainnetUrlConfig: UrlConfig;
   export const DevnetUrlConfig: UrlConfig;
   export const ZekoTestnetConfig: UrlConfig;
-  export const TokenBuildUrl: string;
+  export const TOKEN_BUILD_URL: string;
   export const NET_CONFIG_VERSION: string;
   export const react_private_keys: string;
   export const node_public_keys: string;

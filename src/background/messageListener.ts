@@ -106,10 +106,10 @@ function internalMessageListener(
       });
       break;
     case WALLET_SET_UNLOCKED_STATUS:
-      sendResponse(apiService.setUnlockedStatus(payload));
+      sendResponse(apiService.setUnlockedStatus(payload.status));
       break;
     case WALLET_APP_SUBMIT_PWD:
-      apiService.submitPassword(payload).then((res) => {
+      apiService.submitPassword(payload.password).then((res) => {
         sendResponse(res);
       });
       break;
@@ -130,7 +130,7 @@ function internalMessageListener(
         });
       break;
     case WALLET_CHANGE_CURRENT_ACCOUNT:
-      apiService.setCurrentAccount(payload).then((account) => {
+      apiService.setCurrentAccount(payload.address).then((account) => {
         sendResponse(account);
       });
       break;
@@ -176,7 +176,7 @@ function internalMessageListener(
         });
       break;
     case WALLET_CHECK_TX_STATUS:
-      sendResponse(apiService.checkTxStatus(payload.paymentId, payload.hash));
+      sendResponse(apiService.checkTxStatus(payload.paymentId, payload.hash, payload.type));
       break;
     case WALLET_IMPORT_LEDGER:
       apiService
@@ -203,7 +203,7 @@ function internalMessageListener(
       sendResponse(apiService.setLastActiveTime());
       break;
     case WALLET_UPDATE_LOCK_TIME:
-      sendResponse(apiService.updateLockTime(payload));
+      sendResponse(apiService.updateLockTime(payload.value));
       break;
     case WALLET_GET_LOCK_TIME:
       sendResponse(apiService.getCurrentAutoLockTime());
@@ -289,12 +289,14 @@ function internalMessageListener(
         });
       break;
     case CredentialMsg.get_credentials:
-      apiService.getPrivateCredential(payload).then((res) => {
+      const getCredAddr = typeof payload === 'string' ? payload : payload.address;
+      apiService.getPrivateCredential(getCredAddr).then((res) => {
         sendResponse(res);
       });
       break;
     case CredentialMsg.ID_LIST:
-      apiService.getCredentialIdList(payload).then((res) => {
+      const idListAddr = typeof payload === 'string' ? payload : payload.address;
+      apiService.getCredentialIdList(idListAddr).then((res) => {
         sendResponse(res);
       });
       break;
