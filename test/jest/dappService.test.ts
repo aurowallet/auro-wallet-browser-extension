@@ -114,7 +114,7 @@ describe('DappService', () => {
   describe('disconnectDapp', () => {
     it('should disconnect dapp and return true when url exists', () => {
       mockAccountApprovedUrlList = { [TEST_ADDRESS]: [TEST_URL, 'https://other.com'] };
-      mockAccountApprovedUrlList[TEST_ADDRESS] = mockAccountApprovedUrlList[TEST_ADDRESS].filter(u => u !== TEST_URL);
+      mockAccountApprovedUrlList[TEST_ADDRESS] = mockAccountApprovedUrlList[TEST_ADDRESS]!.filter(u => u !== TEST_URL);
       expect(mockAccountApprovedUrlList[TEST_ADDRESS]).not.toContain(TEST_URL);
     });
 

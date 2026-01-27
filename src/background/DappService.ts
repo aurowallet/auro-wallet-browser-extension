@@ -1,6 +1,6 @@
 import { POPUP_CHANNEL_KEYS } from "@/constant/commonType";
 import { errorCodes } from "@/constant/dappError";
-import { Default_Network_List } from "@/constant/network";
+import { Default_Network_List, type NetworkConfig } from "@/constant/network";
 import { ZKAPP_APPROVE_LIST } from "@/constant/storageKey";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import { decryptData, encryptData } from "@/utils/fore";
@@ -14,7 +14,7 @@ import browser from "webextension-polyfill";
 import {
   node_public_keys,
   react_private_keys,
-  TOKEN_BUILD_URL,
+  TokenBuildUrl,
 } from "../../config";
 import {
   DAPP_ACTION_CANCEL_ALL,
@@ -52,22 +52,63 @@ import {
   removeUrlFromArrays,
   urlValid,
 } from "../utils/utils";
-import apiService from "./APIService";
+import apiService from "./apiService";
 import { verifyFieldsMessage, verifyMessage } from "./lib";
 import { get, save } from "./storageService";
-const { v4: uuidv4 } = require("uuid");
 
-let signRequests = [];
-let approveRequests = [];
-let chainRequests = [];
+import { v4 as uuidv4 } from "uuid";
+import pkg from "../../package.json";
 
-let tokenSignRequests = [];
+// ============================================
+// Types
+// ============================================
+
+interface Site {
+  origin: string;
+  [key: string]: unknown;
+}
+
+interface SignRequest {
+  id: string;
+  params: Record<string, unknown>;
+  site: Site;
+  resolve: (value: unknown) => void;
+  reject: (reason: unknown) => void;
+  time: number;
+}
+
+interface ApproveRequest {
+  id: string;
+  site: Site;
+  resolve: (value: unknown) => void;
+  reject: (reason: unknown) => void;
+}
+
+interface DappMessage {
+  action: string;
+  payload: {
+    id: string;
+    params: Record<string, unknown>;
+    site: Site;
+    [key: string]: unknown;
+  };
+}
+
+// ============================================
+// Module State
+// ============================================
+
+let signRequests: SignRequest[] = [];
+let approveRequests: ApproveRequest[] = [];
+let chainRequests: SignRequest[] = [];
+let tokenSignRequests: SignRequest[] = [];
 
 export const windowId = {
   approve_page: "approve_page",
   request_sign: "request_sign",
   token_sign: "token_sign",
 };
+
 const ZKAPP_CHAIN_ACTION = [
   DAppActions.mina_addChain,
   DAppActions.mina_switchChain,
@@ -75,9 +116,39 @@ const ZKAPP_CHAIN_ACTION = [
 
 import { memStore as dappStore } from "@/store";
 
+// ============================================
+// Types
+// ============================================
+
+/**
+ * Message listener type for browser.runtime.onMessage
+ */
+type MessageListener = (
+  message: { action: string; payload: Record<string, unknown> },
+  sender: browser.Runtime.MessageSender,
+  sendResponse: (response?: unknown) => void
+) => boolean | void;
+
+/**
+ * Type for browser.runtime.onMessage listener parameter
+ */
+type BrowserMessageListener = Parameters<typeof browser.runtime.onMessage.addListener>[0];
+
+// ============================================
+// DappService Class
+// ============================================
+
 class DappService {
+  private signEventListener: MessageListener | undefined;
+  private tokenSignListener: MessageListener | undefined;
+
   constructor() {}
-  requestCallback(request, id, sendResponse) {
+
+  requestCallback(
+    request: () => Promise<unknown>,
+    id: string,
+    sendResponse: (response: unknown) => void
+  ): void {
     request()
       .then((data) => {
         sendResponse({
@@ -93,11 +164,16 @@ class DappService {
       });
   }
 
-  async handleMessage(message, sender, sendResponse) {
+  async handleMessage(
+    message: DappMessage,
+    sender: browser.Runtime.MessageSender,
+    sendResponse: (response: unknown) => void
+  ): Promise<void> {
     const {
       action,
       payload: { id, params, site },
     } = message;
+
     switch (action) {
       case DAppActions.mina_requestAccounts:
         this.requestCallback(
@@ -142,7 +218,12 @@ class DappService {
       case DAppActions.mina_verifyMessage:
       case DAppActions.mina_verify_JsonMessage:
         this.requestCallback(
-          () => verifyMessage(params.publicKey, params.signature, params.data),
+          () =>
+            verifyMessage(
+              (params as any).publicKey,
+              (params as any).signature,
+              (params as any).data
+            ),
           id,
           sendResponse
         );
@@ -154,9 +235,9 @@ class DappService {
         this.requestCallback(
           () =>
             verifyFieldsMessage(
-              params.publicKey,
-              params.signature,
-              params.data
+              (params as any).publicKey,
+              (params as any).signature,
+              (params as any).data
             ),
           id,
           sendResponse
@@ -184,12 +265,12 @@ class DappService {
         );
         break;
       case TOKEN_BUILD.add:
-        const addId = await this.addTokenBuildList(message.payload);
+        const addId = await this.addTokenBuildList(message.payload as any);
         sendResponse(addId);
         break;
       case TOKEN_BUILD.getParams:
         this.requestCallback(
-          () => this.getTokenParamsById(message.payload),
+          () => this.getTokenParamsById(message.payload as any),
           id,
           sendResponse
         );
@@ -206,7 +287,7 @@ class DappService {
         break;
       case DAppActions.wallet_revokePermissions:
         this.requestCallback(
-          () => this.revokePermissions(message.payload),
+          () => this.revokePermissions(message.payload as any),
           id,
           sendResponse
         );
@@ -226,16 +307,21 @@ class DappService {
     }
   }
 
-  async signTransaction(id, params, site) {
+  async signTransaction(
+    id: string,
+    params: Record<string, unknown>,
+    site: Site
+  ): Promise<unknown> {
     return new Promise(async (resolve, reject) => {
-      let that = this;
+      const that = this;
       try {
-        let nextParams = { ...params };
-        let currentAccount = this.getCurrentAccountAddress();
-        let approveAccountStatus = this.getCurrentAccountConnectStatus(
+        let nextParams: Record<string, unknown> = { ...params };
+        const currentAccount = this.getCurrentAccountAddress();
+        const approveAccountStatus = this.getCurrentAccountConnectStatus(
           site.origin,
           currentAccount
         );
+
         if (!approveAccountStatus) {
           reject({
             code: errorCodes.userDisconnect,
@@ -243,12 +329,15 @@ class DappService {
           });
           return;
         }
-        const sendAction = params.action;
+
+        const sendAction = params.action as string;
+
         if (lastWindowIds[POPUP_CHANNEL_KEYS.popup]) {
           await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
         } else {
           await startExtensionPopup(true);
         }
+
         if (
           ZKAPP_CHAIN_ACTION.indexOf(sendAction) !== -1 &&
           chainRequests.length > 0
@@ -260,18 +349,19 @@ class DappService {
           return;
         }
 
-        let currentChainInfo;
+        let currentChainInfo: NetworkConfig | Record<string, never> | undefined;
         if (ZKAPP_CHAIN_ACTION.indexOf(sendAction) !== -1) {
           currentChainInfo = await this.requestCurrentNetwork();
         }
+
         if (sendAction === DAppActions.mina_switchChain) {
-          let customNodeList = await getLocalNetworkList();
-          let allNodeList = [...Default_Network_List, ...customNodeList];
-          let currentSupportChainList = allNodeList.map((node) => {
+          const customNodeList = await getLocalNetworkList();
+          const allNodeList = [...Default_Network_List, ...customNodeList];
+          const currentSupportChainList = allNodeList.map((node: NetworkConfig): string | undefined => {
             return node.networkID;
           });
           const nextChainIndex = currentSupportChainList.indexOf(
-            params.networkID
+            params.networkID as string
           );
           if (nextChainIndex === -1) {
             reject({
@@ -280,15 +370,16 @@ class DappService {
             });
             return;
           }
-          if (currentChainInfo.networkID === params.networkID) {
+          if (currentChainInfo?.networkID === params.networkID) {
             resolve({
-              networkID: currentChainInfo.networkID,
+              networkID: currentChainInfo!.networkID,
             });
             return;
           }
         }
+
         if (sendAction === DAppActions.mina_addChain) {
-          const realAddUrl = decodeURIComponent(params.url);
+          const realAddUrl = decodeURIComponent(params.url as string);
           if (!urlValid(realAddUrl) || !params.name) {
             reject({
               code: errorCodes.invalidParams,
@@ -296,11 +387,11 @@ class DappService {
             });
             return;
           }
-          let exist = await this.checkNetworkIsExist(realAddUrl);
+          const exist = await this.checkNetworkIsExist(realAddUrl);
           if (exist.index !== -1) {
-            if (exist.config.url === currentChainInfo.url) {
+            if (exist.config?.url === currentChainInfo?.url) {
               resolve({
-                networkID: currentChainInfo.networkID,
+                networkID: currentChainInfo?.networkID,
               });
               return;
             } else {
@@ -309,12 +400,16 @@ class DappService {
             }
           }
         }
+
         const checkAddressAction = [
           DAppActions.mina_sendPayment,
           DAppActions.mina_sendStakeDelegation,
         ];
         if (checkAddressAction.indexOf(sendAction) !== -1) {
-          if (params.to.length <= 0 || !addressValid(params.to)) {
+          if (
+            !(params.to as string)?.length ||
+            !addressValid(params.to as string)
+          ) {
             reject({
               code: errorCodes.invalidParams,
               message: getMessageFromCode(errorCodes.invalidParams),
@@ -335,8 +430,9 @@ class DappService {
             return;
           }
         }
+
         if (sendAction === DAppActions.mina_storePrivateCredential) {
-          const credentialData = params.credential || params["0"];
+          const credentialData = params.credential || (params as any)["0"];
           const result = checkStoredCredentialSchema(credentialData);
           nextParams.credential = credentialData;
           if (!result.success) {
@@ -347,10 +443,11 @@ class DappService {
             return;
           }
         }
+
         if (sendAction === DAppActions.mina_requestPresentation) {
-          const presentationData = params.presentation || params["0"];
+          const presentationData = params.presentation || (params as any)["0"];
           const presentationRequest =
-            presentationData.presentationRequest ?? {};
+            (presentationData as any).presentationRequest ?? {};
           const result = checkPresentationRequestSchema(presentationRequest);
           nextParams.presentationData = presentationData;
           if (!result.success) {
@@ -361,19 +458,26 @@ class DappService {
             return;
           }
         }
+
         if (sendAction === DAppActions.mina_sendTransaction) {
           nextParams.transaction = zkCommondFormat(params.transaction);
         }
+
         if (lastWindowIds[POPUP_CHANNEL_KEYS.popup]) {
           await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
         } else {
           await startExtensionPopup(true);
         }
-        function onMessage(message, sender, sendResponse) {
+
+        function onMessage(
+          message: { action: string; payload: Record<string, unknown> },
+          _sender: browser.Runtime.MessageSender,
+          sendResponse: () => void
+        ): boolean | void {
           const { action, payload } = message;
+
           if (action === DAPP_ACTION_CANCEL_ALL) {
-            let requestList = signRequests;
-            requestList.map((item) => {
+            signRequests.forEach((item) => {
               item.reject({
                 code: errorCodes.userRejectedRequest,
                 message: getMessageFromCode(errorCodes.userRejectedRequest),
@@ -383,16 +487,18 @@ class DappService {
             that.setBadgeContent();
             if (chainRequests.length === 0) {
               closePopupWindow(windowId.request_sign);
-              browser.runtime.onMessage.removeListener(onMessage);
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
               that.signEventListener = undefined;
             }
             return;
           }
-          const signId = payload?.id;
+
+          const signId = payload?.id as string;
           const currentSignParams = that.getSignParamsByOpenId(signId);
           if (!currentSignParams) {
             return;
           }
+
           const nextReject = currentSignParams.reject;
           const nextResolve = currentSignParams.resolve;
 
@@ -410,9 +516,9 @@ class DappService {
                   code: errorCodes.userRejectedRequest,
                   message: getMessageFromCode(errorCodes.userRejectedRequest),
                 });
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
@@ -420,19 +526,20 @@ class DappService {
                 nextResolve({
                   credential: payload.credential,
                 });
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
               } else {
-                let msg =
+                const msg =
                   payload.message || getMessageFromCode(errorCodes.internal);
                 nextReject({ message: msg, code: errorCodes.internal });
               }
               sendResponse();
               return true;
+
             case DAPP_ACTION_REQUEST_PRESENTATION:
               if (payload.resultOrigin !== currentSignParams.site.origin) {
                 nextReject({
@@ -446,9 +553,9 @@ class DappService {
                   code: errorCodes.userRejectedRequest,
                   message: getMessageFromCode(errorCodes.userRejectedRequest),
                 });
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
@@ -456,19 +563,20 @@ class DappService {
                 nextResolve({
                   presentation: payload.presentation,
                 });
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
               } else {
-                let msg =
+                const msg =
                   payload.message || getMessageFromCode(errorCodes.internal);
                 nextReject({ message: msg, code: errorCodes.internal });
               }
               sendResponse();
               return true;
+
             case DAPP_ACTION_SEND_TRANSACTION:
               if (payload.resultOrigin !== currentSignParams.site.origin) {
                 nextReject({
@@ -488,9 +596,9 @@ class DappService {
                     signedData: payload.signedData,
                   });
                 }
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
@@ -499,19 +607,20 @@ class DappService {
                   code: errorCodes.userRejectedRequest,
                   message: getMessageFromCode(errorCodes.userRejectedRequest),
                 });
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
               } else {
-                let msg =
+                const msg =
                   payload.message || getMessageFromCode(errorCodes.internal);
                 nextReject({ message: msg, code: errorCodes.internal });
               }
               sendResponse();
               return true;
+
             case DAPP_ACTION_SIGN_MESSAGE:
               if (payload.resultOrigin !== currentSignParams.site.origin) {
                 nextReject({
@@ -522,9 +631,9 @@ class DappService {
               }
               if (payload && payload.signature) {
                 nextResolve(payload);
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
@@ -535,15 +644,16 @@ class DappService {
                   code: errorCodes.userRejectedRequest,
                   message: getMessageFromCode(errorCodes.userRejectedRequest),
                 });
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
               }
               sendResponse();
               return true;
+
             case DAPP_ACTION_SWITCH_CHAIN:
               if (payload.resultOrigin !== currentSignParams.site.origin) {
                 nextReject({
@@ -558,28 +668,29 @@ class DappService {
                     code: errorCodes.userRejectedRequest,
                     message: getMessageFromCode(errorCodes.userRejectedRequest),
                   });
-                  that.removeNotifyParamsByOpenId(payload.id);
-                  if (signRequests.length == 0 && chainRequests.length === 0) {
-                    browser.runtime.onMessage.removeListener(onMessage);
+                  that.removeNotifyParamsByOpenId(payload.id as string);
+                  if (signRequests.length === 0 && chainRequests.length === 0) {
+                browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                     that.signEventListener = undefined;
                   }
                   that.setBadgeContent();
                 } else if (payload.nextConfig) {
                   nextResolve(payload.nextConfig);
-                  that.removeNotifyParamsByOpenId(payload.id);
-                  if (signRequests.length == 0 && chainRequests.length === 0) {
-                    browser.runtime.onMessage.removeListener(onMessage);
+                  that.removeNotifyParamsByOpenId(payload.id as string);
+                  if (signRequests.length === 0 && chainRequests.length === 0) {
+                browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                     that.signEventListener = undefined;
                   }
                   that.setBadgeContent();
                 } else {
-                  let msg =
+                  const msg =
                     payload.message || getMessageFromCode(errorCodes.internal);
                   nextReject({ message: msg, code: errorCodes.internal });
                 }
               }
               sendResponse();
               return true;
+
             case DAPP_ACTION_CREATE_NULLIFIER:
               if (payload.resultOrigin !== currentSignParams.site.origin) {
                 nextReject({
@@ -590,9 +701,9 @@ class DappService {
               }
               if (payload && payload.private) {
                 nextResolve(payload);
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
@@ -603,9 +714,9 @@ class DappService {
                   code: errorCodes.userRejectedRequest,
                   message: getMessageFromCode(errorCodes.userRejectedRequest),
                 });
-                that.removeSignParamsByOpenId(payload.id);
-                if (signRequests.length == 0 && chainRequests.length === 0) {
-                  browser.runtime.onMessage.removeListener(onMessage);
+                that.removeSignParamsByOpenId(payload.id as string);
+                if (signRequests.length === 0 && chainRequests.length === 0) {
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.signEventListener = undefined;
                 }
                 that.setBadgeContent();
@@ -615,11 +726,13 @@ class DappService {
           }
           return false;
         }
+
         if (!that.signEventListener) {
-          that.signEventListener =
-            browser.runtime.onMessage.addListener(onMessage);
+          browser.runtime.onMessage.addListener(onMessage as BrowserMessageListener);
+          that.signEventListener = onMessage;
         }
-        let time = new Date().getTime();
+
+        const time = new Date().getTime();
         if (ZKAPP_CHAIN_ACTION.indexOf(sendAction) !== -1) {
           if (chainRequests.length > 0) {
             reject({
@@ -666,14 +779,15 @@ class DappService {
       }
     });
   }
-  clearAllPendingZk() {
-    let requestList = [
+
+  clearAllPendingZk(): void {
+    const requestList = [
       ...signRequests,
       ...approveRequests,
       ...chainRequests,
       ...tokenSignRequests,
     ];
-    requestList.map((item) => {
+    requestList.forEach((item) => {
       item.reject({
         code: errorCodes.userRejectedRequest,
         message: getMessageFromCode(errorCodes.userRejectedRequest),
@@ -685,24 +799,26 @@ class DappService {
     tokenSignRequests = [];
     this.setBadgeContent();
   }
-  async checkLocalWallet() {
-    let localAccount = await get("keyringData");
-    if (localAccount && localAccount.keyringData) {
+
+  async checkLocalWallet(): Promise<boolean> {
+    const localAccount = await get("keyringData");
+    if (localAccount && (localAccount as any).keyringData) {
       return true;
     } else {
       return false;
     }
   }
-  async requestConnectedAccount(site) {
+
+  async requestConnectedAccount(site: Site): Promise<string[]> {
     return new Promise(async (resolve) => {
       try {
-        let isCreate = await this.checkLocalWallet();
+        const isCreate = await this.checkLocalWallet();
         if (!isCreate) {
           resolve([]);
           return;
         }
-        let currentAccount = this.getCurrentAccountAddress();
-        let connectStatus = this.getCurrentAccountConnectStatus(
+        const currentAccount = this.getCurrentAccountAddress();
+        const connectStatus = this.getCurrentAccountConnectStatus(
           site.origin,
           currentAccount
         );
@@ -716,11 +832,12 @@ class DappService {
       }
     });
   }
-  async requestAccounts(id, site) {
-    let that = this;
+
+  async requestAccounts(id: string, site: Site): Promise<string[]> {
+    const that = this;
     return new Promise(async (resolve, reject) => {
       try {
-        let isCreate = await this.checkLocalWallet();
+        const isCreate = await this.checkLocalWallet();
         if (!isCreate) {
           reject({
             message: getMessageFromCode(errorCodes.noWallet),
@@ -728,8 +845,8 @@ class DappService {
           });
           return;
         }
-        let currentAccount = this.getCurrentAccountAddress();
-        let connectStatus = this.getCurrentAccountConnectStatus(
+        const currentAccount = this.getCurrentAccountAddress();
+        const connectStatus = this.getCurrentAccountConnectStatus(
           site.origin,
           currentAccount
         );
@@ -749,9 +866,14 @@ class DappService {
           });
           return;
         }
-        function onMessage(message, sender, sendResponse) {
+
+        function onMessage(
+          message: { action: string; payload: Record<string, unknown> },
+          _sender: browser.Runtime.MessageSender,
+          sendResponse: () => void
+        ): boolean | void {
           const { action, payload } = message;
-          const approveId = payload?.id;
+          const approveId = payload?.id as string;
           const currentApproveParams = that.getApproveParamsByOpenId(approveId);
           if (!currentApproveParams) {
             return;
@@ -770,18 +892,23 @@ class DappService {
               }
               approveRequests = [];
               that.setBadgeContent();
-              if (payload.selectAccount && payload.selectAccount.length > 0) {
-                let account = payload.selectAccount[0];
-                let accountApprovedUrlList =
-                  dappStore.getState().accountApprovedUrlList;
-                let currentApprovedList =
-                  accountApprovedUrlList[account.address] || [];
-                if (currentApprovedList.indexOf(payload.resultOrigin) === -1) {
-                  currentApprovedList.push(payload.resultOrigin);
+              if (
+                payload.selectAccount &&
+                (payload.selectAccount as unknown[]).length > 0
+              ) {
+                const account = (payload.selectAccount as { address: string }[])[0]!;
+                const accountApprovedUrlList =
+                  dappStore.getState().accountApprovedUrlList as Record<string, string[]>;
+                let currentApprovedList: string[] =
+                  accountApprovedUrlList[account!.address] || [];
+                if (
+                  (currentApprovedList as string[]).indexOf(payload.resultOrigin as string) === -1
+                ) {
+                  (currentApprovedList as string[]).push(payload.resultOrigin as string);
                 }
-                accountApprovedUrlList[account.address] = currentApprovedList;
-                that.updateApproveConnect(accountApprovedUrlList);
-                nextResolve([account.address]);
+                accountApprovedUrlList[account!.address] = currentApprovedList;
+                that.updateApproveConnect(accountApprovedUrlList as Record<string, string[]>);
+                nextResolve([account!.address]);
               } else {
                 nextReject({
                   code: errorCodes.userRejectedRequest,
@@ -798,7 +925,7 @@ class DappService {
                 });
                 return;
               }
-              browser.runtime.onMessage.removeListener(onMessage);
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
               nextResolve([payload.account]);
               approveRequests = [];
               that.setBadgeContent();
@@ -809,8 +936,9 @@ class DappService {
           }
           return false;
         }
-        browser.runtime.onMessage.addListener(onMessage);
-        approveRequests.push({ id, site, resolve, reject });
+
+        browser.runtime.onMessage.addListener(onMessage as BrowserMessageListener);
+        approveRequests.push({ id, site, resolve: resolve as (value: unknown) => void, reject });
         this.setBadgeContent();
         sendMsg(
           {
@@ -831,7 +959,8 @@ class DappService {
       }
     });
   }
-  setBadgeContent = () => {
+
+  setBadgeContent = (): void => {
     const list = [
       ...approveRequests,
       ...signRequests,
@@ -845,36 +974,35 @@ class DappService {
       action.setBadgeText({ text: "" });
     }
   };
-  getApproveParamsByOpenId(openId) {
-    let params = approveRequests.filter((item) => {
-      if (item.id === openId) {
-        return item;
-      }
-    });
 
+  getApproveParamsByOpenId(openId: string): ApproveRequest | null {
+    const params = approveRequests.filter((item) => item.id === openId);
     if (params.length > 0) {
-      return params[0];
+      return params[0] ?? null;
     } else {
       return null;
     }
   }
 
-  getSignParamsByOpenId(openId) {
-    let params = [...signRequests, ...chainRequests].filter((item) => {
-      if (item.id === openId) {
-        return item;
-      }
-    });
+  getSignParamsByOpenId(openId: string): SignRequest | null {
+    const params = [...signRequests, ...chainRequests].filter(
+      (item) => item.id === openId
+    );
     if (params.length > 0) {
-      return params[0];
+      return params[0] ?? null;
     } else {
       return null;
     }
   }
-  getSignParams() {
-    let list = [...signRequests, ...chainRequests];
+
+  getSignParams(): {
+    signRequests: SignRequest[];
+    chainRequests: SignRequest[];
+    topItem?: SignRequest;
+  } {
+    const list = [...signRequests, ...chainRequests];
     list.sort((a, b) => a.time - b.time);
-    let topItem;
+    let topItem: SignRequest | undefined;
     if (list.length > 0) {
       topItem = list[0];
     }
@@ -884,48 +1012,45 @@ class DappService {
       topItem,
     };
   }
-  getApproveParams() {
-    let list = [...approveRequests];
+
+  getApproveParams(): ApproveRequest | undefined {
+    const list = [...approveRequests];
     if (list.length > 0) {
       return list[0];
     }
+    return undefined;
   }
-  removeSignParamsByOpenId(openId) {
-    const newSignRequests = signRequests.filter((item) => {
-      return item.id !== openId;
-    });
+
+  removeSignParamsByOpenId(openId: string): void {
+    const newSignRequests = signRequests.filter((item) => item.id !== openId);
     signRequests = newSignRequests;
   }
-  removeNotifyParamsByOpenId(openId) {
-    const newNotifyRequests = chainRequests.filter((item) => {
-      return item.id !== openId;
-    });
+
+  removeNotifyParamsByOpenId(openId: string): void {
+    const newNotifyRequests = chainRequests.filter((item) => item.id !== openId);
     chainRequests = newNotifyRequests;
   }
-  getDappStore() {
+
+  getDappStore(): ReturnType<typeof dappStore.getState> {
     return dappStore.getState();
   }
-  /**
-   * get dapp account  address
-   * @param {*} siteUrl
-   * @returns
-   */
-  getCurrentAccountConnectStatus(siteUrl, currentAddress = "") {
-    let accountApprovedUrlList = this.getDappStore().accountApprovedUrlList;
-    let currentAccountApproved = accountApprovedUrlList[currentAddress] || [];
+
+  getCurrentAccountConnectStatus(
+    siteUrl: string,
+    currentAddress: string = ""
+  ): boolean {
+    const accountApprovedUrlList = this.getDappStore()
+      .accountApprovedUrlList as Record<string, string[]>;
+    const currentAccountApproved = accountApprovedUrlList[currentAddress] || [];
     return currentAccountApproved.indexOf(siteUrl) !== -1;
   }
-  /**
-   * get current web url and disconnect
-   * @param {*} siteUrl
-   * @param {*} address
-   * @returns
-   */
-  disconnectDapp(siteUrl, address) {
+
+  disconnectDapp(siteUrl: string, address: string): boolean {
     try {
-      let accountApprovedUrlList = this.getDappStore().accountApprovedUrlList;
-      let currentAccountApproved = accountApprovedUrlList[address] || [];
-      let urlIndex = currentAccountApproved.indexOf(siteUrl);
+      const accountApprovedUrlList = this.getDappStore()
+        .accountApprovedUrlList as Record<string, string[]>;
+      const currentAccountApproved = accountApprovedUrlList[address] || [];
+      const urlIndex = currentAccountApproved.indexOf(siteUrl);
       if (urlIndex !== -1) {
         currentAccountApproved.splice(urlIndex, 1);
         this.notifyAccountChange([siteUrl]);
@@ -938,22 +1063,26 @@ class DappService {
       return false;
     }
   }
-  /**
-   * delete all connect of target address . when delete account
-   * @param {*} address
-   */
-  deleteDAppConnect(deletedAddress, oldCurrentAddress, newCurrentAddress) {
-    let accountApprovedUrlList = this.getDappStore().accountApprovedUrlList;
+
+  deleteDAppConnect(
+    deletedAddress: string,
+    oldCurrentAddress: string,
+    newCurrentAddress: string
+  ): void {
+    const accountApprovedUrlList = this.getDappStore()
+      .accountApprovedUrlList as Record<string, string[]>;
     if (deletedAddress !== oldCurrentAddress) {
-      let deletedAccountApproved = accountApprovedUrlList[deletedAddress];
+      const deletedAccountApproved = accountApprovedUrlList[deletedAddress];
       if (deletedAccountApproved) {
         delete accountApprovedUrlList[deletedAddress];
         this.updateApproveConnect(accountApprovedUrlList);
       }
     } else {
-      let deletedAccountApproved = accountApprovedUrlList[deletedAddress] || [];
-      let newAccountApproved = accountApprovedUrlList[newCurrentAddress] || [];
-      let diffConnectedUrl = getArrayDiff(
+      const deletedAccountApproved =
+        accountApprovedUrlList[deletedAddress] || [];
+      const newAccountApproved =
+        accountApprovedUrlList[newCurrentAddress] || [];
+      const diffConnectedUrl = getArrayDiff(
         deletedAccountApproved,
         newAccountApproved
       );
@@ -966,18 +1095,20 @@ class DappService {
         this.notifyAccountChange(diffConnectedUrl);
       }
     }
-    return;
   }
-  getCurrentAccountAddress() {
+
+  getCurrentAccountAddress(): string {
     return apiService.getCurrentAccountAddress();
   }
-  changeCurrentConnecting(address, currentAddress) {
-    let accountApprovedUrlList = this.getDappStore().accountApprovedUrlList;
 
-    let oldAccountApproved = accountApprovedUrlList[address] || [];
-    let newAccountApproved = accountApprovedUrlList[currentAddress] || [];
+  changeCurrentConnecting(address: string, currentAddress: string): void {
+    const accountApprovedUrlList = this.getDappStore()
+      .accountApprovedUrlList as Record<string, string[]>;
 
-    let diffConnectedUrl = getArrayDiff(oldAccountApproved, newAccountApproved);
+    const oldAccountApproved = accountApprovedUrlList[address] || [];
+    const newAccountApproved = accountApprovedUrlList[currentAddress] || [];
+
+    const diffConnectedUrl = getArrayDiff(oldAccountApproved, newAccountApproved);
     if (newAccountApproved.length > 0) {
       this.notifyAccountChange(newAccountApproved, currentAddress);
     }
@@ -985,30 +1116,31 @@ class DappService {
     if (diffConnectedUrl.length > 0) {
       this.notifyAccountChange(diffConnectedUrl);
     }
-    return;
   }
-  notifyAccountChange(siteUrlList, connectAccount) {
-    let account = !connectAccount ? [] : [connectAccount];
+
+  notifyAccountChange(siteUrlList: string[], connectAccount?: string): void {
+    const account = !connectAccount ? [] : [connectAccount];
     browser.tabs.query({}).then((tabs) => {
-      let message = {
+      const message = {
         action: "accountsChanged",
         result: account,
       };
       for (let tabIndex = 0; tabIndex < tabs.length; tabIndex++) {
         const tab = tabs[tabIndex];
-        let origin = getOriginFromUrl(tab.url);
+        if (!tab) continue;
+        const origin = getOriginFromUrl(tab.url || "");
 
-        let tabConnectIndex = siteUrlList.indexOf(origin);
-        if (tabConnectIndex !== -1) {
+        const tabConnectIndex = siteUrlList.indexOf(origin);
+        if (tabConnectIndex !== -1 && tab.id) {
           browser.tabs.sendMessage(tab.id, message);
         }
-        continue;
       }
     });
   }
-  notifyNetworkChange(currentNet) {
-    let networkID = currentNet.networkID || "";
-    let message = {
+
+  notifyNetworkChange(currentNet: NetworkConfig): void {
+    const networkID = currentNet.networkID || "";
+    const message = {
       action: "chainChanged",
       result: {
         networkID: networkID,
@@ -1016,24 +1148,32 @@ class DappService {
     };
     this.tabNotify(message);
   }
-  tabNotify(message) {
+
+  tabNotify(message: Record<string, unknown>): void {
     browser.tabs.query({}).then((tabs) => {
-      let currentConnect = this.getDappStore().currentConnect;
+      const currentConnect = this.getDappStore().currentConnect as Record<
+        number,
+        unknown
+      >;
       for (let index = 0; index < tabs.length; index++) {
         const tab = tabs[index];
-        if (currentConnect[tab.id]) {
+        if (tab && tab.id && currentConnect[tab.id]) {
           browser.tabs.sendMessage(tab.id, message);
         }
       }
     });
   }
-  portDisconnectListener(port) {
-    let tab = port?.sender?.tab || {};
-    let tabId = tab.id;
+
+  portDisconnectListener(port: browser.Runtime.Port): void {
+    const tab = port?.sender?.tab || ({} as browser.Tabs.Tab);
+    const tabId = tab.id;
     if (!tabId) {
       return;
     }
-    let currentConnect = dappStore.getState().currentConnect;
+    const currentConnect = dappStore.getState().currentConnect as Record<
+      number,
+      unknown
+    >;
     if (currentConnect[tabId]) {
       delete currentConnect[tabId];
       dappStore.updateState({
@@ -1041,14 +1181,18 @@ class DappService {
       });
     }
   }
-  setupProviderConnection(port) {
-    let tab = port?.sender?.tab || {};
-    let tabId = tab.id;
+
+  setupProviderConnection(port: browser.Runtime.Port): void {
+    const tab = port?.sender?.tab || ({} as browser.Tabs.Tab);
+    const tabId = tab.id;
     if (!tabId) {
       return;
     }
-    let origin = port?.sender.origin;
-    let currentConnect = dappStore.getState().currentConnect;
+    const origin = (port?.sender as browser.Runtime.MessageSender & { origin?: string })?.origin;
+    const currentConnect = dappStore.getState().currentConnect as Record<
+      number,
+      unknown
+    >;
     if (!currentConnect[tabId]) {
       currentConnect[tabId] = {
         tabId: tabId,
@@ -1059,46 +1203,63 @@ class DappService {
       });
     }
   }
-  requestNetwork() {
+
+  requestNetwork(): Promise<{ networkID: string }> {
     return new Promise(async (resolve) => {
-      let netConfig = await getCurrentNodeConfig();
+      const netConfig = await getCurrentNodeConfig();
       resolve({ networkID: netConfig.networkID });
     });
   }
-  requestCurrentNetwork() {
+
+  requestCurrentNetwork(): Promise<NetworkConfig | Record<string, never>> {
     return new Promise(async (resolve) => {
-      let currentNodeConfig = await getCurrentNodeConfig();
+      const currentNodeConfig = await getCurrentNodeConfig();
       resolve(currentNodeConfig);
     });
   }
-  getAppConnectionList(address) {
-    let accountApprovedUrlList = dappStore.getState().accountApprovedUrlList;
-    let currentAccountApproved = accountApprovedUrlList[address] || [];
+
+  getAppConnectionList(address: string): string[] {
+    const accountApprovedUrlList = dappStore.getState()
+      .accountApprovedUrlList as Record<string, string[]>;
+    const currentAccountApproved = accountApprovedUrlList[address] || [];
     return currentAccountApproved;
   }
-  async checkNetworkIsExist(url) {
-    let customList = await getLocalNetworkList();
-    let allNodeList = [...Default_Network_List, ...customList];
-    let exist = checkNodeExist(allNodeList, url);
+
+  async checkNetworkIsExist(
+    url: string
+  ): Promise<{ index: number; config?: NetworkConfig }> {
+    const customList = await getLocalNetworkList();
+    const allNodeList = [...Default_Network_List, ...customList];
+    const exist = checkNodeExist(allNodeList, url);
     return exist;
   }
-  async initApproveConnect() {
-    let approveData = await get(ZKAPP_APPROVE_LIST);
+
+  async initApproveConnect(): Promise<void> {
+    const approveData = await get(ZKAPP_APPROVE_LIST) as Record<string, string> | undefined;
     if (approveData?.ZKAPP_APPROVE_LIST) {
-      let approveMap = JSON.parse(approveData?.ZKAPP_APPROVE_LIST);
+      const approveMap = JSON.parse(approveData.ZKAPP_APPROVE_LIST);
       dappStore.updateState({
         accountApprovedUrlList: approveMap,
       });
     }
   }
-  updateApproveConnect(approveMap) {
+
+  updateApproveConnect(approveMap: Record<string, string[]>): void {
     dappStore.updateState({
       accountApprovedUrlList: approveMap,
     });
     save({ ZKAPP_APPROVE_LIST: JSON.stringify(approveMap) });
   }
-  async addTokenBuildList(buildParams) {
-    const buildList = dappStore.getState().tokenBuildList;
+
+  async addTokenBuildList(buildParams: {
+    sendParams: Record<string, unknown>;
+    left?: number;
+    top?: number;
+  }): Promise<string> {
+    const buildList = dappStore.getState().tokenBuildList as Record<
+      string,
+      unknown
+    >;
     let buildID = uuidv4();
     if (buildList[buildID]) {
       buildID = uuidv4();
@@ -1111,12 +1272,12 @@ class DappService {
       tokenBuildList: buildList,
     });
 
-    let languageCode = buildParams.sendParams.langCode || "";
+    let languageCode = (buildParams.sendParams.langCode as string) || "";
     if (languageCode) {
       languageCode = `/${languageCode}`;
     }
-    let targetUrl = TOKEN_BUILD_URL + languageCode + "?buildid=" + buildID;
-    let nextOption = {};
+    const targetUrl = TokenBuildUrl + languageCode + "?buildid=" + buildID;
+    let nextOption: Record<string, number> = {};
     if (buildParams?.left && buildParams?.top) {
       nextOption = {
         left: buildParams.left + PopupSize.exitSize,
@@ -1129,34 +1290,39 @@ class DappService {
     return buildID;
   }
 
-  removeTokenBuildById(buildID) {
-    const newBuildList = tokenSignRequests.filter((item) => {
-      return item.id !== buildID;
-    });
+  removeTokenBuildById(buildID: string): void {
+    const newBuildList = tokenSignRequests.filter((item) => item.id !== buildID);
     tokenSignRequests = newBuildList;
-    const nextTokenBuildList = this.getDappStore().tokenBuildList;
+    const nextTokenBuildList = this.getDappStore().tokenBuildList as Record<
+      string,
+      unknown
+    >;
     delete nextTokenBuildList[buildID];
     dappStore.updateState({
       tokenBuildList: nextTokenBuildList,
     });
   }
-  checkSafeBuild(site) {
+
+  checkSafeBuild(site: Site): boolean {
     const buildUrl = new URL(site.origin);
     const hostname = buildUrl.hostname;
-    const whiteUrl = new URL(TOKEN_BUILD_URL);
+    const whiteUrl = new URL(TokenBuildUrl);
     if (hostname !== whiteUrl.hostname) {
       return false;
     }
     return true;
   }
 
-  getAllTokenSignParams() {
-    let list = [...tokenSignRequests];
+  getAllTokenSignParams(): SignRequest[] {
+    const list = [...tokenSignRequests];
     list.sort((a, b) => a.time - b.time);
     return list;
   }
 
-  async getTokenParamsById(payload) {
+  async getTokenParamsById(payload: {
+    site: Site;
+    params: string;
+  }): Promise<unknown> {
     const site = payload.site;
     if (!this.checkSafeBuild(site)) {
       return {
@@ -1165,7 +1331,10 @@ class DappService {
       };
     }
     const buildId = payload.params;
-    const buildList = dappStore.getState().tokenBuildList;
+    const buildList = dappStore.getState().tokenBuildList as Record<
+      string,
+      unknown
+    >;
     const nextData = buildList[buildId];
     if (nextData) {
       const data = encryptData(JSON.stringify(nextData), node_public_keys);
@@ -1173,29 +1342,40 @@ class DappService {
     }
     return nextData;
   }
-  getDecryptData(nextParams) {
+
+  getDecryptData(nextParams: { result: Record<string, unknown> }): Record<string, unknown> {
     try {
       const encrypted = nextParams.result;
-      let realUnSignTxStr = decryptData(
-        encrypted.encryptedData,
-        encrypted.encryptedAESKey,
-        encrypted.iv,
+      const realUnSignTxStr = decryptData(
+        encrypted.encryptedData as string,
+        encrypted.encryptedAESKey as string,
+        encrypted.iv as string,
         react_private_keys
       );
-      return realUnSignTxStr;
+      return realUnSignTxStr as Record<string, unknown>;
     } catch (error) {
-      return "";
+      return {};
     }
   }
-  verifyTokenBuildRes(decryptData, buildData) {
+
+  verifyTokenBuildRes(
+    decryptData: Record<string, unknown>,
+    buildData: Record<string, unknown>
+  ): boolean {
     try {
       if (!buildData) {
         return false;
       }
-      let realUnSignTx = JSON.stringify(decryptData.transaction);
+      const realUnSignTx = JSON.stringify(decryptData.transaction);
+      const sourceData = {
+        sender: buildData.sender as string,
+        receiver: buildData.receiver as string,
+        amount: buildData.amount as string | number,
+        isNewAccount: buildData.isNewAccount as boolean | undefined,
+      };
       const checkChangeStatus = verifyTokenCommand(
-        buildData,
-        buildData.tokenId,
+        sourceData,
+        buildData.tokenId as string,
         realUnSignTx
       );
       return checkChangeStatus;
@@ -1203,16 +1383,26 @@ class DappService {
       return false;
     }
   }
-  requestTokenBuildSign(id, params, site) {
+
+  requestTokenBuildSign(
+    id: string,
+    params: Record<string, unknown>,
+    site: Site
+  ): Promise<unknown> {
     return new Promise(async (resolve, reject) => {
-      let that = this;
+      const that = this;
       try {
-        let nextParams = { ...params };
-        function onMessage(message, sender, sendResponse) {
+        const nextParams: Record<string, unknown> = { ...params };
+
+        function onMessage(
+          message: { action: string; payload: Record<string, unknown> },
+          _sender: browser.Runtime.MessageSender,
+          sendResponse: () => void
+        ): boolean | void {
           const { action, payload } = message;
+
           if (action === DAPP_ACTION_CANCEL_ALL) {
-            let requestList = tokenSignRequests;
-            requestList.map((item) => {
+            tokenSignRequests.forEach((item) => {
               item.reject({
                 code: errorCodes.userRejectedRequest,
                 message: getMessageFromCode(errorCodes.userRejectedRequest),
@@ -1223,16 +1413,15 @@ class DappService {
             that.setBadgeContent();
             if (tokenSignRequests.length === 0) {
               closePopupWindow(windowId.token_sign);
-              browser.runtime.onMessage.removeListener(onMessage);
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
               that.tokenSignListener = undefined;
             }
             return;
           }
-          let currentSignParams = [...tokenSignRequests].find((item) => {
-            if (item.id === payload?.id) {
-              return item;
-            }
-          });
+
+          const currentSignParams = [...tokenSignRequests].find(
+            (item) => item.id === payload?.id
+          );
           if (!currentSignParams) {
             return;
           }
@@ -1258,10 +1447,10 @@ class DappService {
                     signedData: payload.signedData,
                   });
                 }
-                that.removeTokenBuildById(payload.id);
-                if (tokenSignRequests.length == 0) {
+                that.removeTokenBuildById(payload.id as string);
+                if (tokenSignRequests.length === 0) {
                   closePopupWindow(windowId.token_sign);
-                  browser.runtime.onMessage.removeListener(onMessage);
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.tokenSignListener = undefined;
                 }
                 that.setBadgeContent();
@@ -1270,15 +1459,15 @@ class DappService {
                   code: errorCodes.userRejectedRequest,
                   message: getMessageFromCode(errorCodes.userRejectedRequest),
                 });
-                that.removeTokenBuildById(payload.id);
-                if (tokenSignRequests.length == 0) {
+                that.removeTokenBuildById(payload.id as string);
+                if (tokenSignRequests.length === 0) {
                   closePopupWindow(windowId.token_sign);
-                  browser.runtime.onMessage.removeListener(onMessage);
+              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
                   that.tokenSignListener = undefined;
                 }
                 that.setBadgeContent();
               } else {
-                let msg =
+                const msg =
                   payload.message || getMessageFromCode(errorCodes.internal);
                 nextReject({ message: msg, code: errorCodes.internal });
               }
@@ -1287,18 +1476,23 @@ class DappService {
           }
           return false;
         }
-        const decryptData = that.getDecryptData(nextParams);
-        if (!decryptData.buildID) {
+
+        const decryptedData = that.getDecryptData(nextParams as any);
+        if (!decryptedData.buildID) {
           reject({
             message: getMessageFromCode(errorCodes.verifyFailed),
             code: errorCodes.verifyFailed,
           });
           return;
         }
-        const buildList = dappStore.getState().tokenBuildList;
-        const buildData = buildList[decryptData.buildID];
 
-        const checkBuildRes = that.verifyTokenBuildRes(decryptData, buildData);
+        const buildList = dappStore.getState().tokenBuildList as Record<
+          string,
+          Record<string, unknown>
+        >;
+        const buildData = buildList[decryptedData.buildID as string] || {};
+
+        const checkBuildRes = that.verifyTokenBuildRes(decryptedData, buildData);
         if (!checkBuildRes) {
           reject({
             message: getMessageFromCode(errorCodes.verifyFailed),
@@ -1306,14 +1500,17 @@ class DappService {
           });
           return;
         }
-        closePopupWindow("tokenSign_" + decryptData.buildID);
+
+        closePopupWindow("tokenSign_" + decryptedData.buildID);
         nextParams.buildData = buildData;
-        nextParams.result = decryptData.transaction;
+        nextParams.result = decryptedData.transaction;
+
         if (!that.tokenSignListener) {
-          that.tokenSignListener =
-            browser.runtime.onMessage.addListener(onMessage);
+          browser.runtime.onMessage.addListener(onMessage as BrowserMessageListener);
+          that.tokenSignListener = onMessage;
         }
-        let time = new Date().getTime();
+
+        const time = new Date().getTime();
         tokenSignRequests.push({
           id,
           params: nextParams,
@@ -1342,7 +1539,13 @@ class DappService {
       }
     });
   }
-  getAllPendingZK() {
+
+  getAllPendingZK(): {
+    signRequests: SignRequest[];
+    chainRequests: SignRequest[];
+    approveRequests: ApproveRequest[];
+    tokenSignRequests: SignRequest[];
+  } {
     return {
       signRequests,
       chainRequests,
@@ -1350,18 +1553,20 @@ class DappService {
       tokenSignRequests,
     };
   }
-  async getWalletInfo() {
-    let isCreate = await this.checkLocalWallet();
-    const pkg = require("../../package.json");
+
+  async getWalletInfo(): Promise<{ version: string; init: boolean }> {
+    const isCreate = await this.checkLocalWallet();
     const baseWalletInfo = {
       version: pkg.version,
       init: isCreate,
     };
     return baseWalletInfo;
   }
-  async revokePermissions(params) {
+
+  async revokePermissions(params: { site: Site }): Promise<string[]> {
     const targetOrigin = params.site.origin;
-    const accountApprovedUrlList = dappStore.getState().accountApprovedUrlList;
+    const accountApprovedUrlList = dappStore.getState()
+      .accountApprovedUrlList as Record<string, string[]>;
     const res = removeUrlFromArrays(accountApprovedUrlList, targetOrigin);
     this.updateApproveConnect(res);
     return [];

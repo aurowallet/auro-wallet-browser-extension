@@ -1,2 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).regeneratorRuntime = undefined;
+// Extend globalThis to include regeneratorRuntime property
+export {}; // Make this a module
+
+declare global {
+  // eslint-disable-next-line no-var
+  var regeneratorRuntime: unknown;
+}
+
+globalThis.regeneratorRuntime = undefined;

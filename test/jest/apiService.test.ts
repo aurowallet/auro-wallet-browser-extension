@@ -318,9 +318,9 @@ describe('APIService', () => {
 
     it('should unlock successfully with V1 vault format', async () => {
       const mockVaultV1 = [{
-        currentAddress: TEST_DATA.accounts[0].pubKey,
+        currentAddress: TEST_DATA.accounts[0]!.pubKey,
         mnemonic: 'encrypted_mnemonic',
-        accounts: [{ address: TEST_DATA.accounts[0].pubKey, accountName: 'Account 1', type: 'WALLET_INSIDE', hdPath: 0 }],
+        accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, accountName: 'Account 1', type: 'WALLET_INSIDE', hdPath: 0 }],
       }];
       mockEncryptUtils.decrypt.mockResolvedValue(mockVaultV1);
 
@@ -716,14 +716,14 @@ describe('APIService', () => {
   describe('getAccountWithoutPrivate', () => {
     it('should remove privateKey from account', () => {
       const account = {
-        address: TEST_DATA.accounts[0].pubKey,
+        address: TEST_DATA.accounts[0]!.pubKey,
         privateKey: '{"data":"encrypted"}',
         accountName: 'Account 1',
       };
 
       const result = apiService.getAccountWithoutPrivate(account);
 
-      expect(result).toHaveProperty('address', TEST_DATA.accounts[0].pubKey);
+      expect(result).toHaveProperty('address', TEST_DATA.accounts[0]!.pubKey);
       expect(result).toHaveProperty('accountName', 'Account 1');
       expect(result.privateKey).toBeUndefined();
     });
