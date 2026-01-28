@@ -46,22 +46,21 @@ const HomePage = () => {
         dispatch(updateLocalShowedTokenId(Array.isArray(tokenIds) ? tokenIds:[]));
      }
 
+    let localTokenConfig = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG)
+    if(localTokenConfig){
+      let tokenConfigMap = safeJsonParse(localTokenConfig)
+      if(tokenConfigMap && tokenConfigMap[address]){
+        let tokenConfig = tokenConfigMap[address]
+        dispatch(updateLocalTokenConfig(tokenConfig, ''))
+      }
+    }
+
     let localTokenAssets = getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS)
     if (localTokenAssets) {
       let tokenAssetsMap = safeJsonParse(localTokenAssets)
       let tokenAssets = tokenAssetsMap ? tokenAssetsMap[address] : ""
       if (tokenAssets) {
         dispatch(updateTokenAssets(tokenAssets,true));
-
-        let localTokenConfig = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG)
-        if(localTokenConfig){
-          let tokenConfigMap = safeJsonParse(localTokenConfig)
-          if(tokenConfigMap && tokenConfigMap[address]){
-            let tokenConfig = tokenConfigMap[address]
-            dispatch(updateLocalTokenConfig(tokenConfig, ''))
-          }
-        }
-
       }
     }
   }, [])

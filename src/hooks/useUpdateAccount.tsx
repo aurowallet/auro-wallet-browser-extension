@@ -74,10 +74,7 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
               if (tokenConfigMap && tokenConfigMap[address]) {
                 const tokenConfig = tokenConfigMap[address];
                 if (!isDev && tokenConfig) {
-                  // tokenConfig is per-address config, iterate through tokenIds
-                  Object.keys(tokenConfig).forEach((tokenId: string) => {
-                    dispatch(updateLocalTokenConfig(tokenConfig[tokenId], tokenId));
-                  });
+                  dispatch(updateLocalTokenConfig(tokenConfig, ''));
                 }
               }
             }
