@@ -126,6 +126,7 @@ function getLocalCurrencyConfig(appStore: typeof store): void {
 interface CurrentAccountResponse {
   localAccount?: { keyringData?: unknown };
   isUnlocked?: boolean;
+  address?: string;
   [key: string]: unknown;
 }
 
@@ -137,7 +138,8 @@ async function initAccountInfo(appStore: typeof store): Promise<string> {
       },
       async (currentAccount: CurrentAccountResponse) => {
         let nextRoute = "";
-        if (currentAccount?.localAccount?.keyringData) {
+        const hasValidWallet = currentAccount?.localAccount?.keyringData && currentAccount?.address;
+        if (hasValidWallet) {
           if (currentAccount.isUnlocked) {
             appStore.dispatch(initCurrentAccount(currentAccount));
           } else {

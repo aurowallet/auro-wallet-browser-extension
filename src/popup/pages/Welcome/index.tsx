@@ -19,7 +19,6 @@ import { setWelcomeNextType } from "../../../reducers/cache";
 import { openTab, sendMsg } from "../../../utils/commonMsg";
 import Button, { button_theme } from "../../component/Button";
 import { CreateProcessPage } from "../CreateProcessPage";
-import { LedgerPage } from "../LedgerPage";
 
 const type_conditions = "conditions";
 const type_policy = "policy";
@@ -92,7 +91,6 @@ const StyledModalTip = styled.span`
 const RegisterStep = {
   welcome: "welcome",
   process: "process",
-  ledger: "ledger",
 };
 const Welcome = () => {
   const cache = useAppSelector((state) => state.cache);
@@ -124,8 +122,9 @@ const Welcome = () => {
       return;
     }
 
-    sendMsg({ action: WALLET_GET_CURRENT_ACCOUNT }, (currentAccount: { localAccount?: { keyringData?: unknown }; isUnlocked?: boolean }) => {
-      if (currentAccount?.localAccount?.keyringData) {
+    sendMsg({ action: WALLET_GET_CURRENT_ACCOUNT }, (currentAccount: { localAccount?: { keyringData?: unknown }; isUnlocked?: boolean; address?: string }) => {
+      const hasValidWallet = currentAccount?.localAccount?.keyringData && currentAccount?.address;
+      if (hasValidWallet) {
         // Wallet exists, redirect based on lock status
         if (currentAccount.isUnlocked) {
           navigate("/homepage");
@@ -172,15 +171,11 @@ const Welcome = () => {
   const goPage = useCallback((route: string, type?: string) => {
     if (type === "saveProtocol") {
       saveLocal(USER_AGREEMENT, "true");
-    }
-
-    // Ledger: show ledger component inline
-    if (route === WALLET_CREATE_TYPE.ledger) {
-      setRegisterStep(RegisterStep.ledger);
-      return;
+      setIsGotoProtocol(false);
     }
 
     dispatch(setWelcomeNextType(route));
+    // Ledger also goes through CreateProcessPage for password creation first
     setRegisterStep(RegisterStep.process);
   }, []);
 
@@ -302,9 +297,6 @@ const Welcome = () => {
       )}
       {registerStep === RegisterStep.process && (
         <CreateProcessPage onClickPre={onClickPre} />
-      )}
-      {registerStep === RegisterStep.ledger && (
-        <LedgerPage onClickPre={onClickPre} />
       )}
     </StyledPageOuterWrapper>
   );

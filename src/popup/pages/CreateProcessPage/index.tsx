@@ -23,6 +23,7 @@ import { CreatePwdView } from "./CreatePwdView";
 import { CreateResultView } from "./CreateResultView";
 import { MnemonicView } from "./MnemonicView";
 import { RestoreMneView } from "./RestoreMneView";
+import { LedgerPage } from "../LedgerPage";
 
 const StyledTabContent = styled.div<StyledTabContentProps>`
   width: 100%;
@@ -37,6 +38,7 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [showMore,setShowMore] = useState(false);
   const [hasExistingWallet, setHasExistingWallet] = useState(false);
+  const [ledgerStep, setLedgerStep] = useState(0);
   
   useEffect(() => {
     // Check if wallet already exists (user is unlocked means wallet exists)
@@ -65,6 +67,35 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
     return welcomeNextType === WALLET_CREATE_TYPE.restore;
   }, []);
 
+  const showLedger = useMemo(() => {
+    return welcomeNextType === WALLET_CREATE_TYPE.ledger;
+  }, []);
+
+  const onLedgerStepChange = useCallback((step: number) => {
+    setLedgerStep(step);
+  }, []);
+
+  // Calculate combined progress for Ledger flow
+  const combinedTabIndex = useMemo(() => {
+    if (showLedger && tabIndex === 1) {
+      // For existing wallet, ledgerStep starts from 0 directly
+      // For new wallet, password(1) + ledgerStep
+      return hasExistingWallet ? ledgerStep : 1 + ledgerStep;
+    }
+    return tabIndex;
+  }, [showLedger, tabIndex, ledgerStep, hasExistingWallet]);
+
+  // Total steps for progress bar
+  const totalSteps = useMemo(() => {
+    if (showLedger) {
+      // Existing wallet: 3 ledger steps only (connect, name, success)
+      // New wallet: password + 3 ledger steps = 4
+      return hasExistingWallet ? 3 : 4;
+    }
+    if (showRestore) return 2; // password + restore
+    return 4; // password + mnemonic + confirm + success
+  }, [showLedger, showRestore, hasExistingWallet]);
+
   const onSwitchMneCount = useCallback((isShowMore: boolean)=>{
     setShowMore(isShowMore)
   },[showRestore])
@@ -77,11 +108,16 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
 
   return (
     <StyledPageInnerContent $showMore={showMore}>
-      <StepTabs selected={tabIndex}>
+      <StepTabs selected={tabIndex} totalSteps={totalSteps} progressIndex={combinedTabIndex}>
         <StyledTabContent id={1}>
           <CreatePwdView onClickNextTab={onClickNextTab} onClickPre={onClickPre}/>
         </StyledTabContent>
-        {!showRestore && (
+        {showLedger && (
+          <StyledTabContent id={2}>
+            <LedgerPage onClickPre={onClickPreTab} isEmbedded={true} onStepChange={onLedgerStepChange} />
+          </StyledTabContent>
+        )}
+        {!showRestore && !showLedger && (
           <StyledTabContent id={2}>
             <MnemonicView
               onClickNext={onClickNextTab}
@@ -89,7 +125,7 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
             />
           </StyledTabContent>
         )}
-        {!showRestore && (
+        {!showRestore && !showLedger && (
           <StyledTabContent id={3}>
             <ConfirmMneView
               onClickNext={onClickNextTab}
@@ -106,9 +142,11 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
             />
           </StyledTabContent>
         )}
-        <StyledTabContent id={5}>
-          <CreateResultView />
-        </StyledTabContent>
+        {!showLedger && (
+          <StyledTabContent id={5}>
+            <CreateResultView />
+          </StyledTabContent>
+        )}
       </StepTabs>
     </StyledPageInnerContent>
   );

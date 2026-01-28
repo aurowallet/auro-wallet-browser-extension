@@ -14,6 +14,9 @@ interface StepTabsProps {
   selected?: number;
   children?: ReactNode;
   onSelect?: (index: number, id?: string) => void;
+  hideProgress?: boolean;
+  totalSteps?: number;
+  progressIndex?: number;
 }
 
 const StyledTabContainer = styled.div`
@@ -73,20 +76,21 @@ const StyledPanel = styled.div<StyledPanelProps>`
  * @param {React.ReactNode} props.children - tab panels content
  * @param {Function} props.onSelect - selected callback (index, id)
  */
-export const StepTabs = ({ selected = 0, children, onSelect }: StepTabsProps) => {
+export const StepTabs = ({ selected = 0, children, onSelect, hideProgress, totalSteps: customTotalSteps, progressIndex }: StepTabsProps) => {
   const indicatorRef = useRef<HTMLSpanElement>(null);
   const childrenArray = React.Children.toArray(children) as React.ReactElement<StepTabChildProps>[];
-  const totalSteps = childrenArray.length;
+  const totalSteps = customTotalSteps ?? childrenArray.length;
+  const currentProgressIndex = progressIndex ?? selected;
 
   const updateIndicator = useCallback(() => {
     if (indicatorRef.current && totalSteps > 0) {
       // Each step shows its own segment (e.g., 25% width at step position)
       const stepWidth = 100 / totalSteps;
-      const leftPosition = selected * stepWidth;
+      const leftPosition = currentProgressIndex * stepWidth;
       indicatorRef.current.style.width = `${stepWidth}%`;
       indicatorRef.current.style.left = `${leftPosition}%`;
     }
-  }, [selected, totalSteps]);
+  }, [currentProgressIndex, totalSteps]);
 
   useEffect(() => {
     updateIndicator();
@@ -103,9 +107,11 @@ export const StepTabs = ({ selected = 0, children, onSelect }: StepTabsProps) =>
 
   return (
     <StyledTabContainer>
-      <StyledIndicatorContainer>
-        <StyledIndicator ref={indicatorRef} />
-      </StyledIndicatorContainer>
+      {!hideProgress && (
+        <StyledIndicatorContainer>
+          <StyledIndicator ref={indicatorRef} />
+        </StyledIndicatorContainer>
+      )}
       <StyledPanelsContainer>
         <StyledPanelTracker>{panels}</StyledPanelTracker>
       </StyledPanelsContainer>

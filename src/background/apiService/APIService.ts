@@ -1409,7 +1409,17 @@ class APIService {
       let data = this.getStore().data;
       const version = getVaultVersion(data);
 
-      if (version === "v2") {
+      // For first-time import or V2 vault, use V2 logic
+      if (version === "v2" || !data) {
+        // Create new V2 vault if no data exists
+        if (!data) {
+          data = {
+            version: 2,
+            keyrings: [],
+            currentKeyringId: null,
+            createdAt: Date.now(),
+          };
+        }
         return this._addImportAccountV2(data, wallet, accountName);
       }
 
@@ -1548,7 +1558,17 @@ class APIService {
       let data = this.getStore().data;
       const version = getVaultVersion(data);
 
-      if (version === "v2") {
+      // For first-time Ledger setup or V2 vault, use V2 logic
+      if (version === "v2" || !data) {
+        // Create new V2 vault if no data exists
+        if (!data) {
+          data = {
+            version: 2,
+            keyrings: [],
+            currentKeyringId: null,
+            createdAt: Date.now(),
+          };
+        }
         return this._addLedgerAccountV2(
           data,
           address,
@@ -1586,7 +1606,8 @@ class APIService {
       save({ keyringData: encryptData });
       return this.getAccountWithoutPrivate(account);
     } catch (error) {
-      return { error: JSON.stringify(error) };
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { error: errorMessage || "Import failed" };
     }
   };
 

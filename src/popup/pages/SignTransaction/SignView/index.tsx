@@ -655,18 +655,22 @@ const SignView = ({
             signature: signature,
           };
         } else if (sendAction === DAppActions.mina_sendTransaction) {
+          setConfirmModalStatus(false);
           return true;
         } else {
           Toast.info(i18n.t("notSupportNow"));
+          setConfirmModalStatus(false);
           return false;
         }
 
         if (result?.rejected) {
           Toast.info(i18n.t("ledgerRejected"));
+          setConfirmModalStatus(false);
           return false;
         }
         if (result?.error) {
           Toast.info(result.error.message || "Signature failed");
+          setConfirmModalStatus(false);
           return false;
         }
 
@@ -684,6 +688,7 @@ const SignView = ({
           const txResponse = response as { error?: unknown };
           if (txResponse.error) {
             Toast.info(getRealErrorMsg(txResponse.error) || i18n.t("postFailed"));
+            setConfirmModalStatus(false);
             return;
           }
         }
@@ -693,6 +698,7 @@ const SignView = ({
         return true;
       } catch (err) {
         Toast.info("Transaction failed");
+        setConfirmModalStatus(false);
         return false;
       } finally {
         setBtnLoading(false);
@@ -1093,6 +1099,13 @@ const SignView = ({
       if (!support) {
         return;
       }
+      const { status } = await ledgerManager.ensureConnect();
+      dispatch(updateLedgerConnectStatus(status));
+      if (status !== LEDGER_STATUS.READY) {
+        setLedgerModalStatus(true);
+        return;
+      }
+      setConfirmModalStatus(true);
       clickNextStep();
     } else {
       dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
@@ -1115,6 +1128,7 @@ const SignView = ({
     zkOnlySign,
     handleLedgerSign,
     checkLedgerSupport,
+    dispatch,
   ]);
 
   const onClickAdvance = useCallback(() => {

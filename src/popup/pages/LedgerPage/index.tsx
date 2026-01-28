@@ -54,7 +54,13 @@ const Tip_Type = {
 
   grantSuccess: "grantSuccess",
 };
-export const LedgerPage = ({ onClickPre }: { onClickPre?: () => void }) => {
+interface LedgerPageProps {
+  onClickPre?: () => void;
+  isEmbedded?: boolean;
+  onStepChange?: (step: number) => void;
+}
+
+export const LedgerPage = ({ onClickPre, isEmbedded, onStepChange }: LedgerPageProps) => {
 
   const [tabIndex, setTabIndex] = useState(0);
   const [tipType, setTipType] = useState(Tip_Type.init);
@@ -71,8 +77,26 @@ export const LedgerPage = ({ onClickPre }: { onClickPre?: () => void }) => {
     };
   }, []);
   const onClickNextTab = useCallback(() => {
-    setTabIndex((state) => state + 1);
-  }, []);
+    setTabIndex((state) => {
+      const newIndex = state + 1;
+      onStepChange?.(newIndex);
+      return newIndex;
+    });
+  }, [onStepChange]);
+
+  const onClickPreTab = useCallback(() => {
+    if (tabIndex === 0) {
+      // At first step, go back to parent
+      onClickPre?.();
+    } else {
+      // Go back within LedgerPage
+      setTabIndex((state) => {
+        const newIndex = state - 1;
+        onStepChange?.(newIndex);
+        return newIndex;
+      });
+    }
+  }, [tabIndex, onClickPre, onStepChange]);
 
   const getWalletLockStatus = useCallback(() => {
     return new Promise((resolve) => {
@@ -87,33 +111,46 @@ export const LedgerPage = ({ onClickPre }: { onClickPre?: () => void }) => {
     });
   }, []);
 
+  const isFirstTimeSetup = !!onClickPre;
+
+  const connectLedger = useCallback(() => {
+    ledgerManager.requestConnect().then(({ status }) => {
+      if (status === LEDGER_STATUS.READY) {
+        if (!isLedgerPermission) onClickNextTab();
+        if (isLedgerPermission) {
+          setIsShowSuccessTip(true);
+          setTipType(Tip_Type.grantSuccess);
+        }
+      } else if (status === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
+        setTipType(Tip_Type.openLedgerApp);
+      } else {
+        setTipType(Tip_Type.openLedger);
+      }
+    });
+  }, [isLedgerPermission, onClickNextTab]);
+
   const onClickConnect = useCallback(() => {
     if (isShowSuccessTip) {
       window.close();
       return;
     }
     setTipType(Tip_Type.init);
+
+    // Skip lock status check for first-time wallet setup (no wallet exists yet)
+    if (isFirstTimeSetup) {
+      connectLedger();
+      return;
+    }
+
+    // For existing wallets, check if wallet is unlocked before connecting
     getWalletLockStatus().then((ok) => {
       if (!ok) {
         setTipType(Tip_Type.openLockStatus);
         return;
       }
-
-      ledgerManager.requestConnect().then(({ status }) => {
-        if (status === LEDGER_STATUS.READY) {
-          if (!isLedgerPermission) onClickNextTab();
-          if (isLedgerPermission) {
-            setIsShowSuccessTip(true);
-            setTipType(Tip_Type.grantSuccess);
-          }
-        } else if (status === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
-          setTipType(Tip_Type.openLedgerApp);
-        } else {
-          setTipType(Tip_Type.openLedger);
-        }
-      });
+      connectLedger();
     });
-  }, [isShowSuccessTip, isLedgerPermission, onClickNextTab]);
+  }, [isShowSuccessTip, isFirstTimeSetup, connectLedger, getWalletLockStatus]);
   const onClickImport = useCallback(() => {
     onClickNextTab();
   }, []);
@@ -144,12 +181,12 @@ export const LedgerPage = ({ onClickPre }: { onClickPre?: () => void }) => {
   return (
     <StyledOuterContainer>
       <StyledInnerContainer>
-        <StepTabs selected={tabIndex} children={[
+        <StepTabs selected={tabIndex} hideProgress={isEmbedded} children={[
           <StyledInnerContent key={1} id={"1"}>
             <LedgerConnectView
               isLedgerPermission={isLedgerPermission}
               onClickNext={onClickConnect}
-              onClickPre={onClickPre}
+              onClickPre={onClickPreTab}
               tipContent={tipContent}
               isShowSuccessTip={isShowSuccessTip}
             />
@@ -158,7 +195,7 @@ export const LedgerPage = ({ onClickPre }: { onClickPre?: () => void }) => {
             <StyledInnerContent key={2} id={2 as any}>
               <AccountNameView
                 onClickNext={onClickImport}
-                onClickPre={onClickPre}
+                onClickPre={onClickPreTab}
                 tipContent={tipContent}
                 onClickConnect={onClickConnect}
               />
@@ -169,8 +206,8 @@ export const LedgerPage = ({ onClickPre }: { onClickPre?: () => void }) => {
               <CreateResultView
                 onClickDone={onClickDone}
                 contents={[i18n.t("ledgerSuccess"), i18n.t("returnEx")]}
-                showFollowUs={false}
-                showExtTip={false}
+                showFollowUs={true}
+                showExtTip={true}
               />
             </StyledInnerContent>
           )
