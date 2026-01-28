@@ -92,7 +92,7 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
       // New wallet: password + 3 ledger steps = 4
       return hasExistingWallet ? 3 : 4;
     }
-    if (showRestore) return 2; // password + restore
+    if (showRestore) return 3; // password + restore + success
     return 4; // password + mnemonic + confirm + success
   }, [showLedger, showRestore, hasExistingWallet]);
 
