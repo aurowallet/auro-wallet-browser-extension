@@ -132,15 +132,23 @@ interface CurrentAccountResponse {
 
 async function initAccountInfo(appStore: typeof store): Promise<string> {
   return new Promise((resolve) => {
+    // Timeout to prevent infinite loading if background script doesn't respond
+    const timeoutId = setTimeout(() => {
+      resolve(ENTRY_WITCH_ROUTE.WELCOME);
+    }, 3000);
+
     sendMsg(
       {
         action: WALLET_GET_CURRENT_ACCOUNT,
       },
       async (currentAccount: CurrentAccountResponse) => {
+        clearTimeout(timeoutId);
         let nextRoute = "";
-        const hasValidWallet = currentAccount?.localAccount?.keyringData && currentAccount?.address;
-        if (hasValidWallet) {
-          if (currentAccount.isUnlocked) {
+        // Check if wallet data exists (keyringData indicates encrypted vault exists)
+        // Note: address is only available when unlocked
+        const hasWalletData = !!currentAccount?.localAccount?.keyringData;
+        if (hasWalletData) {
+          if (currentAccount.isUnlocked && currentAccount.address) {
             appStore.dispatch(initCurrentAccount(currentAccount));
           } else {
             nextRoute = ENTRY_WITCH_ROUTE.LOCK_PAGE;

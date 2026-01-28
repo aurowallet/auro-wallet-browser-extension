@@ -67,11 +67,15 @@ const MainRouter = () => {
       case ENTRY_WITCH_ROUTE.LOCK_PAGE:
         setNextRoute(<LockPage />);
         return;
+      case ENTRY_WITCH_ROUTE.WELCOME:
+        // Redirect to register page for new wallet setup
+        navigate("/register_page");
+        return;
       default:
         setNextRoute(<LoadingView />);
         return;
     }
-  }, [entryWitchRoute]);
+  }, [entryWitchRoute, navigate]);
 
   return nextRoute;
 };

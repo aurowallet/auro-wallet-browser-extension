@@ -122,11 +122,26 @@ const Welcome = () => {
       return;
     }
 
+    let isHandled = false;
+    
+    // Timeout to prevent infinite loading (e.g., after downgrade installation)
+    const timeoutId = setTimeout(() => {
+      if (!isHandled) {
+        isHandled = true;
+        setIsCheckingWallet(false);
+      }
+    }, 3000);
+
     sendMsg({ action: WALLET_GET_CURRENT_ACCOUNT }, (currentAccount: { localAccount?: { keyringData?: unknown }; isUnlocked?: boolean; address?: string }) => {
-      const hasValidWallet = currentAccount?.localAccount?.keyringData && currentAccount?.address;
-      if (hasValidWallet) {
+      if (isHandled) return;
+      isHandled = true;
+      clearTimeout(timeoutId);
+      
+      // Check if wallet data exists (keyringData indicates encrypted vault exists)
+      const hasWalletData = !!currentAccount?.localAccount?.keyringData;
+      if (hasWalletData) {
         // Wallet exists, redirect based on lock status
-        if (currentAccount.isUnlocked) {
+        if (currentAccount.isUnlocked && currentAccount.address) {
           navigate("/homepage");
         } else {
           navigate("/lock_page");
@@ -136,6 +151,10 @@ const Welcome = () => {
         setIsCheckingWallet(false);
       }
     });
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [navigate, isAddWalletFlow]);
 
   const onClickGuide = useCallback(
