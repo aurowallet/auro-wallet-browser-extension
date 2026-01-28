@@ -457,8 +457,11 @@ export const TokenAction = ({ type, isFungibleToken }: TokenActionProps) => {
     return { title, nextRouter, actionIconUrl, isReceive };
   }, [type]);
   const onClickActionBtn = useCallback(() => {
+    if (type === token_action_type.delegation) {
+      sessionStorage.setItem('staking_origin', 'token_detail');
+    }
     navigate(nextRouter, { state: { isFromTokenPage: true, isFungibleToken } });
-  }, [nextRouter, isFungibleToken]);
+  }, [nextRouter, isFungibleToken, type]);
   return (
     <StyledActionItemWrapper onClick={onClickActionBtn}>
       <StyledIconWrapper rotate={String(isReceive)}>

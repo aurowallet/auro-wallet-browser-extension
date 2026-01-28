@@ -158,7 +158,9 @@ const StakingTransfer = () => {
           () => {}
         );
       }
-      if (window.history.length >= 4) {
+      const stakingOrigin = sessionStorage.getItem('staking_origin');
+      sessionStorage.removeItem('staking_origin');
+      if (stakingOrigin === 'token_detail') {
         navigate(-3);
       } else {
         navigate("/");
