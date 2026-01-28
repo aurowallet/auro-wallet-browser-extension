@@ -9,7 +9,7 @@ export const StyledOuterContainer = styled.div`
 
 export const StyledInnerContainer = styled.div`
   width: 750px;
-  height: 600px;
+  min-height: 600px;
   position: relative;
   background: #ffffff;
   border-radius: 20px;
