@@ -605,17 +605,20 @@ class APIService {
     let currentAccount = this.getStore().currentAccount;
     let isUnlocked = this.getStore().isUnlocked;
 
+    // Check if keyringData actually exists (not just empty object from storage)
+    const hasKeyringData = localAccount && localAccount.keyringData;
+
     // Handle case when vault is cleared (no current account or empty object)
     if (!currentAccount || !currentAccount.address) {
       let iconStatus = !initStatus || isUnlocked;
       this.setPopupIcon(iconStatus);
       return {
         isUnlocked,
-        localAccount: localAccount ? { keyringData: "keyringData" } : null,
+        localAccount: hasKeyringData ? { keyringData: "keyringData" } : null,
       };
     }
 
-    if (localAccount && localAccount.keyringData) {
+    if (hasKeyringData) {
       initStatus = true;
       currentAccount.localAccount = {
         keyringData: "keyringData",
