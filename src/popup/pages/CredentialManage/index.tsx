@@ -39,18 +39,28 @@ const CredentialManage = ({}) => {
       },
       (credentials: { id: string; credential: string }[]) => {
         const list: CredentialItem[] = [];
+        if (!Array.isArray(credentials)) {
+          console.error("Credentials is not an array:", credentials);
+          setCredentialList([]);
+          return;
+        }
         for (let index = 0; index < credentials.length; index++) {
           const credential = credentials[index];
-          const displayCredentialData = getSimplifyCredentialData(JSON.parse(credential?.credential || '{}'));
-          const parseCredential = getCredentialDisplayData(
-            displayCredentialData
-          );
-          list.push({
-            id: credential?.id || '',
-            credential: credential?.credential || '',
-            displayCredentialData,
-            parseCredential,
-          });
+          try {
+            const parsedCredential = JSON.parse(credential?.credential || '{}');
+            const displayCredentialData = getSimplifyCredentialData(parsedCredential);
+            const parseCredential = getCredentialDisplayData(
+              displayCredentialData
+            );
+            list.push({
+              id: credential?.id || '',
+              credential: credential?.credential || '',
+              displayCredentialData,
+              parseCredential,
+            });
+          } catch (error) {
+            console.error("Error parsing credential:", error, credential);
+          }
         }
         setCredentialList(list);
       }

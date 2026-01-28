@@ -12,7 +12,11 @@
  * // For UI logic:
  * debugLog.ui('PageName', 'actionName', data);
  *
- * TO REMOVE: Delete this file and remove all debugLog imports/calls
+ * // To view all logged pages/components:
+ * debugLog.getLoggedPages();
+ * debugLog.getLoggedComponents();
+ * debugLog.printSummary();
+ * debugLog.clear() 
  */
 
 const DEBUG_ENABLED = true;
@@ -22,7 +26,12 @@ const STYLES = {
   component:
     "background: #0db27c; color: white; padding: 2px 6px; border-radius: 3px;",
   ui: "background: #e4b200; color: black; padding: 2px 6px; border-radius: 3px;",
+  summary: "background: #333; color: #fff; padding: 2px 6px; border-radius: 3px;",
 } as const;
+
+// Track logged pages and components
+const loggedPages = new Set<string>();
+const loggedComponents = new Set<string>();
 
 export const debugLog = {
   /**
@@ -30,6 +39,7 @@ export const debugLog = {
    */
   page: (pageName: string): void => {
     if (!DEBUG_ENABLED) return;
+    loggedPages.add(pageName);
     console.log(`%c[PAGE] ${pageName}`, STYLES.page, "- mounted");
   },
 
@@ -38,6 +48,7 @@ export const debugLog = {
    */
   component: (componentName: string): void => {
     if (!DEBUG_ENABLED) return;
+    loggedComponents.add(componentName);
     console.log(`%c[COMPONENT] ${componentName}`, STYLES.component, "- mounted");
   },
 
@@ -52,6 +63,43 @@ export const debugLog = {
       console.log(`%c[UI] ${source}`, STYLES.ui, `- ${action}`);
     }
   },
+
+  /**
+   * Get all logged pages as array
+   */
+  getLoggedPages: (): string[] => {
+    return Array.from(loggedPages).sort();
+  },
+
+  /**
+   * Get all logged components as array
+   */
+  getLoggedComponents: (): string[] => {
+    return Array.from(loggedComponents).sort();
+  },
+
+  /**
+   * Print summary of all logged pages and components
+   */
+  printSummary: (): void => {
+    const pages = Array.from(loggedPages).sort();
+    const components = Array.from(loggedComponents).sort();
+    console.log(`%c[DEBUG SUMMARY]`, STYLES.summary, `\nPages (${pages.length}):`, pages, `\nComponents (${components.length}):`, components);
+  },
+
+  /**
+   * Clear logged records
+   */
+  clear: (): void => {
+    loggedPages.clear();
+    loggedComponents.clear();
+    console.log(`%c[DEBUG]`, STYLES.summary, "Cleared all logged records");
+  },
 };
+
+// Expose to window for easy console access
+if (typeof window !== 'undefined') {
+  (window as unknown as { debugLog: typeof debugLog }).debugLog = debugLog;
+}
 
 export default debugLog;

@@ -23,7 +23,14 @@ interface SafeParseResult {
 export const getSimplifyCredentialData = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   credential: any
-): Record<string, unknown> => PrettyPrinter.simplifyCredentialData(credential) || {};
+): Record<string, unknown> => {
+  try {
+    return PrettyPrinter.simplifyCredentialData(credential) || {};
+  } catch (error) {
+    console.error("Error in getSimplifyCredentialData:", error);
+    return {};
+  }
+};
 
 export const getPrintPresentationRequest = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -66,6 +66,7 @@ import { normalizeVault, validateVault } from "../vaultMigration";
 // TypeScript types
 interface AccountInfo {
   address: string;
+  [key: string]: any;
   accountName?: string;
   type?: string;
   hdPath?: number;
@@ -75,6 +76,51 @@ interface AccountInfo {
   typeIndex?: number;
   localAccount?: { keyringData: string };
   isUnlocked?: boolean;
+  name?: string;
+  vaultVersion?: string;
+  didMigrate?: boolean;
+}
+
+interface V2Vault {
+  version: number;
+  keyrings: Keyring[];
+  currentKeyringId: string;
+  nextWalletIndex?: number;
+}
+
+interface V2Account {
+  address: string;
+  name?: string;
+  hdIndex?: number;
+  privateKey?: string;
+}
+
+interface MigrateResult {
+  data: VaultData;
+  version: string;
+  didMigrate: boolean;
+}
+
+interface ErrorResult {
+  error: string;
+  type?: string;
+  account?: { accountName?: string; address?: string };
+  existingAccount?: { address?: string; accountName?: string };
+}
+
+interface TransactionParams {
+  isSpeedUp?: boolean;
+  memo?: string;
+  zkOnlySign?: boolean;
+  sendAction?: string;
+}
+
+interface SignedTransaction {
+  data: {
+    zkappCommand?: unknown;
+  };
+  signature?: string;
+  error?: string;
 }
 
 interface V1Wallet {
@@ -86,6 +132,7 @@ interface V1Wallet {
 type V1Vault = V1Wallet[];
 
 type VaultData = Vault | V1Vault | null;
+type AnyVault = any;
 
 interface SortedAccountList {
   allList: AccountInfo[];
@@ -126,8 +173,8 @@ const getAllAccountsFromVault = (data: VaultData): AccountInfo[] => {
 
   if (isV2Vault(data)) {
     // V2: collect accounts from all keyrings
-    const accounts = [];
-    const typeIndexCounters = {
+    const accounts: AccountInfo[] = [];
+    const typeIndexCounters: Record<string, number> = {
       [ACCOUNT_TYPE.WALLET_INSIDE]: 0,
       [ACCOUNT_TYPE.WALLET_OUTSIDE]: 0,
       [ACCOUNT_TYPE.WALLET_LEDGER]: 0,
@@ -135,7 +182,7 @@ const getAllAccountsFromVault = (data: VaultData): AccountInfo[] => {
     };
 
     data.keyrings.forEach((keyring) => {
-      keyring.accounts.forEach((acc) => {
+      keyring.accounts.forEach((acc: any) => {
         const accountType = keyringTypeToAccountType(keyring.type);
         typeIndexCounters[accountType]++;
 
@@ -166,12 +213,12 @@ const getMnemonicFromVault = (data: VaultData): string | null => {
 
   if (isV2Vault(data)) {
     // V2: get from first HD keyring
-    const hdKeyring = data.keyrings.find((kr) => kr.type === KEYRING_TYPE.HD);
+    const hdKeyring = data.keyrings.find((kr) => kr.type === KEYRING_TYPE.HD) as any;
     return hdKeyring?.mnemonic || null;
   }
 
   // V1: return mnemonic from first wallet
-  return data[0]?.mnemonic || null;
+  return (data as any)[0]?.mnemonic || null;
 };
 
 /**
@@ -185,18 +232,18 @@ const getCurrentAddressFromVault = (data: VaultData): string | null => {
       data.keyrings.find((kr) => kr.id === data.currentKeyringId) ||
       data.keyrings[0];
     return (
-      currentKeyring?.currentAddress || currentKeyring?.accounts?.[0]?.address
+      currentKeyring?.currentAddress || currentKeyring?.accounts?.[0]?.address || null
     );
   }
 
-  return data[0]?.currentAddress || null;
+  return (data as any)[0]?.currentAddress || null;
 };
 
 /**
  * Convert keyring type to account type
  */
 const keyringTypeToAccountType = (keyringType: string): string => {
-  const typeMap = {
+  const typeMap: Record<string, string> = {
     [KEYRING_TYPE.HD]: ACCOUNT_TYPE.WALLET_INSIDE,
     [KEYRING_TYPE.IMPORTED]: ACCOUNT_TYPE.WALLET_OUTSIDE,
     [KEYRING_TYPE.LEDGER]: ACCOUNT_TYPE.WALLET_LEDGER,
@@ -262,7 +309,7 @@ class APIService {
     if (typeof storedValue === 'number') {
       return storedValue;
     } else if (storedValue && typeof storedValue === 'object' && 'value' in storedValue) {
-      return storedValue.value;
+      return (storedValue as { value: number }).value;
     }
     return LOCK_TIME_DEFAULT;
   };
@@ -292,16 +339,16 @@ class APIService {
 
       if (version === "v2") {
         // V2: get current account from keyrings
-        currentAddress = this.getCurrentAddressFromV2(vaultData);
+        currentAddress = this.getCurrentAddressFromV2(vaultData as Vault);
         currentAccount = this.getCurrentAccountFromV2(
-          vaultData,
+          vaultData as Vault,
           currentAddress
         );
       } else {
         // V1: legacy logic
-        currentAddress = vaultData[0]?.currentAddress;
+        currentAddress = (vaultData as any)[0]?.currentAddress;
         currentAccount = this.filterCurrentAccount(
-          vaultData[0]?.accounts || [],
+          (vaultData as any)[0]?.accounts || [],
           currentAddress
         );
       }
@@ -310,10 +357,9 @@ class APIService {
       console.log("[aurowallet] submitPassword: autoLockTime from config:", autoLockTime);
       memStore.unlock({
         password,
-        data: vaultData,
+        data: vaultData as any,
         currentAccount,
         autoLockTime,
-        vaultVersion: version,
       });
       console.log("[aurowallet] submitPassword: unlocked, store state:", { isUnlocked: this.getStore().isUnlocked, autoLockTime: this.getStore().autoLockTime });
 
@@ -325,7 +371,7 @@ class APIService {
       });
 
       // Return account info with version and migration status for dev mode
-      const result = this.getAccountWithoutPrivate(currentAccount);
+      const result = this.getAccountWithoutPrivate(currentAccount || {} as AccountInfo);
       result.vaultVersion = version;
       result.didMigrate = didMigrate;
       return result;
@@ -338,7 +384,7 @@ class APIService {
   /**
    * Get current address from V2 vault
    */
-  getCurrentAddressFromV2(vault) {
+  getCurrentAddressFromV2(vault: Vault): string | null {
     if (!vault || !vault.keyrings) return null;
 
     // Find current keyring
@@ -357,7 +403,7 @@ class APIService {
   /**
    * Get current account from V2 vault
    */
-  getCurrentAccountFromV2(vault, currentAddress) {
+  getCurrentAccountFromV2(vault: Vault, currentAddress: string): AccountInfo | null {
     if (!vault || !vault.keyrings || !currentAddress) return null;
 
     for (const keyring of vault.keyrings) {
@@ -382,8 +428,8 @@ class APIService {
   /**
    * Convert keyring type to account type
    */
-  keyringTypeToAccountType(keyringType) {
-    const typeMap = {
+  keyringTypeToAccountType(keyringType: string): string {
+    const typeMap: Record<string, string> = {
       hd: ACCOUNT_TYPE.WALLET_INSIDE,
       imported: ACCOUNT_TYPE.WALLET_OUTSIDE,
       ledger: ACCOUNT_TYPE.WALLET_LEDGER,
@@ -396,7 +442,7 @@ class APIService {
    * Strategy: V2 returns directly, V1 upgrades with validation, keeps V1 on failure
    * Core principle: mnemonic/private key must never be lost
    */
-  async migrateData(password, vault) {
+  async migrateData(password: string, vault: any): Promise<MigrateResult> {
     let didMigrate = false;
     // 1. Return V2 directly
     if (isV2Vault(vault)) {
@@ -404,7 +450,7 @@ class APIService {
     }
 
     // 2. V1: upgrade encryption format
-    const migrateCheck = (dataStr) => {
+    const migrateCheck = (dataStr: any): boolean => {
       try {
         return dataStr && JSON.parse(dataStr).version !== 2;
       } catch (e) {
@@ -412,7 +458,7 @@ class APIService {
       }
     };
 
-    const migrateEncryption = async (data, key) => {
+    const migrateEncryption = async (data: any, key: string): Promise<void> => {
       if (migrateCheck(data[key])) {
         data[key] = await encryptUtils.encrypt(
           password,
@@ -497,13 +543,12 @@ class APIService {
     return { data: vault, version: "v1", didMigrate };
   }
 
-  checkPassword(password) {
+  checkPassword(password: string): boolean {
     return this.getStore().password === password;
   }
 
   setLastActiveTime() {
     const rawAutoLockTime = this.getStore().autoLockTime;
-    // Handle both formats: number or {value: number}
     let timeoutMs: number;
     if (typeof rawAutoLockTime === 'number') {
       timeoutMs = rawAutoLockTime;
@@ -515,27 +560,22 @@ class APIService {
     
     let localData = this.getStore().data;
     let isUnlocked = this.getStore().isUnlocked;
-    console.log("[aurowallet] setLastActiveTime called, autoLockTime:", timeoutMs, "isUnlocked:", isUnlocked);
     if (localData && isUnlocked) {
       if (this.activeTimer) {
         clearTimeout(this.activeTimer);
       }
       if (timeoutMs === -1) {
-        console.log("[aurowallet] setLastActiveTime: never lock (-1)");
         return;
       }
       if (!timeoutMs) {
-        console.log("[aurowallet] setLastActiveTime: no timeout value");
         return;
       }
-      console.log("[aurowallet] setLastActiveTime: setting timer for", timeoutMs, "ms (", timeoutMs / 60000, "min)");
       this.activeTimer = setTimeout(() => {
-        console.log("[aurowallet] auto-lock timer triggered, locking wallet");
         this.setUnlockedStatus(false);
       }, timeoutMs);
     }
   }
-  async updateLockTime(autoLockTime) {
+  async updateLockTime(autoLockTime: number | { value: number }): Promise<void> {
     // Extract value if passed as object {value: number}
     const timeValue = typeof autoLockTime === 'object' && autoLockTime?.value !== undefined 
       ? autoLockTime.value 
@@ -546,7 +586,7 @@ class APIService {
   getCurrentAutoLockTime() {
     return this.getStore().autoLockTime;
   }
-  setUnlockedStatus = (status) => {
+  setUnlockedStatus = (status: boolean): void => {
     if (!status) {
       memStore.lock();
     }
@@ -591,10 +631,10 @@ class APIService {
     let currentAccount = this.getStore().currentAccount;
     return currentAccount.address;
   };
-  createPwd = (password) => {
+  createPwd = (password: string): void => {
     memStore.updateState({ password, isUnlocked: true });
   };
-  createAccount = async (mnemonic) => {
+  createAccount = async (mnemonic: string): Promise<AccountInfo | ErrorResult> => {
     memStore.updateState({ mne: "" });
     const password = this.getStore().password;
     const existingData = this.getStore().data;
@@ -665,15 +705,15 @@ class APIService {
     return isUnlocked && hasWallet;
   };
 
-  fetchTransactionStatus = (paymentId, hash) => {
+  fetchTransactionStatus = (paymentId: string, hash: string): void => {
     this.baseTransactionStatus(getTxStatus, paymentId, hash);
   };
 
-  fetchQAnetTransactionStatus = (paymentId, hash) => {
+  fetchQAnetTransactionStatus = (paymentId: string, hash: string): void => {
     this.baseTransactionStatus(getQATxStatus, paymentId, hash);
   };
 
-  baseTransactionStatus = (method, paymentId, hash) => {
+  baseTransactionStatus = (method: (id: string) => Promise<{ transactionStatus?: string }>, paymentId: string, hash: string): void => {
     method(paymentId)
       .then((data) => {
         if (data?.transactionStatus === STATUS.TX_STATUS_INCLUDED) {
@@ -699,7 +739,7 @@ class APIService {
       });
   };
 
-  notification = async (hash) => {
+  notification = async (hash: string): Promise<void> => {
     let netConfig = await getCurrentNodeConfig();
     let myNotificationID;
     browser.notifications &&
@@ -728,7 +768,7 @@ class APIService {
       });
     return;
   };
-  getAccountWithoutPrivate = (account) => {
+  getAccountWithoutPrivate = (account: AccountInfo): AccountInfo => {
     let newAccount = { ...account };
     delete newAccount.privateKey;
     return newAccount;
@@ -819,7 +859,7 @@ class APIService {
    * Add a new HD wallet (keyring) with its own mnemonic
    * This creates a completely new wallet group
    */
-  addHDKeyring = async (mnemonic, walletName) => {
+  addHDKeyring = async (mnemonic: string, walletName?: string): Promise<{ keyring?: { id: string; name: string; type: string }; account?: AccountInfo } | ErrorResult> => {
     try {
       let data = this.getStore().data;
       const password = this.getStore().password;
@@ -904,7 +944,7 @@ class APIService {
   /**
    * Rename a keyring (wallet group)
    */
-  renameKeyring = async (keyringId, newName) => {
+  renameKeyring = async (keyringId: string, newName: string): Promise<{ success?: boolean; keyring?: { id: string; name: string } } | ErrorResult> => {
     try {
       let data = this.getStore().data;
 
@@ -936,7 +976,7 @@ class APIService {
   /**
    * Get mnemonic for a specific HD keyring
    */
-  getKeyringMnemonic = async (keyringId, password) => {
+  getKeyringMnemonic = async (keyringId: string, password: string): Promise<{ mnemonic?: string } | ErrorResult> => {
     if (!this.checkPassword(password)) {
       return { error: "passwordError", type: "local" };
     }
@@ -968,7 +1008,7 @@ class APIService {
    * Requires password verification for security
    * If deleting the last keyring, clears vault and returns isLastKeyring: true
    */
-  deleteKeyring = async (keyringId, password) => {
+  deleteKeyring = async (keyringId: string, password: string): Promise<{ success?: boolean; isLastKeyring?: boolean; currentAccount?: AccountInfo | null } | ErrorResult> => {
     try {
       if (!this.checkPassword(password)) {
         return { error: "passwordError", type: "local" };
@@ -1043,7 +1083,7 @@ class APIService {
   /**
    * Add account to a specific HD keyring
    */
-  addAccountToKeyring = async (keyringId, accountName) => {
+  addAccountToKeyring = async (keyringId: string, accountName?: string): Promise<{ account?: AccountInfo } | ErrorResult> => {
     try {
       let data = this.getStore().data;
       const password = this.getStore().password;
@@ -1158,7 +1198,7 @@ class APIService {
     }
   };
 
-  accountSort = (accountList) => {
+  accountSort = (accountList: AccountInfo[]): SortedAccountList => {
     let newList = accountList;
     let createList = [],
       importList = [],
@@ -1187,7 +1227,7 @@ class APIService {
     let commonList = [...createList, ...importList, ...ledgerList];
     return { allList: [...commonList, ...watchList], commonList, watchList };
   };
-  addHDNewAccount = async (accountName) => {
+  addHDNewAccount = async (accountName: string): Promise<AccountInfo | ErrorResult | undefined> => {
     let data = this.getStore().data;
     const version = getVaultVersion(data);
 
@@ -1264,7 +1304,7 @@ class APIService {
   };
 
   // V2: add HD account
-  _addHDNewAccountV2 = async (data, accountName) => {
+  _addHDNewAccountV2 = async (data: any, accountName: string): Promise<AccountInfo | ErrorResult> => {
     // Find current HD keyring (use currentKeyringId, fallback to first HD keyring)
     let hdKeyring = null;
     if (data.currentKeyringId) {
@@ -1337,7 +1377,7 @@ class APIService {
     save({ keyringData: encryptData });
     return this.getAccountWithoutPrivate(accountForUI);
   };
-  _checkWalletRepeat(accounts, address) {
+  _checkWalletRepeat(accounts: AccountInfo[], address: string): { error?: string; type?: string } {
     let error = {};
     for (let index = 0; index < accounts.length; index++) {
       const account = accounts[index];
@@ -1348,7 +1388,7 @@ class APIService {
     }
     return error;
   }
-  _findWalletIndex(accounts, type) {
+  _findWalletIndex(accounts: AccountInfo[], type: string): number {
     let importList = accounts.filter((item, index) => {
       return item.type === type;
     });
@@ -1363,7 +1403,7 @@ class APIService {
   /**
    *  import private key
    */
-  addImportAccount = async (privateKey, accountName) => {
+  addImportAccount = async (privateKey: string, accountName: string): Promise<AccountInfo | ErrorResult> => {
     try {
       let wallet = await importWalletByPrivateKey(privateKey);
       let data = this.getStore().data;
@@ -1411,7 +1451,7 @@ class APIService {
   };
 
   // V2: import private key account
-  _addImportAccountV2 = async (data, wallet, accountName) => {
+  _addImportAccountV2 = async (data: any, wallet: any, accountName: string): Promise<AccountInfo | ErrorResult> => {
     // Check for duplicate
     const allAccounts = getAllAccountsFromVault(data);
     const existingAccount = allAccounts.find(
@@ -1489,7 +1529,7 @@ class APIService {
    * @param {*} accountName
    * @returns
    */
-  addAccountByKeyStore = async (keystore, password, accountName) => {
+  addAccountByKeyStore = async (keystore: string, password: string, accountName: string): Promise<AccountInfo | ErrorResult> => {
     let wallet = await importWalletByKeystore(keystore, password);
     if (wallet.error) {
       return wallet;
@@ -1503,7 +1543,7 @@ class APIService {
   /**
    * import ledger wallet
    */
-  addLedgerAccount = async (address, accountName, ledgerPathAccountIndex) => {
+  addLedgerAccount = async (address: string, accountName: string, ledgerPathAccountIndex: number): Promise<AccountInfo | ErrorResult> => {
     try {
       let data = this.getStore().data;
       const version = getVaultVersion(data);
@@ -1552,11 +1592,11 @@ class APIService {
 
   // V2: add Ledger account
   _addLedgerAccountV2 = async (
-    data,
-    address,
-    accountName,
-    ledgerPathAccountIndex
-  ) => {
+    data: any,
+    address: string,
+    accountName: string,
+    ledgerPathAccountIndex: number
+  ): Promise<AccountInfo | ErrorResult> => {
     const allAccounts = getAllAccountsFromVault(data);
     const existingAccount = allAccounts.find((acc) => acc.address === address);
     if (existingAccount) {
@@ -1614,7 +1654,7 @@ class APIService {
     save({ keyringData: encryptData });
     return this.getAccountWithoutPrivate(accountForUI);
   };
-  setCurrentAccount = async (address) => {
+  setCurrentAccount = async (address: string): Promise<{ accountList: SortedAccountList; currentAccount: AccountInfo; currentAddress: string }> => {
     let data = this.getStore().data;
     const version = getVaultVersion(data);
 
@@ -1649,7 +1689,7 @@ class APIService {
   };
 
   // V2: set current account
-  _setCurrentAccountV2 = async (data, address) => {
+  _setCurrentAccountV2 = async (data: any, address: string): Promise<{ accountList: SortedAccountList; currentAccount: AccountInfo; currentAddress: string }> => {
     let currentAccount = null;
 
     for (const keyring of data.keyrings) {
@@ -1686,7 +1726,7 @@ class APIService {
       currentAddress: address,
     };
   };
-  changeAccountName = async (address, accountName) => {
+  changeAccountName = async (address: string, accountName: string): Promise<{ account: AccountInfo }> => {
     let data = this.getStore().data;
     const version = getVaultVersion(data);
 
@@ -1716,7 +1756,7 @@ class APIService {
   };
 
   // V2: change account name
-  _changeAccountNameV2 = async (data, address, accountName) => {
+  _changeAccountNameV2 = async (data: any, address: string, accountName: string): Promise<{ account: AccountInfo }> => {
     let account = null;
     for (const keyring of data.keyrings) {
       const acc = keyring.accounts.find((a) => a.address === address);
@@ -1743,7 +1783,7 @@ class APIService {
 
     return { account: this.getAccountWithoutPrivate(account || {}) };
   };
-  deleteAccount = async (address, password) => {
+  deleteAccount = async (address: string, password: string): Promise<AccountInfo | ErrorResult> => {
     let data = this.getStore().data;
     const version = getVaultVersion(data);
 
@@ -1793,7 +1833,7 @@ class APIService {
   };
 
   // V2: delete account
-  _deleteAccountV2 = async (data, address, password) => {
+  _deleteAccountV2 = async (data: any, address: string, password: string): Promise<AccountInfo | ErrorResult> => {
     // Find account to delete
     let targetKeyring = null;
     let targetAccount = null;
@@ -1873,7 +1913,7 @@ class APIService {
     save({ keyringData: encryptData });
     return this.getAccountWithoutPrivate(currentAccount);
   };
-  getMnemonic = async (pwd) => {
+  getMnemonic = async (pwd: string): Promise<string | ErrorResult> => {
     let isCorrect = this.checkPassword(pwd);
     if (isCorrect) {
       let data = this.getStore().data;
@@ -1891,7 +1931,7 @@ class APIService {
       return { error: "passwordError", type: "local" };
     }
   };
-  updateSecPassword = async (oldPwd, pwd) => {
+  updateSecPassword = async (oldPwd: string, pwd: string): Promise<{ code?: number } | ErrorResult> => {
     try {
       let isCorrect = this.checkPassword(oldPwd);
       if (isCorrect) {
@@ -1943,7 +1983,7 @@ class APIService {
   };
 
   // V2: update password
-  _updateSecPasswordV2 = async (data, oldPwd, pwd) => {
+  _updateSecPasswordV2 = async (data: any, oldPwd: string, pwd: string): Promise<{ code?: number } | ErrorResult> => {
     let currentAccount = this.getStore().currentAccount;
 
     // Re-encrypt sensitive data in all keyrings
@@ -1975,7 +2015,7 @@ class APIService {
     await save({ keyringData: encryptData });
     return { code: 0 };
   };
-  getPrivateKey = async (address, pwd) => {
+  getPrivateKey = async (address: string, pwd: string): Promise<string | ErrorResult> => {
     let isCorrect = this.checkPassword(pwd);
     if (isCorrect) {
       let data = this.getStore().data;
@@ -2065,7 +2105,7 @@ class APIService {
     return privateKey;
   };
 
-  postStakeTx = async (data, signature) => {
+  postStakeTx = async (data: Record<string, unknown>, signature: string): Promise<Record<string, unknown>> => {
     let stakeRes = await sendStakeTx(data, signature).catch((error) => error);
     let delegation =
       (stakeRes.sendDelegation && stakeRes.sendDelegation.delegation) || {};
@@ -2074,7 +2114,7 @@ class APIService {
     }
     return { ...stakeRes };
   };
-  postPaymentTx = async (data, signature) => {
+  postPaymentTx = async (data: Record<string, unknown>, signature: string): Promise<Record<string, unknown>> => {
     let sendRes = await sendTx(data, signature).catch((error) => error);
     let payment = (sendRes.sendPayment && sendRes.sendPayment.payment) || {};
     if (payment.hash && payment.id) {
@@ -2082,7 +2122,7 @@ class APIService {
     }
     return { ...sendRes };
   };
-  postZkTx = async (signedTx) => {
+  postZkTx = async (signedTx: SignedTransaction): Promise<Record<string, unknown>> => {
     let sendPartyRes = await sendParty(
       signedTx.data.zkappCommand,
       signedTx.signature
@@ -2098,7 +2138,7 @@ class APIService {
     }
   };
 
-  sendTransaction = async (params) => {
+  sendTransaction = async (params: TransactionParams): Promise<SignedTransaction | { error: string } | Record<string, unknown>> => {
     try {
       let nextParams = { ...params };
       const privateKey = await this.getCurrentPrivateKey();
@@ -2138,7 +2178,7 @@ class APIService {
       return { error: err };
     }
   };
-  checkTxStatus = (paymentId, hash, type) => {
+  checkTxStatus = (paymentId: string, hash: string, type?: string): void => {
     if (type === FETCH_TYPE_QA) {
       this.fetchQAnetTransactionStatus(paymentId, hash);
     } else {
@@ -2146,7 +2186,7 @@ class APIService {
     }
   };
 
-  signFields = async (params) => {
+  signFields = async (params: Record<string, unknown>): Promise<{ error?: string } | Record<string, unknown>> => {
     const privateKey = await this.getCurrentPrivateKey();
     let signedResult = await signFieldsMessage(privateKey, params);
     if (signedResult.error) {
@@ -2155,7 +2195,7 @@ class APIService {
     return signedResult;
   };
 
-  createNullifierByApi = async (params) => {
+  createNullifierByApi = async (params: Record<string, unknown>): Promise<{ error?: string } | Record<string, unknown>> => {
     const privateKey = await this.getCurrentPrivateKey();
     let createResult = await createNullifier(privateKey, params);
     if (createResult.error) {
@@ -2163,7 +2203,7 @@ class APIService {
     }
     return createResult;
   };
-  storePrivateCredential = async (address, credential) => {
+  storePrivateCredential = async (address: string, credential: unknown): Promise<void> => {
     const nextCredential = {
       address,
       credentialId: crypto.randomUUID(),
@@ -2172,7 +2212,7 @@ class APIService {
     await storeCredential(nextCredential);
   };
 
-  getPrivateCredential = async (address) => {
+  getPrivateCredential = async (address: string): Promise<Record<string, unknown>[]> => {
     const credentials = await searchCredential({
       address,
       query: { type: "private-credential" },
@@ -2185,16 +2225,16 @@ class APIService {
     });
   };
 
-  getCredentialIdList = async (address) => {
+  getCredentialIdList = async (address: string): Promise<string[]> => {
     const { credentials } = await getStoredCredentials();
     return Object.keys(credentials[address] || {});
   };
 
-  getTargetCredential = async (address, credentialId) => {
+  getTargetCredential = async (address: string, credentialId: string): Promise<unknown> => {
     return await getCredentialById(address, credentialId);
   };
 
-  removeTargetCredential = async (address, credentialId) => {
+  removeTargetCredential = async (address: string, credentialId: string): Promise<boolean> => {
     try {
       await removeCredential(address, credentialId);
       return true;
