@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Add new account token activation prompt
 - Update Auto-Lock to Security page
 - Update css/scss to styled-components
+- Continuous transfers
 
 ### Fixes
 - E-notation of SendPage
