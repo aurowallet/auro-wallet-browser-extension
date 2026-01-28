@@ -407,7 +407,7 @@ const SendPage = () => {
       setConfirmModalStatus(false);
       fetchAccountData();
       if (isFromModal) {
-        navigate("/token_detail");
+        navigate("/token_detail", { replace: true });
       } else {
         navigate(-1);
       }
@@ -514,7 +514,8 @@ const SendPage = () => {
       setConfirmBtnStatus(false);
       fetchAccountData();
       if (isFromModal) {
-        navigate("/token_detail");
+        // Use replace to prevent history stack accumulation during continuous transfers
+        navigate("/token_detail", { replace: true });
       } else {
         navigate(-1);
       }
