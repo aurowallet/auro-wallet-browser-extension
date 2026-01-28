@@ -11,7 +11,6 @@ import {
   addressSlice,
   getAmountForUI,
   getBalanceForUI,
-  isNaturalNumber,
 } from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -355,10 +354,10 @@ const TokenDetail = () => {
           <LoadingView />
         ) : showTxHistory.length !== 0 ? (
           <TxListView history={showTxHistory as Parameters<typeof TxListView>[0]["history"]} tokenInfo={token} />
-        ) : isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? (
-          <TxNotSupportView />
-        ) : (
+        ) : currentNode.gqlTxUrl ? (
           <EmptyTxListView />
+        ) : (
+          <TxNotSupportView />
         )}
       </StyledHistoryWrapper>
 

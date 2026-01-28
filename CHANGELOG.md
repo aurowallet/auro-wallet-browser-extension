@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [2.5.0]
 ### Enhancements
 - Support multi-wallet
+- Support TypeScript
 - Firefox build scripts
 - Debug scripts
 - Ledger connect
@@ -26,6 +27,7 @@ All notable changes to this project will be documented in this file.
 ### Fixes
 - E-notation of SendPage
 - Legder error message
+- Transaction history
 
 ## [2.4.4]
 ### Enhancements
