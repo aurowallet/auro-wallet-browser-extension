@@ -3,8 +3,10 @@ import styled, { css } from 'styled-components';
 export const StyledOuterContainer = styled.div`
   min-width: 750px;
   min-height: 600px;
+  max-height: calc(100vh - 40px);
   background-color: rgb(249, 250, 252);
   z-index: 10;
+  overflow-y: auto;
 `;
 
 export const StyledInnerContainer = styled.div`
@@ -18,14 +20,18 @@ export const StyledInnerContainer = styled.div`
   flex-direction: column;
 `;
 
-export const StyledInnerContent = styled.div`
+interface StyledInnerContentProps {
+  $embedded?: boolean;
+}
+
+export const StyledInnerContent = styled.div<StyledInnerContentProps>`
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  margin: 60px auto 0;
+  justify-content: ${({ $embedded }) => $embedded ? 'flex-start' : 'center'};
+  margin: ${({ $embedded }) => $embedded ? '0 auto' : '60px auto 0'};
 `;
 
 export const StyledViewTip = styled.div`
@@ -100,9 +106,9 @@ interface StyledAccountWarningTipProps {
   $success?: boolean;
 }
 export const StyledAccountWarningTip = styled(StyledWarningTip)<StyledAccountWarningTipProps>`
-  margin-bottom: 32px;
-  min-width: 632px;
-  transform: translate(-16px);
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 
   ${({ $success }) => $success && css`
     background: rgba(13, 178, 124, 0.1);

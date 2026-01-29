@@ -159,8 +159,15 @@ export const ConfirmMneView = ({ onClickPre, onClickNext }: ProcessViewProps) =>
             mne: sourceMne,
           },
         },
-        async (currentAccount: AccountInfo) => {
+        async (currentAccount: AccountInfo & { error?: string; type?: string }) => {
           setLoadingStatus(false);
+          if (currentAccount.error) {
+            const errorMsg = currentAccount.type === "local" 
+              ? i18n.t(currentAccount.error) 
+              : currentAccount.error;
+            Toast.info(errorMsg);
+            return;
+          }
           dispatch(updateCurrentAccount(currentAccount));
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
           onClickNext?.();

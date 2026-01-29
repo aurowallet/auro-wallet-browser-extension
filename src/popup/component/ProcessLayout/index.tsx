@@ -52,7 +52,6 @@ const StyledContentArea = styled.div`
   flex-direction: column;
   justify-content: space-between;
   gap: 40px;
-  overflow-y: auto;
 `;
 
 const StyledTitle = styled.div`

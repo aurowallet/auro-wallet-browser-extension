@@ -178,40 +178,49 @@ export const LedgerPage = ({ onClickPre, isEmbedded, onStepChange }: LedgerPageP
     return msg;
   }, [tipType, i18n]);
  
+  const content = (
+    <StepTabs selected={tabIndex} hideProgress={isEmbedded} children={[
+      <StyledInnerContent key={1} id={"1"} $embedded={isEmbedded}>
+        <LedgerConnectView
+          isLedgerPermission={isLedgerPermission}
+          onClickNext={onClickConnect}
+          onClickPre={onClickPreTab}
+          tipContent={tipContent}
+          isShowSuccessTip={isShowSuccessTip}
+        />
+      </StyledInnerContent>,
+      !isLedgerPermission && (
+        <StyledInnerContent key={2} id={2 as any} $embedded={isEmbedded}>
+          <AccountNameView
+            onClickNext={onClickImport}
+            onClickPre={onClickPreTab}
+            tipContent={tipContent}
+            onClickConnect={onClickConnect}
+          />
+        </StyledInnerContent>
+      ),
+      !isLedgerPermission && (
+        <StyledInnerContent key={3} id={3 as any} $embedded={isEmbedded}>
+          <CreateResultView
+            onClickDone={onClickDone}
+            contents={[i18n.t("ledgerSuccess"), i18n.t("returnEx")]}
+            showFollowUs={true}
+            showExtTip={true}
+          />
+        </StyledInnerContent>
+      )
+    ] as any} />
+  );
+
+  // When embedded, don't use outer containers with fixed min-height
+  if (isEmbedded) {
+    return content;
+  }
+
   return (
     <StyledOuterContainer>
       <StyledInnerContainer>
-        <StepTabs selected={tabIndex} hideProgress={isEmbedded} children={[
-          <StyledInnerContent key={1} id={"1"}>
-            <LedgerConnectView
-              isLedgerPermission={isLedgerPermission}
-              onClickNext={onClickConnect}
-              onClickPre={onClickPreTab}
-              tipContent={tipContent}
-              isShowSuccessTip={isShowSuccessTip}
-            />
-          </StyledInnerContent>,
-          !isLedgerPermission && (
-            <StyledInnerContent key={2} id={2 as any}>
-              <AccountNameView
-                onClickNext={onClickImport}
-                onClickPre={onClickPreTab}
-                tipContent={tipContent}
-                onClickConnect={onClickConnect}
-              />
-            </StyledInnerContent>
-          ),
-          !isLedgerPermission && (
-            <StyledInnerContent key={3} id={3 as any}>
-              <CreateResultView
-                onClickDone={onClickDone}
-                contents={[i18n.t("ledgerSuccess"), i18n.t("returnEx")]}
-                showFollowUs={true}
-                showExtTip={true}
-              />
-            </StyledInnerContent>
-          )
-        ] as any} />
+        {content}
       </StyledInnerContainer>
     </StyledOuterContainer>
   );
