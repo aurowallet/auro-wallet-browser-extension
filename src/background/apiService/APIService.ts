@@ -354,14 +354,12 @@ class APIService {
       }
 
       const autoLockTime = await this.initAppLocalConfig();
-      console.log("[aurowallet] submitPassword: autoLockTime from config:", autoLockTime);
       memStore.unlock({
         password,
         data: vaultData as any,
         currentAccount,
         autoLockTime,
       });
-      console.log("[aurowallet] submitPassword: unlocked, store state:", { isUnlocked: this.getStore().isUnlocked, autoLockTime: this.getStore().autoLockTime });
 
       this.setPopupIcon(true);
       sendMsg({

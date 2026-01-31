@@ -1,4 +1,5 @@
 {
+    "_WARNING": "⚠️ SECURITY: These private keys are FOR TESTING ONLY. DO NOT use for real funds.",
     "importWalletByMnemonic":{ 
         "priKey": "EKEjdAVBfHwuS7crogwpXLeTbwQTWbd2W2RyhPpCZpfHQSLJ1zyS",
         "pubKey": "B62qkzCugh8u2Ez1vEs7i3UjW7iypA8ovwC88rBwLqZmdWFqh96M8rM",

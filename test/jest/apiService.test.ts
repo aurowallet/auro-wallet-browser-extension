@@ -1,6 +1,11 @@
 /**
  * Jest tests for APIService - Complete Migration from Mocha
  * Using proper Jest mocking strategy
+ * 
+ * ⚠️ SECURITY WARNING ⚠️
+ * The mnemonic phrases and private keys in this file are FOR TESTING PURPOSES ONLY.
+ * DO NOT use these keys for any real funds or production environments.
+ * These keys are publicly visible and should be considered compromised.
  */
 
 // ==================== Mock Variables (hoisted) ====================

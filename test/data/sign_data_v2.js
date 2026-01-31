@@ -3,6 +3,11 @@ const { DAppActions } = require("@aurowallet/mina-provider");
 /**
  * data for runTransactionTest
  * generate by auro wallet extension & mina signer 3.0.0
+ * 
+ * ⚠️ SECURITY WARNING ⚠️
+ * The private keys and mnemonics in this file are FOR TESTING PURPOSES ONLY.
+ * DO NOT use these keys for any real funds or production environments.
+ * These keys are publicly visible and should be considered compromised.
  */
 export const signDataV2 = {
   testAccount: {

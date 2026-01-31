@@ -19,7 +19,7 @@
  * debugLog.clear() 
  */
 
-const DEBUG_ENABLED = true;
+const DEBUG_ENABLED = process.env.NODE_ENV === 'development';
 
 const STYLES = {
   page: "background: #594af1; color: white; padding: 2px 6px; border-radius: 3px;",

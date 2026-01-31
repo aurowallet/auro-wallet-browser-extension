@@ -1,3 +1,9 @@
+/**
+ * ⚠️ SECURITY WARNING ⚠️
+ * The encrypted vault data in this file is FOR TESTING PURPOSES ONLY.
+ * Test password: "Aa111111"
+ * DO NOT use these test credentials for any real funds or production environments.
+ */
 // All 6 test cases
 exports.testCases = [
   { name: 'Case 1: 1 HD account', hd: 1, imported: 0, ledger: 0, data: '{"data":"lV0U3+t85g6LG97nYsA9URWC/qiPQDp0OpRvK+u1cafGqiCeGIHc2MDczpbBLzPNGRwie1ycMkmZtvGy+w7aUJfSBISvwi44rAJ3UL8yNm0vbfDXa6d8pxYhYFhgiB4Pc6wBRkPa2/I+voYbr+zC/5Zyi+4mVZTwKB9EFS8JrvLdR8pcnCwen9v3C68TrTpU+ARaLn9w7SR8OqpshT70MhmbeLciExMtN1H7YZS01ORi5tadtUSedqLClvsl3oF+nhfgJdGSu7O0B1aA/6SAxu0BN2NSfBuL/fbXbpfFVG5S2ikJoa+NAeUKmI5YooE/boFQDoopTzvovMiGFTrS0ebOrv+vHxD8DwSPsBhO0XPF6ESl8Unyqmgaa9ZyIgLY3NKh9UFEV1LTf9B6dxM/i2MHcFEg0/lJNm3NDIKzhRRul3+Oh1RbTq0vqYVnJ32h1F9l8nYjeG+8Tma2uBpJRnBGXj6svXvHwpLZLvupQj4Pw70n8JUnXP2kn9csHgCI6DK2l55QEFj+EWnuxAZOQ2AU9Ft8b+hAi5eQqULcy5xFW3+tRdQRNgGptVGbDTBA8S3grKvDJjUecXfoqrhGyJKlbA9l88blbcb14v0KZGJBXPE1etTWgNggJ+yj8Q2r0pWk547smYDOf09NdsBhX3EwrUJhM2FH1OYKIAHbERkqabnCpYrNm/LUNDLgdeiYBdbkh5btLWJvLAxXGjN954SbgjplYD+C4M2lpAHpKLpXRXXjlxhpnoeioU8aKJx2lLSS2f0eZQ9Bm2/nzjCw2/jScSCjPYCF9ZG31KqxA6imNmTh4gqMwbYL4L0p2lUS7STYJkiM1fO/ufbozdKCvV/PkRCXdNfDJ89xBCTjSQgp99Tfu15j/Qf36QQL/dlrk35yLjHfXvjgQe9Z9/1km0BoG4kQ+PAXT5B/B3moxETwQo26j3Dv","iv":"4oWa8YgU3fMpYSS7tT/epQ==","salt":"HzwBw9zqWcXoXwn8pjGnAA==","version":2}' },
