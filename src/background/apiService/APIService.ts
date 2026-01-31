@@ -807,7 +807,7 @@ class APIService {
 
   /**
    * Get all keyrings sorted by creation time for UI display
-   * Each keyring represents a wallet group in the Account Management page
+   * Each keyring represents a wallet group in the Wallet Management page
    */
   getKeyringsList = () => {
     const data = this.getStore().data;
