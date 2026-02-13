@@ -1,5 +1,7 @@
 .contentClassName {
-  padding: 10px 20px 0px;
+  padding: 20px 20px 0px;
+  display: flex;
+  flex-direction: column;
 }
 .customTitleClass {
   left: 46px;
@@ -28,12 +30,12 @@
   border-radius: 12px;
 }
 .mgtM10 {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 .epochContent {
   @extend .commonContent;
-  margin-top: 10px;
-  padding: 20px;
+  margin-top: 8px;
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   position: relative;
@@ -122,6 +124,164 @@
   }
 }
 
+.earnContainer {
+  margin-top: 16px;
+}
+
+.loadingEarnContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.unknownEarnContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.earnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.infoIcon {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.earnContent {
+  @extend .commonContent;
+  padding: 14px 20px;
+}
+
+.earnRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  &:not(:first-child) {
+    margin-top: 10px;
+  }
+}
+
+.earnLabel {
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.earnValue {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+  text-align: right;
+}
+
+.activeTitle {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 16px 0 8px;
+}
+
+.validatorCard {
+  @extend .commonContent;
+  padding: 14px;
+}
+
+.validatorInfo {
+  display: flex;
+  align-items: center;
+}
+
+.validatorIconWrapper {
+  width: 36px;
+  height: 36px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.validatorIconHolder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #594AF1 0%, #FF7870 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.validatorIconImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.validatorName {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+}
+
+.stakedInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.05);
+}
+
+.stakedLabel {
+  font-size: 12px;
+  line-height: 14px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.stakedValue {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+}
+
+.actionLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.actionText {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #594af1;
+}
+
+.actionArrow {
+  width: 30px;
+  height: 30px;
+}
+
+.actionDivider {
+  height: 0.5px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
 .delegationContainer {
   margin-top: 20px;
   .delegationRow {
@@ -207,7 +367,7 @@
 }
 
 .loadingContainer {
-  margin-top: 66px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -234,13 +394,25 @@
 
 .unknownContainer {
   @extend .loadingContainer;
-  margin-top: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  margin-bottom: 0;
 
+  .unknownIcon {
+    width: 80px;
+    height: 80px;
+    opacity: 0.3;
+  }
   .unknownTip {
     font-size: 12px;
     line-height: 17px;
     color: rgba(0, 0, 0, 0.3);
     margin: 10px 0px 0px;
+    text-align: center;
   }
 }
 .label {

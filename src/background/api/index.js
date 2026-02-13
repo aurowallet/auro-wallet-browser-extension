@@ -153,12 +153,25 @@ export async function fetchDelegationInfo(publicKey) {
   return account;
 }
 
+export async function fetchStakingAPY() {
+  let netConfig = await getCurrentNodeConfig();
+  if (netConfig.networkID !== NetworkID_MAP.mainnet) {
+    return null;
+  }
+  const data = await commonFetch(BASE_INFO_URL + "/staking/apy").catch(() => null);
+  const apy = data?.apr ?? null;
+  if (apy !== null) {
+    saveLocal(LOCAL_CACHE_KEYS.STAKING_APY, JSON.stringify(apy));
+  }
+  return apy;
+}
+
 export async function fetchStakingList() {
   let netConfig = await getCurrentNodeConfig();
   if (netConfig.networkID !== NetworkID_MAP.mainnet) {
-    return [];
+    return { active: [], inactive: [] };
   }
-  const data = await commonFetch(BASE_INFO_URL + "/validators").catch(() => []);
+  const data = await commonFetch(BASE_INFO_URL + "/validators/v2").catch(() => ({}));
   const stakingList = parseStakingList(data);
   saveLocal(LOCAL_CACHE_KEYS.STAKING_LIST, JSON.stringify(stakingList));
   return stakingList;

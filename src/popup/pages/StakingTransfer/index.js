@@ -13,15 +13,14 @@ import {
   isNumber,
   trimSpace,
 } from "../../../utils/utils";
-import AdvanceMode from "../../component/AdvanceMode";
 import Button from "../../component/Button";
 import { ConfirmModal } from "../../component/ConfirmModal";
 import CustomView from "../../component/CustomView";
-import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
 import styles from "./index.module.scss";
 
 import { MAIN_COIN_CONFIG } from "../../../constant";
+import { NetworkID_MAP } from "../../../constant/network";
 import {
   QA_SIGN_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
@@ -50,37 +49,90 @@ const StakingTransfer = () => {
   const ledgerStatus = useSelector((state) => state.ledger.ledgerConnectStatus);
   const { fetchAccountData } = useFetchAccountData(currentAccount);
 
-  const { menuAdd, nodeName, nodeAddress, showNodeName } = useMemo(() => {
+  const stakingList = useSelector((state) => state.staking.stakingList);
+  const delegationKey = useSelector((state) => state.staking.delegationKey);
+  const stakingAPY = useSelector((state) => state.staking.stakingAPY);
+  const networkID = useSelector((state) => state.network.currentNode.networkID);
+
+  const [routeParams] = useState(() => {
     let params = history.location?.params || {};
+    return {
+      menuAdd: !!params.menuAdd,
+      nodeName: params.nodeName,
+      nodeAddress: params.nodeAddress,
+      icon: params.icon,
+      isRedelegate: !!params.isRedelegate,
+    };
+  });
 
-    let menuAdd = !!params.menuAdd;
-    let nodeName = params.nodeName;
-    let nodeAddress = params.nodeAddress;
+  const { menuAdd, nodeAddress, showNodeName, nodeIcon, isRedelegate, currentValidatorName, currentValidatorIcon, hasToValidator, isActiveValidator } = useMemo(() => {
+    let menuAdd = routeParams.menuAdd;
+    let nodeName = routeParams.nodeName;
+    let nodeAddress = routeParams.nodeAddress;
+    let nodeIcon = routeParams.icon;
+    let isRedelegate = routeParams.isRedelegate;
 
-    let showNodeName = nodeName || addressSlice(nodeAddress, 8);
+    if (isRedelegate && !nodeAddress && !menuAdd && networkID === NetworkID_MAP.mainnet) {
+      const defaultNode = stakingList.active[0];
+      if (defaultNode) {
+        nodeAddress = defaultNode.nodeAddress;
+        nodeName = defaultNode.nodeName;
+        nodeIcon = defaultNode.icon;
+      }
+    }
+
+    let showNodeName = nodeName || (nodeAddress ? addressSlice(nodeAddress, 8) : "");
+    let hasToValidator = !!nodeAddress;
+    let isActiveValidator = nodeAddress ? stakingList.active.some(n => n.nodeAddress === nodeAddress) : false;
+    
+    if (nodeAddress && !nodeIcon) {
+      const node = stakingList.active.find(n => n.nodeAddress === nodeAddress) || stakingList.inactive.find(n => n.nodeAddress === nodeAddress);
+      if (node) {
+        nodeIcon = node.icon;
+        if (!nodeName) {
+          showNodeName = node.nodeName || addressSlice(nodeAddress, 8);
+        }
+      }
+    }
+
+    let currentValidatorName = delegationKey ? addressSlice(delegationKey, 8) : i18n.t('currentValidator');
+    let currentValidatorIcon = null;
+    if (isRedelegate && delegationKey) {
+      const currentNode = stakingList.active.find(n => n.nodeAddress === delegationKey) || stakingList.inactive.find(n => n.nodeAddress === delegationKey);
+      if (currentNode) {
+        currentValidatorName = currentNode.nodeName || addressSlice(delegationKey, 8);
+        currentValidatorIcon = currentNode.icon;
+      }
+    }
+
     return {
       menuAdd,
-      nodeName,
       nodeAddress,
       showNodeName,
+      nodeIcon,
+      isRedelegate,
+      currentValidatorName,
+      currentValidatorIcon,
+      hasToValidator,
+      isActiveValidator,
     };
-  }, [history]);
+  }, [routeParams, stakingList, delegationKey, networkID]);
 
   const [blockAddress, setBlockAddress] = useState("");
 
-  const [memo, setMemo] = useState("");
+  const memo = "";
   const [feeAmount, setFeeAmount] = useState(0.1);
-  const [advanceInputFee, setAdvanceInputFee] = useState("");
-  const [inputNonce, setInputNonce] = useState("");
-  const [feeErrorTip, setFeeErrorTip] = useState("");
-  const [isOpenAdvance, setIsOpenAdvance] = useState(false);
+  const inputNonce = "";
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
   const [contentList, setContentList] = useState([]);
 
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
   const [btnDisableStatus, setBtnDisableStatus] = useState(() => {
-    if (menuAdd) {
+    if (routeParams.menuAdd) {
+      return true;
+    }
+    if (routeParams.isRedelegate && !routeParams.nodeAddress && !routeParams.menuAdd) {
       return true;
     }
     return false;
@@ -94,29 +146,6 @@ const StakingTransfer = () => {
     setBlockAddress(e.target.value);
   }, []);
 
-  const onMemoInput = useCallback((e) => {
-    setMemo(e.target.value);
-  }, []);
-  const onClickFeeGroup = useCallback((item) => {
-    setFeeAmount(item.fee);
-  }, []);
-
-  const onClickAdvance = useCallback(() => {
-    setIsOpenAdvance((state) => !state);
-  }, []);
-
-  const onFeeInput = useCallback((e) => {
-    setFeeAmount(e.target.value);
-    setAdvanceInputFee(e.target.value);
-    if (BigNumber(e.target.value).gt(10)) {
-      setFeeErrorTip(i18n.t("feeTooHigh"));
-    } else {
-      setFeeErrorTip("");
-    }
-  }, []);
-  const onNonceInput = useCallback((e) => {
-    setInputNonce(e.target.value);
-  }, []);
   const onClickClose = useCallback(() => {
     setConfirmModalStatus(false);
   }, []);
@@ -203,7 +232,7 @@ const StakingTransfer = () => {
       let toAddress = nodeAddress || trimSpace(blockAddress);
       let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce;
       let realMemo = memo || "";
-      let fee = trimSpace(feeAmount);
+      let fee = trimSpace(String(feeAmount));
       let payload = {
         fromAddress,
         toAddress,
@@ -230,12 +259,11 @@ const StakingTransfer = () => {
     [
       currentAccount,
       mainTokenNetInfo,
-      inputNonce,
       feeAmount,
       blockAddress,
+      nodeAddress,
       ledgerTransfer,
       ledgerStatus,
-      memo,
     ]
   );
 
@@ -246,7 +274,7 @@ const StakingTransfer = () => {
         Toast.info(i18n.t("sendAddressError"));
         return;
       }
-      let inputFee = trimSpace(feeAmount);
+      let inputFee = trimSpace(String(feeAmount));
       if (inputFee.length > 0 && !isNumber(inputFee)) {
         Toast.info(i18n.t("inputFeeError"));
         return;
@@ -309,14 +337,8 @@ const StakingTransfer = () => {
       nodeAddress,
       mainTokenNetInfo,
       feeAmount,
-      inputNonce,
       currentAccount,
-      clickNextStep,
-      nodeName,
-      nodeAddress,
       blockAddress,
-      currentAccount,
-      memo,
       ledgerStatus,
     ]
   );
@@ -327,7 +349,7 @@ const StakingTransfer = () => {
       setLedgerModalStatus(false);
       onConfirm(true);
     },
-    [confirmModalStatus, clickNextStep, onConfirm]
+    [onConfirm]
   );
 
   const onClickBlockProducer = useCallback(() => {
@@ -336,13 +358,14 @@ const StakingTransfer = () => {
       params: {
         nodeAddress: nodeAddress,
         fromPage: "stakingTransfer",
+        ...(isRedelegate ? { isRedelegate: true } : {}),
       },
     });
-  }, [nodeAddress]);
+  }, [nodeAddress, isRedelegate]);
 
   useEffect(() => {
     if (feeAmount === 0.1) {
-      if (netFeeList.length > 0) {
+      if (netFeeList.length > 1) {
         setFeeAmount(netFeeList[1].value);
       }
     }
@@ -355,61 +378,73 @@ const StakingTransfer = () => {
   useEffect(() => {
     if (menuAdd && trimSpace(blockAddress).length === 0) {
       setBtnDisableStatus(true);
+    } else if (isRedelegate && !nodeAddress && !menuAdd) {
+      setBtnDisableStatus(true);
     } else {
       setBtnDisableStatus(false);
     }
-  }, [menuAdd, blockAddress]);
+  }, [menuAdd, blockAddress, isRedelegate, nodeAddress]);
+
+  const pageTitle = isRedelegate ? i18n.t("redelegate") : i18n.t("stake");
 
   return (
-    <CustomView title={i18n.t("staking")} contentClassName={styles.container}>
+    <CustomView title={pageTitle} contentClassName={styles.container}>
       <div className={styles.contentContainer}>
-        <div className={styles.inputContainer}>
-          {menuAdd ? (
-            <Input
-              label={i18n.t("blockProducer")}
-              onChange={onBlockAddressInput}
-              value={blockAddress}
-              inputType={"text"}
-            />
-          ) : (
-            <BlockProducer
-              label={i18n.t("blockProducer")}
-              showNodeName={showNodeName}
-              onClickBlockProducer={onClickBlockProducer}
-            />
-          )}
-          <Input
-            label={i18n.t("memo")}
-            onChange={onMemoInput}
-            value={memo}
-            inputType={"text"}
-          />
-        </div>
-        <div className={styles.feeContainer}>
-          <FeeGroup
-            onClickFee={onClickFeeGroup}
-            currentFee={feeAmount}
-            netFeeList={netFeeList}
-            hideTimer={true}
-          />
+        <div className={styles.infoBanner}>
+          <p className={styles.infoBannerText}>{i18n.t("stakeInfoBanner")}</p>
         </div>
 
-        <div className={styles.dividedLine}>
-          <p className={styles.dividedContent}>-</p>
-        </div>
+        {isRedelegate ? (
+          <div className={styles.validatorSection}>
+            <p className={styles.validatorLabel}>{i18n.t("fromValidator")}</p>
+            <div className={styles.validatorCard}>
+              <ValidatorIcon icon={currentValidatorIcon} name={currentValidatorName} />
+              <span className={styles.validatorName}>{currentValidatorName}</span>
+            </div>
 
-        <div>
-          <AdvanceMode
-            onClickAdvance={onClickAdvance}
-            isOpenAdvance={isOpenAdvance}
-            feeValue={advanceInputFee}
-            feePlaceholder={feeAmount}
-            onFeeInput={onFeeInput}
-            feeErrorTip={feeErrorTip}
-            nonceValue={inputNonce}
-            onNonceInput={onNonceInput}
-          />
-        </div>
+            <p className={styles.validatorLabel}>{i18n.t("toValidator")}</p>
+            {menuAdd ? (
+              <Input
+                onChange={onBlockAddressInput}
+                value={blockAddress}
+                inputType={"text"}
+                placeholder={i18n.t("blockProducerAddress")}
+              />
+            ) : hasToValidator ? (
+              <ValidatorSelector
+                showNodeName={showNodeName}
+                nodeIcon={nodeIcon}
+                onClickBlockProducer={onClickBlockProducer}
+              />
+            ) : (
+              <ValidatorSelector
+                showNodeName={i18n.t("selectValidator")}
+                nodeIcon={null}
+                onClickBlockProducer={onClickBlockProducer}
+              />
+            )}
+          </div>
+        ) : (
+          <div className={styles.validatorSection}>
+            <p className={styles.validatorLabel}>{i18n.t("validator")}</p>
+            {menuAdd ? (
+              <Input
+                onChange={onBlockAddressInput}
+                value={blockAddress}
+                inputType={"text"}
+                placeholder={i18n.t("blockProducerAddress")}
+              />
+            ) : (
+              <ValidatorSelector
+                showNodeName={showNodeName}
+                nodeIcon={nodeIcon}
+                onClickBlockProducer={onClickBlockProducer}
+              />
+            )}
+
+            <EarningsEstimate balanceTotal={mainTokenNetInfo?.balance?.total || "0"} decimals={mainTokenNetInfo?.tokenBaseInfo?.decimals || 9} stakingAPY={isActiveValidator ? stakingAPY : 0} />
+          </div>
+        )}
         <div className={styles.hold} />
       </div>
       <div className={cls(styles.bottomContainer)}>
@@ -439,19 +474,82 @@ const StakingTransfer = () => {
   );
 };
 
-const BlockProducer = ({ label, showNodeName, onClickBlockProducer }) => {
+const ValidatorSelector = ({ showNodeName, nodeIcon, onClickBlockProducer }) => {
   return (
-    <div className={styles.nodeNameContainer}>
-      <div className={styles.label}>
-        <div className={styles.labelContainer}>
-          <span>{label}</span>
-        </div>
+    <div className={styles.validatorSelectorCard} onClick={onClickBlockProducer}>
+      <div className={styles.validatorSelectorInfo}>
+        <ValidatorIcon icon={nodeIcon} name={showNodeName} />
+        <span className={styles.validatorSelectorName}>{showNodeName}</span>
       </div>
-      <div className={styles.rowContainer} onClick={onClickBlockProducer}>
-        <p className={styles.nodeName}>{showNodeName}</p>
-        <img className={styles.arrow} src={"/img/icon_arrow_unfold.svg"} />
+      <img className={styles.arrow} src="/img/icon_arrow.svg" />
+    </div>
+  );
+};
+
+const ValidatorIcon = ({ icon, name }) => {
+  const [showHolder, setShowHolder] = useState(!icon);
+  const holderName = useMemo(() => {
+    return (name?.slice(0, 1) || "").toUpperCase();
+  }, [name]);
+
+  useEffect(() => {
+    if (icon) setShowHolder(false);
+  }, [icon]);
+
+  const onLoadError = useCallback(() => {
+    setShowHolder(true);
+  }, []);
+
+  return (
+    <div className={styles.validatorIconWrapper}>
+      {showHolder ? (
+        <div className={styles.validatorIconHolder}>{holderName}</div>
+      ) : (
+        <img src={icon} className={styles.validatorIconImg} onError={onLoadError} />
+      )}
+    </div>
+  );
+};
+
+const EPOCH_DAYS = 15;
+const THREE_MONTHS_DAYS = 90;
+const SIX_MONTHS_DAYS = 180;
+const ESTIMATE_DECIMALS = 4;
+
+const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPY = 0 }) => {
+  const balance = useMemo(() => {
+    return new BigNumber(balanceTotal).dividedBy(new BigNumber(10).pow(decimals));
+  }, [balanceTotal, decimals]);
+  
+  const estimates = useMemo(() => {
+    if (!stakingAPY || balance.isZero() || balance.isNaN()) return { epoch: '--', threeMonths: '--', sixMonths: '--' };
+    const dailyRate = new BigNumber(stakingAPY).dividedBy(100).dividedBy(365);
+    
+    return {
+      epoch: balance.multipliedBy(dailyRate).multipliedBy(EPOCH_DAYS).toFixed(ESTIMATE_DECIMALS, BigNumber.ROUND_DOWN),
+      threeMonths: balance.multipliedBy(dailyRate).multipliedBy(THREE_MONTHS_DAYS).toFixed(ESTIMATE_DECIMALS, BigNumber.ROUND_DOWN),
+      sixMonths: balance.multipliedBy(dailyRate).multipliedBy(SIX_MONTHS_DAYS).toFixed(ESTIMATE_DECIMALS, BigNumber.ROUND_DOWN),
+    };
+  }, [balance, stakingAPY]);
+
+  const formatValue = (val) => val === '--' ? '--' : `${val} ${MAIN_COIN_CONFIG.symbol}`;
+
+  return (
+    <div className={styles.earningsCard}>
+      <div className={styles.earningsRow}>
+        <span className={styles.earningsLabel}>{i18n.t("epochEstimate")}</span>
+        <span className={styles.earningsValue}>{formatValue(estimates.epoch)}</span>
+      </div>
+      <div className={styles.earningsRow}>
+        <span className={styles.earningsLabel}>{i18n.t("threeMonthsEstimate")}</span>
+        <span className={styles.earningsValue}>{formatValue(estimates.threeMonths)}</span>
+      </div>
+      <div className={styles.earningsRow}>
+        <span className={styles.earningsLabel}>{i18n.t("sixMonthsEstimate")}</span>
+        <span className={styles.earningsValue}>{formatValue(estimates.sixMonths)}</span>
       </div>
     </div>
   );
 };
+
 export default StakingTransfer;

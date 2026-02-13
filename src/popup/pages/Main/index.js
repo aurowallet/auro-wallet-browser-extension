@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "../../../constant/storageKey";
 import { updateAccountTx, updateAccountTxV2, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
-import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
+import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingAPY, updateStakingList } from "../../../reducers/stakingReducer";
 import Wallet from "../Wallet";
 
 const HomePage = () => {
@@ -17,7 +17,7 @@ const HomePage = () => {
     try {
       return JSON.parse(data)
     } catch (error) {
-      return ""
+      return null
     }
   }
   const shouldUpdateTxList = useCallback((address) => {
@@ -68,7 +68,7 @@ const HomePage = () => {
     let localTokenPrice = getLocal(LOCAL_CACHE_KEYS.COIN_PRICE)
     if (localTokenPrice) {
       let localPriceJson = safeJsonParse(localTokenPrice)
-      if (Object.keys(localPriceJson).length>0) {
+      if (localPriceJson && Object.keys(localPriceJson).length>0) {
         dispatch(updateCurrentPrice(localPriceJson,true))
       }
     }
@@ -109,8 +109,25 @@ const HomePage = () => {
     let localStakingList = getLocal(LOCAL_CACHE_KEYS.STAKING_LIST)
     if (localStakingList) {
       let localStakingListJson = safeJsonParse(localStakingList)
-      if (localStakingListJson) {
+      if (!localStakingListJson) return
+      if (Array.isArray(localStakingListJson)) {
+        localStakingListJson = {
+          active: localStakingListJson.filter(n => n.isActive),
+          inactive: localStakingListJson.filter(n => !n.isActive),
+        }
+      }
+      if (localStakingListJson.active?.length > 0 || localStakingListJson.inactive?.length > 0) {
         dispatch(updateStakingList({ stakingList: localStakingListJson }))
+      }
+    }
+  }, [])
+
+  const updateLocalStakingAPY = useCallback(() => {
+    let localStakingAPY = getLocal(LOCAL_CACHE_KEYS.STAKING_APY)
+    if (localStakingAPY) {
+      let apy = safeJsonParse(localStakingAPY)
+      if (apy !== null && apy !== undefined) {
+        dispatch(updateStakingAPY(apy))
       }
     }
   }, [])
@@ -125,9 +142,10 @@ const HomePage = () => {
     updateLocalDelegation(address)
     updateLocalBlock()
     updateLocalStaking()
+    updateLocalStakingAPY()
   }, [currentAccount,
-    shouldUpdateTxList, updateLocalAccount, updateLocalPrice, updateLocalDaemonStatus,
-    updateLocalDelegation, updateLocalBlock, updateLocalStaking])
+    shouldUpdateTxList, updateLocalPrice,
+    updateLocalDaemonStatus, updateLocalDelegation, updateLocalBlock, updateLocalStaking, updateLocalStakingAPY])
 
   useEffect(() => {
     getLocalCache()

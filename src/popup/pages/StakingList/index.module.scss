@@ -30,6 +30,13 @@
   padding: 0 20px;
   overflow: auto;
 }
+.sectionTitle {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 20px 0 0;
+}
 .rowContainer {
   display: flex;
   align-items: center;
