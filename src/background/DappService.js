@@ -19,10 +19,7 @@ import { decryptData, encryptData } from '@/utils/fore';
 import { node_public_keys, react_private_keys, TOKEN_BUILD_URL } from '../../config';
 import { sendMsg } from '../utils/commonMsg';
 import { POPUP_CHANNEL_KEYS } from '@/constant/commonType';
-import {
-  PresentationRequestSchema,
-  StoredCredentialSchema,
-} from "mina-attestations/validation"
+import { checkPresentationRequestSchema, checkStoredCredentialSchema } from '@/utils/o1jsUtils';
 const { v4: uuidv4 } = require('uuid');
 
 let signRequests = [];
@@ -298,7 +295,7 @@ class DappService {
         } 
         if (sendAction === DAppActions.mina_storePrivateCredential) {
           const credentialData = params.credential||params["0"];
-          const result = StoredCredentialSchema.safeParse(credentialData);
+          const result = checkStoredCredentialSchema(credentialData);
           nextParams.credential = credentialData;
           if(!result.success){
             reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})
@@ -308,7 +305,7 @@ class DappService {
         if (sendAction === DAppActions.mina_requestPresentation) {
           const presentationData = params.presentation || params["0"]
           const presentationRequest = presentationData.presentationRequest??{}
-          const result = PresentationRequestSchema.safeParse(presentationRequest);
+          const result = checkPresentationRequestSchema(presentationRequest);
           nextParams.presentationData = presentationData;
           if(!result.success){
             reject({ code:errorCodes.invalidParams, message: getMessageFromCode(errorCodes.invalidParams)})

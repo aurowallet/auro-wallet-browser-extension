@@ -5,6 +5,8 @@
 /.pnp
 .pnp.js
 /dist
+/dist-chrome
+/dist-firefox
 .idea
 
 # testing

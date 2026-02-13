@@ -1,38 +1,28 @@
-const deepmerge = require("deepmerge");
 const fs = require("fs");
 const path = require("path");
+const deepmerge = require("deepmerge");
 
 const baseManifest = require("../src/manifest/manifest.json");
-const chromeManifestProperties = require("../src/manifest/chrome.json");
+const chromeManifestProps = require("../src/manifest/chrome.json");
+const firefoxManifestProps = require("../src/manifest/firefox.json");
 
-const chromeManifest = deepmerge(baseManifest, chromeManifestProperties, {
-  // arrayMerge: (_, source) => source,
-});
+// check browser environment
+const browser = process.env.BROWSER || "chrome";
+console.log(`post-dev.js: browser is → ${browser.toUpperCase()}`);
 
-async function writeManifestFile(targetPath, fileContent) {
-  return new Promise((resolve) => {
-    fs.writeFile(
-      targetPath + "/manifest.json",
-      JSON.stringify(fileContent, null, 2),
-      (err) => {
-        if (err) {
-          console.error(err);
-          process.exit(1);
-        } else {
-          console.log("write distManifest success !", targetPath);
-          resolve();
-        }
-      }
-    );
-  });
+const targetManifest = browser === "firefox"
+  ? deepmerge(baseManifest, firefoxManifestProps)
+  : deepmerge(baseManifest, chromeManifestProps);
+
+const distPath = browser === "firefox" ? "dist-firefox" : "dist";
+// write manifest.json to dist
+if (!fs.existsSync(distPath)) {
+  fs.mkdirSync(distPath, { recursive: true });
 }
 
-(async () => {
-  try {
-    const distPath = path.resolve(__dirname, `../dist`);
-    await writeManifestFile(distPath, chromeManifest);
-  } catch (e) {
-    console.error(e);
-    process.exit(1);
-  }
-})();
+fs.writeFileSync(
+  path.join(distPath, "manifest.json"),
+  JSON.stringify(targetManifest, null, 2)
+);
+
+console.log("manifest.json is write to dist(for dev) successfully.");
