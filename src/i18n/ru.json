@@ -329,5 +329,6 @@
   "epochEstimate": "15 дней (1 эпоха) прогноз",
   "threeMonthsEstimate": "3 месяца прогноз",
   "sixMonthsEstimate": "6 месяцев прогноз",
-  "staked": "Застейкано"
+  "staked": "Застейкано",
+  "networkFee": "Сетевая комиссия"
 }

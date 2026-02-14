@@ -7,7 +7,7 @@ const webExt = require("web-ext");
 const pck = require("../package.json");
 const deepmerge = require("deepmerge");
 
-const ID = "1002";
+const ID = "1004";
 const version = pck.version;
 const baseName = pck.name;
 

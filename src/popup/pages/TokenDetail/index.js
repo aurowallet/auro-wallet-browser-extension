@@ -103,7 +103,7 @@ const TokenDetail = () => {
   );
   let isFirstRequest = useRef(false);
 
-  let isRequest = false;
+  const isRequestRef = useRef(false);
 
   const {
     tokenIconUrl,
@@ -113,6 +113,16 @@ const TokenDetail = () => {
     tokenName,
     isFungibleToken,
   } = useMemo(() => {
+    if (!nextTokenInfo?.tokenBaseInfo) {
+      return {
+        tokenIconUrl: "",
+        tokenSymbol: MAIN_COIN_CONFIG.symbol,
+        displayBalance: "0 " + MAIN_COIN_CONFIG.symbol,
+        displayAmount: "",
+        tokenName: MAIN_COIN_CONFIG.name,
+        isFungibleToken: false,
+      };
+    }
     const isFungibleToken = !nextTokenInfo.tokenBaseInfo.isMainToken;
 
     let tokenIconUrl = nextTokenInfo.tokenBaseInfo.iconUrl;
@@ -148,7 +158,6 @@ const TokenDetail = () => {
 
     return {
       tokenIconUrl,
-      token: nextTokenInfo,
       isFungibleToken,
       tokenSymbol,
       tokenName,
@@ -158,9 +167,9 @@ const TokenDetail = () => {
   }, [nextTokenInfo]);
 
   const showTxHistory = useMemo(() => {
-    let list = txHistoryMap[token.tokenId] || [];
+    let list = txHistoryMap[token?.tokenId] || [];
     return list;
-  }, [txHistoryMap, token.tokenId]);
+  }, [txHistoryMap, token?.tokenId]);
 
   useEffect(() => {
     if (showTxHistory.length == 0 && isFirstRequest.current) {
@@ -172,12 +181,13 @@ const TokenDetail = () => {
 
   const saveToLocal = useCallback(
     (newHistory) => {
+      if (!token?.tokenId) return;
       const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
       const currentHistory = JSON.parse(txHistory);
       if (currentHistory?.[currentAccount.address]) {
         let newSaveHistory = {
           ...currentHistory[currentAccount.address],
-          [token.tokenId]: newHistory,
+          [token?.tokenId]: newHistory,
         };
         saveLocal(
           LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
@@ -190,26 +200,26 @@ const TokenDetail = () => {
           LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
           JSON.stringify({
             [currentAccount.address]: {
-              [token.tokenId]: newHistory,
+              [token?.tokenId]: newHistory,
             },
           })
         );
       }
     },
-    [currentAccount.address, token.tokenId]
+    [currentAccount.address, token?.tokenId]
   );
   const requestHistory = useCallback(
     async (address = currentAccount.address) => {
-      if (isRequest) {
+      if (isRequestRef.current || !token?.tokenId) {
         return;
       }
-      isRequest = true;
-      let fullTxRequest = getAllTxHistory(address, token.tokenId).catch(
+      isRequestRef.current = true;
+      let fullTxRequest = getAllTxHistory(address, token?.tokenId).catch(
         (err) => err
       );
       let getZkAppPendingRequest = getZkAppPendingTx(
         address,
-        token.tokenId
+        token?.tokenId
       ).catch((err) => err);
       let txResponse;
       if (isFungibleToken) {
@@ -226,7 +236,7 @@ const TokenDetail = () => {
         if (zkPendingStatus) {
           history.zkPendingList = zkPendingList;
         }
-        dispatch(updateAccountTxV2(history, token.tokenId));
+        dispatch(updateAccountTxV2(history, token?.tokenId));
         dispatch(updateShouldRequest(false));
         saveToLocal(history);
       } else {
@@ -253,16 +263,16 @@ const TokenDetail = () => {
         if (zkPendingStatus) {
           history.zkPendingList = zkPendingList;
         }
-        dispatch(updateAccountTxV2(history, token.tokenId));
+        dispatch(updateAccountTxV2(history, token?.tokenId));
         dispatch(updateShouldRequest(false));
         saveToLocal(history);
       }
 
       isFirstRequest.current = false;
       setShowLoading(false);
-      isRequest = false;
+      isRequestRef.current = false;
     },
-    [currentAccount.address, isFungibleToken, token.tokenId, saveToLocal]
+    [currentAccount.address, isFungibleToken, token?.tokenId, saveToLocal]
   );
 
   const onClickRefresh = useCallback(() => {
@@ -291,8 +301,9 @@ const TokenDetail = () => {
       if (type === FROM_BACK_TO_RECORD && action === TX_SUCCESS) {
         dispatch(updateShouldRequest(true, true));
         sendResponse();
+        return true;
       }
-      return true;
+      return false;
     };
     browser.runtime.onMessage.addListener(onMessageListening);
     return () => {
@@ -318,7 +329,7 @@ const TokenDetail = () => {
     <CustomViewV2
       title={tokenSymbol}
       subTitle={tokenName}
-      copyContent={isFungibleToken ? token.tokenId : ""}
+      copyContent={isFungibleToken ? token?.tokenId : ""}
     >
       <StyledTopWrapper>
         <TokenIcon

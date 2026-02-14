@@ -329,5 +329,6 @@
   "epochEstimate": "15 days (1 epoch) est.",
   "threeMonthsEstimate": "3 months est.",
   "sixMonthsEstimate": "6 months est.",
-  "staked": "Staked"
+  "staked": "Staked",
+  "networkFee": "Network Fee"
 }

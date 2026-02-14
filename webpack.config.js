@@ -4,6 +4,7 @@ const fs = require("fs");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const deepmerge = require("deepmerge");
 
 module.exports = (env, argv) => {
   console.log("argv.mode:", argv.mode);
@@ -172,6 +173,17 @@ function getPlugins(browser) {
         { from: "./public/static", to: "./" },
         { from: "./public/img", to: "./img" },
         { from: "./src/_locales", to: "./_locales" },
+        {
+          from: "./src/manifest/manifest.json",
+          to: "manifest.json",
+          transform(content) {
+            const base = JSON.parse(content.toString());
+            const browserProps = browser === "firefox"
+              ? JSON.parse(fs.readFileSync(path.resolve(__dirname, "./src/manifest/firefox.json"), "utf-8"))
+              : JSON.parse(fs.readFileSync(path.resolve(__dirname, "./src/manifest/chrome.json"), "utf-8"));
+            return JSON.stringify(deepmerge(base, browserProps), null, 2);
+          },
+        },
       ],
     }),
     new webpack.ProvidePlugin({

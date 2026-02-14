@@ -19,7 +19,7 @@ import CustomView from "../../component/CustomView";
 import Input from "../../component/Input";
 import styles from "./index.module.scss";
 
-import { MAIN_COIN_CONFIG } from "../../../constant";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
 import { NetworkID_MAP } from "../../../constant/network";
 import {
   QA_SIGN_TRANSACTION,
@@ -33,6 +33,7 @@ import useFetchAccountData from "@/hooks/useUpdateAccount";
 import { DAppActions } from "@aurowallet/mina-provider";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
+import { updateNextTokenDetail } from "../../../reducers/cache";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
 const StakingTransfer = () => {
@@ -120,9 +121,12 @@ const StakingTransfer = () => {
 
   const [blockAddress, setBlockAddress] = useState("");
 
-  const memo = "";
-  const [feeAmount, setFeeAmount] = useState(0.1);
-  const inputNonce = "";
+  const [memo, setMemo] = useState("");
+  const [feeAmount, setFeeAmount] = useState(() => {
+    return netFeeList.length > 1 ? String(netFeeList[1].value) : "0.1";
+  });
+  const [inputNonce, setInputNonce] = useState("");
+  const [isOpenAdvance, setIsOpenAdvance] = useState(false);
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
   const [contentList, setContentList] = useState([]);
@@ -144,6 +148,22 @@ const StakingTransfer = () => {
 
   const onBlockAddressInput = useCallback((e) => {
     setBlockAddress(e.target.value);
+  }, []);
+
+  const onMemoInput = useCallback((e) => {
+    setMemo(e.target.value);
+  }, []);
+
+  const onFeeInput = useCallback((e) => {
+    setFeeAmount(e.target.value);
+  }, []);
+
+  const onNonceInput = useCallback((e) => {
+    setInputNonce(e.target.value);
+  }, []);
+
+  const onClickAdvance = useCallback(() => {
+    setIsOpenAdvance(prev => !prev);
   }, []);
 
   const onClickClose = useCallback(() => {
@@ -173,13 +193,23 @@ const StakingTransfer = () => {
           () => {}
         );
       }
-      if (history.length >= 4) {
-        history.go(-3);
-      } else {
-        history.replace("/");
-      }
+      const tokenDetail = mainTokenNetInfo?.tokenId
+        ? mainTokenNetInfo
+        : {
+            ...mainTokenNetInfo,
+            tokenId: ZK_DEFAULT_TOKEN_ID,
+            tokenBaseInfo: mainTokenNetInfo?.tokenBaseInfo || {
+              isMainToken: true,
+              decimals: MAIN_COIN_CONFIG.decimals,
+              showBalance: "0",
+              iconUrl: "img/mina_color.svg",
+            },
+          };
+      dispatch(updateNextTokenDetail(tokenDetail));
+      history.replace("/");
+      history.push("/token_detail");
     },
-    [history]
+    [history, dispatch, mainTokenNetInfo]
   );
 
   useEffect(() => {
@@ -262,6 +292,9 @@ const StakingTransfer = () => {
       feeAmount,
       blockAddress,
       nodeAddress,
+      memo,
+      inputNonce,
+      onSubmitSuccess,
       ledgerTransfer,
       ledgerStatus,
     ]
@@ -339,6 +372,8 @@ const StakingTransfer = () => {
       feeAmount,
       currentAccount,
       blockAddress,
+      memo,
+      inputNonce,
       ledgerStatus,
     ]
   );
@@ -364,9 +399,9 @@ const StakingTransfer = () => {
   }, [nodeAddress, isRedelegate]);
 
   useEffect(() => {
-    if (feeAmount === 0.1) {
+    if (feeAmount === "0.1") {
       if (netFeeList.length > 1) {
-        setFeeAmount(netFeeList[1].value);
+        setFeeAmount(String(netFeeList[1].value));
       }
     }
   }, [feeAmount, netFeeList]);
@@ -390,11 +425,55 @@ const StakingTransfer = () => {
   return (
     <CustomView title={pageTitle} contentClassName={styles.container}>
       <div className={styles.contentContainer}>
-        <div className={styles.infoBanner}>
-          <p className={styles.infoBannerText}>{i18n.t("stakeInfoBanner")}</p>
-        </div>
+        {!menuAdd && (
+          <div className={styles.infoBanner}>
+            <p className={styles.infoBannerText}>{i18n.t("stakeInfoBanner")}</p>
+          </div>
+        )}
 
-        {isRedelegate ? (
+        {menuAdd ? (
+          <div className={styles.validatorSection}>
+            <p className={styles.manualLabel}>{i18n.t("blockProducer")}</p>
+            <Input
+              onChange={onBlockAddressInput}
+              value={blockAddress}
+              inputType={"text"}
+              placeholder={i18n.t("blockProducerAddress")}
+            />
+
+            <p className={styles.manualLabel}>{i18n.t("memo")}</p>
+            <Input
+              onChange={onMemoInput}
+              value={memo}
+              inputType={"text"}
+            />
+
+            <div className={styles.feeDisplayRow}>
+              <span className={styles.feeDisplayLabel}>{i18n.t("networkFee")}</span>
+              <span className={styles.feeDisplayValue}>{feeAmount} {MAIN_COIN_CONFIG.symbol}</span>
+            </div>
+            <div className={styles.dividedLine}><p className={styles.dividedContent}>-</p></div>
+            <div className={styles.advancedRow}>
+              <span className={styles.advancedLink} onClick={onClickAdvance}>{i18n.t("advanceMode")}</span>
+            </div>
+            {isOpenAdvance && (
+              <div className={styles.advancedInputs}>
+                <Input
+                  label={i18n.t('transactionFee')}
+                  onChange={onFeeInput}
+                  value={String(feeAmount)}
+                  inputType={'numric'}
+                />
+                <Input
+                  label={"Nonce"}
+                  onChange={onNonceInput}
+                  value={inputNonce}
+                  inputType={'numric'}
+                />
+              </div>
+            )}
+          </div>
+        ) : isRedelegate ? (
           <div className={styles.validatorSection}>
             <p className={styles.validatorLabel}>{i18n.t("fromValidator")}</p>
             <div className={styles.validatorCard}>
@@ -403,14 +482,7 @@ const StakingTransfer = () => {
             </div>
 
             <p className={styles.validatorLabel}>{i18n.t("toValidator")}</p>
-            {menuAdd ? (
-              <Input
-                onChange={onBlockAddressInput}
-                value={blockAddress}
-                inputType={"text"}
-                placeholder={i18n.t("blockProducerAddress")}
-              />
-            ) : hasToValidator ? (
+            {hasToValidator ? (
               <ValidatorSelector
                 showNodeName={showNodeName}
                 nodeIcon={nodeIcon}
@@ -420,6 +492,7 @@ const StakingTransfer = () => {
               <ValidatorSelector
                 showNodeName={i18n.t("selectValidator")}
                 nodeIcon={null}
+                showIcon={false}
                 onClickBlockProducer={onClickBlockProducer}
               />
             )}
@@ -427,20 +500,11 @@ const StakingTransfer = () => {
         ) : (
           <div className={styles.validatorSection}>
             <p className={styles.validatorLabel}>{i18n.t("validator")}</p>
-            {menuAdd ? (
-              <Input
-                onChange={onBlockAddressInput}
-                value={blockAddress}
-                inputType={"text"}
-                placeholder={i18n.t("blockProducerAddress")}
-              />
-            ) : (
-              <ValidatorSelector
-                showNodeName={showNodeName}
-                nodeIcon={nodeIcon}
-                onClickBlockProducer={onClickBlockProducer}
-              />
-            )}
+            <ValidatorSelector
+              showNodeName={showNodeName}
+              nodeIcon={nodeIcon}
+              onClickBlockProducer={onClickBlockProducer}
+            />
 
             <EarningsEstimate balanceTotal={mainTokenNetInfo?.balance?.total || "0"} decimals={mainTokenNetInfo?.tokenBaseInfo?.decimals || 9} stakingAPY={isActiveValidator ? stakingAPY : 0} />
           </div>
@@ -456,7 +520,7 @@ const StakingTransfer = () => {
       <ConfirmModal
         modalVisible={confirmModalStatus}
         title={i18n.t("transactionDetails")}
-        highlightTitle={i18n.t("blockProducerName")}
+        highlightTitle={i18n.t("blockProducer")}
         highlightContent={showNodeName || addressSlice(blockAddress, 8)}
         onConfirm={clickNextStep}
         loadingStatus={confirmBtnStatus}
@@ -474,11 +538,11 @@ const StakingTransfer = () => {
   );
 };
 
-const ValidatorSelector = ({ showNodeName, nodeIcon, onClickBlockProducer }) => {
+const ValidatorSelector = ({ showNodeName, nodeIcon, onClickBlockProducer, showIcon = true }) => {
   return (
     <div className={styles.validatorSelectorCard} onClick={onClickBlockProducer}>
       <div className={styles.validatorSelectorInfo}>
-        <ValidatorIcon icon={nodeIcon} name={showNodeName} />
+        {showIcon && <ValidatorIcon icon={nodeIcon} name={showNodeName} />}
         <span className={styles.validatorSelectorName}>{showNodeName}</span>
       </div>
       <img className={styles.arrow} src="/img/icon_arrow.svg" />

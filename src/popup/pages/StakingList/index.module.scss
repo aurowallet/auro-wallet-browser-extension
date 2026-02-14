@@ -34,8 +34,8 @@
   font-weight: 500;
   font-size: 14px;
   line-height: 17px;
-  color: rgba(0, 0, 0, 0.5);
-  margin: 20px 0 0;
+  color: rgba(0, 0, 0, 0.8);
+  margin: 10px 0 0;
 }
 .rowContainer {
   display: flex;
@@ -53,9 +53,6 @@
   .numberContent {
     color: rgba(0, 0, 0, 1);
   }
-}
-.selectedBorder{
-  border: 0.5px solid #594af1 !important;
 }
 .nodeItemContainer {
   display: flex;

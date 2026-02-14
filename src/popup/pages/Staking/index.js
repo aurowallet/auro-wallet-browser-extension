@@ -22,7 +22,7 @@ import {
   updateStakingAPY,
 } from "../../../reducers/stakingReducer";
 import { openTab } from "../../../utils/commonMsg";
-import { addressSlice, isNumber } from "../../../utils/utils";
+import { addressSlice, getBalanceForUI, isNumber } from "../../../utils/utils";
 import Clock from "../../component/Clock";
 import CustomView from "../../component/CustomView";
 import styles from "./index.module.scss";
@@ -45,11 +45,7 @@ const Staking = ({}) => {
     return networkID?.startsWith("mina");
   }, [networkID]);
 
-  const [delegatePublicKey, setDelegatePublicKey] = useState(() => {
-    const delegateAccount = mainTokenNetInfo?.delegateAccount?.publicKey;
-    if (!delegateAccount) return null;
-    return currentAddress === delegateAccount ? "" : delegateAccount;
-  });
+  const [delegatePublicKey, setDelegatePublicKey] = useState(null);
   const [loading, setLoading] = useState(false);
   const isFirstRequest = useRef(
     !isNumber(daemonStatus?.consensusConfiguration?.slotsPerEpoch),
@@ -73,6 +69,9 @@ const Staking = ({}) => {
           let account = data[0];
           let delegateKey =
             currentAddress === account.delegate ? "" : account.delegate;
+          console.log('[Staking:fetchData] currentAddress:', currentAddress);
+          console.log('[Staking:fetchData] account.delegate:', account.delegate);
+          console.log('[Staking:fetchData] resolved delegateKey:', delegateKey);
           setDelegatePublicKey(delegateKey);
           dispatch(updateDelegationKey(delegateKey));
           let daemonStatus = data[1];
@@ -154,20 +153,24 @@ const Staking = ({}) => {
 };
 
 
+const EarnHeader = ({ onClickGuide }) => (
+  <div className={styles.earnHeader}>
+    <div className={styles.rowTitleContainer}>
+      <img className={styles.rowIcon} src="/img/icon_Delegation.svg" />
+      <p className={styles.rowTitle}>{i18n.t("earnOnMina")}</p>
+    </div>
+    <img
+      className={styles.infoIcon}
+      src="/img/icon_info_staking.svg"
+      onClick={onClickGuide}
+    />
+  </div>
+);
+
 const LoadingView = ({ onClickGuide }) => {
   return (
     <div className={cls(styles.earnContainer, styles.loadingEarnContainer)}>
-      <div className={styles.earnHeader}>
-        <div className={styles.rowTitleContainer}>
-          <img className={styles.rowIcon} src="/img/icon_Delegation.svg" />
-          <p className={styles.rowTitle}>{i18n.t("earnOnMina")}</p>
-        </div>
-        <img
-          className={styles.infoIcon}
-          src="/img/icon_info.svg"
-          onClick={onClickGuide}
-        />
-      </div>
+      <EarnHeader onClickGuide={onClickGuide} />
       <div className={styles.loadingContainer}>
         <img className={styles.refreshLoading} src="/img/loading_purple.svg" />
         <p className={styles.loadingTip}>{i18n.t("loading")}...</p>
@@ -184,8 +187,9 @@ const EmptyView = ({ onClickGuide }) => {
   const stakingAPY = useSelector((state) => state.staking.stakingAPY);
   const stakingList = useSelector((state) => state.staking.stakingList);
   const networkID = useSelector((state) => state.network.currentNode.networkID);
-  const availableBalance =
-    mainTokenNetInfo?.tokenBaseInfo?.showBalance || "0.00";
+  const availableBalance = getBalanceForUI(
+    mainTokenNetInfo?.tokenBaseInfo?.showBalance || "0", 0, 4
+  );
 
   const onGoStake = useCallback(() => {
     if (networkID === NetworkID_MAP.mainnet) {
@@ -209,17 +213,7 @@ const EmptyView = ({ onClickGuide }) => {
 
   return (
     <div className={styles.earnContainer}>
-      <div className={styles.earnHeader}>
-        <div className={styles.rowTitleContainer}>
-          <img className={styles.rowIcon} src="/img/icon_Delegation.svg" />
-          <p className={styles.rowTitle}>{i18n.t("earnOnMina")}</p>
-        </div>
-        <img
-          className={styles.infoIcon}
-          src="/img/icon_info.svg"
-          onClick={onClickGuide}
-        />
-      </div>
+      <EarnHeader onClickGuide={onClickGuide} />
       <div className={styles.earnContent}>
         <div className={styles.earnRow}>
           <span className={styles.earnLabel}>{i18n.t("available")}</span>
@@ -238,11 +232,10 @@ const EmptyView = ({ onClickGuide }) => {
           <span className={styles.earnValue}>{i18n.t("notLocked")}</span>
         </div>
       </div>
-      <div className={styles.actionLink} onClick={onGoStake}>
+      <div className={cls(styles.actionLink, styles.actionLinkBordered)} onClick={onGoStake}>
         <span className={styles.actionText}>{i18n.t("stake")}</span>
         <img className={styles.actionArrow} src="/img/icon_arrow.svg" />
       </div>
-      <div className={styles.actionDivider} />
     </div>
   );
 };
@@ -283,8 +276,9 @@ const DelegationInfo = ({
           nodeIcon = delegateNode.icon;
         }
       }
-      let stakedBalance =
-        mainTokenNetInfo?.tokenBaseInfo?.showBalance || "0.00";
+      let stakedBalance = getBalanceForUI(
+        mainTokenNetInfo?.tokenBaseInfo?.showBalance || "0", 0, 4
+      );
       return {
         nodeName,
         nodeIcon,
@@ -294,17 +288,7 @@ const DelegationInfo = ({
 
   return (
     <div className={styles.earnContainer}>
-      <div className={styles.earnHeader}>
-        <div className={styles.rowTitleContainer}>
-          <img className={styles.rowIcon} src="/img/icon_Delegation.svg" />
-          <p className={styles.rowTitle}>{i18n.t("earnOnMina")}</p>
-        </div>
-        <img
-          className={styles.infoIcon}
-          src="/img/icon_info.svg"
-          onClick={onClickGuide}
-        />
-      </div>
+      <EarnHeader onClickGuide={onClickGuide} />
       <div className={styles.earnContent}>
         <div className={styles.earnRow}>
           <span className={styles.earnLabel}>{i18n.t("available")}</span>
@@ -378,17 +362,7 @@ const ValidatorIcon = ({ icon, name }) => {
 const UnknownNetworkView = ({ onClickGuide }) => {
   return (
     <div className={cls(styles.earnContainer, styles.unknownEarnContainer)}>
-      <div className={styles.earnHeader}>
-        <div className={styles.rowTitleContainer}>
-          <img className={styles.rowIcon} src="/img/icon_Delegation.svg" />
-          <p className={styles.rowTitle}>{i18n.t("earnOnMina")}</p>
-        </div>
-        <img
-          className={styles.infoIcon}
-          src="/img/icon_info.svg"
-          onClick={onClickGuide}
-        />
-      </div>
+      <EarnHeader onClickGuide={onClickGuide} />
       <div className={styles.unknownContainer}>
         <img className={styles.unknownIcon} src="/img/icon_empty.svg" />
         <p className={styles.unknownTip}>{i18n.t("unknownNetworkStaking")}</p>

@@ -1,5 +1,5 @@
 .contentClassName {
-  padding: 20px 20px 0px;
+  padding: 10px 20px 0px;
   display: flex;
   flex-direction: column;
 }
@@ -30,11 +30,11 @@
   border-radius: 12px;
 }
 .mgtM10 {
-  margin-top: 8px;
+  margin-top: 12px;
 }
 .epochContent {
   @extend .commonContent;
-  margin-top: 8px;
+  margin-top: 12px;
   padding: 16px;
   display: flex;
   justify-content: space-between;
@@ -145,12 +145,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .infoIcon {
-  width: 18px;
-  height: 18px;
+  width: 30px;
+  height: 30px;
   cursor: pointer;
   opacity: 0.5;
 }
@@ -187,8 +187,8 @@
   font-weight: 500;
   font-size: 14px;
   line-height: 17px;
-  color: rgba(0, 0, 0, 0.5);
-  margin: 16px 0 8px;
+  color: rgba(0, 0, 0, 0.8);
+  margin: 16px 0 12px;
 }
 
 .validatorCard {
@@ -212,7 +212,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: linear-gradient(135deg, #594AF1 0%, #FF7870 100%);
+  background-color: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,8 +261,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  padding: 4px 10px;
   cursor: pointer;
+}
+
+.actionLinkBordered {
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
 }
 
 .actionText {
@@ -275,11 +279,6 @@
 .actionArrow {
   width: 30px;
   height: 30px;
-}
-
-.actionDivider {
-  height: 0.5px;
-  background: rgba(0, 0, 0, 0.1);
 }
 
 .delegationContainer {

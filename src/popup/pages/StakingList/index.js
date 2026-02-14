@@ -1,4 +1,3 @@
-import cls from "classnames";
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -20,7 +19,9 @@ const StakingList = ({ }) => {
     return { active: [], inactive: [] }
   })
 
-  const [currentSelectAddress, setCurrentSelectAddress] = useState("")
+  const [currentSelectAddress, setCurrentSelectAddress] = useState(() => {
+    return history.location?.params?.nodeAddress || ""
+  })
 
   const [fromPage,] = useState(() => {
     let fromPage = history.location?.params?.fromPage ?? "";
@@ -38,7 +39,7 @@ const StakingList = ({ }) => {
       pathname: "/staking_transfer",
       params: {
         ...nodeItem,
-        ...(isRedelegate ? { isRedelegate: true } : {})
+        ...(isRedelegate ? { isRedelegate: true } : {}),
       }
     }
     if (fromPage === 'stakingTransfer') {
@@ -118,9 +119,7 @@ const NodeItem = ({
     }
   }, [nodeItem, currentSelectAddress, delegationKey])
   return(<div className={styles.rowContainer}>
-     <div className={cls(styles.nodeItemContainer, {
-      [styles.selectedBorder]:select
-    })} onClick={() => onClickRow(nodeItem)}>
+     <div className={styles.nodeItemContainer} onClick={() => onClickRow(nodeItem)}>
       <div className={styles.rowLeft}>
           <NodeIcon nodeItem={nodeItem}/>
           <div className={styles.nodeInfoCon}>
@@ -128,7 +127,7 @@ const NodeItem = ({
             <p className={styles.nodeAddress}>{showAddress}</p>
           </div>
       </div>
-      {isChecked && <div className={styles.rowRight}> 
+      {(currentSelectAddress ? select : isChecked) && <div className={styles.rowRight}> 
          <img src="/img/icon_checked.svg" />
       </div>}
     </div>
