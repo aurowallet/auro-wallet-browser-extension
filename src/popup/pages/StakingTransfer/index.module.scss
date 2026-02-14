@@ -20,7 +20,7 @@
 }
 
 .validatorSection {
-  margin-top: 10px;
+   margin-top: 10px;
 }
 
 .validatorLabel {
@@ -133,57 +133,6 @@
 .arrow {
   width: 30px;
   height: 30px;
-}
-
-.manualLabel {
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 17px;
-  color: rgba(0, 0, 0, 0.85);
-  margin: 0 0 10px 0;
-  &:not(:first-child) {
-    margin-top: 20px;
-  }
-}
-
-.feeDisplayRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.feeDisplayLabel {
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 17px;
-  color: rgba(0, 0, 0, 0.85);
-}
-
-.feeDisplayValue {
-  font-size: 14px;
-  line-height: 17px;
-  color: rgba(0, 0, 0, 0.85);
-}
-
-.advancedRow {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.advancedLink {
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 17px;
-  color: #594af1;
-  cursor: pointer;
-}
-
-.advancedInputs {
-  margin-top: 16px;
-  > :not(:first-child) {
-    margin-top: 12px;
-  }
 }
 
 .inputContainer {

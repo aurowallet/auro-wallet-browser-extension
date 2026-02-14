@@ -28,6 +28,8 @@ import {
 import { sendMsg } from "../../../utils/commonMsg";
 import { getLedgerStatus, requestSignDelegation } from "../../../utils/ledger";
 import Toast from "../../component/Toast";
+import FeeGroup from "../../component/FeeGroup";
+import AdvanceMode from "../../component/AdvanceMode";
 
 import useFetchAccountData from "@/hooks/useUpdateAccount";
 import { DAppActions } from "@aurowallet/mina-provider";
@@ -125,6 +127,8 @@ const StakingTransfer = () => {
   const [feeAmount, setFeeAmount] = useState(() => {
     return netFeeList.length > 1 ? String(netFeeList[1].value) : "0.1";
   });
+  const [advanceInputFee, setAdvanceInputFee] = useState("");
+  const [feeErrorTip, setFeeErrorTip] = useState("");
   const [inputNonce, setInputNonce] = useState("");
   const [isOpenAdvance, setIsOpenAdvance] = useState(false);
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
@@ -155,15 +159,39 @@ const StakingTransfer = () => {
   }, []);
 
   const onFeeInput = useCallback((e) => {
-    setFeeAmount(e.target.value);
+    setAdvanceInputFee(e.target.value);
+    if (BigNumber(e.target.value).gt(10)) {
+      setFeeErrorTip(i18n.t("feeTooHigh"));
+    } else {
+      setFeeErrorTip("");
+    }
   }, []);
+
+  const nextFee = useMemo(() => {
+    if (isNumber(advanceInputFee) && advanceInputFee > 0) {
+      return advanceInputFee;
+    }
+    return feeAmount;
+  }, [advanceInputFee, feeAmount]);
 
   const onNonceInput = useCallback((e) => {
     setInputNonce(e.target.value);
   }, []);
 
   const onClickAdvance = useCallback(() => {
-    setIsOpenAdvance(prev => !prev);
+    setIsOpenAdvance(prev => {
+      if (prev) {
+        setAdvanceInputFee("");
+        setFeeErrorTip("");
+      }
+      return !prev;
+    });
+  }, []);
+
+  const onClickFeeGroup = useCallback((item) => {
+    setFeeAmount(item.fee);
+    setAdvanceInputFee("");
+    setFeeErrorTip("");
   }, []);
 
   const onClickClose = useCallback(() => {
@@ -262,7 +290,7 @@ const StakingTransfer = () => {
       let toAddress = nodeAddress || trimSpace(blockAddress);
       let nonce = trimSpace(inputNonce) || mainTokenNetInfo.inferredNonce;
       let realMemo = memo || "";
-      let fee = trimSpace(String(feeAmount));
+      let fee = trimSpace(String(nextFee));
       let payload = {
         fromAddress,
         toAddress,
@@ -289,7 +317,7 @@ const StakingTransfer = () => {
     [
       currentAccount,
       mainTokenNetInfo,
-      feeAmount,
+      nextFee,
       blockAddress,
       nodeAddress,
       memo,
@@ -307,7 +335,7 @@ const StakingTransfer = () => {
         Toast.info(i18n.t("sendAddressError"));
         return;
       }
-      let inputFee = trimSpace(String(feeAmount));
+      let inputFee = trimSpace(String(nextFee));
       if (inputFee.length > 0 && !isNumber(inputFee)) {
         Toast.info(i18n.t("inputFeeError"));
         return;
@@ -336,7 +364,7 @@ const StakingTransfer = () => {
         },
         {
           label: i18n.t("fee"),
-          value: inputFee + " " + MAIN_COIN_CONFIG.symbol,
+          value: trimSpace(String(nextFee)) + " " + MAIN_COIN_CONFIG.symbol,
         },
       ];
       if (isNaturalNumber(nonce)) {
@@ -369,7 +397,7 @@ const StakingTransfer = () => {
     [
       nodeAddress,
       mainTokenNetInfo,
-      feeAmount,
+      nextFee,
       currentAccount,
       blockAddress,
       memo,
@@ -432,46 +460,46 @@ const StakingTransfer = () => {
         )}
 
         {menuAdd ? (
-          <div className={styles.validatorSection}>
-            <p className={styles.manualLabel}>{i18n.t("blockProducer")}</p>
-            <Input
-              onChange={onBlockAddressInput}
-              value={blockAddress}
-              inputType={"text"}
-              placeholder={i18n.t("blockProducerAddress")}
-            />
-
-            <p className={styles.manualLabel}>{i18n.t("memo")}</p>
-            <Input
-              onChange={onMemoInput}
-              value={memo}
-              inputType={"text"}
-            />
-
-            <div className={styles.feeDisplayRow}>
-              <span className={styles.feeDisplayLabel}>{i18n.t("networkFee")}</span>
-              <span className={styles.feeDisplayValue}>{feeAmount} {MAIN_COIN_CONFIG.symbol}</span>
+          <div>
+            <div className={styles.inputContainer}>
+              <Input
+                label={i18n.t("blockProducer")}
+                onChange={onBlockAddressInput}
+                value={blockAddress}
+                inputType={"text"}
+              />
+              <Input
+                label={i18n.t("memo")}
+                onChange={onMemoInput}
+                value={memo}
+                inputType={"text"}
+              />
             </div>
-            <div className={styles.dividedLine}><p className={styles.dividedContent}>-</p></div>
-            <div className={styles.advancedRow}>
-              <span className={styles.advancedLink} onClick={onClickAdvance}>{i18n.t("advanceMode")}</span>
+            <div className={styles.feeContainer}>
+              <FeeGroup
+                onClickFee={onClickFeeGroup}
+                currentFee={nextFee}
+                netFeeList={netFeeList}
+                showFeeGroup={true}
+              />
             </div>
-            {isOpenAdvance && (
-              <div className={styles.advancedInputs}>
-                <Input
-                  label={i18n.t('transactionFee')}
-                  onChange={onFeeInput}
-                  value={String(feeAmount)}
-                  inputType={'numric'}
-                />
-                <Input
-                  label={"Nonce"}
-                  onChange={onNonceInput}
-                  value={inputNonce}
-                  inputType={'numric'}
-                />
-              </div>
-            )}
+
+            <div className={styles.dividedLine}>
+              <p className={styles.dividedContent}>-</p>
+            </div>
+
+            <div>
+              <AdvanceMode
+                onClickAdvance={onClickAdvance}
+                isOpenAdvance={isOpenAdvance}
+                feeValue={advanceInputFee}
+                feePlaceholder={String(feeAmount)}
+                onFeeInput={onFeeInput}
+                feeErrorTip={feeErrorTip}
+                nonceValue={inputNonce}
+                onNonceInput={onNonceInput}
+              />
+            </div>
           </div>
         ) : isRedelegate ? (
           <div className={styles.validatorSection}>
