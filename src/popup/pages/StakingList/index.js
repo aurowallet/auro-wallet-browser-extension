@@ -7,6 +7,7 @@ import { addressSlice, showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
 import styles from './index.module.scss';
 import { NetworkID_MAP } from "@/constant/network";
+import { useDelegationKey } from "@/hooks/useDelegationKey";
 
 const StakingList = ({ }) => {
 
@@ -102,7 +103,7 @@ const NodeItem = ({
   nodeItem,
   currentSelectAddress,
 }) => {
-  const delegationKey = useSelector(state => state.staking.delegationKey)
+  const delegationKey = useDelegationKey();
   const {
     select, showName, showAddress,isChecked
   } = useMemo(() => {

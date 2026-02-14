@@ -7,6 +7,7 @@ import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
+import { useDelegationKey } from "@/hooks/useDelegationKey";
 import {
   fetchBlockInfo,
   fetchDaemonStatus,
@@ -41,15 +42,30 @@ const Staking = ({}) => {
   const networkID = useSelector((state) => state.network.currentNode.networkID);
   const dispatch = useDispatch();
 
+  const cachedDelegationKey = useDelegationKey();
+
   const isKnownNetwork = useMemo(() => {
     return networkID?.startsWith("mina");
   }, [networkID]);
 
-  const [delegatePublicKey, setDelegatePublicKey] = useState(null);
+  const [delegatePublicKey, setDelegatePublicKey] = useState(() => {
+    return cachedDelegationKey;
+  });
   const [loading, setLoading] = useState(false);
-  const isFirstRequest = useRef(
-    !isNumber(daemonStatus?.consensusConfiguration?.slotsPerEpoch),
-  );
+  const hasInitialData = isNumber(daemonStatus?.consensusConfiguration?.slotsPerEpoch);
+  const isFirstRequest = useRef(true);
+  const fetchContextRef = useRef({ address: currentAddress, network: networkID });
+
+  useEffect(() => {
+    fetchContextRef.current = { address: currentAddress, network: networkID };
+    if (cachedDelegationKey === null) {
+      setDelegatePublicKey(null);
+      isFirstRequest.current = true;
+    } else {
+      setDelegatePublicKey(cachedDelegationKey);
+      isFirstRequest.current = !hasInitialData;
+    }
+  }, [currentAddress, networkID, cachedDelegationKey, hasInitialData]);
 
   const closeLoading = useCallback(() => {
     setLoading(false);
@@ -60,20 +76,25 @@ const Staking = ({}) => {
       if (isFirstRequest.current && !isSilent) {
         setLoading(true);
       }
-      const promises = [fetchDelegationInfo(currentAddress), fetchDaemonStatus()];
-      if (networkID === NetworkID_MAP.mainnet) {
+      const fetchAddress = currentAddress;
+      const fetchNetwork = networkID;
+      const promises = [fetchDelegationInfo(fetchAddress), fetchDaemonStatus()];
+      if (fetchNetwork === NetworkID_MAP.mainnet) {
         promises.push(fetchStakingAPY());
       }
       Promise.all(promises)
         .then((data) => {
+          const isStale =
+            fetchContextRef.current.address !== fetchAddress ||
+            fetchContextRef.current.network !== fetchNetwork;
+          if (isStale) {
+            return;
+          }
           let account = data[0];
           let delegateKey =
-            currentAddress === account.delegate ? "" : account.delegate;
-          console.log('[Staking:fetchData] currentAddress:', currentAddress);
-          console.log('[Staking:fetchData] account.delegate:', account.delegate);
-          console.log('[Staking:fetchData] resolved delegateKey:', delegateKey);
+            fetchAddress === account.delegate ? "" : account.delegate;
           setDelegatePublicKey(delegateKey);
-          dispatch(updateDelegationKey(delegateKey));
+          dispatch(updateDelegationKey(delegateKey, fetchAddress, fetchNetwork));
           let daemonStatus = data[1];
           if (data[2] !== undefined) {
             dispatch(updateStakingAPY(data[2]));
@@ -81,6 +102,10 @@ const Staking = ({}) => {
           if (daemonStatus.stateHash) {
             dispatch(updateDaemonStatus(daemonStatus));
             fetchBlockInfo(daemonStatus.stateHash).then((block) => {
+              if (fetchContextRef.current.address !== fetchAddress ||
+                  fetchContextRef.current.network !== fetchNetwork) {
+                return;
+              }
               if (block.protocolState) {
                 dispatch(updateBlockInfo(block));
               }
@@ -91,6 +116,10 @@ const Staking = ({}) => {
           }
         })
         .catch(() => {
+          if (fetchContextRef.current.address !== fetchAddress ||
+              fetchContextRef.current.network !== fetchNetwork) {
+            return;
+          }
           setDelegatePublicKey((prev) => (prev === null ? "" : prev));
           closeLoading();
         });
@@ -104,10 +133,17 @@ const Staking = ({}) => {
   }, [fetchData]);
 
   const baseFetchDataRef = useLatestRef(baseFetchData);
+  const lastFetchKeyRef = useRef("");
 
   useEffect(() => {
-    baseFetchData(false);
-  }, []);
+    const fetchKey = `${currentAddress}:${networkID}`;
+    if (lastFetchKeyRef.current === fetchKey) {
+      return;
+    }
+    lastFetchKeyRef.current = fetchKey;
+    const isCacheHit = cachedDelegationKey !== null;
+    baseFetchDataRef.current(hasInitialData && isCacheHit);
+  }, [currentAddress, networkID, hasInitialData, cachedDelegationKey]);
 
   const cache = useSelector((state) => state.cache);
   const history = useHistory();

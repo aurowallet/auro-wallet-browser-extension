@@ -58,10 +58,12 @@ export function updateDelegationInfo( account ) {
   };
 }
 
-export function updateDelegationKey(delegationKey) {
+export function updateDelegationKey(delegationKey, ownerAddress = "", networkID = "") {
   return {
     type: UPDATE_DELEGATION_PUBLICKEY,
     delegationKey,
+    ownerAddress,
+    networkID,
   };
 }
 
@@ -71,7 +73,11 @@ const initState = {
   daemonStatus: {},
   block: {},
   account:{},
-  delegationKey: "",
+  delegationCache: {
+    key: "",
+    owner: "",
+    network: "",
+  },
 };
 
 const staking = (state = initState, action) => {
@@ -96,7 +102,11 @@ const staking = (state = initState, action) => {
       case UPDATE_DELEGATION_PUBLICKEY:
         return {
           ...state,
-          delegationKey: action.delegationKey
+          delegationCache: {
+            key: action.delegationKey,
+            owner: action.ownerAddress || "",
+            network: action.networkID || "",
+          }
         };
       case UPDATE_STAKING_APY:
         return {

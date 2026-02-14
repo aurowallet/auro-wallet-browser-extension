@@ -32,6 +32,7 @@ import FeeGroup from "../../component/FeeGroup";
 import AdvanceMode from "../../component/AdvanceMode";
 
 import useFetchAccountData from "@/hooks/useUpdateAccount";
+import { useDelegationKey } from "@/hooks/useDelegationKey";
 import { DAppActions } from "@aurowallet/mina-provider";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
@@ -53,7 +54,7 @@ const StakingTransfer = () => {
   const { fetchAccountData } = useFetchAccountData(currentAccount);
 
   const stakingList = useSelector((state) => state.staking.stakingList);
-  const delegationKey = useSelector((state) => state.staking.delegationKey);
+  const delegationKey = useDelegationKey();
   const stakingAPY = useSelector((state) => state.staking.stakingAPY);
   const networkID = useSelector((state) => state.network.currentNode.networkID);
 
