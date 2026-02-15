@@ -8,16 +8,24 @@ const UPDATE_DELEGATION_INFO = 'UPDATE_DELEGATION_INFO';
 
 
 const UPDATE_DELEGATION_PUBLICKEY = 'UPDATE_DELEGATION_PUBLICKEY';
+const UPDATE_STAKING_APY = 'UPDATE_STAKING_APY';
 /**
  * request net list
  */
 export function getStakingList() {
   return async (dispatch) => {
     const stakingList = await fetchStakingList();
-    if(stakingList && stakingList.length>0){
+    if(stakingList && (stakingList.active?.length > 0 || stakingList.inactive?.length > 0)){
       dispatch(updateStakingList({ stakingList }));
     }
   }
+}
+
+export function updateStakingAPY(stakingAPY) {
+  return {
+    type: UPDATE_STAKING_APY,
+    stakingAPY,
+  };
 }
 /**
  * update staking list
@@ -50,18 +58,26 @@ export function updateDelegationInfo( account ) {
   };
 }
 
-export function updateDelegationKey(delegationKey) {
+export function updateDelegationKey(delegationKey, ownerAddress = "", networkID = "") {
   return {
     type: UPDATE_DELEGATION_PUBLICKEY,
     delegationKey,
+    ownerAddress,
+    networkID,
   };
 }
 
 const initState = {
-  stakingList: [],
+  stakingList: { active: [], inactive: [] },
+  stakingAPY: null,
   daemonStatus: {},
   block: {},
   account:{},
+  delegationCache: {
+    key: "",
+    owner: "",
+    network: "",
+  },
 };
 
 const staking = (state = initState, action) => {
@@ -86,7 +102,16 @@ const staking = (state = initState, action) => {
       case UPDATE_DELEGATION_PUBLICKEY:
         return {
           ...state,
-          delegationKey: action.delegationKey
+          delegationCache: {
+            key: action.delegationKey,
+            owner: action.ownerAddress || "",
+            network: action.networkID || "",
+          }
+        };
+      case UPDATE_STAKING_APY:
+        return {
+          ...state,
+          stakingAPY: action.stakingAPY
         };
       
     default:

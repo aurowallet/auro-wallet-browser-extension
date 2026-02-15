@@ -212,8 +212,9 @@ const Record = ({}) => {
       ) {
         dispatch(updateShouldRequest(true, true));
         sendResponse();
+        return true;
       }
-      return true;
+      return false;
     };
     browser.runtime.onMessage.addListener(onMessageListening);
     return () => {

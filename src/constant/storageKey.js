@@ -81,7 +81,12 @@ export const LOCAL_CACHE_KEYS = {
      */
     "ALL_TX_HISTORY":"ALL_TX_HISTORY",
 
-    "ALL_TX_HISTORY_V2":"ALL_TX_HISTORY_V2"
+    "ALL_TX_HISTORY_V2":"ALL_TX_HISTORY_V2",
+
+    /**
+     * staking APY
+     */
+    "STAKING_APY": "STAKING_APY"
 }
 
 /**

@@ -234,6 +234,8 @@ const SendPage = ({}) => {
 
   const onClickFeeGroup = useCallback((item) => {
     setFeeAmount(item.fee);
+    setAdvanceInputFee("");
+    setFeeErrorTip("");
   }, []);
 
   const fetchAccountInfo = useCallback(async () => {
@@ -245,7 +247,13 @@ const SendPage = ({}) => {
   }, []);
 
   const onClickAdvance = useCallback(() => {
-    setIsOpenAdvance((state) => !state);
+    setIsOpenAdvance((prev) => {
+      if (prev) {
+        setAdvanceInputFee("");
+        setFeeErrorTip("");
+      }
+      return !prev;
+    });
   }, []);
 
   const onFeeInput = useCallback(

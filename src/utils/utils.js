@@ -235,17 +235,38 @@ export function getRealErrorMsg(error) {
 
 /**
  * Process staking list data
+ * Supports v2 format: { active: [], inactive: [] }
+ * Also supports legacy flat array format for backward compatibility
  */
 export function parseStakingList(stakingListFromServer) {
-  return stakingListFromServer.map((node) => {
-    return {
-      nodeAddress: node.public_key,
-      nodeName: node.identity_name,
-      totalStake: getAmountForUI(node.stake, MAIN_COIN_CONFIG.decimals, 0),
-      delegations: node.delegations,
-      icon: node.validator_logo || "",
-    };
+  const emptyResult = { active: [], inactive: [] };
+  if (!stakingListFromServer) return emptyResult;
+
+  const parseNode = (node, isActive) => ({
+    nodeAddress: node.public_key,
+    nodeName: node.identity_name,
+    totalStake: getAmountForUI(node.stake, MAIN_COIN_CONFIG.decimals, 0),
+    delegations: node.delegations,
+    icon: node.validator_logo || "",
+    fee: node.fee,
+    blocksCreated: node.blocks_created,
+    isActive: isActive !== undefined ? isActive : !!node.is_active,
   });
+
+  // v2 format: { active: [...], inactive: [...] }
+  if (stakingListFromServer.active || stakingListFromServer.inactive) {
+    const active = (stakingListFromServer.active || []).map(n => parseNode(n, true));
+    const inactive = (stakingListFromServer.inactive || []).map(n => parseNode(n, false));
+    return { active, inactive };
+  }
+
+  // legacy flat array format
+  if (Array.isArray(stakingListFromServer)) {
+    const nodes = stakingListFromServer.map(n => parseNode(n));
+    return { active: nodes.filter(n => n.isActive), inactive: nodes.filter(n => !n.isActive) };
+  }
+
+  return emptyResult;
 }
 
 /**

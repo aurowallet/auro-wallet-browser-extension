@@ -46,6 +46,9 @@ function internalMessageListener(message, sender, sendResponse) {
   if (messageSource) {
     return false;
   }
+  if (!action) {
+    return false;
+  }
   switch (action) {
     case WALLET_CREATE_PWD:
       sendResponse(apiService.createPwd(payload.pwd));

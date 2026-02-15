@@ -1,8 +1,12 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@/utils/o1jsUtils": ["src/utils/o1jsUtils.js"],
+      "@/utils/o1jsUtils.js": ["src/utils/o1jsUtils.js"]
     }
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "dist-chrome", "dist-firefox"]
 }

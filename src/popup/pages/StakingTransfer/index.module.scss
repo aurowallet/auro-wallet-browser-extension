@@ -4,6 +4,137 @@
 .contentContainer {
   padding: 0px 20px;
 }
+
+.infoBanner {
+  background-color: rgba(0, 210, 146, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.infoBannerText {
+  font-size: 14px;
+  line-height: 20px;
+  color: #00D292;
+  margin: 0;
+}
+
+.validatorSection {
+   margin-top: 10px;
+}
+
+.validatorLabel {
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0 0 10px 0;
+}
+
+.validatorCard {
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.validatorSelectorCard {
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  &:hover {
+    border-color: #594af1;
+  }
+}
+
+.validatorSelectorInfo {
+  display: flex;
+  align-items: center;
+}
+
+.validatorSelectorName {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+}
+
+.validatorIconWrapper {
+  width: 36px;
+  height: 36px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.validatorIconHolder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.validatorIconImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.validatorName {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+}
+
+.earningsCard {
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.earningsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  &:not(:first-child) {
+    margin-top: 12px;
+  }
+}
+
+.earningsLabel {
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.earningsValue {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+}
+
+.arrow {
+  width: 30px;
+  height: 30px;
+}
+
 .inputContainer {
   > :not(:first-child) {
     margin-top: 20px;
