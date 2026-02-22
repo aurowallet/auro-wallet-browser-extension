@@ -714,7 +714,13 @@ class APIService {
     this.baseTransactionStatus(getQATxStatus, paymentId, hash);
   };
 
-  baseTransactionStatus = (method: (id: string) => Promise<{ transactionStatus?: string }>, paymentId: string, hash: string): void => {
+  private static readonly MAX_TX_POLL_RETRIES = 720; // 720 * 5s = 1 hour max
+
+  baseTransactionStatus = (method: (id: string) => Promise<{ transactionStatus?: string }>, paymentId: string, hash: string, retryCount = 0): void => {
+    if (retryCount >= APIService.MAX_TX_POLL_RETRIES) {
+      if (this.timer) clearTimeout(this.timer);
+      return;
+    }
     method(paymentId)
       .then((data) => {
         if (data?.transactionStatus === STATUS.TX_STATUS_INCLUDED) {
@@ -729,27 +735,29 @@ class APIService {
           if (this.timer) clearTimeout(this.timer);
         } else {
           this.timer = setTimeout(() => {
-            this.baseTransactionStatus(method, paymentId, hash);
+            this.baseTransactionStatus(method, paymentId, hash, retryCount + 1);
           }, 5000);
         }
       })
-      .catch((err) => {
+      .catch(() => {
         this.timer = setTimeout(() => {
-          this.baseTransactionStatus(method, paymentId, hash);
+          this.baseTransactionStatus(method, paymentId, hash, retryCount + 1);
         }, 5000);
       });
   };
 
+  private notificationListenerRegistered = false;
+
   notification = async (hash: string): Promise<void> => {
     let netConfig = await getCurrentNodeConfig();
-    let myNotificationID;
-    browser.notifications &&
-      browser.notifications.onClicked.addListener(function (clickId) {
-        if (myNotificationID === clickId) {
-          let url = netConfig.explorer + "/tx/" + clickId;
-          browser.tabs.create({ url: url });
-        }
+    if (browser.notifications && !this.notificationListenerRegistered) {
+      this.notificationListenerRegistered = true;
+      browser.notifications.onClicked.addListener(async (clickId) => {
+        const config = await getCurrentNodeConfig();
+        const url = config.explorer + "/tx/" + clickId;
+        browser.tabs.create({ url });
       });
+    }
     const i18nLanguage = i18n.language;
     const localLanguage = await extGetLocal(LANGUAGE_CONFIG);
     if (localLanguage !== i18nLanguage) {
@@ -763,9 +771,6 @@ class APIService {
         message: message,
         iconUrl: "/img/logo/128.png",
         type: "basic",
-      })
-      .then((notificationItem) => {
-        myNotificationID = notificationItem;
       });
     return;
   };

@@ -114,7 +114,9 @@ export function getAllRouter() {
         <Route path="/preferences_page" element={<Preferences />} />
         <Route path="/devpage" element={<DevPage />} />
         <Route path="/dev_detail_page" element={<DevDetailPage />} />
-        <Route path="/vault_debug" element={<VaultDebug />} />
+        {process.env.NODE_ENV === 'development' && (
+          <Route path="/vault_debug" element={<VaultDebug />} />
+        )}
         <Route path="/wallet_details" element={<WalletDetails />} />
       </Routes>
     </HashRouter>

@@ -134,6 +134,42 @@ type MessageListener = (
  */
 type BrowserMessageListener = Parameters<typeof browser.runtime.onMessage.addListener>[0];
 
+const READ_ONLY_ACTIONS = new Set([
+  DAppActions.mina_accounts,
+  DAppActions.mina_requestNetwork,
+  DAppActions.mina_verifyMessage,
+  DAppActions.mina_verify_JsonMessage,
+  DAppActions.mina_verifyFields,
+  DAppActions.wallet_info,
+  TOKEN_BUILD.getParams,
+]);
+
+class RateLimiter {
+  private requests = new Map<string, number[]>();
+
+  isAllowed(origin: string, action: string): boolean {
+    const isReadOnly = READ_ONLY_ACTIONS.has(action);
+    const maxRequests = isReadOnly ? 120 : 60;
+    const windowMs = 60000;
+
+    const key = `${origin}:${isReadOnly ? "read" : "write"}`;
+    const now = Date.now();
+    const timestamps = this.requests.get(key) || [];
+    const recent = timestamps.filter((t) => now - t < windowMs);
+
+    if (recent.length >= maxRequests) {
+      this.requests.set(key, recent);
+      return false;
+    }
+
+    recent.push(now);
+    this.requests.set(key, recent);
+    return true;
+  }
+}
+
+const dappRateLimiter = new RateLimiter();
+
 // ============================================
 // DappService Class
 // ============================================
@@ -141,6 +177,7 @@ type BrowserMessageListener = Parameters<typeof browser.runtime.onMessage.addLis
 class DappService {
   private signEventListener: MessageListener | undefined;
   private tokenSignListener: MessageListener | undefined;
+  private approveEventListener: MessageListener | undefined;
 
   constructor() {}
 
@@ -173,6 +210,17 @@ class DappService {
       action,
       payload: { id, params, site },
     } = message;
+
+    if (site?.origin && !dappRateLimiter.isAllowed(site.origin, action)) {
+      sendResponse({
+        error: {
+          code: errorCodes.throwError,
+          message: "Rate limit exceeded. Please try again later.",
+        },
+        id,
+      });
+      return;
+    }
 
     switch (action) {
       case DAppActions.mina_requestAccounts:
@@ -771,13 +819,35 @@ class DappService {
           }
         );
       } catch (error) {
+        const isDev = process.env.NODE_ENV === 'development';
         reject({
           code: errorCodes.throwError,
           message: getMessageFromCode(errorCodes.throwError),
-          stack: String(error),
+          ...(isDev && { stack: String(error) }),
         });
       }
     });
+  }
+
+  private cleanupSignListener(): void {
+    if (this.signEventListener) {
+      browser.runtime.onMessage.removeListener(this.signEventListener as BrowserMessageListener);
+      this.signEventListener = undefined;
+    }
+  }
+
+  private cleanupTokenSignListener(): void {
+    if (this.tokenSignListener) {
+      browser.runtime.onMessage.removeListener(this.tokenSignListener as BrowserMessageListener);
+      this.tokenSignListener = undefined;
+    }
+  }
+
+  private cleanupApproveListener(): void {
+    if (this.approveEventListener) {
+      browser.runtime.onMessage.removeListener(this.approveEventListener as BrowserMessageListener);
+      this.approveEventListener = undefined;
+    }
   }
 
   clearAllPendingZk(): void {
@@ -797,6 +867,9 @@ class DappService {
     approveRequests = [];
     chainRequests = [];
     tokenSignRequests = [];
+    this.cleanupSignListener();
+    this.cleanupTokenSignListener();
+    this.cleanupApproveListener();
     this.setBadgeContent();
   }
 
@@ -891,6 +964,7 @@ class DappService {
                 return;
               }
               approveRequests = [];
+              that.cleanupApproveListener();
               that.setBadgeContent();
               if (
                 payload.selectAccount &&
@@ -925,7 +999,7 @@ class DappService {
                 });
                 return;
               }
-              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
+              that.cleanupApproveListener();
               nextResolve([payload.account]);
               approveRequests = [];
               that.setBadgeContent();
@@ -937,7 +1011,10 @@ class DappService {
           return false;
         }
 
-        browser.runtime.onMessage.addListener(onMessage as BrowserMessageListener);
+        if (!that.approveEventListener) {
+          browser.runtime.onMessage.addListener(onMessage as BrowserMessageListener);
+          that.approveEventListener = onMessage;
+        }
         approveRequests.push({ id, site, resolve: resolve as (value: unknown) => void, reject });
         this.setBadgeContent();
         sendMsg(
@@ -951,10 +1028,11 @@ class DappService {
           }
         );
       } catch (error) {
+        const isDev = process.env.NODE_ENV === 'development';
         reject({
-          stack: String(error),
           code: errorCodes.throwError,
           message: getMessageFromCode(errorCodes.throwError),
+          ...(isDev && { stack: String(error) }),
         });
       }
     });
@@ -1304,13 +1382,18 @@ class DappService {
   }
 
   checkSafeBuild(site: Site): boolean {
-    const buildUrl = new URL(site.origin);
-    const hostname = buildUrl.hostname;
-    const whiteUrl = new URL(TOKEN_BUILD_URL);
-    if (hostname !== whiteUrl.hostname) {
+    try {
+      const buildUrl = new URL(site.origin);
+      const whiteUrl = new URL(TOKEN_BUILD_URL);
+
+      if (buildUrl.protocol !== 'https:') return false;
+
+      if (buildUrl.hostname !== whiteUrl.hostname) return false;
+
+      return true;
+    } catch {
       return false;
     }
-    return true;
   }
 
   getAllTokenSignParams(): SignRequest[] {
@@ -1531,10 +1614,11 @@ class DappService {
           }
         );
       } catch (error) {
+        const isDev = process.env.NODE_ENV === 'development';
         reject({
           code: errorCodes.throwError,
           message: getMessageFromCode(errorCodes.throwError),
-          stack: String(error),
+          ...(isDev && { stack: String(error) }),
         });
       }
     });

@@ -56,12 +56,14 @@ const DevPage = () => {
           });
         }}
       />
-      <RowItem
-        title={"Vault debug"}
-        onClickItem={() => {
-          goToPage("/vault_debug", {});
-        }}
-      />
+      {process.env.NODE_ENV === 'development' && (
+        <RowItem
+          title={"Vault debug"}
+          onClickItem={() => {
+            goToPage("/vault_debug", {});
+          }}
+        />
+      )}
     </CustomView>
   );
 };

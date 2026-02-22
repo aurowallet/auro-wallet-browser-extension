@@ -112,7 +112,34 @@ export function numberFormat(str: string): string {
 export function urlValid(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
-    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      return false;
+    }
+    if (!parsedUrl.hostname || parsedUrl.hostname.length === 0) {
+      return false;
+    }
+    if (parsedUrl.username || parsedUrl.password) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function urlValidStrict(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== "https:") {
+      return false;
+    }
+    if (!parsedUrl.hostname || parsedUrl.hostname.length === 0) {
+      return false;
+    }
+    if (parsedUrl.username || parsedUrl.password) {
+      return false;
+    }
+    return true;
   } catch {
     return false;
   }
