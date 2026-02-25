@@ -468,6 +468,7 @@ const WalletInfo = () => {
       if (currency) {
         lastCurrency = currency;
       }
+      if (!lastCurrency?.key) return;
       let tokenPrice = await getCurrencyPrice(lastCurrency.key);
       dispatch(updateCurrentPrice(tokenPrice as Record<string, number>, false));
     },

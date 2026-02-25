@@ -36,9 +36,11 @@ export function updateCurrencyConfig(list: CurrencyItem[]): ChangeCurrencySelect
 
 // ============ Initial State ============
 
+const DEFAULT_CURRENCY: CurrencyItem = { key: "usd", value: "USD", symbol: "$" };
+
 const initState: CurrencyState = {
   currencyList: [],
-  currentCurrency: {},
+  currentCurrency: DEFAULT_CURRENCY,
 };
 
 // ============ Reducer ============

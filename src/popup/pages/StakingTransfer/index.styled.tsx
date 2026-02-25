@@ -38,47 +38,127 @@ export const StyledPlaceholder = styled.div`
   flex: 1;
 `;
 
-export const StyledNodeNameContainer = styled.div``;
-
-export const StyledLabel = styled.div`
-  font-weight: ${({ theme }) => theme.typography.fontWeightSemiBold};
-  font-size: ${({ theme }) => theme.typography.fontSizeDesc};
-  line-height: ${({ theme }) => theme.typography.lineHeightDesc};
-  display: flex;
-  align-items: center;
-  color: ${({ theme }) => theme.colors.textPrimary};
-  margin-bottom: 4px;
-  justify-content: space-between;
+export const StyledInfoBanner = styled.div`
+  background-color: rgba(0, 210, 146, 0.1);
+  padding: 12px 20px;
 `;
 
-export const StyledLabelContainer = styled.div`
-  display: flex;
-  align-items: center;
+export const StyledInfoBannerText = styled.p`
+  font-size: 14px;
+  line-height: 20px;
+  color: #00D292;
+  margin: 0;
 `;
 
-export const StyledRowContainer = styled.div`
+export const StyledValidatorSection = styled.div`
+  margin-top: 10px;
+`;
+
+export const StyledValidatorLabel = styled.p`
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0 0 10px 0;
+`;
+
+export const StyledValidatorCard = styled.div`
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
-  height: 44px;
+  margin-bottom: 20px;
+`;
+
+export const StyledValidatorSelectorCard = styled.div`
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  border: 0.5px solid ${({ theme }) => theme.colors.borderLight};
-  border-radius: 6px;
-  padding: 0 10px;
   cursor: pointer;
+
+  &:hover {
+    border-color: #594af1;
+  }
 `;
 
-export const StyledNodeName = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSizeTitleSmall};
-  line-height: 24px;
-  color: ${({ theme }) => theme.colors.textPrimary};
-  max-width: 280px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+export const StyledValidatorInfo = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
-export const StyledArrow = styled.img`
-  transform: rotate(270deg);
+export const StyledValidatorIconWrapper = styled.div`
+  width: 36px;
+  height: 36px;
+  margin-right: 12px;
+  flex-shrink: 0;
+`;
+
+export const StyledValidatorIconHolder = styled.div`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: ${({ theme }) => theme.typography.fontWeightMedium};
+`;
+
+export const StyledValidatorIconImg = styled.img`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+`;
+
+export const StyledValidatorName = styled.span`
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+`;
+
+export const StyledSelectorArrow = styled.img`
   width: 30px;
-  object-fit: scale-down;
+  height: 30px;
+`;
+
+// ============ EarningsEstimate Styled Components ============
+
+export const StyledEarningsCard = styled.div`
+  background: #f9fafc;
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 20px;
+`;
+
+export const StyledEarningsRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  &:not(:first-child) {
+    margin-top: 12px;
+  }
+`;
+
+export const StyledEarningsLabel = styled.span`
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.5);
+`;
+
+export const StyledEarningsValue = styled.span`
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: #000000;
+  text-align: right;
 `;

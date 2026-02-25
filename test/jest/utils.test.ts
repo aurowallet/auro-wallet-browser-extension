@@ -199,17 +199,21 @@ describe('Utils Test', () => {
             stake: '0',
             delegations: 0,
             blocks_created: 0,
-          } as Parameters<typeof parseStakingList>[0][0],
+          } as { public_key: string; identity_name: string; stake: string; delegations: number; validator_logo: string; blocks_created: number },
         ])
-      ).toEqual([
-        {
+      ).toEqual({
+        active: [],
+        inactive: [{
           nodeAddress: 'B62qq3TQ8AP7MFYPVtMx5tZGF3kWLJukfwG1A1RGvaBW1jfTPTkDBW6',
           nodeName: 'Auro Wallet',
           totalStake: '0',
           delegations: 0,
           icon: 'https://raw.githubusercontent.com/aurowallet/launch/master/validators/assets/B62qq3TQ8AP7MFYPVtMx5tZGF3kWLJukfwG1A1RGvaBW1jfTPTkDBW6/logo.png',
-        },
-      ]);
+          fee: undefined,
+          blocksCreated: 0,
+          isActive: false,
+        }],
+      });
     });
   });
 

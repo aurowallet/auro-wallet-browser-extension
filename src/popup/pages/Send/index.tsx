@@ -302,6 +302,8 @@ const SendPage = () => {
 
   const onClickFeeGroup = useCallback((item: { fee: string }) => {
     setFeeAmount(item.fee);
+    setAdvanceInputFee("");
+    setFeeErrorTip("");
   }, []);
 
   const fetchAccountInfo = useCallback(async () => {

@@ -30,6 +30,11 @@ All notable changes to this project will be documented in this file.
 - Legder error message
 - Transaction history
 
+## [2.4.5]
+### Enhancements
+- Update delegation UI
+- Firefox build scripts
+
 ## [2.4.4]
 ### Enhancements
 - Token asset request error

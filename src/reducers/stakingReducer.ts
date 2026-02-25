@@ -8,6 +8,7 @@ const UPDATE_DAEMON_STATUS = "UPDATE_DAEMON_STATUS";
 const UPDATE_BLOCK_INFO = "UPDATE_BLOCK_INFO";
 const UPDATE_DELEGATION_INFO = "UPDATE_DELEGATION_INFO";
 const UPDATE_DELEGATION_PUBLICKEY = "UPDATE_DELEGATION_PUBLICKEY";
+const UPDATE_STAKING_APY = "UPDATE_STAKING_APY";
 
 // ============ Interfaces ============
 
@@ -38,19 +39,26 @@ export interface DelegationAccount {
   [key: string]: unknown;
 }
 
+export interface DelegationCache {
+  key: string;
+  owner: string;
+  network: string;
+}
+
 export interface StakingState {
-  stakingList: StakingItem[];
+  stakingList: { active: StakingItem[]; inactive: StakingItem[] };
+  stakingAPY: number | null;
   daemonStatus: DaemonStatus;
   block: BlockInfo;
   account: DelegationAccount;
-  delegationKey?: string;
+  delegationCache: DelegationCache;
 }
 
 // ============ Action Interfaces ============
 
 interface UpdateStakingListAction {
   type: typeof UPDATE_STAKING_LIST;
-  stakingList: StakingItem[];
+  stakingList: { active: StakingItem[]; inactive: StakingItem[] };
 }
 
 interface UpdateDaemonStatusAction {
@@ -71,6 +79,13 @@ interface UpdateDelegationInfoAction {
 interface UpdateDelegationKeyAction {
   type: typeof UPDATE_DELEGATION_PUBLICKEY;
   delegationKey: string;
+  ownerAddress: string;
+  networkID: string;
+}
+
+interface UpdateStakingAPYAction {
+  type: typeof UPDATE_STAKING_APY;
+  stakingAPY: number | null;
 }
 
 type StakingAction =
@@ -78,21 +93,26 @@ type StakingAction =
   | UpdateDaemonStatusAction
   | UpdateBlockInfoAction
   | UpdateDelegationInfoAction
-  | UpdateDelegationKeyAction;
+  | UpdateDelegationKeyAction
+  | UpdateStakingAPYAction;
 
 // ============ Action Creators ============
 
 export function getStakingList() {
   return async (dispatch: Dispatch) => {
-    const stakingList = await fetchStakingList() as StakingItem[];
-    if (stakingList && stakingList.length > 0) {
+    const stakingList = await fetchStakingList() as unknown as { active: StakingItem[]; inactive: StakingItem[] };
+    if (stakingList && (stakingList.active?.length > 0 || stakingList.inactive?.length > 0)) {
       dispatch(updateStakingList({ stakingList }));
     }
   };
 }
 
-export function updateStakingList({ stakingList }: { stakingList: StakingItem[] }) {
+export function updateStakingList({ stakingList }: { stakingList: { active: StakingItem[]; inactive: StakingItem[] } }) {
   return { type: UPDATE_STAKING_LIST, stakingList };
+}
+
+export function updateStakingAPY(stakingAPY: number | null) {
+  return { type: UPDATE_STAKING_APY, stakingAPY };
 }
 
 export function updateDaemonStatus(daemonStatus: DaemonStatus) {
@@ -107,17 +127,19 @@ export function updateDelegationInfo(account: DelegationAccount) {
   return { type: UPDATE_DELEGATION_INFO, account };
 }
 
-export function updateDelegationKey(delegationKey: string) {
-  return { type: UPDATE_DELEGATION_PUBLICKEY, delegationKey };
+export function updateDelegationKey(delegationKey: string, ownerAddress = "", networkID = "") {
+  return { type: UPDATE_DELEGATION_PUBLICKEY, delegationKey, ownerAddress, networkID };
 }
 
 // ============ Initial State ============
 
 const initState: StakingState = {
-  stakingList: [],
+  stakingList: { active: [], inactive: [] },
+  stakingAPY: null,
   daemonStatus: {},
   block: {},
   account: {},
+  delegationCache: { key: "", owner: "", network: "" },
 };
 
 // ============ Reducer ============
@@ -133,7 +155,16 @@ const staking = (state: StakingState = initState, action: StakingAction): Stakin
     case UPDATE_DELEGATION_INFO:
       return { ...state, account: action.account };
     case UPDATE_DELEGATION_PUBLICKEY:
-      return { ...state, delegationKey: action.delegationKey };
+      return {
+        ...state,
+        delegationCache: {
+          key: action.delegationKey,
+          owner: action.ownerAddress,
+          network: action.networkID,
+        },
+      };
+    case UPDATE_STAKING_APY:
+      return { ...state, stakingAPY: action.stakingAPY };
     default:
       return state;
   }

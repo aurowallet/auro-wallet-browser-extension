@@ -151,3 +151,11 @@ export const StyledNodeIcon = styled.img`
   object-fit: scale-down;
   border-radius: 100%;
 `;
+
+export const StyledSectionTitle = styled.p`
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 17px;
+  color: rgba(0, 0, 0, 0.8);
+  margin: 10px 0 0;
+`;

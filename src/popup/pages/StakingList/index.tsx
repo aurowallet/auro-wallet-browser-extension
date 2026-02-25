@@ -1,16 +1,14 @@
 import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { useAppSelector } from "@/hooks/useStore";
-import type { InputChangeEvent } from "../../types/common";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ValidatorsLaunch } from "../../../constant";
 import { addressSlice, showNameSlice } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
-import Input from "../../component/Input";
 import { NetworkID_MAP } from "@/constant/network";
+import { useDelegationKey } from "@/hooks/useDelegationKey";
 import {
   StyledContentClassName, 
-  StyledInputCon,
   StyledListContainer,
   StyledRowContainer,
   StyledNodeItemContainer,
@@ -24,9 +22,14 @@ import {
   StyledIconCon,
   StyledHolderIconCon,
   StyledNodeIcon,
-  searchInputContainerCss,
-  searchInputCss,
+  StyledSectionTitle,
 } from "./index.styled";
+
+interface NodeItemData {
+  nodeAddress: string;
+  nodeName: string;
+  icon?: string;
+}
 
 const StakingList = () => {
 
@@ -37,99 +40,92 @@ const StakingList = () => {
     if(networkID === NetworkID_MAP.mainnet){
       return state.staking.stakingList
     }
-    return []
+    return { active: [], inactive: [] }
   })
 
-  const [keywords, setKeywords] = useState("")
-  const [currentSelectAddress, setCurrentSelectAddress] = useState("")
-
-  const [fromPage,] = useState(() => {
-    let fromPage = location?.state?.fromPage ?? "";
-    return fromPage
+  const [currentSelectAddress, setCurrentSelectAddress] = useState(() => {
+    return (location?.state as { nodeAddress?: string })?.nodeAddress || ""
   })
 
-  const onChange = useCallback((e: InputChangeEvent) => {
-    setKeywords(e.target.value)
-  }, [])
+  const [fromPage] = useState(() => {
+    return (location?.state as { fromPage?: string })?.fromPage ?? "";
+  })
 
-  interface NodeItemData {
-    nodeAddress: string;
-    nodeName: string;
-    icon?: string;
-  }
+  const [isRedelegate] = useState(() => {
+    return !!(location?.state as { isRedelegate?: boolean })?.isRedelegate
+  })
+
   const onClickRow = useCallback((nodeItem: NodeItemData) => {
     setCurrentSelectAddress(nodeItem.nodeAddress)
-    navigate("/staking_transfer", { state: nodeItem, replace: fromPage === 'stakingTransfer' });
-  }, [fromPage])
+    const nextState = {
+      ...nodeItem,
+      ...(isRedelegate ? { isRedelegate: true } : {}),
+    };
+    if (fromPage === 'stakingTransfer') {
+      navigate("/staking_transfer", { state: nextState, replace: true });
+    } else {
+      navigate("/staking_transfer", { state: nextState });
+    }
+  }, [fromPage, isRedelegate, navigate])
 
   const onClickManual = useCallback(() => {
-    navigate("/staking_transfer", { state: { menuAdd: true } });
-  }, [])
+    navigate("/staking_transfer", {
+      state: {
+        menuAdd: true,
+        ...(isRedelegate ? { isRedelegate: true } : {}),
+      },
+    });
+  }, [isRedelegate, navigate])
 
-  return (
-    <CustomView
-      title={i18n.t("blockProducers")}
-      ContentWrapper={StyledContentClassName}
-    >
-      <StyledInputCon>
-        <Input
-          showSearchIcon
-          onChange={onChange}
-          value={keywords}
-          placeholder={i18n.t("searchPlaceholder")}
-          customInputContainer={searchInputContainerCss as unknown as string}
-          customInputCss={searchInputCss as unknown as string}
-        />
-      </StyledInputCon>
-      <StyledListContainer>
-        {stakingList
-          .filter((node: NodeItemData) => {
-            if (keywords) {
-              const keywordsLS = keywords.toLowerCase();
-              const addressFlag =
-                node.nodeAddress.toLowerCase().indexOf(keywordsLS) >= 0;
-              let nameFlag = false;
-              if (node.nodeName) {
-                nameFlag = node.nodeName.toLowerCase().indexOf(keywordsLS) >= 0;
-              }
-              return addressFlag || nameFlag;
-            }
-            return true;
-          })
-          .map((nodeItem: NodeItemData, index: number) => {
-            return (
-              <NodeItem
-                key={index}
-                nodeItem={nodeItem}
-                onClickRow={onClickRow}
-                currentSelectAddress={currentSelectAddress}
-              />
-            );
-          })}
-        <StyledManualAddContainer>
-          <StyledManualAddContent onClick={onClickManual}>
-            {i18n.t("manualAdd")}
-          </StyledManualAddContent>
-          <StyledManualSubmit href={ValidatorsLaunch} target="_blank">
-            {i18n.t("submitNode")}
-          </StyledManualSubmit>
-        </StyledManualAddContainer>
-      </StyledListContainer>
-    </CustomView>
-  );
+  const { activeNodes, inactiveNodes } = useMemo(() => {
+    return { activeNodes: stakingList.active || [], inactiveNodes: stakingList.inactive || [] };
+  }, [stakingList]);
+
+  return (<CustomView
+    title={i18n.t('blockProducers')}
+    ContentWrapper={StyledContentClassName}>
+    <StyledListContainer>
+      {activeNodes.length > 0 && (
+        <>
+          <StyledSectionTitle>{i18n.t('active')}</StyledSectionTitle>
+          {activeNodes.map((nodeItem: NodeItemData, index: number) => (
+            <NodeItem key={`active-${index}`} nodeItem={nodeItem} onClickRow={onClickRow} currentSelectAddress={currentSelectAddress} />
+          ))}
+        </>
+      )}
+
+      {inactiveNodes.length > 0 && (
+        <>
+          <StyledSectionTitle>{i18n.t('inactive')}</StyledSectionTitle>
+          {inactiveNodes.map((nodeItem: NodeItemData, index: number) => (
+            <NodeItem key={`inactive-${index}`} nodeItem={nodeItem} onClickRow={onClickRow} currentSelectAddress={currentSelectAddress} />
+          ))}
+        </>
+      )}
+
+      <StyledManualAddContainer>
+        <StyledManualAddContent onClick={onClickManual}>
+          {i18n.t('manualAdd')}
+        </StyledManualAddContent>
+        <StyledManualSubmit href={ValidatorsLaunch} target="_blank">
+          {i18n.t('submitNode')}
+        </StyledManualSubmit>
+      </StyledManualAddContainer>
+    </StyledListContainer>
+  </CustomView>)
 };
 
 interface NodeItemProps {
-  onClickRow: (item: { nodeAddress: string; nodeName: string; icon?: string }) => void;
-  nodeItem: { nodeAddress: string; nodeName: string; icon?: string };
+  onClickRow: (item: NodeItemData) => void;
+  nodeItem: NodeItemData;
   currentSelectAddress: string;
 }
 
 const NodeItem = ({ onClickRow, nodeItem, currentSelectAddress }: NodeItemProps) => {
-  const delegationKey = useAppSelector((state) => state.staking.delegationKey);
+  const delegationKey = useDelegationKey();
   const { select, showName, showAddress, isChecked } = useMemo(() => {
     let select = nodeItem.nodeAddress === currentSelectAddress;
-    let showName = nodeItem.nodeName;
+    let showName = nodeItem.nodeName || "";
     if (showName.length >= 16) {
       showName = showNameSlice(nodeItem.nodeName, 16) || '';
     }
@@ -151,7 +147,7 @@ const NodeItem = ({ onClickRow, nodeItem, currentSelectAddress }: NodeItemProps)
             <StyledNodeAddress>{showAddress}</StyledNodeAddress>
           </StyledNodeInfoCon>
         </StyledRowLeft>
-        {isChecked && (
+        {(currentSelectAddress ? select : isChecked) && (
           <div>
             <img src="/img/icon_checked.svg" />
           </div>

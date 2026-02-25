@@ -9,7 +9,7 @@ import {
   SUPPORT_TOKEN_LIST,
 } from "../../constant/storageKey";
 import { getCurrentNodeConfig } from "../../utils/browserUtils";
-import { getReadableNetworkId, parseStakingList } from "../../utils/utils";
+import { getReadableNetworkId, parseStakingList, type StakingListResult } from "../../utils/utils";
 
 import { saveLocal } from "../localStorage";
 import {
@@ -193,16 +193,29 @@ export async function fetchDelegationInfo(publicKey: string): Promise<unknown> {
   return account;
 }
 
-export async function fetchStakingList(): Promise<unknown[]> {
+export async function fetchStakingAPY(): Promise<number | null> {
   const netConfig = await getCurrentNodeConfig();
   if (netConfig.networkID !== NetworkID_MAP.mainnet) {
-    return [];
+    return null;
   }
-  const data = await commonFetch(BASE_INFO_URL + "/validators").catch(() => []);
+  const data = await commonFetch(BASE_INFO_URL + "/staking/apy").catch(() => null) as { apr?: number } | null;
+  const apy = data?.apr ?? null;
+  if (apy !== null) {
+    saveLocal(LOCAL_CACHE_KEYS.STAKING_APY, JSON.stringify(apy));
+  }
+  return apy;
+}
+
+export async function fetchStakingList(): Promise<StakingListResult> {
+  const netConfig = await getCurrentNodeConfig();
+  if (netConfig.networkID !== NetworkID_MAP.mainnet) {
+    return { active: [], inactive: [] };
+  }
+  const data = await commonFetch(BASE_INFO_URL + "/validators/v2").catch(() => ({}));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stakingList = parseStakingList(data as any);
   saveLocal(LOCAL_CACHE_KEYS.STAKING_LIST, JSON.stringify(stakingList));
-  return stakingList;
+  return stakingList as StakingListResult;
 }
 
 /**

@@ -254,16 +254,64 @@ interface StakingNodeServer {
   stake: string | number;
   delegations: number;
   validator_logo?: string;
+  fee?: number;
+  blocks_created?: number;
+  is_active?: boolean;
 }
 
-export function parseStakingList(stakingListFromServer: StakingNodeServer[]) {
-  return stakingListFromServer.map((node) => ({
+interface StakingNodeParsed {
+  nodeAddress: string;
+  nodeName: string;
+  totalStake: string;
+  delegations: number;
+  icon: string;
+  fee?: number;
+  blocksCreated?: number;
+  isActive: boolean;
+}
+
+export interface StakingListResult {
+  active: StakingNodeParsed[];
+  inactive: StakingNodeParsed[];
+}
+
+interface StakingListFromServerV2 {
+  active?: StakingNodeServer[];
+  inactive?: StakingNodeServer[];
+}
+
+export function parseStakingList(
+  stakingListFromServer: StakingNodeServer[] | StakingListFromServerV2 | null
+): StakingListResult {
+  const emptyResult: StakingListResult = { active: [], inactive: [] };
+  if (!stakingListFromServer) return emptyResult;
+
+  const parseNode = (node: StakingNodeServer, isActive?: boolean): StakingNodeParsed => ({
     nodeAddress: node.public_key,
     nodeName: node.identity_name,
     totalStake: getAmountForUI(node.stake, MAIN_COIN_CONFIG.decimals, 0),
     delegations: node.delegations,
     icon: node.validator_logo || "",
-  }));
+    fee: node.fee,
+    blocksCreated: node.blocks_created,
+    isActive: isActive !== undefined ? isActive : !!node.is_active,
+  });
+
+  // v2 format: { active: [...], inactive: [...] }
+  if ('active' in stakingListFromServer || 'inactive' in stakingListFromServer) {
+    const serverV2 = stakingListFromServer as StakingListFromServerV2;
+    const active = (serverV2.active || []).map(n => parseNode(n, true));
+    const inactive = (serverV2.inactive || []).map(n => parseNode(n, false));
+    return { active, inactive };
+  }
+
+  // legacy flat array format
+  if (Array.isArray(stakingListFromServer)) {
+    const nodes = stakingListFromServer.map(n => parseNode(n));
+    return { active: nodes.filter(n => n.isActive), inactive: nodes.filter(n => !n.isActive) };
+  }
+
+  return emptyResult;
 }
 
 // ============ Time Utils ============
