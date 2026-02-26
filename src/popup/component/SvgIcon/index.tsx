@@ -1,6 +1,31 @@
 import { memo, useEffect, useState } from "react";
 
 const svgCache: Record<string, string> = {};
+const svgPending: Record<string, Promise<string>> = {};
+
+function fetchSvg(src: string): Promise<string> {
+  if (svgCache[src]) return Promise.resolve(svgCache[src]);
+  if (!svgPending[src]) {
+    svgPending[src] = fetch(src)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to fetch SVG: ${src}`);
+        return res.text();
+      })
+      .then((text) => {
+        if (!text.trimStart().startsWith("<svg")) {
+          throw new Error(`Invalid SVG content: ${src}`);
+        }
+        svgCache[src] = text;
+        delete svgPending[src];
+        return text;
+      })
+      .catch((err) => {
+        delete svgPending[src];
+        throw err;
+      });
+  }
+  return svgPending[src];
+}
 
 interface SvgIconProps {
   src: string;
@@ -18,16 +43,8 @@ const SvgIcon = memo(({ src, color, className, style }: SvgIconProps) => {
       return;
     }
     let cancelled = false;
-    fetch(src)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to fetch SVG: ${src}`);
-        return res.text();
-      })
+    fetchSvg(src)
       .then((text) => {
-        if (!text.trimStart().startsWith("<svg")) {
-          throw new Error(`Invalid SVG content: ${src}`);
-        }
-        svgCache[src] = text;
         if (!cancelled) setSvgContent(text);
       })
       .catch((err) => {
