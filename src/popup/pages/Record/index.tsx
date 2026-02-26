@@ -1,6 +1,4 @@
-import IconDelegation from "@/popup/component/SVG/icon_delegation";
-import IconPayment from "@/popup/component/SVG/icon_payment";
-import IconZkApp from "@/popup/component/SVG/icon_zkApp";
+import SvgIcon from "@/popup/component/SvgIcon";
 import browser from "webextension-polyfill";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -341,18 +339,18 @@ const StatusRow = ({ txDetail, isMainCoin, isZkReceive }: StatusRowProps) => {
     let typeCamelCase = (txDetail?.kind as string)?.toLowerCase();
     switch (typeCamelCase) {
       case "payment":
-        StatusIcon = <IconPayment fill={icon_color} />;
+        StatusIcon = <SvgIcon src="/img/icon_tx_payment.svg" color={icon_color} />;
         isReceive =
           (txDetail?.to as string)?.toLowerCase() === currentAccount?.address?.toLowerCase();
         break;
       case "delegation":
       case "stake_delegation":
-        StatusIcon = <IconDelegation fill={icon_color} />;
+        StatusIcon = <SvgIcon src="/img/icon_tx_delegation.svg" color={icon_color} />;
         break;
       case "zkapp":
-        StatusIcon = <IconZkApp fill={icon_color} />;
+        StatusIcon = <SvgIcon src="/img/icon_tx_zkapp.svg" color={icon_color} />;
         if (!isMainCoin) {
-          StatusIcon = <IconPayment fill={icon_color} />;
+          StatusIcon = <SvgIcon src="/img/icon_tx_payment.svg" color={icon_color} />;
           isReceive = isZkReceive ?? false;
         }
         break;

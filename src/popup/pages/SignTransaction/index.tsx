@@ -5,7 +5,7 @@ import {
 } from "@/constant/msgTypes";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
 import Loading from "@/popup/component/Loading";
-import ICON_Arrow from "@/popup/component/SVG/ICON_Arrow";
+import SvgIcon from "@/popup/component/SvgIcon";
 import { updateShouldRequest } from "@/reducers/accountReducer";
 import { sendMsg } from "@/utils/commonMsg";
 import { DAppActions } from "@aurowallet/mina-provider";
@@ -342,14 +342,14 @@ const SignTransaction = () => {
               $disabled={leftArrowStatus}
               onClick={onClickLeftBtn}
             >
-              <ICON_Arrow stroke={leftArrowColor} />
+              <SvgIcon src="/img/icon_chevron_left.svg" color={leftArrowColor} />
             </StyledMultiRowArrow>
             <StyledMultiRowArrow
               $disabled={rightArrowStatus}
               $isRight
               onClick={onClickRightBtn}
             >
-              <ICON_Arrow stroke={rightArrowColor} />
+              <SvgIcon src="/img/icon_chevron_left.svg" color={rightArrowColor} />
             </StyledMultiRowArrow>
           </StyledMultiTitleRowRight>
         </StyledMultiTitleRow>

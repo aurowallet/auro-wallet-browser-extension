@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Continuous transfers
 - Upgrade network fee config
 - Update API of staking APR
+- Upgrade SVG component to image
 
 ### Fixes
 - E-notation of SendPage

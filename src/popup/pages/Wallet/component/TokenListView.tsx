@@ -1,7 +1,7 @@
 import { saveLocal } from "@/background/localStorage";
 import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import FooterPopup from "@/popup/component/FooterPopup";
-import IconAdd from "@/popup/component/SVG/icon_add";
+import SvgIcon from "@/popup/component/SvgIcon";
 import { updateLocalShowedTokenId } from "@/reducers/accountReducer";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
@@ -166,7 +166,7 @@ export const TokenManageIcon = ({
 }: TokenManageIconProps) => {
   return (
     <StyledTokenManageWrapper onClick={onClickManage}>
-      <IconAdd fill={"rgba(0, 0, 0, 0.8)"} />
+      <SvgIcon src="/img/icon_circle_plus.svg" color="rgba(0, 0, 0, 0.8)" />
       {showTokenTip && <StyledManageTip>{showCount}</StyledManageTip>}
     </StyledTokenManageWrapper>
   );

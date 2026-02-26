@@ -22,7 +22,7 @@ const StyledPopupContainer = styled.div<StyledProps>`
   width: 100%;
 `;
 const StyledPopupContent = styled.div`
-  max-height: 350px;
+  max-height: 360px;
   overflow-y: auto;
 `;
 

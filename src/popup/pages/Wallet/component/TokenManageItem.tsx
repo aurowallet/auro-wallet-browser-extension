@@ -1,7 +1,7 @@
 import { saveLocal } from "@/background/localStorage";
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
-import IconAdd from "@/popup/component/SVG/icon_add";
+import SvgIcon from "@/popup/component/SvgIcon";
 import { updateLocalTokenConfig } from "@/reducers/accountReducer";
 import { addressSlice, getBalanceForUI } from "@/utils/utils";
 import i18n from "i18next";
@@ -182,9 +182,9 @@ const TokenManageItem = ({ token }: TokenManageItemProps) => {
       {isFungibleToken && (
         <StyledTokenRight onClick={onClickManage}>
           {token.localConfig?.hideToken ? (
-            <IconAdd fill={"rgba(0, 0, 0, 0.8)"} />
+            <SvgIcon src="/img/icon_circle_plus.svg" color="rgba(0, 0, 0, 0.8)" />
           ) : (
-            <img src="img/icon_hide.svg" />
+            <img src="/img/icon_hide.svg" />
           )}
         </StyledTokenRight>
       )}

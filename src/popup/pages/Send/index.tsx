@@ -46,8 +46,7 @@ import CustomView from "../../component/CustomView";
 import FeeGroup from "../../component/FeeGroup";
 import Input from "../../component/Input";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
-import ICON_Address from "../../component/SVG/ICON_Address";
-import ICON_Wallet from "../../component/SVG/ICON_Wallet";
+import SvgIcon from "../../component/SvgIcon";
 import Toast from "../../component/Toast";
 import {
   StyledContainer,
@@ -929,12 +928,12 @@ interface AddressRowItemProps {
 }
 
 const AddressRowItem = ({ data, onClickRowAddress }: AddressRowItemProps) => {
-  const { ShowIcon, showName, showAddress } = useMemo(() => {
-    const ShowIcon = data?.type ? ICON_Wallet : ICON_Address;
+  const { showIconSrc, showName, showAddress } = useMemo(() => {
+    const showIconSrc = data?.type ? "/img/icon_wallet_outline.svg" : "/img/icon_contact.svg";
     let showName = data?.accountName || data?.name;
     const showAddress = addressSlice(data?.address || "", 6);
     return {
-      ShowIcon,
+      showIconSrc,
       showName,
       showAddress,
     };
@@ -957,7 +956,7 @@ const AddressRowItem = ({ data, onClickRowAddress }: AddressRowItemProps) => {
     >
       <StyledAddressRowLeft>
         <StyledRowIconContainer>
-          <ShowIcon stroke={iconColor} />
+          <SvgIcon src={showIconSrc} color={iconColor} />
         </StyledRowIconContainer>
         <StyledAddressName>{showName}</StyledAddressName>
       </StyledAddressRowLeft>
