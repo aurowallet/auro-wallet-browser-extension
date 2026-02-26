@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
@@ -47,7 +48,7 @@ import {
   StyledEarningsValue,
 } from "./index.styled";
 
-import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../constant";
+import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID, DEFAULT_FEE_CONFIG } from "../../../constant";
 import {
   QA_SIGN_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
@@ -75,7 +76,7 @@ const StakingTransfer = () => {
   const mainTokenNetInfo = useAppSelector(
     (state) => state.accountInfo.mainTokenNetInfo
   );
-  const netFeeList = useAppSelector((state) => state.cache.feeRecommend);
+  const { feeErrorTip, setFeeErrorTip, validateFee, feeConfig } = useFeeValidation();
   const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const { fetchAccountData } = useFetchAccountData(currentAccount as Parameters<typeof useFetchAccountData>[0]);
 
@@ -160,11 +161,10 @@ const StakingTransfer = () => {
 
   const [memo, setMemo] = useState("");
   const [feeAmount, setFeeAmount] = useState(() => {
-    return netFeeList.length > 1 && netFeeList[1] ? String(netFeeList[1].value) : "0.1";
+    return feeConfig?.transactionFee?.medium ?? "0.1";
   });
   const [advanceInputFee, setAdvanceInputFee] = useState("");
   const [inputNonce, setInputNonce] = useState("");
-  const [feeErrorTip, setFeeErrorTip] = useState("");
   const [isOpenAdvance, setIsOpenAdvance] = useState(false);
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
@@ -208,12 +208,8 @@ const StakingTransfer = () => {
 
   const onFeeInput = useCallback((e: InputChangeEvent) => {
     setAdvanceInputFee(e.target.value);
-    if (BigNumber(e.target.value).gt(10)) {
-      setFeeErrorTip(i18n.t("feeTooHigh"));
-    } else {
-      setFeeErrorTip("");
-    }
-  }, []);
+    validateFee(e.target.value);
+  }, [validateFee]);
 
   const nextFee = useMemo(() => {
     if (isNumber(advanceInputFee) && Number(advanceInputFee) > 0) {
@@ -449,12 +445,11 @@ const StakingTransfer = () => {
   }, [nodeAddress, isRedelegate, navigate]);
 
   useEffect(() => {
-    if (feeAmount === "0.1") {
-      if (netFeeList.length > 1 && netFeeList[1]) {
-        setFeeAmount(String(netFeeList[1].value) || "0.1");
-      }
+    const medium = feeConfig?.transactionFee?.medium;
+    if (medium && feeAmount === DEFAULT_FEE_CONFIG.transactionFee.medium) {
+      setFeeAmount(medium);
     }
-  }, [feeAmount, netFeeList]);
+  }, [feeConfig]);
 
   useEffect(() => {
     fetchAccountData();
@@ -500,7 +495,7 @@ const StakingTransfer = () => {
               <FeeGroup
                 onClickFee={onClickFeeGroup}
                 currentFee={nextFee}
-                netFeeList={netFeeList as unknown as Parameters<typeof FeeGroup>[0]["netFeeList"]}
+                feeConfig={feeConfig}
                 hideTimer={true}
               />
             </StyledFeeContainer>

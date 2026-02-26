@@ -22,6 +22,7 @@ import {
 } from "@/utils/utils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
+import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
@@ -117,10 +118,9 @@ const SignView = ({
     (state) => state.accountInfo.mainTokenNetInfo
   );
   const tokenList = useAppSelector((state) => state.accountInfo.tokenList);
-  const netFeeList = useAppSelector((state) => state.cache.feeRecommend);
+  const { feeErrorTip, validateFee, feeConfig } = useFeeValidation();
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
-  const [feeErrorTip, setFeeErrorTip] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
 
   const [advanceFee, setAdvanceFee] = useState("");
@@ -232,17 +232,14 @@ const SignView = ({
     if (isNumber(sourceFee) && Number(advanceFee) > 0) {
       return sourceFee;
     }
-    if (netFeeList.length >= 6) {
-      const zkAccountFee = new BigNumber(netFeeList[5]!.value).multipliedBy(
-        zkAppUpdateCount
-      );
-      let defaultRecommendFee = new BigNumber(netFeeList[1]!.value)
-        .plus(zkAccountFee)
-        .toNumber();
-      return defaultRecommendFee;
-    }
-    return TRANSACTION_FEE;
-  }, [advanceFee, zekoPerFee, isZeko, sourceFee, zkAppUpdateCount, netFeeList]);
+    const zkAccountFee = new BigNumber(feeConfig?.zkAppAccountUpdateFee ?? "0").multipliedBy(
+      zkAppUpdateCount
+    );
+    let defaultRecommendFee = new BigNumber(feeConfig?.transactionFee?.medium ?? TRANSACTION_FEE)
+      .plus(zkAccountFee)
+      .toNumber();
+    return defaultRecommendFee;
+  }, [advanceFee, zekoPerFee, isZeko, sourceFee, zkAppUpdateCount, feeConfig]);
 
   const onFeeTimerComplete = useCallback(async () => {
     if (isZeko) {
@@ -416,13 +413,9 @@ const SignView = ({
   const onFeeInput = useCallback(
     (e: InputChangeEvent) => {
       setAdvanceFee(e.target.value);
-      if (BigNumber(e.target.value).gt(10)) {
-        setFeeErrorTip(i18n.t("feeTooHigh"));
-      } else {
-        setFeeErrorTip("");
-      }
+      validateFee(e.target.value);
     },
-    [i18n]
+    [validateFee]
   );
   const onNonceInput = useCallback((e: InputChangeEvent) => {
     setAdvanceNonce(e.target.value);
@@ -438,13 +431,8 @@ const SignView = ({
   }, [advanceFee, advanceNonce, onUpdateAdvance, signParams]);
 
   const checkFeeHigh = useCallback(() => {
-    let checkFee = nextFee;
-    if (BigNumber(checkFee).gt(10)) {
-      setFeeErrorTip(i18n.t("feeTooHigh"));
-    } else {
-      setFeeErrorTip("");
-    }
-  }, [nextFee, i18n, signParams]);
+    validateFee(nextFee);
+  }, [nextFee, validateFee]);
 
   useEffect(() => {
     checkFeeHigh();

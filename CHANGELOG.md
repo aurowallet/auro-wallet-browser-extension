@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Update Auto-Lock to Security page
 - Update css/scss to styled-components
 - Continuous transfers
+- Upgrade network fee config
 
 ### Fixes
 - E-notation of SendPage

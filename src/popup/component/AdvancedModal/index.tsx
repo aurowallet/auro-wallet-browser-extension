@@ -5,7 +5,7 @@ import i18n from "i18next";
 import Button from "../Button";
 import AdvanceMode from "../AdvanceMode";
 import { useCallback, useEffect, useState } from "react";
-import BigNumber from "bignumber.js";
+import { useFeeValidation } from "@/hooks/useFeeValidation";
 import {
   StyledModalOverlay,
   StyledModalContent,
@@ -34,25 +34,16 @@ export const AdvancedModal = ({
   currentFee = "",
 }: AdvancedModalProps) => {
   const [inputFee, setInputFee] = useState("");
-  const [feeErrorTip, setFeeErrorTip] = useState("");
-  const [isOpenAdvance, setIsOpenAdvance] = useState(false);
-
-  const onClickAdvance = useCallback(() => {
-    setIsOpenAdvance((state: boolean) => !state);
-  }, []);
+  const { feeErrorTip, setFeeErrorTip, validateFee } = useFeeValidation();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onFeeInput = useCallback(
     (e: any) => {
       const value = e?.target?.value ?? e;
       setInputFee(value);
-      if (BigNumber(value).gt(10)) {
-        setFeeErrorTip(i18n.t("feeTooHigh"));
-      } else {
-        setFeeErrorTip("");
-      }
+      validateFee(value);
     },
-    []
+    [validateFee]
   );
   useEffect(() => {
     if (!modalVisible) {
@@ -80,7 +71,6 @@ export const AdvancedModal = ({
             <StyledDivider />
             <StyledBottomContent>
               <AdvanceMode
-                onClickAdvance={onClickAdvance}
                 isOpenAdvance={true}
                 feeValue={inputFee}
                 feePlaceholder={currentFee}

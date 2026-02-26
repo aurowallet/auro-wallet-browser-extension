@@ -14,7 +14,6 @@ import { updateRecommendFee } from "../reducers/cache";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocal } from "../background/localStorage";
 import {
-  RECOMMEND_FEE,
   SCAM_LIST,
   SUPPORT_TOKEN_LIST,
 } from "../constant/storageKey";
@@ -70,20 +69,9 @@ function App() {
     }
   }, [window.location.href]);
 
-  const getLocalFeeList = useCallback(() => {
-    let localFeeList = getLocal(RECOMMEND_FEE);
-    if (localFeeList) {
-      let feeList = JSON.parse(localFeeList);
-      dispatch(updateRecommendFee(feeList));
-    }
-  }, []);
-
   const fetchFeeData = useCallback(async () => {
-    getLocalFeeList();
-    const feeRecommend = await getRecommendFee();
-    if (Array.isArray(feeRecommend) && feeRecommend.length > 0) {
-      dispatch(updateRecommendFee(feeRecommend as Parameters<typeof updateRecommendFee>[0]));
-    }
+    const feeConfig = await getRecommendFee();
+    dispatch(updateRecommendFee(feeConfig));
   }, []);
   const getLocalScamList = useCallback(() => {
     let localScamList = getLocal(SCAM_LIST);

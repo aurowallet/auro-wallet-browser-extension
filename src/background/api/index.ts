@@ -1,6 +1,6 @@
 import { NetworkID_MAP } from "@/constant/network";
 import { BASE_INFO_URL } from "../../../config";
-import { DEFAULT_TX_REQUEST_LENGTH, ZK_DEFAULT_TOKEN_ID } from "../../constant";
+import { DEFAULT_TX_REQUEST_LENGTH, ZK_DEFAULT_TOKEN_ID, DEFAULT_FEE_CONFIG } from "../../constant";
 import {
   LOCAL_BASE_INFO,
   LOCAL_CACHE_KEYS,
@@ -11,7 +11,7 @@ import {
 import { getCurrentNodeConfig } from "../../utils/browserUtils";
 import { getReadableNetworkId, parseStakingList, type StakingListResult } from "../../utils/utils";
 
-import { saveLocal } from "../localStorage";
+import { getLocal, saveLocal } from "../localStorage";
 import {
   commonFetch,
   startFetchMyMutation,
@@ -39,6 +39,7 @@ import {
   getZekoFeeBody,
   getZkAppTransactionListBody,
 } from "./gqlparams";
+import type { FeeConfig } from "@/types/tx.types";
 
 // ============ Types ============
 
@@ -221,13 +222,25 @@ export async function fetchStakingList(): Promise<StakingListResult> {
 /**
  * get recommend fee
  */
-export async function getRecommendFee(): Promise<unknown[]> {
-  const feeUrl = BASE_INFO_URL + "/minter_fee.json";
-  const result = await commonFetch(feeUrl).catch(() => []);
-  if (Array.isArray(result) && result.length > 0) {
+export async function getRecommendFee(): Promise<FeeConfig> {
+  const feeUrl = BASE_INFO_URL + "/fee_config.json";
+  const result = await commonFetch(feeUrl).catch(() => null);
+  if (result && typeof result === "object" && (result as FeeConfig).transactionFee) {
     saveLocal(RECOMMEND_FEE, JSON.stringify(result));
+    return result as FeeConfig;
   }
-  return result as unknown[];
+  const cached = getLocal(RECOMMEND_FEE);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.transactionFee) {
+        return parsed as FeeConfig;
+      }
+    } catch (_e) {
+      // ignore parse error
+    }
+  }
+  return DEFAULT_FEE_CONFIG;
 }
 
 /**

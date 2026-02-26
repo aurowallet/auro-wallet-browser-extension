@@ -106,17 +106,27 @@ export interface NetworkConfig {
   currentNode: NetworkNode;
 }
 
-// ============ Fee Recommend ============
+// ============ Fee Config ============
 
-export interface FeeRecommendItem {
-  desc: string;
-  value: string | number;
+export interface TransactionFee {
+  slow: string;
+  medium: string;
+  fast: string;
 }
+
+export interface FeeConfig {
+  version: number;
+  transactionFee: TransactionFee;
+  feeCap: string;
+  speedUpBuffer: string;
+  zkAppAccountUpdateFee: string;
+}
+
 
 // ============ Cache State ============
 
 export interface CacheState {
-  feeRecommend?: FeeRecommendItem[];
+  feeRecommend?: FeeConfig;
 }
 
 // ============ Ledger State ============

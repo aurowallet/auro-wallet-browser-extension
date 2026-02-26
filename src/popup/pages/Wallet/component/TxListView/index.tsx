@@ -39,7 +39,6 @@ import type {
   TxData,
   TokenInfo,
   AccountInfo,
-  FeeRecommendItem,
 } from "../../../../../types/tx.types";
 import type { RootState } from "@/reducers";
 import { TX_STATUS } from "../../../../../types/tx.types";
@@ -134,7 +133,7 @@ const TxListView: React.FC<TxListViewProps> = ({
 
   const accountInfo = useSelector((state: RootState) => state.accountInfo);
   const netConfig = useSelector((state: RootState) => state.network);
-  const netFeeList = useSelector(
+  const feeConfig = useSelector(
     (state: RootState) => state.cache.feeRecommend
   );
   const ledgerStatus = useSelector(
@@ -169,19 +168,11 @@ const TxListView: React.FC<TxListViewProps> = ({
   const [waitLedgerStatus, setWaitLedgerStatus] = useState<boolean>(false);
 
   const { nextNetFee } = useMemo<{ nextNetFee: string | number }>(() => {
-    let nextNetFee: string | number = "";
-    if (Array.isArray(netFeeList)) {
-      const tempFeeList = netFeeList.filter((item: FeeRecommendItem) => {
-        return item.desc === "speedup";
-      });
-      if (tempFeeList.length >= 1) {
-        nextNetFee = tempFeeList[0]?.value ?? "";
-      }
-    }
+    let nextNetFee: string | number = feeConfig?.speedUpBuffer ?? "";
     return {
       nextNetFee,
     };
-  }, [transactionModalData, netFeeList]);
+  }, [feeConfig]);
 
   const setCurrentTransactionFee = useCallback((txData: TxData): string => {
     let fee = txData?.fee ?? "";
@@ -506,7 +497,6 @@ const TxListView: React.FC<TxListViewProps> = ({
         currentFee={currentFee}
         currentNonce={String(transactionModalData?.nonce ?? "")}
         nextFee={String(nextFee)}
-        modalType={modalType}
         onClickClose={onClickClose}
         onConfirm={onClickConfirm as (nextInputFee?: string | number) => void}
         btnLoading={btnLoading}

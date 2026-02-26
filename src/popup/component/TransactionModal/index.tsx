@@ -12,7 +12,6 @@ interface TransactionModalProps {
   onClickClose?: () => void;
   currentFee?: string;
   nextFee?: string;
-  modalType?: string;
   currentNonce?: string;
   btnLoading?: boolean;
   waitingLedger?: boolean;
@@ -63,7 +62,6 @@ export const TransactionModal = ({
 
   currentFee = "",
   nextFee = "",
-  modalType = "",
   currentNonce = "",
   btnLoading = false,
   waitingLedger = false,

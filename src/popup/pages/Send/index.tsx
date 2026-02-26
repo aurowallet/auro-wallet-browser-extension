@@ -2,6 +2,7 @@ import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
+import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
@@ -92,7 +93,7 @@ const SendPage = () => {
   const currentAddress = useAppSelector(
     (state) => state.accountInfo.currentAccount.address
   );
-  const netFeeList = useAppSelector((state) => state.cache.feeRecommend);
+  const { feeErrorTip, setFeeErrorTip, validateFee, feeConfig } = useFeeValidation();
   const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const token = useAppSelector((state) => state.cache.nextTokenDetail);
 
@@ -181,7 +182,6 @@ const SendPage = () => {
   const [feeAmount, setFeeAmount] = useState("");
   const [advanceInputFee, setAdvanceInputFee] = useState("");
   const [inputNonce, setInputNonce] = useState("");
-  const [feeErrorTip, setFeeErrorTip] = useState("");
 
   const [isOpenAdvance, setIsOpenAdvance] = useState(false);
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
@@ -233,11 +233,11 @@ const SendPage = () => {
       // button fee
       return feeAmount;
     }
-    if (netFeeList?.length > 0) {
-      return netFeeList[1]?.value ?? TRANSACTION_FEE;
+    if (feeConfig?.transactionFee?.medium) {
+      return feeConfig.transactionFee.medium;
     }
     return TRANSACTION_FEE;
-  }, [advanceInputFee, isZeko, zekoPerFee, netFeeList, feeAmount]);
+  }, [advanceInputFee, isZeko, zekoPerFee, feeConfig, feeAmount]);
 
   const feeIntervalTime = useMemo(() => {
     if (!isZeko) {
@@ -343,13 +343,9 @@ const SendPage = () => {
   const onFeeInput = useCallback(
     (e: InputChangeEvent) => {
       setAdvanceInputFee(e.target.value);
-      if (BigNumber(e.target.value).gt(10)) {
-        setFeeErrorTip(i18n.t("feeTooHigh"));
-      } else {
-        setFeeErrorTip("");
-      }
+      validateFee(e.target.value);
     },
-    [i18n]
+    [validateFee]
   );
   const onNonceInput = useCallback((e: InputChangeEvent) => {
     setInputNonce(e.target.value);
@@ -865,7 +861,7 @@ const SendPage = () => {
             <FeeGroup
               onClickFee={onClickFeeGroup}
               currentFee={String(nextFee)}
-              netFeeList={netFeeList as unknown as Parameters<typeof FeeGroup>[0]["netFeeList"]}
+              feeConfig={feeConfig}
               showFeeGroup={!isZeko}
               hideTimer={false}
             />

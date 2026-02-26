@@ -1,4 +1,5 @@
-import { Terms_default } from "@/constant";
+import { Terms_default, DEFAULT_FEE_CONFIG } from "@/constant";
+import type { FeeConfig } from "@/types/tx.types";
 
 // ============ Action Types ============
 
@@ -31,10 +32,6 @@ export interface AccountTypeCount {
   ledger: number;
 }
 
-export interface FeeRecommendItem {
-  desc: string;
-  value: string | number;
-}
 
 export interface ExtensionBaseInfo {
   changelog?: string;
@@ -66,7 +63,7 @@ export interface CacheState {
   addressBookFrom: string;
   dappAccountList: unknown[];
   accountBalanceList: Record<string, unknown>;
-  feeRecommend: FeeRecommendItem[];
+  feeRecommend: FeeConfig;
   accountTypeCount: AccountTypeCount;
   nextTokenDetail: Record<string, unknown>;
   popupLockStatus: boolean;
@@ -122,7 +119,7 @@ interface UpdateAccountBalanceListAction {
 
 interface UpdateRecommendFeeListAction {
   type: typeof UPDATE_RECOMMEND_FEE_LIST;
-  feeRecommend: FeeRecommendItem[];
+  feeRecommend: FeeConfig;
 }
 
 interface UpdateAccountTypeCountAction {
@@ -207,8 +204,8 @@ export function updateAccountBalanceList(accountDetail: Record<string, { publicK
   return { type: UPDATE_ACCOUNT_BALANCE_LIST, accountDetail };
 }
 
-export function updateRecommendFee(feeList: FeeRecommendItem[]) {
-  return { type: UPDATE_RECOMMEND_FEE_LIST, feeRecommend: feeList };
+export function updateRecommendFee(feeConfig: FeeConfig) {
+  return { type: UPDATE_RECOMMEND_FEE_LIST, feeRecommend: feeConfig };
 }
 
 export function updateAccountTypeCount(countMap: AccountTypeCount) {
@@ -239,7 +236,7 @@ const initState: CacheState = {
   addressBookFrom: "",
   dappAccountList: [],
   accountBalanceList: {},
-  feeRecommend: [],
+  feeRecommend: DEFAULT_FEE_CONFIG,
   accountTypeCount: { create: 1, import: 1, ledger: 1 },
   nextTokenDetail: {},
   popupLockStatus: false,

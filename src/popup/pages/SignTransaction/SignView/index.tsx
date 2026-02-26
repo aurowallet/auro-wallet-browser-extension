@@ -51,6 +51,7 @@ import {
 } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
+import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
@@ -270,7 +271,7 @@ const SignView = ({
   const mainTokenNetInfo = useAppSelector(
     (state) => state.accountInfo.mainTokenNetInfo
   );
-  const netFeeList = useAppSelector((state) => state.cache.feeRecommend);
+  const { feeErrorTip, validateFee, feeConfig } = useFeeValidation();
   const currentNode = useAppSelector((state) => state.network.currentNode);
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
@@ -279,7 +280,6 @@ const SignView = ({
 
   const [nonceType, setNonceType] = useState("");
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-  const [feeErrorTip, setFeeErrorTip] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
 
@@ -378,15 +378,12 @@ const SignView = ({
       ? signParams?.params?.nonce
       : "";
 
-    let defaultRecommendFee: number = TRANSACTION_FEE;
-    if (netFeeList?.length >= 2) {
-      defaultRecommendFee = Number(netFeeList[1]?.value ?? TRANSACTION_FEE);
-    }
-    if (isSendZk && netFeeList?.length >= 6) {
-      const zkAccountFee = new BigNumber(netFeeList[5]?.value ?? 0).multipliedBy(
+    let defaultRecommendFee: number = Number(feeConfig?.transactionFee?.medium ?? TRANSACTION_FEE);
+    if (isSendZk) {
+      const zkAccountFee = new BigNumber(feeConfig?.zkAppAccountUpdateFee ?? 0).multipliedBy(
         count
       );
-      defaultRecommendFee = new BigNumber(netFeeList[1]?.value ?? 0)
+      defaultRecommendFee = new BigNumber(feeConfig?.transactionFee?.medium ?? 0)
         .plus(zkAccountFee)
         .toNumber();
     }
@@ -399,7 +396,7 @@ const SignView = ({
       zkAppNonce,
       zkAppUpdateCount: count,
     };
-  }, [sendAction, signParams, currentAccount, netFeeList]);
+  }, [sendAction, signParams, currentAccount, feeConfig]);
 
   useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
@@ -1144,13 +1141,9 @@ const SignView = ({
         setCustomFeeStatus(true);
       }
       setAdvanceFee(e.target.value);
-      if (BigNumber(e.target.value).gt(10)) {
-        setFeeErrorTip(i18n.t("feeTooHigh"));
-      } else {
-        setFeeErrorTip("");
-      }
+      validateFee(e.target.value);
     },
-    [i18n, customFeeStatus]
+    [validateFee, customFeeStatus]
   );
   const onNonceInput = useCallback((e: InputChangeEvent) => {
     setAdvanceNonce(e.target.value);
@@ -1269,12 +1262,8 @@ const SignView = ({
   }, [advanceNonce, zkAppNonce]);
 
   const checkFeeHigh = useCallback(() => {
-    if (BigNumber(nextFee).gt(10)) {
-      setFeeErrorTip(i18n.t("feeTooHigh"));
-    } else {
-      setFeeErrorTip("");
-    }
-  }, [nextFee, i18n]);
+    validateFee(nextFee);
+  }, [nextFee, validateFee]);
 
   useEffect(() => {
     checkFeeHigh();

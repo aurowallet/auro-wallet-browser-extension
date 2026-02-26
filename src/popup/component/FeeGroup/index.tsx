@@ -1,4 +1,5 @@
 import { MAIN_COIN_CONFIG } from "@/constant";
+import type { FeeConfig } from "@/types/tx.types";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
 import { useMemo } from "react";
@@ -15,12 +16,11 @@ import {
 interface FeeItem {
     text: string;
     fee: string;
-    value?: string;
 }
 
 interface FeeGroupProps {
     currentFee: string;
-    netFeeList?: FeeItem[];
+    feeConfig?: FeeConfig;
     onClickFee?: (fee: FeeItem) => void;
     showFeeGroup?: boolean;
     hideTimer?: boolean;
@@ -28,36 +28,31 @@ interface FeeGroupProps {
 
 const FeeGroup = ({
   currentFee,
-  netFeeList = [],
+  feeConfig,
   onClickFee = () => {},
   showFeeGroup = true,
   hideTimer = true,
 }: FeeGroupProps) => {
   const { feeList } = useMemo(() => {
-    let feeList = [
+    const txFee = feeConfig?.transactionFee;
+    const feeList: FeeItem[] = [
       {
         text: i18n.t("fee_slow"),
-        fee: " ",
+        fee: txFee?.slow ?? " ",
       },
       {
         text: i18n.t("fee_default"),
-        fee: " ",
+        fee: txFee?.medium ?? " ",
       },
       {
         text: i18n.t("fee_fast"),
-        fee: " ",
+        fee: txFee?.fast ?? " ",
       },
     ];
-    if (netFeeList.length >= feeList.length) {
-      feeList = feeList.map((item, index) => ({
-        ...item,
-        fee: netFeeList[index]?.value ?? item.fee,
-      }));
-    }
     return {
       feeList,
     };
-  }, [netFeeList]);
+  }, [feeConfig]);
 
   return (
     <StyledFeeContainer>
