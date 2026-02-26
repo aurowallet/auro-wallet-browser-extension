@@ -8,7 +8,7 @@ const UPDATE_DAEMON_STATUS = "UPDATE_DAEMON_STATUS";
 const UPDATE_BLOCK_INFO = "UPDATE_BLOCK_INFO";
 const UPDATE_DELEGATION_INFO = "UPDATE_DELEGATION_INFO";
 const UPDATE_DELEGATION_PUBLICKEY = "UPDATE_DELEGATION_PUBLICKEY";
-const UPDATE_STAKING_APY = "UPDATE_STAKING_APY";
+const UPDATE_STAKING_APR = "UPDATE_STAKING_APR";
 
 // ============ Interfaces ============
 
@@ -47,7 +47,7 @@ export interface DelegationCache {
 
 export interface StakingState {
   stakingList: { active: StakingItem[]; inactive: StakingItem[] };
-  stakingAPY: number | null;
+  stakingAPR: number | null;
   daemonStatus: DaemonStatus;
   block: BlockInfo;
   account: DelegationAccount;
@@ -83,9 +83,9 @@ interface UpdateDelegationKeyAction {
   networkID: string;
 }
 
-interface UpdateStakingAPYAction {
-  type: typeof UPDATE_STAKING_APY;
-  stakingAPY: number | null;
+interface UpdateStakingAPRAction {
+  type: typeof UPDATE_STAKING_APR;
+  stakingAPR: number | null;
 }
 
 type StakingAction =
@@ -94,7 +94,7 @@ type StakingAction =
   | UpdateBlockInfoAction
   | UpdateDelegationInfoAction
   | UpdateDelegationKeyAction
-  | UpdateStakingAPYAction;
+  | UpdateStakingAPRAction;
 
 // ============ Action Creators ============
 
@@ -111,8 +111,8 @@ export function updateStakingList({ stakingList }: { stakingList: { active: Stak
   return { type: UPDATE_STAKING_LIST, stakingList };
 }
 
-export function updateStakingAPY(stakingAPY: number | null) {
-  return { type: UPDATE_STAKING_APY, stakingAPY };
+export function updateStakingAPR(stakingAPR: number | null) {
+  return { type: UPDATE_STAKING_APR, stakingAPR };
 }
 
 export function updateDaemonStatus(daemonStatus: DaemonStatus) {
@@ -135,7 +135,7 @@ export function updateDelegationKey(delegationKey: string, ownerAddress = "", ne
 
 const initState: StakingState = {
   stakingList: { active: [], inactive: [] },
-  stakingAPY: null,
+  stakingAPR: null,
   daemonStatus: {},
   block: {},
   account: {},
@@ -163,8 +163,8 @@ const staking = (state: StakingState = initState, action: StakingAction): Stakin
           network: action.networkID,
         },
       };
-    case UPDATE_STAKING_APY:
-      return { ...state, stakingAPY: action.stakingAPY };
+    case UPDATE_STAKING_APR:
+      return { ...state, stakingAPR: action.stakingAPR };
     default:
       return state;
   }

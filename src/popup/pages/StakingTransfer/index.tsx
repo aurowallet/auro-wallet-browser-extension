@@ -82,7 +82,7 @@ const StakingTransfer = () => {
 
   const stakingList = useAppSelector((state) => state.staking.stakingList);
   const delegationKey = useDelegationKey();
-  const stakingAPY = useAppSelector((state) => state.staking.stakingAPY);
+  const stakingAPR = useAppSelector((state) => state.staking.stakingAPR);
   const networkID = useAppSelector((state) => state.network.currentNode.networkID);
 
   const [routeParams] = useState(() => {
@@ -549,7 +549,7 @@ const StakingTransfer = () => {
             <EarningsEstimate
               balanceTotal={mainTokenNetInfo?.balance?.total || "0"}
               decimals={(mainTokenNetInfo?.tokenBaseInfo as { decimals?: number } | undefined)?.decimals || 9}
-              stakingAPY={isActiveValidator ? (stakingAPY || 0) : 0}
+              stakingAPR={isActiveValidator ? (stakingAPR || 0) : 0}
             />
           </StyledValidatorSection>
         )}
@@ -641,17 +641,17 @@ const ESTIMATE_DECIMALS = 4;
 interface EarningsEstimateProps {
   balanceTotal: string;
   decimals?: number;
-  stakingAPY?: number;
+  stakingAPR?: number;
 }
 
-const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPY = 0 }: EarningsEstimateProps) => {
+const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPR = 0 }: EarningsEstimateProps) => {
   const balance = useMemo(() => {
     return new BigNumber(balanceTotal).dividedBy(new BigNumber(10).pow(decimals));
   }, [balanceTotal, decimals]);
 
   const estimates = useMemo(() => {
-    if (!stakingAPY || balance.isZero() || balance.isNaN()) return { epoch: '--', threeMonths: '--', sixMonths: '--' };
-    const dailyEarnings = balance.multipliedBy(stakingAPY).dividedBy(36500);
+    if (!stakingAPR || balance.isZero() || balance.isNaN()) return { epoch: '--', threeMonths: '--', sixMonths: '--' };
+    const dailyEarnings = balance.multipliedBy(stakingAPR).dividedBy(36500);
     const calc = (days: number) => dailyEarnings.multipliedBy(days).toFixed(ESTIMATE_DECIMALS, BigNumber.ROUND_DOWN);
 
     return {
@@ -659,7 +659,7 @@ const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPY = 0 }: Earnin
       threeMonths: calc(THREE_MONTHS_DAYS),
       sixMonths: calc(SIX_MONTHS_DAYS),
     };
-  }, [balance, stakingAPY]);
+  }, [balance, stakingAPR]);
 
   const formatValue = (val: string) => val === '--' ? '--' : `${val} ${MAIN_COIN_CONFIG.symbol}`;
 

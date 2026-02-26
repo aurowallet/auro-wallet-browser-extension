@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Update css/scss to styled-components
 - Continuous transfers
 - Upgrade network fee config
+- Update API of staking APR
 
 ### Fixes
 - E-notation of SendPage

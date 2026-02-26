@@ -12,7 +12,7 @@ import {
   fetchBlockInfo,
   fetchDaemonStatus,
   fetchDelegationInfo,
-  fetchStakingAPY,
+  fetchStakingAPR,
 } from "../../../background/api";
 import { LANG_SUPPORT_LIST } from "../../../i18n";
 import {
@@ -20,7 +20,7 @@ import {
   updateBlockInfo,
   updateDaemonStatus,
   updateDelegationKey,
-  updateStakingAPY,
+  updateStakingAPR,
 } from "../../../reducers/stakingReducer";
 import { copyText } from "../../../utils/browserUtils";
 import { openTab } from "../../../utils/commonMsg";
@@ -142,7 +142,7 @@ const Staking = () => {
         fetchDaemonStatus(),
       ];
       if (fetchNetwork === NetworkID_MAP.mainnet) {
-        promises.push(fetchStakingAPY());
+        promises.push(fetchStakingAPR());
       }
       Promise.all(promises)
         .then((data) => {
@@ -160,7 +160,7 @@ const Staking = () => {
             updateDelegationKey(delegateKey, fetchAddress, fetchNetwork),
           );
           if (data[2] !== undefined) {
-            dispatch(updateStakingAPY(data[2] as number | null));
+            dispatch(updateStakingAPR(data[2] as number | null));
           }
           const daemonStatusRes = data[1] as { stateHash?: string };
           if (daemonStatusRes.stateHash) {
@@ -287,7 +287,7 @@ const EmptyView = ({ onClickGuide }: { onClickGuide?: () => void }) => {
   const mainTokenNetInfo = useAppSelector(
     (state) => state.accountInfo.mainTokenNetInfo,
   );
-  const stakingAPY = useAppSelector((state) => state.staking.stakingAPY);
+  const stakingAPR = useAppSelector((state) => state.staking.stakingAPR);
   const stakingList = useAppSelector((state) => state.staking.stakingList);
   const networkID = useAppSelector(
     (state) => state.network.currentNode.networkID,
@@ -328,7 +328,7 @@ const EmptyView = ({ onClickGuide }: { onClickGuide?: () => void }) => {
         <StyledEarnRow>
           <StyledEarnLabel>{i18n.t("apr")}</StyledEarnLabel>
           <StyledEarnValue>
-            {stakingAPY !== null ? `${stakingAPY}%` : "--"}
+            {stakingAPR !== null ? `${stakingAPR}%` : "--"}
           </StyledEarnValue>
         </StyledEarnRow>
         <StyledEarnRow>
@@ -369,7 +369,7 @@ const DelegationInfo = ({
 }) => {
   const navigate = useNavigate();
   const stakingListData = useAppSelector((state) => state.staking.stakingList);
-  const stakingAPY = useAppSelector((state) => state.staking.stakingAPY);
+  const stakingAPR = useAppSelector((state) => state.staking.stakingAPR);
   const mainTokenNetInfo = useAppSelector(
     (state) => state.accountInfo.mainTokenNetInfo,
   );
@@ -417,7 +417,7 @@ const DelegationInfo = ({
         <StyledEarnRow>
           <StyledEarnLabel>{i18n.t("apr")}</StyledEarnLabel>
           <StyledEarnValue>
-            {stakingAPY !== null ? `${stakingAPY}%` : "--"}
+            {stakingAPR !== null ? `${stakingAPR}%` : "--"}
           </StyledEarnValue>
         </StyledEarnRow>
         <StyledEarnRow>

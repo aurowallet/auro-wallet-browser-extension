@@ -194,17 +194,17 @@ export async function fetchDelegationInfo(publicKey: string): Promise<unknown> {
   return account;
 }
 
-export async function fetchStakingAPY(): Promise<number | null> {
+export async function fetchStakingAPR(): Promise<number | null> {
   const netConfig = await getCurrentNodeConfig();
   if (netConfig.networkID !== NetworkID_MAP.mainnet) {
     return null;
   }
-  const data = await commonFetch(BASE_INFO_URL + "/staking/apy").catch(() => null) as { apr?: number } | null;
-  const apy = data?.apr ?? null;
-  if (apy !== null) {
-    saveLocal(LOCAL_CACHE_KEYS.STAKING_APY, JSON.stringify(apy));
+  const data = await commonFetch(BASE_INFO_URL + "/staking/apr").catch(() => null) as { apr?: number } | null;
+  const apr = data?.apr ?? null;
+  if (apr !== null) {
+    saveLocal(LOCAL_CACHE_KEYS.STAKING_APR, JSON.stringify(apr));
   }
-  return apy;
+  return apr;
 }
 
 export async function fetchStakingList(): Promise<StakingListResult> {
