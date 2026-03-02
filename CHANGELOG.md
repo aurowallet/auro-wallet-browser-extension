@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - Update API of staking APR
 - Upgrade SVG component to image
 - Update password to "CryptoKey + vaultSalt"
+- Message of PopupMonitor
 
 ### Fixes
 - E-notation of SendPage

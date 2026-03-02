@@ -33,6 +33,10 @@ export function sendMsg<T = unknown>(
         console.error("send message error", action, browser.runtime.lastError);
         errorCallback?.();
       }
+    })
+    .catch((err) => {
+      console.warn("send message error", action, err);
+      errorCallback?.();
     });
 }
 

@@ -358,6 +358,9 @@ function internalMessageListener(
     case POPUP_ACTIONS.INIT_APPROVE_LIST:
       sendResponse(dappService.initApproveConnect());
       break;
+    case POPUP_ACTIONS.POPUP_NOTIFICATION:
+      sendResponse();
+      break;
     case CredentialMsg.store_credential:
       apiService
         .storePrivateCredential(payload.address, payload.credential)

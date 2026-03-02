@@ -80,22 +80,22 @@ function PopupMonitor() {
   }, []);
 
   useEffect(() => {
-    const messageListener = (message: unknown, sender: unknown, sendResponse: (response?: unknown) => void): true => {
+    const messageListener = (message: unknown, sender: unknown, sendResponse: (response?: unknown) => void): boolean => {
       const msg = message as { action: string; payload?: unknown };
       const { action, payload } = msg;
       switch (action) {
         case WORKER_ACTIONS.BUILD_TOKEN_SEND:
           dispatch(updateTokenSignStatus(true));
           sendResponse();
-          break;
+          return true;
         case WORKER_ACTIONS.APPROVE:
           dispatch(updateApproveStatus(true));
           sendResponse();
-          break;
+          return true;
         case WORKER_ACTIONS.SIGN_ZK:
           dispatch(updateSignZkModalStatus(true));
           sendResponse();
-          break;
+          return true;
         case ACCOUNT_ACTIONS.REFRESH_CURRENT_ACCOUNT:
           if(payload){
             sendMsg(
@@ -108,18 +108,17 @@ function PopupMonitor() {
             );
           }
           sendResponse();
-          break;
+          return true;
         default:
-          break;
+          return false;
       }
-      return true;
     };
 
-    browser.runtime.onMessage.addListener(messageListener);
+    browser.runtime.onMessage.addListener(messageListener as Parameters<typeof browser.runtime.onMessage.addListener>[0]);
     sendMsg({ action: POPUP_ACTIONS.POPUP_NOTIFICATION });
 
     return () => {
-      browser.runtime.onMessage.removeListener(messageListener);
+      browser.runtime.onMessage.removeListener(messageListener as Parameters<typeof browser.runtime.onMessage.removeListener>[0]);
     };
   }, []);
 
