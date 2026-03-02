@@ -164,12 +164,12 @@ const Wallet = ({}) => {
 export default Wallet;
 
 interface StyledWalletInfoWrapperProps {
-  netcolor?: string;
+  $netColor?: string;
 }
 const StyledWalletInfoWrapper = styled.div<StyledWalletInfoWrapperProps>`
   border-radius: 20px;
   background: ${(props) =>
-    props.netcolor ? props.netcolor : "rgba(0, 0, 0, 0.30)"};
+    props.$netColor ? props.$netColor : "rgba(0, 0, 0, 0.30)"};
   margin: 10px 20px 20px;
   padding: 20px;
   position: relative;
@@ -243,14 +243,14 @@ const StyledWalletBaseAction = styled.div`
   z-index: 1;
 `;
 interface StyledBaseBtnProps {
-  netcolor?: string;
+  $netColor?: string;
 }
 const StyledBaseBtn = styled.div<StyledBaseBtnProps>`
   font-weight: 500;
   font-size: 14px;
   text-align: center;
   color: ${(props) =>
-    props.netcolor ? props.netcolor : "rgba(0, 0, 0, 0.30)"};
+    props.$netColor ? props.$netColor : "rgba(0, 0, 0, 0.30)"};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -485,24 +485,24 @@ const WalletInfo = () => {
     fetchPrice();
   }, [currencyConfig.currentCurrency, netConfig.currentNode.networkID]);
 
-  const { netcolor, showStaking, nextChainIcon } = useMemo(() => {
+  const { netColor, showStaking, nextChainIcon } = useMemo(() => {
     const networkID = netConfig.currentNode.networkID;
-    let netcolor = "rgba(0, 0, 0, 0.30)";
+    let netColor = "rgba(0, 0, 0, 0.30)";
     if (networkID === NetworkID_MAP.mainnet) {
-      netcolor = "#594AF1";
+      netColor = "#594AF1";
     }
     let showStaking = networkID?.startsWith("mina");
     let isZeko = isZekoNet(networkID)
     let nextChainIcon = isZeko ? "/img/icon_zeko.svg" : "/img/icon_mina.svg";
     return {
-      netcolor,
+      netColor,
       showStaking,
       nextChainIcon,
     };
   }, [netConfig.currentNode.networkID]);
   return (
     <>
-      <StyledWalletInfoWrapper netcolor={netcolor}>
+      <StyledWalletInfoWrapper $netColor={netColor}>
         <StyledWalletBaseRow>
           <StyledWalletBaseLeft>
             <StyledWalletName>{accountName}</StyledWalletName>
@@ -516,14 +516,14 @@ const WalletInfo = () => {
         </StyledWalletAddress>
         <StyledCurrencyRow $isCache={isCache}>{unitBalance}</StyledCurrencyRow>
         <StyledWalletBaseAction>
-          <StyledSendBtn netcolor={netcolor} onClick={toSend}>
+          <StyledSendBtn $netColor={netColor} onClick={toSend}>
             {i18n.t("send")}
           </StyledSendBtn>
           <StyledDivideColumnWrapper>
             <StyledDivideColumn />
           </StyledDivideColumnWrapper>
           <StyledReceiveBtn
-            netcolor={netcolor}
+            $netColor={netColor}
             onClick={toReceive}
             $showStaking={showStaking}
           >
@@ -534,7 +534,7 @@ const WalletInfo = () => {
               <StyledDivideColumnWrapper>
                 <StyledDivideColumn />
               </StyledDivideColumnWrapper>
-              <StyledStakeBtn netcolor={netcolor} onClick={toStaking}>
+              <StyledStakeBtn $netColor={netColor} onClick={toStaking}>
                 {i18n.t("staking")}
               </StyledStakeBtn>
             </>

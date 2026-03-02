@@ -391,14 +391,14 @@ const rotateCss = css`
   transform: rotate(180deg);
 `;
 interface StyledIconWrapperProps {
-  rotate?: string;
+  $rotate?: string;
 }
 
 const StyledIconWrapper = styled.div<StyledIconWrapperProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  ${(props) => props.rotate == "true" && rotateCss}
+  ${(props) => props.$rotate == "true" && rotateCss}
 `;
 
 const StyledActionItemWrapper = styled.div`
@@ -464,7 +464,7 @@ export const TokenAction = ({ type, isFungibleToken }: TokenActionProps) => {
   }, [nextRouter, isFungibleToken, type]);
   return (
     <StyledActionItemWrapper onClick={onClickActionBtn}>
-      <StyledIconWrapper rotate={String(isReceive)}>
+      <StyledIconWrapper $rotate={String(isReceive)}>
         {actionIconUrl && <img src={actionIconUrl} />}
       </StyledIconWrapper>
       <StyledActionTitle>{title}</StyledActionTitle>

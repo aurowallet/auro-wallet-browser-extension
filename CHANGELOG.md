@@ -30,10 +30,12 @@ All notable changes to this project will be documented in this file.
 - Update password to "CryptoKey + vaultSalt"
 - Message of PopupMonitor
 
+
 ### Fixes
 - E-notation of SendPage
 - Legder error message
 - Transaction history
+- transient prop
 
 ## [2.4.5]
 ### Enhancements

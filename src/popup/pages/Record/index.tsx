@@ -297,10 +297,10 @@ const StyledRowWrapper = styled.div`
   margin-bottom: 10px;
 `;
 interface StyledIconWrapperProps {
-  rotate?: string;
+  $rotate?: string;
 }
 const StyledIconWrapper = styled.div<StyledIconWrapperProps>`
-  ${(props) => props.rotate == "true" && rotateCss}
+  ${(props) => props.$rotate == "true" && rotateCss}
 `;
 const StyledTitle = styled.div`
   font-weight: 600;
@@ -367,7 +367,7 @@ const StatusRow = ({ txDetail, isMainCoin, isZkReceive }: StatusRowProps) => {
 
   return (
     <StyledRowWrapper>
-      <StyledIconWrapper rotate={String(isReceive)}>
+      <StyledIconWrapper $rotate={String(isReceive)}>
         {StatusIcon}
       </StyledIconWrapper>
       <StyledTitle style={{ color: icon_color }} color={icon_color}>

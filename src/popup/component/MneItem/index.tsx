@@ -12,12 +12,12 @@ const colorIndexStatus = css`
 `;
 
 interface StyledMneItemContainerProps {
-  clickable?: string;
-  colorstatus?: string;
+  $clickable?: string;
+  $colorStatus?: string;
 }
 
 interface StyledMneItemIndexProps {
-  colorstatus?: string;
+  $colorStatus?: string;
 }
 
 const StyledMneItemContainer = styled.div<StyledMneItemContainerProps>`
@@ -29,8 +29,8 @@ const StyledMneItemContainer = styled.div<StyledMneItemContainerProps>`
   padding-left: 12px;
   min-height: 30px;
   width: 128px;
-  ${(props) => props.clickable == "true" && clickAble}
-  ${(props) => props.colorstatus == "true" && colorStatus}
+  ${(props) => props.$clickable == "true" && clickAble}
+  ${(props) => props.$colorStatus == "true" && colorStatus}
 `;
 const StyledMneItemIndex = styled.div<StyledMneItemIndexProps>`
   font-size: 14px;
@@ -39,7 +39,7 @@ const StyledMneItemIndex = styled.div<StyledMneItemIndexProps>`
   color: rgba(255, 255, 255, 0.8);
   display: flex;
   font-weight: 500;
-  ${(props) => props.colorstatus == "true" && colorIndexStatus}
+  ${(props) => props.$colorStatus == "true" && colorIndexStatus}
 `;
 const StyledMneItem = styled.span`
   font-weight: 500;
@@ -99,11 +99,11 @@ export const MneItemV2 = ({
   }, []);
   return (
     <StyledMneItemContainer
-      clickable={String(canClick)}
-      colorstatus={String(colorStatus)}
+      $clickable={String(canClick)}
+      $colorStatus={String(colorStatus)}
       onClick={onClick}
     >
-      <StyledMneItemIndex colorstatus={String(colorStatus)}>
+      <StyledMneItemIndex $colorStatus={String(colorStatus)}>
         {index + 1 + "."}
       </StyledMneItemIndex>
       {useInput ? (
