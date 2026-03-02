@@ -1,5 +1,4 @@
 import { NetworkIcon } from "@/popup/component/NetworkIcon";
-import { addressSlice } from "@/utils/utils";
 import { useCallback, useMemo } from "react";
 import { useAppSelector } from "@/hooks/useStore";
 import styled, { css } from "styled-components";
@@ -42,18 +41,7 @@ const StyledNetworkName = styled.div`
   max-width: 210px;
   word-break: break-all;
 `;
-const StyledNetworkId = styled.div`
-  margin: 0;
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 14px;
-  color: rgba(0, 0, 0, 0.1);
-  color: ${(props) => props.color};
-`;
-const selectedTypeCss = css`
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
-`;
+
 const unSelectedTypeCss = css`
   color: white;
   background: rgba(0, 0, 0, 0.2);
