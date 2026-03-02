@@ -126,8 +126,8 @@ const NodeItem = ({ onClickRow, nodeItem, currentSelectAddress }: NodeItemProps)
   const { select, showName, showAddress, isChecked } = useMemo(() => {
     let select = nodeItem.nodeAddress === currentSelectAddress;
     let showName = nodeItem.nodeName || "";
-    if (showName.length >= 16) {
-      showName = showNameSlice(nodeItem.nodeName, 16) || '';
+    if (showName.length >= 24) {
+      showName = showNameSlice(nodeItem.nodeName, 24) || '';
     }
     let showAddress = addressSlice(nodeItem.nodeAddress, 6);
     let isChecked = delegationKey === nodeItem.nodeAddress;

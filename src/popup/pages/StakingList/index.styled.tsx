@@ -83,8 +83,7 @@ export const StyledRowLeft = styled.div`
 
 export const StyledNodeName = styled.p`
   font-weight: ${({ theme }) => theme.typography.fontWeightMedium};
-  font-size: ${({ theme }) => theme.typography.fontSizeContent};
-  line-height: ${({ theme }) => theme.typography.lineHeightDesc};
+  font-size: ${({ theme }) => theme.typography.fontSizeTitleSmall}; 
   color: ${({ theme }) => theme.colors.textBlack};
 `;
 
@@ -96,7 +95,7 @@ export const StyledNodeAddress = styled.p`
 
 export const StyledNodeInfoCon = styled.div`
   margin-left: 10px;
-  max-width: 146px;
+  max-width: 240px;
 `;
 
 export const StyledManualAddContainer = styled.div`
