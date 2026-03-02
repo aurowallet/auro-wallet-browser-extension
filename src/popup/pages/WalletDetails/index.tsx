@@ -55,6 +55,7 @@ const WalletDetails = () => {
   const [currentModal, setCurrentModal] = useState<ModalConfig>({});
   const [showSecurity, setShowSecurity] = useState(false);
   const [resetModalBtnStatus, setResetModalBtnStatus] = useState(true);
+  const [btnLoading, setBtnLoading] = useState(false);
 
   const isHDWallet = keyringType === "hd";
   // Check if V1 wallet by vault version (more reliable than keyringId prefix)
@@ -125,7 +126,7 @@ const WalletDetails = () => {
 
   const onClickCheck = useCallback(
     (password: string) => {
-      Loading.show();
+      setBtnLoading(true);
       sendMsg(
         {
           action: WALLET_DELETE_KEYRING,
@@ -135,7 +136,7 @@ const WalletDetails = () => {
           },
         },
         (result: { error?: string; type?: string; isLastKeyring?: boolean }) => {
-          Loading.hide();
+          setBtnLoading(false);
           if (result.error) {
             if (result.type === "local") {
               Toast.info(i18n.t(result.error));
@@ -144,7 +145,6 @@ const WalletDetails = () => {
             }
             return;
           }
-          
           // If last keyring deleted, open welcome page in full tab and close popup
           if (result.isLastKeyring) {
             createOrActivateTab("popup.html#/register_page");
@@ -169,6 +169,7 @@ const WalletDetails = () => {
         onClickCheck={onClickCheck}
         action={SEC_FROM_TYPE.SEC_DELETE_ACCOUNT}
         btnTxt={i18n.t("confirm")}
+        loading={btnLoading}
       />
     );
   }

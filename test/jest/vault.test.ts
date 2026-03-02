@@ -20,7 +20,7 @@ import {
   createHDKeyring,
   generateUUID,
   isLegacyVault,
-  isV2Vault
+  isModernVault
 } from '@/constant/vaultTypes';
 
 import { ACCOUNT_TYPE } from '@/constant/commonType';
@@ -86,14 +86,14 @@ describe('Vault Types', () => {
     });
   });
 
-  describe('isV2Vault', () => {
+  describe('isModernVault', () => {
     it('should return true for valid v2 vault', () => {
       const v2Data = { version: 2, currentKeyringId: 'uuid', keyrings: [] };
-      expect(isV2Vault(v2Data)).toBe(true);
+      expect(isModernVault(v2Data)).toBe(true);
     });
 
     it('should return false for legacy format', () => {
-      expect(isV2Vault(sampleLegacyData)).toBe(false);
+      expect(isModernVault(sampleLegacyData)).toBe(false);
     });
   });
 

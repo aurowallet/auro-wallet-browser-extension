@@ -9,7 +9,8 @@
 
 // ============ Constants ============
 
-export const VAULT_VERSION = 2;
+export const VAULT_VERSION = 3;
+export const MIN_MODERN_VAULT_VERSION = 2;
 
 export const KEYRING_TYPE = {
   HD: "hd",
@@ -185,12 +186,12 @@ export function isLegacyVault(data: unknown): boolean {
   );
 }
 
-export function isV2Vault(data: unknown): data is Vault {
+export function isModernVault(data: unknown): data is Vault {
   return (
     data !== null &&
     typeof data === "object" &&
     !Array.isArray(data) &&
-    (data as Vault).version === VAULT_VERSION &&
+    (data as Vault).version >= MIN_MODERN_VAULT_VERSION &&
     Array.isArray((data as Vault).keyrings)
   );
 }

@@ -2,7 +2,7 @@
  * Vault Debug Tool
  * 
  * Development-only tool for visualizing vault data before/after migration.
- * Uses 'keyringData' as the single storage key for both v1 (array) and v2 (object with version=2).
+ * Uses 'keyringData' as the single storage key for both v1 (array) and v3 (object with version=3, CryptoKey encryption).
  * Features: decrypt/display, manual upgrade with backup/rollback, plaintext toggle, simulation test.
  */
 
@@ -21,7 +21,7 @@ import {
   normalizeVault,
   validateVault,
 } from "../../../background/vaultMigration";
-import { isLegacyVault, isV2Vault, VAULT_VERSION } from "../../../constant/vaultTypes";
+import { isLegacyVault, isModernVault, MIN_MODERN_VAULT_VERSION, VAULT_VERSION } from "../../../constant/vaultTypes";
 
 const encryptUtils = require("../../../utils/encryptUtils").default;
 
@@ -32,6 +32,42 @@ import { t } from "./vaultDebugI18n";
 const STORAGE_KEY = {
   KEYRING_DATA: "keyringData",
   BACKUP: "keyringData_backup",
+  BACKUP_SALT: "keyringData_backup_vaultSalt",
+};
+
+const isV3EncryptedPayload = (payload: string): boolean => {
+  try {
+    const parsed = JSON.parse(payload);
+    return parsed?.version === 3;
+  } catch {
+    return false;
+  }
+};
+
+const encryptVaultAsV3 = async (
+  vault: any,
+  password: string
+): Promise<{ encryptedV3: string; vaultSalt: string; upgradedVault: any }> => {
+  const upgradedVault = JSON.parse(JSON.stringify(vault));
+  const { key: cryptoKey, salt: vaultSalt } = await encryptUtils.deriveSessionKey(password);
+
+  // Re-encrypt legacy inner secrets (v1/v2) with session CryptoKey.
+  for (const keyring of upgradedVault.keyrings || []) {
+    const kr = keyring as any;
+    if (typeof kr.mnemonic === "string" && !isV3EncryptedPayload(kr.mnemonic)) {
+      const mne = await encryptUtils.decrypt(password, kr.mnemonic);
+      kr.mnemonic = await encryptUtils.encryptWithCryptoKey(cryptoKey, mne);
+    }
+    for (const acc of (kr.accounts || []) as any[]) {
+      if (typeof acc.privateKey === "string" && !isV3EncryptedPayload(acc.privateKey)) {
+        const pk = await encryptUtils.decrypt(password, acc.privateKey);
+        acc.privateKey = await encryptUtils.encryptWithCryptoKey(cryptoKey, pk);
+      }
+    }
+  }
+
+  const encryptedV3 = await encryptUtils.encryptWithCryptoKey(cryptoKey, upgradedVault);
+  return { encryptedV3, vaultSalt, upgradedVault };
 };
 
 // ============================================
@@ -397,7 +433,7 @@ const VaultDebug = () => {
   const [isDecryptingPlaintext, setIsDecryptingPlaintext] = useState(false);
   
   // Version detection
-  const [currentVersion, setCurrentVersion] = useState<'v1' | 'v2' | 'unknown' | null>(null);
+  const [currentVersion, setCurrentVersion] = useState<'v1' | 'v3' | 'unknown' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   // Simulation test states
@@ -408,6 +444,16 @@ const VaultDebug = () => {
   const [simulateFailure, setSimulateFailure] = useState(false);
   const [simulationBefore, setSimulationBefore] = useState<unknown>(null);
   const [simulationAfter, setSimulationAfter] = useState<unknown>(null);
+  
+  // Migration check states
+  interface MigrationCheckItem {
+    label: string;
+    status: 'pass' | 'fail' | 'na' | 'notChecked';
+    detail: string;
+  }
+  const [migrationChecks, setMigrationChecks] = useState<MigrationCheckItem[] | null>(null);
+  const [migrationVerdict, setMigrationVerdict] = useState<'complete' | 'incomplete' | 'partial' | null>(null);
+  const [isCheckingMigration, setIsCheckingMigration] = useState(false);
   
   const isProcessing = isDecrypting || isUpgrading || isSimulating || isDecryptingPlaintext;
 
@@ -446,6 +492,109 @@ const VaultDebug = () => {
   };
 
   // ============================================
+  // One-click migration status check
+  // ============================================
+
+  const handleMigrationCheck = useCallback(async (withPasswordVerify = false) => {
+    setIsCheckingMigration(true);
+    setMigrationChecks(null);
+    setMigrationVerdict(null);
+
+    try {
+      const storage = await browser.storage.local.get([
+        'keyringData', 'vaultSalt'
+      ]);
+
+      const checks: MigrationCheckItem[] = [];
+      let passCount = 0;
+      const totalBasic = 3; // keyringData, encVersion, vaultSalt
+
+      // 1. keyringData exists
+      const hasKeyring = !!storage.keyringData;
+      checks.push({
+        label: t('checkKeyringData'),
+        status: hasKeyring ? 'pass' : 'fail',
+        detail: hasKeyring ? String(storage.keyringData).substring(0, 60) + '...' : '-',
+      });
+      if (hasKeyring) passCount++;
+
+      // 2. Encryption payload version
+      let encVersion: number | string = '-';
+      try {
+        const parsed = JSON.parse(storage.keyringData as string);
+        encVersion = parsed.version ?? 'none';
+      } catch { encVersion = 'parse error'; }
+      const isV3Enc = encVersion === 3;
+      checks.push({
+        label: t('checkEncVersion'),
+        status: isV3Enc ? 'pass' : 'fail',
+        detail: String(encVersion),
+      });
+      if (isV3Enc) passCount++;
+
+      // 3. vaultSalt exists
+      const hasVaultSalt = !!storage.vaultSalt;
+      checks.push({
+        label: t('checkVaultSalt'),
+        status: hasVaultSalt ? 'pass' : 'fail',
+        detail: hasVaultSalt ? (storage.vaultSalt as string).substring(0, 20) + '...' : '-',
+      });
+      if (hasVaultSalt) passCount++;
+
+      // 4. Optional: vault decrypt verification (password required)
+      if (withPasswordVerify && password && isV3Enc && hasVaultSalt) {
+        try {
+          const { key } = await encryptUtils.deriveSessionKey(password, storage.vaultSalt);
+          const decrypted = await encryptUtils.decryptWithCryptoKey(key, storage.keyringData);
+          checks.push({
+            label: t('checkVerifierWorks'),
+            status: 'pass',
+            detail: '✓',
+          });
+
+          // Also check vault data version
+          const dataVersion = isModernVault(decrypted) ? (decrypted as { version: number }).version : -1;
+          checks.push({
+            label: t('checkVaultDataVersion'),
+            status: dataVersion >= MIN_MODERN_VAULT_VERSION ? 'pass' : 'fail',
+            detail: String(dataVersion),
+          });
+        } catch (e) {
+          checks.push({
+            label: t('checkVerifierWorks'),
+            status: 'fail',
+            detail: 'Vault decrypt failed (wrong password?)',
+          });
+        }
+      } else if (withPasswordVerify && !password) {
+        checks.push({
+          label: t('checkVerifierWorks'),
+          status: 'notChecked',
+          detail: t('notChecked'),
+        });
+      }
+
+      setMigrationChecks(checks);
+
+      // Determine verdict
+      if (passCount === totalBasic) {
+        setMigrationVerdict('complete');
+      } else if (passCount === 0 || (!isV3Enc && !hasVaultSalt)) {
+        setMigrationVerdict('incomplete');
+      } else {
+        setMigrationVerdict('partial');
+      }
+
+      Toast.info(t('migrationCheckResult'));
+    } catch (error) {
+      console.error('[VaultDebug] Migration check error:', error);
+      Toast.info(t('loadFailed'));
+    } finally {
+      setIsCheckingMigration(false);
+    }
+  }, [password]);
+
+  // ============================================
   // Decrypt vault data
   // ============================================
 
@@ -467,10 +616,25 @@ const VaultDebug = () => {
         return;
       }
 
-      const decrypted = await encryptUtils.decrypt(password, rawKeyringData);
+      // Detect v3 CryptoKey format vs old password-based format
+      const rawStr = typeof rawKeyringData === 'string' ? rawKeyringData : JSON.stringify(rawKeyringData);
+      const payload: { version?: number } = JSON.parse(rawStr);
+      let decrypted: unknown;
+      if (payload.version === 3) {
+        const storedSalt = await browser.storage.local.get('vaultSalt');
+        const salt = storedSalt?.vaultSalt as string;
+        if (!salt) {
+          setDecryptError('No vaultSalt found in storage (required for v3 decryption)');
+          return;
+        }
+        const { key } = await encryptUtils.deriveSessionKey(password, salt);
+        decrypted = await encryptUtils.decryptWithCryptoKey(key, rawStr);
+      } else {
+        decrypted = await encryptUtils.decrypt(password, rawStr);
+      }
       
-      if (isV2Vault(decrypted)) {
-        setCurrentVersion('v2');
+      if (isModernVault(decrypted)) {
+        setCurrentVersion('v3');
         setDecryptedData(decrypted);
       } else if (isLegacyVault(decrypted)) {
         setCurrentVersion('v1');
@@ -497,7 +661,18 @@ const VaultDebug = () => {
     if (!password || !encryptedValue) return null;
     
     try {
-      const decrypted = await encryptUtils.decrypt(password, encryptedValue);
+      // Detect v3 inner secrets vs old format
+      const innerPayload = JSON.parse(encryptedValue);
+      let decrypted: unknown;
+      if (innerPayload.version === 3) {
+        const storedSalt = await browser.storage.local.get('vaultSalt');
+        const salt = storedSalt?.vaultSalt as string;
+        if (!salt) return t('decryptFailed');
+        const { key } = await encryptUtils.deriveSessionKey(password, salt);
+        decrypted = await encryptUtils.decryptWithCryptoKey(key, encryptedValue);
+      } else {
+        decrypted = await encryptUtils.decrypt(password, encryptedValue);
+      }
       setPlaintextData((prev) => ({ ...prev, [fieldKey]: decrypted }));
       return decrypted;
     } catch (error) {
@@ -515,6 +690,21 @@ const VaultDebug = () => {
     }
   }, [showPlaintext, decryptedData, password]);
 
+  /**
+   * Helper: decrypt a single inner secret (mnemonic or private key).
+   * Detects v3 (CryptoKey) vs v1/v2 (password-based) format automatically.
+   */
+  const decryptInnerSecret = async (encrypted: string, cryptoKey: CryptoKey | null): Promise<unknown> => {
+    const innerPayload = JSON.parse(encrypted);
+    if (innerPayload.version === 3) {
+      if (!cryptoKey) {
+        throw new Error('CryptoKey required for v3 decryption but could not be derived');
+      }
+      return encryptUtils.decryptWithCryptoKey(cryptoKey, encrypted);
+    }
+    return encryptUtils.decrypt(password, encrypted);
+  };
+
   const decryptAllSensitiveFields = async () => {
     if (!decryptedData || !password) return;
 
@@ -523,12 +713,23 @@ const VaultDebug = () => {
     
     const newPlaintextData: Record<string, unknown> = {};
 
-    if (currentVersion === 'v2') {
-      // V2 structure
+    // Derive CryptoKey once for v3 inner secrets
+    let cryptoKey: CryptoKey | null = null;
+    try {
+      const storedSalt = await browser.storage.local.get('vaultSalt');
+      const salt = storedSalt?.vaultSalt as string;
+      if (salt) {
+        const { key } = await encryptUtils.deriveSessionKey(password, salt);
+        cryptoKey = key;
+      }
+    } catch { /* salt not available, will fall back to password-based decrypt */ }
+
+    if (currentVersion === 'v3') {
+      // V3 structure
       for (const keyring of (decryptedData as { keyrings?: Array<{ id: string; mnemonic?: string; accounts?: Array<{ address: string; privateKey?: string }> }> }).keyrings || []) {
         if (keyring.mnemonic) {
           try {
-            newPlaintextData[`mnemonic_${keyring.id}`] = await encryptUtils.decrypt(password, keyring.mnemonic);
+            newPlaintextData[`mnemonic_${keyring.id}`] = await decryptInnerSecret(keyring.mnemonic, cryptoKey);
           } catch (e) {
             newPlaintextData[`mnemonic_${keyring.id}`] = t('decryptFailed');
           }
@@ -536,7 +737,7 @@ const VaultDebug = () => {
         for (const account of keyring.accounts || []) {
           if (account.privateKey) {
             try {
-              newPlaintextData[`pk_${account.address}`] = await encryptUtils.decrypt(password, account.privateKey);
+              newPlaintextData[`pk_${account.address}`] = await decryptInnerSecret(account.privateKey, cryptoKey);
             } catch (e) {
               newPlaintextData[`pk_${account.address}`] = t('decryptFailed');
             }
@@ -550,7 +751,7 @@ const VaultDebug = () => {
         if (!wallet) continue;
         if (wallet.mnemonic) {
           try {
-            newPlaintextData[`mnemonic_${i}`] = await encryptUtils.decrypt(password, wallet.mnemonic);
+            newPlaintextData[`mnemonic_${i}`] = await decryptInnerSecret(wallet.mnemonic, cryptoKey);
           } catch (e) {
             newPlaintextData[`mnemonic_${i}`] = t('decryptFailed');
           }
@@ -558,7 +759,7 @@ const VaultDebug = () => {
         for (const account of wallet.accounts || []) {
           if (account.privateKey) {
             try {
-              newPlaintextData[`pk_${account.address}`] = await encryptUtils.decrypt(password, account.privateKey);
+              newPlaintextData[`pk_${account.address}`] = await decryptInnerSecret(account.privateKey, cryptoKey);
             } catch (e) {
               newPlaintextData[`pk_${account.address}`] = t('decryptFailed');
             }
@@ -581,7 +782,7 @@ const VaultDebug = () => {
       return;
     }
 
-    if (currentVersion === 'v2') {
+    if (currentVersion === 'v3') {
       Toast.info(t('alreadyV2'));
       return;
     }
@@ -598,7 +799,11 @@ const VaultDebug = () => {
     try {
       // Step 1: Create backup
       setProcessingText(t('creatingBackup'));
-      await browser.storage.local.set({ [STORAGE_KEY.BACKUP]: rawKeyringData });
+      const currentSalt = await browser.storage.local.get('vaultSalt');
+      await browser.storage.local.set({
+        [STORAGE_KEY.BACKUP]: rawKeyringData,
+        [STORAGE_KEY.BACKUP_SALT]: currentSalt?.vaultSalt || '',
+      });
       setHasBackup(true);
 
       // Step 2: Execute migration
@@ -621,17 +826,17 @@ const VaultDebug = () => {
         throw new Error(t('accountCountMismatch') + `: ${originalCount} vs ${migratedCount}`);
       }
 
-      // Step 5: Re-encrypt and save
-      const encryptedV2 = await encryptUtils.encrypt(password, v2Vault);
-      await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV2 });
+      // Step 5: Derive CryptoKey, migrate inner secrets, re-encrypt and save
+      const { encryptedV3, vaultSalt, upgradedVault } = await encryptVaultAsV3(v2Vault, password);
+      await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV3, vaultSalt });
 
       setUpgradeResult({ success: true, message: t('upgradeSuccess') });
       Toast.info(t('upgradeSuccess'));
       
       // Reload data
       await loadStorageData();
-      setDecryptedData(v2Vault);
-      setCurrentVersion('v2');
+      setDecryptedData(upgradedVault);
+      setCurrentVersion('v3');
 
     } catch (error) {
       console.error('[VaultDebug] Upgrade error:', error);
@@ -639,11 +844,25 @@ const VaultDebug = () => {
       
       // Rollback from backup
       try {
-        const backupResult = await browser.storage.local.get(STORAGE_KEY.BACKUP);
+        const backupResult = await browser.storage.local.get([
+          STORAGE_KEY.BACKUP,
+          STORAGE_KEY.BACKUP_SALT,
+        ]);
         if (backupResult[STORAGE_KEY.BACKUP]) {
-          await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: backupResult[STORAGE_KEY.BACKUP] });
+          const backupSalt = backupResult[STORAGE_KEY.BACKUP_SALT];
+          if (typeof backupSalt === 'string' && backupSalt) {
+            await browser.storage.local.set({
+              [STORAGE_KEY.KEYRING_DATA]: backupResult[STORAGE_KEY.BACKUP],
+              vaultSalt: backupSalt,
+            });
+          } else {
+            await browser.storage.local.set({
+              [STORAGE_KEY.KEYRING_DATA]: backupResult[STORAGE_KEY.BACKUP],
+            });
+            await browser.storage.local.remove('vaultSalt');
+          }
           // Delete backup after successful rollback
-          await browser.storage.local.remove(STORAGE_KEY.BACKUP);
+          await browser.storage.local.remove([STORAGE_KEY.BACKUP, STORAGE_KEY.BACKUP_SALT]);
           setHasBackup(false);
           console.log('[VaultDebug] Rolled back from backup, backup deleted');
           setUpgradeResult({ 
@@ -705,7 +924,7 @@ const VaultDebug = () => {
 
       // Step 2: Verify legacy format
       if (!isLegacyVault(decrypted)) {
-        if (isV2Vault(decrypted)) {
+        if (isModernVault(decrypted)) {
           throw new Error(t('inputAlreadyV2'));
         }
         throw new Error(t('inputUnknownFormat'));
@@ -733,12 +952,17 @@ const VaultDebug = () => {
       if (applyToStorage) {
         // Backup current data first
         if (rawKeyringData) {
-          await browser.storage.local.set({ [STORAGE_KEY.BACKUP]: rawKeyringData });
+          const currentSalt = await browser.storage.local.get('vaultSalt');
+          await browser.storage.local.set({
+            [STORAGE_KEY.BACKUP]: rawKeyringData,
+            [STORAGE_KEY.BACKUP_SALT]: currentSalt?.vaultSalt || '',
+          });
         }
         
-        // Save migrated data
-        const encryptedV2 = await encryptUtils.encrypt(password, v2Vault);
-        await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV2 });
+        // Save migrated data in current v3 encrypted format.
+        const { encryptedV3, vaultSalt, upgradedVault } = await encryptVaultAsV3(v2Vault, password);
+        await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV3, vaultSalt });
+        setSimulationAfter(upgradedVault);
         
         setSimulationResult({ 
           success: true, 
@@ -747,8 +971,8 @@ const VaultDebug = () => {
         });
         Toast.info(t('upgradeSuccess'));
         await loadStorageData();
-        setDecryptedData(v2Vault);
-        setCurrentVersion('v2');
+        setDecryptedData(upgradedVault);
+        setCurrentVersion('v3');
       } else {
         setSimulationResult({ 
           success: true, 
@@ -786,13 +1010,18 @@ const VaultDebug = () => {
     try {
       // backup current data
       if (rawKeyringData) {
-        await browser.storage.local.set({ [STORAGE_KEY.BACKUP]: rawKeyringData });
+        const currentSalt = await browser.storage.local.get('vaultSalt');
+        await browser.storage.local.set({
+          [STORAGE_KEY.BACKUP]: rawKeyringData,
+          [STORAGE_KEY.BACKUP_SALT]: currentSalt?.vaultSalt || '',
+        });
         setHasBackup(true);
       }
       
-      // save migrate data
-      const encryptedV2 = await encryptUtils.encrypt(password, simulationAfter);
-      await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV2 });
+      // Save migrate data in current v3 encrypted format.
+      const { encryptedV3, vaultSalt, upgradedVault } = await encryptVaultAsV3(simulationAfter, password);
+      await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV3, vaultSalt });
+      setSimulationAfter(upgradedVault);
       
       setSimulationResult({ 
         success: true, 
@@ -801,8 +1030,8 @@ const VaultDebug = () => {
       });
       Toast.info(t('upgradeSuccess'));
       await loadStorageData();
-      setDecryptedData(simulationAfter);
-      setCurrentVersion('v2');
+      setDecryptedData(upgradedVault);
+      setCurrentVersion('v3');
     } catch (error) {
       console.error('[VaultDebug] Apply to storage error:', error);
       const err = error as Error;
@@ -832,24 +1061,53 @@ const VaultDebug = () => {
 
   const handleRestoreFromBackup = useCallback(async () => {
     try {
-      const backupResult = await browser.storage.local.get(STORAGE_KEY.BACKUP);
+      const backupResult = await browser.storage.local.get([
+        STORAGE_KEY.BACKUP,
+        STORAGE_KEY.BACKUP_SALT,
+      ]);
       if (!backupResult[STORAGE_KEY.BACKUP]) {
         Toast.info(t('noBackupData'));
         return;
       }
 
-      await browser.storage.local.set({ 
-        [STORAGE_KEY.KEYRING_DATA]: backupResult[STORAGE_KEY.BACKUP] 
-      });
+      const backupSalt = backupResult[STORAGE_KEY.BACKUP_SALT];
+      if (typeof backupSalt === 'string' && backupSalt) {
+        await browser.storage.local.set({
+          [STORAGE_KEY.KEYRING_DATA]: backupResult[STORAGE_KEY.BACKUP],
+          vaultSalt: backupSalt,
+        });
+      } else {
+        await browser.storage.local.set({
+          [STORAGE_KEY.KEYRING_DATA]: backupResult[STORAGE_KEY.BACKUP],
+        });
+        await browser.storage.local.remove('vaultSalt');
+      }
       
       Toast.info(t('rollbackSuccess'));
       await loadStorageData();
       
-      // Re-decrypt and display
+      // Re-decrypt and display (detect v3 CryptoKey format vs old password-based format)
       if (password) {
-        const decrypted = await encryptUtils.decrypt(password, backupResult[STORAGE_KEY.BACKUP]);
+        const backupRaw = backupResult[STORAGE_KEY.BACKUP];
+        const rawStr = typeof backupRaw === 'string'
+          ? backupRaw
+          : JSON.stringify(backupRaw);
+        const backupPayload: { version?: number } = JSON.parse(rawStr as string);
+        let decrypted: unknown;
+        if (backupPayload.version === 3) {
+          const storedSalt = await browser.storage.local.get('vaultSalt');
+          const salt = storedSalt?.vaultSalt as string;
+          if (!salt) {
+            Toast.info('No vaultSalt found (required for v3 backup decryption)');
+            return;
+          }
+          const { key } = await encryptUtils.deriveSessionKey(password, salt);
+          decrypted = await encryptUtils.decryptWithCryptoKey(key, rawStr);
+        } else {
+          decrypted = await encryptUtils.decrypt(password, rawStr);
+        }
         setDecryptedData(decrypted);
-        setCurrentVersion(isV2Vault(decrypted) ? 'v2' : isLegacyVault(decrypted) ? 'v1' : 'unknown');
+        setCurrentVersion(isModernVault(decrypted) ? 'v3' : isLegacyVault(decrypted) ? 'v1' : 'unknown');
       }
     } catch (error) {
       console.error('[VaultDebug] Restore error:', error);
@@ -864,7 +1122,7 @@ const VaultDebug = () => {
 
   const handleCleanupBackup = useCallback(async () => {
     try {
-      await browser.storage.local.remove(STORAGE_KEY.BACKUP);
+      await browser.storage.local.remove([STORAGE_KEY.BACKUP, STORAGE_KEY.BACKUP_SALT]);
       setHasBackup(false);
       Toast.info(t('rollbackSuccess'));
     } catch (error) {
@@ -1139,7 +1397,7 @@ const VaultDebug = () => {
         {/* Version Status */}
         <Title>
           {t('currentStatus')}
-          {currentVersion === 'v2' && <VersionBadge $isV2={true}>{t('v2NewStructure')}</VersionBadge>}
+          {currentVersion === 'v3' && <VersionBadge $isV2={true}>{t('v2NewStructure')}</VersionBadge>}
           {currentVersion === 'v1' && <VersionBadge $isV2={false}>{t('v1OldStructure')}</VersionBadge>}
           {currentVersion === 'unknown' && <VersionBadge $isV2={false}>{t('pending')}</VersionBadge>}
           {!currentVersion && <VersionBadge $isV2={false}>{t('noDataShort')}</VersionBadge>}
@@ -1192,6 +1450,71 @@ const VaultDebug = () => {
             ) : null}
           </ButtonRow>
         ) : null}
+
+        {/* Migration Status Check */}
+        <Section>
+          <SectionTitle>{t('migrationCheckTitle')}</SectionTitle>
+          <InfoText>{t('migrationCheckInfo')}</InfoText>
+
+          <ButtonRow>
+            <Button
+              size={button_size.small}
+              onClick={() => handleMigrationCheck(false)}
+              loading={isCheckingMigration}
+              disable={isCheckingMigration}
+            >
+              {t('runMigrationCheck')}
+            </Button>
+            <Button
+              size={button_size.small}
+              theme={button_theme.BUTTON_THEME_LIGHT}
+              onClick={() => handleMigrationCheck(true)}
+              loading={isCheckingMigration}
+              disable={isCheckingMigration || !password}
+            >
+              {t('migrationCheckWithVerify')}
+            </Button>
+          </ButtonRow>
+
+          {migrationChecks && (
+            <>
+              {/* Verdict banner */}
+              {migrationVerdict === 'complete' && (
+                <SuccessText style={{ fontSize: '14px', fontWeight: 600, margin: '12px 0' }}>
+                  ✅ {t('migrationComplete')}
+                </SuccessText>
+              )}
+              {migrationVerdict === 'incomplete' && (
+                <WarningText style={{ fontSize: '14px', fontWeight: 600, margin: '12px 0' }}>
+                  ⚠️ {t('migrationIncomplete')}
+                </WarningText>
+              )}
+              {migrationVerdict === 'partial' && (
+                <WarningText style={{ fontSize: '14px', fontWeight: 600, margin: '12px 0' }}>
+                  ❓ {t('migrationPartial')}
+                </WarningText>
+              )}
+
+              {/* Check items table */}
+              <div style={{ border: '1px solid #e8e8e8', borderRadius: '8px', overflow: 'hidden', margin: '8px 0' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', background: '#fafafa', padding: '8px 12px', fontWeight: 600, fontSize: '12px', borderBottom: '1px solid #e8e8e8' }}>
+                  <span>{t('checkItem')}</span>
+                  <span>{t('checkStatus')}</span>
+                  <span>Detail</span>
+                </div>
+                {migrationChecks.map((check, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 1fr', padding: '6px 12px', fontSize: '12px', borderBottom: idx < migrationChecks.length - 1 ? '1px solid #f0f0f0' : 'none', background: check.status === 'fail' ? '#fff2f0' : 'white' }}>
+                    <span>{check.label}</span>
+                    <span style={{ fontWeight: 600, color: check.status === 'pass' ? '#52c41a' : check.status === 'fail' ? '#ff4d4f' : '#999' }}>
+                      {check.status === 'pass' ? t('pass') : check.status === 'fail' ? t('fail') : check.status === 'notChecked' ? t('na') : t('na')}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#666', wordBreak: 'break-all' }}>{check.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </Section>
 
         {/* Raw Storage Data */}
         <Section>
@@ -1279,7 +1602,7 @@ const VaultDebug = () => {
             </Section>
 
             {/* Render based on version */}
-            {currentVersion === 'v2' && renderV2Structure(decryptedData)}
+            {currentVersion === 'v3' && renderV2Structure(decryptedData)}
             {currentVersion === 'v1' && renderV1Structure(decryptedData as any[])}
             
             {currentVersion === 'unknown' && (
@@ -1298,7 +1621,7 @@ const VaultDebug = () => {
           <Section>
             <SectionTitle>{t('versionUpgrade')}</SectionTitle>
             
-            {currentVersion === 'v2' ? (
+            {currentVersion === 'v3' ? (
               <SuccessText>✓ {t('alreadyLatestVersion')}</SuccessText>
             ) : currentVersion === 'v1' ? (
               <>
@@ -1469,7 +1792,7 @@ rawKeyringData: ${rawKeyringData ? 'exists' : 'null'}
 hasBackup: ${hasBackup}
 decryptedData: ${decryptedData ? 'loaded' : 'null'}
 isLegacy: ${decryptedData ? isLegacyVault(decryptedData) : 'N/A'}
-isV2: ${decryptedData ? isV2Vault(decryptedData) : 'N/A'}
+isV2: ${decryptedData ? isModernVault(decryptedData) : 'N/A'}
 ${t('storageKey')}`}
           </CodeBlock>
         </Section>

@@ -326,7 +326,7 @@
   "keystore": "Keystore",
   "inputPrivateKey": "Lütfen özel anahtarı büyük harf, noktalama işareti veya boşluk olmadan girin.",
   "privateKeyPlaceholder": "Özel anahtarınızı girin",
-  "v2Required": "Bu özelliği kullanmak için lütfen cüzdanınızı yükseltin",
+  "upgradeRequired": "Bu özelliği kullanmak için lütfen cüzdanınızı yükseltin",
   "currentEpoch": "Mevcut Dönem",
   "earnOnMina": "MINA ile Kazan",
   "apr": "Yıllık Getiri",

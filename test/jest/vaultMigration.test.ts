@@ -9,7 +9,7 @@ import {
   createImportedKeyring,
   generateUUID,
   isLegacyVault,
-  isV2Vault
+  isModernVault
 } from '@/constant/vaultTypes';
 
 import {
@@ -117,20 +117,20 @@ describe('vaultTypes', () => {
     });
   });
 
-  describe('isV2Vault', () => {
+  describe('isModernVault', () => {
     it('should return true for valid V2 format', () => {
       const v2 = createEmptyVault();
-      expect(isV2Vault(v2)).toBe(true);
+      expect(isModernVault(v2)).toBe(true);
     });
 
     it('should return false for legacy format', () => {
       const legacy = [createLegacyWallet()];
-      expect(isV2Vault(legacy)).toBe(false);
+      expect(isModernVault(legacy)).toBe(false);
     });
 
     it('should return false for wrong version', () => {
       const wrong = { version: 1, keyrings: [] };
-      expect(isV2Vault(wrong)).toBe(false);
+      expect(isModernVault(wrong)).toBe(false);
     });
   });
 
@@ -260,7 +260,7 @@ describe('vaultMigration', () => {
       const { vault, migrated } = normalizeVault(legacy);
 
       expect(migrated).toBe(true);
-      expect(isV2Vault(vault)).toBe(true);
+      expect(isModernVault(vault)).toBe(true);
     });
 
     it('should return empty vault for invalid input', () => {
@@ -329,6 +329,19 @@ describe('validateVault', () => {
       { address: 'B62q1', hdIndex: 0, name: 'Test' } as any
     );
     const vault = createV2Vault([hdKeyring]);
+
+    const { valid, errors } = validateVault(vault);
+    expect(valid).toBe(true);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('should allow modern vault version 2', () => {
+    const hdKeyring = createHDKeyring('Test', 'mnemonic');
+    hdKeyring.accounts.push(
+      { address: 'B62q1', hdIndex: 0, name: 'Test' } as any
+    );
+    const vault = createV2Vault([hdKeyring]);
+    vault.version = 2;
 
     const { valid, errors } = validateVault(vault);
     expect(valid).toBe(true);

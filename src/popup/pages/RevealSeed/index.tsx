@@ -27,13 +27,15 @@ const RevealSeedPage = () => {
   const { keyringId } = location.state || {};
   const [mneList, setMneList] = useState<string[]>([]);
   const [showSecurity, setShowSecurity] = useState(true);
+  const [btnLoading, setBtnLoading] = useState(false);
 
   const onClickCheck = useCallback(
     (password: string) => {
       const action = keyringId ? WALLET_GET_KEYRING_MNEMONIC : WALLET_GET_MNE;
       const payload = keyringId ? { keyringId, password } : { password };
-
+      setBtnLoading(true);
       sendMsg({ action, payload }, async (result: string | { error?: string; type?: string; mnemonic?: string }) => {
+        setBtnLoading(false);
         if (typeof result === "object" && result.error) {
           if (result.type === "local") {
             Toast.info(i18n.t(result.error));
@@ -61,6 +63,7 @@ const RevealSeedPage = () => {
       <SecurityPwd
         onClickCheck={onClickCheck}
         action={SEC_FROM_TYPE.SEC_SHOW_MNEMONIC}
+        loading={btnLoading}
       />
     );
   }

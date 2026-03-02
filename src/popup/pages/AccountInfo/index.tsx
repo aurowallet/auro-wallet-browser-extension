@@ -62,6 +62,7 @@ const AccountInfo = () => {
   const [currentModal, setCurrentModal] = useState<ModalConfig>({});
   const [showSecurity, setShowSecurity] = useState(false);
   const [resetModalBtnStatus,setResetModalBtnStatus] = useState(true)
+  const [btnLoading, setBtnLoading] = useState(false)
 
   const onCloseModal = useCallback(() => {
     setPopupModalStatus(false);
@@ -190,6 +191,7 @@ const AccountInfo = () => {
   const onClickCheck = useCallback(
     (password: string) => {
       let address = currentAccount?.address;
+      setBtnLoading(true);
       sendMsg(
         {
           action: WALLET_CHANGE_DELETE_ACCOUNT,
@@ -199,6 +201,7 @@ const AccountInfo = () => {
           },
         },
         async (currentAccount: AccountInfoType & { error?: string; type?: string }) => {
+          setBtnLoading(false);
           if (currentAccount.error) {
             if (currentAccount.type === "local") {
               if (currentAccount.error === "passwordError") {
@@ -245,6 +248,7 @@ const AccountInfo = () => {
         onClickCheck={onClickCheck}
         action={SEC_FROM_TYPE.SEC_DELETE_ACCOUNT}
         btnTxt={i18n.t("confirm")}
+        loading={btnLoading}
       />
     );
   }

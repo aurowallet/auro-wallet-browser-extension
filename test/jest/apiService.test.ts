@@ -9,9 +9,14 @@
  */
 
 // ==================== Mock Variables (hoisted) ====================
+const MOCK_CRYPTO_KEY = { type: 'secret', extractable: false } as unknown as CryptoKey;
+
 const mockEncryptUtils = {
-  encrypt: jest.fn(),
+  encrypt: jest.fn().mockResolvedValue('encrypted_data'),
   decrypt: jest.fn(),
+  deriveSessionKey: jest.fn().mockResolvedValue({ key: MOCK_CRYPTO_KEY, salt: 'mock-vault-salt' }),
+  encryptWithCryptoKey: jest.fn().mockResolvedValue('encrypted_data'),
+  decryptWithCryptoKey: jest.fn(),
 };
 
 let mockStoreState: Record<string, any> = {};
@@ -27,25 +32,53 @@ const mockMemStore = {
   }),
   lock: jest.fn(() => {
     mockStoreState.isUnlocked = false;
-    mockStoreState.password = '';
+    mockStoreState.cryptoKey = null;
+    mockStoreState.vaultSalt = '';
     mockStoreState.data = null;
     mockStoreState.currentAccount = null;
   }),
   unlock: jest.fn((params: any) => {
     mockStoreState.isUnlocked = true;
-    mockStoreState.password = params.password;
+    mockStoreState.cryptoKey = params.cryptoKey;
+    mockStoreState.vaultSalt = params.vaultSalt;
     mockStoreState.data = params.data;
     mockStoreState.currentAccount = params.currentAccount;
     mockStoreState.autoLockTime = params.autoLockTime;
+  }),
+  reset: jest.fn(() => {
+    mockStoreState.isUnlocked = false;
+    mockStoreState.cryptoKey = null;
+    mockStoreState.vaultSalt = '';
+    mockStoreState.data = null;
+    mockStoreState.currentAccount = {};
+    mockStoreState.mne = '';
   }),
   setMnemonic: jest.fn((mne: string) => { mockStoreState.mne = mne; }),
   setCurrentAccount: jest.fn((account: any) => { mockStoreState.currentAccount = account; }),
 };
 
+let mockStorageData: Record<string, any> = {};
+
 const mockStorageService = {
-  get: jest.fn(),
-  save: jest.fn().mockResolvedValue(undefined),
-  removeValue: jest.fn().mockResolvedValue(undefined),
+  get: jest.fn((key: string | string[]) => {
+    if (typeof key === 'string') {
+      return Promise.resolve(key in mockStorageData ? { [key]: mockStorageData[key] } : {});
+    }
+    const result: Record<string, any> = {};
+    for (const k of key) {
+      if (k in mockStorageData) result[k] = mockStorageData[k];
+    }
+    return Promise.resolve(result);
+  }),
+  save: jest.fn((data: any) => {
+    Object.assign(mockStorageData, data);
+    return Promise.resolve(undefined);
+  }),
+  removeValue: jest.fn((keys: string | string[]) => {
+    const keysArray = Array.isArray(keys) ? keys : [keys];
+    for (const k of keysArray) { delete mockStorageData[k]; }
+    return Promise.resolve(undefined);
+  }),
 };
 
 const mockAccountService = {
@@ -130,7 +163,7 @@ jest.mock('react-i18next', () => ({
   initReactI18next: { type: '3rdParty', init: jest.fn() },
 }));
 
-jest.mock('../../src/utils/encryptUtils', () => ({ default: mockEncryptUtils }));
+jest.mock('../../src/utils/encryptUtils', () => ({ __esModule: true, default: mockEncryptUtils, ENCRYPT_VERSION_CRYPTOKEY: 3 }));
 
 jest.mock('../../src/store', () => ({ memStore: mockMemStore }));
 
@@ -147,10 +180,20 @@ jest.mock('../../src/utils/browserUtils', () => ({
 
 
 jest.mock('../../src/constant/vaultTypes', () => ({
-  isLegacyVault: jest.fn((v: any) => Array.isArray(v)),
-  isV2Vault: jest.fn((v: any) => v && v.version === 2),
-  VAULT_VERSION: 2,
+  isLegacyVault: jest.fn((v: any) => {
+    if (!Array.isArray(v) || v.length === 0) return false;
+    const first = v[0];
+    return !!(
+      first &&
+      typeof first === 'object' &&
+      ('currentAddress' in first) &&
+      ('mnemonic' in first || 'accounts' in first)
+    );
+  }),
+  isModernVault: jest.fn((v: any) => v && v.version >= 2),
+  VAULT_VERSION: 3,
   KEYRING_TYPE: { HD: 'hd', IMPORTED: 'imported', LEDGER: 'ledger', WATCH: 'watch' },
+  generateUUID: jest.fn(() => 'mock-uuid'),
   getDefaultHDWalletName: jest.fn((i: number) => `Wallet ${i}`),
   createHDKeyring: jest.fn(() => ({
     id: 'keyring-1',
@@ -160,7 +203,14 @@ jest.mock('../../src/constant/vaultTypes', () => ({
     accounts: [],
     currentAddress: null,
   })),
+  createEmptyVault: jest.fn(() => ({
+    version: 3,
+    currentKeyringId: '',
+    keyrings: [],
+    nextWalletIndex: 1,
+  })),
   countHDKeyrings: jest.fn().mockReturnValue(0),
+  sortKeyringsByCreatedAt: jest.fn((keyrings: any[]) => keyrings),
 }));
 
 jest.mock('../../src/background/vaultMigration', () => ({
@@ -171,6 +221,7 @@ jest.mock('../../src/background/vaultMigration', () => ({
 
 // Import after mocks
 import apiService from '../../src/background/apiService/APIService';
+import { normalizeVault } from '../../src/background/vaultMigration';
 
 // ==================== Test Data ====================
 const TEST_DATA = {
@@ -198,11 +249,24 @@ const resetMockStoreState = () => {
   Object.assign(mockStoreState, {
     isUnlocked: false,
     data: null,
-    password: '',
+    cryptoKey: null,
+    vaultSalt: '',
     currentAccount: null,
     mne: '',
     autoLockTime: 900,
   });
+};
+
+const resetMockStorage = () => {
+  Object.keys(mockStorageData).forEach(key => delete mockStorageData[key]);
+};
+
+/** Set up mock state for an "authenticated" wallet session */
+const setupAuthenticated = () => {
+  mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+  mockStoreState.vaultSalt = 'mock-vault-salt';
+  mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+  mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue({ version: 3, keyrings: [] });
 };
 
 const createV1VaultData = (accounts?: any[]) => {
@@ -216,11 +280,41 @@ const createV1VaultData = (accounts?: any[]) => {
   }];
 };
 
+const createV3VaultData = (overrides: Record<string, any> = {}) => ({
+  version: 3,
+  currentKeyringId: 'kr-hd',
+  nextWalletIndex: 2,
+  keyrings: [
+    {
+      id: 'kr-hd',
+      type: 'hd',
+      name: 'Wallet 1',
+      mnemonic: JSON.stringify({ version: 3, data: 'mne', iv: 'iv' }),
+      nextHdIndex: 1,
+      currentAddress: TEST_DATA.accounts[0]!.pubKey,
+      createdAt: Date.now(),
+      accounts: [
+        {
+          address: TEST_DATA.accounts[0]!.pubKey,
+          hdIndex: 0,
+          name: 'Account 1',
+        },
+      ],
+    },
+  ],
+  ...overrides,
+});
+
 // ==================== Tests ====================
 describe('APIService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     resetMockStoreState();
+    resetMockStorage();
+    // Restore default mock implementations after clearAllMocks
+    mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
+    mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('encrypted_data');
+    mockEncryptUtils.deriveSessionKey.mockResolvedValue({ key: MOCK_CRYPTO_KEY, salt: 'mock-vault-salt' });
   });
 
   // ==================== 1. getLockStatus ====================
@@ -245,31 +339,170 @@ describe('APIService', () => {
 
   // ==================== 3. checkPassword ====================
   describe('checkPassword', () => {
-    it('should return true for correct password', () => {
-      mockStoreState.password = 'correctPwd';
-      expect(apiService.checkPassword('correctPwd')).toBe(true);
+    it('should return true for correct password (vault decrypt)', async () => {
+      setupAuthenticated();
+      mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+      const result = await apiService.checkPassword('correctPwd');
+      expect(result).toBe(true);
+      // Derives a fresh key and attempts to decrypt the vault
+      expect(mockEncryptUtils.deriveSessionKey).toHaveBeenCalledWith('correctPwd', 'mock-vault-salt');
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalledWith(
+        MOCK_CRYPTO_KEY,
+        mockStorageData.keyringData
+      );
     });
 
-    it('should return false for incorrect password', () => {
-      mockStoreState.password = 'correctPwd';
-      expect(apiService.checkPassword('wrongPwd')).toBe(false);
+    it('should return false for incorrect password (decrypt fails)', async () => {
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockRejectedValueOnce(new Error('Incorrect password'));
+      const result = await apiService.checkPassword('wrongPwd');
+      expect(result).toBe(false);
     });
 
-    it('should return false for empty password', () => {
-      mockStoreState.password = 'correctPwd';
-      expect(apiService.checkPassword('')).toBe(false);
+    it('should return false when no vaultSalt', async () => {
+      mockStoreState.vaultSalt = '';
+      const result = await apiService.checkPassword('anyPwd');
+      expect(result).toBe(false);
+    });
+
+    it('should return false when no keyringData in storage', async () => {
+      mockStoreState.vaultSalt = 'mock-vault-salt';
+      // no keyringData in storage
+      const result = await apiService.checkPassword('anyPwd');
+      expect(result).toBe(false);
+    });
+
+    it('should verify with in-memory v3 inner secret without loading full vault', async () => {
+      setupAuthenticated();
+      const encryptedMnemonicProbe = JSON.stringify({
+        version: 3,
+        data: 'cipher',
+        iv: 'iv',
+      });
+      mockStoreState.data = {
+        version: 3,
+        currentKeyringId: 'kr-1',
+        keyrings: [
+          {
+            id: 'kr-1',
+            type: 'hd',
+            mnemonic: encryptedMnemonicProbe,
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+        ],
+      };
+
+      const result = await apiService.checkPassword('correctPwd');
+
+      expect(result).toBe(true);
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalledWith(
+        MOCK_CRYPTO_KEY,
+        encryptedMnemonicProbe
+      );
+      expect(mockStorageService.get).not.toHaveBeenCalledWith('keyringData');
+    });
+
+    it('should load vaultSalt from storage when not in memory', async () => {
+      mockStoreState.vaultSalt = '';
+      mockStorageData.vaultSalt = 'mock-vault-salt';
+      mockStorageData.keyringData = 'encrypted_data';
+
+      const result = await apiService.checkPassword('correctPwd');
+
+      expect(result).toBe(true);
+      expect(mockEncryptUtils.deriveSessionKey).toHaveBeenCalledWith('correctPwd', 'mock-vault-salt');
+    });
+
+    it('should verify legacy encrypted vault when no salt is available', async () => {
+      mockStoreState.vaultSalt = '';
+      mockStorageData.keyringData = JSON.stringify({ version: 2, data: 'blob', iv: 'iv', salt: 'salt' });
+      mockEncryptUtils.decrypt.mockResolvedValueOnce([{ accounts: [] }]);
+
+      const result = await apiService.checkPassword('legacyPwd');
+
+      expect(result).toBe(true);
+      expect(mockEncryptUtils.deriveSessionKey).not.toHaveBeenCalled();
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith('legacyPwd', mockStorageData.keyringData);
+    });
+
+    it('should verify version-less legacy encrypted vault when no salt is available', async () => {
+      mockStoreState.vaultSalt = '';
+      mockStorageData.keyringData = JSON.stringify({ data: 'blob', iv: 'iv' });
+      mockEncryptUtils.decrypt.mockResolvedValueOnce([{ accounts: [] }]);
+
+      const result = await apiService.checkPassword('legacyPwd');
+
+      expect(result).toBe(true);
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith('legacyPwd', mockStorageData.keyringData);
+    });
+
+    it('should fall back to legacy decrypt when outer vault is not v3', async () => {
+      mockStoreState.vaultSalt = 'mock-vault-salt';
+      mockStorageData.keyringData = JSON.stringify({ version: 2, data: 'blob', iv: 'iv', salt: 'salt' });
+      mockEncryptUtils.decrypt.mockResolvedValueOnce([{ accounts: [] }]);
+
+      const result = await apiService.checkPassword('legacyPwdWithSalt');
+
+      expect(result).toBe(true);
+      expect(mockEncryptUtils.deriveSessionKey).toHaveBeenCalledWith('legacyPwdWithSalt', 'mock-vault-salt');
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith('legacyPwdWithSalt', mockStorageData.keyringData);
     });
   });
 
   // ==================== 4. createPwd ====================
   describe('createPwd', () => {
-    it('should update password in state', () => {
-      apiService.createPwd('newPassword');
-      expect(mockStoreState.password).toBe('newPassword');
+    it('should derive CryptoKey and update state (no verifier needed)', async () => {
+      await apiService.createPwd('newPassword');
+      expect(mockEncryptUtils.deriveSessionKey).toHaveBeenCalledWith('newPassword');
+      expect(mockStoreState.cryptoKey).toBe(MOCK_CRYPTO_KEY);
+      expect(mockStoreState.vaultSalt).toBe('mock-vault-salt');
     });
   });
 
-  // ==================== 5. getCurrentAutoLockTime ====================
+  // ==================== 5. resetWallet ====================
+  describe('resetWallet', () => {
+    it('should clear persisted vault keys and in-memory account state', async () => {
+      mockStoreState.isUnlocked = true;
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.vaultSalt = 'mock-vault-salt';
+      mockStoreState.data = createV1VaultData();
+      mockStoreState.currentAccount = { address: 'B62qCurr', accountName: 'Main' };
+      mockStoreState.mne = 'temp mnemonic';
+
+      await apiService.resetWallet();
+
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
+      expect(mockStoreState.isUnlocked).toBe(false);
+      expect(mockStoreState.cryptoKey).toBeNull();
+      expect(mockStoreState.vaultSalt).toBe('');
+      expect(mockStoreState.data).toBeNull();
+      expect(mockStoreState.currentAccount).toEqual({});
+      expect(mockStoreState.mne).toBe('');
+    });
+
+    it('should notify UI lock state after reset', async () => {
+      await apiService.resetWallet();
+
+      expect(mockSendMsg).toHaveBeenCalledWith(expect.objectContaining({
+        payload: false,
+      }));
+    });
+
+    it('should clear both auto-lock timer and tx polling timer', async () => {
+      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      (apiService as any).activeTimer = setTimeout(() => {}, 10_000);
+      (apiService as any).timer = setTimeout(() => {}, 10_000);
+
+      await apiService.resetWallet();
+
+      expect(clearTimeoutSpy).toHaveBeenCalledWith((apiService as any).activeTimer);
+      expect(clearTimeoutSpy).toHaveBeenCalledWith((apiService as any).timer);
+      clearTimeoutSpy.mockRestore();
+    });
+  });
+
+  // ==================== 6. getCurrentAutoLockTime ====================
   describe('getCurrentAutoLockTime', () => {
     it('should return current autoLockTime', () => {
       mockStoreState.autoLockTime = 300;
@@ -282,7 +515,7 @@ describe('APIService', () => {
     });
   });
 
-  // ==================== 6. updateLockTime ====================
+  // ==================== 7. updateLockTime ====================
   describe('updateLockTime', () => {
     it('should update autoLockTime in state and storage', async () => {
       await apiService.updateLockTime(600);
@@ -296,23 +529,29 @@ describe('APIService', () => {
     });
   });
 
-  // ==================== 7. submitPassword ====================
+  // ==================== 8. submitPassword ====================
   describe('submitPassword', () => {
+    const V2_ENCRYPTED_PAYLOAD = JSON.stringify({ data: 'base64enc', iv: 'base64iv', salt: 'base64salt', version: 2 });
+
     beforeEach(() => {
-      mockStorageService.get.mockResolvedValue({ keyringData: 'encrypted_data' });
+      mockStorageData.keyringData = V2_ENCRYPTED_PAYLOAD;
     });
 
-    it('should unlock successfully with V1 vault format', async () => {
+    it('should unlock successfully with V1 vault format (old encryption path)', async () => {
       const mockVaultV1 = [{
         currentAddress: TEST_DATA.accounts[0]!.pubKey,
         mnemonic: 'encrypted_mnemonic',
         accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, accountName: 'Account 1', type: 'WALLET_INSIDE', hdPath: 0 }],
       }];
-      mockEncryptUtils.decrypt.mockResolvedValue(mockVaultV1);
+      mockEncryptUtils.decrypt
+        .mockResolvedValueOnce(mockVaultV1)
+        .mockResolvedValueOnce(TEST_DATA.mnemonic);
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('v3_encrypted');
 
       const result = await apiService.submitPassword(TEST_DATA.password);
 
-      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(TEST_DATA.password, 'encrypted_data');
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(TEST_DATA.password, V2_ENCRYPTED_PAYLOAD);
+      expect(mockEncryptUtils.deriveSessionKey).toHaveBeenCalled();
       expect(mockMemStore.unlock).toHaveBeenCalled();
       expect(result).toHaveProperty('address');
     });
@@ -324,6 +563,282 @@ describe('APIService', () => {
       const result = await apiService.submitPassword('wrong');
 
       expect(result).toEqual({ error: 'passwordError', type: 'local' });
+      consoleSpy.mockRestore();
+    });
+
+    it('should reject unlock when decrypted vault structure is invalid', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      // Decrypt succeeds but payload is neither legacy array nor modern vault object.
+      mockEncryptUtils.decrypt.mockResolvedValue({ foo: 'bar' });
+
+      const result = await apiService.submitPassword(TEST_DATA.password);
+
+      expect(result).toEqual({ error: 'passwordError', type: 'local' });
+      expect(mockMemStore.unlock).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should not persist migrated payload when post-migration validation fails', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      // Empty array is not a valid legacy vault; validation should fail.
+      mockEncryptUtils.decrypt.mockResolvedValue([]);
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('outer_v3_payload');
+
+      const result = await apiService.submitPassword(TEST_DATA.password);
+
+      expect(result).toEqual({ error: 'passwordError', type: 'local' });
+      expect(mockStorageService.save).not.toHaveBeenCalled();
+      expect(mockMemStore.unlock).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should reject unlock when legacy inner secret decrypts to non-string payload', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const legacyVault = [{
+        currentAddress: TEST_DATA.accounts[0]!.pubKey,
+        mnemonic: 'legacy_mnemonic',
+        accounts: [{
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          hdPath: 0,
+          privateKey: 'legacy_private_key',
+        }],
+      }];
+      mockEncryptUtils.decrypt.mockResolvedValueOnce(legacyVault).mockResolvedValueOnce({ bad: true });
+
+      const result = await apiService.submitPassword(TEST_DATA.password);
+
+      expect(result).toEqual({ error: 'passwordError', type: 'local' });
+      expect(mockStorageService.save).not.toHaveBeenCalled();
+      expect(mockMemStore.unlock).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should upgrade legacy data wrapped in v3 format during unlock', async () => {
+      mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+      mockStorageData.vaultSalt = 'mock-vault-salt';
+      const legacyVault = [{
+        currentAddress: TEST_DATA.accounts[0]!.pubKey,
+        mnemonic: 'legacy_mnemonic',
+        accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, accountName: 'Account 1', type: 'WALLET_INSIDE', hdPath: 0 }],
+      }];
+      const modernVault = {
+        version: 3,
+        currentKeyringId: 'kr-1',
+        keyrings: [
+          {
+            id: 'kr-1',
+            type: 'hd',
+            mnemonic: 'legacy_mnemonic',
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+        ],
+      };
+
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(legacyVault);
+      mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.mnemonic);
+      (normalizeVault as jest.Mock).mockReturnValueOnce({ vault: modernVault, migrated: true });
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('v3_migrated_payload');
+
+      await apiService.submitPassword(TEST_DATA.password);
+
+      expect(mockStorageService.save).toHaveBeenCalledWith({
+        keyringData: 'v3_migrated_payload',
+        vaultSalt: 'mock-vault-salt',
+      });
+    });
+
+    it('should migrate legacy inner secrets even when legacy structure remains in v3 fast path', async () => {
+      mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+      mockStorageData.vaultSalt = 'mock-vault-salt';
+      const innerMnemonicV3 = JSON.stringify({ version: 3, data: 'mne-v3', iv: 'iv-mne' });
+      const innerPkV3 = JSON.stringify({ version: 3, data: 'pk-v3', iv: 'iv-pk' });
+      const legacyVault = [{
+        currentAddress: TEST_DATA.accounts[0]!.pubKey,
+        mnemonic: 'legacy_mnemonic',
+        accounts: [{
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          hdPath: 0,
+          privateKey: 'legacy_private_key',
+        }],
+      }];
+
+      // Fast-path decrypt gives legacy structure; normalizeVault default mocked to migrated:false.
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce(legacyVault);
+      mockEncryptUtils.decrypt
+        .mockResolvedValueOnce(TEST_DATA.mnemonic)
+        .mockResolvedValueOnce(TEST_DATA.accounts[0]!.priKey);
+      mockEncryptUtils.encryptWithCryptoKey
+        .mockResolvedValueOnce(innerMnemonicV3)
+        .mockResolvedValueOnce(innerPkV3)
+        .mockResolvedValueOnce('outer_v3_payload');
+
+      const result = await apiService.submitPassword(TEST_DATA.password);
+
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(TEST_DATA.password, 'legacy_mnemonic');
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(TEST_DATA.password, 'legacy_private_key');
+      expect(mockStorageService.save).toHaveBeenCalledWith({
+        keyringData: 'outer_v3_payload',
+        vaultSalt: 'mock-vault-salt',
+      });
+      expect(result).toHaveProperty('address', TEST_DATA.accounts[0]!.pubKey);
+    });
+
+    it('should keep getCurrentPrivateKey working after unlock when structure remains legacy', async () => {
+      mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+      mockStorageData.vaultSalt = 'mock-vault-salt';
+      const innerMnemonicV3 = JSON.stringify({ version: 3, data: 'mne-v3', iv: 'iv-mne' });
+      const innerPkV3 = JSON.stringify({ version: 3, data: 'pk-v3', iv: 'iv-pk' });
+      const legacyVault = [{
+        currentAddress: TEST_DATA.accounts[0]!.pubKey,
+        mnemonic: 'legacy_mnemonic',
+        accounts: [{
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          hdPath: 0,
+          privateKey: 'legacy_private_key',
+        }],
+      }];
+
+      mockEncryptUtils.decryptWithCryptoKey.mockImplementation(async (_key: CryptoKey, ciphertext: string) => {
+        if (ciphertext === mockStorageData.keyringData) return legacyVault;
+        if (ciphertext === innerMnemonicV3) return TEST_DATA.mnemonic;
+        return 'ok';
+      });
+      mockEncryptUtils.decrypt
+        .mockResolvedValueOnce(TEST_DATA.mnemonic)
+        .mockResolvedValueOnce(TEST_DATA.accounts[0]!.priKey);
+      mockEncryptUtils.encryptWithCryptoKey
+        .mockResolvedValueOnce(innerMnemonicV3)
+        .mockResolvedValueOnce(innerPkV3)
+        .mockResolvedValueOnce('outer_v3_payload');
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[0]!.pubKey,
+        priKey: TEST_DATA.accounts[0]!.priKey,
+        hdIndex: 0,
+      });
+
+      await apiService.submitPassword(TEST_DATA.password);
+      const result = await apiService.getCurrentPrivateKey();
+
+      expect(result).toBe(TEST_DATA.accounts[0]!.priKey);
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalledWith(
+        MOCK_CRYPTO_KEY,
+        innerMnemonicV3
+      );
+    });
+
+    it('should migrate legacy inner secrets for modern vault in v3 fast path', async () => {
+      mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+      mockStorageData.vaultSalt = 'mock-vault-salt';
+      const modernVaultWithLegacyInner = {
+        version: 3,
+        currentKeyringId: 'kr-hd',
+        keyrings: [
+          {
+            id: 'kr-hd',
+            type: 'hd',
+            name: 'Wallet 1',
+            mnemonic: 'legacy_mnemonic',
+            nextHdIndex: 1,
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+          {
+            id: 'kr-import',
+            type: 'imported',
+            name: 'Imported',
+            currentAddress: TEST_DATA.importedAccount.pubKey,
+            accounts: [{
+              address: TEST_DATA.importedAccount.pubKey,
+              name: 'Imported 1',
+              privateKey: 'legacy_private_key',
+            }],
+          },
+        ],
+      };
+      const migratedMnemonic = JSON.stringify({ version: 3, data: 'mne-v3', iv: 'iv-mne' });
+      const migratedPk = JSON.stringify({ version: 3, data: 'pk-v3', iv: 'iv-pk' });
+
+      mockEncryptUtils.decryptWithCryptoKey.mockImplementation(async (_key: CryptoKey, ciphertext: string) => {
+        if (ciphertext === mockStorageData.keyringData) return modernVaultWithLegacyInner;
+        if (ciphertext === migratedMnemonic) return TEST_DATA.mnemonic;
+        return 'ok';
+      });
+      mockEncryptUtils.decrypt
+        .mockResolvedValueOnce(TEST_DATA.mnemonic)
+        .mockResolvedValueOnce(TEST_DATA.importedAccount.priKey);
+      mockEncryptUtils.encryptWithCryptoKey
+        .mockResolvedValueOnce(migratedMnemonic)
+        .mockResolvedValueOnce(migratedPk)
+        .mockResolvedValueOnce('outer_v3_migrated');
+
+      const result = await apiService.submitPassword(TEST_DATA.password);
+
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(TEST_DATA.password, 'legacy_mnemonic');
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(
+        TEST_DATA.password,
+        'legacy_private_key'
+      );
+      expect(mockStorageService.save).toHaveBeenCalledWith({
+        keyringData: 'outer_v3_migrated',
+        vaultSalt: 'mock-vault-salt',
+      });
+      expect(result).toHaveProperty('address', TEST_DATA.accounts[0]!.pubKey);
+    });
+
+    it('should serialize checkPassword while submitPassword is persisting vault', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockStorageData.keyringData = JSON.stringify({ data: 'base64enc', iv: 'base64iv', salt: 'base64salt', version: 2 });
+      const legacyVault = [{
+        currentAddress: TEST_DATA.accounts[0]!.pubKey,
+        mnemonic: 'encrypted_mnemonic',
+        accounts: [
+          {
+            address: TEST_DATA.accounts[0]!.pubKey,
+            accountName: 'Account 1',
+            type: 'WALLET_INSIDE',
+            hdPath: 0,
+          },
+        ],
+      }];
+      mockEncryptUtils.decrypt.mockResolvedValue(legacyVault);
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue(
+        JSON.stringify({ version: 3, data: 'outer-v3', iv: 'iv-v3' })
+      );
+
+      let releaseSave: () => void = () => {};
+      const saveGate = new Promise<void>((resolve) => {
+        releaseSave = resolve;
+      });
+      mockStorageService.save.mockImplementationOnce(async (data: any) => {
+        Object.assign(mockStorageData, data);
+        await saveGate;
+      });
+
+      const submitPromise = apiService.submitPassword(TEST_DATA.password);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      let checkFinished = false;
+      const checkPromise = apiService.checkPassword(TEST_DATA.password).then((result) => {
+        checkFinished = true;
+        return result;
+      });
+
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(checkFinished).toBe(false);
+
+      releaseSave();
+      await submitPromise;
+      const checkResult = await checkPromise;
+      expect(checkResult).toBe(true);
       consoleSpy.mockRestore();
     });
   });
@@ -415,23 +930,22 @@ describe('APIService', () => {
     });
 
     it('should call importWalletByMnemonic and encrypt data', async () => {
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockAccountService.importWalletByMnemonic.mockReturnValue({
         pubKey: TEST_DATA.accounts[0]!.pubKey,
         priKey: TEST_DATA.accounts[0]!.priKey,
         hdIndex: 0,
       });
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.createAccount(TEST_DATA.mnemonic);
       
       expect(mockAccountService.importWalletByMnemonic).toHaveBeenCalled();
-      expect(mockEncryptUtils.encrypt).toHaveBeenCalled();
+      expect(mockEncryptUtils.encryptWithCryptoKey).toHaveBeenCalled();
       expect(result).toHaveProperty('address');
     });
 
     it('should save encrypted data to storage', async () => {
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockAccountService.importWalletByMnemonic.mockReturnValue({
         pubKey: TEST_DATA.accounts[0]!.pubKey,
         priKey: TEST_DATA.accounts[0]!.priKey,
@@ -443,9 +957,176 @@ describe('APIService', () => {
       
       expect(mockStorageService.save).toHaveBeenCalled();
     });
+
+    it('should not update in-memory vault when save fails', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      setupAuthenticated();
+      mockStoreState.data = null;
+      mockStoreState.currentAccount = {};
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[0]!.pubKey,
+        priKey: TEST_DATA.accounts[0]!.priKey,
+        hdIndex: 0,
+      });
+      mockStorageService.save.mockRejectedValueOnce(new Error('save failed'));
+
+      const result = await apiService.createAccount(TEST_DATA.mnemonic);
+      expect(result).toEqual({ error: 'createFailed', type: 'local' });
+      expect(mockStoreState.data).toBeNull();
+      expect(mockStoreState.currentAccount).toEqual({});
+      consoleSpy.mockRestore();
+    });
   });
 
   // ==================== 16. addHDNewAccount ====================
+  describe('addHDKeyring', () => {
+    it('should not increment nextWalletIndex when duplicate address is detected', async () => {
+      const initialData = createV3VaultData({ nextWalletIndex: 7 });
+      mockStoreState.data = initialData;
+      setupAuthenticated();
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[0]!.pubKey,
+        priKey: TEST_DATA.accounts[0]!.priKey,
+        hdIndex: 0,
+      });
+
+      const result = await apiService.addHDKeyring(TEST_DATA.mnemonic);
+
+      expect(result).toHaveProperty('error', 'repeatTip');
+      expect(mockStoreState.data.nextWalletIndex).toBe(7);
+      expect(mockStorageService.save).not.toHaveBeenCalled();
+    });
+
+    it('should keep in-memory v3 vault unchanged when save fails', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const initialData = createV3VaultData({ nextWalletIndex: 3 });
+      mockStoreState.data = initialData;
+      setupAuthenticated();
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[1]!.pubKey,
+        priKey: TEST_DATA.accounts[1]!.priKey,
+        hdIndex: 0,
+      });
+      mockStorageService.save.mockRejectedValueOnce(new Error('save failed'));
+
+      const result = await apiService.addHDKeyring(TEST_DATA.mnemonic);
+
+      expect(result).toEqual({ error: 'createFailed', type: 'local' });
+      expect(mockStoreState.data.keyrings).toHaveLength(1);
+      expect(mockStoreState.data.nextWalletIndex).toBe(3);
+      consoleSpy.mockRestore();
+    });
+  });
+
+  // ==================== 16. multi-keyring methods ====================
+  describe('multi-keyring methods', () => {
+    it('should rename keyring and persist updated vault', async () => {
+      setupAuthenticated();
+      mockStoreState.data = createV3VaultData();
+
+      const result = await apiService.renameKeyring('kr-hd', 'Main Wallet');
+
+      expect(result).toEqual({
+        success: true,
+        keyring: { id: 'kr-hd', name: 'Main Wallet' },
+      });
+      expect(mockStoreState.data.keyrings[0].name).toBe('Main Wallet');
+      expect(mockStorageService.save).toHaveBeenCalled();
+    });
+
+    it('should decrypt and return mnemonic for target HD keyring', async () => {
+      setupAuthenticated();
+      mockStoreState.data = createV3VaultData();
+      const checkPasswordSpy = jest.spyOn(apiService, 'checkPassword').mockResolvedValueOnce(true);
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce(TEST_DATA.mnemonic);
+
+      const result = await apiService.getKeyringMnemonic('kr-hd', TEST_DATA.password);
+
+      expect(result).toEqual({ mnemonic: TEST_DATA.mnemonic });
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalledWith(
+        MOCK_CRYPTO_KEY,
+        JSON.stringify({ version: 3, data: 'mne', iv: 'iv' })
+      );
+      checkPasswordSpy.mockRestore();
+    });
+
+    it('should delete a keyring and switch current account to remaining keyring', async () => {
+      setupAuthenticated();
+      mockStoreState.data = {
+        version: 3,
+        currentKeyringId: 'kr-import',
+        nextWalletIndex: 2,
+        keyrings: [
+          {
+            id: 'kr-hd',
+            type: 'hd',
+            name: 'Wallet 1',
+            mnemonic: JSON.stringify({ version: 3, data: 'mne', iv: 'iv' }),
+            nextHdIndex: 1,
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            createdAt: Date.now(),
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+          {
+            id: 'kr-import',
+            type: 'imported',
+            name: 'Imported',
+            currentAddress: TEST_DATA.importedAccount.pubKey,
+            createdAt: Date.now(),
+            accounts: [{
+              address: TEST_DATA.importedAccount.pubKey,
+              name: TEST_DATA.importedAccount.accountName,
+              privateKey: JSON.stringify({ version: 3, data: 'pk', iv: 'ivpk' }),
+            }],
+          },
+        ],
+      };
+      const checkPasswordSpy = jest.spyOn(apiService, 'checkPassword').mockResolvedValueOnce(true);
+
+      const result = await apiService.deleteKeyring('kr-import', TEST_DATA.password);
+
+      expect(result).toEqual({
+        success: true,
+        currentAccount: {
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          hdPath: 0,
+          keyringId: 'kr-hd',
+        },
+      });
+      expect(mockStoreState.data.currentKeyringId).toBe('kr-hd');
+      expect(mockStoreState.data.keyrings).toHaveLength(1);
+      checkPasswordSpy.mockRestore();
+    });
+
+    it('should add account to specific HD keyring', async () => {
+      setupAuthenticated();
+      mockStoreState.data = createV3VaultData();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce(TEST_DATA.mnemonic);
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[1]!.pubKey,
+        priKey: TEST_DATA.accounts[1]!.priKey,
+        hdIndex: 1,
+      });
+
+      const result = await apiService.addAccountToKeyring('kr-hd', 'HD 2');
+
+      expect(result).toEqual({
+        account: {
+          address: TEST_DATA.accounts[1]!.pubKey,
+          accountName: 'HD 2',
+          type: 'WALLET_INSIDE',
+          hdPath: 1,
+          keyringId: 'kr-hd',
+        },
+      });
+      expect(mockStoreState.data.currentKeyringId).toBe('kr-hd');
+      expect(mockStoreState.data.keyrings[0].accounts).toHaveLength(2);
+    });
+  });
+
+  // ==================== 17. addHDNewAccount ====================
   describe('addHDNewAccount', () => {
     it('should be a function', () => {
       expect(typeof apiService.addHDNewAccount).toBe('function');
@@ -453,8 +1134,9 @@ describe('APIService', () => {
 
     it('should add new HD account with V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
-      mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.mnemonic);
+      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
       mockAccountService.importWalletByMnemonic.mockReturnValue({
         pubKey: TEST_DATA.accounts[1]!.pubKey,
         priKey: TEST_DATA.accounts[1]!.priKey,
@@ -468,8 +1150,9 @@ describe('APIService', () => {
 
     it('should return error when address already exists', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
-      mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.mnemonic);
+      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
       mockAccountService.importWalletByMnemonic.mockReturnValue({
         pubKey: TEST_DATA.accounts[0]!.pubKey,
         priKey: TEST_DATA.accounts[0]!.priKey,
@@ -480,9 +1163,116 @@ describe('APIService', () => {
       const result = await apiService.addHDNewAccount('Account');
       expect(result).toHaveProperty('error', 'importRepeat');
     });
+
+    it('should fallback to deterministic typeIndex when legacy HD account misses typeIndex', async () => {
+      mockStoreState.data = createV1VaultData([
+        {
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          hdPath: 0,
+          privateKey: 'enc_key_0',
+        },
+      ]);
+      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[1]!.pubKey,
+        priKey: TEST_DATA.accounts[1]!.priKey,
+        hdIndex: 1,
+      });
+
+      const result = await apiService.addHDNewAccount('HD 2');
+
+      expect(result).toHaveProperty('typeIndex', 2);
+      expect(Number.isNaN((result as any).typeIndex)).toBe(false);
+    });
+
+    it('should fallback to deterministic hdPath when legacy HD account misses hdPath', async () => {
+      mockStoreState.data = createV1VaultData([
+        {
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          privateKey: 'enc_key_0',
+          typeIndex: 1,
+        },
+      ]);
+      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[1]!.pubKey,
+        priKey: TEST_DATA.accounts[1]!.priKey,
+        hdIndex: 1,
+      });
+
+      const result = await apiService.addHDNewAccount('HD 2');
+
+      expect(result).toHaveProperty('hdPath', 1);
+      expect(Number.isNaN((result as any).hdPath)).toBe(false);
+    });
+
+    it('should update currentKeyringId when adding account via fallback HD keyring', async () => {
+      setupAuthenticated();
+      mockStoreState.data = {
+        version: 3,
+        currentKeyringId: 'kr-import',
+        keyrings: [
+          {
+            id: 'kr-import',
+            type: 'imported',
+            name: 'Imported',
+            currentAddress: TEST_DATA.importedAccount.pubKey,
+            accounts: [
+              {
+                address: TEST_DATA.importedAccount.pubKey,
+                name: 'Imported 1',
+                privateKey: JSON.stringify({ version: 3, data: 'pk', iv: 'ivpk' }),
+              },
+            ],
+          },
+          {
+            id: 'kr-hd',
+            type: 'hd',
+            name: 'Wallet 1',
+            mnemonic: JSON.stringify({ version: 3, data: 'mne', iv: 'ivm' }),
+            nextHdIndex: 1,
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+        ],
+      };
+      mockStoreState.currentAccount = {
+        address: TEST_DATA.importedAccount.pubKey,
+        keyringId: 'kr-import',
+      };
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[1]!.pubKey,
+        priKey: TEST_DATA.accounts[1]!.priKey,
+        hdIndex: 1,
+      });
+
+      const result = await apiService.addHDNewAccount('HD 2');
+
+      expect(result).toHaveProperty('address', TEST_DATA.accounts[1]!.pubKey);
+      expect(result).toHaveProperty('keyringId', 'kr-hd');
+      expect(mockStoreState.data.currentKeyringId).toBe('kr-hd');
+    });
+
+    it('should return invalidVault when store data is non-null but unrecognized shape', async () => {
+      setupAuthenticated();
+      mockStoreState.data = { broken: true };
+
+      const result = await apiService.addHDNewAccount('HD 2');
+
+      expect(result).toEqual({ error: 'invalidVault', type: 'local' });
+    });
   });
 
-  // ==================== 17. addImportAccount ====================
+  // ==================== 18. addImportAccount ====================
   describe('addImportAccount', () => {
     it('should be a function', () => {
       expect(typeof apiService.addImportAccount).toBe('function');
@@ -490,7 +1280,7 @@ describe('APIService', () => {
 
     it('should import account with V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockAccountService.importWalletByPrivateKey.mockReturnValue({
         pubKey: TEST_DATA.importedAccount.pubKey,
         priKey: TEST_DATA.importedAccount.priKey,
@@ -501,9 +1291,39 @@ describe('APIService', () => {
       expect(result).toHaveProperty('address', TEST_DATA.importedAccount.pubKey);
     });
 
+    it('should fallback to deterministic typeIndex when legacy imported account misses typeIndex', async () => {
+      mockStoreState.data = createV1VaultData([
+        {
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          hdPath: 0,
+          typeIndex: 1,
+          privateKey: 'enc_key_0',
+        },
+        {
+          address: 'B62qLegacyImported',
+          accountName: 'Legacy Import',
+          type: 'WALLET_OUTSIDE',
+          hdPath: null,
+          privateKey: 'enc_legacy_import',
+        },
+      ]);
+      setupAuthenticated();
+      mockAccountService.importWalletByPrivateKey.mockReturnValue({
+        pubKey: TEST_DATA.importedAccount.pubKey,
+        priKey: TEST_DATA.importedAccount.priKey,
+      });
+
+      const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
+
+      expect(result).toHaveProperty('typeIndex', 2);
+      expect(Number.isNaN((result as any).typeIndex)).toBe(false);
+    });
+
     it('should return error when address already exists', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockAccountService.importWalletByPrivateKey.mockReturnValue({
         pubKey: TEST_DATA.accounts[0]!.pubKey,
         priKey: TEST_DATA.accounts[0]!.priKey,
@@ -511,6 +1331,66 @@ describe('APIService', () => {
 
       const result = await apiService.addImportAccount(TEST_DATA.accounts[0]!.priKey, 'Account');
       expect(result).toHaveProperty('error', 'importRepeat');
+    });
+
+    it('should return walletNotReady when cryptoKey is missing', async () => {
+      mockStoreState.data = null;
+      mockStoreState.cryptoKey = null;
+      mockAccountService.importWalletByPrivateKey.mockReturnValue({
+        pubKey: TEST_DATA.importedAccount.pubKey,
+        priKey: TEST_DATA.importedAccount.priKey,
+      });
+
+      const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
+      expect(result).toEqual({ error: 'walletNotReady', type: 'local' });
+    });
+
+    it('should not mutate in-memory V1 data when save fails', async () => {
+      const originalData = createV1VaultData();
+      mockStoreState.data = JSON.parse(JSON.stringify(originalData));
+      setupAuthenticated();
+      mockAccountService.importWalletByPrivateKey.mockReturnValue({
+        pubKey: TEST_DATA.importedAccount.pubKey,
+        priKey: TEST_DATA.importedAccount.priKey,
+      });
+      mockStorageService.save.mockRejectedValueOnce(new Error('save failed'));
+
+      const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
+
+      expect(result).toEqual({ error: 'privateError', type: 'local' });
+      expect(mockStoreState.data).toEqual(originalData);
+    });
+
+    it('should initialize empty v3 vault with nextWalletIndex on first import', async () => {
+      setupAuthenticated();
+      mockStoreState.data = null;
+      mockAccountService.importWalletByPrivateKey.mockReturnValue({
+        pubKey: TEST_DATA.importedAccount.pubKey,
+        priKey: TEST_DATA.importedAccount.priKey,
+      });
+
+      const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import 1');
+
+      expect(result).toHaveProperty('address', TEST_DATA.importedAccount.pubKey);
+      const vaultEncryptCall = mockEncryptUtils.encryptWithCryptoKey.mock.calls.find(
+        (_call) => _call[1] && typeof _call[1] === 'object' && 'keyrings' in _call[1]
+      );
+      expect(vaultEncryptCall?.[1]?.version).toBe(3);
+      expect(vaultEncryptCall?.[1]?.nextWalletIndex).toBe(1);
+      expect(vaultEncryptCall?.[1]?.createdAt).toBeUndefined();
+    });
+
+    it('should return invalidVault when store data is non-null but unrecognized shape', async () => {
+      setupAuthenticated();
+      mockStoreState.data = { broken: true };
+      mockAccountService.importWalletByPrivateKey.mockReturnValue({
+        pubKey: TEST_DATA.importedAccount.pubKey,
+        priKey: TEST_DATA.importedAccount.priKey,
+      });
+
+      const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
+
+      expect(result).toEqual({ error: 'invalidVault', type: 'local' });
     });
   });
 
@@ -522,7 +1402,7 @@ describe('APIService', () => {
 
     it('should import account via keystore', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockAccountService.importWalletByKeystore.mockResolvedValue({
         pubKey: TEST_DATA.importedAccount.pubKey,
         priKey: TEST_DATA.importedAccount.priKey,
@@ -543,9 +1423,16 @@ describe('APIService', () => {
       const result = await apiService.addAccountByKeyStore('invalid', 'wrong', 'Test');
       expect(result).toHaveProperty('error');
     });
+
+    it('should return sanitized error when importWalletByKeystore throws', async () => {
+      mockAccountService.importWalletByKeystore.mockRejectedValue(new Error('sodium init failed'));
+
+      const result = await apiService.addAccountByKeyStore('bad', 'pwd', 'Test');
+      expect(result).toEqual({ error: 'importFailed', type: 'local' });
+    });
   });
 
-  // ==================== 19. addLedgerAccount ====================
+  // ==================== 20. addLedgerAccount ====================
   describe('addLedgerAccount', () => {
     it('should be a function', () => {
       expect(typeof apiService.addLedgerAccount).toBe('function');
@@ -553,7 +1440,7 @@ describe('APIService', () => {
 
     it('should add ledger account with V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.addLedgerAccount(
@@ -566,11 +1453,54 @@ describe('APIService', () => {
 
     it('should return error when ledger address already exists', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.addLedgerAccount(TEST_DATA.accounts[0]!.pubKey, 'Ledger', 0);
       expect(result).toHaveProperty('error', 'importRepeat');
+    });
+
+    it('should return walletNotReady when cryptoKey is missing', async () => {
+      mockStoreState.data = null;
+      mockStoreState.cryptoKey = null;
+      const result = await apiService.addLedgerAccount(
+        TEST_DATA.ledgerAccount.pubKey,
+        TEST_DATA.ledgerAccount.accountName,
+        TEST_DATA.ledgerAccount.hdPath
+      );
+      expect(result).toEqual({ error: 'walletNotReady', type: 'local' });
+    });
+
+    it('should initialize empty v3 vault with nextWalletIndex on first ledger import', async () => {
+      setupAuthenticated();
+      mockStoreState.data = null;
+
+      const result = await apiService.addLedgerAccount(
+        TEST_DATA.ledgerAccount.pubKey,
+        TEST_DATA.ledgerAccount.accountName,
+        TEST_DATA.ledgerAccount.hdPath
+      );
+
+      expect(result).toHaveProperty('address', TEST_DATA.ledgerAccount.pubKey);
+      const vaultEncryptCall = mockEncryptUtils.encryptWithCryptoKey.mock.calls.find(
+        (_call) => _call[1] && typeof _call[1] === 'object' && 'keyrings' in _call[1]
+      );
+      expect(vaultEncryptCall?.[1]?.version).toBe(3);
+      expect(vaultEncryptCall?.[1]?.nextWalletIndex).toBe(1);
+      expect(vaultEncryptCall?.[1]?.createdAt).toBeUndefined();
+    });
+
+    it('should return invalidVault when store data is non-null but unrecognized shape', async () => {
+      setupAuthenticated();
+      mockStoreState.data = { broken: true };
+
+      const result = await apiService.addLedgerAccount(
+        TEST_DATA.ledgerAccount.pubKey,
+        TEST_DATA.ledgerAccount.accountName,
+        TEST_DATA.ledgerAccount.hdPath
+      );
+
+      expect(result).toEqual({ error: 'invalidVault', type: 'local' });
     });
   });
 
@@ -582,11 +1512,25 @@ describe('APIService', () => {
 
     it('should set current account with V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.setCurrentAccount(TEST_DATA.accounts[0]!.pubKey);
       expect(result).toHaveProperty('currentAddress', TEST_DATA.accounts[0]!.pubKey);
+    });
+
+    it('should only persist once after first match in V1 data', async () => {
+      const duplicateAddress = 'B62qDuplicate';
+      mockStoreState.data = createV1VaultData([
+        { address: duplicateAddress, accountName: 'Dup 1', type: 'WALLET_OUTSIDE', hdPath: 0, typeIndex: 0, privateKey: 'enc1' },
+        { address: duplicateAddress, accountName: 'Dup 2', type: 'WALLET_OUTSIDE', hdPath: 1, typeIndex: 1, privateKey: 'enc2' },
+      ]);
+      setupAuthenticated();
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('encrypted_data');
+
+      await apiService.setCurrentAccount(duplicateAddress);
+
+      expect(mockStorageService.save).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -598,7 +1542,7 @@ describe('APIService', () => {
 
     it('should change account name with V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.changeAccountName(TEST_DATA.accounts[0]!.pubKey, 'New Name');
@@ -619,7 +1563,7 @@ describe('APIService', () => {
         { address: TEST_DATA.accounts[0]!.pubKey, accountName: 'Account 1', type: 'WALLET_INSIDE', hdPath: 0, typeIndex: 0, privateKey: 'enc_key_0' },
         watchAccount,
       ]);
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockStoreState.currentAccount = { address: TEST_DATA.accounts[0]!.pubKey };
       mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
@@ -633,7 +1577,7 @@ describe('APIService', () => {
         { address: TEST_DATA.accounts[0]!.pubKey, accountName: 'Account 1', type: 'WALLET_INSIDE', hdPath: 0, typeIndex: 0, privateKey: 'enc_key_0' },
         importedAccount,
       ]);
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockStoreState.currentAccount = { address: TEST_DATA.accounts[0]!.pubKey };
       mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
@@ -643,10 +1587,136 @@ describe('APIService', () => {
 
     it('should return error with incorrect password', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockRejectedValueOnce(new Error('Incorrect password'));
 
       const result = await apiService.deleteAccount(TEST_DATA.accounts[0]!.pubKey, 'wrongPwd');
       expect(result).toEqual({ error: 'passwordError', type: 'local' });
+    });
+
+    it('should reset wallet when deleting the last account in V1 vault', async () => {
+      mockStoreState.data = createV1VaultData([
+        { address: TEST_DATA.accounts[0]!.pubKey, accountName: 'Account 1', type: 'WALLET_INSIDE', hdPath: 0, typeIndex: 0, privateKey: 'enc_key_0' },
+      ]);
+      setupAuthenticated();
+      mockStoreState.currentAccount = { address: TEST_DATA.accounts[0]!.pubKey };
+
+      const result = await apiService.deleteAccount(TEST_DATA.accounts[0]!.pubKey, TEST_DATA.password);
+
+      expect(result).toEqual({});
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
+      expect(mockStoreState.isUnlocked).toBe(false);
+      expect(mockStoreState.cryptoKey).toBeNull();
+      expect(mockStoreState.data).toBeNull();
+      expect(mockStoreState.currentAccount).toEqual({});
+    });
+
+    it('should reset wallet when deleting the last account in V3 vault', async () => {
+      setupAuthenticated();
+      mockStoreState.data = {
+        version: 3,
+        currentKeyringId: 'kr-watch',
+        keyrings: [
+          {
+            id: 'kr-watch',
+            type: 'watch',
+            name: 'Watch',
+            currentAddress: 'B62qWatchOnly',
+            accounts: [{ address: 'B62qWatchOnly', name: 'Watch 1' }],
+          },
+        ],
+      };
+      mockStoreState.currentAccount = { address: 'B62qWatchOnly' };
+
+      const result = await apiService.deleteAccount('B62qWatchOnly', '');
+
+      expect(result).toEqual({});
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
+      expect(mockStoreState.isUnlocked).toBe(false);
+      expect(mockStoreState.data).toBeNull();
+      expect(mockStoreState.currentAccount).toEqual({});
+    });
+
+    it('should preserve keyringId when switching current account after V3 delete', async () => {
+      setupAuthenticated();
+      mockStoreState.data = {
+        version: 3,
+        currentKeyringId: 'kr-1',
+        keyrings: [
+          {
+            id: 'kr-1',
+            type: 'hd',
+            name: 'Wallet 1',
+            mnemonic: JSON.stringify({ version: 3, data: 'm1', iv: 'iv1' }),
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+          {
+            id: 'kr-2',
+            type: 'imported',
+            name: 'Imported',
+            currentAddress: TEST_DATA.importedAccount.pubKey,
+            accounts: [
+              {
+                address: TEST_DATA.importedAccount.pubKey,
+                name: 'Imported 1',
+                privateKey: JSON.stringify({ version: 3, data: 'pk', iv: 'ivpk' }),
+              },
+            ],
+          },
+        ],
+      };
+      mockStoreState.currentAccount = {
+        address: TEST_DATA.accounts[0]!.pubKey,
+        keyringId: 'kr-1',
+      };
+
+      const result = await apiService.deleteAccount(TEST_DATA.accounts[0]!.pubKey, TEST_DATA.password);
+
+      expect(result).toHaveProperty('address', TEST_DATA.importedAccount.pubKey);
+      expect(result).toHaveProperty('keyringId', 'kr-2');
+    });
+
+    it('should refresh keyring currentAddress when deleting non-current-global keyring current account', async () => {
+      setupAuthenticated();
+      const ledgerA = 'B62qLedgerA';
+      const ledgerB = 'B62qLedgerB';
+      mockStoreState.data = {
+        version: 3,
+        currentKeyringId: 'kr-hd',
+        keyrings: [
+          {
+            id: 'kr-hd',
+            type: 'hd',
+            name: 'Wallet 1',
+            mnemonic: JSON.stringify({ version: 3, data: 'm1', iv: 'iv1' }),
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+          {
+            id: 'kr-ledger',
+            type: 'ledger',
+            name: 'Ledger',
+            currentAddress: ledgerA,
+            accounts: [
+              { address: ledgerA, hdIndex: 0, name: 'Ledger 1' },
+              { address: ledgerB, hdIndex: 1, name: 'Ledger 2' },
+            ],
+          },
+        ],
+      };
+      mockStoreState.currentAccount = {
+        address: TEST_DATA.accounts[0]!.pubKey,
+        keyringId: 'kr-hd',
+      };
+
+      const result = await apiService.deleteAccount(ledgerA, '');
+      const ledgerKeyring = mockStoreState.data.keyrings.find((kr: any) => kr.id === 'kr-ledger');
+
+      expect(result).toHaveProperty('address', TEST_DATA.accounts[0]!.pubKey);
+      expect(ledgerKeyring.currentAddress).toBe(ledgerB);
+      expect(ledgerKeyring.accounts).toHaveLength(1);
+      expect(ledgerKeyring.accounts[0].address).toBe(ledgerB);
     });
   });
 
@@ -658,18 +1728,104 @@ describe('APIService', () => {
 
     it('should return mnemonic with correct password', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.mnemonic);
 
       const result = await apiService.getMnemonic(TEST_DATA.password);
       expect(result).toBe(TEST_DATA.mnemonic);
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(
+        TEST_DATA.password,
+        mockStoreState.data[0].mnemonic
+      );
+    });
+
+    it('should decrypt v3 inner mnemonic with CryptoKey', async () => {
+      mockStoreState.data = createV1VaultData();
+      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
+
+      const result = await apiService.getMnemonic(TEST_DATA.password);
+      expect(result).toBe(TEST_DATA.mnemonic);
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenLastCalledWith(
+        MOCK_CRYPTO_KEY,
+        mockStoreState.data[0].mnemonic
+      );
     });
 
     it('should return error with incorrect password', async () => {
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockRejectedValueOnce(new Error('Incorrect password'));
 
       const result = await apiService.getMnemonic('wrongPwd');
       expect(result).toEqual({ error: 'passwordError', type: 'local' });
+    });
+
+    it('should prefer current account keyring mnemonic in modern vault', async () => {
+      setupAuthenticated();
+      mockStoreState.data = {
+        version: 3,
+        currentKeyringId: 'kr-2',
+        keyrings: [
+          {
+            id: 'kr-1',
+            type: 'hd',
+            mnemonic: JSON.stringify({ version: 3, data: 'encrypted_mnemonic_1', iv: 'iv1' }),
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+          {
+            id: 'kr-2',
+            type: 'hd',
+            mnemonic: JSON.stringify({ version: 3, data: 'encrypted_mnemonic_2', iv: 'iv2' }),
+            currentAddress: TEST_DATA.accounts[1]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[1]!.pubKey, hdIndex: 1, name: 'Account 2' }],
+          },
+        ],
+      };
+      mockStoreState.currentAccount = { address: TEST_DATA.accounts[1]!.pubKey, keyringId: 'kr-2' };
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
+
+      const result = await apiService.getMnemonic(TEST_DATA.password);
+
+      expect(result).toBe(TEST_DATA.mnemonic);
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenLastCalledWith(
+        MOCK_CRYPTO_KEY,
+        JSON.stringify({ version: 3, data: 'encrypted_mnemonic_2', iv: 'iv2' })
+      );
+    });
+
+    it('should still decrypt v3 mnemonic when store cryptoKey is missing but password is valid', async () => {
+      mockStoreState.data = createV1VaultData();
+      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+      mockStoreState.cryptoKey = null;
+      mockStoreState.vaultSalt = 'mock-vault-salt';
+      mockStorageData.vaultSalt = 'mock-vault-salt';
+      mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+      mockEncryptUtils.deriveSessionKey.mockResolvedValue({ key: MOCK_CRYPTO_KEY, salt: 'mock-vault-salt' });
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
+
+      const result = await apiService.getMnemonic(TEST_DATA.password);
+
+      expect(result).toBe(TEST_DATA.mnemonic);
+      expect(mockEncryptUtils.deriveSessionKey).toHaveBeenCalledWith(TEST_DATA.password, 'mock-vault-salt');
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalledWith(
+        MOCK_CRYPTO_KEY,
+        mockStoreState.data[0].mnemonic
+      );
+    });
+
+    it('should reject mnemonic when decrypted inner secret is not a string', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockStoreState.data = createV1VaultData();
+      const checkPasswordSpy = jest.spyOn(apiService, 'checkPassword').mockResolvedValueOnce(true);
+      mockEncryptUtils.decrypt.mockResolvedValueOnce({ value: 'not-a-string' });
+
+      const result = await apiService.getMnemonic(TEST_DATA.password);
+
+      expect(result).toEqual({ error: 'decryptFailed', type: 'local' });
+      checkPasswordSpy.mockRestore();
+      consoleSpy.mockRestore();
     });
   });
 
@@ -681,15 +1837,20 @@ describe('APIService', () => {
 
     it('should return private key with correct password', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.accounts[0]!.priKey);
 
       const result = await apiService.getPrivateKey(TEST_DATA.accounts[0]!.pubKey, TEST_DATA.password);
       expect(result).toBe(TEST_DATA.accounts[0]!.priKey);
+      expect(mockEncryptUtils.decrypt).toHaveBeenCalledWith(
+        TEST_DATA.password,
+        mockStoreState.data[0].accounts[0].privateKey
+      );
     });
 
     it('should return error with incorrect password', async () => {
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockRejectedValueOnce(new Error('Incorrect password'));
 
       const result = await apiService.getPrivateKey('B62q', 'wrongPwd');
       expect(result).toEqual({ error: 'passwordError', type: 'local' });
@@ -704,20 +1865,183 @@ describe('APIService', () => {
 
     it('should update password with correct old password', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockStoreState.currentAccount = { address: TEST_DATA.accounts[0]!.pubKey };
       mockEncryptUtils.decrypt.mockResolvedValue('decrypted_data');
-      mockEncryptUtils.encrypt.mockResolvedValue('re_encrypted_data');
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue('decrypted_data');
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('re_encrypted_data');
 
       const result = await apiService.updateSecPassword(TEST_DATA.password, 'newPassword');
       expect(result).toHaveProperty('code', 0);
     });
 
     it('should return error with incorrect old password', async () => {
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockRejectedValueOnce(new Error('Incorrect password'));
 
       const result = await apiService.updateSecPassword('wrongOld', 'newPwd');
       expect(result).toEqual({ error: 'passwordError', type: 'local' });
+    });
+
+    it('should not mutate in-memory data when save fails in V3 path', async () => {
+      const originalData = {
+        version: 3,
+        currentKeyringId: 'kr-1',
+        keyrings: [
+          {
+            id: 'kr-1',
+            type: 'hd',
+            mnemonic: JSON.stringify({ version: 3, data: 'old_mnemonic_enc', iv: 'iv-mnemonic' }),
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [{ address: TEST_DATA.accounts[0]!.pubKey, hdIndex: 0, name: 'Account 1' }],
+          },
+          {
+            id: 'kr-2',
+            type: 'imported',
+            currentAddress: TEST_DATA.importedAccount.pubKey,
+            accounts: [{
+              address: TEST_DATA.importedAccount.pubKey,
+              name: 'Imported',
+              privateKey: JSON.stringify({ version: 3, data: 'old_pk_enc', iv: 'iv-pk' }),
+            }],
+          },
+        ],
+      };
+
+      setupAuthenticated();
+      mockStoreState.data = JSON.parse(JSON.stringify(originalData));
+      mockStoreState.currentAccount = { address: TEST_DATA.accounts[0]!.pubKey, keyringId: 'kr-1' };
+      const newCryptoKey = { type: 'secret', extractable: false, tag: 'new-key' } as unknown as CryptoKey;
+      mockEncryptUtils.deriveSessionKey.mockResolvedValue({ key: newCryptoKey, salt: 'new-salt' });
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue('decrypted');
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('re_encrypted_data');
+      mockStorageService.save.mockRejectedValueOnce(new Error('save failed'));
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const result = await apiService.updateSecPassword(TEST_DATA.password, 'newPassword');
+      consoleSpy.mockRestore();
+
+      expect(result).toEqual({ error: 'passwordError', type: 'local' });
+      expect(mockStoreState.cryptoKey).toBe(MOCK_CRYPTO_KEY);
+      expect(mockStoreState.vaultSalt).toBe('mock-vault-salt');
+      expect(mockStoreState.data).toEqual(originalData);
+    });
+
+    it('should update vaultSalt after unlock fallback migration keeps legacy structure', async () => {
+      const newCryptoKey = { type: 'secret', extractable: false, tag: 'new-key' } as unknown as CryptoKey;
+      mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+      mockStorageData.vaultSalt = 'mock-vault-salt';
+      const innerMnemonicV3 = JSON.stringify({ version: 3, data: 'mne-v3', iv: 'iv-mne' });
+      const innerPkV3 = JSON.stringify({ version: 3, data: 'pk-v3', iv: 'iv-pk' });
+      const legacyVault = [{
+        currentAddress: TEST_DATA.accounts[0]!.pubKey,
+        mnemonic: 'legacy_mnemonic',
+        accounts: [{
+          address: TEST_DATA.accounts[0]!.pubKey,
+          accountName: 'Account 1',
+          type: 'WALLET_INSIDE',
+          hdPath: 0,
+          privateKey: 'legacy_private_key',
+        }],
+      }];
+
+      mockEncryptUtils.deriveSessionKey.mockImplementation(async (_pwd: string, salt?: string) => {
+        if (salt) {
+          return { key: MOCK_CRYPTO_KEY, salt };
+        }
+        return { key: newCryptoKey, salt: 'new-salt' };
+      });
+      mockEncryptUtils.decryptWithCryptoKey.mockImplementation(async (_key: CryptoKey, ciphertext: string) => {
+        if (ciphertext === mockStorageData.keyringData) return legacyVault;
+        if (ciphertext === innerMnemonicV3) return TEST_DATA.mnemonic;
+        if (ciphertext === innerPkV3) return TEST_DATA.accounts[0]!.priKey;
+        return 'ok';
+      });
+      mockEncryptUtils.decrypt.mockImplementation(async (_pwd: string, ciphertext: string) => {
+        if (ciphertext === 'legacy_mnemonic') return TEST_DATA.mnemonic;
+        if (ciphertext === 'legacy_private_key') return TEST_DATA.accounts[0]!.priKey;
+        return 'decrypted_data';
+      });
+      mockEncryptUtils.encryptWithCryptoKey
+        .mockResolvedValueOnce(innerMnemonicV3)
+        .mockResolvedValueOnce(innerPkV3)
+        .mockResolvedValueOnce('outer_v3_after_unlock')
+        .mockResolvedValueOnce('inner_mnemonic_new')
+        .mockResolvedValueOnce('inner_pk_new')
+        .mockResolvedValueOnce('outer_v3_after_pwd_update');
+
+      await apiService.submitPassword(TEST_DATA.password);
+      const result = await apiService.updateSecPassword(TEST_DATA.password, 'newPassword');
+
+      expect(result).toEqual({ code: 0 });
+      expect(mockStorageService.save).toHaveBeenLastCalledWith({
+        keyringData: 'outer_v3_after_pwd_update',
+        vaultSalt: 'new-salt',
+      });
+      expect(mockStoreState.vaultSalt).toBe('new-salt');
+      expect(mockStoreState.cryptoKey).toBe(newCryptoKey);
+    });
+
+    it('should return innerSecretsNotMigrated when v3 vault contains legacy inner secret', async () => {
+      setupAuthenticated();
+      const checkPasswordSpy = jest.spyOn(apiService, 'checkPassword').mockResolvedValueOnce(true);
+      mockStoreState.data = createV3VaultData({
+        keyrings: [
+          {
+            id: 'kr-hd',
+            type: 'hd',
+            name: 'Wallet 1',
+            mnemonic: 'legacy_mnemonic_payload',
+            nextHdIndex: 1,
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            createdAt: Date.now(),
+            accounts: [
+              {
+                address: TEST_DATA.accounts[0]!.pubKey,
+                hdIndex: 0,
+                name: 'Account 1',
+              },
+            ],
+          },
+        ],
+      });
+
+      const result = await apiService.updateSecPassword(TEST_DATA.password, 'newPassword');
+
+      expect(result).toEqual({ error: 'innerSecretsNotMigrated', type: 'local' });
+      expect(mockStorageService.save).not.toHaveBeenCalled();
+      checkPasswordSpy.mockRestore();
+    });
+
+    it('should fail closed when decrypted v3 inner secret is not a string during password update', async () => {
+      setupAuthenticated();
+      mockStoreState.data = createV3VaultData({
+        keyrings: [
+          {
+            id: 'kr-hd',
+            type: 'hd',
+            name: 'Wallet 1',
+            mnemonic: JSON.stringify({ version: 3, data: 'old_mnemonic_enc', iv: 'iv-mnemonic' }),
+            currentAddress: TEST_DATA.accounts[0]!.pubKey,
+            accounts: [
+              {
+                address: TEST_DATA.accounts[0]!.pubKey,
+                hdIndex: 0,
+                name: 'Account 1',
+              },
+            ],
+          },
+        ],
+      });
+      mockStoreState.currentAccount = { address: TEST_DATA.accounts[0]!.pubKey, keyringId: 'kr-hd' };
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce({ bad: true });
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const result = await apiService.updateSecPassword(TEST_DATA.password, 'newPassword');
+      consoleSpy.mockRestore();
+
+      expect(result).toEqual({ error: 'passwordError', type: 'local' });
+      expect(mockStorageService.save).not.toHaveBeenCalled();
     });
   });
 
@@ -747,6 +2071,19 @@ describe('APIService', () => {
 
     it('should handle stake delegation', async () => {
       expect(apiService.sendTransaction).toBeDefined();
+    });
+
+    it('should return sanitized error string instead of raw Error object', async () => {
+      // Force getCurrentPrivateKey to throw so the catch block fires
+      const spy = jest.spyOn(apiService, 'getCurrentPrivateKey' as any)
+        .mockRejectedValue(new Error('internal crypto failure'));
+
+      const result = await apiService.sendTransaction({ sendAction: 'mina_sendPayment' });
+
+      // The catch block should serialize the Error to its message string
+      expect(result).toEqual({ error: 'internal crypto failure' });
+      expect(typeof (result as any).error).toBe('string');
+      spy.mockRestore();
     });
   });
 
@@ -840,7 +2177,7 @@ describe('APIService', () => {
   describe('Wallet Lifecycle', () => {
     describe('Full wallet creation and HD account derivation', () => {
       it('should create wallet with first account at hdIndex 0', async () => {
-        mockStoreState.password = TEST_DATA.password;
+        setupAuthenticated();
         mockAccountService.importWalletByMnemonic.mockReturnValue({
           pubKey: TEST_DATA.accounts[0]!.pubKey,
           priKey: TEST_DATA.accounts[0]!.priKey,
@@ -854,8 +2191,9 @@ describe('APIService', () => {
 
       it('should derive second HD account at hdIndex 1', async () => {
         mockStoreState.data = createV1VaultData();
-        mockStoreState.password = TEST_DATA.password;
-        mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.mnemonic);
+        mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+        setupAuthenticated();
+        mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
         mockAccountService.importWalletByMnemonic.mockReturnValue({
           pubKey: TEST_DATA.accounts[1]!.pubKey,
           priKey: TEST_DATA.accounts[1]!.priKey,
@@ -869,8 +2207,9 @@ describe('APIService', () => {
 
       it('should derive third HD account at hdIndex 2', async () => {
         mockStoreState.data = createV1VaultData();
-        mockStoreState.password = TEST_DATA.password;
-        mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.mnemonic);
+        mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+        setupAuthenticated();
+        mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
         mockAccountService.importWalletByMnemonic.mockReturnValue({
           pubKey: TEST_DATA.accounts[2]!.pubKey,
           priKey: TEST_DATA.accounts[2]!.priKey,
@@ -926,7 +2265,7 @@ describe('APIService', () => {
 
     describe('Password security', () => {
       it('should use password for all encryption operations', async () => {
-        mockStoreState.password = TEST_DATA.password;
+        setupAuthenticated();
         mockEncryptUtils.encrypt.mockResolvedValue('encrypted');
         await mockEncryptUtils.encrypt(TEST_DATA.password, 'data');
         expect(mockEncryptUtils.encrypt).toHaveBeenCalledWith(TEST_DATA.password, 'data');
@@ -934,10 +2273,10 @@ describe('APIService', () => {
 
       it('should update all encrypted data when password changes', async () => {
         mockStoreState.data = createV1VaultData();
-        mockStoreState.password = TEST_DATA.password;
+        setupAuthenticated();
         mockStoreState.currentAccount = { address: TEST_DATA.accounts[0]!.pubKey };
-        mockEncryptUtils.decrypt.mockResolvedValue('decrypted');
-        mockEncryptUtils.encrypt.mockResolvedValue('re_encrypted');
+        mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue('decrypted');
+        mockEncryptUtils.encryptWithCryptoKey.mockResolvedValue('re_encrypted');
         const result = await apiService.updateSecPassword(TEST_DATA.password, 'newPassword');
         expect(result).toEqual({ code: 0 });
       });
@@ -955,12 +2294,82 @@ describe('APIService', () => {
       mockKeyringService.tryUpgradeVaultFn.mockResolvedValue({ error: 'No vault' });
       expect(apiService.tryUpgradeVault).toBeDefined();
     });
+
+    it('should reject upgrade when any inner secret is not v3-encrypted', async () => {
+      setupAuthenticated();
+      // Keep source data in legacy shape so tryUpgradeVault runs normalizeVault path.
+      mockStoreState.data = createV1VaultData();
+
+      (normalizeVault as jest.Mock).mockReturnValueOnce({
+        migrated: true,
+        vault: {
+          version: 2,
+          currentKeyringId: 'kr-1',
+          nextWalletIndex: 2,
+          keyrings: [
+            {
+              id: 'kr-1',
+              type: 'hd',
+              name: 'Wallet 1',
+              currentAddress: TEST_DATA.accounts[0]!.pubKey,
+              createdAt: Date.now(),
+              nextHdIndex: 1,
+              // v3 mnemonic (ok)
+              mnemonic: JSON.stringify({ version: 3, data: 'x', iv: 'y' }),
+              accounts: [
+                {
+                  address: TEST_DATA.accounts[0]!.pubKey,
+                  hdIndex: 0,
+                  name: 'Account 1',
+                },
+              ],
+            },
+            {
+              id: 'kr-2',
+              type: 'imported',
+              name: 'Imported',
+              currentAddress: TEST_DATA.importedAccount.pubKey,
+              createdAt: Date.now(),
+              accounts: [
+                {
+                  address: TEST_DATA.importedAccount.pubKey,
+                  name: TEST_DATA.importedAccount.accountName,
+                  // non-v3 privateKey payload should be rejected
+                  privateKey: JSON.stringify({ version: 2, data: 'old', iv: 'old', salt: 's' }),
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const result = await apiService.tryUpgradeVault();
+
+      expect(result).toEqual({ success: false, error: 'innerSecretsNotMigrated', type: 'local' });
+    });
+
+    it('should not mutate in-memory modern vault when save fails during version bump', async () => {
+      setupAuthenticated();
+      const modernVault = createV3VaultData({ version: 2 });
+      mockStoreState.data = modernVault;
+      mockStorageService.save.mockRejectedValueOnce(new Error('save failed'));
+
+      const result = await apiService.tryUpgradeVault();
+
+      expect(result).toEqual({ success: false, error: 'upgradeFailed', type: 'local' });
+      expect(mockStoreState.data.version).toBe(2);
+    });
   });
 
   // ==================== 40. getVaultVersion ====================
   describe('getVaultVersion', () => {
     it('should return vault version', () => {
       expect(typeof apiService.getVaultVersion).toBe('function');
+    });
+
+    it('should return null for empty array (invalid legacy vault shape)', () => {
+      mockStoreState.data = [];
+      expect(apiService.getVaultVersion()).toEqual({ version: null });
     });
   });
 
@@ -1013,57 +2422,62 @@ describe('APIService', () => {
   });
 
   describe('Password Validation', () => {
-    it('should validate correct password', () => {
-      mockStoreState.password = 'myPassword';
-      expect(apiService.checkPassword('myPassword')).toBe(true);
+    it('should validate correct password', async () => {
+      setupAuthenticated();
+      const result = await apiService.checkPassword('myPassword');
+      expect(result).toBe(true);
     });
 
-    it('should reject incorrect password', () => {
-      mockStoreState.password = 'myPassword';
-      expect(apiService.checkPassword('wrongPassword')).toBe(false);
+    it('should reject incorrect password', async () => {
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockRejectedValueOnce(new Error('Incorrect password'));
+      const result = await apiService.checkPassword('wrongPassword');
+      expect(result).toBe(false);
     });
 
-    it('should reject empty password', () => {
-      mockStoreState.password = 'myPassword';
-      expect(apiService.checkPassword('')).toBe(false);
+    it('should reject empty password when no vaultSalt', async () => {
+      mockStoreState.vaultSalt = '';
+      const result = await apiService.checkPassword('');
+      expect(result).toBe(false);
     });
 
-    it('should handle null password state', () => {
-      mockStoreState.password = null;
-      expect(apiService.checkPassword('anyPassword')).toBe(false);
+    it('should handle missing vaultSalt state', async () => {
+      mockStoreState.vaultSalt = '';
+      const result = await apiService.checkPassword('anyPassword');
+      expect(result).toBe(false);
     });
   });
 
   describe('Encryption Operations', () => {
-    it('should call encrypt when creating account', async () => {
-      mockStoreState.password = TEST_DATA.password;
+    it('should call encryptWithCryptoKey when creating account', async () => {
+      setupAuthenticated();
       mockAccountService.importWalletByMnemonic.mockReturnValue({
         pubKey: TEST_DATA.accounts[0]!.pubKey,
         priKey: TEST_DATA.accounts[0]!.priKey,
         hdIndex: 0,
       });
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       await apiService.createAccount(TEST_DATA.mnemonic);
       
-      expect(mockEncryptUtils.encrypt).toHaveBeenCalled();
+      expect(mockEncryptUtils.encryptWithCryptoKey).toHaveBeenCalled();
     });
 
-    it('should use decrypt via getMnemonic', async () => {
+    it('should use decryptWithCryptoKey via getMnemonic', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.password = TEST_DATA.password;
-      mockEncryptUtils.decrypt.mockResolvedValue(TEST_DATA.mnemonic);
+      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
+      setupAuthenticated();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
 
       const result = await apiService.getMnemonic(TEST_DATA.password);
       
-      expect(mockEncryptUtils.decrypt).toHaveBeenCalled();
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalled();
       expect(result).toBe(TEST_DATA.mnemonic);
     });
   });
 
   describe('Storage Operations', () => {
     it('should call storage.save when creating account', async () => {
-      mockStoreState.password = TEST_DATA.password;
+      setupAuthenticated();
       mockAccountService.importWalletByMnemonic.mockReturnValue({
         pubKey: TEST_DATA.accounts[0]!.pubKey,
         priKey: TEST_DATA.accounts[0]!.priKey,

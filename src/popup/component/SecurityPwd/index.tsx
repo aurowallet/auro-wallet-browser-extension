@@ -7,6 +7,7 @@ interface SecurityPwdProps {
   action?: string;
   pageTitle?: string;
   btnTxt?: string;
+  loading?: boolean;
 }
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
@@ -22,7 +23,8 @@ const SecurityPwd = ({
   onClickCheck = () => { },
   action = "",
   pageTitle = "",
-  btnTxt = ""
+  btnTxt = "",
+  loading = false
 }: SecurityPwdProps) => {
 
   const [inputValue, setInputValue] = useState("")
@@ -95,6 +97,7 @@ const SecurityPwd = ({
           <StyledPlaceholder />
           <StyledBottomContainer>
             <Button
+              loading={loading}
               disable={!btnClick}
               onClick={onConfirm}>
               {showBtnTxt}

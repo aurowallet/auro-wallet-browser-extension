@@ -326,7 +326,7 @@
   "keystore": "Keystore",
   "inputPrivateKey": "请输入私钥，不要包含大写字母、标点符号或空格。",
   "privateKeyPlaceholder": "请输入您的私钥",
-  "v2Required": "请升级钱包以使用此功能",
+  "upgradeRequired": "请升级钱包以使用此功能",
   "currentEpoch": "当前 Epoch",
   "earnOnMina": "赚取 MINA",
   "apr": "年化收益率",

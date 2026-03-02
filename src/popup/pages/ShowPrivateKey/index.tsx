@@ -30,12 +30,14 @@ const ShowPrivateKeyPage = () => {
   const [showSecurity, setShowSecurity] = useState(true)
   const [priKey, setPriKey] = useState('')
   const [confirmModalStatus, setConfirmModalStatus] = useState(false)
+  const [btnLoading, setBtnLoading] = useState(false)
 
   const address = useMemo(()=>{
     return location.state?.address || ""
   },[location])
 
   const onClickCheck = useCallback((password: string) => {
+    setBtnLoading(true);
     sendMsg({
       action: WALLET_GET_PRIVATE_KEY,
       payload: {
@@ -44,6 +46,7 @@ const ShowPrivateKeyPage = () => {
       }
     },
       async (privateKey: string | { error?: string; type?: string }) => {
+        setBtnLoading(false);
         if (typeof privateKey === "object" && privateKey.error) {
           if (privateKey.type === "local") {
             if(privateKey.error === "passwordError"){
@@ -82,6 +85,7 @@ const ShowPrivateKeyPage = () => {
         pageTitle={i18n.t("privateKey")}
         onClickCheck={onClickCheck}
         action={SEC_FROM_TYPE.SEC_SHOW_PRIVATE_KEY}
+        loading={btnLoading}
       />
     );
   }

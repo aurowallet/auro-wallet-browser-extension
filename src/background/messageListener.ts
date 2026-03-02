@@ -89,20 +89,32 @@ function internalMessageListener(
   if (messageSource) {
     return false;
   }
+  if (!action) {
+    return false;
+  }
   switch (action) {
     case WALLET_CREATE_PWD:
-      sendResponse(apiService.createPwd(payload.pwd));
+      apiService.createPwd(payload.pwd).then(() => {
+        sendResponse();
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
+      });
       break;
     case WALLET_NEW_HD_ACCOUNT:
       apiService.createAccount(payload.mne).then((res) => {
         sendResponse(res);
-        return true;
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_GET_CURRENT_ACCOUNT:
       apiService.getCurrentAccount().then((account) => {
         sendResponse(account);
-        return true;
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_SET_UNLOCKED_STATUS:
@@ -111,6 +123,9 @@ function internalMessageListener(
     case WALLET_APP_SUBMIT_PWD:
       apiService.submitPassword(payload.password).then((res) => {
         sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_GET_ALL_ACCOUNT:
@@ -120,6 +135,9 @@ function internalMessageListener(
     case WALLET_CREATE_HD_ACCOUNT:
       apiService.addHDNewAccount(payload.accountName).then((account) => {
         sendResponse(account);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_IMPORT_HD_ACCOUNT:
@@ -127,11 +145,17 @@ function internalMessageListener(
         .addImportAccount(payload.privateKey, payload.accountName)
         .then((account) => {
           sendResponse(account);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_CHANGE_CURRENT_ACCOUNT:
       apiService.setCurrentAccount(payload.address).then((account) => {
         sendResponse(account);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_CHANGE_ACCOUNT_NAME:
@@ -139,6 +163,9 @@ function internalMessageListener(
         .changeAccountName(payload.address, payload.accountName)
         .then((account) => {
           sendResponse(account);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_CHANGE_DELETE_ACCOUNT:
@@ -146,19 +173,33 @@ function internalMessageListener(
         .deleteAccount(payload.address, payload.password)
         .then((account) => {
           sendResponse(account);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_DELETE_WATCH_ACCOUNT:
       apiService.deleteAccount(payload.address, "").then((account) => {
         sendResponse(account);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_CHECKOUT_PASSWORD:
-      sendResponse(apiService.checkPassword(payload.password));
+      apiService.checkPassword(payload.password).then((result) => {
+        sendResponse(result);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse(false);
+      });
       break;
     case WALLET_GET_MNE:
       apiService.getMnemonic(payload.password).then((mne) => {
         sendResponse(mne);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_GET_PRIVATE_KEY:
@@ -166,6 +207,9 @@ function internalMessageListener(
         .getPrivateKey(payload.address, payload.password)
         .then((privateKey) => {
           sendResponse(privateKey);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_CHANGE_SEC_PASSWORD:
@@ -173,6 +217,9 @@ function internalMessageListener(
         .updateSecPassword(payload.oldPassword, payload.password)
         .then((account) => {
           sendResponse(account);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_CHECK_TX_STATUS:
@@ -187,6 +234,9 @@ function internalMessageListener(
         )
         .then((account) => {
           sendResponse(account);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_IMPORT_KEY_STORE:
@@ -194,6 +244,9 @@ function internalMessageListener(
         .addAccountByKeyStore(payload.keypair, payload.password, payload.accountName)
         .then((account) => {
           sendResponse(account);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_GET_CREATE_MNEMONIC:
@@ -203,13 +256,23 @@ function internalMessageListener(
       sendResponse(apiService.setLastActiveTime());
       break;
     case WALLET_UPDATE_LOCK_TIME:
-      sendResponse(apiService.updateLockTime(payload.value));
+      apiService.updateLockTime(payload.value).then(() => {
+        sendResponse();
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
+      });
       break;
     case WALLET_GET_LOCK_TIME:
       sendResponse(apiService.getCurrentAutoLockTime());
       break;
     case RESET_WALLET:
-      sendResponse(apiService.resetWallet());
+      apiService.resetWallet().then(() => {
+        sendResponse();
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
+      });
       break;
     case GET_SIGN_PARAMS_BY_ID:
       sendResponse(dappService.getSignParamsByOpenId(payload.openId));
@@ -257,16 +320,25 @@ function internalMessageListener(
     case WALLET_SEND_FIELDS_MESSAGE_TRANSACTION:
       apiService.signFields(payload).then((result) => {
         sendResponse(result);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_SEND_NULLIFIER:
       apiService.createNullifierByApi(payload).then((result) => {
         sendResponse(result);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case QA_SIGN_TRANSACTION:
       apiService.sendTransaction(payload).then((result) => {
         sendResponse(result);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case DAPP_CONNECTION_LIST:
@@ -286,18 +358,27 @@ function internalMessageListener(
         .storePrivateCredential(payload.address, payload.credential)
         .then((res) => {
           sendResponse(res);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case CredentialMsg.get_credentials:
       const getCredAddr = typeof payload === 'string' ? payload : payload.address;
       apiService.getPrivateCredential(getCredAddr).then((res) => {
         sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case CredentialMsg.ID_LIST:
       const idListAddr = typeof payload === 'string' ? payload : payload.address;
       apiService.getCredentialIdList(idListAddr).then((res) => {
         sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case CredentialMsg.target_credential:
@@ -305,6 +386,9 @@ function internalMessageListener(
         .getTargetCredential(payload.address, payload.credentialId)
         .then((res) => {
           sendResponse(res);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case CredentialMsg.remove_credential_detail:
@@ -312,6 +396,9 @@ function internalMessageListener(
         .removeTargetCredential(payload.address, payload.credentialId)
         .then((res) => {
           sendResponse(res);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     // ============================================
@@ -323,11 +410,17 @@ function internalMessageListener(
     case WALLET_ADD_HD_KEYRING:
       apiService.addHDKeyring(payload.mnemonic, payload.walletName).then((res) => {
         sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_RENAME_KEYRING:
       apiService.renameKeyring(payload.keyringId, payload.name).then((res) => {
         sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     case WALLET_GET_KEYRING_MNEMONIC:
@@ -335,6 +428,9 @@ function internalMessageListener(
         .getKeyringMnemonic(payload.keyringId, payload.password)
         .then((res) => {
           sendResponse(res);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_DELETE_KEYRING:
@@ -342,6 +438,9 @@ function internalMessageListener(
         .deleteKeyring(payload.keyringId, payload.password)
         .then((res) => {
           sendResponse(res);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_ADD_ACCOUNT_TO_KEYRING:
@@ -349,6 +448,9 @@ function internalMessageListener(
         .addAccountToKeyring(payload.keyringId, payload.accountName)
         .then((res) => {
           sendResponse(res);
+        }).catch((err) => {
+          console.error("[messageListener]", action, err);
+          sendResponse();
         });
       break;
     case WALLET_GET_VAULT_VERSION:
@@ -357,10 +459,13 @@ function internalMessageListener(
     case WALLET_TRY_UPGRADE_VAULT:
       apiService.tryUpgradeVault().then((res) => {
         sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
       });
       break;
     default:
-      break;
+      return false;
   }
   return true;
 }

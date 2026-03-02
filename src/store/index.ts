@@ -18,7 +18,8 @@ export interface AccountInfo {
 export interface StoreState {
   isUnlocked: boolean;
   data: VaultData | null;
-  password: string;
+  cryptoKey: CryptoKey | null;
+  vaultSalt: string;
   currentAccount: AccountInfo;
   mne: string;
   autoLockTime: number;
@@ -29,13 +30,15 @@ export interface StoreState {
   _directUpdate: (partial: Partial<StoreState>) => void;
   unlock: (payload: UnlockPayload) => void;
   lock: () => void;
+  reset: () => void;
   setCurrentAccount: (account: AccountInfo) => void;
   setMnemonic: (mne: string) => void;
   setAutoLockTime: (time: number) => void;
 }
 
 export interface UnlockPayload {
-  password?: string;
+  cryptoKey?: CryptoKey | null;
+  vaultSalt?: string;
   data?: VaultData | null;
   currentAccount?: AccountInfo;
   autoLockTime?: number;
@@ -45,7 +48,8 @@ const useInternalStore = create<StoreState>((set, get) => ({
   // === APIService state ===
   isUnlocked: false,
   data: null,
-  password: '',
+  cryptoKey: null,
+  vaultSalt: '',
   currentAccount: {},
   mne: "",
   autoLockTime: LOCK_TIME_DEFAULT,
@@ -60,20 +64,31 @@ const useInternalStore = create<StoreState>((set, get) => ({
 
   unlock: (payload: UnlockPayload) => set({
     isUnlocked: true,
-    password: payload.password || '',
+    cryptoKey: payload.cryptoKey || null,
+    vaultSalt: payload.vaultSalt || '',
     data: payload.data || null,
     currentAccount: payload.currentAccount || {},
-    autoLockTime: payload.autoLockTime || LOCK_TIME_DEFAULT,
+    autoLockTime: payload.autoLockTime ?? LOCK_TIME_DEFAULT,
   }),
 
   lock: () => set((state) => ({
     isUnlocked: false,
-    password: '',
+    cryptoKey: null,
+    vaultSalt: '',
     data: null,
     currentAccount: { address: state.currentAccount?.address || '' },
     mne: "",
     autoLockTime: state.autoLockTime,
   })),
+
+  reset: () => set({
+    isUnlocked: false,
+    cryptoKey: null,
+    vaultSalt: '',
+    data: null,
+    currentAccount: {},
+    mne: "",
+  }),
 
   setCurrentAccount: (account: AccountInfo) => set({ currentAccount: account }),
   setMnemonic: (mne: string) => set({ mne }),
@@ -88,6 +103,7 @@ export const memStore = {
 
   unlock: (payload: UnlockPayload) => useInternalStore.getState().unlock(payload),
   lock: () => useInternalStore.getState().lock(),
+  reset: () => useInternalStore.getState().reset(),
   setCurrentAccount: (acc: AccountInfo) => useInternalStore.getState().setCurrentAccount(acc),
   setMnemonic: (mne: string) => useInternalStore.getState().setMnemonic(mne),
   setAutoLockTime: (time: number) => useInternalStore.getState().setAutoLockTime(time),

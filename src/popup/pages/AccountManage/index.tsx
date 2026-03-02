@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { getBalanceBatch } from "../../../background/api";
 import { MAIN_COIN_CONFIG } from "../../../constant";
 import { ACCOUNT_TYPE } from "../../../constant/commonType";
-import { getDefaultHDWalletName } from "../../../constant/vaultTypes";
+import { getDefaultHDWalletName, VAULT_VERSION } from "../../../constant/vaultTypes";
 import type {
   AccountInfo,
   UIKeyring,
@@ -137,7 +137,7 @@ const AccountManagePage = () => {
       const version = versionResult?.version || "v1";
       setVaultVersion(version);
 
-      if (version === "v2") {
+      if (version === `v${VAULT_VERSION}`) {
         sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (result: { keyrings?: UIKeyring[] }) => {
           if (result.keyrings && result.keyrings.length > 0) {
             setKeyringsList(result.keyrings);
@@ -163,8 +163,8 @@ const AccountManagePage = () => {
       const version = versionResult?.version || "v1";
       setVaultVersion(version);
 
-      if (version === "v2") {
-        // V2: Use keyrings list directly
+      if (version === `v${VAULT_VERSION}`) {
+        // V3: Use keyrings list directly
         sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (result: { keyrings?: UIKeyring[] }) => {
           if (result.keyrings && result.keyrings.length > 0) {
             setKeyringsList(result.keyrings);
@@ -297,7 +297,7 @@ const AccountManagePage = () => {
         setShowUpgradeModal(true);
         setUpgradeStatus("idle");
       } else {
-        // V2 vault, open add wallet in new tab with addWallet parameter
+        // V3 vault, open add wallet in new tab with addWallet parameter
         // This parameter tells Welcome page to skip the wallet existence check
         createOrActivateTab("popup.html?addWallet=true#/register_page");
         // Close popup window so new wallet can refresh when user returns
@@ -317,7 +317,7 @@ const AccountManagePage = () => {
       if (result.success) {
         setShowUpgradeModal(false);
         setUpgradeStatus("idle");
-        setVaultVersion("v2");
+        setVaultVersion(`v${VAULT_VERSION}`);
         
         // Refresh keyrings list first
         sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (res: { keyrings?: UIKeyring[] }) => {

@@ -8,14 +8,14 @@
 import { ACCOUNT_TYPE } from "../constant/commonType";
 import {
   KEYRING_TYPE,
-  VAULT_VERSION,
+  MIN_MODERN_VAULT_VERSION,
   createEmptyVault,
   createHDKeyring,
   createImportedKeyring,
   createLedgerKeyring,
   createWatchKeyring,
   isLegacyVault,
-  isV2Vault,
+  isModernVault,
   sortKeyringsByCreatedAt,
   Vault,
   Keyring,
@@ -394,7 +394,7 @@ function keyringTypeToAccountType(keyringType: string): string {
 export function normalizeVault(
   data: unknown
 ): { vault: Vault; migrated: boolean } {
-  if (isV2Vault(data)) {
+  if (isModernVault(data)) {
     return { vault: data as Vault, migrated: false };
   }
 
@@ -485,7 +485,7 @@ export function validateVault(vault: Vault): ValidationResult {
     return { valid: false, errors };
   }
 
-  if (vault.version !== VAULT_VERSION) {
+  if (typeof vault.version !== "number" || vault.version < MIN_MODERN_VAULT_VERSION) {
     errors.push(`Invalid vault version: ${vault.version}`);
   }
 

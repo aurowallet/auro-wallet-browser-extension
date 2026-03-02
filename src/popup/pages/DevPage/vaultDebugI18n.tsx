@@ -168,6 +168,28 @@ export const VAULT_DEBUG_I18N = {
     debugInfo: "调试信息",
     detectedVersion: "当前检测版本",
     storageKey: "存储键: keyringData (唯一)",
+
+    // Migration Status Check
+    migrationCheckTitle: "一键迁移状态检查",
+    migrationCheckInfo: "检查 v3 CryptoKey 迁移是否完成，无需输入密码即可查看基本状态",
+    runMigrationCheck: "运行迁移检查",
+    migrationCheckRunning: "正在检查迁移状态...",
+    migrationCheckWithVerify: "运行迁移检查（含密码验证）",
+    migrationCheckResult: "检查结果",
+    checkItem: "检查项",
+    checkStatus: "状态",
+    checkKeyringData: "keyringData 存在",
+    checkEncVersion: "加密 payload version",
+    checkVaultSalt: "vaultSalt 存在",
+    checkVaultDataVersion: "vault 数据结构版本",
+    checkVerifierWorks: "密码解密 vault 验证通过",
+    migrationComplete: "迁移完成：v3 CryptoKey 加密格式",
+    migrationIncomplete: "尚未迁移：仍为旧加密格式",
+    migrationPartial: "部分迁移：状态不一致，可能需要重新解锁",
+    pass: "通过",
+    fail: "未通过",
+    na: "N/A",
+    notChecked: "未检查（需输入密码）",
   },
   en: {
     // Page
@@ -333,6 +355,28 @@ export const VAULT_DEBUG_I18N = {
     debugInfo: "Debug Info",
     detectedVersion: "Detected Version",
     storageKey: "Storage key: keyringData (only)",
+
+    // Migration Status Check
+    migrationCheckTitle: "One-Click Migration Status Check",
+    migrationCheckInfo: "Check if v3 CryptoKey migration is complete. No password required for basic checks.",
+    runMigrationCheck: "Run Migration Check",
+    migrationCheckRunning: "Checking migration status...",
+    migrationCheckWithVerify: "Run Migration Check (with password verify)",
+    migrationCheckResult: "Check Result",
+    checkItem: "Check Item",
+    checkStatus: "Status",
+    checkKeyringData: "keyringData exists",
+    checkEncVersion: "Encryption payload version",
+    checkVaultSalt: "vaultSalt exists",
+    checkVaultDataVersion: "Vault data structure version",
+    checkVerifierWorks: "Vault decrypt verification passed",
+    migrationComplete: "Migration complete: v3 CryptoKey encryption",
+    migrationIncomplete: "Not migrated: still using old encryption format",
+    migrationPartial: "Partial migration: inconsistent state, may need re-unlock",
+    pass: "PASS",
+    fail: "FAIL",
+    na: "N/A",
+    notChecked: "Not checked (password required)",
   }
 };
 
