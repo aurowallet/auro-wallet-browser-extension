@@ -223,7 +223,12 @@ function internalMessageListener(
         });
       break;
     case WALLET_CHECK_TX_STATUS:
-      sendResponse(apiService.checkTxStatus(payload.paymentId, payload.hash, payload.type));
+      apiService.checkTxStatus(payload.paymentId, payload.hash, payload.type).then(() => {
+        sendResponse();
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
+      });
       break;
     case WALLET_IMPORT_LEDGER:
       apiService

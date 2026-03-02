@@ -71,15 +71,15 @@ interface TxResult {
  * get txStatus
  * @param {*} paymentId
  */
-export async function getTxStatus(paymentId: string): Promise<unknown> {
+export async function getTxStatus(paymentId: string, url?: string): Promise<unknown> {
   const txBody = getTxStatusBody();
-  const result = await startFetchMyQuery(txBody, { paymentId });
+  const result = await startFetchMyQuery(txBody, { paymentId }, url);
   return result;
 }
 
-export async function getQATxStatus(zkappTransaction: string): Promise<unknown> {
+export async function getQATxStatus(zkappTransaction: string, url?: string): Promise<unknown> {
   const txBody = getQATxStatusBody();
-  const result = await startFetchMyQuery(txBody, { zkappTransaction });
+  const result = await startFetchMyQuery(txBody, { zkappTransaction }, url);
   return result;
 }
 

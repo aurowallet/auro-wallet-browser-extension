@@ -9,6 +9,7 @@ import {
 } from "../../../constant/msgTypes";
 import { SEC_FROM_TYPE } from "../../../constant/commonType";
 import { setKeyringInfo } from "../../../reducers/cache";
+import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { createOrActivateTab } from "../../../utils/popup";
 import { nameLengthCheck } from "../../../utils/utils";
@@ -135,7 +136,7 @@ const WalletDetails = () => {
             password,
           },
         },
-        (result: { error?: string; type?: string; isLastKeyring?: boolean }) => {
+        (result: { error?: string; type?: string; isLastKeyring?: boolean; currentAccount?: any }) => {
           setBtnLoading(false);
           if (result.error) {
             if (result.type === "local") {
@@ -150,6 +151,10 @@ const WalletDetails = () => {
             createOrActivateTab("popup.html#/register_page");
             window.close();
           } else {
+            // Update Redux currentAccount so AccountManage shows the correct current account
+            if (result.currentAccount?.address) {
+              dispatch(updateCurrentAccount(result.currentAccount));
+            }
             navigate(-1);
           }
         }

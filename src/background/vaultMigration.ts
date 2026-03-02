@@ -151,6 +151,11 @@ export function migrateToV2(legacyData: LegacyWallet[]): Vault {
   // Sort keyrings by creation time
   vault.keyrings = sortKeyringsByCreatedAt(vault.keyrings);
 
+  // Set nextWalletIndex based on the number of HD keyrings migrated
+  // so the next wallet created after upgrade gets the correct name
+  const hdCount = vault.keyrings.filter((kr) => kr.type === KEYRING_TYPE.HD).length;
+  vault.nextWalletIndex = hdCount + 1;
+
   migrationLog.info(
     "Migration complete: " + vault.keyrings.length + " keyring(s)"
   );

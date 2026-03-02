@@ -11,6 +11,7 @@ import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import { nameLengthCheck } from "../../../utils/utils";
 import { copyText } from "../../../utils/browserUtils";
+import { createOrActivateTab } from "../../../utils/popup";
 import Loading from "../../component/Loading";
 import SecurityPwd from "../../component/SecurityPwd";
 import Toast from "../../component/Toast";
@@ -126,7 +127,7 @@ const AccountInfo = () => {
           address: account.address,
         },
       },
-      async (currentAccount: AccountInfoType & { error?: string; type?: string }) => {
+      async (currentAccount: AccountInfoType & { error?: string; type?: string; isReset?: boolean }) => {
         Loading.hide();
         if (currentAccount.error) {
           if (currentAccount.type === "local") {
@@ -134,6 +135,9 @@ const AccountInfo = () => {
           } else {
             Toast.info(currentAccount.error);
           }
+        } else if (currentAccount.isReset) {
+          createOrActivateTab("popup.html#/register_page");
+          window.close();
         } else {
           dispatch(updateCurrentAccount(currentAccount));
 
@@ -200,7 +204,7 @@ const AccountInfo = () => {
             password: password,
           },
         },
-        async (currentAccount: AccountInfoType & { error?: string; type?: string }) => {
+        async (currentAccount: AccountInfoType & { error?: string; type?: string; isReset?: boolean }) => {
           setBtnLoading(false);
           if (currentAccount.error) {
             if (currentAccount.type === "local") {
@@ -212,6 +216,9 @@ const AccountInfo = () => {
             } else {
               Toast.info(currentAccount.error);
             }
+          } else if (currentAccount.isReset) {
+            createOrActivateTab("popup.html#/register_page");
+            window.close();
           } else {
             sendMsg(
               {

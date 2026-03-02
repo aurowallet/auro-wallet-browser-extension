@@ -19,6 +19,7 @@ import {
   WALLET_ADD_ACCOUNT_TO_KEYRING,
   WALLET_CHANGE_CURRENT_ACCOUNT,
   WALLET_GET_ALL_ACCOUNT,
+  WALLET_GET_CURRENT_ACCOUNT,
   WALLET_GET_KEYRINGS_LIST,
   WALLET_GET_VAULT_VERSION,
   WALLET_SET_UNLOCKED_STATUS,
@@ -133,6 +134,12 @@ const AccountManagePage = () => {
 
   // Refetch keyrings data when navigating back to this page
   const fetchKeyringsData = useCallback(() => {
+    // Re-sync currentAccount from backend to guard against stale Redux state
+    sendMsg({ action: WALLET_GET_CURRENT_ACCOUNT }, (currentAccountResult: AccountInfo) => {
+      if (currentAccountResult?.address) {
+        dispatch(updateCurrentAccount(currentAccountResult));
+      }
+    });
     sendMsg({ action: WALLET_GET_VAULT_VERSION }, (versionResult: GetVaultVersionResponse) => {
       const version = versionResult?.version || "v1";
       setVaultVersion(version);
@@ -150,7 +157,7 @@ const AccountManagePage = () => {
         });
       }
     });
-  }, [fetchBalance]);
+  }, [fetchBalance, dispatch]);
 
   // Refresh data when location changes (e.g., navigating back from WalletDetails)
   useEffect(() => {

@@ -391,11 +391,6 @@ class APIService {
     this.setPopupIcon(false);
     // resetWallet clears account identity entirely (unlike lock(), which keeps address)
     memStore.reset();
-    sendMsg({
-      type: FROM_BACK_TO_RECORD,
-      action: WORKER_ACTIONS.SET_LOCK,
-      payload: false,
-    });
     await removeValue(["keyringData", "vaultSalt"]);
   };
 
@@ -1162,22 +1157,22 @@ class APIService {
     return isUnlocked && hasWallet;
   };
 
-  fetchTransactionStatus = (paymentId: string, hash: string): void => {
-    this.baseTransactionStatus(getTxStatus, paymentId, hash);
+  fetchTransactionStatus = (paymentId: string, hash: string, gqlUrl?: string): void => {
+    this.baseTransactionStatus(getTxStatus, paymentId, hash, gqlUrl);
   };
 
-  fetchQAnetTransactionStatus = (paymentId: string, hash: string): void => {
-    this.baseTransactionStatus(getQATxStatus, paymentId, hash);
+  fetchQAnetTransactionStatus = (paymentId: string, hash: string, gqlUrl?: string): void => {
+    this.baseTransactionStatus(getQATxStatus, paymentId, hash, gqlUrl);
   };
 
   private static readonly MAX_TX_POLL_RETRIES = 720; // 720 * 5s = 1 hour max
 
-  baseTransactionStatus = (method: (id: string) => Promise<{ transactionStatus?: string }>, paymentId: string, hash: string, retryCount = 0): void => {
+  baseTransactionStatus = (method: (id: string, url?: string) => Promise<{ transactionStatus?: string }>, paymentId: string, hash: string, gqlUrl?: string, retryCount = 0): void => {
     if (retryCount >= APIService.MAX_TX_POLL_RETRIES) {
       if (this.timer) clearTimeout(this.timer);
       return;
     }
-    method(paymentId)
+    method(paymentId, gqlUrl)
       .then((data) => {
         if (data?.transactionStatus === STATUS.TX_STATUS_INCLUDED) {
           browser.runtime.sendMessage({
@@ -1191,13 +1186,13 @@ class APIService {
           if (this.timer) clearTimeout(this.timer);
         } else {
           this.timer = setTimeout(() => {
-            this.baseTransactionStatus(method, paymentId, hash, retryCount + 1);
+            this.baseTransactionStatus(method, paymentId, hash, gqlUrl, retryCount + 1);
           }, 5000);
         }
       })
       .catch(() => {
         this.timer = setTimeout(() => {
-          this.baseTransactionStatus(method, paymentId, hash, retryCount + 1);
+          this.baseTransactionStatus(method, paymentId, hash, gqlUrl, retryCount + 1);
         }, 5000);
       });
   };
@@ -1516,39 +1511,36 @@ class APIService {
       // Remove the keyring
       workingData.keyrings.splice(keyringIndex, 1);
 
-      // Update currentKeyringId if needed
+      // Update currentKeyringId and current account if the deleted keyring was current
+      let currentAccount = this.getStore().currentAccount || {};
       if (workingData.currentKeyringId === keyringId) {
         workingData.currentKeyringId = workingData.keyrings[0].id;
+        const newCurrentKeyring = workingData.keyrings.find(
+          (kr) => kr.id === workingData.currentKeyringId
+        );
+        if (newCurrentKeyring && newCurrentKeyring.accounts.length > 0) {
+          const firstAccount = newCurrentKeyring.accounts[0];
+          newCurrentKeyring.currentAddress = firstAccount.address;
+          currentAccount = {
+            address: firstAccount.address,
+            accountName: firstAccount.name,
+            type: keyringTypeToAccountType(newCurrentKeyring.type),
+            hdPath: firstAccount.hdIndex,
+            keyringId: newCurrentKeyring.id,
+          };
+        }
       }
 
-      // Save
+      // Save (after updating currentKeyringId and currentAddress)
       const cryptoKey = await this._requireOrDeriveCryptoKey(password);
       const encryptData = await encryptUtils.encryptWithCryptoKey(cryptoKey, workingData);
       await save({ keyringData: encryptData });
-
-      // Update current account to first account of new current keyring
-      const newCurrentKeyring = workingData.keyrings.find(
-        (kr) => kr.id === workingData.currentKeyringId
-      );
-      let currentAccount = null;
-      if (newCurrentKeyring && newCurrentKeyring.accounts.length > 0) {
-        const firstAccount = newCurrentKeyring.accounts[0];
-        currentAccount = {
-          address: firstAccount.address,
-          accountName: firstAccount.name,
-          type: keyringTypeToAccountType(newCurrentKeyring.type),
-          hdPath: firstAccount.hdIndex,
-          keyringId: newCurrentKeyring.id,
-        };
-      }
 
       memStore.updateState({ data: workingData, currentAccount });
 
       return {
         success: true,
-        currentAccount: currentAccount
-          ? this.getAccountWithoutPrivate(currentAccount)
-          : null,
+        currentAccount: this.getAccountWithoutPrivate(currentAccount),
       };
     } catch (error) {
       console.error("[deleteKeyring] Error:", error);
@@ -2434,7 +2426,7 @@ class APIService {
         });
         if (accounts.length === 0) {
           await this.resetWallet();
-          return {};
+          return { isReset: true };
         }
         let currentAccount = this.getStore().currentAccount;
         if (address === currentAccount.address) {
@@ -2512,19 +2504,24 @@ class APIService {
       }
 
       // If keyring is empty, remove keyring
+      const wasCurrentKeyring = workingData.currentKeyringId === targetKeyring.id;
       if (targetKeyring.accounts.length === 0) {
         workingData.keyrings = workingData.keyrings.filter((kr) => kr.id !== targetKeyring.id);
       }
 
       if (workingData.keyrings.length === 0) {
         await this.resetWallet();
-        return {};
+        return { isReset: true };
       }
 
       // Update current account
-      let currentAccount = this.getStore().currentAccount;
+      let currentAccount = this.getStore().currentAccount || {};
+      const deletedCurrentAccount = address === currentAccount.address;
 
-      if (address === currentAccount.address) {
+      // Need to update current account if:
+      // 1. Deleted account was the current account, OR
+      // 2. Current keyring was removed (deleted the last account in current keyring)
+      if (deletedCurrentAccount || (wasCurrentKeyring && targetKeyring.accounts.length === 0)) {
         const allAccounts = getAllAccountsFromVault(workingData);
         if (allAccounts.length > 0) {
           const firstAcc = allAccounts[0];
@@ -2922,11 +2919,15 @@ class APIService {
       return { error: err instanceof Error ? err.message : String(err) };
     }
   };
-  checkTxStatus = (paymentId: string, hash: string, type?: string): void => {
+  checkTxStatus = async (paymentId: string, hash: string, type?: string): Promise<void> => {
+    // Capture the current network GQL URL at the time of the request,
+    // so polling continues to use this URL even if the user switches networks.
+    const netConfig = await getCurrentNodeConfig();
+    const gqlUrl = netConfig.url || undefined;
     if (type === FETCH_TYPE_QA) {
-      this.fetchQAnetTransactionStatus(paymentId, hash);
+      this.fetchQAnetTransactionStatus(paymentId, hash, gqlUrl);
     } else {
-      this.fetchTransactionStatus(paymentId, hash);
+      this.fetchTransactionStatus(paymentId, hash, gqlUrl);
     }
   };
 

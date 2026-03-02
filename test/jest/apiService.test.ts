@@ -481,10 +481,10 @@ describe('APIService', () => {
       expect(mockStoreState.mne).toBe('');
     });
 
-    it('should notify UI lock state after reset', async () => {
+    it('should not send SET_LOCK notification after reset (caller handles redirect)', async () => {
       await apiService.resetWallet();
 
-      expect(mockSendMsg).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockSendMsg).not.toHaveBeenCalledWith(expect.objectContaining({
         payload: false,
       }));
     });
@@ -1603,7 +1603,7 @@ describe('APIService', () => {
 
       const result = await apiService.deleteAccount(TEST_DATA.accounts[0]!.pubKey, TEST_DATA.password);
 
-      expect(result).toEqual({});
+      expect(result).toEqual({ isReset: true });
       expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.cryptoKey).toBeNull();
@@ -1630,7 +1630,7 @@ describe('APIService', () => {
 
       const result = await apiService.deleteAccount('B62qWatchOnly', '');
 
-      expect(result).toEqual({});
+      expect(result).toEqual({ isReset: true });
       expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.data).toBeNull();
