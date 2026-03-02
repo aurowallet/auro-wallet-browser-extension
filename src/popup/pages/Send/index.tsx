@@ -336,7 +336,13 @@ const SendPage = () => {
   }, [toAddress, isSendMainToken, token]);
 
   const onClickAdvance = useCallback(() => {
-    setIsOpenAdvance((state) => !state);
+    setIsOpenAdvance((prev) => {
+      if (prev) {
+        setAdvanceInputFee("");
+        setFeeErrorTip("");
+      }
+      return !prev;
+    });
   }, []);
 
   const onFeeInput = useCallback(
