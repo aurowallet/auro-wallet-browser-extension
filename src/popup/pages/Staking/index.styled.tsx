@@ -250,7 +250,7 @@ export const StyledActiveTitle = styled.p`
   font-size: 14px;
   line-height: 17px;
   color: rgba(0, 0, 0, 0.8);
-  margin: 16px 0 12px;
+  margin: 12px 0 12px;
 `;
 
 export const StyledValidatorCard = styled(StyledCommonContent)`
@@ -326,7 +326,7 @@ export const StyledActionLink = styled.div<StyledActionLinkProps>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 10px;
+  padding: 4px 0px 4px 10px;
   cursor: pointer;
   ${({ $bordered }) => $bordered && css`
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);

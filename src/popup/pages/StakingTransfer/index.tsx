@@ -576,7 +576,7 @@ const ValidatorSelector = ({ showNodeName, nodeIcon, onClickBlockProducer, showI
         {showIcon && <ValidatorIcon icon={nodeIcon} name={showNodeName} />}
         <StyledValidatorName>{showNodeName}</StyledValidatorName>
       </StyledValidatorInfo>
-      <StyledSelectorArrow src="/img/icon_arrow.svg" />
+      <StyledSelectorArrow src="/img/icon_arrow_black.svg" />
     </StyledValidatorSelectorCard>
   );
 };

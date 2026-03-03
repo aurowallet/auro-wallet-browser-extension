@@ -338,7 +338,7 @@ const EmptyView = ({ onClickGuide }: { onClickGuide?: () => void }) => {
       </StyledEarnContent>
       <StyledActionLink $bordered onClick={onGoStake}>
         <StyledActionText>{i18n.t("stake")}</StyledActionText>
-        <StyledActionArrow src="/img/icon_arrow.svg" />
+        <StyledActionArrow src="/img/icon_arrow_black.svg" />
       </StyledActionLink>
     </StyledEarnContainer>
   );
@@ -442,7 +442,7 @@ const DelegationInfo = ({
 
       <StyledActionLink onClick={onRedelegate}>
         <StyledActionText>{i18n.t("redelegate")}</StyledActionText>
-        <StyledActionArrow src="/img/icon_arrow.svg" />
+        <StyledActionArrow src="/img/icon_arrow_black.svg" />
       </StyledActionLink>
     </StyledEarnContainer>
   );
