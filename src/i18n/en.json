@@ -105,7 +105,7 @@
   "confirmEnv": "Please ensure that the system and network environment you are using is absolutely safe before performing this operation.",
   "privateKeyTip_1": "The private key consists of a string of characters, owning the private key is equivalent to owning the asset.",
   "privateKeyTip_2": "Once the private key is lost, it cannot be retrieved. Please make sure to backup the private key and keep it in a safe place.",
-  "deleteAccountTip": "A deleted account can only be restored by the Mnemonic Phrase or Private Key. Please make sure you have backed up your Mnemonic Phrase and Private Key.",
+  "deleteAccountTip": "The deleted wallet/account can only be restored by Mnemonic Phrase or Private Key. Please make sure you have backed up your Mnemonic Phrase or Private Key.",
   "backTips_1": "Backup your mnemonic phrase now!",
   "backTips_2": "The mnemonic phrase consists of multiple words, which cannot be retrieved if they are lost. Make sure the mnemonic phrase is kept in a secure location.",
   "backTips_3": "If the wallet cannot be accessed because the device is lost or for any other reason, importing the mnemonic phrase is the only way to retrieve your assets.",
