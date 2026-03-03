@@ -37,7 +37,7 @@ import {
   isZekoNet,
   parsedZekoFee,
 } from "../../../../utils/utils";
-import CountdownTimer from "../../../component/CountdownTimer";
+import NetworkFee from "../../../component/NetworkFee";
 import { getAccountUpdateCount } from "../../../../utils/zkUtils";
 import {
   StyledSectionSign,
@@ -51,14 +51,10 @@ import {
   StyledRowTitle,
   StyledRowContent,
   StyledRowDescContent,
-  StyledFeeCon,
-  StyledFeeContent,
   StyledRowArrow,
   StyledRowRight,
   StyledRightWrapper,
   StyledTypeRow,
-  StyledModeWrapper,
-  StyledRowPurpleContent,
   StyledHighFeeTip,
   StyledBtnGroup,
 } from "./index.styled";
@@ -472,24 +468,10 @@ const SignView = ({
             {nextMemo && (
               <CommonRow leftTitle={"Memo"} leftContent={nextMemo} />
             )}
-            <StyledAccountRow>
-              <StyledRowLeft>
-                <StyledRowTitle>{i18n.t("transactionFee")}</StyledRowTitle>
-                <StyledFeeCon>
-                  <StyledFeeContent>
-                    {nextFee + " " + MAIN_COIN_CONFIG.symbol}
-                  </StyledFeeContent>
-                  <StyledFeeWrapper>
-                    <CountdownTimer />
-                  </StyledFeeWrapper>
-                </StyledFeeCon>
-              </StyledRowLeft>
-              <StyledModeWrapper>
-                <StyledRowPurpleContent onClick={onClickAdvance}>
-                  {i18n.t("advanceMode")}
-                </StyledRowPurpleContent>
-              </StyledModeWrapper>
-            </StyledAccountRow>
+            <NetworkFee
+              currentFee={String(nextFee)}
+              onClickAdvance={onClickAdvance}
+            />
             <StyledHighFeeTip>{feeErrorTip}</StyledHighFeeTip>
           </>
         </StyledContent>

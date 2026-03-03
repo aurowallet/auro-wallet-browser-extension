@@ -16,18 +16,15 @@ import {
   isNumber,
   trimSpace,
 } from "../../../utils/utils";
-import AdvanceMode from "../../component/AdvanceMode";
 import Button from "../../component/Button";
 import { ConfirmModal } from "../../component/ConfirmModal";
 import CustomView from "../../component/CustomView";
-import FeeGroup from "../../component/FeeGroup";
+import NetworkFee from "../../component/NetworkFee";
 import Input from "../../component/Input";
 import {
   StyledContainer,
   StyledContentContainer,
   StyledInputContainer,
-  StyledFeeContainer,
-  StyledDividedLine,
   StyledBottomContainer,
   StyledPlaceholder,
   StyledInfoBanner,
@@ -190,12 +187,6 @@ const StakingTransfer = () => {
   const onMemoInput = useCallback((e: InputChangeEvent) => {
     setMemo(e.target.value);
   }, []);
-  const onClickFeeGroup = useCallback((item: { fee: string | number }) => {
-    setFeeAmount(String(item.fee));
-    setAdvanceInputFee("");
-    setFeeErrorTip("");
-  }, []);
-
   const onClickAdvance = useCallback(() => {
     setIsOpenAdvance(prev => {
       if (prev) {
@@ -491,27 +482,17 @@ const StakingTransfer = () => {
                 inputType={"text"}
               />
             </StyledInputContainer>
-            <StyledFeeContainer>
-              <FeeGroup
-                onClickFee={onClickFeeGroup}
-                currentFee={nextFee}
-                feeConfig={feeConfig}
-                hideTimer={true}
-              />
-            </StyledFeeContainer>
-            <StyledDividedLine />
-            <div>
-              <AdvanceMode
-                onClickAdvance={onClickAdvance}
-                isOpenAdvance={isOpenAdvance}
-                feeValue={advanceInputFee}
-                feePlaceholder={String(feeAmount)}
-                onFeeInput={onFeeInput}
-                feeErrorTip={feeErrorTip}
-                nonceValue={inputNonce}
-                onNonceInput={onNonceInput}
-              />
-            </div>
+            <NetworkFee
+              currentFee={nextFee}
+              onClickAdvance={onClickAdvance}
+              isOpenAdvance={isOpenAdvance}
+              feeValue={advanceInputFee}
+              feePlaceholder={String(feeAmount)}
+              onFeeInput={onFeeInput}
+              feeErrorTip={feeErrorTip}
+              nonceValue={inputNonce}
+              onNonceInput={onNonceInput}
+            />
           </>
         ) : isRedelegate ? (
           <StyledValidatorSection>

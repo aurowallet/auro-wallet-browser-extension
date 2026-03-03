@@ -36,17 +36,6 @@ export const StyledMax = styled(StyledAddressBook)`
   padding-right: 12px;
 `;
 
-export const StyledFeeContainer = styled.div`
-  margin: 20px 0;
-`;
-
-export const StyledDividedLine = styled.div`
-  height: 0.5px;
-  background-color: rgba(0, 0, 0, 0.1);
-  width: 100%;
-  margin: 10px 0px;
-`;
-
 export const StyledBottomContainer = styled.div`
   padding: 12px 38px 20px;
   position: fixed;

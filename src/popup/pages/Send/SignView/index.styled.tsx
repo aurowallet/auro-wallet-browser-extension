@@ -86,15 +86,6 @@ export const StyledRowDescContent = styled.span`
   font-size: 12px;
 `;
 
-export const StyledFeeCon = styled.div`
-  display: flex;
-  align-content: center;
-`;
-
-export const StyledFeeContent = styled(StyledRowContent)`
-  margin-right: 4px;
-`;
-
 export const StyledRowArrow = styled.div`
   height: 100%;
   position: absolute;
@@ -129,24 +120,6 @@ export const StyledTypeRow = styled.div`
   color: #594af1;
   font-size: 10px;
   font-weight: 500;
-`;
-
-export const StyledModeWrapper = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  height: auto;
-  align-items: stretch;
-`;
-
-export const StyledRowPurpleContent = styled.p`
-  font-weight: 600;
-  font-size: 14px;
-  text-align: center;
-  color: #594af1;
-  cursor: pointer;
-  position: absolute;
-  right: 0;
-  bottom: 0;
 `;
 
 export const StyledHighFeeTip = styled.div`

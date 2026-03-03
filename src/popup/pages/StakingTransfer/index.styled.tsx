@@ -15,17 +15,6 @@ export const StyledInputContainer = styled.div`
   }
 `;
 
-export const StyledFeeContainer = styled.div`
-  margin: 20px 0 10px;
-`;
-
-export const StyledDividedLine = styled.div`
-  height: 0.5px;
-  background-color: ${({ theme }) => theme.colors.borderLight};
-  width: 100%;
-  margin: 10px 0px;
-`;
-
 export const StyledBottomContainer = styled.div`
   padding: 12px 38px 20px;
   position: fixed;

@@ -39,11 +39,10 @@ import {
   parsedZekoFee,
   trimSpace,
 } from "../../../utils/utils";
-import AdvanceMode from "../../component/AdvanceMode";
 import Button from "../../component/Button";
 import { ConfirmModal } from "../../component/ConfirmModal";
 import CustomView from "../../component/CustomView";
-import FeeGroup from "../../component/FeeGroup";
+import NetworkFee from "../../component/NetworkFee";
 import Input from "../../component/Input";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 import SvgIcon from "../../component/SvgIcon";
@@ -54,8 +53,6 @@ import {
   StyledInputContainer,
   StyledBalance,
   StyledMax,
-  StyledFeeContainer,
-  StyledDividedLine,
   StyledBottomContainer,
   StyledPlaceholder,
   StyledAddressCon,
@@ -298,12 +295,6 @@ const SendPage = () => {
   const onClickAll = useCallback(() => {
     setAmount(String(availableBalance));
   }, [availableBalance]);
-
-  const onClickFeeGroup = useCallback((item: { fee: string }) => {
-    setFeeAmount(item.fee);
-    setAdvanceInputFee("");
-    setFeeErrorTip("");
-  }, []);
 
   const fetchAccountInfo = useCallback(async () => {
     dispatch(updateShouldRequest(true, true));
@@ -862,28 +853,17 @@ const SendPage = () => {
               inputType={"text"}
             />
           </StyledInputContainer>
-          <StyledFeeContainer>
-            <FeeGroup
-              onClickFee={onClickFeeGroup}
-              currentFee={String(nextFee)}
-              feeConfig={feeConfig}
-              showFeeGroup={!isZeko}
-              hideTimer={false}
-            />
-          </StyledFeeContainer>
-          <StyledDividedLine />
-          <div>
-            <AdvanceMode
-              onClickAdvance={onClickAdvance}
-              isOpenAdvance={isOpenAdvance}
-              feeValue={advanceInputFee}
-              feePlaceholder={String(nextFee)}
-              onFeeInput={onFeeInput}
-              feeErrorTip={feeErrorTip}
-              nonceValue={inputNonce}
-              onNonceInput={onNonceInput}
-            />
-          </div>
+          <NetworkFee
+            currentFee={String(nextFee)}
+            onClickAdvance={onClickAdvance}
+            isOpenAdvance={isOpenAdvance}
+            feeValue={advanceInputFee}
+            feePlaceholder={String(nextFee)}
+            onFeeInput={onFeeInput}
+            feeErrorTip={feeErrorTip}
+            nonceValue={inputNonce}
+            onNonceInput={onNonceInput}
+          />
           <StyledPlaceholder />
         </StyledContentContainer>
         <StyledBottomContainer>
