@@ -1210,7 +1210,9 @@ class DappService {
 
         const tabConnectIndex = siteUrlList.indexOf(origin);
         if (tabConnectIndex !== -1 && tab.id) {
-          browser.tabs.sendMessage(tab.id, message);
+          browser.tabs.sendMessage(tab.id, message).catch(() => {
+            // Ignore errors from tabs in back/forward cache
+          });
         }
       }
     });
@@ -1236,7 +1238,9 @@ class DappService {
       for (let index = 0; index < tabs.length; index++) {
         const tab = tabs[index];
         if (tab && tab.id && currentConnect[tab.id]) {
-          browser.tabs.sendMessage(tab.id, message);
+          browser.tabs.sendMessage(tab.id, message).catch(() => {
+            // Ignore errors from tabs in back/forward cache
+          });
         }
       }
     });
