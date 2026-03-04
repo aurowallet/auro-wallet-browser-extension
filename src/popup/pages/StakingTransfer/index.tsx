@@ -375,7 +375,7 @@ const StakingTransfer = () => {
           value: currentAccount.address || "",
         },
         {
-          label: i18n.t("fee"),
+          label: i18n.t("networkFee"),
           value: trimSpace(String(nextFee)) + " " + MAIN_COIN_CONFIG.symbol,
         },
       ];

@@ -168,7 +168,7 @@ const Record = () => {
         content: nonce,
       },
       {
-        title: i18n.t("fee"),
+        title: i18n.t("networkFee"),
         content: fee,
       }
     );

@@ -62,7 +62,7 @@ const NetworkFee = ({
             {isOpenAdvance && (
                 <StyledAdvanceInputGroup>
                     <Input
-                        label={i18n.t('transactionFee')}
+                        label={i18n.t('networkFee')}
                         onChange={onFeeInput}
                         value={feeValue}
                         inputType={'numric'}

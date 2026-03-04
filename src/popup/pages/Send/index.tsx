@@ -648,7 +648,7 @@ const SendPage = () => {
         value: currentAddress || "",
       },
       {
-        label: i18n.t("fee"),
+        label: i18n.t("networkFee"),
         value: inputFee + " " + MAIN_COIN_CONFIG.symbol,
         showTimer: feeIntervalTime > 0,
       },

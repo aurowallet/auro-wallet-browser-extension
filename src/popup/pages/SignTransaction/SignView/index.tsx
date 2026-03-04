@@ -1452,7 +1452,7 @@ const SignView = ({
               )}
               <StyledAccountRow>
                 <StyledRowLeft>
-                  <StyledRowTitle>{i18n.t("transactionFee")}</StyledRowTitle>
+                  <StyledRowTitle>{i18n.t("networkFee")}</StyledRowTitle>
                   <StyledFeeCon>
                     <StyledFeeContent>
                       {nextFee + " " + MAIN_COIN_CONFIG.symbol}

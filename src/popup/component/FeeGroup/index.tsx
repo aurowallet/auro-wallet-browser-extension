@@ -57,7 +57,7 @@ const FeeGroup = ({
   return (
     <StyledFeeContainer>
       <StyledTopContainer>
-        <StyledFeeTitle>{i18n.t("fee")}</StyledFeeTitle>
+        <StyledFeeTitle>{i18n.t("networkFee")}</StyledFeeTitle>
         <StyledFeeAmount>
           <div>{currentFee + " " + MAIN_COIN_CONFIG.symbol}</div>
           {!hideTimer ? <CountdownTimer /> : <></>}
