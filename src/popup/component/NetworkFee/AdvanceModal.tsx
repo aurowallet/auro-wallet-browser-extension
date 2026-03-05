@@ -95,11 +95,11 @@ const AdvanceModal = ({
 
     const handleConfirm = useCallback(() => {
         if (inputFee && !isNumber(inputFee)) {
-            Toast.info(i18n.t("inputFeeError"));
+            Toast.info(i18n.t("inputFeeError"), { top: '60%' });
             return;
         }
         if (inputNonce && !isNaturalNumber(inputNonce)) {
-            Toast.info(i18n.t("inputNonceError", { nonce: "nonce" }));
+            Toast.info(i18n.t("inputNonceError", { nonce: "nonce" }), { top: '60%' });
             return;
         }
         onConfirm(inputFee, inputNonce);

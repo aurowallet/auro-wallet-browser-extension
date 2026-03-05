@@ -22,10 +22,21 @@ const destroy = () => {
     );
 }
 
+interface ToastOptions {
+    duration?: number;
+    isShowMask?: boolean;
+    top?: string;
+}
+
 export default {
-    info: (text: string, duration?: number, isShowMask?: boolean) => {
+    info: (text: string, durationOrOptions?: number | ToastOptions, isShowMask?: boolean) => {
         if (toastContainerRef.current) {
-            toastContainerRef.current.pushToast({ type: 'info', text, duration, isShowMask });
+            if (typeof durationOrOptions === 'object') {
+                const { duration, isShowMask, top } = durationOrOptions;
+                toastContainerRef.current.pushToast({ type: 'info', text, duration, isShowMask, top });
+            } else {
+                toastContainerRef.current.pushToast({ type: 'info', text, duration: durationOrOptions, isShowMask });
+            }
         }
     },
     hide: destroy

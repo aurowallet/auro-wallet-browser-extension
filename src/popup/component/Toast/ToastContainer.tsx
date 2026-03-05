@@ -7,6 +7,7 @@ interface ToastProps {
   text: string;
   duration?: number;
   isShowMask?: boolean;
+  top?: string;
 }
 
 interface ToastContainerState {
@@ -27,12 +28,13 @@ class ToastContainer extends Component<object, ToastContainerState> {
     }
 
     pushToast = (toastProps: ToastProps) => {
-        const { text, duration, isShowMask = false } = toastProps;
+        const { text, duration, isShowMask = false, top } = toastProps;
         let lastDuration = duration || default_duration
         this.setState({
             currentToast: {
                 text,
                 duration: lastDuration,
+                top,
             },
             isShowMask
         });
@@ -51,7 +53,7 @@ class ToastContainer extends Component<object, ToastContainerState> {
         return (
             <StyledToastContainer>
                 {isShowMask && <StyledMask />}
-                <StyledToastWrap>
+                <StyledToastWrap $top={currentToast.top}>
                     {currentToast.text && currentToast.duration && (
                         <ToastItem 
                             text={currentToast.text} 

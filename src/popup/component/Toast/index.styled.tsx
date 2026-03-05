@@ -15,9 +15,9 @@ export const StyledMask = styled.div`
   z-index: 301;
 `;
 
-export const StyledToastWrap = styled.div`
+export const StyledToastWrap = styled.div<{ $top?: string }>`
   position: fixed;
-  top: 40%;
+  top: ${({ $top }) => $top || '40%'};
   margin: 0 auto;
   left: 0;
   right: 0;
