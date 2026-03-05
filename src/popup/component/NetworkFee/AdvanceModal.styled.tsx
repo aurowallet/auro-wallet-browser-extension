@@ -12,6 +12,10 @@ interface StyledBottomContainerProps {
     $visible?: boolean;
 }
 
+interface StyledFeeButtonProps {
+    $selected?: boolean;
+}
+
 const openModal = keyframes`
   from { bottom: -50%; }
   to { bottom: 0; }
@@ -89,7 +93,7 @@ export const StyledBottomContainer = styled.div<StyledBottomContainerProps>`
   padding: 12px 38px 20px;
   position: fixed;
   bottom: 0;
-  width: calc(100% - 76px);
+  width: 100%;
   background-color: ${({ theme }) => theme.colors.backgroundWhite};
   animation: ${({ $visible }) => $visible ? openModal : closeModal} 0.35s;
   animation-fill-mode: forwards;
@@ -98,5 +102,63 @@ export const StyledBottomContainer = styled.div<StyledBottomContainerProps>`
 export const StyledWarningTip = styled.span`
   && {
     color: ${({ theme }) => theme.colors.warning};
+  }
+`;
+
+export const StyledFeeBtnGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 4px;
+`;
+
+const baseFeeButtonStyles = css`
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  border: 1.5px solid transparent;
+  color: white;
+`;
+
+export const StyledSlowButton = styled.div<StyledFeeButtonProps>`
+  ${baseFeeButtonStyles}
+  background: rgba(0, 0, 0, 0.3);
+  
+  ${({ $selected }) => $selected && css`
+    border-color: #808080;
+  `}
+
+  &:hover {
+    border-color: #808080;
+  }
+`;
+
+export const StyledNormalButton = styled.div<StyledFeeButtonProps>`
+  ${baseFeeButtonStyles}
+  background: #0DB27C;
+  
+  ${({ $selected }) => $selected && css`
+    border-color: #008056;
+  `}
+
+  &:hover {
+    border-color: #008056;
+  }
+`;
+
+export const StyledFastButton = styled.div<StyledFeeButtonProps>`
+  ${baseFeeButtonStyles}
+  background: #D65A5A;
+  
+  ${({ $selected }) => $selected && css`
+    border-color: #963E3E;
+  `}
+
+  &:hover {
+    border-color: #963E3E;
   }
 `;

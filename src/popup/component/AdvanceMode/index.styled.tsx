@@ -39,5 +39,7 @@ export const StyledAdvanceInputGroup = styled.div`
 `;
 
 export const StyledWarningTip = styled.span`
-  color: ${({ theme }) => theme.colors.warning};
+  && {
+    color: ${({ theme }) => theme.colors.warning};
+  }
 `;

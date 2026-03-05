@@ -89,7 +89,7 @@ const SendPage = () => {
   const currentAddress = useAppSelector(
     (state) => state.accountInfo.currentAccount.address
   );
-  const { feeErrorTip, setFeeErrorTip, validateFee, feeConfig } = useFeeValidation();
+  const { feeConfig } = useFeeValidation();
   const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const token = useAppSelector((state) => state.cache.nextTokenDetail);
 
@@ -179,7 +179,6 @@ const SendPage = () => {
   const [advanceInputFee, setAdvanceInputFee] = useState("");
   const [inputNonce, setInputNonce] = useState("");
 
-  const [isOpenAdvance, setIsOpenAdvance] = useState(false);
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
@@ -326,26 +325,11 @@ const SendPage = () => {
     checkTokenAccountStatus();
   }, [toAddress, isSendMainToken, token]);
 
-  const onClickAdvance = useCallback(() => {
-    setIsOpenAdvance((prev) => {
-      if (prev) {
-        setAdvanceInputFee("");
-        setFeeErrorTip("");
-      }
-      return !prev;
-    });
+  const onAdvanceConfirm = useCallback((fee: string, nonce: string) => {
+    setAdvanceInputFee(fee);
+    setInputNonce(nonce);
   }, []);
 
-  const onFeeInput = useCallback(
-    (e: InputChangeEvent) => {
-      setAdvanceInputFee(e.target.value);
-      validateFee(e.target.value);
-    },
-    [validateFee]
-  );
-  const onNonceInput = useCallback((e: InputChangeEvent) => {
-    setInputNonce(e.target.value);
-  }, []);
 
   const isAllTransfer = useCallback(() => {
     return new BigNumber(amount).isEqualTo(availableBalance);
@@ -855,14 +839,12 @@ const SendPage = () => {
           </StyledInputContainer>
           <NetworkFee
             currentFee={String(nextFee)}
-            onClickAdvance={onClickAdvance}
-            isOpenAdvance={isOpenAdvance}
-            feeValue={advanceInputFee}
-            feePlaceholder={String(nextFee)}
-            onFeeInput={onFeeInput}
-            feeErrorTip={feeErrorTip}
-            nonceValue={inputNonce}
-            onNonceInput={onNonceInput}
+            currentNonce={inputNonce}
+            advanceFee={advanceInputFee}
+            advanceNonce={inputNonce}
+            feeConfig={feeConfig}
+            showFeeButtons={!isZeko}
+            onAdvanceConfirm={onAdvanceConfirm}
           />
           <StyledPlaceholder />
         </StyledContentContainer>

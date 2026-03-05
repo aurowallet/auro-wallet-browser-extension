@@ -73,7 +73,7 @@ const StakingTransfer = () => {
   const mainTokenNetInfo = useAppSelector(
     (state) => state.accountInfo.mainTokenNetInfo
   );
-  const { feeErrorTip, setFeeErrorTip, validateFee, feeConfig } = useFeeValidation();
+  const { feeConfig } = useFeeValidation();
   const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const { fetchAccountData } = useFetchAccountData(currentAccount as Parameters<typeof useFetchAccountData>[0]);
 
@@ -162,7 +162,6 @@ const StakingTransfer = () => {
   });
   const [advanceInputFee, setAdvanceInputFee] = useState("");
   const [inputNonce, setInputNonce] = useState("");
-  const [isOpenAdvance, setIsOpenAdvance] = useState(false);
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
   const [contentList, setContentList] = useState<{ label: string; value: string }[]>([]);
@@ -187,20 +186,11 @@ const StakingTransfer = () => {
   const onMemoInput = useCallback((e: InputChangeEvent) => {
     setMemo(e.target.value);
   }, []);
-  const onClickAdvance = useCallback(() => {
-    setIsOpenAdvance(prev => {
-      if (prev) {
-        setAdvanceInputFee("");
-        setFeeErrorTip("");
-      }
-      return !prev;
-    });
+  const onAdvanceConfirm = useCallback((fee: string, nonce: string) => {
+    setAdvanceInputFee(fee);
+    setInputNonce(nonce);
   }, []);
 
-  const onFeeInput = useCallback((e: InputChangeEvent) => {
-    setAdvanceInputFee(e.target.value);
-    validateFee(e.target.value);
-  }, [validateFee]);
 
   const nextFee = useMemo(() => {
     if (isNumber(advanceInputFee) && Number(advanceInputFee) > 0) {
@@ -208,9 +198,6 @@ const StakingTransfer = () => {
     }
     return feeAmount;
   }, [advanceInputFee, feeAmount]);
-  const onNonceInput = useCallback((e: InputChangeEvent) => {
-    setInputNonce(e.target.value);
-  }, []);
   const onClickClose = useCallback(() => {
     setConfirmModalStatus(false);
   }, []);
@@ -250,7 +237,7 @@ const StakingTransfer = () => {
               iconUrl: "img/mina_color.svg",
             },
           };
-      dispatch(updateNextTokenDetail(tokenDetail as Record<string, unknown>));
+      dispatch(updateNextTokenDetail(tokenDetail));
       navigate("/", { replace: true });
       setTimeout(() => {
         navigate("/token_detail");
@@ -484,14 +471,12 @@ const StakingTransfer = () => {
             </StyledInputContainer>
             <NetworkFee
               currentFee={nextFee}
-              onClickAdvance={onClickAdvance}
-              isOpenAdvance={isOpenAdvance}
-              feeValue={advanceInputFee}
-              feePlaceholder={String(feeAmount)}
-              onFeeInput={onFeeInput}
-              feeErrorTip={feeErrorTip}
-              nonceValue={inputNonce}
-              onNonceInput={onNonceInput}
+              currentNonce={inputNonce}
+              advanceFee={advanceInputFee}
+              advanceNonce={inputNonce}
+              feeConfig={feeConfig}
+              showFeeButtons={true}
+              onAdvanceConfirm={onAdvanceConfirm}
             />
           </>
         ) : isRedelegate ? (

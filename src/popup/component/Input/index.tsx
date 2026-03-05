@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactNode, useCallback, useState, ComponentType } from "react";
+import { ChangeEvent, ReactNode, useCallback, useState, ElementType, createElement } from "react";
 import { Trans } from "react-i18next";
 import i18n from "i18next";
 import { numberFormat } from "../../../utils/utils";
@@ -33,7 +33,7 @@ interface InputProps {
     label?: string;
     showBottomTip?: boolean;
     bottomTip?: string;
-    bottomTipClass?: string;
+    bottomTipClass?: ElementType;
     rightComponent?: ReactNode;
     rightStableComponent?: ReactNode;
     subLabel?: string;
@@ -55,7 +55,7 @@ const Input = ({
     label = "",
     showBottomTip = false,
     bottomTip = "",
-    bottomTipClass = "",
+    bottomTipClass,
     rightComponent,
     rightStableComponent,
     subLabel = "",
@@ -138,8 +138,8 @@ const Input = ({
                 {rightStableComponent}
             </StyledInputWrapper>
             {showBottomTip && (
-                <StyledBottomTip className={bottomTipClass}>
-                    {bottomTip}
+                <StyledBottomTip>
+                    {bottomTipClass ? createElement(bottomTipClass, null, bottomTip) : bottomTip}
                 </StyledBottomTip>
             )}
         </StyledInputContainer>

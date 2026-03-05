@@ -189,9 +189,9 @@ const TokenSignPage = () => {
       setCurrentSignIndex(0);
       // if the zk tx is confirmed and the nonce is same with nextUseInferredNonce , then + 1
       if (type === TX_CLICK_TYPE.CONFIRM) {
-        if (nextUseInferredNonce === nonce) {
+        if (nonce !== undefined && nextUseInferredNonce === Number(nonce)) {
           setNextUseInferredNonce((state) =>
-            BigNumber(state || 0).plus(1).toNumber()
+            new BigNumber(state || 0).plus(1).toNumber()
           );
         }
       }

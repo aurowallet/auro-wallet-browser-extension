@@ -255,10 +255,10 @@ export const StyledScrollBtn = styled.div`
   cursor: pointer;
 `;
 
-export const StyledCustomTabPanelCss = styled.div`
+export const StyledCustomTabPanelCss = styled.div<{ $active?: boolean }>`
   position: relative;
   width: 100%;
-  display: flex;
+  display: ${({ $active }) => $active ? 'flex' : 'none'};
   flex: 1;
   min-width: 0;
 `;

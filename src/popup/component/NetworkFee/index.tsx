@@ -1,9 +1,8 @@
-import { useMemo } from "react";
+import { useCallback, useState } from "react";
 import i18n from "i18next";
 import { MAIN_COIN_CONFIG } from "@/constant";
-import { isNaturalNumber } from "@/utils/utils";
-import Input from "../Input";
-import { useAppSelector } from "@/hooks/useStore";
+import type { FeeConfig } from "@/types/tx.types";
+import AdvanceModal from "./AdvanceModal";
 import {
     StyledNetworkFeeContainer,
     StyledFeeRow,
@@ -11,41 +10,49 @@ import {
     StyledFeeValue,
     StyledDividedLine,
     StyledAdvanceLink,
-    StyledAdvanceInputGroup,
-    StyledWarningTip,
 } from "./index.styled";
 
 interface NetworkFeeProps {
     currentFee: string;
-    isOpenAdvance?: boolean;
-    onClickAdvance?: () => void;
-    feeValue?: string;
-    feePlaceholder?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onFeeInput?: (e: any) => void;
-    feeErrorTip?: string;
-    nonceValue?: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onNonceInput?: (e: any) => void;
-    type?: string;
+    currentNonce?: string;
+    advanceFee?: string;
+    advanceNonce?: string;
+    feeConfig?: FeeConfig;
+    showFeeButtons?: boolean;
+    onAdvanceConfirm?: (fee: string, nonce: string) => void;
+    onAdvanceClick?: () => void;
+    hideAdvanceLink?: boolean;
 }
 
 const NetworkFee = ({
     currentFee,
-    isOpenAdvance = false,
-    onClickAdvance = () => { },
-    feeValue = "",
-    feePlaceholder = "",
-    onFeeInput = () => { },
-    feeErrorTip = "",
-    nonceValue = "",
-    onNonceInput = () => { },
-    type = "",
+    currentNonce = "",
+    advanceFee = "",
+    advanceNonce = "",
+    feeConfig,
+    showFeeButtons = true,
+    onAdvanceConfirm,
+    onAdvanceClick,
+    hideAdvanceLink = false,
 }: NetworkFeeProps) => {
-    const mainTokenNetInfo = useAppSelector((state) => state.accountInfo.mainTokenNetInfo);
-    const nonceHolder = useMemo(() => {
-        return isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? String(mainTokenNetInfo?.inferredNonce) : "";
-    }, [mainTokenNetInfo]);
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const onClickAdvance = useCallback(() => {
+        if (onAdvanceClick) {
+            onAdvanceClick();
+        } else {
+            setModalVisible(true);
+        }
+    }, [onAdvanceClick]);
+
+    const onClickClose = useCallback(() => {
+        setModalVisible(false);
+    }, []);
+
+    const handleConfirm = useCallback((fee: string, nonce: string) => {
+        setModalVisible(false);
+        onAdvanceConfirm?.(fee, nonce);
+    }, [onAdvanceConfirm]);
 
     return (
         <StyledNetworkFeeContainer>
@@ -54,32 +61,23 @@ const NetworkFee = ({
                 <StyledFeeValue>{currentFee + " " + MAIN_COIN_CONFIG.symbol}</StyledFeeValue>
             </StyledFeeRow>
             <StyledDividedLine />
-            {!type && (
+            {!hideAdvanceLink && (
                 <StyledAdvanceLink onClick={onClickAdvance}>
                     {i18n.t("advanceMode")}
                 </StyledAdvanceLink>
             )}
-            {isOpenAdvance && (
-                <StyledAdvanceInputGroup>
-                    <Input
-                        label={i18n.t('networkFee')}
-                        onChange={onFeeInput}
-                        value={feeValue}
-                        inputType={'numric'}
-                        placeholder={feePlaceholder}
-                        showBottomTip={true}
-                        bottomTip={feeErrorTip}
-                        bottomTipClass={StyledWarningTip}
-                    />
-                    <Input
-                        label={"Nonce"}
-                        onChange={onNonceInput}
-                        value={nonceValue}
-                        inputType={'numric'}
-                        placeholder={nonceHolder}
-                        inputDisable={!!type}
-                    />
-                </StyledAdvanceInputGroup>
+            {!onAdvanceClick && (
+                <AdvanceModal
+                    modalVisible={modalVisible}
+                    onClickClose={onClickClose}
+                    onConfirm={handleConfirm}
+                    currentFee={currentFee}
+                    currentNonce={currentNonce}
+                    advanceFee={advanceFee}
+                    advanceNonce={advanceNonce}
+                    feeConfig={feeConfig}
+                    showFeeButtons={showFeeButtons}
+                />
             )}
         </StyledNetworkFeeContainer>
     );

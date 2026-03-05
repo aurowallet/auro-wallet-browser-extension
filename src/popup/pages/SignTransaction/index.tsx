@@ -277,10 +277,10 @@ const SignTransaction = () => {
         if (
           isNaturalNumber(nonce) && 
           SIGN_EVENT_WITH_BROADCAST.indexOf(sendAction) !== -1 &&
-          nextUseInferredNonce === nonce
+          nextUseInferredNonce === Number(nonce)
         ) {
           setNextUseInferredNonce((state) =>
-            BigNumber(state || 0).plus(1).toNumber()
+            new BigNumber(state || 0).plus(1).toNumber()
           );
         }
       }

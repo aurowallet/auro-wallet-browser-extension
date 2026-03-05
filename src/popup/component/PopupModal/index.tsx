@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, ElementType, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { isTrueNumber, nameLengthCheck } from "../../../utils/utils";
 import Input from "../Input";
 import { RuleSet } from "styled-components";
@@ -19,7 +19,7 @@ interface PopupModalProps {
   inputPlaceholder?: string;
   showBottomTip?: boolean;
   bottomTip?: string;
-  bottomTipClass?: string;
+  bottomTipClass?: ElementType;
   onInputChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   contentList?: string[];
   maxInputLength?: number;
@@ -64,7 +64,7 @@ export const PopupModal = ({
     inputPlaceholder = "",
     showBottomTip = false,
     bottomTip = "",
-    bottomTipClass = "",
+    bottomTipClass,
     onInputChange = () => { },
     contentList = [],
     maxInputLength = -1,

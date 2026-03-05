@@ -103,7 +103,9 @@ export const StyledDividedLine = styled.div`
 `;
 
 export const StyledWarningTip = styled.span`
-  color: rgba(228, 178, 0, 1);
+  && {
+    color: rgba(228, 178, 0, 1);
+  }
 `;
 
 export const StyledModalDelete = styled.span`

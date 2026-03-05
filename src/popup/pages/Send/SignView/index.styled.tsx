@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components';
+import { StyledFeeLabel, StyledNetworkFeeContainer } from "@/popup/component/NetworkFee/index.styled";
 
 interface StyledRowTitleProps {
   $rightAlign?: boolean;
@@ -127,6 +128,19 @@ export const StyledHighFeeTip = styled.div`
   font-size: 12px;
   line-height: 17px;
   color: #e4b200;
+`;
+
+export const StyledNetworkFeeWrapper = styled.div`
+  ${StyledNetworkFeeContainer} {
+    margin-top: 20px;
+  }
+  ${StyledFeeLabel} {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 14px;
+    color: rgba(0, 0, 0, 0.5);
+    margin: 0 0 4px 0;
+  }
 `;
 
 export const StyledBtnGroup = styled.div<StyledBtnGroupProps>`

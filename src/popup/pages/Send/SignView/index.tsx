@@ -57,6 +57,7 @@ import {
   StyledTypeRow,
   StyledHighFeeTip,
   StyledBtnGroup,
+  StyledNetworkFeeWrapper,
 } from "./index.styled";
 
 const TX_CLICK_TYPE = {
@@ -132,9 +133,7 @@ const SignView = ({
     nextMemo,
     showAmount,
     pageTitle,
-    currentToken,
     availableBalance,
-    sourceFee,
     isZeko,
     zkAppUpdateCount,
   } = useMemo(() => {
@@ -155,8 +154,6 @@ const SignView = ({
       tokenDecimal
     );
     showAmount = showAmount + " " + showSymbol;
-    const sourceFee = amountDecimals(buildData.fee ?? 0, MAIN_COIN_CONFIG.decimals);
-
     let pageTitle = i18n.t("send") + " " + showSymbol;
     let currentToken = (tokenList as unknown as Array<{ tokenId: string; tokenBaseInfo?: { showBalance?: number } }>).find(
       (tokenItem) => tokenItem.tokenId === buildData.tokenId
@@ -178,9 +175,7 @@ const SignView = ({
       nextMemo,
       showAmount,
       pageTitle,
-      currentToken,
       availableBalance,
-      sourceFee,
       isZeko,
       zkAppUpdateCount,
     };
@@ -225,17 +220,14 @@ const SignView = ({
     if (isZeko) {
       return zekoPerFee;
     }
-    if (isNumber(sourceFee) && Number(advanceFee) > 0) {
-      return sourceFee;
-    }
     const zkAccountFee = new BigNumber(feeConfig?.zkAppAccountUpdateFee ?? "0").multipliedBy(
       zkAppUpdateCount
     );
-    let defaultRecommendFee = new BigNumber(feeConfig?.transactionFee?.medium ?? TRANSACTION_FEE)
+    const defaultRecommendFee = new BigNumber(feeConfig?.transactionFee?.medium ?? TRANSACTION_FEE)
       .plus(zkAccountFee)
       .toNumber();
     return defaultRecommendFee;
-  }, [advanceFee, zekoPerFee, isZeko, sourceFee, zkAppUpdateCount, feeConfig]);
+  }, [advanceFee, zekoPerFee, isZeko, zkAppUpdateCount, feeConfig]);
 
   const onFeeTimerComplete = useCallback(async () => {
     if (isZeko) {
@@ -468,10 +460,12 @@ const SignView = ({
             {nextMemo && (
               <CommonRow leftTitle={"Memo"} leftContent={nextMemo} />
             )}
-            <NetworkFee
-              currentFee={String(nextFee)}
-              onClickAdvance={onClickAdvance}
-            />
+            <StyledNetworkFeeWrapper>
+              <NetworkFee
+                currentFee={String(nextFee)}
+                onAdvanceClick={onClickAdvance}
+              />
+            </StyledNetworkFeeWrapper>
             <StyledHighFeeTip>{feeErrorTip}</StyledHighFeeTip>
           </>
         </StyledContent>

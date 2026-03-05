@@ -101,6 +101,7 @@ interface TokenItemProps {
       iconUrl?: string;
       showBalance: string;
       showAmount?: string;
+      decimals: number;
     };
     tokenNetInfo?: {
       tokenSymbol?: string;

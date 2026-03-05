@@ -1,5 +1,6 @@
 import { Terms_default, DEFAULT_FEE_CONFIG } from "@/constant";
 import type { FeeConfig } from "@/types/tx.types";
+import type { TokenItem } from "@/utils/reducer";
 
 // ============ Action Types ============
 
@@ -65,7 +66,7 @@ export interface CacheState {
   accountBalanceList: Record<string, unknown>;
   feeRecommend: FeeConfig;
   accountTypeCount: AccountTypeCount;
-  nextTokenDetail: Record<string, unknown>;
+  nextTokenDetail: Partial<TokenItem>;
   popupLockStatus: boolean;
   keyringInfo: Record<string, unknown>;
 }
@@ -129,7 +130,7 @@ interface UpdateAccountTypeCountAction {
 
 interface UpdateNextTokenDetailAction {
   type: typeof UPDATE_NEXT_TOKEN_DETAIL;
-  token: Record<string, unknown>;
+  token: Partial<TokenItem>;
 }
 
 interface UpdatePopupLockStatusAction {
@@ -212,7 +213,7 @@ export function updateAccountTypeCount(countMap: AccountTypeCount) {
   return { type: UPDATE_ACCOUNT_TYPE_COUNT, countMap };
 }
 
-export function updateNextTokenDetail(token: Record<string, unknown>) {
+export function updateNextTokenDetail(token: Partial<TokenItem>) {
   return { type: UPDATE_NEXT_TOKEN_DETAIL, token };
 }
 

@@ -1,9 +1,10 @@
 import i18n from "i18next";
-import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Button from "../Button";
 import Input from "../Input";
+import Toast from "../Toast";
 import { useAppSelector } from "@/hooks/useStore";
-import { isNaturalNumber } from "@/utils/utils";
+import { isNaturalNumber, isNumber } from "@/utils/utils";
 import {
     StyledOverlay,
     StyledModalContent,
@@ -55,6 +56,18 @@ const DAppAdvance = ({
         return isNaturalNumber(mainTokenNetInfo?.inferredNonce) ? String(mainTokenNetInfo?.inferredNonce) : ""
     }, [mainTokenNetInfo, zkAppNonce])
 
+    const handleConfirm = useCallback(() => {
+        if (feeValue && !isNumber(feeValue)) {
+            Toast.info(i18n.t("inputFeeError"));
+            return;
+        }
+        if (nonceValue && !isNaturalNumber(nonceValue)) {
+            Toast.info(i18n.t("inputNonceError", { nonce: "nonce" }));
+            return;
+        }
+        onConfirm();
+    }, [feeValue, nonceValue, onConfirm]);
+
     const onClickOuter = useCallback(() => {
         onClickClose()
     }, [onClickClose])
@@ -64,15 +77,18 @@ const DAppAdvance = ({
     }, [])
 
     const [modalBg, setModalBg] = useState(modalVisible)
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
     useEffect(() => {
         if (modalVisible) {
-            setModalBg(modalVisible)
+            clearTimeout(closeTimerRef.current)
+            setModalBg(true)
         } else {
-            setTimeout(() => {
-                setModalBg(modalVisible)
+            closeTimerRef.current = setTimeout(() => {
+                setModalBg(false)
             }, 300);
         }
+        return () => clearTimeout(closeTimerRef.current)
     }, [modalVisible])
 
     return (
@@ -106,7 +122,7 @@ const DAppAdvance = ({
                         />
                     </StyledBottomContent>
                     <StyledBottomContainer $visible={modalVisible}>
-                        <Button onClick={onConfirm}>
+                        <Button onClick={handleConfirm}>
                             {i18n.t('confirm')}
                         </Button>
                     </StyledBottomContainer>

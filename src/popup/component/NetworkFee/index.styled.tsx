@@ -41,13 +41,3 @@ export const StyledAdvanceLink = styled.p`
   cursor: pointer;
 `;
 
-export const StyledAdvanceInputGroup = styled.div`
-  margin-top: 10px;
-  > :not(:first-child) {
-    margin-top: 20px;
-  }
-`;
-
-export const StyledWarningTip = styled.span`
-  color: ${({ theme }) => theme.colors.warning};
-`;
