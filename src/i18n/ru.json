@@ -21,7 +21,7 @@
   "atLeastOneUppercaseLetter": "заглавная буква",
   "send": "Отправить",
   "amount": "Сумма",
-  "waitingLedgerConfirmTip_3": "<red>Не закрывайте это окно.</red> После завершения работы с Ledger, страница автоматически перенаправится.",
+  "waitingLedgerConfirmTip_3": "<red>НЕ</red> <yellow>покидайте этот экран.</yellow><br/>После завершения работы с Ledger, страница автоматически перенаправится.",
   "epochInfo": "Информация об эпохе",
   "lockTime_30m": "30 минут",
   "lockTime_1h": "1 час",

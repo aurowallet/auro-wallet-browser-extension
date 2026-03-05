@@ -41,12 +41,12 @@ import {
   StyledChangeWrapper,
   StyledChangeCls,
   StyledLedgerContent,
-  StyledWaitingIcon,
-  StyledWaitingTitle,
+  StyledLoadingSpinner,
   StyledWaitingContent,
   StyledWaitingTip,
   StyledAccountRepeatName,
   StyledRedFont,
+  StyledYellowFont,
 } from "./index.styled";
 
 export const TransactionModalType = {
@@ -106,10 +106,7 @@ export const TransactionModal = ({
             <StyledDividedLine />
             {waitingLedger ? (
               <StyledLedgerContent>
-                <StyledWaitingIcon src="/img/detail_pending.svg" />
-                <StyledWaitingTitle>
-                  {i18n.t("waitingLedgerConfirm") + "..."}
-                </StyledWaitingTitle>
+                <StyledLoadingSpinner />
                 <StyledWaitingContent>
                   {i18n.t("waitingLedgerConfirmTip")}
                 </StyledWaitingContent>
@@ -119,6 +116,8 @@ export const TransactionModal = ({
                     components={{
                       b: <StyledAccountRepeatName />,
                       red: <StyledRedFont />,
+                      yellow: <StyledYellowFont />,
+                      br: <br />,
                     }}
                   />
                 </StyledWaitingTip>

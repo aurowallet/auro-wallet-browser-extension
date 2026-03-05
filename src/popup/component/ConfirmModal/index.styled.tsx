@@ -137,15 +137,28 @@ export const StyledContentValue = styled.p`
 `;
 
 export const StyledLedgerContent = styled.div`
-  padding: 48px 20px 100px;
+  padding: 40px 20px 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
 `;
 
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
 export const StyledWaitingIcon = styled.img`
   width: 58px;
+`;
+
+export const StyledLoadingSpinner = styled.div`
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 5px solid #E8E4F6;
+  border-top-color: #594AF1;
+  animation: ${spin} 1s linear infinite;
 `;
 
 export const StyledWaitingTitle = styled.p`
@@ -156,22 +169,26 @@ export const StyledWaitingTitle = styled.p`
   font-weight: 700;
 `;
 
+export const StyledYellowFont = styled.span`
+  color: #E4B200;
+`;
+
 export const StyledWaitingContent = styled.p`
   font-size: 14px;
-  line-height: 16px;
+  line-height: 20px;
   text-align: center;
   color: rgba(0, 0, 0, 0.5);
-  margin: 0;
+  margin: 20px 0px 0;
   font-weight: 500;
 `;
 
 export const StyledWaitingTip = styled.p`
   font-size: 14px;
-  line-height: 16px;
+  line-height: 20px;
   text-align: center;
   font-weight: 400;
   color: rgba(0, 0, 0, 0.5);
-  margin: 20px 10px;
+  margin: 16px 10px 0;
 `;
 
 export const StyledAccountRepeatName = styled.span`
@@ -179,7 +196,8 @@ export const StyledAccountRepeatName = styled.span`
 `;
 
 export const StyledRedFont = styled.span`
-  color: #d65a5a;
+  color: #E4B200;
+  font-weight: 700;
 `;
 
 export const StyledBottomContainer = styled.div`

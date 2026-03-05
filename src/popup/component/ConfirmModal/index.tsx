@@ -45,12 +45,12 @@ import {
   StyledContentTitle,
   StyledContentValue,
   StyledLedgerContent,
-  StyledWaitingIcon,
-  StyledWaitingTitle,
+  StyledLoadingSpinner,
   StyledWaitingContent,
   StyledWaitingTip,
   StyledAccountRepeatName,
   StyledRedFont,
+  StyledYellowFont,
   StyledBottomContainer,
 } from "./index.styled";
 
@@ -102,10 +102,7 @@ export const ConfirmModal = ({
             <StyledDividedLine />
             {waitingLedger && (
               <StyledLedgerContent>
-                <StyledWaitingIcon src="/img/detail_pending.svg" />
-                <StyledWaitingTitle>
-                  {i18n.t("waitingLedgerConfirm") + "..."}
-                </StyledWaitingTitle>
+                <StyledLoadingSpinner />
                 <StyledWaitingContent>
                   {i18n.t("waitingLedgerConfirmTip")}
                 </StyledWaitingContent>
@@ -115,6 +112,8 @@ export const ConfirmModal = ({
                     components={{
                       b: <StyledAccountRepeatName />,
                       red: <StyledRedFont />,
+                      yellow: <StyledYellowFont />,
+                      br: <br />,
                     }}
                   />
                 </StyledWaitingTip>

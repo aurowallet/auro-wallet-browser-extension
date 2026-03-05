@@ -214,7 +214,7 @@
   "confirmTransaction": "Підтвердити транзакцію",
   "waitingLedgerConfirm": "Чекаю підтвердження",
   "waitingLedgerConfirmTip": "Підтвердьте в апаратному гаманці Ledger, підпис може зайняти 1-3 хвилини.",
-  "waitingLedgerConfirmTip_3": "<red>Не закривайте це вікно.</red> Щойно Ledger буде завершено, сторінка буде автоматично перенаправлена.",
+  "waitingLedgerConfirmTip_3": "<red>НЕ</red> <yellow>залишайте цей екран.</yellow><br/>Щойно Ledger буде завершено, сторінка буде автоматично перенаправлена.",
   "epochInfo": "Інформація про епоху",
   "signatureRequest": "Запит на підпис",
   "lockTime_5m": "5 хвилин",

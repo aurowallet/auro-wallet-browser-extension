@@ -235,7 +235,7 @@
   "auroLocked": "Cüzdan kilitlendi, lütfen önce cüzdanın kilidini açın.",
   "selectHardware": "Auro Wallet ile kullanmak istediğiniz donanım cüzdanını seçin.",
   "ledgerContentTip_1": "Lütfen takip işlemine Ledger donanım cüzdanının bildirimlerin göre devam edin.",
-  "waitingLedgerConfirmTip_3": "<red>Bu pencereyi kapatmayınız.</red> Ledger tamamlandığında sayfa otomatik olarak yönlendirilecektir.",
+  "waitingLedgerConfirmTip_3": "<red>SAKIN</red> <yellow>bu ekrandan ayrılmayın.</yellow><br/>Ledger tamamlandığında sayfa otomatik olarak yönlendirilecektir.",
   "getStarted": "Başla",
   "returnEx": "Lütfen eklentiye geri dönün.",
   "ledgerStartDesc": "Başlamadan önce Ledger cihazınızda en güncel ürün yazılımının bulunduğundan ve Mina Uygulaması’nın Ledger cihazınıza kurulu olduğundan emin olun.",

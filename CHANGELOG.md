@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - Update Advance UI
 - Update delete tip
 - Update toast config
+- Update ledger loading UI
 
 
 ### Fixes
