@@ -775,12 +775,7 @@ const SendPage = () => {
               value={toAddress}
               inputType={"text"}
               subLabel={
-                isNewAccount ? (
-                  <>
-                    {toAddressName}
-                    <StyledNewBadge>{i18n.t("newAccount")}</StyledNewBadge>
-                  </>
-                ) : toAddressName as any
+                toAddressName as any
               }
               placeholder={i18n.t("address")}
               rightStableComponent={
