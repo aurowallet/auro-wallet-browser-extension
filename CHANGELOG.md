@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - Update delete tip
 - Update toast config
 - Update ledger loading UI
+- Remove unuse CreatePassword
 
 
 ### Fixes

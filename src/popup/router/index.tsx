@@ -14,7 +14,6 @@ import ApprovePage from '../pages/ApprovePage';
 import AutoLock from '../pages/AutoLock';
 import {BackupMnemonics} from '../pages/BackupMnemonics';
 import {BackupSuccess} from '../pages/BackupSuccess';
-import CreatePassword from '../pages/CreatePassword';
 import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
 import ImportKeypair from '../pages/ImportKeypair';
@@ -58,7 +57,6 @@ export function getAllRouter() {
     <HashRouter>
       <Routes>
         <Route path="/" element={<MainRouter />} />
-        <Route path="/create_password" element={<CreatePassword />} />
         <Route path="/show_mnemonic" element={<ShowMnemonic />} />
         <Route path="/backup_mnemonic" element={<BackupMnemonics />} />
         <Route path="/backup_success" element={<BackupSuccess />} />
