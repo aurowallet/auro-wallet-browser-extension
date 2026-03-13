@@ -11,6 +11,7 @@ import {
   addressSlice,
   getAmountForUI,
   getBalanceForUI,
+  isZekoNet,
 } from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -99,6 +100,12 @@ const TokenDetail = () => {
   let isFirstRequest = useRef(false);
 
   let isRequest = false;
+
+  const postTxRetryTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const clearPostTxRetries = useCallback(() => {
+    postTxRetryTimersRef.current.forEach(t => clearTimeout(t));
+    postTxRetryTimersRef.current = [];
+  }, []);
 
   const {
     tokenIconUrl,
@@ -285,6 +292,27 @@ const TokenDetail = () => {
   }, [shouldRefresh, fetchAccountData]);
 
   useEffect(() => {
+    clearPostTxRetries();
+  }, [currentAccount.address, currentNode.networkID]);
+
+  useEffect(() => {
+    if (shouldRefresh && isSilentRefresh) {
+      const isZeko = isZekoNet(currentNode.networkID);
+      const delays = isZeko
+        ? [6, 15, 30]
+        : [6, 15];
+
+      clearPostTxRetries();
+      postTxRetryTimersRef.current = delays.map(delay =>
+        setTimeout(() => {
+          requestHistory();
+          fetchAccountData();
+        }, delay*1000)
+      );
+    }
+  }, [shouldRefresh, isSilentRefresh, currentNode.networkID, requestHistory, fetchAccountData, clearPostTxRetries]);
+
+  useEffect(() => {
     let onMessageListening = (message: { type: string; action: string; hash?: string }, sender: browser.Runtime.MessageSender, sendResponse: () => void) => {
       const { type, action, hash } = message;
       if (type === FROM_BACK_TO_RECORD && action === TX_SUCCESS) {
@@ -300,7 +328,9 @@ const TokenDetail = () => {
   }, []);
 
   useEffect(() => {
+    isMounted.current = true;
     return () => {
+      clearPostTxRetries();
       isMounted.current = false;
     };
   }, []);

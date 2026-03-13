@@ -58,6 +58,7 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { updateNextTokenDetail } from "../../../reducers/cache";
+import { updateShouldRequest } from "../../../reducers/accountReducer";
 import ledgerManager from "../../../utils/ledger";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
@@ -238,6 +239,7 @@ const StakingTransfer = () => {
             },
           };
       dispatch(updateNextTokenDetail(tokenDetail));
+      dispatch(updateShouldRequest(true, true));
       navigate("/", { replace: true });
       setTimeout(() => {
         navigate("/token_detail");

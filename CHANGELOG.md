@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Remove unuse CreatePassword
 - Refactor mnemonic wallet create flow
 - Update Zeko GraphQL queries
+- Update transaction history fetch
 
 
 ### Fixes
