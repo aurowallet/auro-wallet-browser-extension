@@ -21,7 +21,7 @@ import {
   getExtensionAction,
 } from "../../utils/browserUtils";
 import { sendMsg } from "../../utils/commonMsg";
-import { decodeMemo, parseMnemonicWords } from "../../utils/utils";
+import { decodeMemo, isZekoNet, parseMnemonicWords } from "../../utils/utils";
 import {
   getQATxStatus,
   getTxStatus,
@@ -3062,6 +3062,9 @@ class APIService {
     // Capture the current network GQL URL at the time of the request,
     // so polling continues to use this URL even if the user switches networks.
     const netConfig = await getCurrentNodeConfig();
+    if (isZekoNet(netConfig.networkID)) {
+      return;
+    }
     const gqlUrl = netConfig.url || undefined;
     if (type === FETCH_TYPE_QA) {
       this.fetchQAnetTransactionStatus(paymentId, hash, gqlUrl);

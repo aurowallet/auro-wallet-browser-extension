@@ -9,7 +9,7 @@ import {
   SUPPORT_TOKEN_LIST,
 } from "../../constant/storageKey";
 import { getCurrentNodeConfig } from "../../utils/browserUtils";
-import { getReadableNetworkId, parseStakingList, type StakingListResult } from "../../utils/utils";
+import { getReadableNetworkId, isZekoNet, parseStakingList, type StakingListResult } from "../../utils/utils";
 
 import { getLocal, saveLocal } from "../localStorage";
 import {
@@ -72,12 +72,20 @@ interface TxResult {
  * @param {*} paymentId
  */
 export async function getTxStatus(paymentId: string, url?: string): Promise<unknown> {
+  const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return { transactionStatus: "UNKNOWN" };
+  }
   const txBody = getTxStatusBody();
   const result = await startFetchMyQuery(txBody, { paymentId }, url);
   return result;
 }
 
 export async function getQATxStatus(zkappTransaction: string, url?: string): Promise<unknown> {
+  const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return { transactionStatus: "UNKNOWN" };
+  }
   const txBody = getQATxStatusBody();
   const result = await startFetchMyQuery(txBody, { zkappTransaction }, url);
   return result;
@@ -135,6 +143,10 @@ export async function sendStakeTx(
   payload: TxPayload,
   signature: Signature
 ): Promise<unknown> {
+  const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return { error: "Delegation is not supported on Zeko network" };
+  }
   const variables = _getGQLVariables(payload, signature, false);
   const txBody = getStakeTxSend(!!variables.rawSignature);
   const res = await startFetchMyMutation(txBody, variables);
@@ -158,6 +170,10 @@ export async function sendParty(sendJson: unknown): Promise<unknown> {
  * @returns {Promise<{error: *}>}
  */
 export async function fetchDaemonStatus(): Promise<unknown> {
+  const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return {};
+  }
   const query = getDaemonStatusBody();
   const res = (await startFetchMyQuery(query, {})) as { daemonStatus?: unknown };
   const daemonStatus = res.daemonStatus || {};
@@ -171,6 +187,10 @@ export async function fetchDaemonStatus(): Promise<unknown> {
  * @returns
  */
 export async function fetchBlockInfo(stateHash: string): Promise<unknown> {
+  const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return {};
+  }
   const query = getBlockInfoBody();
   const res = (await startFetchMyQuery(query, { stateHash })) as { block?: unknown };
   const block = res.block || {};
@@ -184,6 +204,10 @@ export async function fetchBlockInfo(stateHash: string): Promise<unknown> {
  * @returns
  */
 export async function fetchDelegationInfo(publicKey: string): Promise<unknown> {
+  const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return {};
+  }
   const query = getDelegationInfoBody();
   const res = (await startFetchMyQuery(query, { publicKey })) as { account?: unknown };
   const account = res.account || {};
@@ -267,6 +291,10 @@ export async function getBaseInfo(): Promise<unknown> {
 export async function getPendingTxList(
   address: string
 ): Promise<{ txList: unknown[]; address: string }> {
+  const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return { txList: [], address };
+  }
   const txBody = getPendingTxBody();
   const result = (await startFetchMyQuery(txBody, {
     publicKey: address,
@@ -438,6 +466,9 @@ export async function getZkAppPendingTx(
   limit?: number
 ): Promise<{ txList: unknown[]; address: string } | unknown[]> {
   const netConfig = await getCurrentNodeConfig();
+  if (isZekoNet(netConfig.networkID)) {
+    return { txList: [], address };
+  }
   let gqlTxUrl = netConfig.url;
   if (!gqlTxUrl) {
     return [];
