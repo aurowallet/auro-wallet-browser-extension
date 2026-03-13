@@ -17,13 +17,13 @@ import { LoadingView } from "../Wallet/component/StatusView";
 
 // Import vault utilities
 import {
-  migrateToV2,
+  migrateToModern,
   normalizeVault,
   validateVault,
 } from "../../../background/vaultMigration";
 import { isLegacyVault, isModernVault, MIN_MODERN_VAULT_VERSION, VAULT_VERSION } from "../../../constant/vaultTypes";
 
-const encryptUtils = require("../../../utils/encryptUtils").default;
+import encryptUtils from "../../../utils/encryptUtils";
 
 // Import i18n from separate file
 import { t } from "./vaultDebugI18n";
@@ -544,8 +544,8 @@ const VaultDebug = () => {
       // 4. Optional: vault decrypt verification (password required)
       if (withPasswordVerify && password && isV3Enc && hasVaultSalt) {
         try {
-          const { key } = await encryptUtils.deriveSessionKey(password, storage.vaultSalt);
-          const decrypted = await encryptUtils.decryptWithCryptoKey(key, storage.keyringData);
+          const { key } = await encryptUtils.deriveSessionKey(password, storage.vaultSalt as string);
+          const decrypted = await encryptUtils.decryptWithCryptoKey(key, storage.keyringData as string);
           checks.push({
             label: t('checkVerifierWorks'),
             status: 'pass',
@@ -773,7 +773,7 @@ const VaultDebug = () => {
   };
 
   // ============================================
-  // Upgrade to V2 (with backup and rollback)
+  // Upgrade to Modern (with backup and rollback)
   // ============================================
 
   const handleUpgrade = useCallback(async () => {
@@ -807,27 +807,27 @@ const VaultDebug = () => {
       setHasBackup(true);
 
       // Step 2: Execute migration
-      const { vault: v2Vault, migrated } = normalizeVault(decryptedData);
+      const { vault: modernVault, migrated } = normalizeVault(decryptedData);
       
       if (!migrated) {
         throw new Error(t('alreadyNewFormat'));
       }
 
       // Step 3: Validate migrated data
-      const validation = validateVault(v2Vault);
+      const validation = validateVault(modernVault);
       if (!validation.valid) {
         throw new Error(t('validationFailed') + ': ' + validation.errors.join(', '));
       }
 
       // Step 4: Verify account count
       const originalCount = (decryptedData as Array<{ accounts?: unknown[] }>).reduce((sum: number, w) => sum + (w.accounts?.length || 0), 0);
-      const migratedCount = v2Vault.keyrings.reduce((sum, kr) => sum + kr.accounts.length, 0);
+      const migratedCount = modernVault.keyrings.reduce((sum, kr) => sum + kr.accounts.length, 0);
       if (originalCount !== migratedCount) {
         throw new Error(t('accountCountMismatch') + `: ${originalCount} vs ${migratedCount}`);
       }
 
       // Step 5: Derive CryptoKey, migrate inner secrets, re-encrypt and save
-      const { encryptedV3, vaultSalt, upgradedVault } = await encryptVaultAsV3(v2Vault, password);
+      const { encryptedV3, vaultSalt, upgradedVault } = await encryptVaultAsV3(modernVault, password);
       await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV3, vaultSalt });
 
       setUpgradeResult({ success: true, message: t('upgradeSuccess') });
@@ -938,15 +938,15 @@ const VaultDebug = () => {
       }
 
       // Step 4: Execute migration
-      const v2Vault = migrateToV2(decrypted);
+      const modernVault = migrateToModern(decrypted as any);
 
       // Step 5: Validate
-      const validation = validateVault(v2Vault);
+      const validation = validateVault(modernVault);
       if (!validation.valid) {
         throw new Error(t('validationFailed') + ': ' + validation.errors.join(', '));
       }
 
-      setSimulationAfter(v2Vault);
+      setSimulationAfter(modernVault);
 
       // Step 6: Apply to storage if checked
       if (applyToStorage) {
@@ -960,7 +960,7 @@ const VaultDebug = () => {
         }
         
         // Save migrated data in current v3 encrypted format.
-        const { encryptedV3, vaultSalt, upgradedVault } = await encryptVaultAsV3(v2Vault, password);
+        const { encryptedV3, vaultSalt, upgradedVault } = await encryptVaultAsV3(modernVault, password);
         await browser.storage.local.set({ [STORAGE_KEY.KEYRING_DATA]: encryptedV3, vaultSalt });
         setSimulationAfter(upgradedVault);
         

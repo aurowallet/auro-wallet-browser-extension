@@ -48,6 +48,10 @@ import {
   WALLET_ADD_ACCOUNT_TO_KEYRING,
   WALLET_GET_VAULT_VERSION,
   WALLET_TRY_UPGRADE_VAULT,
+  WALLET_GET_CREATE_MNEMONIC_CHALLENGE,
+  WALLET_CONFIRM_CREATE_MNEMONIC,
+  WALLET_CLEAR_CREATE_MNEMONIC,
+  WALLET_GET_CREATE_FLOW_STATE,
 } from "../constant/msgTypes";
 import apiService from "./apiService";
 import * as storage from "./storageService";
@@ -77,13 +81,36 @@ interface MessagePayload {
 // ============ Internal Functions ============
 
 function internalMessageListener(
-  message: MessagePayload,
+  message: MessagePayload | null | undefined,
   sender: browser.Runtime.MessageSender,
   sendResponse: (response?: unknown) => void
 ): boolean {
-  const { messageSource, action, payload } = message;
+  if (!message || typeof message !== "object") {
+    return false;
+  }
+
+  const { messageSource, action } = message;
+  const payload = message.payload ?? {};
   if (messageSource === "messageFromDapp" || messageSource === "messageFromUpdate") {
-    dappService.handleMessage(message as Parameters<typeof dappService.handleMessage>[0], sender, sendResponse);
+    dappService
+      .handleMessage(
+        message as Parameters<typeof dappService.handleMessage>[0],
+        sender,
+        sendResponse as Parameters<typeof dappService.handleMessage>[2]
+      )
+      .catch((err) => {
+        console.error("[messageListener]", action, err);
+        const responseId =
+          payload && typeof payload === "object" && "id" in payload
+            ? (payload as { id?: unknown }).id
+            : undefined;
+        sendResponse({
+          error: {
+            message: "internalError",
+          },
+          id: responseId,
+        });
+      });
     return true;
   }
   if (messageSource) {
@@ -92,13 +119,14 @@ function internalMessageListener(
   if (!action) {
     return false;
   }
-  switch (action) {
+  try {
+    switch (action) {
     case WALLET_CREATE_PWD:
       apiService.createPwd(payload.pwd).then(() => {
-        sendResponse();
+        sendResponse({ success: true });
       }).catch((err) => {
         console.error("[messageListener]", action, err);
-        sendResponse();
+        sendResponse({ success: false });
       });
       break;
     case WALLET_NEW_HD_ACCOUNT:
@@ -118,7 +146,12 @@ function internalMessageListener(
       });
       break;
     case WALLET_SET_UNLOCKED_STATUS:
-      sendResponse(apiService.setUnlockedStatus(payload.status));
+      apiService.setUnlockedStatus(payload.status).then(() => {
+        sendResponse();
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse();
+      });
       break;
     case WALLET_APP_SUBMIT_PWD:
       apiService.submitPassword(payload.password).then((res) => {
@@ -255,7 +288,44 @@ function internalMessageListener(
         });
       break;
     case WALLET_GET_CREATE_MNEMONIC:
-      sendResponse(apiService.getCreateMnemonic(payload.isNewMne));
+      apiService.getCreateMnemonic(payload.isNewMne).then((mne) => {
+        sendResponse(mne);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse("");
+      });
+      break;
+    case WALLET_GET_CREATE_MNEMONIC_CHALLENGE:
+      apiService.getCreateMnemonicChallenge().then((res) => {
+        sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse({ error: "tryAgain", type: "local" });
+      });
+      break;
+    case WALLET_CONFIRM_CREATE_MNEMONIC:
+      apiService.confirmCreateMnemonic(payload.words).then((res) => {
+        sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse({ error: "tryAgain", type: "local" });
+      });
+      break;
+    case WALLET_CLEAR_CREATE_MNEMONIC:
+      apiService.clearCreateMnemonic().then((res) => {
+        sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse({ success: false });
+      });
+      break;
+    case WALLET_GET_CREATE_FLOW_STATE:
+      apiService.getCreateFlowState().then((res) => {
+        sendResponse(res);
+      }).catch((err) => {
+        console.error("[messageListener]", action, err);
+        sendResponse({ hasExistingWallet: false, isUnlocked: false });
+      });
       break;
     case WALLET_RESET_LAST_ACTIVE_TIME:
       sendResponse(apiService.setLastActiveTime());
@@ -474,8 +544,13 @@ function internalMessageListener(
       break;
     default:
       return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("[messageListener] sync error", action, err);
+    sendResponse();
+    return true;
   }
-  return true;
 }
 
 let time: string | number = "";

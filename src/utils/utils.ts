@@ -8,6 +8,12 @@ import type { NetworkConfig } from "../constant/network";
 
 const bs58check = createBase58check(sha256);
 
+// ============ Mnemonic Utils ============
+
+export const parseMnemonicWords = (mnemonic: string): string[] => {
+  return mnemonic.trim().split(/\s+/).filter(Boolean);
+};
+
 // ============ String Utils ============
 
 export function addressSlice(

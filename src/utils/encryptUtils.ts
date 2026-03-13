@@ -71,7 +71,7 @@ async function decryptWithKey(key: CryptoKey, payload: EncryptedPayload): Promis
   }
 }
 
-async function keyFromPasswordV2(password: string, salt: string): Promise<CryptoKey> {
+async function keyFromPasswordArgon2(password: string, salt: string): Promise<CryptoKey> {
   const saltBuffer = Buffer.from(salt, "base64");
   await sodium.ready;
   const passwordBytes = new TextEncoder().encode(password);
@@ -138,7 +138,7 @@ async function keyFromPassword(password: string, salt: string): Promise<CryptoKe
 
 async function encrypt(password: string, dataObj: unknown): Promise<string> {
   const salt = generateSalt(16);
-  const passwordDerivedKey = await keyFromPasswordV2(password, salt);
+  const passwordDerivedKey = await keyFromPasswordArgon2(password, salt);
   const payload = await encryptWithKey(passwordDerivedKey, dataObj);
 
   return JSON.stringify({
@@ -156,7 +156,7 @@ async function decrypt(password: string, text: string): Promise<unknown> {
   }
 
   const salt = payload.salt || "";
-  const keyDerivedFunc = payload.version === ENCRYPT_VERSION_ARGON2 ? keyFromPasswordV2 : keyFromPassword;
+  const keyDerivedFunc = payload.version === ENCRYPT_VERSION_ARGON2 ? keyFromPasswordArgon2 : keyFromPassword;
   const key = await keyDerivedFunc(password, salt);
 
   return decryptWithKey(key, payload);
@@ -172,7 +172,7 @@ async function deriveSessionKey(
   salt?: string
 ): Promise<{ key: CryptoKey; salt: string }> {
   const keySalt = salt || generateSalt(16);
-  const key = await keyFromPasswordV2(password, keySalt);
+  const key = await keyFromPasswordArgon2(password, keySalt);
   return { key, salt: keySalt };
 }
 

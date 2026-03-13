@@ -2,11 +2,11 @@
  * Vault Migration & Types Test Suite - Migrated from Mocha to Jest
  */
 import {
-  convertV2ToLegacy,
+  convertModernToLegacy,
   findAccountByAddress,
   getCurrentAccount,
   getCurrentKeyring,
-  migrateToV2,
+  migrateToModern,
   normalizeVault,
   validateVault
 } from '@/background/vaultMigration';
@@ -121,7 +121,7 @@ describe('Vault Types', () => {
 
   describe('countHDKeyrings', () => {
     it('should count HD keyrings in vault', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const count = countHDKeyrings(vault);
       expect(count).toBeGreaterThanOrEqual(1);
     });
@@ -161,9 +161,9 @@ describe('Vault Types', () => {
 });
 
 describe('Vault Migration', () => {
-  describe('migrateToV2', () => {
+  describe('migrateToModern', () => {
     it('should migrate legacy data to v2 format', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
 
       expect(vault.version).toBe(VAULT_VERSION);
       expect(Array.isArray(vault.keyrings)).toBe(true);
@@ -171,7 +171,7 @@ describe('Vault Migration', () => {
     });
 
     it('should separate accounts by type into different keyrings', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
 
       const hdKeyrings = vault.keyrings.filter(kr => kr.type === KEYRING_TYPE.HD);
       const importedKeyrings = vault.keyrings.filter(kr => kr.type === KEYRING_TYPE.IMPORTED);
@@ -183,7 +183,7 @@ describe('Vault Migration', () => {
     });
 
     it('should NOT store privateKey for HD accounts', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const hdKeyring = vault.keyrings.find(kr => kr.type === KEYRING_TYPE.HD);
 
       hdKeyring?.accounts.forEach((account: { privateKey?: string; hdIndex?: number }) => {
@@ -193,7 +193,7 @@ describe('Vault Migration', () => {
     });
 
     it('should store privateKey for imported accounts', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const importedKeyring = vault.keyrings.find(kr => kr.type === KEYRING_TYPE.IMPORTED);
 
       importedKeyring?.accounts.forEach(account => {
@@ -203,17 +203,17 @@ describe('Vault Migration', () => {
 
     it('should handle empty legacy data', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const vault = migrateToV2([]);
+      const vault = migrateToModern([]);
       expect(vault.version).toBe(VAULT_VERSION);
       expect(vault.keyrings).toHaveLength(0);
       warnSpy.mockRestore();
     });
   });
 
-  describe('convertV2ToLegacy', () => {
+  describe('convertModernToLegacy', () => {
     it('should convert v2 vault back to legacy format', () => {
-      const vault = migrateToV2(sampleLegacyData);
-      const legacy = convertV2ToLegacy(vault);
+      const vault = migrateToModern(sampleLegacyData);
+      const legacy = convertModernToLegacy(vault);
 
       expect(Array.isArray(legacy)).toBe(true);
       expect(legacy.length).toBe(1);
@@ -223,8 +223,8 @@ describe('Vault Migration', () => {
     });
 
     it('should preserve account count in round-trip', () => {
-      const vault = migrateToV2(sampleLegacyData);
-      const legacy = convertV2ToLegacy(vault);
+      const vault = migrateToModern(sampleLegacyData);
+      const legacy = convertModernToLegacy(vault);
 
       expect((legacy[0] as { accounts: unknown[] }).accounts.length).toBe((sampleLegacyData[0] as { accounts: unknown[] }).accounts.length);
     });
@@ -249,7 +249,7 @@ describe('Vault Migration', () => {
 
   describe('findAccountByAddress', () => {
     it('should find account across keyrings', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const result = findAccountByAddress(vault, 'B62qjLVC7ryAwctX9tZimvgh4FBocUozL4VtCPvPJ9bYKRatb5NCRyy');
 
       expect(result).not.toBeNull();
@@ -257,7 +257,7 @@ describe('Vault Migration', () => {
     });
 
     it('should return null for non-existent address', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const result = findAccountByAddress(vault, 'B62qnonexistent...');
       expect(result).toBeNull();
     });
@@ -265,7 +265,7 @@ describe('Vault Migration', () => {
 
   describe('getCurrentKeyring', () => {
     it('should return current keyring', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const keyring = getCurrentKeyring(vault);
 
       expect(keyring).not.toBeNull();
@@ -275,7 +275,7 @@ describe('Vault Migration', () => {
 
   describe('getCurrentAccount', () => {
     it('should return current account from current keyring', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const account = getCurrentAccount(vault);
 
       expect(account).not.toBeNull();
@@ -285,7 +285,7 @@ describe('Vault Migration', () => {
 
   describe('validateVault', () => {
     it('should validate correct vault structure', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       const { valid, errors } = validateVault(vault);
 
       expect(valid).toBe(true);
@@ -293,7 +293,7 @@ describe('Vault Migration', () => {
     });
 
     it('should detect missing keyring ID', () => {
-      const vault = migrateToV2(sampleLegacyData);
+      const vault = migrateToModern(sampleLegacyData);
       vault.keyrings[0]!.id = '';
       const { valid, errors } = validateVault(vault);
 
@@ -387,11 +387,11 @@ describe('Encryption Integration', () => {
     });
   });
 
-  describe('backward compatibility (convertV2ToLegacy)', () => {
+  describe('backward compatibility (convertModernToLegacy)', () => {
     it('should convert migrated vault back to legacy format', async () => {
       const decrypted = await encryptUtils.decrypt(TEST_PASSWORD, testCases[0].data);
       const { vault } = normalizeVault(decrypted);
-      const legacy = convertV2ToLegacy(vault);
+      const legacy = convertModernToLegacy(vault);
 
       expect(Array.isArray(legacy)).toBe(true);
       expect(legacy[0]).toHaveProperty('mnemonic');

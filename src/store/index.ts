@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { LOCK_TIME_DEFAULT } from '../constant';
 import type { Vault } from '../constant/vaultTypes';
 
-// VaultData can be V2 Vault, V1 array format, or null
+// VaultData can be V3 modern Vault, V1 array format, or null
 type V1Wallet = { mnemonic?: string; accounts: unknown[]; currentAddress?: string };
 type VaultData = Vault | V1Wallet[] | null;
 
@@ -88,6 +88,7 @@ const useInternalStore = create<StoreState>((set, get) => ({
     data: null,
     currentAccount: {},
     mne: "",
+    autoLockTime: LOCK_TIME_DEFAULT,
   }),
 
   setCurrentAccount: (account: AccountInfo) => set({ currentAccount: account }),

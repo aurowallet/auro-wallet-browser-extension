@@ -13,12 +13,12 @@ import {
 } from '@/constant/vaultTypes';
 
 import {
-  convertV2ToLegacy,
+  convertModernToLegacy,
   findAccountByAddress,
   findKeyringById,
   getCurrentAccount,
   getCurrentKeyring,
-  migrateToV2,
+  migrateToModern,
   normalizeVault,
   validateVault,
 } from '@/background/vaultMigration';
@@ -156,10 +156,10 @@ describe('vaultTypes', () => {
 });
 
 describe('vaultMigration', () => {
-  describe('migrateToV2', () => {
+  describe('migrateToModern', () => {
     it('should return empty vault for empty array', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const result = migrateToV2([]);
+      const result = migrateToModern([]);
       expect(result.version).toBe(VAULT_VERSION);
       expect(result.keyrings).toHaveLength(0);
       warnSpy.mockRestore();
@@ -167,7 +167,7 @@ describe('vaultMigration', () => {
 
     it('should migrate single HD wallet to HD keyring', () => {
       const legacy = [createLegacyWallet({ hdAccounts: 3 })];
-      const result = migrateToV2(legacy);
+      const result = migrateToModern(legacy);
 
       expect(result.keyrings).toHaveLength(1);
       expect(result.keyrings[0]!.type).toBe(KEYRING_TYPE.HD);
@@ -176,7 +176,7 @@ describe('vaultMigration', () => {
 
     it('should NOT store privateKey for HD accounts', () => {
       const legacy = [createLegacyWallet({ hdAccounts: 2 })];
-      const result = migrateToV2(legacy);
+      const result = migrateToModern(legacy);
 
       const hdKeyring = result.keyrings[0]!;
       hdKeyring.accounts.forEach((acc: any) => {
@@ -187,7 +187,7 @@ describe('vaultMigration', () => {
 
     it('should preserve privateKey for imported accounts', () => {
       const legacy = [createLegacyWallet({ hdAccounts: 1, importedAccounts: 2 })];
-      const result = migrateToV2(legacy);
+      const result = migrateToModern(legacy);
 
       const importedKeyring = result.keyrings.find(
         (kr: any) => kr.type === KEYRING_TYPE.IMPORTED
@@ -207,7 +207,7 @@ describe('vaultMigration', () => {
           watchAccounts: 1,
         }),
       ];
-      const result = migrateToV2(legacy);
+      const result = migrateToModern(legacy);
 
       expect(result.keyrings).toHaveLength(4);
 
@@ -220,7 +220,7 @@ describe('vaultMigration', () => {
 
     it('should set nextHdIndex correctly', () => {
       const legacy = [createLegacyWallet({ hdAccounts: 5 })];
-      const result = migrateToV2(legacy);
+      const result = migrateToModern(legacy);
 
       const hdKeyring = result.keyrings[0] as { nextHdIndex?: number };
       expect(hdKeyring!.nextHdIndex).toBe(5);
@@ -233,14 +233,14 @@ describe('vaultMigration', () => {
           currentAddress: 'B62qHD_1_address',
         }),
       ];
-      const result = migrateToV2(legacy);
+      const result = migrateToModern(legacy);
 
       expect(result.keyrings[0]!.currentAddress).toBe('B62qHD_1_address');
     });
 
     it('should set currentKeyringId to first keyring', () => {
       const legacy = [createLegacyWallet({ hdAccounts: 1 })];
-      const result = migrateToV2(legacy);
+      const result = migrateToModern(legacy);
 
       expect(result.currentKeyringId).toBe(result.keyrings[0]!.id);
     });
@@ -273,7 +273,7 @@ describe('vaultMigration', () => {
     });
   });
 
-  describe('convertV2ToLegacy', () => {
+  describe('convertModernToLegacy', () => {
     it('should convert V2 to legacy array format', () => {
       const hdKeyring = createHDKeyring('Wallet 1', 'encrypted_mnemonic');
       hdKeyring.accounts.push(
@@ -282,7 +282,7 @@ describe('vaultMigration', () => {
       hdKeyring.currentAddress = 'B62q1';
 
       const v2 = createV2Vault([hdKeyring]);
-      const legacy = convertV2ToLegacy(v2);
+      const legacy = convertModernToLegacy(v2);
 
       expect(Array.isArray(legacy)).toBe(true);
       expect(legacy).toHaveLength(1);
@@ -305,7 +305,7 @@ describe('vaultMigration', () => {
       } as any);
 
       const v2 = createV2Vault([hdKeyring, importedKeyring]);
-      const legacy = convertV2ToLegacy(v2);
+      const legacy = convertModernToLegacy(v2);
 
       const hdAcc = (legacy[0] as { accounts: any[] }).accounts.find((a: any) => a.address === 'B62qHD');
       const impAcc = (legacy[0] as { accounts: any[] }).accounts.find((a: any) => a.address === 'B62qIMP');
@@ -316,7 +316,7 @@ describe('vaultMigration', () => {
     });
 
     it('should return empty array for empty vault', () => {
-      const result = convertV2ToLegacy(null as any);
+      const result = convertModernToLegacy(null as any);
       expect(result).toEqual([]);
     });
   });
@@ -469,7 +469,7 @@ describe('Lookup Functions', () => {
 describe('Edge Cases', () => {
   it('should handle wallet with no mnemonic', () => {
     const legacy = [{ accounts: [], currentAddress: '' }];
-    const result = migrateToV2(legacy as any);
+    const result = migrateToModern(legacy as any);
     expect(result.keyrings).toHaveLength(0);
   });
 
@@ -488,7 +488,7 @@ describe('Edge Cases', () => {
         currentAddress: 'B62q1',
       },
     ];
-    const result = migrateToV2(legacy as any);
+    const result = migrateToModern(legacy as any);
 
     expect(result.keyrings).toHaveLength(1);
     expect(result.keyrings[0]!.type).toBe(KEYRING_TYPE.IMPORTED);
@@ -508,7 +508,7 @@ describe('Edge Cases', () => {
         currentAddress: 'B62q1',
       },
     ];
-    const result = migrateToV2(legacy as any);
+    const result = migrateToModern(legacy as any);
 
     expect(result.keyrings[0]!.accounts[0]!.name).toBe('Account 1');
   });
@@ -526,8 +526,8 @@ describe('Round-trip Migration', () => {
       }),
     ];
 
-    const v2 = migrateToV2(originalLegacy as any);
-    const backToLegacy = convertV2ToLegacy(v2);
+    const v2 = migrateToModern(originalLegacy as any);
+    const backToLegacy = convertModernToLegacy(v2);
 
     const originalCount = (originalLegacy[0] as { accounts: unknown[] }).accounts.length;
     const resultCount = (backToLegacy[0] as { accounts: unknown[] }).accounts.length;

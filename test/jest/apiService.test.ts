@@ -215,8 +215,12 @@ jest.mock('../../src/constant/vaultTypes', () => ({
 
 jest.mock('../../src/background/vaultMigration', () => ({
   normalizeVault: jest.fn((vault: any) => ({ vault, migrated: false })),
-  convertV2ToLegacy: jest.fn((vault: any) => vault),
+  convertModernToLegacy: jest.fn((vault: any) => vault),
   validateVault: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+  keyringTypeToAccountType: jest.fn((keyringType: string) => {
+    const map: Record<string, string> = { hd: 'WALLET_INSIDE', imported: 'WALLET_OUTSIDE', ledger: 'WALLET_LEDGER', watch: 'WALLET_WATCH' };
+    return map[keyringType] || 'WALLET_INSIDE';
+  }),
 }));
 
 // Import after mocks
@@ -458,9 +462,259 @@ describe('APIService', () => {
       expect(mockStoreState.cryptoKey).toBe(MOCK_CRYPTO_KEY);
       expect(mockStoreState.vaultSalt).toBe('mock-vault-salt');
     });
+
+    it('should clear temporary create-flow mnemonic before deriving new key', async () => {
+      mockStoreState.mne = 'stale_encrypted_mnemonic';
+
+      await apiService.createPwd('newPassword');
+
+      expect(mockMemStore.setMnemonic).toHaveBeenCalledWith('');
+      expect(mockStoreState.mne).toBe('');
+    });
+
+    it('should throw vaultAlreadyExists when keyringData exists in storage', async () => {
+      mockStorageData.keyringData = 'existing_vault_data';
+
+      await expect(apiService.createPwd('newPassword')).rejects.toThrow('vaultAlreadyExists');
+      expect(mockEncryptUtils.deriveSessionKey).not.toHaveBeenCalled();
+      expect(mockStorageService.save).not.toHaveBeenCalled();
+    });
   });
 
-  // ==================== 5. resetWallet ====================
+  // ==================== 5. getCreateMnemonic ====================
+  describe('getCreateMnemonic', () => {
+    it('should return empty string when wallet is not ready (missing cryptoKey)', async () => {
+      mockStoreState.cryptoKey = null;
+
+      const result = await apiService.getCreateMnemonic(true);
+
+      expect(result).toBe('');
+      expect(mockAccountService.generateMne).not.toHaveBeenCalled();
+      expect(mockMemStore.setMnemonic).not.toHaveBeenCalled();
+    });
+
+    it('should encrypt and store mnemonic in memory only for first-time creation', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.data = null; // first-time creation: no vault
+      mockAccountService.generateMne.mockReturnValueOnce('word1 word2');
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValueOnce('encrypted_mne');
+
+      const result = await apiService.getCreateMnemonic(true);
+
+      expect(result).toBe('word1 word2');
+      expect(mockEncryptUtils.encryptWithCryptoKey).toHaveBeenCalledWith(
+        MOCK_CRYPTO_KEY,
+        'word1 word2'
+      );
+      expect(mockMemStore.setMnemonic).toHaveBeenCalledWith('encrypted_mne');
+      // First-time creation: NOT persisted to storage (memory only)
+      expect(mockStorageService.save).not.toHaveBeenCalledWith({ pendingCreateMnemonic: 'encrypted_mne' });
+    });
+
+    it('should persist mnemonic to storage for add-wallet flow (existing vault)', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.data = createV3VaultData(); // add-wallet: vault exists
+      mockAccountService.generateMne.mockReturnValueOnce('word1 word2');
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValueOnce('encrypted_mne');
+
+      const result = await apiService.getCreateMnemonic(true);
+
+      expect(result).toBe('word1 word2');
+      expect(mockMemStore.setMnemonic).toHaveBeenCalledWith('encrypted_mne');
+      // Add-wallet flow: persisted to storage
+      expect(mockStorageService.save).toHaveBeenCalledWith({ pendingCreateMnemonic: 'encrypted_mne' });
+    });
+
+    it('should return existing mnemonic when isNewMne=true but pending mnemonic exists in memStore', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'already_encrypted_mne';
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('existing word1 word2');
+
+      const result = await apiService.getCreateMnemonic(true);
+
+      expect(result).toBe('existing word1 word2');
+      expect(mockAccountService.generateMne).not.toHaveBeenCalled();
+    });
+
+    it('should return existing mnemonic when isNewMne=true but pending mnemonic exists in persistent storage', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = '';
+      mockStorageData.pendingCreateMnemonic = 'persisted_encrypted_mne';
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('persisted word1 word2');
+
+      const result = await apiService.getCreateMnemonic(true);
+
+      expect(result).toBe('persisted word1 word2');
+      expect(mockAccountService.generateMne).not.toHaveBeenCalled();
+      expect(mockMemStore.setMnemonic).toHaveBeenCalledWith('persisted_encrypted_mne');
+    });
+  });
+
+  describe('getCreateMnemonicChallenge', () => {
+    it('should return local tryAgain error when no temporary mnemonic exists', async () => {
+      mockStoreState.mne = '';
+
+      const result = await apiService.getCreateMnemonicChallenge();
+
+      expect(result).toEqual({ error: 'tryAgain', type: 'local' });
+    });
+
+    it('should return shuffled challenge words from encrypted temporary mnemonic', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'encrypted_mne_payload';
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
+
+      const result = await apiService.getCreateMnemonicChallenge();
+
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalledWith(
+        MOCK_CRYPTO_KEY,
+        'encrypted_mne_payload'
+      );
+      expect(result).toHaveProperty('words');
+      expect((result as { words: string[] }).words).toHaveLength(3);
+      expect((result as { words: string[] }).words.sort()).toEqual(['alpha', 'beta', 'gamma'].sort());
+    });
+  });
+
+  describe('clearCreateMnemonic', () => {
+    it('should clear in-memory temporary mnemonic cache and storage', async () => {
+      mockStoreState.mne = 'stale_encrypted_mnemonic';
+
+      const result = await apiService.clearCreateMnemonic();
+
+      expect(result).toEqual({ success: true });
+      expect(mockMemStore.setMnemonic).toHaveBeenCalledWith('');
+      expect(mockStoreState.mne).toBe('');
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith('pendingCreateMnemonic');
+    });
+  });
+
+  describe('confirmCreateMnemonic', () => {
+    it('should reject when selected words do not match original order', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'encrypted_mne_payload';
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
+      const createSpy = jest.spyOn(apiService, 'createAccount');
+
+      const result = await apiService.confirmCreateMnemonic(['beta', 'alpha', 'gamma']);
+
+      expect(result).toEqual({ error: 'seed_error', type: 'local' });
+      expect(createSpy).not.toHaveBeenCalled();
+      createSpy.mockRestore();
+    });
+
+    it('should create account when selected words match original order', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'encrypted_mne_payload';
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
+
+      const expectedAccount = {
+        address: TEST_DATA.accounts[0]!.pubKey,
+        accountName: 'Account 1',
+      };
+      const createSpy = jest
+        .spyOn(apiService, 'createAccount')
+        .mockResolvedValueOnce(expectedAccount as any);
+
+      const result = await apiService.confirmCreateMnemonic(['alpha', 'beta', 'gamma']);
+
+      expect(createSpy).toHaveBeenCalledWith('alpha beta gamma');
+      expect(result).toEqual(expectedAccount);
+      createSpy.mockRestore();
+    });
+
+    it('should re-store temporary mnemonic in memory only when first-time creation fails', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'encrypted_mne_payload';
+      mockStoreState.data = null; // first-time creation
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
+
+      const createSpy = jest
+        .spyOn(apiService, 'createAccount')
+        .mockResolvedValueOnce({ error: 'createFailed', type: 'local' } as any);
+
+      const result = await apiService.confirmCreateMnemonic(['alpha', 'beta', 'gamma']);
+
+      expect(result).toEqual({ error: 'createFailed', type: 'local' });
+      expect(mockMemStore.setMnemonic).toHaveBeenCalledWith('encrypted_mne_payload');
+      // First-time creation: NOT persisted to storage
+      expect(mockStorageService.save).not.toHaveBeenCalledWith({ pendingCreateMnemonic: 'encrypted_mne_payload' });
+      createSpy.mockRestore();
+    });
+
+    it('should return mnemonicLost error when mnemonic is missing from both memStore and storage', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = '';
+      // No pendingCreateMnemonic in storage either
+
+      const result = await apiService.confirmCreateMnemonic(['alpha', 'beta', 'gamma']);
+
+      expect(result).toEqual({ error: 'mnemonicLost', type: 'local' });
+    });
+
+    it('should return flat AccountInfo (not nested { keyring, account }) when adding to modern vault', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'encrypted_mne_payload';
+      mockStoreState.data = createV3VaultData();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
+
+      const flatAccount = {
+        address: TEST_DATA.accounts[1]!.pubKey,
+        accountName: 'Account 1',
+        type: 'WALLET_INSIDE',
+        hdPath: 0,
+        keyringId: 'kr-new',
+      };
+      // confirmCreateMnemonic now always delegates to createAccount,
+      // which internally routes to addHDKeyring and normalizes the result.
+      const createSpy = jest
+        .spyOn(apiService, 'createAccount')
+        .mockResolvedValueOnce(flatAccount as any);
+
+      const result = await apiService.confirmCreateMnemonic(['alpha', 'beta', 'gamma']);
+
+      expect(createSpy).toHaveBeenCalledWith('alpha beta gamma');
+      // Must return the flat account, NOT the nested { keyring, account } object
+      expect(result).toEqual(flatAccount);
+      expect(result).not.toHaveProperty('keyring');
+      createSpy.mockRestore();
+    });
+
+    it('should pass through addHDKeyring error result unchanged when adding to modern vault', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'encrypted_mne_payload';
+      mockStoreState.data = createV3VaultData();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
+      mockEncryptUtils.encryptWithCryptoKey.mockResolvedValueOnce('re_encrypted_mne');
+
+      // confirmCreateMnemonic delegates to createAccount, which routes to addHDKeyring
+      const createSpy = jest
+        .spyOn(apiService, 'createAccount')
+        .mockResolvedValueOnce({ error: 'repeatTip', type: 'local' } as any);
+
+      const result = await apiService.confirmCreateMnemonic(['alpha', 'beta', 'gamma']);
+
+      expect(result).toEqual({ error: 'repeatTip', type: 'local' });
+      createSpy.mockRestore();
+    });
+
+    it('should clear memStore mnemonic after successful confirmation', async () => {
+      mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      mockStoreState.mne = 'encrypted_mne_payload';
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
+
+      const createSpy = jest
+        .spyOn(apiService, 'createAccount')
+        .mockResolvedValueOnce({ address: 'B62q...', accountName: 'Account 1' } as any);
+
+      await apiService.confirmCreateMnemonic(['alpha', 'beta', 'gamma']);
+
+      expect(mockMemStore.setMnemonic).toHaveBeenCalledWith('');
+      createSpy.mockRestore();
+    });
+  });
+
+  // ==================== 6. resetWallet ====================
   describe('resetWallet', () => {
     it('should clear persisted vault keys and in-memory account state', async () => {
       mockStoreState.isUnlocked = true;
@@ -472,7 +726,7 @@ describe('APIService', () => {
 
       await apiService.resetWallet();
 
-      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.cryptoKey).toBeNull();
       expect(mockStoreState.vaultSalt).toBe('');
@@ -489,20 +743,24 @@ describe('APIService', () => {
       }));
     });
 
-    it('should clear both auto-lock timer and tx polling timer', async () => {
+    it('should clear auto-lock and tx polling timers', async () => {
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-      (apiService as any).activeTimer = setTimeout(() => {}, 10_000);
-      (apiService as any).timer = setTimeout(() => {}, 10_000);
+      const activeTimer = setTimeout(() => {}, 10_000);
+      (apiService as any).activeTimer = activeTimer;
+      const txTimer = setTimeout(() => {}, 10_000);
+      (apiService as any).txTimers.set('test-payment-id', txTimer);
 
       await apiService.resetWallet();
 
-      expect(clearTimeoutSpy).toHaveBeenCalledWith((apiService as any).activeTimer);
-      expect(clearTimeoutSpy).toHaveBeenCalledWith((apiService as any).timer);
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(activeTimer);
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(txTimer);
+      expect((apiService as any).activeTimer).toBeNull();
+      expect((apiService as any).txTimers.size).toBe(0);
       clearTimeoutSpy.mockRestore();
     });
   });
 
-  // ==================== 6. getCurrentAutoLockTime ====================
+  // ==================== 7. getCurrentAutoLockTime ====================
   describe('getCurrentAutoLockTime', () => {
     it('should return current autoLockTime', () => {
       mockStoreState.autoLockTime = 300;
@@ -877,28 +1135,45 @@ describe('APIService', () => {
       expect(apiService.getCurrentAccountAddress()).toBe('B62qCurrentAddr');
     });
 
-    it('should throw when no current account', () => {
+    it('should return empty string when no current account', () => {
       mockStoreState.currentAccount = null;
-      expect(() => apiService.getCurrentAccountAddress()).toThrow();
+      expect(apiService.getCurrentAccountAddress()).toBe('');
+    });
+
+    it('should return empty string when currentAccount is empty object', () => {
+      mockStoreState.currentAccount = {};
+      expect(apiService.getCurrentAccountAddress()).toBe('');
     });
   });
 
   // ==================== 10. setUnlockedStatus ====================
   describe('setUnlockedStatus', () => {
-    it('should update state when locking', () => {
+    it('should update state when locking', async () => {
       mockStoreState.autoLockTime = 900;
       mockStoreState.currentAccount = { address: 'B62qTestAddr' };
 
-      apiService.setUnlockedStatus(false);
+      await apiService.setUnlockedStatus(false);
 
       expect(mockMemStore.lock).toHaveBeenCalled();
       expect(mockSendMsg).toHaveBeenCalled();
     });
 
-    it('should send message when unlocking', () => {
+    it('should send message when unlocking', async () => {
       mockStoreState.isUnlocked = true;
-      apiService.setUnlockedStatus(true);
+      await apiService.setUnlockedStatus(true);
       expect(mockSendMsg).toHaveBeenCalled();
+    });
+
+    it('should clear pendingCreateMnemonic from storage on lock', async () => {
+      await apiService.setUnlockedStatus(false);
+
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith('pendingCreateMnemonic');
+    });
+
+    it('should not clear pendingCreateMnemonic when unlocking', async () => {
+      await apiService.setUnlockedStatus(true);
+
+      expect(mockStorageService.removeValue).not.toHaveBeenCalled();
     });
   });
 
@@ -1037,17 +1312,19 @@ describe('APIService', () => {
     it('should decrypt and return mnemonic for target HD keyring', async () => {
       setupAuthenticated();
       mockStoreState.data = createV3VaultData();
-      const checkPasswordSpy = jest.spyOn(apiService, 'checkPassword').mockResolvedValueOnce(true);
-      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce(TEST_DATA.mnemonic);
+      // First decryptWithCryptoKey call: verification in _checkPasswordAndGetKey
+      // Second call: actual mnemonic decryption
+      mockEncryptUtils.decryptWithCryptoKey
+        .mockResolvedValueOnce('verified')
+        .mockResolvedValueOnce(TEST_DATA.mnemonic);
 
       const result = await apiService.getKeyringMnemonic('kr-hd', TEST_DATA.password);
 
       expect(result).toEqual({ mnemonic: TEST_DATA.mnemonic });
-      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenCalledWith(
+      expect(mockEncryptUtils.decryptWithCryptoKey).toHaveBeenLastCalledWith(
         MOCK_CRYPTO_KEY,
         JSON.stringify({ version: 3, data: 'mne', iv: 'iv' })
       );
-      checkPasswordSpy.mockRestore();
     });
 
     it('should delete a keyring and switch current account to remaining keyring', async () => {
@@ -1317,7 +1594,7 @@ describe('APIService', () => {
 
       const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
 
-      expect(result).toHaveProperty('typeIndex', 2);
+      expect(result).toHaveProperty('typeIndex', 1);
       expect(Number.isNaN((result as any).typeIndex)).toBe(false);
     });
 
@@ -1604,7 +1881,7 @@ describe('APIService', () => {
       const result = await apiService.deleteAccount(TEST_DATA.accounts[0]!.pubKey, TEST_DATA.password);
 
       expect(result).toEqual({ isReset: true });
-      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.cryptoKey).toBeNull();
       expect(mockStoreState.data).toBeNull();
@@ -1631,7 +1908,7 @@ describe('APIService', () => {
       const result = await apiService.deleteAccount('B62qWatchOnly', '');
 
       expect(result).toEqual({ isReset: true });
-      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt']);
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.data).toBeNull();
       expect(mockStoreState.currentAccount).toEqual({});
@@ -1818,13 +2095,13 @@ describe('APIService', () => {
     it('should reject mnemonic when decrypted inner secret is not a string', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       mockStoreState.data = createV1VaultData();
-      const checkPasswordSpy = jest.spyOn(apiService, 'checkPassword').mockResolvedValueOnce(true);
+      setupAuthenticated();
+      // decrypt returns non-string for inner secret
       mockEncryptUtils.decrypt.mockResolvedValueOnce({ value: 'not-a-string' });
 
       const result = await apiService.getMnemonic(TEST_DATA.password);
 
       expect(result).toEqual({ error: 'decryptFailed', type: 'local' });
-      checkPasswordSpy.mockRestore();
       consoleSpy.mockRestore();
     });
   });
@@ -2140,6 +2417,35 @@ describe('APIService', () => {
 
     it('should call fetchQAnetTransactionStatus for QA tx', () => {
       expect(apiService.fetchQAnetTransactionStatus).toBeDefined();
+    });
+
+    it('should ignore polling when paymentId or hash is empty', async () => {
+      const fetchMainSpy = jest.spyOn(apiService as any, 'fetchTransactionStatus');
+      const fetchQASpy = jest.spyOn(apiService as any, 'fetchQAnetTransactionStatus');
+
+      await apiService.checkTxStatus('', 'hash');
+      await apiService.checkTxStatus('payment', '');
+
+      expect(fetchMainSpy).not.toHaveBeenCalled();
+      expect(fetchQASpy).not.toHaveBeenCalled();
+      fetchMainSpy.mockRestore();
+      fetchQASpy.mockRestore();
+    });
+
+    it('should clear existing timer before starting a new polling loop for same paymentId', async () => {
+      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+      const existingTimer = setTimeout(() => {}, 10_000);
+      (apiService as any).txTimers.set('dup-payment-id', existingTimer);
+      const fetchMainSpy = jest
+        .spyOn(apiService as any, 'fetchTransactionStatus')
+        .mockImplementation(() => {});
+
+      await apiService.checkTxStatus('dup-payment-id', 'hash-1');
+
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(existingTimer);
+      expect(fetchMainSpy).toHaveBeenCalledWith('dup-payment-id', 'hash-1', undefined);
+      fetchMainSpy.mockRestore();
+      clearTimeoutSpy.mockRestore();
     });
   });
 

@@ -347,5 +347,6 @@
   "threeMonthsEstimate": "3个月预估",
   "sixMonthsEstimate": "6个月预估",
   "staked": "已质押",
-  "networkFee": "网络费用"
+  "networkFee": "网络费用",
+  "mnemonicLost": "钱包创建失败，请重新开始创建流程。"
 }

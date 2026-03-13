@@ -1,7 +1,8 @@
 import {
-  WALLET_GET_CREATE_MNEMONIC,
-  WALLET_NEW_HD_ACCOUNT,
+  WALLET_CONFIRM_CREATE_MNEMONIC,
+  WALLET_GET_CREATE_MNEMONIC_CHALLENGE,
 } from "@/constant/msgTypes";
+import { useAppDispatch } from "@/hooks/useStore";
 import Button from "@/popup/component/Button";
 import { MneItemV2 } from "@/popup/component/MneItem";
 import ProcessLayout from "@/popup/component/ProcessLayout";
@@ -13,15 +14,14 @@ import {
 } from "@/reducers/entryRouteReducer";
 import { sendMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import type {
-  ProcessViewProps,
-  MneWordItem,
-  MneItemSelectedProps,
-} from "../../types/common";
 import type { AccountInfo } from "../../types/account";
-import { useAppDispatch } from "@/hooks/useStore";
+import type {
+  MneItemSelectedProps,
+  MneWordItem,
+  ProcessViewProps,
+} from "../../types/common";
 
 const StyledMneTip = styled.div`
   font-weight: 500;
@@ -47,142 +47,219 @@ const StyledBottomMneContainer = styled.div`
   gap: 12px 20px;
 `;
 
-export const ConfirmMneView = ({ onClickPre, onClickNext }: ProcessViewProps) => {
-  const [currentMneLength, setCurrentMneLength] = useState(12);
-  const [mnemonicRandomList, setMnemonicRandomList] = useState<MneWordItem[]>([]);
-  const [mneSelectList, setMneSelectList] = useState(
-    Array(currentMneLength).fill("")
-  );
+interface ConfirmMneViewProps extends ProcessViewProps {
+  isActive?: boolean;
+}
 
-  const [sourceMne, setSourceMne] = useState("");
+interface ChallengeWordItem extends MneWordItem {
+  id: string;
+}
+
+interface MnemonicChallengeResponse {
+  words?: string[];
+  error?: string;
+  type?: string;
+}
+
+const normalizeWords = (words: unknown): string[] => {
+  if (!Array.isArray(words)) return [];
+  return words
+    .map((word) => (typeof word === "string" ? word.trim() : ""))
+    .filter(Boolean);
+};
+
+const createChallengeList = (words: string[]): ChallengeWordItem[] => {
+  return words.map((name, index) => ({
+    id: `${index}-${name}`,
+    name,
+    selected: false,
+  }));
+};
+
+export const ConfirmMneView = ({
+  onClickPre,
+  onClickNext,
+  isActive = false,
+}: ConfirmMneViewProps) => {
+  const [currentMneLength, setCurrentMneLength] = useState(12);
+  const [mnemonicRandomList, setMnemonicRandomList] = useState<
+    ChallengeWordItem[]
+  >([]);
+  const [mneSelectList, setMneSelectList] = useState<
+    (ChallengeWordItem | string)[]
+  >(Array(currentMneLength).fill(""));
   const [btnClick, setBtnClick] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
 
   const dispatch = useAppDispatch();
 
+  const onClickPreRef = useRef(onClickPre);
   useEffect(() => {
-    sendMsg(
-      {
-        action: WALLET_GET_CREATE_MNEMONIC,
-        payload: {
-          isNewMne: false,
-        },
-      },
-      (mnemonic: string) => {
-        let mneList = mnemonic.split(" ");
-        for (let i = 0; i < mneList.length; i++) {
-          const index = Math.floor(Math.random() * mneList.length);
-          const temp = mneList[i];
-          mneList[i] = mneList[index] ?? '';
-          mneList[index] = temp ?? '';
-        }
-        let list: MneWordItem[] = mneList.map((v: string) => {
-          return {
-            name: v,
-            selected: false,
-          };
-        });
-        setSourceMne(mnemonic);
-        setMnemonicRandomList(list);
-        setCurrentMneLength(list.length);
-      }
-    );
-  }, []);
-
-  const onClickTopItem = useCallback(
-    (v: MneWordItem | string, i: number) => {
-      let tempMnemonicRandomList = [...mnemonicRandomList];
-      let tempSelectList = [...mneSelectList];
-      const item = typeof v === 'string' ? null : v;
-      const bool = item?.selected;
-      if (bool && item) {
-        const index = tempMnemonicRandomList.findIndex(
-          (mneItem: MneWordItem) => mneItem.name === item.name
-        );
-        if (index >= 0 && tempMnemonicRandomList[index]) {
-          tempMnemonicRandomList[index].selected = !bool;
-        }
-        tempSelectList.splice(i, 1);
-        setMnemonicRandomList(tempMnemonicRandomList);
-        setMneSelectList(setMneListFill(tempSelectList));
-      }
-    },
-    [mnemonicRandomList, mneSelectList]
-  );
+    onClickPreRef.current = onClickPre;
+  }, [onClickPre]);
 
   const setMneListFill = useCallback(
-    (list: (MneWordItem | string)[] = []) => {
-      let targetLength = currentMneLength;
-      let newList = list.filter(Boolean);
-      let length = targetLength - newList.length;
-      let newFillList = Array(length).fill("");
+    (list: (ChallengeWordItem | string)[] = []) => {
+      const targetLength = currentMneLength;
+      const newList = list.filter(Boolean);
+      const length = targetLength - newList.length;
+      const newFillList = Array(length).fill("");
       return [...newList, ...newFillList];
     },
-    [currentMneLength]
+    [currentMneLength],
+  );
+
+  const resetSelectedWords = useCallback(() => {
+    setMneSelectList(setMneListFill([]));
+    setMnemonicRandomList((list) =>
+      list.map((item) => ({
+        ...item,
+        selected: false,
+      })),
+    );
+    setBtnClick(false);
+  }, [setMneListFill]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    sendMsg<MnemonicChallengeResponse>(
+      {
+        action: WALLET_GET_CREATE_MNEMONIC_CHALLENGE,
+      },
+      (response) => {
+        if (response?.error) {
+          const errorMsg =
+            response.type === "local" ? i18n.t(response.error) : response.error;
+          Toast.info(errorMsg);
+          onClickPreRef.current?.();
+          return;
+        }
+        const words = normalizeWords(response?.words);
+        if (words.length === 0) {
+          Toast.info(i18n.t("tryAgain"));
+          onClickPreRef.current?.();
+          return;
+        }
+        const challengeList = createChallengeList(words);
+        setCurrentMneLength(challengeList.length);
+        setMnemonicRandomList(challengeList);
+        setMneSelectList(Array(challengeList.length).fill(""));
+        setBtnClick(false);
+      },
+      () => {
+        Toast.info(i18n.t("tryAgain"));
+      },
+    );
+  }, [isActive]);
+
+  const onClickTopItem = useCallback(
+    (v: ChallengeWordItem | string, i: number) => {
+      const item = typeof v === "string" ? null : v;
+      const isSelected = item?.selected;
+      if (!isSelected || !item) return;
+
+      const tempMnemonicRandomList = mnemonicRandomList.map((word) => ({
+        ...word,
+      }));
+      const tempSelectList = [...mneSelectList];
+
+      const index = tempMnemonicRandomList.findIndex(
+        (word: ChallengeWordItem) => word.id === item.id,
+      );
+
+      if (index >= 0 && tempMnemonicRandomList[index]) {
+        tempMnemonicRandomList[index].selected = false;
+      }
+
+      tempSelectList.splice(i, 1);
+
+      setMnemonicRandomList(tempMnemonicRandomList);
+      setMneSelectList(setMneListFill(tempSelectList));
+    },
+    [mnemonicRandomList, mneSelectList, setMneListFill],
   );
 
   const onClickBottomItem = useCallback(
-    (v: MneWordItem, i: number) => {
-      let tempMnemonicRandomList = [...mnemonicRandomList];
-      let tempSelectList = mneSelectList.filter(Boolean);
-      const bool = v.selected;
-      if (!bool && tempMnemonicRandomList[i]) {
-        tempMnemonicRandomList[i].selected = !bool;
-        tempSelectList.push(v);
-        setMnemonicRandomList(tempMnemonicRandomList);
-        setMneSelectList(setMneListFill(tempSelectList));
-      }
+    (v: ChallengeWordItem, i: number) => {
+      const tempMnemonicRandomList = mnemonicRandomList.map((word) => ({
+        ...word,
+      }));
+      const tempSelectList = mneSelectList.filter(
+        Boolean,
+      ) as ChallengeWordItem[];
+
+      if (v.selected || !tempMnemonicRandomList[i]) return;
+
+      tempMnemonicRandomList[i].selected = true;
+      tempSelectList.push(tempMnemonicRandomList[i]);
+
+      setMnemonicRandomList(tempMnemonicRandomList);
+      setMneSelectList(setMneListFill(tempSelectList));
     },
-    [mnemonicRandomList, mneSelectList]
+    [mnemonicRandomList, mneSelectList, setMneListFill],
   );
 
   useEffect(() => {
-    let tempSelectList = mneSelectList.filter(Boolean);
-    if (tempSelectList.length === currentMneLength) {
+    const tempSelectList = mneSelectList.filter(Boolean);
+    if (currentMneLength > 0 && tempSelectList.length === currentMneLength) {
       setBtnClick(true);
+    } else {
+      setBtnClick(false);
     }
-  }, [mneSelectList]);
-
-  const compareList = useCallback(() => {
-    let mneList = sourceMne.split(" ");
-    return mneSelectList.map((v) => typeof v === 'string' ? v : v.name).join("") === mneList.join("");
-  }, [sourceMne, mneSelectList]);
+  }, [mneSelectList, currentMneLength]);
 
   const goToNext = useCallback(() => {
-    let bool = compareList();
-    if (bool) {
-      setLoadingStatus(true);
-      sendMsg(
-        {
-          action: WALLET_NEW_HD_ACCOUNT,
-          payload: {
-            mne: sourceMne,
-          },
-        },
-        async (currentAccount: AccountInfo & { error?: string; type?: string }) => {
-          setLoadingStatus(false);
-          if (currentAccount.error) {
-            const errorMsg = currentAccount.type === "local" 
-              ? i18n.t(currentAccount.error) 
-              : currentAccount.error;
-            Toast.info(errorMsg);
-            return;
-          }
-          dispatch(updateCurrentAccount(currentAccount));
-          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-          onClickNext?.();
-        }
-      );
-    } else {
+    const selectedWords = mneSelectList
+      .map((item) => (typeof item === "string" ? "" : item.name))
+      .filter(Boolean);
+
+    if (currentMneLength <= 0 || selectedWords.length !== currentMneLength) {
       Toast.info(i18n.t("seed_error"));
-      setMneSelectList(setMneListFill([]));
-      let newList = mnemonicRandomList.map((v: MneWordItem) => ({
-        ...v,
-        selected: false,
-      }));
-      setMnemonicRandomList(newList);
+      return;
     }
-  }, [mnemonicRandomList, i18n, onClickNext]);
+
+    setLoadingStatus(true);
+    sendMsg(
+      {
+        action: WALLET_CONFIRM_CREATE_MNEMONIC,
+        payload: {
+          words: selectedWords,
+        },
+      },
+      (currentAccount: AccountInfo & { error?: string; type?: string }) => {
+        setLoadingStatus(false);
+
+        if (currentAccount?.error) {
+          const errorMsg =
+            currentAccount.type === "local"
+              ? i18n.t(currentAccount.error)
+              : currentAccount.error;
+          Toast.info(errorMsg || i18n.t("tryAgain"));
+
+          if (currentAccount.error === "mnemonicLost") {
+            onClickPre?.();
+          } else if (currentAccount.error === "seed_error") {
+            resetSelectedWords();
+          }
+          return;
+        }
+
+        dispatch(updateCurrentAccount(currentAccount));
+        dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
+        onClickNext?.();
+      },
+      () => {
+        setLoadingStatus(false);
+        Toast.info(i18n.t("tryAgain"));
+      },
+    );
+  }, [
+    mneSelectList,
+    currentMneLength,
+    dispatch,
+    onClickNext,
+    resetSelectedWords,
+  ]);
 
   return (
     <ProcessLayout
@@ -200,7 +277,7 @@ export const ConfirmMneView = ({ onClickPre, onClickNext }: ProcessViewProps) =>
           return (
             <MneItemV2
               key={index}
-              mne={mne?.name || ""}
+              mne={typeof mne === "string" ? "" : mne.name}
               colorStatus={!mne}
               index={index}
               onClick={() => onClickTopItem(mne, index)}
@@ -210,13 +287,13 @@ export const ConfirmMneView = ({ onClickPre, onClickNext }: ProcessViewProps) =>
         })}
       </StyledTopMneContainer>
       <StyledBottomMneContainer>
-        {mnemonicRandomList.map((mne: MneWordItem, index: number) => {
+        {mnemonicRandomList.map((mne: ChallengeWordItem, index: number) => {
           if (mne.selected) {
             return null;
           }
           return (
             <MneItemSelectedV2
-              key={index}
+              key={mne.id}
               mne={mne.name}
               index={index}
               onClick={() => onClickBottomItem(mne, index)}
@@ -245,7 +322,10 @@ const StyledSelectedItem = styled.div`
   text-align: center;
   color: #000000;
 `;
-const MneItemSelectedV2 = ({ mne, onClick = () => {} }: MneItemSelectedProps) => {
+const MneItemSelectedV2 = ({
+  mne,
+  onClick = () => {},
+}: MneItemSelectedProps) => {
   return (
     <StyledSelectedContainer onClick={onClick}>
       <StyledSelectedItem>{mne}</StyledSelectedItem>

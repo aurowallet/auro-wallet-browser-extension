@@ -12,7 +12,7 @@ export const VAULT_DEBUG_I18N = {
     // Actions
     password: "密码",
     decrypt: "解密",
-    upgrade: "升级到 V2",
+    upgrade: "升级到 V3 (Modern)",
     rollback: "回滚到备份",
     simulate: "模拟升级",
     refresh: "刷新",
@@ -45,7 +45,7 @@ export const VAULT_DEBUG_I18N = {
     passwordError: "密码错误或数据损坏",
     noKeyringData: "没有找到存储的 keyringData 数据",
     decryptSuccess: "解密成功",
-    alreadyV2: "已经是 V2 版本",
+    alreadyV2: "已经是最新版本",
     cannotUpgrade: "当前数据格式无法升级",
     upgradeSuccess: "升级成功！",
     upgradeFailed: "升级失败",
@@ -58,7 +58,7 @@ export const VAULT_DEBUG_I18N = {
     confirmRollback: "确定要回滚到备份吗？这将覆盖当前数据。",
     inputRequired: "请输入旧版 keyringData 加密字符串",
     inputDecryptFailed: "解密失败，请检查密码和加密字符串是否正确",
-    inputAlreadyV2: "输入数据已是 V2 格式，无需升级",
+    inputAlreadyV2: "输入数据已是 V3 格式，无需升级",
     inputUnknownFormat: "输入数据格式无法识别",
     simulateFailureTriggered: "模拟升级失败：用户触发的测试失败场景",
     validationFailed: "迁移后验证失败",
@@ -96,13 +96,13 @@ export const VAULT_DEBUG_I18N = {
     
     // Comparison
     before: "升级前 (V1)",
-    after: "升级后 (V2)",
+    after: "升级后 (V3)",
     
-    // V2 Structure
-    v2VaultStructure: "V2 Vault 结构",
+    // V3 Structure
+    v2VaultStructure: "V3 Vault 结构",
     v1VaultStructure: "V1 Vault 结构 (Legacy)",
-    copyV2Json: "复制 V2 明文 JSON",
-    copyV2Encrypted: "复制 V2 密文",
+    copyV2Json: "复制 V3 明文 JSON",
+    copyV2Encrypted: "复制 V3 密文",
     copyV1Json: "复制 V1 明文 JSON",
     version: "版本",
     currentKeyringId: "当前 Keyring ID",
@@ -128,7 +128,7 @@ export const VAULT_DEBUG_I18N = {
     
     // UI Labels (JSX)
     currentStatus: "当前状态",
-    v2NewStructure: "V2 新结构",
+    v2NewStructure: "V3 新结构 (Modern)",
     v1OldStructure: "V1 旧结构",
     pending: "待检测",
     noDataShort: "无数据",
@@ -151,9 +151,9 @@ export const VAULT_DEBUG_I18N = {
     plaintextWarning: "警告：明文仅在内存中显示，请勿截图或分享！",
     rawData: "原始数据",
     versionUpgrade: "版本升级",
-    alreadyLatestVersion: "已是最新版本（V2），无需升级",
-    v1DetectedInfo: "检测到 V1 旧结构，可以升级到 V2 多 keyring 结构。升级后 HD 账户私钥将不再存储，而是按需从助记词派生。",
-    executeUpgradeToV2: "执行升级到 V2",
+    alreadyLatestVersion: "已是最新版本（V3），无需升级",
+    v1DetectedInfo: "检测到 V1 旧结构，可以升级到 V3 多 keyring 结构。升级后 HD 账户私钥将不再存储，而是按需从助记词派生。",
+    executeUpgradeToV2: "执行升级到 V3",
     autoRolledBack: "已自动回滚，钱包数据保持不变，可继续使用",
     unrecognizedFormat: "无法识别当前数据格式",
     simulationTestTitle: "模拟升级测试",
@@ -199,7 +199,7 @@ export const VAULT_DEBUG_I18N = {
     // Actions
     password: "Password",
     decrypt: "Decrypt",
-    upgrade: "Upgrade to V2",
+    upgrade: "Upgrade to V3 (Modern)",
     rollback: "Rollback to Backup",
     simulate: "Simulate Upgrade",
     refresh: "Refresh",
@@ -232,7 +232,7 @@ export const VAULT_DEBUG_I18N = {
     passwordError: "Wrong password or corrupted data",
     noKeyringData: "No keyringData found in storage",
     decryptSuccess: "Decrypt success",
-    alreadyV2: "Already V2 version",
+    alreadyV2: "Already latest version",
     cannotUpgrade: "Cannot upgrade current data format",
     upgradeSuccess: "Upgrade success!",
     upgradeFailed: "Upgrade failed",
@@ -245,7 +245,7 @@ export const VAULT_DEBUG_I18N = {
     confirmRollback: "Are you sure you want to rollback to backup? This will overwrite current data.",
     inputRequired: "Please enter old keyringData encrypted string",
     inputDecryptFailed: "Decrypt failed, please check password and encrypted string",
-    inputAlreadyV2: "Input data is already V2 format, no upgrade needed",
+    inputAlreadyV2: "Input data is already V3 format, no upgrade needed",
     inputUnknownFormat: "Input data format unrecognized",
     simulateFailureTriggered: "Simulated upgrade failure: user triggered test scenario",
     validationFailed: "Validation failed after migration",
@@ -283,13 +283,13 @@ export const VAULT_DEBUG_I18N = {
     
     // Comparison
     before: "Before (V1)",
-    after: "After (V2)",
+    after: "After (V3)",
     
-    // V2 Structure
-    v2VaultStructure: "V2 Vault Structure",
+    // V3 Structure
+    v2VaultStructure: "V3 Vault Structure",
     v1VaultStructure: "V1 Vault Structure (Legacy)",
-    copyV2Json: "Copy V2 JSON",
-    copyV2Encrypted: "Copy V2 Encrypted",
+    copyV2Json: "Copy V3 JSON",
+    copyV2Encrypted: "Copy V3 Encrypted",
     copyV1Json: "Copy V1 JSON",
     version: "Version",
     currentKeyringId: "Current Keyring ID",
@@ -315,7 +315,7 @@ export const VAULT_DEBUG_I18N = {
     
     // UI Labels (JSX)
     currentStatus: "Current Status",
-    v2NewStructure: "V2 New Structure",
+    v2NewStructure: "V3 New Structure (Modern)",
     v1OldStructure: "V1 Old Structure",
     pending: "Pending",
     noDataShort: "No Data",
@@ -338,9 +338,9 @@ export const VAULT_DEBUG_I18N = {
     plaintextWarning: "Warning: Plaintext shown in memory only, do not screenshot or share!",
     rawData: "Raw Data",
     versionUpgrade: "Version Upgrade",
-    alreadyLatestVersion: "Already latest version (V2), no upgrade needed",
-    v1DetectedInfo: "V1 old structure detected, can upgrade to V2 multi-keyring structure. After upgrade, HD account private keys will not be stored, but derived on-demand from mnemonic.",
-    executeUpgradeToV2: "Execute Upgrade to V2",
+    alreadyLatestVersion: "Already latest version (V3), no upgrade needed",
+    v1DetectedInfo: "V1 old structure detected, can upgrade to V3 modern multi-keyring structure. After upgrade, HD account private keys will not be stored, but derived on-demand from mnemonic.",
+    executeUpgradeToV2: "Execute Upgrade to V3",
     autoRolledBack: "Auto rolled back, wallet data unchanged, can continue using",
     unrecognizedFormat: "Cannot recognize current data format",
     simulationTestTitle: "Simulation Upgrade Test",

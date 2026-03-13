@@ -347,5 +347,6 @@
   "threeMonthsEstimate": "3 ay tahmini",
   "sixMonthsEstimate": "6 ay tahmini",
   "staked": "Stake Edildi",
-  "networkFee": "Ağ Ücreti"
+  "networkFee": "Ağ Ücreti",
+  "mnemonicLost": "Cüzdan oluşturulamadı. Lütfen işlemi yeniden başlatın."
 }

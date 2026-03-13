@@ -3,6 +3,7 @@ import Button from "@/popup/component/Button";
 import Input from "@/popup/component/Input";
 import ProcessLayout from "@/popup/component/ProcessLayout";
 import { ReminderTip } from "@/popup/component/ReminderTip";
+import Toast from "@/popup/component/Toast";
 import { sendMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
 import { useCallback, useState } from "react";
@@ -28,33 +29,35 @@ const StyledPwdCheckSpan = styled.span<StyledPwdCheckSpanProps>`
   color: var(--secondaryRed);
   display: ${(props) => (props.$showStatus ? "none" : "initial")};
 `;
-export const CreatePwdView = ({ onClickNextTab, onClickPre }: ProcessViewProps) => {
+export const CreatePwdView = ({
+  onClickNextTab,
+  onClickPre,
+}: ProcessViewProps) => {
   const [inputPwd, setInputPwd] = useState("");
 
   const [rulesMet, setRulesMet] = useState(
-    PasswordValidationList.map((rule) => ({ ...rule, bool: false }))
+    PasswordValidationList.map((rule) => ({ ...rule, bool: false })),
   );
 
   const [confirmPwd, setConfirmPwd] = useState("");
   const [passwordsMatch, setPasswordsMatch] = useState(true);
-
 
   const onPwdInput = useCallback(
     (e: InputChangeEvent) => {
       const newPassword = e.target.value;
       setInputPwd(newPassword);
 
-      setRulesMet(
-        rulesMet.map((rule) => ({
+      setRulesMet((prev) =>
+        prev.map((rule) => ({
           ...rule,
           bool: rule.expression.test(newPassword),
-        }))
+        })),
       );
       if (confirmPwd.length > 0) {
-        setPasswordsMatch(confirmPwd === inputPwd);
+        setPasswordsMatch(confirmPwd === newPassword);
       }
     },
-    [rulesMet, confirmPwd]
+    [confirmPwd],
   );
 
   const onPwdConfirmInput = useCallback(
@@ -64,20 +67,30 @@ export const CreatePwdView = ({ onClickNextTab, onClickPre }: ProcessViewProps) 
 
       setPasswordsMatch(newConfirmedPassword === inputPwd);
     },
-    [inputPwd]
+    [inputPwd],
   );
 
-
   const goToCreate = useCallback(() => {
-    sendMsg({
-      action: WALLET_CREATE_PWD,
-      payload: {
-        pwd: confirmPwd,
+    if (!isButtonEnabled()) return;
+    sendMsg(
+      {
+        action: WALLET_CREATE_PWD,
+        payload: {
+          pwd: confirmPwd,
+        },
       },
-    });
-
-    onClickNextTab?.();
-  }, [confirmPwd, onClickNextTab]);
+      (res: { success?: boolean }) => {
+        if (res?.success) {
+          onClickNextTab?.();
+          return;
+        }
+        Toast.info(i18n.t("tryAgain"));
+      },
+      () => {
+        Toast.info(i18n.t("tryAgain"));
+      },
+    );
+  }, [confirmPwd, onClickNextTab, inputPwd, rulesMet, passwordsMatch]);
 
   const isButtonEnabled = () => {
     const allRulesMet = rulesMet.every((rule) => rule.bool);

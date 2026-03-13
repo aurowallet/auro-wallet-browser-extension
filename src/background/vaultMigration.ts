@@ -1,10 +1,3 @@
-/**
- * Vault Migration Service (Optimized)
- * - HD accounts: no private key stored, derived on-demand
- * - Imported accounts: store encrypted private key
- * - Ledger/Watch: no private key
- */
-
 import { ACCOUNT_TYPE } from "../constant/commonType";
 import {
   KEYRING_TYPE,
@@ -77,7 +70,7 @@ const migrationLog = {
 // ============ Migration Functions ============
 
 /**
- * Migrate legacy v1 data to optimized v2 vault structure
+ * Migrate legacy v1 data to modern (v3) multi-keyring vault structure
  *
  * Key changes for multi-wallet support:
  * - Each HD wallet becomes its own keyring (with unique mnemonic)
@@ -87,10 +80,10 @@ const migrationLog = {
  * - Keyrings sorted by creation time
  *
  * @param {Array} legacyData - Legacy keyring data array
- * @returns {Object} V2 vault structure
+ * @returns {Object} Modern vault structure
  */
-export function migrateToV2(legacyData: LegacyWallet[]): Vault {
-  migrationLog.info("Starting migration from legacy to V2");
+export function migrateToModern(legacyData: LegacyWallet[]): Vault {
+  migrationLog.info("Starting migration from legacy to modern");
 
   if (!Array.isArray(legacyData) || legacyData.length === 0) {
     migrationLog.warn("Empty or invalid legacy data, returning empty vault");
@@ -300,13 +293,13 @@ function migrateLegacyWallet(
 }
 
 /**
- * Convert v2 vault back to legacy format for backward compatibility
+ * Convert modern vault back to legacy format for backward compatibility
  * Used by memStore for UI compatibility
  *
- * @param {Object} vault - V2 vault structure
+ * @param {Object} vault - Modern vault structure
  * @returns {Array} Legacy format data
  */
-export function convertV2ToLegacy(vault: Vault): LegacyWallet[] {
+export function convertModernToLegacy(vault: Vault): LegacyWallet[] {
   if (!vault || !vault.keyrings || vault.keyrings.length === 0) {
     return [];
   }
@@ -376,7 +369,7 @@ export function convertV2ToLegacy(vault: Vault): LegacyWallet[] {
 /**
  * Map keyring type to legacy account type
  */
-function keyringTypeToAccountType(keyringType: string): string {
+export function keyringTypeToAccountType(keyringType: string): string {
   switch (keyringType) {
     case KEYRING_TYPE.HD:
       return ACCOUNT_TYPE.WALLET_INSIDE;
@@ -392,9 +385,9 @@ function keyringTypeToAccountType(keyringType: string): string {
 }
 
 /**
- * Detect vault format and return normalized v2 structure
- * @param {any} data - Decrypted vault data (could be v1 or v2)
- * @returns {{ vault: Object, migrated: boolean }} V2 vault and migration flag
+ * Detect vault format and return normalized modern structure
+ * @param {any} data - Decrypted vault data (could be v1 or modern v3)
+ * @returns {{ vault: Object, migrated: boolean }} Modern vault and migration flag
  */
 export function normalizeVault(
   data: unknown
@@ -404,7 +397,7 @@ export function normalizeVault(
   }
 
   if (isLegacyVault(data)) {
-    return { vault: migrateToV2(data as LegacyWallet[]), migrated: true };
+    return { vault: migrateToModern(data as LegacyWallet[]), migrated: true };
   }
 
   console.warn("[vaultMigration] Unknown vault format, creating empty vault");
@@ -413,7 +406,7 @@ export function normalizeVault(
 
 /**
  * Find account by address across all keyrings
- * @param {Object} vault - V2 vault structure
+ * @param {Object} vault - Modern vault structure
  * @param {string} address - Account address to find
  * @returns {{ keyring: Object, account: Object } | null}
  */
@@ -432,7 +425,7 @@ export function findAccountByAddress(
 
 /**
  * Find keyring by ID
- * @param {Object} vault - V2 vault structure
+ * @param {Object} vault - Modern vault structure
  * @param {string} keyringId - Keyring ID to find
  * @returns {Object | null}
  */
@@ -445,7 +438,7 @@ export function findKeyringById(
 
 /**
  * Get current keyring from vault
- * @param {Object} vault - V2 vault structure
+ * @param {Object} vault - Modern vault structure
  * @returns {Object | null}
  */
 export function getCurrentKeyring(vault: Vault): Keyring | null {
@@ -457,7 +450,7 @@ export function getCurrentKeyring(vault: Vault): Keyring | null {
 
 /**
  * Get current account from vault
- * @param {Object} vault - V2 vault structure
+ * @param {Object} vault - Modern vault structure
  * @returns {Object | null}
  */
 export function getCurrentAccount(
@@ -479,7 +472,7 @@ export function getCurrentAccount(
 
 /**
  * Validate vault structure integrity
- * @param {Object} vault - V2 vault structure
+ * @param {Object} vault - Modern vault structure
  * @returns {{ valid: boolean, errors: string[] }}
  */
 export function validateVault(vault: Vault): ValidationResult {

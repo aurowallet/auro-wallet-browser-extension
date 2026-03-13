@@ -33,43 +33,15 @@ interface SearchCredentialParams {
  * save local in storage
  */
 export function save(value: Record<string, unknown>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    extensionStorage
-      .set(value)
-      .then(() => {
-        const error = browser.runtime.lastError;
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      })
-      .catch((error) => {
-        reject(error);
-      });
-  });
+  return extensionStorage.set(value);
 }
 
 /**
  * get local storage
  * @param {*} value
  */
-export function get(value: string | string[]): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    extensionStorage
-      .get(value)
-      .then((items) => {
-        const error = browser.runtime.lastError;
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve(items);
-      })
-      .catch((error) => {
-        reject(error);
-      });
-  });
+export function get(value: string | string[]): Promise<Record<string, any>> {
+  return extensionStorage.get(value);
 }
 
 /**
@@ -77,21 +49,7 @@ export function get(value: string | string[]): Promise<Record<string, unknown>> 
  * @param {*} value
  */
 export function removeValue(value: string | string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    extensionStorage
-      .remove(value)
-      .then(() => {
-        const error = browser.runtime.lastError;
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      })
-      .catch((error) => {
-        reject(error);
-      });
-  });
+  return extensionStorage.remove(value);
 }
 
 /**
@@ -207,7 +165,7 @@ function matchesQuery(
 ): boolean {
   for (const key in query) {
     if (Object.prototype.hasOwnProperty.call(query, key)) {
-      if (typeof query[key] === "object" && !Array.isArray(query[key])) {
+      if (typeof query[key] === "object" && query[key] !== null && !Array.isArray(query[key])) {
         if (
           !Object.prototype.hasOwnProperty.call(obj, key) ||
           !matchesQuery(

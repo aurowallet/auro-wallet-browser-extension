@@ -347,5 +347,6 @@
   "threeMonthsEstimate": "3 months est.",
   "sixMonthsEstimate": "6 months est.",
   "staked": "Staked",
-  "networkFee": "Network Fee"
+  "networkFee": "Network Fee",
+  "mnemonicLost": "Wallet creation failed. Please restart the process."
 }

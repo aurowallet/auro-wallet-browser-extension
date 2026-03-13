@@ -5,7 +5,6 @@ import type { TokenItem } from "@/utils/reducer";
 // ============ Action Types ============
 
 const SET_ACCOUNT_INFO = "SET_ACCOUNT_INFO";
-const SET_WELCOME_NEXT_ROUTE = "SET_WELCOME_NEXT_ROUTE";
 const SET_WELCOME_NEXT_TYPE = "SET_WELCOME_NEXT_TYPE";
 const UPDATE_ACCOUNT_TYPE_FROM = "UPDATE_ACCOUNT_TYPE_FROM";
 const UPDATE_EXTENSION_BASE_INFO = "UPDATE_EXTENSION_BASE_INFO";
@@ -49,7 +48,6 @@ export interface ExtensionBaseInfo {
 export interface CacheState {
   fromType: string;
   accountInfo: Record<string, unknown>;
-  welcomeNextRoute: string;
   welcomeNextType: string;
   changelog: string;
   changelog_app: string;
@@ -76,11 +74,6 @@ export interface CacheState {
 interface SetAccountInfoAction {
   type: typeof SET_ACCOUNT_INFO;
   info: Record<string, unknown>;
-}
-
-interface SetWelcomeNextRouteAction {
-  type: typeof SET_WELCOME_NEXT_ROUTE;
-  nextRoute: string;
 }
 
 interface SetWelcomeNextTypeAction {
@@ -145,7 +138,6 @@ interface SetKeyringInfoAction {
 
 type CacheAction =
   | SetAccountInfoAction
-  | SetWelcomeNextRouteAction
   | SetWelcomeNextTypeAction
   | UpdateAccountTypeFromAction
   | UpdateExtensionBaseInfoAction
@@ -185,10 +177,6 @@ export function setAccountInfo(info: Record<string, unknown>) {
   return { type: SET_ACCOUNT_INFO, info };
 }
 
-export function setWelcomeNextRoute(nextRoute: string) {
-  return { type: SET_WELCOME_NEXT_ROUTE, nextRoute };
-}
-
 export function setWelcomeNextType(nextType: string) {
   return { type: SET_WELCOME_NEXT_TYPE, nextType };
 }
@@ -222,7 +210,6 @@ export function updateNextTokenDetail(token: Partial<TokenItem>) {
 const initState: CacheState = {
   fromType: "",
   accountInfo: {},
-  welcomeNextRoute: "",
   welcomeNextType: "",
   changelog: "",
   changelog_app: "",
@@ -250,8 +237,6 @@ const cacheReducer = (state: CacheState = initState, action: CacheAction): Cache
   switch (action.type) {
     case SET_ACCOUNT_INFO:
       return { ...state, accountInfo: action.info };
-    case SET_WELCOME_NEXT_ROUTE:
-      return { ...state, welcomeNextRoute: action.nextRoute };
     case SET_WELCOME_NEXT_TYPE:
       return { ...state, welcomeNextType: action.nextType };
     case UPDATE_ACCOUNT_TYPE_FROM:
