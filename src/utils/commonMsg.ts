@@ -20,7 +20,7 @@ export type ErrorCallback = () => void;
 export function sendMsg<T = unknown>(
   message: MessagePayload,
   sendResponse?: SendResponseCallback<T>,
-  errorCallback?: ErrorCallback
+  errorCallback?: ErrorCallback,
 ): void {
   const { action } = message;
   browser.runtime
@@ -29,10 +29,6 @@ export function sendMsg<T = unknown>(
     })
     .then((params) => {
       sendResponse?.(params as T);
-      if (browser.runtime.lastError) {
-        console.error("send message error", action, browser.runtime.lastError);
-        errorCallback?.();
-      }
     })
     .catch((err) => {
       console.warn("send message error", action, err);
@@ -51,16 +47,11 @@ export function sendMsgV2<T = unknown>(message: MessagePayload): Promise<T> {
         ...message,
       })
       .then((response) => {
-        if (browser.runtime.lastError) {
-          console.error(
-            "send message error",
-            action,
-            browser.runtime.lastError
-          );
-          reject(browser.runtime.lastError);
-        } else {
-          resolve(response as T);
-        }
+        resolve(response as T);
+      })
+      .catch((err) => {
+        console.warn("send message error", action, err);
+        reject(err);
       });
   });
 }
@@ -93,7 +84,7 @@ export function sendNetworkChangeMsg(netConfig: NetConfig): void {
           netConfig: netConfig,
         },
       },
-      () => {}
+      () => {},
     );
   }
 }
