@@ -133,6 +133,40 @@ export function urlValid(url: string): boolean {
   }
 }
 
+export function isPrivateIP(hostname: string): boolean {
+  if (hostname === "localhost") return true;
+  if (hostname.endsWith(".local")) return true;
+
+  const bare = hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname;
+
+  const parts = bare.split(".").map(Number);
+  if (parts.length === 4 && parts.every((p) => !isNaN(p) && p >= 0 && p <= 255)) {
+    if (parts[0] === 10) return true;
+    if (parts[0] === 172 && parts[1]! >= 16 && parts[1]! <= 31) return true;
+    if (parts[0] === 192 && parts[1] === 168) return true;
+    if (parts[0] === 127) return true;
+    if (parts[0] === 169 && parts[1] === 254) return true;
+    if (parts[0] === 0) return true;
+  }
+
+  // IPv6 check
+  const lower = bare.toLowerCase();
+  if (lower === "::1" || lower === "::") return true;
+  if (lower.startsWith("fc") || lower.startsWith("fd")) return true;
+  if (lower.startsWith("fe80")) return true;
+  if (lower.startsWith("::ffff:")) {
+    const mapped = lower.slice(7);
+    const mappedParts = mapped.split(".").map(Number);
+    if (mappedParts.length === 4 && mappedParts.every((p) => !isNaN(p) && p >= 0 && p <= 255)) {
+      return isPrivateIP(mapped);
+    }
+  }
+
+  return false;
+}
+
 export function urlValidStrict(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
@@ -143,6 +177,9 @@ export function urlValidStrict(url: string): boolean {
       return false;
     }
     if (parsedUrl.username || parsedUrl.password) {
+      return false;
+    }
+    if (isPrivateIP(parsedUrl.hostname)) {
       return false;
     }
     return true;

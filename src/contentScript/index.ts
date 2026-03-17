@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import browser from "webextension-polyfill";
 import { sendMsg } from "../utils/commonMsg";
 import { MessageChannel, getSiteIcon } from "@aurowallet/mina-provider";
 import { WALLET_CONNECT_TYPE } from "../constant/commonType";
@@ -12,6 +12,46 @@ interface ContentScriptInterface {
 }
 
 const CONTENT_SCRIPT = WALLET_CONNECT_TYPE.CONTENT_SCRIPT;
+
+type NormalizedPageMessage = {
+  source?: string;
+  action: string;
+  payload: Record<string, unknown>;
+};
+
+function normalizePageMessage(event: MessageEvent): NormalizedPageMessage | null {
+  const { data: eventData, isTrusted } = event;
+  if (!isTrusted) return null;
+  if (!eventData || typeof eventData !== "object") return null;
+
+  const envelope = eventData as Record<string, unknown>;
+  if (envelope.isAuro !== true) return null;
+
+  const source =
+    typeof envelope.source === "string" ? envelope.source : undefined;
+  const rawMessage = envelope.message;
+
+  if (!rawMessage || typeof rawMessage !== "object") return null;
+
+  const outerMessage = rawMessage as Record<string, unknown>;
+  const messageData = outerMessage.data;
+  if (!messageData || typeof messageData !== "object") return null;
+
+  const data = messageData as Record<string, unknown>;
+  if (typeof data.action !== "string" || !data.action) return null;
+
+  const payload =
+    data.payload && typeof data.payload === "object" && !Array.isArray(data.payload)
+      ? (data.payload as Record<string, unknown>)
+      : {};
+
+  return {
+    source,
+    action: data.action,
+    payload,
+  };
+}
+
 const contentScript: ContentScriptInterface = {
   channel: null,
   init() {
@@ -25,15 +65,12 @@ const contentScript: ContentScriptInterface = {
   },
   registerListeners() {
     window.addEventListener("message", (event) => {
-      const { data: eventData, isTrusted } = event;
-      const { isAuro = false, message, source } = eventData;
-      if (!isTrusted) return;
-      if (!isAuro || (!message && !source)) return;
-      if (source === CONTENT_SCRIPT) return;
-      const { data } = message;
+      const normalized = normalizePageMessage(event);
+      if (!normalized) return;
+      if (normalized.source === CONTENT_SCRIPT) return;
 
       const nextPayload = {
-        ...data.payload,
+        ...normalized.payload,
         site: {
           origin: event.origin,
           webIcon: getSiteIcon(event.source as Window & typeof globalThis),
@@ -41,7 +78,7 @@ const contentScript: ContentScriptInterface = {
       };
       sendMsg(
         {
-          action: data.action,
+          action: normalized.action,
           messageSource: "messageFromDapp",
           payload: nextPayload,
         },
@@ -68,7 +105,7 @@ const contentScript: ContentScriptInterface = {
   inject() {
     const hostPage = document.head || document.documentElement;
     const script = document.createElement("script");
-    
+
     script.src = browser.runtime.getURL("webhook.js");
     script.onload = () => {
       script.parentNode?.removeChild(script);

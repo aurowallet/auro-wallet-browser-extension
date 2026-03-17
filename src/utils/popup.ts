@@ -132,13 +132,9 @@ export function closePopupWindow(channel: string): void {
 
 export function startExtensionPopup(withListener: boolean = false): Promise<number | undefined> {
   return new Promise(async (resolve) => {
-    if (lastWindowIds[POPUP_CHANNEL_KEYS.popup]) {
-      await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
-      resolve(lastWindowIds[POPUP_CHANNEL_KEYS.popup] ?? undefined);
-      return;
-    }
-    const targetUrl = "popup.html";
-    browser.windows.getCurrent().then(async (currentWindow) => {
+    const openFreshPopup = async (): Promise<void> => {
+      const targetUrl = "popup.html";
+      const currentWindow = await browser.windows.getCurrent();
       const top = currentWindow.top;
       const left =
         (currentWindow.left ?? 0) + (currentWindow.width ?? 0) - PopupSize.width;
@@ -148,26 +144,91 @@ export function startExtensionPopup(withListener: boolean = false): Promise<numb
       });
       if (!withListener) {
         resolve(id);
-      } else {
-        const onMessage: RuntimeMessageListener = (
-          message,
-          _sender,
-          sendResponse
-        ) => {
-          const { action } = message as { action?: string };
-          switch (action) {
-            case POPUP_ACTIONS.POPUP_NOTIFICATION:
-              sendResponse("page live");
-              browser.runtime.onMessage.removeListener(onMessage as Parameters<typeof browser.runtime.onMessage.removeListener>[0]);
-              resolve(id);
-              break;
-            default:
-              break;
-          }
-        };
-        browser.runtime.onMessage.addListener(onMessage as Parameters<typeof browser.runtime.onMessage.addListener>[0]);
+        return;
       }
-    });
+      let settled = false;
+      const cleanup = () => {
+        if (settled) return;
+        settled = true;
+        browser.runtime.onMessage.removeListener(onMessage as Parameters<typeof browser.runtime.onMessage.removeListener>[0]);
+        browser.windows.onRemoved.removeListener(onWindowRemoved);
+        clearTimeout(timeoutId);
+      };
+      const onMessage: RuntimeMessageListener = (
+        message,
+        _sender,
+        sendResponse
+      ) => {
+        const { action } = message as { action?: string };
+        switch (action) {
+          case POPUP_ACTIONS.POPUP_NOTIFICATION:
+            sendResponse("page live");
+            cleanup();
+            resolve(id);
+            break;
+          default:
+            break;
+        }
+      };
+      const onWindowRemoved = (removedId: number) => {
+        if (removedId === id) {
+          cleanup();
+          resolve(undefined);
+        }
+      };
+      const timeoutId = setTimeout(() => {
+        cleanup();
+        resolve(id);
+      }, 15000);
+      browser.runtime.onMessage.addListener(onMessage as Parameters<typeof browser.runtime.onMessage.addListener>[0]);
+      browser.windows.onRemoved.addListener(onWindowRemoved);
+    };
+
+    const existingPopupId = lastWindowIds[POPUP_CHANNEL_KEYS.popup];
+    if (existingPopupId) {
+      const isAlive = await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
+      if (isAlive) {
+        if (!withListener) {
+          resolve(existingPopupId);
+          return;
+        }
+        try {
+          const tabs = await browser.tabs.query({ windowId: existingPopupId });
+          const popupTab = tabs[0];
+          if (popupTab?.id && popupTab.status === "complete") {
+            resolve(existingPopupId);
+            return;
+          }
+          if (popupTab?.id && popupTab.status === "loading") {
+            const ready = await new Promise<boolean>((r) => {
+              const timeout = setTimeout(() => {
+                browser.tabs.onUpdated.removeListener(onUpdated);
+                r(false);
+              }, 3000);
+              const onUpdated = (tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
+                if (tabId === popupTab.id && changeInfo.status === "complete") {
+                  clearTimeout(timeout);
+                  browser.tabs.onUpdated.removeListener(onUpdated);
+                  r(true);
+                }
+              };
+              browser.tabs.onUpdated.addListener(onUpdated);
+            });
+            if (ready) {
+              resolve(existingPopupId);
+              return;
+            }
+          }
+          try { await browser.windows.remove(existingPopupId); } catch {}
+        } catch {
+        }
+        lastWindowIds[POPUP_CHANNEL_KEYS.popup] = undefined;
+      } else {
+        lastWindowIds[POPUP_CHANNEL_KEYS.popup] = undefined;
+      }
+    }
+
+    await openFreshPopup();
   });
 }
 

@@ -1,5 +1,7 @@
 import browser from "webextension-polyfill";
 import { produce } from "immer";
+import encryptUtils from "../utils/encryptUtils";
+import { memStore } from "@/store";
 
 // ============ Constants ============
 
@@ -59,24 +61,101 @@ export function clearStorage(): void {
   extensionStorage.clear();
 }
 
-// ============ Credential Storage Functions ============
+// ============ Credential Operation Lock ============
 
-export const getStoredCredentials = (): Promise<CredentialsStore> => {
-  return new Promise((resolve) => {
-    extensionStorage.get("credentials").then((result) => {
-      resolve({
-        credentials: (result.credentials as Record<string, Record<string, CredentialData>>) || {},
-      });
-    });
-  });
-};
+let credentialOpLock: Promise<void> = Promise.resolve();
 
-const setStoredData = (data: CredentialsStore): Promise<void> => {
-  return new Promise((resolve) => {
-    extensionStorage.set(data as unknown as Record<string, unknown>).then(() => {
-      resolve();
-    });
+async function withCredentialLock<T>(fn: () => Promise<T>): Promise<T> {
+  const previous = credentialOpLock;
+  let release: () => void = () => {};
+  credentialOpLock = new Promise<void>((resolve) => {
+    release = resolve;
   });
+  await previous;
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+}
+
+type PlaintextCredentials = Record<string, Record<string, CredentialData>>;
+
+function requireCryptoKey(): CryptoKey {
+  const cryptoKey = memStore.getState().cryptoKey;
+  if (!cryptoKey) {
+    throw new Error("Wallet is locked: CryptoKey not available for credential encryption");
+  }
+  return cryptoKey;
+}
+
+async function readLegacyCredentials(): Promise<PlaintextCredentials> {
+  const result = await extensionStorage.get("credentials");
+  const raw = result.credentials;
+  if (raw && typeof raw === "object" && typeof raw !== "string") {
+    return raw as PlaintextCredentials;
+  }
+  return {};
+}
+
+async function readEncryptedCredentials(
+  cryptoKey: CryptoKey
+): Promise<PlaintextCredentials> {
+  const result = await extensionStorage.get("credentialsEncrypted");
+  const raw = result.credentialsEncrypted;
+  if (!raw || typeof raw !== "string") return {};
+  const decrypted = await encryptUtils.decryptWithCryptoKey<PlaintextCredentials>(
+    cryptoKey,
+    raw
+  );
+  return decrypted || {};
+}
+
+function mergeCredentials(
+  legacy: PlaintextCredentials,
+  encrypted: PlaintextCredentials
+): PlaintextCredentials {
+  const merged: PlaintextCredentials = {};
+  for (const addr of Object.keys(legacy)) {
+    merged[addr] = { ...legacy[addr] };
+  }
+  for (const addr of Object.keys(encrypted)) {
+    if (!merged[addr]) {
+      merged[addr] = {};
+    }
+    Object.assign(merged[addr], encrypted[addr]);
+  }
+  return merged;
+}
+
+async function saveEncryptedCredentials(
+  data: PlaintextCredentials,
+  cryptoKey: CryptoKey
+): Promise<void> {
+  const encrypted = await encryptUtils.encryptWithCryptoKey(cryptoKey, data);
+  await extensionStorage.set({ credentialsEncrypted: encrypted });
+}
+
+async function saveLegacyCredentials(
+  data: PlaintextCredentials
+): Promise<void> {
+  if (Object.keys(data).length === 0) {
+    await extensionStorage.remove("credentials");
+  } else {
+    await extensionStorage.set({ credentials: data });
+  }
+}
+
+export const getStoredCredentials = async (): Promise<CredentialsStore> => {
+  const cryptoKey = memStore.getState().cryptoKey;
+  if (!cryptoKey) {
+    return { credentials: {} };
+  }
+  const [legacy, encrypted] = await Promise.all([
+    readLegacyCredentials(),
+    readEncryptedCredentials(cryptoKey),
+  ]);
+  return { credentials: mergeCredentials(legacy, encrypted) };
 };
 
 export const getCredentialById = async (
@@ -92,36 +171,72 @@ export const storeCredential = async ({
   credentialId,
   credential,
 }: StoreCredentialParams): Promise<void> => {
-  const current = await getStoredCredentials();
-  const newData = produce(current, (draft) => {
-    // Ensure the address key exists in credentials
-    if (!draft.credentials[address]) {
-      draft.credentials[address] = {};
+  return withCredentialLock(async () => {
+    const cryptoKey = requireCryptoKey();
+    const [legacy, encrypted] = await Promise.all([
+      readLegacyCredentials(),
+      readEncryptedCredentials(cryptoKey),
+    ]);
+    const existingLegacy = legacy[address]?.[credentialId];
+    const existingEncrypted = encrypted[address]?.[credentialId];
+    const merged = { ...existingLegacy, ...existingEncrypted, ...credential };
+    const newEncrypted = produce(encrypted, (draft) => {
+      if (!draft[address]) {
+        draft[address] = {};
+      }
+      draft[address][credentialId] = merged;
+    });
+    await saveEncryptedCredentials(newEncrypted, cryptoKey);
+    if (existingLegacy) {
+      const newLegacy = produce(legacy, (draft) => {
+        if (draft[address]) {
+          delete draft[address][credentialId];
+          if (Object.keys(draft[address]).length === 0) {
+            delete draft[address];
+          }
+        }
+      });
+      await saveLegacyCredentials(newLegacy);
     }
-    // Store the credential under the specified address and credentialId
-    draft.credentials[address][credentialId] = {
-      ...draft.credentials[address][credentialId],
-      ...credential,
-    };
   });
-  await setStoredData(newData);
 };
 
 export const removeCredential = async (
   address: string,
   credentialId: string
 ): Promise<void> => {
-  const current = await getStoredCredentials();
-  const newData = produce(current, (draft) => {
-    if (draft.credentials[address]) {
-      delete draft.credentials[address][credentialId];
-      // Optionally, clean up the address key if it's empty
-      if (Object.keys(draft.credentials[address]).length === 0) {
-        delete draft.credentials[address];
+  return withCredentialLock(async () => {
+    const cryptoKey = requireCryptoKey();
+    const [legacy, encrypted] = await Promise.all([
+      readLegacyCredentials(),
+      readEncryptedCredentials(cryptoKey),
+    ]);
+    let legacyChanged = false;
+    const newLegacy = produce(legacy, (draft) => {
+      if (draft[address]?.[credentialId]) {
+        delete draft[address][credentialId];
+        legacyChanged = true;
+        if (Object.keys(draft[address]).length === 0) {
+          delete draft[address];
+        }
       }
+    });
+    const newEncrypted = produce(encrypted, (draft) => {
+      if (draft[address]?.[credentialId]) {
+        delete draft[address][credentialId];
+        if (Object.keys(draft[address]).length === 0) {
+          delete draft[address];
+        }
+      }
+    });
+    const saves: Promise<void>[] = [
+      saveEncryptedCredentials(newEncrypted, cryptoKey),
+    ];
+    if (legacyChanged) {
+      saves.push(saveLegacyCredentials(newLegacy));
     }
+    await Promise.all(saves);
   });
-  await setStoredData(newData);
 };
 
 export const searchCredential = async ({
@@ -131,10 +246,8 @@ export const searchCredential = async ({
 }: SearchCredentialParams): Promise<unknown[]> => {
   const { credentials } = await getStoredCredentials();
 
-  // Get credentials for the specified address, default to empty object if not found
   const addressCredentials = credentials[address] || {};
 
-  // Convert to array of credential objects, including the credentialId
   const objectsStatesArray = Object.entries(addressCredentials).map(
     ([id, credential]) => ({
       id,
@@ -142,12 +255,10 @@ export const searchCredential = async ({
     })
   );
 
-  // Filter based on the query
   const filteredObjects = objectsStatesArray.filter((object) =>
     matchesQuery(object, query)
   );
 
-  // If props are specified, return only the requested properties
   if (props?.length) {
     return filteredObjects.flatMap((object) =>
       props

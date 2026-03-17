@@ -89,6 +89,9 @@ const useInternalStore = create<StoreState>((set, get) => ({
     currentAccount: {},
     mne: "",
     autoLockTime: LOCK_TIME_DEFAULT,
+    accountApprovedUrlList: {},
+    currentConnect: {},
+    tokenBuildList: {},
   }),
 
   setCurrentAccount: (account: AccountInfo) => set({ currentAccount: account }),

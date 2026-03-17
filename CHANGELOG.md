@@ -37,13 +37,17 @@ All notable changes to this project will be documented in this file.
 - Refactor mnemonic wallet create flow
 - Update Zeko GraphQL queries
 - Update transaction history fetch
+- Optimize popup management 
+- Refresh account on ApprovePage before connection
+- Strengthen DApp security verification
 
 
 ### Fixes
 - E-notation of SendPage
 - Legder error message
 - Transaction history
-- transient prop
+- Transient prop
+- Popup duplication caused by incomplete tab loading
 
 ## [2.4.5]
 ### Enhancements

@@ -726,7 +726,7 @@ describe('APIService', () => {
 
       await apiService.resetWallet();
 
-      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic']);
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic', 'ZKAPP_APPROVE_LIST', 'credentials', 'credentialsEncrypted']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.cryptoKey).toBeNull();
       expect(mockStoreState.vaultSalt).toBe('');
@@ -1881,7 +1881,7 @@ describe('APIService', () => {
       const result = await apiService.deleteAccount(TEST_DATA.accounts[0]!.pubKey, TEST_DATA.password);
 
       expect(result).toEqual({ isReset: true });
-      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic']);
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic', 'ZKAPP_APPROVE_LIST', 'credentials', 'credentialsEncrypted']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.cryptoKey).toBeNull();
       expect(mockStoreState.data).toBeNull();
@@ -1908,7 +1908,7 @@ describe('APIService', () => {
       const result = await apiService.deleteAccount('B62qWatchOnly', '');
 
       expect(result).toEqual({ isReset: true });
-      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic']);
+      expect(mockStorageService.removeValue).toHaveBeenCalledWith(['keyringData', 'vaultSalt', 'pendingCreateMnemonic', 'ZKAPP_APPROVE_LIST', 'credentials', 'credentialsEncrypted']);
       expect(mockStoreState.isUnlocked).toBe(false);
       expect(mockStoreState.data).toBeNull();
       expect(mockStoreState.currentAccount).toEqual({});

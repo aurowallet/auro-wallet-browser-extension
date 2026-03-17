@@ -15,15 +15,10 @@ let presentationSignaturePromise: PromiseCallbacks | null = null;
 let allowedOrigin = ""
 window.addEventListener("message", async (event) => {
   if (event.data.type === "init-sandbox" && event.source === window.parent) {
-    allowedOrigin = event.data.parentOrigin;
+    allowedOrigin = event.origin;
     return;
   }
   if(!allowedOrigin){
-    const result = {
-      type: "init-sandbox-extension-id",
-      data: event.data
-    };
-    window.parent.postMessage(result, "*");
     return;
   }
   if (event.origin !== allowedOrigin || event.source !== window.parent) {
@@ -52,13 +47,13 @@ window.addEventListener("message", async (event) => {
         type: "validate-credential-result",
         result: Credential.toJSON(credentialDeserialized),
       };
-      window.parent.postMessage(result, "*");
+      window.parent.postMessage(result, allowedOrigin);
     } catch (error) {
       const result = {
         type: "validate-credential-result",
         error: serializeError(error),
       };
-      window.parent.postMessage(result, "*");
+      window.parent.postMessage(result, allowedOrigin);
     }
   } else if (data.type == "presentation") {
     
@@ -100,7 +95,7 @@ window.addEventListener("message", async (event) => {
           type: "presentation-signing-request",
           fields: prepared.messageFields,
         },
-        "*"
+        allowedOrigin
       );
       const signature = await new Promise<string>((resolve, reject) => {
         presentationSignaturePromise = { resolve: resolve as (value: unknown) => void, reject };
@@ -116,13 +111,13 @@ window.addEventListener("message", async (event) => {
         type: "presentation-result",
         result: serializedPresentation,
       };
-      window.parent.postMessage(result, "*");
+      window.parent.postMessage(result, allowedOrigin);
     } catch (error) {
       const result = {
         type: "presentation-result",
         error: serializeError(error),
       };
-      window.parent.postMessage(result, "*");
+      window.parent.postMessage(result, allowedOrigin);
     }
   }
 });

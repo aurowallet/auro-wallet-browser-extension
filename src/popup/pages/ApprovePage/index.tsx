@@ -1,3 +1,4 @@
+import { updateCurrentAccount, type AccountData } from "@/reducers/accountReducer";
 import { ENTRY_WITCH_ROUTE } from "@/reducers/entryRouteReducer";
 import { updateApproveStatus } from "@/reducers/popupReducer";
 import i18n from "i18next";
@@ -8,8 +9,9 @@ import {
   DAPP_ACTION_GET_ACCOUNT,
   DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS,
   GET_APPROVE_PARAMS,
+  WALLET_GET_CURRENT_ACCOUNT,
 } from "../../../constant/msgTypes";
-import { sendMsg } from "../../../utils/commonMsg";
+import { sendMsg, sendMsgV2 } from "../../../utils/commonMsg";
 import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
@@ -42,6 +44,20 @@ const ApprovePage = () => {
   }
   const [params, setParams] = useState<ApproveParams>({});
 
+  const refreshCurrentAccount = useCallback(async (): Promise<AccountData | null> => {
+    try {
+      const latestAccount = await sendMsgV2<AccountData>({
+        action: WALLET_GET_CURRENT_ACCOUNT,
+      });
+      if (latestAccount?.address) {
+        dispatch(updateCurrentAccount(latestAccount));
+        return latestAccount;
+      }
+    } catch {
+    }
+    return null;
+  }, [dispatch]);
+
   useEffect(() => {
     sendMsg(
       {
@@ -52,6 +68,10 @@ const ApprovePage = () => {
       }
     );
   }, []);
+
+  useEffect(() => {
+    void refreshCurrentAccount();
+  }, [refreshCurrentAccount]);
 
   const getConnectAfterLock = useCallback(() => {
     let siteUrl = params?.site?.origin || "";
@@ -107,8 +127,13 @@ const ApprovePage = () => {
     );
   }, [currentAccount, params]);
 
-  const onConfirm = useCallback(() => {
-    let selectAccount = [currentAccount];
+  const onConfirm = useCallback(async () => {
+    const latestAccount = await refreshCurrentAccount();
+    const approvedAccount = latestAccount?.address ? latestAccount : currentAccount;
+    if (!approvedAccount?.address) {
+      return;
+    }
+    const selectAccount = [approvedAccount];
     sendMsg(
       {
         action: DAPP_ACTION_GET_ACCOUNT,
@@ -122,15 +147,14 @@ const ApprovePage = () => {
         dispatch(updateApproveStatus(false));
       }
     );
-  }, [params, currentAccount]);
+  }, [params, currentAccount, refreshCurrentAccount, dispatch]);
 
   const showAccountInfo = useMemo(() => {
-    return (
-      currentAccount.accountName +
-      "(" +
-      addressSlice(currentAccount.address, 6) +
-      ")"
-    );
+    if (!currentAccount?.address) {
+      return "--";
+    }
+    const accountName = currentAccount.accountName || i18n.t("account");
+    return accountName + "(" + addressSlice(currentAccount.address, 6) + ")";
   }, [currentAccount]);
 
   return (

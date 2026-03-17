@@ -342,6 +342,7 @@ function internalMessageListener(
       sendResponse(apiService.getCurrentAutoLockTime());
       break;
     case RESET_WALLET:
+      dappService.clearAllPendingZk();
       apiService.resetWallet().then(() => {
         sendResponse();
       }).catch((err) => {

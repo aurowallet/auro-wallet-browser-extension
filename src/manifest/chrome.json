@@ -23,12 +23,9 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "webhook.js",
-        "sandbox.html",
-        "sandbox.js"
+        "webhook.js"
       ],
       "matches": [
-        "file://*/*",
         "http://*/*",
         "https://*/*"
       ]

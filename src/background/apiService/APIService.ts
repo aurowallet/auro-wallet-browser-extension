@@ -366,7 +366,7 @@ class APIService {
     this.setPopupIcon(false);
     // resetWallet clears account identity entirely (unlike lock(), which keeps address)
     memStore.reset();
-    await removeValue(["keyringData", "vaultSalt", "pendingCreateMnemonic"]);
+    await removeValue(["keyringData", "vaultSalt", "pendingCreateMnemonic", "ZKAPP_APPROVE_LIST", "credentials", "credentialsEncrypted"]);
   };
 
   setPopupIcon = (isUnlocked: boolean) => {
@@ -1237,60 +1237,62 @@ class APIService {
     });
   };
   createAccount = async (mnemonic: string): Promise<any> => {
-    try {
-      this._clearVolatileMnemonic();
-      const cryptoKey = this.getStore().cryptoKey;
-      if (!cryptoKey) {
-        return { error: "walletNotReady", type: "local" };
+    return this._withAuthOperationLock(async () => {
+      try {
+        this._clearVolatileMnemonic();
+        const cryptoKey = this.getStore().cryptoKey;
+        if (!cryptoKey) {
+          return { error: "walletNotReady", type: "local" };
+        }
+        const existingData = this.getStore().data;
+
+        // If modern vault already exists, add new HD keyring instead of creating new vault
+        if (isModernVault(existingData)) {
+          const hdResult: any = await this._addHDKeyringCore(mnemonic);
+          return hdResult?.error ? hdResult : hdResult?.account ?? hdResult;
+        }
+
+        // Create new modern vault for first-time wallet creation
+        let wallet = importWalletByMnemonic(mnemonic);
+        let mnemonicEn = await encryptUtils.encryptWithCryptoKey(cryptoKey, mnemonic);
+
+        const newKeyring = createHDKeyring(getDefaultHDWalletName(1), mnemonicEn);
+        newKeyring.accounts.push({
+          address: wallet.pubKey,
+          hdIndex: 0,
+          name: default_account_name,
+        });
+        newKeyring.nextHdIndex = 1;
+        newKeyring.currentAddress = wallet.pubKey;
+
+        // V3 vault structure with nextWalletIndex for tracking default names
+        const data = {
+          version: VAULT_VERSION,
+          keyrings: [newKeyring],
+          currentKeyringId: newKeyring.id,
+          nextWalletIndex: 2, // Next wallet will be "Wallet 2"
+        };
+
+        const currentAccount = {
+          address: wallet.pubKey,
+          type: ACCOUNT_TYPE.WALLET_INSIDE,
+          hdPath: 0,
+          accountName: default_account_name,
+          typeIndex: 1,
+          keyringId: newKeyring.id,
+        };
+
+        let encryptData = await encryptUtils.encryptWithCryptoKey(cryptoKey, data);
+        await save({ keyringData: encryptData });
+        await removeValue("pendingCreateMnemonic");
+        memStore.updateState({ data, currentAccount });
+        await this.setUnlockedStatus(true);
+        return this.getAccountWithoutPrivate(currentAccount);
+      } catch (error) {
+        console.error("[createAccount] Error:", error);
+        return { error: "createFailed", type: "local" };
       }
-      const existingData = this.getStore().data;
-
-      // If modern vault already exists, add new HD keyring instead of creating new vault
-      if (isModernVault(existingData)) {
-        const hdResult: any = await this.addHDKeyring(mnemonic);
-        return hdResult?.error ? hdResult : hdResult?.account ?? hdResult;
-      }
-
-      // Create new modern vault for first-time wallet creation
-      let wallet = importWalletByMnemonic(mnemonic);
-      let mnemonicEn = await encryptUtils.encryptWithCryptoKey(cryptoKey, mnemonic);
-
-      const newKeyring = createHDKeyring(getDefaultHDWalletName(1), mnemonicEn);
-      newKeyring.accounts.push({
-        address: wallet.pubKey,
-        hdIndex: 0,
-        name: default_account_name,
-      });
-      newKeyring.nextHdIndex = 1;
-      newKeyring.currentAddress = wallet.pubKey;
-
-      // V3 vault structure with nextWalletIndex for tracking default names
-      const data = {
-        version: VAULT_VERSION,
-        keyrings: [newKeyring],
-        currentKeyringId: newKeyring.id,
-        nextWalletIndex: 2, // Next wallet will be "Wallet 2"
-      };
-
-      const currentAccount = {
-        address: wallet.pubKey,
-        type: ACCOUNT_TYPE.WALLET_INSIDE,
-        hdPath: 0,
-        accountName: default_account_name,
-        typeIndex: 1,
-        keyringId: newKeyring.id,
-      };
-
-      let encryptData = await encryptUtils.encryptWithCryptoKey(cryptoKey, data);
-      await save({ keyringData: encryptData });
-      await removeValue("pendingCreateMnemonic");
-      memStore.updateState({ data, currentAccount });
-      await this.setUnlockedStatus(true);
-      return this.getAccountWithoutPrivate(currentAccount);
-    } catch (error) {
-      console.error("[createAccount] Error:", error);
-      return { error: "createFailed", type: "local" };
-    }
+    });
   };
   getLedgerAccountIndex = () => {
     const state = this.getStore();
@@ -1507,7 +1509,7 @@ class APIService {
    * Add a new HD wallet (keyring) with its own mnemonic
    * This creates a completely new wallet group
    */
-  addHDKeyring = async (mnemonic: string, walletName?: string): Promise<{ keyring?: { id: string; name: string; type: string }; account?: AccountInfo } | ErrorResult> => {
+  private _addHDKeyringCore = async (mnemonic: string, walletName?: string): Promise<{ keyring?: { id: string; name: string; type: string }; account?: AccountInfo } | ErrorResult> => {
     try {
       let data = this.getStore().data;
       const cryptoKey = this.getStore().cryptoKey;
@@ -1596,6 +1598,10 @@ class APIService {
       console.error("[addHDKeyring] Error:", error);
       return { error: "createFailed", type: "local" };
     }
+  };
+
+  addHDKeyring = async (mnemonic: string, walletName?: string): Promise<{ keyring?: { id: string; name: string; type: string }; account?: AccountInfo } | ErrorResult> => {
+    return this._withAuthOperationLock(() => this._addHDKeyringCore(mnemonic, walletName));
   };
 
   /**
@@ -1746,74 +1752,76 @@ class APIService {
    * Add account to a specific HD keyring
    */
   addAccountToKeyring = async (keyringId: string, accountName?: string): Promise<{ account?: AccountInfo } | ErrorResult> => {
-    try {
-      let data = this.getStore().data;
-      const cryptoKey = this.getStore().cryptoKey;
-      if (!cryptoKey) {
-        return { error: "walletNotReady", type: "local" };
+    return this._withAuthOperationLock(async () => {
+      try {
+        let data = this.getStore().data;
+        const cryptoKey = this.getStore().cryptoKey;
+        if (!cryptoKey) {
+          return { error: "walletNotReady", type: "local" };
+        }
+
+        if (!isModernVault(data)) {
+          return { error: "upgradeRequired", type: "local" };
+        }
+
+        const workingData = cloneVaultData(data);
+        if (!isModernVault(workingData)) {
+          return { error: "upgradeRequired", type: "local" };
+        }
+
+        const keyring = workingData.keyrings.find((kr) => kr.id === keyringId);
+        if (!keyring) {
+          return { error: "keyringNotFound", type: "local" };
+        }
+
+        if (keyring.type !== KEYRING_TYPE.HD) {
+          return { error: "cannotAddToNonHD", type: "local" };
+        }
+
+        // Derive next account
+        const mnemonic = this._requireStringInnerSecret(
+          await encryptUtils.decryptWithCryptoKey(cryptoKey, keyring.mnemonic)
+        );
+        const nextIndex = keyring.nextHdIndex || keyring.accounts.length;
+        const wallet = importWalletByMnemonic(mnemonic, nextIndex);
+
+        // Check for duplicate
+        const allAccounts = getAllAccountsFromVault(workingData);
+        if (allAccounts.find((acc) => acc.address === wallet.pubKey)) {
+          return { error: "repeatTip", type: "local" };
+        }
+
+        // Add account
+        const name = accountName || `Account ${keyring.accounts.length + 1}`;
+        keyring.accounts.push({
+          address: wallet.pubKey,
+          hdIndex: nextIndex,
+          name,
+        });
+        keyring.nextHdIndex = nextIndex + 1;
+        keyring.currentAddress = wallet.pubKey;
+        workingData.currentKeyringId = keyringId;
+
+        // Save
+        const encryptData = await encryptUtils.encryptWithCryptoKey(cryptoKey, workingData);
+        await save({ keyringData: encryptData });
+
+        const currentAccount = {
+          address: wallet.pubKey,
+          accountName: name,
+          type: ACCOUNT_TYPE.WALLET_INSIDE,
+          hdPath: nextIndex,
+          keyringId: keyringId,
+        };
+
+        memStore.updateState({ data: workingData, currentAccount });
+
+        return { account: this.getAccountWithoutPrivate(currentAccount) };
+      } catch (error) {
+        console.error("[addAccountToKeyring] Error:", error);
+        return { error: "addFailed", type: "local" };
       }
-
-      if (!isModernVault(data)) {
-        return { error: "upgradeRequired", type: "local" };
-      }
-
-      const workingData = cloneVaultData(data);
-      if (!isModernVault(workingData)) {
-        return { error: "upgradeRequired", type: "local" };
-      }
-
-      const keyring = workingData.keyrings.find((kr) => kr.id === keyringId);
-      if (!keyring) {
-        return { error: "keyringNotFound", type: "local" };
-      }
-
-      if (keyring.type !== KEYRING_TYPE.HD) {
-        return { error: "cannotAddToNonHD", type: "local" };
-      }
-
-      // Derive next account
-      const mnemonic = this._requireStringInnerSecret(
-        await encryptUtils.decryptWithCryptoKey(cryptoKey, keyring.mnemonic)
-      );
-      const nextIndex = keyring.nextHdIndex || keyring.accounts.length;
-      const wallet = importWalletByMnemonic(mnemonic, nextIndex);
-
-      // Check for duplicate
-      const allAccounts = getAllAccountsFromVault(workingData);
-      if (allAccounts.find((acc) => acc.address === wallet.pubKey)) {
-        return { error: "repeatTip", type: "local" };
-      }
-
-      // Add account
-      const name = accountName || `Account ${keyring.accounts.length + 1}`;
-      keyring.accounts.push({
-        address: wallet.pubKey,
-        hdIndex: nextIndex,
-        name,
-      });
-      keyring.nextHdIndex = nextIndex + 1;
-      keyring.currentAddress = wallet.pubKey;
-      workingData.currentKeyringId = keyringId;
-
-      // Save
-      const encryptData = await encryptUtils.encryptWithCryptoKey(cryptoKey, workingData);
-      await save({ keyringData: encryptData });
-
-      const currentAccount = {
-        address: wallet.pubKey,
-        accountName: name,
-        type: ACCOUNT_TYPE.WALLET_INSIDE,
-        hdPath: nextIndex,
-        keyringId: keyringId,
-      };
-
-      memStore.updateState({ data: workingData, currentAccount });
-
-      return { account: this.getAccountWithoutPrivate(currentAccount) };
-    } catch (error) {
-      console.error("[addAccountToKeyring] Error:", error);
-      return { error: "addFailed", type: "local" };
-    }
+    });
   };
 
   /**
@@ -2107,65 +2115,67 @@ class APIService {
     return this.getAccountWithoutPrivate(accountForUI);
   };
   addImportAccount = async (privateKey: string, accountName: string): Promise<any> => {
-    try {
-      if (!this.getStore().cryptoKey) {
-        return { error: "walletNotReady", type: "local" };
-      }
-      let wallet = await importWalletByPrivateKey(privateKey);
-      let data = this.getStore().data;
-      const version = getVaultVersion(data);
-
-      // For first-time import or V3 vault, use V3 logic
-      if (version === "v3" || !data) {
-        // Create new V3 vault if no data exists
-        if (!data) {
-          data = createEmptyVault();
+    return this._withAuthOperationLock(async () => {
+      try {
+        if (!this.getStore().cryptoKey) {
+          return { error: "walletNotReady", type: "local" };
         }
-        return this._addImportAccountModern(data, wallet, accountName);
-      }
-      if (!version) {
-        return { error: "invalidVault", type: "local" };
-      }
+        let wallet = await importWalletByPrivateKey(privateKey);
+        let data = this.getStore().data;
+        const version = getVaultVersion(data);
 
-      // V1: legacy logic
-      const workingLegacyData = cloneVaultData(data);
-      let accounts = workingLegacyData[0].accounts;
-      let error = this._checkWalletRepeat(accounts, wallet.pubKey);
-      if (error.error) {
-        return error as any;
-      }
-      let typeIndex = this._findWalletIndex(
-        accounts,
-        ACCOUNT_TYPE.WALLET_OUTSIDE
-      );
+        // For first-time import or V3 vault, use V3 logic
+        if (version === "v3" || !data) {
+          // Create new V3 vault if no data exists
+          if (!data) {
+            data = createEmptyVault();
+          }
+          return this._addImportAccountModern(data, wallet, accountName);
+        }
+        if (!version) {
+          return { error: "invalidVault", type: "local" };
+        }
 
-      let priKeyEncrypt = await encryptUtils.encryptWithCryptoKey(
-        this._requireCryptoKey(),
-        wallet.priKey
-      );
-      const account = {
-        address: wallet.pubKey,
-        privateKey: priKeyEncrypt,
-        type: ACCOUNT_TYPE.WALLET_OUTSIDE,
-        accountName,
-        typeIndex,
-      };
-      workingLegacyData[0].currentAddress = account.address;
-      workingLegacyData[0].accounts.push(account);
-      let encryptData = await encryptUtils.encryptWithCryptoKey(
-        this._requireCryptoKey(),
-        workingLegacyData
-      );
+        // V1: legacy logic
+        const workingLegacyData = cloneVaultData(data);
+        let accounts = workingLegacyData[0].accounts;
+        let error = this._checkWalletRepeat(accounts, wallet.pubKey);
+        if (error.error) {
+          return error as any;
+        }
+        let typeIndex = this._findWalletIndex(
+          accounts,
+          ACCOUNT_TYPE.WALLET_OUTSIDE
+        );
 
-      await save({ keyringData: encryptData });
-      memStore.updateState({ data: workingLegacyData, currentAccount: this.getAccountWithoutPrivate(account) });
-      return this.getAccountWithoutPrivate(account);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("cryptoKey")) {
-        return { error: "walletNotReady", type: "local" };
+        let priKeyEncrypt = await encryptUtils.encryptWithCryptoKey(
+          this._requireCryptoKey(),
+          wallet.priKey
+        );
+        const account = {
+          address: wallet.pubKey,
+          privateKey: priKeyEncrypt,
+          type: ACCOUNT_TYPE.WALLET_OUTSIDE,
+          accountName,
+          typeIndex,
+        };
+        workingLegacyData[0].currentAddress = account.address;
+        workingLegacyData[0].accounts.push(account);
+        let encryptData = await encryptUtils.encryptWithCryptoKey(
+          this._requireCryptoKey(),
+          workingLegacyData
+        );
+
+        await save({ keyringData: encryptData });
+        memStore.updateState({ data: workingLegacyData, currentAccount: this.getAccountWithoutPrivate(account) });
+        return this.getAccountWithoutPrivate(account);
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("cryptoKey")) {
+          return { error: "walletNotReady", type: "local" };
+        }
+        return { error: "privateError", type: "local" };
       }
-      return { error: "privateError", type: "local" };
-    }
+    });
   };
 
   // V3: import private key account
@@ -2256,66 +2266,68 @@ class APIService {
     }
   };
   addLedgerAccount = async (address: string, accountName: string, ledgerPathAccountIndex: number): Promise<AccountInfo | ErrorResult> => {
-    try {
-      if (!this.getStore().cryptoKey) {
-        return { error: "walletNotReady", type: "local" };
-      }
-      let data = this.getStore().data;
-      const version = getVaultVersion(data);
-
-      // For first-time Ledger setup or V3 vault, use V3 logic
-      if (version === "v3" || !data) {
-        // Create new V3 vault if no data exists
-        if (!data) {
-          data = createEmptyVault();
+    return this._withAuthOperationLock(async () => {
+      try {
+        if (!this.getStore().cryptoKey) {
+          return { error: "walletNotReady", type: "local" };
         }
-        return this._addLedgerAccountModern(
-          data,
-          address,
-          accountName,
-          ledgerPathAccountIndex
+        let data = this.getStore().data;
+        const version = getVaultVersion(data);
+
+        // For first-time Ledger setup or V3 vault, use V3 logic
+        if (version === "v3" || !data) {
+          // Create new V3 vault if no data exists
+          if (!data) {
+            data = createEmptyVault();
+          }
+          return this._addLedgerAccountModern(
+            data,
+            address,
+            accountName,
+            ledgerPathAccountIndex
+          );
+        }
+        if (!version) {
+          return { error: "invalidVault", type: "local" };
+        }
+
+        // V1: legacy logic
+        const workingLegacyData = cloneVaultData(data);
+        let accounts = workingLegacyData[0].accounts;
+        let error = this._checkWalletRepeat(accounts, address);
+        if (error.error) {
+          return error as any;
+        }
+        let typeIndex = this._findWalletIndex(
+          accounts,
+          ACCOUNT_TYPE.WALLET_LEDGER
         );
-      }
-      if (!version) {
-        return { error: "invalidVault", type: "local" };
-      }
 
-      // V1: legacy logic
-      const workingLegacyData = cloneVaultData(data);
-      let accounts = workingLegacyData[0].accounts;
-      let error = this._checkWalletRepeat(accounts, address);
-      if (error.error) {
-        return error as any;
-      }
-      let typeIndex = this._findWalletIndex(
-        accounts,
-        ACCOUNT_TYPE.WALLET_LEDGER
-      );
+        const account = {
+          address: address,
+          type: ACCOUNT_TYPE.WALLET_LEDGER,
+          accountName,
+          hdPath: ledgerPathAccountIndex,
+          typeIndex,
+        };
+        workingLegacyData[0].currentAddress = account.address;
+        workingLegacyData[0].accounts.push(account);
+        let encryptData = await encryptUtils.encryptWithCryptoKey(
+          this._requireCryptoKey(),
+          workingLegacyData
+        );
 
-      const account = {
-        address: address,
-        type: ACCOUNT_TYPE.WALLET_LEDGER,
-        accountName,
-        hdPath: ledgerPathAccountIndex,
-        typeIndex,
-      };
-      workingLegacyData[0].currentAddress = account.address;
-      workingLegacyData[0].accounts.push(account);
-      let encryptData = await encryptUtils.encryptWithCryptoKey(
-        this._requireCryptoKey(),
-        workingLegacyData
-      );
-
-      await save({ keyringData: encryptData });
-      memStore.updateState({ data: workingLegacyData, currentAccount: account });
-      return this.getAccountWithoutPrivate(account);
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("cryptoKey")) {
-        return { error: "walletNotReady", type: "local" };
+        await save({ keyringData: encryptData });
+        memStore.updateState({ data: workingLegacyData, currentAccount: account });
+        return this.getAccountWithoutPrivate(account);
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("cryptoKey")) {
+          return { error: "walletNotReady", type: "local" };
+        }
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        return { error: errorMessage || "Import failed" };
       }
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      return { error: errorMessage || "Import failed" };
-    }
+    });
   };
 
   // V3: add Ledger account

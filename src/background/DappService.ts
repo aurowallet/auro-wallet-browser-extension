@@ -35,7 +35,6 @@ import {
 } from "../utils/browserUtils";
 import { sendMsg } from "../utils/commonMsg";
 import {
-  checkAndTopV2,
   closePopupWindow,
   lastWindowIds,
   PopupSize,
@@ -51,6 +50,7 @@ import {
   isNumber,
   removeUrlFromArrays,
   urlValid,
+  urlValidStrict,
 } from "../utils/utils";
 import apiService from "./apiService";
 import { verifyFieldsMessage, verifyMessage } from "./lib";
@@ -169,6 +169,31 @@ class RateLimiter {
 }
 
 const dappRateLimiter = new RateLimiter();
+
+function getExtensionBaseUrl(): string {
+  return browser.runtime.getURL("");
+}
+
+function isExtensionPopupUrl(url: string): boolean {
+  const baseUrl = getExtensionBaseUrl();
+  return url.startsWith(`${baseUrl}popup.html`);
+}
+
+function getSenderUrls(sender: browser.Runtime.MessageSender): string[] {
+  const nextUrls = [
+    sender.url,
+    (sender as browser.Runtime.MessageSender & { origin?: string }).origin,
+    sender.tab?.url,
+  ].filter((value): value is string => typeof value === "string" && value.length > 0);
+  return [...new Set(nextUrls)];
+}
+
+function isFromExtensionPopup(sender: browser.Runtime.MessageSender): boolean {
+  if (sender.id !== browser.runtime.id) {
+    return false;
+  }
+  return getSenderUrls(sender).some((url) => isExtensionPopupUrl(url));
+}
 
 // ============================================
 // DappService Class
@@ -380,12 +405,6 @@ class DappService {
 
         const sendAction = params.action as string;
 
-        if (lastWindowIds[POPUP_CHANNEL_KEYS.popup]) {
-          await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
-        } else {
-          await startExtensionPopup(true);
-        }
-
         if (
           ZKAPP_CHAIN_ACTION.indexOf(sendAction) !== -1 &&
           chainRequests.length > 0
@@ -428,7 +447,7 @@ class DappService {
 
         if (sendAction === DAppActions.mina_addChain) {
           const realAddUrl = decodeURIComponent(params.url as string);
-          if (!urlValid(realAddUrl) || !params.name) {
+          if (!urlValidStrict(realAddUrl) || !params.name) {
             reject({
               code: errorCodes.invalidParams,
               message: getMessageFromCode(errorCodes.invalidParams),
@@ -511,17 +530,16 @@ class DappService {
           nextParams.transaction = zkCommondFormat(params.transaction);
         }
 
-        if (lastWindowIds[POPUP_CHANNEL_KEYS.popup]) {
-          await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
-        } else {
-          await startExtensionPopup(true);
-        }
+        await startExtensionPopup(true);
 
         function onMessage(
           message: { action: string; payload: Record<string, unknown> },
-          _sender: browser.Runtime.MessageSender,
+          sender: browser.Runtime.MessageSender,
           sendResponse: () => void
         ): boolean | void {
+          if (!isFromExtensionPopup(sender)) {
+            return false;
+          }
           const { action, payload } = message;
 
           if (action === DAPP_ACTION_CANCEL_ALL) {
@@ -927,11 +945,7 @@ class DappService {
           resolve([currentAccount]);
           return;
         }
-        if (lastWindowIds[POPUP_CHANNEL_KEYS.popup]) {
-          await checkAndTopV2(POPUP_CHANNEL_KEYS.popup);
-        } else {
-          await startExtensionPopup(true);
-        }
+        await startExtensionPopup(true);
         if (approveRequests.length > 0) {
           reject({
             message: getMessageFromCode(errorCodes.zkChainPending),
@@ -942,9 +956,12 @@ class DappService {
 
         function onMessage(
           message: { action: string; payload: Record<string, unknown> },
-          _sender: browser.Runtime.MessageSender,
+          sender: browser.Runtime.MessageSender,
           sendResponse: () => void
         ): boolean | void {
+          if (!isFromExtensionPopup(sender)) {
+            return false;
+          }
           const { action, payload } = message;
           const approveId = payload?.id as string;
           const currentApproveParams = that.getApproveParamsByOpenId(approveId);
@@ -1483,9 +1500,12 @@ class DappService {
 
         function onMessage(
           message: { action: string; payload: Record<string, unknown> },
-          _sender: browser.Runtime.MessageSender,
+          sender: browser.Runtime.MessageSender,
           sendResponse: () => void
         ): boolean | void {
+          if (!isFromExtensionPopup(sender)) {
+            return false;
+          }
           const { action, payload } = message;
 
           if (action === DAPP_ACTION_CANCEL_ALL) {
