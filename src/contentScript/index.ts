@@ -65,6 +65,7 @@ const contentScript: ContentScriptInterface = {
   },
   registerListeners() {
     window.addEventListener("message", (event) => {
+      if (event.source !== window) return;
       const normalized = normalizePageMessage(event);
       if (!normalized) return;
       if (normalized.source === CONTENT_SCRIPT) return;

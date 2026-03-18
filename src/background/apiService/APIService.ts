@@ -33,6 +33,7 @@ import {
   get,
   getCredentialById,
   getStoredCredentials,
+  migrateLegacyCredentials,
   removeCredential,
   removeValue,
   save,
@@ -708,6 +709,11 @@ class APIService {
           data: vaultData as any,
           currentAccount: this.getAccountWithoutPrivate(currentAccount || {} as AccountInfo),
           autoLockTime,
+        });
+
+        // Bulk-migrate any remaining legacy plaintext credentials to encrypted storage
+        migrateLegacyCredentials(cryptoKey).catch((err) => {
+          console.error("[aurowallet apiservice] legacy credential migration failed:", err);
         });
 
         this.setPopupIcon(true);

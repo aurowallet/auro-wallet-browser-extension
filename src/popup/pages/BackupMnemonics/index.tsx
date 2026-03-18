@@ -41,8 +41,11 @@ export const BackupMnemonics = () => {
       }
     }, (mnemonic: string) => {
       let mneList = mnemonic.split(" ")
-      for (let i = 0; i < mneList.length; i++) {
-        const index = Math.floor(Math.random() * mneList.length);
+      // Fisher-Yates shuffle with crypto.getRandomValues()
+      for (let i = mneList.length - 1; i > 0; i--) {
+        const buf = new Uint32Array(1);
+        crypto.getRandomValues(buf);
+        const index = buf[0]! % (i + 1);
         const temp = mneList[i];
         mneList[i] = mneList[index] ?? '';
         mneList[index] = temp ?? '';

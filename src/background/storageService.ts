@@ -146,6 +146,19 @@ async function saveLegacyCredentials(
   }
 }
 
+export const migrateLegacyCredentials = async (
+  cryptoKey: CryptoKey
+): Promise<void> => {
+  return withCredentialLock(async () => {
+    const legacy = await readLegacyCredentials();
+    if (Object.keys(legacy).length === 0) return;
+    const encrypted = await readEncryptedCredentials(cryptoKey);
+    const merged = mergeCredentials(legacy, encrypted);
+    await saveEncryptedCredentials(merged, cryptoKey);
+    await extensionStorage.remove("credentials");
+  });
+};
+
 export const getStoredCredentials = async (): Promise<CredentialsStore> => {
   const cryptoKey = memStore.getState().cryptoKey;
   if (!cryptoKey) {

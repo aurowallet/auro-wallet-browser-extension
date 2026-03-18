@@ -40,6 +40,8 @@ All notable changes to this project will be documented in this file.
 - Optimize popup management 
 - Refresh account on ApprovePage before connection
 - Strengthen DApp security verification
+- Restrict `SvgIcon` to extension-local SVG resources only
+- Replace insecure UUID fallback with `uuid`
 
 
 ### Fixes

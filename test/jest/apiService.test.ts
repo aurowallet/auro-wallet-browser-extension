@@ -79,6 +79,7 @@ const mockStorageService = {
     for (const k of keysArray) { delete mockStorageData[k]; }
     return Promise.resolve(undefined);
   }),
+  migrateLegacyCredentials: jest.fn(() => Promise.resolve()),
 };
 
 const mockAccountService = {
