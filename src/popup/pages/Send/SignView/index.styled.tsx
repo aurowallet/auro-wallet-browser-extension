@@ -130,6 +130,15 @@ export const StyledHighFeeTip = styled.div`
   color: #e4b200;
 `;
 
+export const StyledErrorTip = styled.div`
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 17px;
+  color: #d65a5a;
+  text-align: center;
+  margin: 8px 0;
+`;
+
 export const StyledNetworkFeeWrapper = styled.div`
   ${StyledNetworkFeeContainer} {
     margin-top: 20px;

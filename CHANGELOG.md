@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
 - Strengthen DApp security verification
 - Restrict `SvgIcon` to extension-local SVG resources only
 - Replace insecure UUID fallback with `uuid`
+- Update token build transaction verification
 
 
 ### Fixes

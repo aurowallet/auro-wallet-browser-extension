@@ -8,7 +8,8 @@ import {
   checkPresentationRequestSchema,
   checkStoredCredentialSchema,
 } from "@/utils/o1jsUtils";
-import { verifyTokenCommand, zkCommondFormat } from "@/utils/zkUtils";
+import BigNumber from "bignumber.js";
+import { extractTokenTransferInfo, verifyTokenCommand, zkCommondFormat } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import browser from "webextension-polyfill";
 import {
@@ -387,6 +388,7 @@ class DappService {
   ): Promise<unknown> {
     return new Promise(async (resolve, reject) => {
       const that = this;
+      let listenerAdded = false;
       try {
         let nextParams: Record<string, unknown> = { ...params };
         const currentAccount = this.getCurrentAccountAddress();
@@ -796,6 +798,7 @@ class DappService {
         if (!that.signEventListener) {
           browser.runtime.onMessage.addListener(onMessage as BrowserMessageListener);
           that.signEventListener = onMessage;
+          listenerAdded = true;
         }
 
         const time = new Date().getTime();
@@ -838,6 +841,9 @@ class DappService {
         );
       } catch (error) {
         const isDev = process.env.NODE_ENV === 'development';
+        if (listenerAdded) {
+          that.cleanupSignListener();
+        }
         reject({
           code: errorCodes.throwError,
           message: getMessageFromCode(errorCodes.throwError),
@@ -1409,7 +1415,7 @@ class DappService {
 
       if (buildUrl.protocol !== 'https:') return false;
 
-      if (buildUrl.hostname !== whiteUrl.hostname) return false;
+      if (buildUrl.origin !== whiteUrl.origin) return false;
 
       return true;
     } catch {
@@ -1466,23 +1472,61 @@ class DappService {
     decryptData: Record<string, unknown>,
     buildData: Record<string, unknown>
   ): boolean {
+    if (!buildData) {
+      return false;
+    }
+
+    let realUnSignTx: string;
     try {
-      if (!buildData) {
-        return false;
-      }
-      const realUnSignTx = JSON.stringify(decryptData.transaction);
-      const sourceData = {
-        sender: buildData.sender as string,
-        receiver: buildData.receiver as string,
-        amount: buildData.amount as string | number,
-        isNewAccount: buildData.isNewAccount as boolean | undefined,
-      };
-      const checkChangeStatus = verifyTokenCommand(
-        sourceData,
-        buildData.tokenId as string,
-        realUnSignTx
-      );
-      return checkChangeStatus;
+      realUnSignTx = JSON.stringify(decryptData.transaction);
+    } catch (error) {
+      return false;
+    }
+
+    const tokenId = buildData.tokenId as string;
+    
+    if (!buildData.sender || !buildData.receiver || !buildData.amount) {
+      return false;
+    }
+    
+    const extractionResult = extractTokenTransferInfo(realUnSignTx, tokenId);
+    if (!extractionResult.success) {
+      return false;
+    }
+    const extractedInfo = extractionResult.data;
+
+    const txMemo = extractedInfo.memo;
+    const feePayerMemo = (decryptData.feePayer as Record<string, unknown>)?.memo as string || "";
+    const topLevelMemo = decryptData.memo as string || "";
+    const resolvedMemo = txMemo || feePayerMemo || topLevelMemo;
+    
+    if (extractedInfo.sender !== buildData.sender) {
+      return false;
+    }
+    if (extractedInfo.receiver !== buildData.receiver) {
+      return false;
+    }
+    const extractedAmount = new BigNumber(extractedInfo.amount);
+    const buildAmount = new BigNumber(String(buildData.amount));
+    if (!extractedAmount.isEqualTo(buildAmount)) {
+      return false;
+    }
+    if (extractedInfo.tokenId !== tokenId) {
+      return false;
+    }
+    if (buildData.memo && resolvedMemo && resolvedMemo !== buildData.memo) {
+      return false;
+    }
+    
+    const sourceData = {
+      sender: buildData.sender as string,
+      receiver: buildData.receiver as string,
+      amount: buildData.amount as string | number,
+      isNewAccount: extractedInfo.isNewAccount,
+    };
+
+    try {
+      return verifyTokenCommand(sourceData, tokenId, realUnSignTx);
     } catch (error) {
       return false;
     }
@@ -1495,6 +1539,7 @@ class DappService {
   ): Promise<unknown> {
     return new Promise(async (resolve, reject) => {
       const that = this;
+      let listenerAdded = false;
       try {
         const nextParams: Record<string, unknown> = { ...params };
 
@@ -1518,11 +1563,9 @@ class DappService {
             tokenSignRequests = [];
             dappStore._directUpdate({ tokenBuildList: {} });
             that.setBadgeContent();
-            if (tokenSignRequests.length === 0) {
-              closePopupWindow(windowId.token_sign);
-              browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
-              that.tokenSignListener = undefined;
-            }
+            closePopupWindow(windowId.token_sign);
+            browser.runtime.onMessage.removeListener(onMessage as BrowserMessageListener);
+            that.tokenSignListener = undefined;
             return;
           }
 
@@ -1537,7 +1580,7 @@ class DappService {
 
           switch (action) {
             case TOKEN_BUILD.requestSign:
-              if (payload.resultOrigin !== site.origin) {
+              if (payload.resultOrigin !== currentSignParams.site.origin) {
                 nextReject({
                   message: getMessageFromCode(errorCodes.originDismatch),
                   code: errorCodes.originDismatch,
@@ -1615,6 +1658,7 @@ class DappService {
         if (!that.tokenSignListener) {
           browser.runtime.onMessage.addListener(onMessage as BrowserMessageListener);
           that.tokenSignListener = onMessage;
+          listenerAdded = true;
         }
 
         const time = new Date().getTime();
@@ -1639,6 +1683,9 @@ class DappService {
         );
       } catch (error) {
         const isDev = process.env.NODE_ENV === 'development';
+        if (listenerAdded) {
+          that.cleanupTokenSignListener();
+        }
         reject({
           code: errorCodes.throwError,
           message: getMessageFromCode(errorCodes.throwError),

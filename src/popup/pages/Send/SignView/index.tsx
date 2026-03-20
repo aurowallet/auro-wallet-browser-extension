@@ -24,7 +24,7 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "@/popup/types/common";
 import styled from "styled-components";
@@ -38,7 +38,7 @@ import {
   parsedZekoFee,
 } from "../../../../utils/utils";
 import NetworkFee from "../../../component/NetworkFee";
-import { getAccountUpdateCount } from "../../../../utils/zkUtils";
+import { getAccountUpdateCount, extractTokenTransferInfo } from "../../../../utils/zkUtils";
 import {
   StyledSectionSign,
   StyledTitleRow,
@@ -56,6 +56,7 @@ import {
   StyledRightWrapper,
   StyledTypeRow,
   StyledHighFeeTip,
+  StyledErrorTip,
   StyledBtnGroup,
   StyledNetworkFeeWrapper,
 } from "./index.styled";
@@ -123,19 +124,28 @@ const SignView = ({
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
   const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
+  const [extractedData, setExtractedData] = useState<{
+    receiveAddress?: string;
+    sender?: string;
+    showAmount: string;
+    rawAmount: string | number;
+    memo: string;
+    extractionFailed: boolean;
+    extractionError: string;
+  } | null>(null);
+  const toastShownRef = useRef(false);
 
   const {
     sendAction,
     currentAdvanceData,
     tokenDecimal,
-    receiveAddress,
-    sender,
     nextMemo,
-    showAmount,
     pageTitle,
     availableBalance,
     isZeko,
     zkAppUpdateCount,
+    buildData,
+    showSymbol,
   } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     let id = signParams?.id || "";
@@ -143,26 +153,20 @@ const SignView = ({
     let zkAppUpdateCount = 1;
 
     const buildData = signParams?.params?.buildData ?? {};
-    const showSymbol = buildData.symbol ?? "UNKNOWN";
-    const tokenDecimal = buildData.decimals ?? 0;
-    const receiveAddress = buildData.receiver;
-    const sender = buildData.sender;
-    const nextMemo = buildData.memo ?? "";
-    let showAmount = getBalanceForUI(
-      buildData.amount ?? 0,
-      tokenDecimal,
-      tokenDecimal
-    );
-    showAmount = showAmount + " " + showSymbol;
-    let pageTitle = i18n.t("send") + " " + showSymbol;
-    let currentToken = (tokenList as unknown as Array<{ tokenId: string; tokenBaseInfo?: { showBalance?: number } }>).find(
-      (tokenItem) => tokenItem.tokenId === buildData.tokenId
-    );
+    let showSymbol = buildData.symbol ?? "UNKNOWN";
+    let tokenDecimal = buildData.decimals ?? 0;
+    let nextMemo = buildData.memo ?? "";
+    
     if (signParams?.params?.result) {
       zkAppUpdateCount = getAccountUpdateCount(
         JSON.stringify(signParams?.params?.result)
       );
     }
+    
+    let pageTitle = i18n.t("send") + " " + showSymbol;
+    let currentToken = (tokenList as unknown as Array<{ tokenId: string; tokenBaseInfo?: { showBalance?: number } }>).find(
+      (tokenItem) => tokenItem.tokenId === buildData.tokenId
+    );
 
     let availableBalance = currentToken?.tokenBaseInfo?.showBalance || 0;
     let isZeko = isZekoNet(buildData?.networkID);
@@ -170,16 +174,81 @@ const SignView = ({
       sendAction,
       currentAdvanceData,
       tokenDecimal,
-      receiveAddress,
-      sender,
       nextMemo,
-      showAmount,
       pageTitle,
       availableBalance,
       isZeko,
       zkAppUpdateCount,
+      buildData,
+      showSymbol,
     };
   }, [signParams, advanceData, tokenList]);
+
+  useEffect(() => {
+    if (signParams?.params?.result && buildData.tokenId) {
+      const extractionResult = extractTokenTransferInfo(
+        JSON.stringify(signParams?.params?.result),
+        buildData.tokenId as string
+      );
+      
+      if (extractionResult.success) {
+        setExtractedData({
+          receiveAddress: extractionResult.data.receiver,
+          sender: extractionResult.data.sender,
+          showAmount: getBalanceForUI(
+            extractionResult.data.amount,
+            tokenDecimal,
+            tokenDecimal
+          ) + " " + showSymbol,
+          rawAmount: extractionResult.data.amount,
+          memo: extractionResult.data.memo || (buildData.memo as string) || "",
+          extractionFailed: false,
+          extractionError: "",
+        });
+      } else {
+        setExtractedData({
+          receiveAddress: undefined,
+          sender: undefined,
+          showAmount: "--",
+          rawAmount: 0,
+          memo: "",
+          extractionFailed: true,
+          extractionError: extractionResult.error,
+        });
+      }
+    } else {
+      setExtractedData({
+        receiveAddress: buildData.receiver,
+        sender: buildData.sender,
+        showAmount: getBalanceForUI(
+          buildData.amount ?? 0,
+          tokenDecimal,
+          tokenDecimal
+        ) + " " + showSymbol,
+        rawAmount: buildData.amount ?? 0,
+        memo: (buildData.memo as string) || "",
+        extractionFailed: false,
+        extractionError: "",
+      });
+    }
+  }, [signParams?.params?.result, buildData, tokenDecimal, showSymbol]);
+
+  const receiveAddress = extractedData?.receiveAddress;
+  const sender = extractedData?.sender;
+  const showAmount = extractedData?.showAmount || "";
+  const showMemo = extractedData?.memo || "";
+  const extractionFailed = extractedData?.extractionFailed || false;
+  const extractionError = extractedData?.extractionError || "";
+
+  useEffect(() => {
+    if (!extractionFailed) {
+      toastShownRef.current = false;
+      return;
+    }
+    if (toastShownRef.current) return;
+    toastShownRef.current = true;
+    Toast.info(i18n.t("postFailed"));
+  }, [extractionFailed]);
 
   useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
@@ -301,7 +370,6 @@ const SignView = ({
 
     let toAddress = receiveAddress;
     let fee = trimSpace(nextFee);
-    let memo = nextMemo;
     let fromAddress = sender;
 
     let payload: {
@@ -319,7 +387,7 @@ const SignView = ({
       nonce: nonce as string,
       currentAccount,
       fee: (fee || "") as string,
-      memo: memo || "",
+      memo: showMemo || "",
     };
 
     payload.transaction = JSON.stringify(params?.result);
@@ -346,14 +414,18 @@ const SignView = ({
     inferredNonce,
     receiveAddress,
     sender,
+    showMemo,
   ]);
 
   const onConfirm = useCallback(async () => {
+    if (extractionFailed) {
+      Toast.info(i18n.t("postFailed"));
+      return;
+    }
     if (sender !== currentAccount.address) {
       Toast.info(i18n.t("updateAccount"));
       return;
     }
-    const buildData = signParams?.params?.buildData ?? {};
     let validNonce = advanceNonce || inferredNonce;
     let nonce = trimSpace(validNonce) || "";
     if ((nonce as string).length > 0 && !isNumber(nonce)) {
@@ -365,7 +437,7 @@ const SignView = ({
       Toast.info(i18n.t("inputFeeError"));
       return;
     }
-    const sendAmount = buildData.amount;
+    const sendAmount = extractedData?.rawAmount ?? buildData.amount ?? 0;
     let amount = amountDecimals(sendAmount || 0, tokenDecimal);
 
     let mainTokenBalance = mainTokenNetInfo?.tokenBaseInfo?.showBalance || 0;
@@ -378,6 +450,7 @@ const SignView = ({
     }
     clickNextStep();
   }, [
+    extractionFailed,
     i18n,
     currentAccount,
     signParams,
@@ -457,8 +530,11 @@ const SignView = ({
               showArrow={true}
             />
             <CommonRow leftTitle={i18n.t("amount")} leftContent={showAmount} />
-            {nextMemo && (
-              <CommonRow leftTitle={"Memo"} leftContent={nextMemo} />
+            {showMemo && (
+              <CommonRow leftTitle={"Memo"} leftContent={showMemo} />
+            )}
+            {extractionFailed && (
+              <StyledErrorTip>{i18n.t("postFailed")}</StyledErrorTip>
             )}
             <StyledNetworkFeeWrapper>
               <NetworkFee
@@ -481,6 +557,7 @@ const SignView = ({
             loading={btnLoading}
             size={button_size.middle}
             onClick={onConfirm}
+            disable={extractionFailed || !extractedData}
           >
             {i18n.t("confirm")}
           </Button>

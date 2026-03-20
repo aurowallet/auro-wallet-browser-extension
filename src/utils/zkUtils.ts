@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { AccountUpdate } from "../constant/zkAccountUpdateDoc";
-import { addressSlice, amountDecimals } from "./utils";
+import { addressSlice, amountDecimals, decodeMemo } from "./utils";
 import {
   MAIN_COIN_CONFIG,
   ZK_DEFAULT_TOKEN_ID,
@@ -70,6 +70,7 @@ interface FeePayer {
 interface ZkAppCommand {
   feePayer: FeePayer;
   accountUpdates: AccountUpdateItem[];
+  memo?: string;
 }
 
 interface ZkInfoItem {
@@ -87,11 +88,36 @@ interface ZkAppUpdateInfo {
   isZkReceive: boolean;
 }
 
-interface SourceData {
+export interface SourceData {
   sender: string;
   receiver: string;
   amount: string | number;
   isNewAccount?: boolean;
+}
+
+const ALLOWED_UPDATE_KEYS = new Set<string>([
+  "appState",
+  "delegate",
+  "verificationKey",
+  "permissions",
+  "zkappUri",
+  "tokenSymbol",
+  "timing",
+  "votingFor",
+]);
+
+function isNullOrFlaggedNone(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'object' && value !== null && 'isSome' in value) {
+    return (value as { isSome: boolean }).isSome === false;
+  }
+  return false;
+}
+
+function isUpdateFieldSafe(key: string, value: unknown): boolean {
+  if (key === 'tokenSymbol') return true;
+  if (key === 'appState') return true;
+  return isNullOrFlaggedNone(value);
 }
 
 // ============ Internal Functions ============
@@ -261,41 +287,110 @@ export function verifyTokenCommand(
   sendTokenId: string,
   buildZkCommand: string
 ): boolean {
-  const { sender, receiver, amount, isNewAccount } = sourceData;
-  const nextBuildZkCommand: ZkAppCommand = JSON.parse(buildZkCommand);
-  let senderVerified = false;
-  let receiverVerified = false;
-  const accountUpdateCount = isNewAccount ? 4 : 3;
+  try {
+    const { sender, receiver, amount, isNewAccount } = sourceData;
+    const nextBuildZkCommand: ZkAppCommand = JSON.parse(buildZkCommand);
+    let senderVerified = false;
+    let receiverVerified = false;
+    const accountUpdateCount = isNewAccount ? 4 : 3;
 
-  if (nextBuildZkCommand.accountUpdates.length !== accountUpdateCount) {
-    return false;
-  }
+    if (!Array.isArray(nextBuildZkCommand.accountUpdates) || 
+        nextBuildZkCommand.accountUpdates.length !== accountUpdateCount) {
+      return false;
+    }
 
-  nextBuildZkCommand.accountUpdates.forEach((accountUpdate) => {
-    const { publicKey, balanceChange, tokenId } = accountUpdate.body;
+    if (nextBuildZkCommand.accountUpdates.some(item => !item?.body)) {
+      return false;
+    }
 
-    if (tokenId === sendTokenId) {
-      if (publicKey === sender) {
-        if (
-          balanceChange.magnitude === amount.toString() &&
-          balanceChange.sgn === "Negative"
-        ) {
-          senderVerified = true;
-        }
+    const feePayerFee = nextBuildZkCommand.feePayer?.body?.fee;
+    const feePayerPublicKey = nextBuildZkCommand.feePayer?.body?.publicKey;
+
+    if (feePayerFee === undefined || feePayerFee === null || feePayerFee === "" || !feePayerPublicKey) {
+      return false;
+    }
+
+    if (new BigNumber(feePayerFee).isNaN()) {
+      return false;
+    }
+    
+    if (new BigNumber(feePayerFee).isLessThan(0)) {
+      return false;
+    }
+    
+    if (feePayerPublicKey !== sender) {
+      return false;
+    }
+
+    for (const accountUpdate of nextBuildZkCommand.accountUpdates) {
+      if (!accountUpdate || !accountUpdate.body) {
+        return false;
       }
 
-      if (publicKey === receiver) {
-        if (
-          balanceChange.magnitude === amount.toString() &&
-          balanceChange.sgn === "Positive"
-        ) {
-          receiverVerified = true;
+      if (!accountUpdate.body.publicKey || !accountUpdate.body.tokenId) {
+        return false;
+      }
+
+      const { publicKey, balanceChange, tokenId, update } = accountUpdate.body;
+
+      if (update != null && typeof update !== 'object') {
+        return false;
+      }
+      if (update && typeof update === 'object') {
+        const updateKeys = Object.keys(update);
+        for (const key of updateKeys) {
+          if (!ALLOWED_UPDATE_KEYS.has(key)) {
+            return false;
+          }
+        }
+        if (publicKey === sender) {
+          for (const key of updateKeys) {
+            const val = (update as Record<string, unknown>)[key];
+            if (!isUpdateFieldSafe(key, val)) {
+              return false;
+            }
+          }
+          if (update.tokenSymbol !== undefined && update.tokenSymbol !== null) {
+            return false;
+          }
+        }
+      }
+      if (!balanceChange || typeof balanceChange.magnitude !== "string" || typeof balanceChange.sgn !== "string") {
+        return false;
+      }
+
+      if (tokenId === sendTokenId) {
+        if (publicKey === sender) {
+          if (
+            new BigNumber(balanceChange.magnitude).isEqualTo(amount) &&
+            balanceChange.sgn === "Negative"
+          ) {
+            senderVerified = true;
+          }
+        } else if (publicKey === receiver) {
+          if (
+            new BigNumber(balanceChange.magnitude).isEqualTo(amount) &&
+            balanceChange.sgn === "Positive"
+          ) {
+            receiverVerified = true;
+          }
+        } else {
+          if (balanceChange.magnitude !== "0") {
+            return false;
+          }
+        }
+      } else {
+        if (balanceChange.magnitude !== "0" || 
+            (balanceChange.sgn !== "Positive" && balanceChange.sgn !== "Negative")) {
+          return false;
         }
       }
     }
-  });
 
-  return senderVerified && receiverVerified;
+    return senderVerified && receiverVerified;
+  } catch (error) {
+    return false;
+  }
 }
 
 export function getAccountUpdateCount(zkappCommand: string): number {
@@ -353,13 +448,13 @@ export function getZkAppUpdateInfo(
 
     if (updateList.length > 0) {
       updateList.sort((a, b) =>
-        new BigNumber(b.amount).comparedTo(new BigNumber(a.amount)) || 0
+        new BigNumber(b.amount).comparedTo(new BigNumber(a.amount)) ?? 0
       );
     }
 
     if (otherList.length > 0) {
       otherList.sort((a, b) =>
-        new BigNumber(b.amount).comparedTo(new BigNumber(a.amount)) || 0
+        new BigNumber(b.amount).comparedTo(new BigNumber(a.amount)) ?? 0
       );
     }
 
@@ -368,26 +463,26 @@ export function getZkAppUpdateInfo(
     let to = "";
     let isZkReceive = false;
 
+    const firstAddress = (list: typeof updateList): string =>
+      list[0]?.address ?? "";
+
+    const counterpartyAddress = firstAddress(updateList) || firstAddress(otherList);
+
     if (totalBalanceChange.isGreaterThan(0)) {
       symbol = "+";
-      from = updateList.length > 0 ? (updateList[0]?.address || "") : (otherList[0]?.address || "");
+      from = counterpartyAddress;
       to = publicKey;
       isZkReceive = true;
     } else if (totalBalanceChange.isLessThan(0)) {
       symbol = "-";
       totalBalanceChange = totalBalanceChange.abs();
       from = publicKey;
-      to = updateList.length > 0 ? (updateList[0]?.address || "") : (otherList[0]?.address || "");
+      to = counterpartyAddress;
       isZkReceive = false;
     } else {
-      let result: { address: string; amount: string } | undefined;
-      if (updateList.length > 0) {
-        result = updateList.find((item) => item.address !== feePayer) || { address: "", amount: "" };
-        to = result.address || publicKey;
-      } else {
-        result = otherList.find((item) => item.address !== feePayer) || { address: "", amount: "" };
-        to = result.address || publicKey;
-      }
+      const candidates = updateList.length > 0 ? updateList : otherList;
+      const result = candidates.find((item) => item.address !== feePayer);
+      to = result?.address || publicKey;
       from = feePayer;
     }
 
@@ -423,3 +518,98 @@ export const getZkAppFeePayerAddress = (tx: string | null | undefined): string =
     return "";
   }
 };
+
+export interface TokenTransferInfo {
+  sender: string;
+  receiver: string;
+  amount: string;
+  tokenId: string;
+  isNewAccount: boolean;
+  memo: string;
+}
+
+export enum ExtractionErrorCode {
+  SENDER_NOT_FOUND = "SENDER_NOT_FOUND",
+  RECEIVER_NOT_FOUND = "RECEIVER_NOT_FOUND",
+  AMOUNT_MISMATCH = "AMOUNT_MISMATCH",
+  INVALID_STRUCTURE = "INVALID_STRUCTURE",
+  PARSE_ERROR = "PARSE_ERROR",
+}
+
+export type ExtractionResult =
+  | { success: true; data: TokenTransferInfo }
+  | { success: false; error: string; code: ExtractionErrorCode };
+
+export function extractTokenTransferInfo(
+  zkCommand: string,
+  expectedTokenId: string
+): ExtractionResult {
+  try {
+    const nextZkCommand: ZkAppCommand = JSON.parse(zkCommand);
+
+    if (!nextZkCommand?.accountUpdates || !Array.isArray(nextZkCommand.accountUpdates)) {
+      return { success: false, error: "Invalid transaction structure: missing accountUpdates", code: ExtractionErrorCode.INVALID_STRUCTURE };
+    }
+
+    let sender = "";
+    let receiver = "";
+    let senderAmount = "";
+    let receiverAmount = "";
+    let senderFound = false;
+    let receiverFound = false;
+
+    const isNewAccount = nextZkCommand.accountUpdates.length === 4;
+
+    for (const accountUpdate of nextZkCommand.accountUpdates) {
+      if (!accountUpdate?.body) {
+        return { success: false, error: "Invalid accountUpdate: missing body", code: ExtractionErrorCode.INVALID_STRUCTURE };
+      }
+      const { publicKey, balanceChange, tokenId } = accountUpdate.body;
+
+      if (tokenId === expectedTokenId) {
+        if (balanceChange.sgn === "Negative" && balanceChange.magnitude !== "0") {
+          if (senderFound) {
+            return { success: false, error: "Multiple senders found in accountUpdates", code: ExtractionErrorCode.INVALID_STRUCTURE };
+          }
+          sender = publicKey;
+          senderAmount = balanceChange.magnitude;
+          senderFound = true;
+        }
+
+        if (balanceChange.sgn === "Positive" && balanceChange.magnitude !== "0") {
+          if (receiverFound) {
+            return { success: false, error: "Multiple receivers found in accountUpdates", code: ExtractionErrorCode.INVALID_STRUCTURE };
+          }
+          receiver = publicKey;
+          receiverAmount = balanceChange.magnitude;
+          receiverFound = true;
+        }
+      }
+    }
+
+    if (!senderFound) {
+      return { success: false, error: "Sender not found in accountUpdates", code: ExtractionErrorCode.SENDER_NOT_FOUND };
+    }
+    if (!receiverFound) {
+      return { success: false, error: "Receiver not found in accountUpdates", code: ExtractionErrorCode.RECEIVER_NOT_FOUND };
+    }
+    if (!new BigNumber(senderAmount).isEqualTo(receiverAmount)) {
+      return { success: false, error: `Amount mismatch: sender=${senderAmount}, receiver=${receiverAmount}`, code: ExtractionErrorCode.AMOUNT_MISMATCH };
+    }
+
+    return {
+      success: true,
+      data: {
+        sender,
+        receiver,
+        amount: senderAmount,
+        tokenId: expectedTokenId,
+        isNewAccount,
+        memo: nextZkCommand.memo ? decodeMemo(nextZkCommand.memo) : "",
+      },
+    };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: `Parse error: ${errorMsg}`, code: ExtractionErrorCode.PARSE_ERROR };
+  }
+}
