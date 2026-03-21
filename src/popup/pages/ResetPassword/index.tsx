@@ -45,13 +45,12 @@ const Reset = () => {
     useEffect(() => {
         let renderList: typeof PasswordValidationList = []
         let newMatchList = pwdMatchList.map(v => {
-            if (v.expression.test(newPassword)) {
-                v.bool = true;
-            } else {
-                v.bool = false;
-                renderList.push(v)
+            const matched = v.expression.test(newPassword);
+            const updated = { ...v, bool: matched };
+            if (!matched) {
+                renderList.push(updated)
             }
-            return v;
+            return updated;
         })
         setPwdMatchList(newMatchList)
         setMatchRenderList(renderList)
@@ -91,7 +90,7 @@ const Reset = () => {
                 Toast.info(i18n.t('passwordError'))
             }
         })
-    }, [oldPassword, confirmPassword, newPassword, history, i18n])
+    }, [oldPassword, newPassword, navigate])
 
     return (
         <CustomView title={i18n.t("changePassword")}>

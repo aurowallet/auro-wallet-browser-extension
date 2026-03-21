@@ -55,6 +55,7 @@ All notable changes to this project will be documented in this file.
 - Transient prop
 - Popup duplication caused by incomplete tab loading
 - getZkAppPendingTx fallback
+- Reset state update
 
 ## [2.4.5]
 ### Enhancements
