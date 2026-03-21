@@ -85,6 +85,9 @@ function internalMessageListener(
   sender: browser.Runtime.MessageSender,
   sendResponse: (response?: unknown) => void
 ): boolean {
+  if (sender.id !== browser.runtime.id) {
+    return false;
+  }
   if (!message || typeof message !== "object") {
     return false;
   }

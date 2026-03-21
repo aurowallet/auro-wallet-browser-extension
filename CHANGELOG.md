@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Remove firefox 'unsafe-eval'
 - Add runtime debug logging toggle
 - Update UUID of addTokenBuildList
+- Add id check to internalMessageListener
 
 
 ### Fixes
