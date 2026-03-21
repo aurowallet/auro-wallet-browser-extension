@@ -473,8 +473,8 @@ export async function getZkAppPendingTx(
   if (!gqlTxUrl) {
     return [];
   }
-  if (gqlTxUrl.indexOf("graphql") !== -1) {
-    gqlTxUrl.substring(gqlTxUrl.indexOf("graphql"));
+  if (gqlTxUrl.indexOf("graphql") === -1) {
+    gqlTxUrl = gqlTxUrl.replace(/\/$/, "") + "/graphql";
   }
   const txBody = getPendingZkAppTxBody();
   const result = (await startFetchMyQuery(

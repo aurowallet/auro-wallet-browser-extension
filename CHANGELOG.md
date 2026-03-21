@@ -54,6 +54,7 @@ All notable changes to this project will be documented in this file.
 - Transaction history
 - Transient prop
 - Popup duplication caused by incomplete tab loading
+- getZkAppPendingTx fallback
 
 ## [2.4.5]
 ### Enhancements
