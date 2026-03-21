@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 - Restrict `SvgIcon` to extension-local SVG resources only
 - Replace insecure UUID fallback with `uuid`
 - Update token build transaction verification
+- Remove firefox 'unsafe-eval'
 
 
 ### Fixes
