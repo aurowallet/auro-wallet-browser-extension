@@ -67,3 +67,8 @@ export const ZKAPP_APPROVE_LIST = "ZKAPP_APPROVE_LIST";
 // ============ Token ============
 
 export const SUPPORT_TOKEN_LIST = "SUPPORT_TOKEN_LIST";
+
+// ============ Debug ============
+
+export const DEBUG_LOG_STORAGE_KEY = "DEBUG_LOG_ENABLED";
+

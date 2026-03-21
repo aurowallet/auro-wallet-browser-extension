@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Replace insecure UUID fallback with `uuid`
 - Update token build transaction verification
 - Remove firefox 'unsafe-eval'
+- Add runtime debug logging toggle
 
 
 ### Fixes

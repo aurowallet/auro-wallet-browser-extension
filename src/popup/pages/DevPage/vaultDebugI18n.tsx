@@ -169,6 +169,9 @@ export const VAULT_DEBUG_I18N = {
     detectedVersion: "当前检测版本",
     storageKey: "存储键: keyringData (唯一)",
 
+    // Debug Logging
+    debugLoggingTitle: "调试日志",
+
     // Migration Status Check
     migrationCheckTitle: "一键迁移状态检查",
     migrationCheckInfo: "检查 v3 CryptoKey 迁移是否完成，无需输入密码即可查看基本状态",
@@ -355,6 +358,9 @@ export const VAULT_DEBUG_I18N = {
     debugInfo: "Debug Info",
     detectedVersion: "Detected Version",
     storageKey: "Storage key: keyringData (only)",
+
+    // Debug Logging
+    debugLoggingTitle: "Debug Logging",
 
     // Migration Status Check
     migrationCheckTitle: "One-Click Migration Status Check",

@@ -1,3 +1,4 @@
+import { initRuntimeLog } from "./utils/runtimeLog";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
@@ -178,6 +179,7 @@ function initZkAppConnect(): void {
 
 export const applicationEntry = {
   async run(): Promise<void> {
+    initRuntimeLog().catch(() => {});
     await languageInit();
     let nextRoute: string = await initAccountInfo(store);
     this.render();

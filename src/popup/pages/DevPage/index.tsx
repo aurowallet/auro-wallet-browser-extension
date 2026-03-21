@@ -1,7 +1,10 @@
 import i18n from "i18next";
-import { useCallback, useEffect } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
+import IOSSwitch from "../../component/Switch";
+import { getDebugLogEnabled, setDebugLogEnabled } from "../../../utils/runtimeLog";
+import { t as vt } from "./vaultDebugI18n";
 import {
   StyledContainer,
   StyledRowContainer,
@@ -13,10 +16,25 @@ import {
 const DevPage = () => {
 
   const navigate = useNavigate();
+  const [debugLogEnabled, setDebugLogEnabledState] = useState(false);
+
+  useEffect(() => {
+    getDebugLogEnabled().then(setDebugLogEnabledState);
+  }, []);
+
+  const handleDebugLogToggle = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    const enabled = e.target.checked;
+    setDebugLogEnabledState(enabled);
+    try {
+      await setDebugLogEnabled(enabled);
+    } catch {
+      setDebugLogEnabledState(!enabled);
+    }
+  }, []);
 
   const goToPage = useCallback((nextRoute: string, { pageType, title }: { pageType?: string; title?: string }) => {
     navigate(nextRoute, { state: { pageType, title } });
-  }, []);
+  }, [navigate]);
 
   return (
     <CustomView title={"Auro Dev"} ContentWrapper={StyledContainer}>
@@ -56,6 +74,17 @@ const DevPage = () => {
           });
         }}
       />
+      <StyledRowContainer>
+        <div>
+          <StyledRowTitle>{vt("debugLoggingTitle")}</StyledRowTitle>
+        </div>
+        <StyledRowLeft>
+          <IOSSwitch
+            isChecked={String(debugLogEnabled)}
+            toggleSwitch={handleDebugLogToggle}
+          />
+        </StyledRowLeft>
+      </StyledRowContainer>
       {process.env.NODE_ENV === 'development' && (
         <RowItem
           title={"Vault debug"}
