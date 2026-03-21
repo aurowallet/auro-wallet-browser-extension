@@ -98,7 +98,7 @@ export const debugLog = {
 };
 
 // Expose to window for easy console access
-if (typeof window !== 'undefined') {
+if (DEBUG_ENABLED && typeof window !== 'undefined') {
   (window as unknown as { debugLog: typeof debugLog }).debugLog = debugLog;
 }
 
