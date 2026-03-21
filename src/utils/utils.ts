@@ -229,7 +229,7 @@ export function getOriginFromUrl(url: string | undefined): string {
     if (!url) return "";
     return new URL(url).origin;
   } catch {
-    return url || "";
+    return "";
   }
 }
 
