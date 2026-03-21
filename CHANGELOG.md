@@ -45,6 +45,7 @@ All notable changes to this project will be documented in this file.
 - Update token build transaction verification
 - Remove firefox 'unsafe-eval'
 - Add runtime debug logging toggle
+- Update UUID of addTokenBuildList
 
 
 ### Fixes

@@ -1366,7 +1366,7 @@ class DappService {
       unknown
     >;
     let buildID = uuidv4();
-    if (buildList[buildID]) {
+    while (buildList[buildID]) {
       buildID = uuidv4();
     }
     buildList[buildID] = {
