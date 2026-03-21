@@ -819,6 +819,14 @@ class DappService {
             time,
           });
         } else {
+          const duplicate = signRequests.some((item) => item.id === id);
+          if (duplicate) {
+            reject({
+              code: errorCodes.zkChainPending,
+              message: getMessageFromCode(errorCodes.zkChainPending),
+            });
+            return;
+          }
           signRequests.push({
             id,
             params: nextParams,
