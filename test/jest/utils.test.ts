@@ -159,7 +159,7 @@ describe('Utils Test', () => {
       );
     });
     it('should return without getOriginFromUrl empty', () => {
-      expect(getOriginFromUrl('xxx')).toBe('xxx');
+      expect(getOriginFromUrl('xxx')).toBe('');
     });
   });
 
