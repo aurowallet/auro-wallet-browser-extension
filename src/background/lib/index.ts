@@ -87,8 +87,8 @@ export async function signPayment(
     const signClient = await getSignClient();
 
     const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
-    const sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber();
-    const sendAmount = new BigNumber(amount).multipliedBy(decimal).toNumber();
+    const sendFee = new BigNumber(fee).multipliedBy(decimal).toFixed(0);
+    const sendAmount = new BigNumber(amount).multipliedBy(decimal).toFixed(0);
     signedPayment = signClient.signPayment(
       {
         to: toAddress,
@@ -119,7 +119,7 @@ export async function stakePayment(
   try {
     const signClient = await getSignClient();
     const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
-    const sendFee = new BigNumber(fee).multipliedBy(decimal).toNumber();
+    const sendFee = new BigNumber(fee).multipliedBy(decimal).toFixed(0);
     signedStakingPayment = signClient.signStakeDelegation(
       {
         to: toAddress,
@@ -186,7 +186,7 @@ export async function verifyMessage(
 function buildSignTxBody(params: SignParams): Record<string, unknown> {
   const sendAction = params.sendAction;
   const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
-  const sendFee = new BigNumber(params.fee).multipliedBy(decimal).toNumber();
+  const sendFee = new BigNumber(params.fee).multipliedBy(decimal).toFixed(0);
   const signBody: Record<string, unknown> = {
     to: params.toAddress,
     from: params.fromAddress,
@@ -197,7 +197,7 @@ function buildSignTxBody(params: SignParams): Record<string, unknown> {
   if (sendAction === DAppActions.mina_sendPayment) {
     const sendAmount = new BigNumber(params.amount || 0)
       .multipliedBy(decimal)
-      .toNumber();
+      .toFixed(0);
     signBody.amount = sendAmount;
   }
   return signBody;
@@ -239,7 +239,7 @@ export async function signTransaction(
         const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
         const sendFee = new BigNumber(params.fee)
           .multipliedBy(decimal)
-          .toNumber();
+          .toFixed(0);
         signBody = {
           zkappCommand: parseTx,
           feePayer: {

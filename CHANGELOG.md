@@ -48,7 +48,7 @@ All notable changes to this project will be documented in this file.
 - Update UUID of addTokenBuildList
 - Add id check to internalMessageListener
 - Add zkApp sensitive update warnings for permissions, delegate, verification key, timing, voting, and zkApp URI
-
+- Transaction precision
 
 ### Fixes
 - E-notation of SendPage

@@ -468,10 +468,10 @@ const SendPage = () => {
       let mainCoinDecimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
       let sendFee = new BigNumber(payload.fee)
         .multipliedBy(mainCoinDecimal)
-        .toNumber();
+        .toFixed(0);
       let sendAmount = new BigNumber(payload.amount)
         .multipliedBy(decimal)
-        .toNumber();
+        .toFixed(0);
       const buildTokenData = {
         sender: payload.fromAddress,
         receiver: payload.toAddress,

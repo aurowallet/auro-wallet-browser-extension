@@ -249,13 +249,16 @@ class LedgerManager {
     const networkId = await this._getNetworkId();
     const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
 
+    const amountNano = new BigNumber(body.amount || 0).multipliedBy(decimal);
+    const feeNano = new BigNumber(body.fee).multipliedBy(decimal);
+
     const payload = {
       txType: type,
       senderAccount: accountIndex,
       senderAddress: body.fromAddress,
       receiverAddress: body.toAddress || body.receiverAddress || "",
-      amount: new BigNumber(body.amount || 0).multipliedBy(decimal).toNumber(),
-      fee: new BigNumber(body.fee).multipliedBy(decimal).toNumber(),
+      amount: amountNano.toNumber(),
+      fee: feeNano.toNumber(),
       nonce: +body.nonce,
       memo: body.memo || "",
       networkId,
