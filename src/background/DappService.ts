@@ -1350,10 +1350,14 @@ class DappService {
   async initApproveConnect(): Promise<void> {
     const approveData = await get(ZKAPP_APPROVE_LIST) as Record<string, string> | undefined;
     if (approveData?.ZKAPP_APPROVE_LIST) {
-      const approveMap = JSON.parse(approveData.ZKAPP_APPROVE_LIST);
-      dappStore.updateState({
-        accountApprovedUrlList: approveMap,
-      });
+      try {
+        const approveMap = JSON.parse(approveData.ZKAPP_APPROVE_LIST);
+        dappStore.updateState({
+          accountApprovedUrlList: approveMap,
+        });
+      } catch (e) {
+        console.error("[initApproveConnect] Failed to parse approve list:", e);
+      }
     }
   }
 
