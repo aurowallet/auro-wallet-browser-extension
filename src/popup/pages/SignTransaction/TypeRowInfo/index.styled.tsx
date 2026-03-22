@@ -18,10 +18,6 @@ export const StyledRowContent = styled.p`
   margin: 0;
 `;
 
-export const StyledMt10 = styled.div`
-  margin-top: 10px;
-`;
-
 export const StyledLoopWrapper = styled.div`
   > :not(:first-child) {
     margin-top: 6px;
@@ -34,4 +30,16 @@ export const StyledViewRow = styled.div`
 
 export const StyledRowContentContainer = styled.div`
   white-space: pre;
+`;
+
+export const StyledWarningRowTitle = styled.p`
+  color: #e4b200;
+  font-weight: 700;
+  margin: 0;
+`;
+
+export const StyledWarningRowContent = styled.p`
+  font-weight: 400;
+  color: #e4b200;
+  margin: 0;
 `;

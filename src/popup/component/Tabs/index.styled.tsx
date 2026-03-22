@@ -10,6 +10,10 @@ interface StyledActiveProps {
 
 export const StyledTabContainer = styled.div<StyledStepProps>`
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   ${({ $isStep }) => $isStep && css`
     height: 100%;
   `}
@@ -87,6 +91,9 @@ export const StyledTabsPanels = styled.div<StyledStepProps>`
   width: 100%;
   background: ${({ theme }) => theme.colors.backgroundWhite};
   min-height: 50px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 
   ${({ $isStep }) => $isStep && css`
     height: 100%;
@@ -98,4 +105,6 @@ export const StyledTabTracker = styled.div`
   display: flex;
   transition: transform 0.3s;
   width: 100%;
+  flex: 1;
+  min-height: 0;
 `;

@@ -3,16 +3,18 @@ import {
   StyledContainer,
   StyledRowTitle2,
   StyledRowContent,
-  StyledMt10,
   StyledLoopWrapper,
   StyledViewRow,
   StyledRowContentContainer,
+  StyledWarningRowTitle,
+  StyledWarningRowContent,
 } from "./index.styled";
 
 interface TypeRowData {
   label?: string;
   value?: string | boolean;
   children?: TypeRowData[];
+  warn?: boolean;
 }
 
 export const TypeRowInfo = ({ data, isZkData }: { data: TypeRowData[]; isZkData?: boolean }) => {
@@ -38,6 +40,7 @@ const ChildView = ({ data, count, showInLine }: { data: TypeRowData; count: numb
           content={data.value}
           count={nextCount}
           showInLine={showInLine}
+          warn={data.warn}
         />
         {data.children.map((item: TypeRowData, i: number) => {
           return (
@@ -59,6 +62,7 @@ const ChildView = ({ data, count, showInLine }: { data: TypeRowData; count: numb
       showInLine={showInLine}
       count={count + 1}
       withColon={showInLine}
+      warn={data.warn}
     />
   );
 };
@@ -69,12 +73,14 @@ const ContentRow = ({
   count = 0,
   showInLine,
   withColon = false,
+  warn = false,
 }: {
   title?: string;
   content?: string | boolean;
   count?: number;
   showInLine?: boolean;
   withColon?: boolean;
+  warn?: boolean;
 }) => {
   const marginLeftValue = useMemo(() => {
     return 20 * (count - 1) + "px";
@@ -93,14 +99,16 @@ const ContentRow = ({
   }, [withColon, title]);
 
   const Container = showInLine ? StyledViewRow : StyledRowContentContainer;
+  const TitleComponent = warn ? StyledWarningRowTitle : StyledRowTitle2;
+  const ContentComponent = warn ? StyledWarningRowContent : StyledRowContent;
 
   return (
     <Container style={{ marginLeft: marginLeftValue }}>
-      <StyledRowTitle2>{showTitle}</StyledRowTitle2>
+      <TitleComponent>{showTitle}</TitleComponent>
       {showContent && (
-        <StyledRowContent style={{ marginTop: showInLine ? 0 : "10px" }}>
+        <ContentComponent style={{ marginTop: showInLine ? 0 : "10px" }}>
           {showContent}
-        </StyledRowContent>
+        </ContentComponent>
       )}
     </Container>
   );

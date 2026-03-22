@@ -271,6 +271,27 @@ const SignView = ({
   const mainTokenNetInfo = useAppSelector(
     (state) => state.accountInfo.mainTokenNetInfo
   );
+  const tokenList = useAppSelector(
+    (state) => state.accountInfo.tokenList
+  );
+
+  const tokenSymbolMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const token of tokenList) {
+      const symbol = token.tokenNetInfo?.tokenSymbol;
+      if (symbol) {
+        map[token.tokenId] = symbol;
+      }
+    }
+    return map;
+  }, [tokenList]);
+  const tokenDecimalsMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const token of tokenList) {
+      map[token.tokenId] = token.tokenBaseInfo.decimals;
+    }
+    return map;
+  }, [tokenList]);
   const { feeErrorTip, validateFee, feeConfig } = useFeeValidation();
   const currentNode = useAppSelector((state) => state.network.currentNode);
 
@@ -293,7 +314,7 @@ const SignView = ({
 
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
-  const [selectedCredentials, setSelectedCredentials] = useState<Record<string, unknown>>({});
+  const [selectedCredentials, setSelectedCredentials] = useState<Map<string, { credential: unknown; credentialStr?: string }>>(new Map());
 
   const isZeko = useMemo(() => {
     return isZekoNet(currentNode.networkID);
@@ -368,7 +389,7 @@ const SignView = ({
     if (isSendZk) {
       zkShowData = signParams?.params?.transaction || "";
       try {
-        zkFormatData = getZkInfo(zkShowData || "", currentAccount.address || "");
+        zkFormatData = getZkInfo(zkShowData || "", currentAccount.address || "", tokenSymbolMap, tokenDecimalsMap);
         zkSourceData = JSON.stringify(JSON.parse(zkShowData), null, 2);
         count = getAccountUpdateCount(zkShowData);
       } catch (error) {}
@@ -396,7 +417,7 @@ const SignView = ({
       zkAppNonce,
       zkAppUpdateCount: count,
     };
-  }, [sendAction, signParams, currentAccount, feeConfig]);
+  }, [sendAction, signParams, currentAccount, feeConfig, tokenSymbolMap, tokenDecimalsMap]);
 
   useEffect(() => {
     if (isNumber(currentAdvanceData.fee)) {
@@ -766,7 +787,7 @@ const SignView = ({
             onRemoveTx?.(signParams?.id || "", TX_CLICK_TYPE.CONFIRM);
           }
         );
-        setBtnLoading(true);
+        setBtnLoading(false);
         return { success: parsedResult };
       } catch (error) {
         const err = serializeError(error) as { message?: string };
@@ -794,16 +815,19 @@ const SignView = ({
         ? zkAppAccount
         : signParams?.site?.origin;
 
-    if (!selectedCredentials?.credential) {
+    if (selectedCredentials.size === 0) {
       Toast.info(i18n.t("credentalSelectTip"));
       return;
     }
     setBtnLoading(true);
+    const credentialStrs = Array.from(selectedCredentials.values()).map(
+      (entry) => entry.credentialStr
+    );
     const result = await sendSandboxMessage({
       type: "presentation",
       payload: {
         presentationRequest,
-        selectedCredentials: (selectedCredentials.credential as { credentialStr?: string })?.credentialStr,
+        selectedCredentials: credentialStrs.length === 1 ? credentialStrs[0] : credentialStrs,
         verifierIdentity,
       },
     });
@@ -818,14 +842,7 @@ const SignView = ({
 
   const clickNextStep = useCallback(async () => {
     if (sendAction === DAppActions.mina_storePrivateCredential) {
-      const res = await onStoreInfo();
-      if (!res) return;
-      sendMsg(
-        { action: DAPP_ACTION_STORE_CREDENTIAL, payload: { ...res } },
-        () => {
-          onRemoveTx?.(signParams?.id || "", TX_CLICK_TYPE.CONFIRM);
-        }
-      );
+      await onStoreInfo();
       return;
     }
 
@@ -842,6 +859,7 @@ const SignView = ({
           },
         },
         () => {
+          setBtnLoading(false);
           onRemoveTx?.(signParams?.id || "", TX_CLICK_TYPE.CONFIRM);
         }
       );
@@ -1342,9 +1360,15 @@ const SignView = ({
     setNonceType(ZkAppValueType.custom);
     setAdvanceNonce("");
   }, [inferredNonce]);
-  const onSelectCredential = (credentialData: Record<string, unknown>) => {
-    setSelectedCredentials({
-      ...credentialData,
+  const onSelectCredential = (credentialData: Record<string, unknown>, inputKey: string) => {
+    const cred = credentialData.credential as { credential: unknown; credentialStr?: string } | undefined;
+    setSelectedCredentials((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(inputKey, {
+        credential: cred?.credential,
+        credentialStr: cred?.credentialStr,
+      });
+      return newMap;
     });
   };
 

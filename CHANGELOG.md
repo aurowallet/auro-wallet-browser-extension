@@ -47,6 +47,7 @@ All notable changes to this project will be documented in this file.
 - Add runtime debug logging toggle
 - Update UUID of addTokenBuildList
 - Add id check to internalMessageListener
+- Add zkApp sensitive update warnings for permissions, delegate, verification key, timing, voting, and zkApp URI
 
 
 ### Fixes
@@ -57,6 +58,8 @@ All notable changes to this project will be documented in this file.
 - Popup duplication caused by incomplete tab loading
 - getZkAppPendingTx fallback
 - Reset state update
+- Presentation request loading state
+- SignTransaction tab flex/scroll rendering
 
 ## [2.4.5]
 ### Enhancements

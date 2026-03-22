@@ -1,13 +1,10 @@
 import BigNumber from "bignumber.js";
-import { AccountUpdate } from "../constant/zkAccountUpdateDoc";
 import { addressSlice, amountDecimals, decodeMemo } from "./utils";
 import {
   MAIN_COIN_CONFIG,
   ZK_DEFAULT_TOKEN_ID,
   ZK_EMPTY_PUBLICKEY,
 } from "@/constant";
-
-// ============ Types ============
 
 interface BalanceChange {
   magnitude: string;
@@ -19,14 +16,14 @@ interface AccountUpdateBody {
   tokenId: string;
   balanceChange: BalanceChange;
   update: {
-    tokenSymbol?: string | null;
-    verificationKey?: {
-      data: string;
-      hash: string;
-    };
+    tokenSymbol?: unknown;
+    verificationKey?: unknown;
     permissions?: unknown;
     appState?: unknown;
     timing?: unknown;
+    delegate?: unknown;
+    votingFor?: unknown;
+    zkappUri?: unknown;
   };
   callDepth?: number;
   incrementNonce?: boolean;
@@ -77,6 +74,7 @@ interface ZkInfoItem {
   label: string;
   value?: string;
   children?: ZkInfoItem[];
+  warn?: boolean;
 }
 
 interface ZkAppUpdateInfo {
@@ -106,6 +104,15 @@ const ALLOWED_UPDATE_KEYS = new Set<string>([
   "votingFor",
 ]);
 
+const SENSITIVE_UPDATE_LABELS: Record<string, string> = {
+  delegate: "Delegate",
+  permissions: "Permissions",
+  verificationKey: "Verification Key",
+  timing: "Timing / Vesting",
+  votingFor: "Voting For",
+  zkappUri: "zkApp URI",
+};
+
 function isNullOrFlaggedNone(value: unknown): boolean {
   if (value === null || value === undefined) return true;
   if (typeof value === 'object' && value !== null && 'isSome' in value) {
@@ -120,60 +127,54 @@ function isUpdateFieldSafe(key: string, value: unknown): boolean {
   return isNullOrFlaggedNone(value);
 }
 
-// ============ Internal Functions ============
-
-function short(s: string): string {
-  return ".." + s.slice(-4);
+function extractFlaggedValue(val: unknown): unknown {
+  if (val && typeof val === 'object' && 'isSome' in val) {
+    const flagged = val as { isSome: boolean; value?: unknown };
+    return flagged.isSome ? flagged.value : null;
+  }
+  return val;
 }
 
-function getFormatFeePayer(zkappCommand: ZkAppCommand): Record<string, unknown> {
-  const feePayer = zkappCommand.feePayer;
-  const body = { ...feePayer.body, authorization: short(feePayer.authorization) };
-  if (body.validUntil === null) delete body.validUntil;
-  return { label: "FeePayer", ...body };
+function formatSensitiveFieldChildren(key: string, innerVal: unknown): ZkInfoItem[] {
+  if ((key === 'permissions' || key === 'timing') && typeof innerVal === 'object' && innerVal !== null) {
+    return Object.entries(innerVal as Record<string, unknown>).map(([k, v]) => ({
+      label: k,
+      value: typeof v === 'string' ? v : JSON.stringify(v),
+      warn: true,
+    }));
+  }
+  return [];
 }
 
-function removeNoUpdateValue(
-  data: Record<string, unknown>,
-  docBody: { docEntries?: Record<string, unknown>; entries?: Record<string, { type?: string; docEntries?: unknown; entries?: unknown }> }
-): boolean {
-  const bodyKeys = Object.keys(data);
-  let isRemovedAll = true;
+function getSensitiveUpdateItems(update: Record<string, unknown>): ZkInfoItem[] {
+  const items: ZkInfoItem[] = [];
 
-  bodyKeys.forEach((key) => {
-    const nextBodyContent = data[key];
-    const body_docEntries = docBody.docEntries || {};
-    const body_entries = docBody.entries || {};
+  for (const [key, label] of Object.entries(SENSITIVE_UPDATE_LABELS)) {
+    const rawVal = update[key];
+    if (isNullOrFlaggedNone(rawVal)) continue;
 
-    if (nextBodyContent === body_docEntries[key]) {
-      delete data[key];
+    const innerVal = extractFlaggedValue(rawVal);
+    if (innerVal === null || innerVal === undefined) continue;
+
+    const children = formatSensitiveFieldChildren(key, innerVal);
+
+    if (children.length > 0) {
+      items.push({ label, warn: true, children });
+    } else if (key === 'delegate' && typeof innerVal === 'string') {
+      items.push({ label, value: addressSlice(innerVal), warn: true });
+    } else if (key === 'verificationKey' && typeof innerVal === 'object' && innerVal !== null) {
+      const vk = innerVal as { hash?: string };
+      items.push({ label, value: vk.hash ? addressSlice(vk.hash) : "Updated", warn: true });
     } else {
-      const nextType = body_entries[key]?.type;
-
-      if (nextType === "object") {
-        const childRemoved = removeNoUpdateValue(
-          nextBodyContent as Record<string, unknown>,
-          body_entries[key] as { docEntries?: Record<string, unknown>; entries?: Record<string, { type?: string }> }
-        );
-        if (childRemoved) {
-          delete data[key];
-        } else {
-          isRemovedAll = false;
-        }
-      } else {
-        isRemovedAll = false;
-      }
+      items.push({
+        label,
+        value: typeof innerVal === 'string' ? innerVal : JSON.stringify(innerVal),
+        warn: true,
+      });
     }
-  });
+  }
 
-  return isRemovedAll;
-}
-
-function filterByDefaultsValue(jsonUpdateBody: Record<string, unknown>): Record<string, unknown> {
-  const nextRealBody = { ...jsonUpdateBody };
-  const nextDocBody = AccountUpdate.entries.body;
-  removeNoUpdateValue(nextRealBody, nextDocBody);
-  return nextRealBody;
+  return items;
 }
 
 function getFormatFeePayerV2(
@@ -201,7 +202,37 @@ function getFormatFeePayerV2(
   };
 }
 
-function getUpdateBody(zkappCommand: ZkAppCommand): ZkInfoItem {
+function resolveTokenSymbol(
+  rawTokenSymbol: unknown,
+  tokenId: string,
+  tokenSymbolMap?: Record<string, string>
+): string {
+  const extracted = extractFlaggedValue(rawTokenSymbol);
+  if (typeof extracted === 'string' && extracted !== '') {
+    return extracted;
+  }
+
+  if (tokenSymbolMap && tokenSymbolMap[tokenId]) {
+    return tokenSymbolMap[tokenId];
+  }
+
+  if (tokenId === ZK_DEFAULT_TOKEN_ID) {
+    return MAIN_COIN_CONFIG.symbol;
+  }
+  return "UNKNOWN";
+}
+
+function resolveTokenDecimals(
+  tokenId: string,
+  tokenDecimalsMap?: Record<string, number>
+): number {
+  if (tokenDecimalsMap && tokenDecimalsMap[tokenId] !== undefined) {
+    return tokenDecimalsMap[tokenId];
+  }
+  return MAIN_COIN_CONFIG.decimals;
+}
+
+function getUpdateBody(zkappCommand: ZkAppCommand, tokenSymbolMap?: Record<string, string>, tokenDecimalsMap?: Record<string, number>): ZkInfoItem {
   const accountUpdates = zkappCommand.accountUpdates;
   const updateInfo: ZkInfoItem = {
     label: "accountUpdates",
@@ -218,43 +249,52 @@ function getUpdateBody(zkappCommand: ZkAppCommand): ZkInfoItem {
 
     const balanceChangeOperator =
       balanceChangeBody.sgn.toLowerCase() === "negative" ? "-" : "+";
+    const decimals = resolveTokenDecimals(tokenId, tokenDecimalsMap);
     const balanceChange = new BigNumber(balanceChangeBody.magnitude).isEqualTo(0)
       ? "0"
       : balanceChangeOperator +
-        amountDecimals(balanceChangeBody.magnitude, MAIN_COIN_CONFIG.decimals);
+        amountDecimals(balanceChangeBody.magnitude, decimals);
 
-    let tokenSymbol: string;
-    if (accountItemBody.tokenId === ZK_DEFAULT_TOKEN_ID) {
-      tokenSymbol = MAIN_COIN_CONFIG.symbol;
-    } else {
-      const bodyTokenSymbol = accountItemBody.update.tokenSymbol;
-      tokenSymbol = bodyTokenSymbol === null ? "UNKNOWN" : bodyTokenSymbol || "UNKNOWN";
-    }
+    const tokenSymbol = resolveTokenSymbol(
+      accountItemBody.update?.tokenSymbol,
+      tokenId,
+      tokenSymbolMap
+    );
 
     const showBalanceChange = balanceChange + " " + tokenSymbol;
+    const accountChildren: ZkInfoItem[] = [
+      { label: "publicKey", value: addressSlice(publicKey) },
+      { label: "tokenId", value: addressSlice(tokenId) },
+      { label: "balanceChange", value: showBalanceChange },
+    ];
+
+    if (accountItemBody.update) {
+      const updateRecord = accountItemBody.update as Record<string, unknown>;
+      const sensitiveItems = getSensitiveUpdateItems(updateRecord);
+      if (sensitiveItems.length > 0) {
+        accountChildren.push(...sensitiveItems);
+      }
+    }
+
     updateInfo.children!.push({
       label: "Account #" + (index + 1),
-      children: [
-        { label: "publicKey", value: addressSlice(publicKey) },
-        { label: "tokenId", value: addressSlice(tokenId) },
-        { label: "balanceChange", value: showBalanceChange },
-      ],
+      children: accountChildren,
     });
   }
 
   return updateInfo;
 }
 
-// ============ Exported Functions ============
-
 export function getZkInfo(
   zkappCommand: string,
-  currentAddress: string
+  currentAddress: string,
+  tokenSymbolMap?: Record<string, string>,
+  tokenDecimalsMap?: Record<string, number>
 ): ZkInfoItem[] {
   try {
     const nextZkCommond: ZkAppCommand = JSON.parse(zkappCommand);
     const feePayerBody = getFormatFeePayerV2(nextZkCommond, currentAddress);
-    const accountUpdateBody = getUpdateBody(nextZkCommond);
+    const accountUpdateBody = getUpdateBody(nextZkCommond, tokenSymbolMap, tokenDecimalsMap);
     return [feePayerBody, accountUpdateBody];
   } catch (error) {
     return [{ label: "Error", value: String(error) }];
@@ -350,7 +390,7 @@ export function verifyTokenCommand(
               return false;
             }
           }
-          if (update.tokenSymbol !== undefined && update.tokenSymbol !== null) {
+          if (!isNullOrFlaggedNone(update.tokenSymbol)) {
             return false;
           }
         }

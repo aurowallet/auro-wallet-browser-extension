@@ -53,6 +53,8 @@ export const StyledContent = styled.div<StyledContentProps>`
   padding: 0px 20px;
   height: calc(100vh - 170px);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 
   ${({ $showMultiView }) => $showMultiView && css`
     height: calc(100vh - 250px) !important;
@@ -70,7 +72,11 @@ export const StyledAccountRow = styled.div<StyledAccountRowProps>`
 
   ${({ $noMargin }) => $noMargin && css`
     margin-top: 0px;
-    display: block;
+    flex: 1;
+    min-height: 200px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
   `}
 `;
 
@@ -222,6 +228,7 @@ export const StyledTabContent = styled.div<{ ref?: React.Ref<HTMLDivElement> }>`
   word-break: break-word;
   white-space: pre-wrap;
   box-sizing: border-box;
+  flex: 1;
 
   pre {
     margin: 0;
@@ -261,4 +268,5 @@ export const StyledCustomTabPanelCss = styled.div<{ $active?: boolean }>`
   display: ${({ $active }) => $active ? 'flex' : 'none'};
   flex: 1;
   min-width: 0;
+  flex-direction: column;
 `;
