@@ -146,7 +146,7 @@ const NodeEditor = () => {
     let newConfig: {
       customNodeList: NetworkConfig[];
       currentNode: NetworkConfig;
-      netConfigVersion: string;
+      nodeConfigVersion: string;
     } | null = null;
     if (!isEdit) {
       let addItem: NetworkConfig = {
@@ -162,7 +162,7 @@ const NodeEditor = () => {
       newConfig = {
         customNodeList: list,
         currentNode: addItem,
-        netConfigVersion: NET_CONFIG_VERSION,
+        nodeConfigVersion: NET_CONFIG_VERSION,
       };
       await extSaveLocal(NET_WORK_CONFIG_V2, newConfig);
 
@@ -207,7 +207,7 @@ const NodeEditor = () => {
       newConfig = {
         customNodeList: newList,
         currentNode: isEditCurrentNode ? editItemTemp : (currentNode as NetworkConfig),
-        netConfigVersion: NET_CONFIG_VERSION,
+        nodeConfigVersion: NET_CONFIG_VERSION,
       };
       await extSaveLocal(NET_WORK_CONFIG_V2, newConfig);
       if (isEditCurrentNode) {

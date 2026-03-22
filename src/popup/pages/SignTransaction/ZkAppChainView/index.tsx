@@ -241,7 +241,7 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }: ZkAppChainViewProps) =
     let newConfig = {
       customNodeList: list,
       currentNode: currentNode,
-      netConfigVersion: NET_CONFIG_VERSION,
+      nodeConfigVersion: NET_CONFIG_VERSION,
     };
     await extSaveLocal(NET_WORK_CONFIG_V2, newConfig);
     dispatch(updateCustomNodeList(newConfig.customNodeList));
