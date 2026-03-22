@@ -1944,101 +1944,103 @@ class APIService {
     return { allList: [...commonList, ...watchList], commonList, watchList };
   };
   addHDNewAccount = async (accountName: string): Promise<AccountInfo | ErrorResult | undefined> => {
-    try {
-      const data = this.getStore().data;
-      const version = getVaultVersion(data);
+    return this._withAuthOperationLock(async () => {
+      try {
+        const data = this.getStore().data;
+        const version = getVaultVersion(data);
 
-      if (version === "v3") {
-        // V3: add account in HD keyring
-        return this._addHDNewAccountModern(data, accountName);
-      }
-      if (!version) {
-        return { error: "invalidVault", type: "local" };
-      }
-
-      // V1: legacy logic
-      const workingLegacyData = cloneVaultData(data);
-      let accounts = workingLegacyData[0].accounts;
-
-      let createList = accounts.filter((item: any, index: any) => {
-        return item.type === ACCOUNT_TYPE.WALLET_INSIDE;
-      });
-      if (createList.length === 0) {
-        return { error: "noHDAccounts", type: "local" };
-      }
-
-      const validHdPaths = createList
-        .map((item: any) => item.hdPath)
-        .filter((idx: any): idx is number => typeof idx === "number" && Number.isFinite(idx));
-      let lastHdIndex =
-        validHdPaths.length > 0
-          ? Math.max(...validHdPaths) + 1
-          : createList.length;
-      const validTypeIndexes = createList
-        .map((item: any) => item.typeIndex)
-        .filter((idx: any): idx is number => typeof idx === "number" && Number.isFinite(idx));
-      let typeIndex =
-        validTypeIndexes.length > 0
-          ? Math.max(...validTypeIndexes) + 1
-          : createList.length + 1;
-
-      let mnemonicEn = workingLegacyData[0].mnemonic;
-      if (!this._isV3Encrypted(mnemonicEn)) {
-        return { error: "innerSecretsNotMigrated", type: "local" };
-      }
-      let mnemonic = await this._decryptInnerSecret(mnemonicEn);
-      let wallet = importWalletByMnemonic(mnemonic, lastHdIndex);
-      let priKeyEncrypt = await encryptUtils.encryptWithCryptoKey(
-        this._requireCryptoKey(),
-        wallet.priKey
-      );
-
-      let sameIndex = -1;
-      let sameAccount: any = {};
-      for (let index = 0; index < accounts.length; index++) {
-        const tempAccount = accounts[index];
-        if (tempAccount.address === wallet.pubKey) {
-          sameIndex = index;
-          sameAccount = tempAccount;
+        if (version === "v3") {
+          // V3: add account in HD keyring
+          return this._addHDNewAccountModern(data, accountName);
         }
-      }
+        if (!version) {
+          return { error: "invalidVault", type: "local" };
+        }
 
-      if (sameIndex !== -1) {
-        let backAccount = {
-          accountName: sameAccount.accountName,
-          address: sameAccount.address,
+        // V1: legacy logic
+        const workingLegacyData = cloneVaultData(data);
+        let accounts = workingLegacyData[0].accounts;
+
+        let createList = accounts.filter((item: any, index: any) => {
+          return item.type === ACCOUNT_TYPE.WALLET_INSIDE;
+        });
+        if (createList.length === 0) {
+          return { error: "noHDAccounts", type: "local" };
+        }
+
+        const validHdPaths = createList
+          .map((item: any) => item.hdPath)
+          .filter((idx: any): idx is number => typeof idx === "number" && Number.isFinite(idx));
+        let lastHdIndex =
+          validHdPaths.length > 0
+            ? Math.max(...validHdPaths) + 1
+            : createList.length;
+        const validTypeIndexes = createList
+          .map((item: any) => item.typeIndex)
+          .filter((idx: any): idx is number => typeof idx === "number" && Number.isFinite(idx));
+        let typeIndex =
+          validTypeIndexes.length > 0
+            ? Math.max(...validTypeIndexes) + 1
+            : createList.length + 1;
+
+        let mnemonicEn = workingLegacyData[0].mnemonic;
+        if (!this._isV3Encrypted(mnemonicEn)) {
+          return { error: "innerSecretsNotMigrated", type: "local" };
+        }
+        let mnemonic = await this._decryptInnerSecret(mnemonicEn);
+        let wallet = importWalletByMnemonic(mnemonic, lastHdIndex);
+        let priKeyEncrypt = await encryptUtils.encryptWithCryptoKey(
+          this._requireCryptoKey(),
+          wallet.priKey
+        );
+
+        let sameIndex = -1;
+        let sameAccount: any = {};
+        for (let index = 0; index < accounts.length; index++) {
+          const tempAccount = accounts[index];
+          if (tempAccount.address === wallet.pubKey) {
+            sameIndex = index;
+            sameAccount = tempAccount;
+          }
+        }
+
+        if (sameIndex !== -1) {
+          let backAccount = {
+            accountName: sameAccount.accountName,
+            address: sameAccount.address,
+          };
+          let error = {
+            error: "importRepeat",
+            type: "local",
+            account: backAccount,
+          };
+          return error;
+        }
+
+        let account = {
+          address: wallet.pubKey,
+          privateKey: priKeyEncrypt,
+          type: ACCOUNT_TYPE.WALLET_INSIDE,
+          hdPath: lastHdIndex,
+          accountName,
+          typeIndex: typeIndex,
         };
-        let error = {
-          error: "importRepeat",
-          type: "local",
-          account: backAccount,
-        };
-        return error;
+
+        workingLegacyData[0].currentAddress = account.address;
+        workingLegacyData[0].accounts.push(account);
+        let encryptData = await encryptUtils.encryptWithCryptoKey(
+          this._requireCryptoKey(),
+          workingLegacyData
+        );
+
+        await save({ keyringData: encryptData });
+        memStore.updateState({ data: workingLegacyData, currentAccount: this.getAccountWithoutPrivate(account) });
+        return this.getAccountWithoutPrivate(account);
+      } catch (error) {
+        console.error("[addHDNewAccount] Error:", error);
+        return { error: "addFailed", type: "local" };
       }
-
-      let account = {
-        address: wallet.pubKey,
-        privateKey: priKeyEncrypt,
-        type: ACCOUNT_TYPE.WALLET_INSIDE,
-        hdPath: lastHdIndex,
-        accountName,
-        typeIndex: typeIndex,
-      };
-
-      workingLegacyData[0].currentAddress = account.address;
-      workingLegacyData[0].accounts.push(account);
-      let encryptData = await encryptUtils.encryptWithCryptoKey(
-        this._requireCryptoKey(),
-        workingLegacyData
-      );
-
-      await save({ keyringData: encryptData });
-      memStore.updateState({ data: workingLegacyData, currentAccount: this.getAccountWithoutPrivate(account) });
-      return this.getAccountWithoutPrivate(account);
-    } catch (error) {
-      console.error("[addHDNewAccount] Error:", error);
-      return { error: "addFailed", type: "local" };
-    }
+    });
   };
 
   // V3: add HD account
