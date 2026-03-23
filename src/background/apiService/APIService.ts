@@ -274,7 +274,6 @@ const shuffleWords = (words: string[]): string[] => {
 class APIService {
   activeTimer: ReturnType<typeof setTimeout> | null = null;
   private txTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
-  private authOpLock: Promise<void> = Promise.resolve();
 
   constructor() {
     this.activeTimer = null;
@@ -308,20 +307,6 @@ class APIService {
       if (derivedKey) return derivedKey;
     }
     throw new Error("Wallet is locked: cryptoKey not available");
-  }
-
-  private async _withAuthOperationLock<T>(fn: () => Promise<T>): Promise<T> {
-    const previous = this.authOpLock;
-    let release: () => void = () => {};
-    this.authOpLock = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    await previous;
-    try {
-      return await fn();
-    } finally {
-      release();
-    }
   }
 
   private _requireStringInnerSecret(value: unknown): string {
@@ -461,7 +446,6 @@ class APIService {
       return { error: "seed_error", type: "local" };
     }
 
-    return this._withAuthOperationLock(async () => {
     let storedMne = this.getStore().mne;
     if (!storedMne) {
       const pending = await get("pendingCreateMnemonic");
@@ -509,7 +493,6 @@ class APIService {
       console.error("[confirmCreateMnemonic] Error:", error);
       return { error: "tryAgain", type: "local" };
     }
-    });
   };
 
   private _clearVolatileMnemonic(): void {
@@ -533,7 +516,6 @@ class APIService {
   };
 
   async submitPassword(password: string, options: Record<string, unknown> = {}) {
-    return this._withAuthOperationLock(async () => {
       const encryptedVault = await get("keyringData");
       if (!encryptedVault?.keyringData) {
         return { error: "passwordError", type: "local" };
@@ -732,7 +714,6 @@ class APIService {
         console.error("[aurowallet apiservice] submitPassword error:", error);
         return { error: "passwordError", type: "local" };
       }
-    });
   }
 
   /**
@@ -1020,7 +1001,7 @@ class APIService {
     return { data: vault, version: "v1", didMigrate };
   }
 
-  private async _checkPasswordCore(password: string): Promise<boolean> {
+  async checkPassword(password: string): Promise<boolean> {
     try {
       let encryptedVault: Record<string, any> | null = null;
       let encryptedPayloadVersion: number | null = null;
@@ -1082,10 +1063,7 @@ class APIService {
     }
   }
 
-  async checkPassword(password: string): Promise<boolean> {
-    return this._withAuthOperationLock(() => this._checkPasswordCore(password));
-  }
-  private async _checkPasswordAndGetKeyCore(password: string): Promise<CryptoKey | null> {
+  private async _checkPasswordAndGetKey(password: string): Promise<CryptoKey | null> {
     try {
       let vaultSalt = this.getStore().vaultSalt;
       if (!vaultSalt) {
@@ -1129,10 +1107,6 @@ class APIService {
     } catch {
       return null;
     }
-  }
-
-  private async _checkPasswordAndGetKey(password: string): Promise<CryptoKey | null> {
-    return this._withAuthOperationLock(() => this._checkPasswordAndGetKeyCore(password));
   }
 
   setLastActiveTime() {
@@ -1225,7 +1199,6 @@ class APIService {
     return currentAccount?.address ?? "";
   };
   createPwd = async (password: string): Promise<void> => {
-    return this._withAuthOperationLock(async () => {
       this._clearVolatileMnemonic();
       const existingVault = await get("keyringData");
       if (existingVault?.keyringData) {
@@ -1240,65 +1213,62 @@ class APIService {
       await save({ vaultSalt });
 
       memStore.updateState({ cryptoKey, vaultSalt, isUnlocked: true });
-    });
   };
   createAccount = async (mnemonic: string): Promise<any> => {
-    return this._withAuthOperationLock(async () => {
-      try {
-        this._clearVolatileMnemonic();
-        const cryptoKey = this.getStore().cryptoKey;
-        if (!cryptoKey) {
-          return { error: "walletNotReady", type: "local" };
-        }
-        const existingData = this.getStore().data;
-
-        // If modern vault already exists, add new HD keyring instead of creating new vault
-        if (isModernVault(existingData)) {
-          const hdResult: any = await this._addHDKeyringCore(mnemonic);
-          return hdResult?.error ? hdResult : hdResult?.account ?? hdResult;
-        }
-
-        // Create new modern vault for first-time wallet creation
-        let wallet = importWalletByMnemonic(mnemonic);
-        let mnemonicEn = await encryptUtils.encryptWithCryptoKey(cryptoKey, mnemonic);
-
-        const newKeyring = createHDKeyring(getDefaultHDWalletName(1), mnemonicEn);
-        newKeyring.accounts.push({
-          address: wallet.pubKey,
-          hdIndex: 0,
-          name: default_account_name,
-        });
-        newKeyring.nextHdIndex = 1;
-        newKeyring.currentAddress = wallet.pubKey;
-
-        // V3 vault structure with nextWalletIndex for tracking default names
-        const data = {
-          version: VAULT_VERSION,
-          keyrings: [newKeyring],
-          currentKeyringId: newKeyring.id,
-          nextWalletIndex: 2, // Next wallet will be "Wallet 2"
-        };
-
-        const currentAccount = {
-          address: wallet.pubKey,
-          type: ACCOUNT_TYPE.WALLET_INSIDE,
-          hdPath: 0,
-          accountName: default_account_name,
-          typeIndex: 1,
-          keyringId: newKeyring.id,
-        };
-
-        let encryptData = await encryptUtils.encryptWithCryptoKey(cryptoKey, data);
-        await save({ keyringData: encryptData });
-        await removeValue("pendingCreateMnemonic");
-        memStore.updateState({ data, currentAccount });
-        await this.setUnlockedStatus(true);
-        return this.getAccountWithoutPrivate(currentAccount);
-      } catch (error) {
-        console.error("[createAccount] Error:", error);
-        return { error: "createFailed", type: "local" };
+    try {
+      this._clearVolatileMnemonic();
+      const cryptoKey = this.getStore().cryptoKey;
+      if (!cryptoKey) {
+        return { error: "walletNotReady", type: "local" };
       }
-    });
+      const existingData = this.getStore().data;
+
+      // If modern vault already exists, add new HD keyring instead of creating new vault
+      if (isModernVault(existingData)) {
+        const hdResult: any = await this.addHDKeyring(mnemonic);
+        return hdResult?.error ? hdResult : hdResult?.account ?? hdResult;
+      }
+
+      // Create new modern vault for first-time wallet creation
+      let wallet = importWalletByMnemonic(mnemonic);
+      let mnemonicEn = await encryptUtils.encryptWithCryptoKey(cryptoKey, mnemonic);
+
+      const newKeyring = createHDKeyring(getDefaultHDWalletName(1), mnemonicEn);
+      newKeyring.accounts.push({
+        address: wallet.pubKey,
+        hdIndex: 0,
+        name: default_account_name,
+      });
+      newKeyring.nextHdIndex = 1;
+      newKeyring.currentAddress = wallet.pubKey;
+
+      // V3 vault structure with nextWalletIndex for tracking default names
+      const data = {
+        version: VAULT_VERSION,
+        keyrings: [newKeyring],
+        currentKeyringId: newKeyring.id,
+        nextWalletIndex: 2, // Next wallet will be "Wallet 2"
+      };
+
+      const currentAccount = {
+        address: wallet.pubKey,
+        type: ACCOUNT_TYPE.WALLET_INSIDE,
+        hdPath: 0,
+        accountName: default_account_name,
+        typeIndex: 1,
+        keyringId: newKeyring.id,
+      };
+
+      let encryptData = await encryptUtils.encryptWithCryptoKey(cryptoKey, data);
+      await save({ keyringData: encryptData });
+      await removeValue("pendingCreateMnemonic");
+      memStore.updateState({ data, currentAccount });
+      await this.setUnlockedStatus(true);
+      return this.getAccountWithoutPrivate(currentAccount);
+    } catch (error) {
+      console.error("[createAccount] Error:", error);
+      return { error: "createFailed", type: "local" };
+    }
   };
   getLedgerAccountIndex = () => {
     const state = this.getStore();
@@ -1515,7 +1485,7 @@ class APIService {
    * Add a new HD wallet (keyring) with its own mnemonic
    * This creates a completely new wallet group
    */
-  private _addHDKeyringCore = async (mnemonic: string, walletName?: string): Promise<{ keyring?: { id: string; name: string; type: string }; account?: AccountInfo } | ErrorResult> => {
+  addHDKeyring = async (mnemonic: string, walletName?: string): Promise<{ keyring?: { id: string; name: string; type: string }; account?: AccountInfo } | ErrorResult> => {
     try {
       let data = this.getStore().data;
       const cryptoKey = this.getStore().cryptoKey;
@@ -1606,9 +1576,6 @@ class APIService {
     }
   };
 
-  addHDKeyring = async (mnemonic: string, walletName?: string): Promise<{ keyring?: { id: string; name: string; type: string }; account?: AccountInfo } | ErrorResult> => {
-    return this._withAuthOperationLock(() => this._addHDKeyringCore(mnemonic, walletName));
-  };
 
   /**
    * Rename a keyring (wallet group)
@@ -1685,9 +1652,8 @@ class APIService {
    * If deleting the last keyring, clears vault and returns isLastKeyring: true
    */
   deleteKeyring = async (keyringId: string, password: string): Promise<{ success?: boolean; isLastKeyring?: boolean; currentAccount?: AccountInfo | null } | ErrorResult> => {
-    return this._withAuthOperationLock(async () => {
       try {
-        const cryptoKey = await this._checkPasswordAndGetKeyCore(password);
+        const cryptoKey = await this._checkPasswordAndGetKey(password);
         if (!cryptoKey) {
           return { error: "passwordError", type: "local" };
         }
@@ -1751,14 +1717,12 @@ class APIService {
         console.error("[deleteKeyring] Error:", error);
         return { error: "deleteFailed", type: "local" };
       }
-    });
   };
 
   /**
    * Add account to a specific HD keyring
    */
   addAccountToKeyring = async (keyringId: string, accountName?: string): Promise<{ account?: AccountInfo } | ErrorResult> => {
-    return this._withAuthOperationLock(async () => {
       try {
         let data = this.getStore().data;
         const cryptoKey = this.getStore().cryptoKey;
@@ -1827,7 +1791,6 @@ class APIService {
         console.error("[addAccountToKeyring] Error:", error);
         return { error: "addFailed", type: "local" };
       }
-    });
   };
 
   /**
@@ -1844,7 +1807,6 @@ class APIService {
    * Returns success status and any error message
    */
   tryUpgradeVault = async () => {
-    return this._withAuthOperationLock(async () => {
       try {
         const data = this.getStore().data;
         const cryptoKey = this.getStore().cryptoKey;
@@ -1911,7 +1873,6 @@ class APIService {
       } catch (error) {
         return { success: false, error: "upgradeFailed", type: "local" };
       }
-    });
   };
 
   accountSort = (accountList: AccountInfo[]): SortedAccountList => {
@@ -1944,7 +1905,6 @@ class APIService {
     return { allList: [...commonList, ...watchList], commonList, watchList };
   };
   addHDNewAccount = async (accountName: string): Promise<AccountInfo | ErrorResult | undefined> => {
-    return this._withAuthOperationLock(async () => {
       try {
         const data = this.getStore().data;
         const version = getVaultVersion(data);
@@ -2040,7 +2000,6 @@ class APIService {
         console.error("[addHDNewAccount] Error:", error);
         return { error: "addFailed", type: "local" };
       }
-    });
   };
 
   // V3: add HD account
@@ -2123,7 +2082,6 @@ class APIService {
     return this.getAccountWithoutPrivate(accountForUI);
   };
   addImportAccount = async (privateKey: string, accountName: string): Promise<any> => {
-    return this._withAuthOperationLock(async () => {
       try {
         if (!this.getStore().cryptoKey) {
           return { error: "walletNotReady", type: "local" };
@@ -2183,7 +2141,6 @@ class APIService {
         }
         return { error: "privateError", type: "local" };
       }
-    });
   };
 
   // V3: import private key account
@@ -2274,7 +2231,6 @@ class APIService {
     }
   };
   addLedgerAccount = async (address: string, accountName: string, ledgerPathAccountIndex: number): Promise<AccountInfo | ErrorResult> => {
-    return this._withAuthOperationLock(async () => {
       try {
         if (!this.getStore().cryptoKey) {
           return { error: "walletNotReady", type: "local" };
@@ -2335,7 +2291,6 @@ class APIService {
         const errorMessage = error instanceof Error ? error.message : String(error);
         return { error: errorMessage || "Import failed" };
       }
-    });
   };
 
   // V3: add Ledger account
@@ -2571,7 +2526,6 @@ class APIService {
     }
   };
   deleteAccount = async (address: string, password: string): Promise<AccountInfo | ErrorResult | { isReset: boolean }> => {
-    return this._withAuthOperationLock(async () => {
       try {
         const data = this.getStore().data;
         const version = getVaultVersion(data);
@@ -2595,7 +2549,7 @@ class APIService {
         ) {
           canDelete = true;
         } else {
-          let isCorrect = await this._checkPasswordCore(password);
+          let isCorrect = await this.checkPassword(password);
           if (isCorrect) {
             canDelete = true;
           }
@@ -2628,7 +2582,6 @@ class APIService {
         console.error("[deleteAccount] Error:", error);
         return { error: "deleteFailed", type: "local" };
       }
-    });
   };
 
   _deleteAccountModern = async (data: any, address: string, password: string): Promise<AccountInfo | ErrorResult | { isReset: boolean }> => {
@@ -2662,7 +2615,7 @@ class APIService {
       ) {
         canDelete = true;
       } else {
-        canDelete = await this._checkPasswordCore(password);
+        canDelete = await this.checkPassword(password);
       }
 
       if (!canDelete) {
@@ -2761,9 +2714,8 @@ class APIService {
     }
   };
   updateSecPassword = async (oldPwd: string, pwd: string): Promise<{ code?: number } | ErrorResult> => {
-    return this._withAuthOperationLock(async () => {
       try {
-        const oldVerifiedKey = await this._checkPasswordAndGetKeyCore(oldPwd);
+        const oldVerifiedKey = await this._checkPasswordAndGetKey(oldPwd);
         if (!oldVerifiedKey) {
           return { error: "passwordError", type: "local" };
         }
@@ -2843,7 +2795,6 @@ class APIService {
       } catch (error) {
         return { error: "passwordError", type: "local" };
       }
-    });
   };
 
   _updateSecPasswordModern = async (data: any, pwd: string, oldPwd?: string, preVerifiedKey?: CryptoKey): Promise<{ code?: number } | ErrorResult> => {

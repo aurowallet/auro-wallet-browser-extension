@@ -666,8 +666,6 @@ describe('APIService', () => {
         hdPath: 0,
         keyringId: 'kr-new',
       };
-      // confirmCreateMnemonic now always delegates to createAccount,
-      // which internally routes to addHDKeyring and normalizes the result.
       const createSpy = jest
         .spyOn(apiService, 'createAccount')
         .mockResolvedValueOnce(flatAccount as any);
@@ -688,7 +686,6 @@ describe('APIService', () => {
       mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce('alpha beta gamma');
       mockEncryptUtils.encryptWithCryptoKey.mockResolvedValueOnce('re_encrypted_mne');
 
-      // confirmCreateMnemonic delegates to createAccount, which routes to addHDKeyring
       const createSpy = jest
         .spyOn(apiService, 'createAccount')
         .mockResolvedValueOnce({ error: 'repeatTip', type: 'local' } as any);
