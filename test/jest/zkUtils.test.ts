@@ -2525,7 +2525,7 @@ describe('ZkUtils Test Case', () => {
       expect(permItem.label).toBe('Permissions');
       expect(permItem.warn).toBe(true);
       expect(permItem.children.length).toBe(13);
-      expect(permItem.children[0]).toEqual({ label: 'editState', value: 'Proof', warn: true });
+      expect(permItem.children[0]).toEqual({ label: 'editState', value: 'Proof', warn: false });
       expect(permItem.children[4]).toEqual({ label: 'setDelegate', value: 'Impossible', warn: true });
     });
 
@@ -2831,9 +2831,11 @@ describe('ZkUtils Test Case', () => {
       expect(permItem.children).toHaveLength(3);
       expect(permItem.children[0].label).toBe('editState');
       expect(permItem.children[0].value).toBe('Proof');
-      expect(permItem.children[0].warn).toBe(true);
+      expect(permItem.children[0].warn).toBe(false);
       expect(permItem.children[1].label).toBe('send');
+      expect(permItem.children[1].warn).toBe(true);
       expect(permItem.children[2].label).toBe('setDelegate');
+      expect(permItem.children[2].warn).toBe(true);
     });
 
     it('should show all 13 permission fields when full permissions are set', () => {
@@ -2875,7 +2877,7 @@ describe('ZkUtils Test Case', () => {
       expect(delegateItem.children).toBeUndefined();
     });
 
-    it('should show verificationKey with warn:true and sliced hash', () => {
+    it('should show verificationKey with warn:false and sliced hash', () => {
       const cmd = makeCommand({
         verificationKey: {
           isSome: true,
@@ -2887,7 +2889,7 @@ describe('ZkUtils Test Case', () => {
       const children = getAccount1Children(cmd);
       const vkItem = children.find((c: any) => c.label === 'Verification Key');
       expect(vkItem).toBeDefined();
-      expect(vkItem.warn).toBe(true);
+      expect(vkItem.warn).toBe(false);
       expect(vkItem.value).toContain('...');
     });
 
@@ -3003,6 +3005,99 @@ describe('ZkUtils Test Case', () => {
       const warnItems = children.filter((c: any) => c.warn === true);
       expect(warnItems.length).toBe(3);
       expect(warnItems.map((i: any) => i.label).sort()).toEqual(['Delegate', 'Permissions', 'Timing / Vesting']);
+    });
+
+    it('should HIDE default permissions entirely (new contract deployment)', () => {
+      const cmd = makeCommand({
+        permissions: {
+          editState: 'Proof',
+          access: 'None',
+          send: 'Proof',
+          receive: 'None',
+          setDelegate: 'Signature',
+          setPermissions: 'Signature',
+          setVerificationKey: { auth: 'Signature', txnVersion: '3' },
+          setZkappUri: 'Signature',
+          editActionState: 'Proof',
+          setTokenSymbol: 'Signature',
+          incrementNonce: 'Signature',
+          setVotingFor: 'Signature',
+          setTiming: 'Signature',
+        },
+        verificationKey: {
+          data: 'vk_data',
+          hash: '12345678901234567890123456789012345678901234567890',
+        },
+        delegate: null,
+        tokenSymbol: null,
+      });
+      const children = getAccount1Children(cmd);
+      const permItem = children.find((c: any) => c.label === 'Permissions');
+      expect(permItem).toBeUndefined();
+      const vkItem = children.find((c: any) => c.label === 'Verification Key');
+      expect(vkItem).toBeDefined();
+      expect(vkItem.warn).toBe(false);
+    });
+
+    it('should HIDE default permissions in isSome format', () => {
+      const cmd = makeCommand({
+        permissions: {
+          isSome: true,
+          value: {
+            editState: 'Proof',
+            access: 'None',
+            send: 'Proof',
+            receive: 'None',
+            setDelegate: 'Signature',
+            setPermissions: 'Signature',
+            setVerificationKey: { auth: 'Signature', txnVersion: '3' },
+            setZkappUri: 'Signature',
+            editActionState: 'Proof',
+            setTokenSymbol: 'Signature',
+            incrementNonce: 'Signature',
+            setVotingFor: 'Signature',
+            setTiming: 'Signature',
+          },
+        },
+        delegate: { isSome: false },
+        tokenSymbol: { isSome: false },
+      });
+      const children = getAccount1Children(cmd);
+      const permItem = children.find((c: any) => c.label === 'Permissions');
+      expect(permItem).toBeUndefined();
+    });
+
+    it('should WARN for risky permissions (Impossible values)', () => {
+      const cmd = makeCommand({
+        permissions: {
+          isSome: true,
+          value: {
+            editState: 'Proof',
+            access: 'None',
+            send: 'Impossible',
+            receive: 'None',
+            setDelegate: 'Impossible',
+            setPermissions: 'Impossible',
+            setVerificationKey: { auth: 'Impossible', txnVersion: '3' },
+            setZkappUri: 'Impossible',
+            editActionState: 'Proof',
+            setTokenSymbol: 'Impossible',
+            incrementNonce: 'Signature',
+            setVotingFor: 'Impossible',
+            setTiming: 'Impossible',
+          },
+        },
+        delegate: { isSome: false },
+        tokenSymbol: { isSome: false },
+      });
+      const children = getAccount1Children(cmd);
+      const permItem = children.find((c: any) => c.label === 'Permissions');
+      expect(permItem).toBeDefined();
+      expect(permItem.warn).toBe(true);
+      const riskyChildren = permItem.children.filter((c: any) => c.warn === true);
+      expect(riskyChildren.length).toBeGreaterThan(0);
+      const safeChildren = permItem.children.filter((c: any) => c.warn === false);
+      expect(safeChildren.length).toBeGreaterThan(0);
     });
   });
 

@@ -48,6 +48,7 @@ All notable changes to this project will be documented in this file.
 - Update UUID of addTokenBuildList
 - Add id check to internalMessageListener
 - Add zkApp sensitive update warnings for permissions, delegate, verification key, timing, voting, and zkApp URI
+- Add test cases for zkApp default permissions and risky permission rendering
 - Transaction precision
 
 ### Fixes
@@ -60,6 +61,7 @@ All notable changes to this project will be documented in this file.
 - Reset state update
 - Presentation request loading state
 - SignTransaction tab flex/scroll rendering
+- Fix SignTransaction content flex layout to apply only for zkApp transactions
 
 ## [2.4.5]
 ### Enhancements

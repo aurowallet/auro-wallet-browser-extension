@@ -1386,7 +1386,7 @@ const SignView = ({
             <NetworkStatusView />
           </StyledTitleRight>
         </StyledTitleRow>
-        <StyledContent $showMultiView={showMultiView}>
+        <StyledContent $showMultiView={showMultiView} $flexLayout={isSendZk}>
           <div>
             <DappWebsite
               siteIcon={signParams?.site?.webIcon}

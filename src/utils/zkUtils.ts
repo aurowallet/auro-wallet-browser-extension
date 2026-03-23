@@ -113,6 +113,54 @@ const SENSITIVE_UPDATE_LABELS: Record<string, string> = {
   zkappUri: "zkApp URI",
 };
 
+const MINA_DEFAULT_PERMISSIONS: Record<string, string | Record<string, string>> = {
+  editState: "Proof",
+  access: "None",
+  send: "Proof",
+  receive: "None",
+  setDelegate: "Signature",
+  setPermissions: "Signature",
+  setVerificationKey: { auth: "Signature", txnVersion: "3" },
+  setZkappUri: "Signature",
+  editActionState: "Proof",
+  setTokenSymbol: "Signature",
+  incrementNonce: "Signature",
+  setVotingFor: "Signature",
+  setTiming: "Signature",
+};
+
+const SAFE_PERMISSION_VALUES = new Set(["None", "Signature", "Proof", "Either"]);
+
+function isRiskyPermissionValue(value: unknown): boolean {
+  if (typeof value === 'string') {
+    return !SAFE_PERMISSION_VALUES.has(value);
+  }
+  if (typeof value === 'object' && value !== null) {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.auth === 'string') {
+      return !SAFE_PERMISSION_VALUES.has(obj.auth);
+    }
+  }
+  return true;
+}
+
+function areDefaultPermissions(perms: Record<string, unknown>): boolean {
+  for (const [key, defaultVal] of Object.entries(MINA_DEFAULT_PERMISSIONS)) {
+    const actual = perms[key];
+    if (actual === undefined) continue;
+    if (typeof defaultVal === 'string') {
+      if (actual !== defaultVal) return false;
+    } else {
+      if (typeof actual !== 'object' || actual === null) return false;
+      const actualObj = actual as Record<string, string>;
+      for (const [dk, dv] of Object.entries(defaultVal)) {
+        if (actualObj[dk] !== dv) return false;
+      }
+    }
+  }
+  return true;
+}
+
 function isNullOrFlaggedNone(value: unknown): boolean {
   if (value === null || value === undefined) return true;
   if (typeof value === 'object' && value !== null && 'isSome' in value) {
@@ -140,7 +188,7 @@ function formatSensitiveFieldChildren(key: string, innerVal: unknown): ZkInfoIte
     return Object.entries(innerVal as Record<string, unknown>).map(([k, v]) => ({
       label: k,
       value: typeof v === 'string' ? v : JSON.stringify(v),
-      warn: true,
+      warn: key === 'permissions' ? isRiskyPermissionValue(v) : true,
     }));
   }
   return [];
@@ -159,12 +207,19 @@ function getSensitiveUpdateItems(update: Record<string, unknown>): ZkInfoItem[] 
     const children = formatSensitiveFieldChildren(key, innerVal);
 
     if (children.length > 0) {
-      items.push({ label, warn: true, children });
+      const hasRiskyChild = children.some((c) => c.warn);
+      if (key === 'permissions' && typeof innerVal === 'object' && innerVal !== null) {
+        const isDefault = areDefaultPermissions(innerVal as Record<string, unknown>);
+        if (isDefault) continue;
+        items.push({ label, warn: hasRiskyChild, children });
+      } else {
+        items.push({ label, warn: hasRiskyChild, children });
+      }
     } else if (key === 'delegate' && typeof innerVal === 'string') {
       items.push({ label, value: addressSlice(innerVal), warn: true });
     } else if (key === 'verificationKey' && typeof innerVal === 'object' && innerVal !== null) {
       const vk = innerVal as { hash?: string };
-      items.push({ label, value: vk.hash ? addressSlice(vk.hash) : "Updated", warn: true });
+      items.push({ label, value: vk.hash ? addressSlice(vk.hash) : "Updated", warn: false });
     } else {
       items.push({
         label,

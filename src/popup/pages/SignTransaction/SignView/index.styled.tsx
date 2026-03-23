@@ -2,6 +2,7 @@ import styled, { css } from 'styled-components';
 
 interface StyledContentProps {
   $showMultiView?: boolean;
+  $flexLayout?: boolean;
 }
 
 interface StyledAccountRowProps {
@@ -53,8 +54,11 @@ export const StyledContent = styled.div<StyledContentProps>`
   padding: 0px 20px;
   height: calc(100vh - 170px);
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+
+  ${({ $flexLayout }) => $flexLayout && css`
+    display: flex;
+    flex-direction: column;
+  `}
 
   ${({ $showMultiView }) => $showMultiView && css`
     height: calc(100vh - 250px) !important;
