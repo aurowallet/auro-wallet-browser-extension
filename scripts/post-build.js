@@ -5,7 +5,7 @@ const JSZip = require("jszip");
 const pck = require("../package.json");
 const deepmerge = require("deepmerge");
 
-const ID = "1003";
+const ID = "1006";
 const version = pck.version;
 const baseName = pck.name;
 
