@@ -118,7 +118,7 @@ export const StyledAddTipContainer = styled.div`
   margin-bottom: 20px;
   padding: 10px 20px;
   background: rgba(214, 90, 90, 0.1);
-  width: 100vw;
+  width: 100%;
   margin-left: -20px;
 `;
 
