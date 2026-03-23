@@ -311,6 +311,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         tokenTotalAmount: "0",
         localTokenConfig: {},
         newTokenCount: 0,
+        pendingNonce: null,
       };
 
     case INIT_CURRENT_ACCOUNT:
@@ -334,6 +335,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
           supportTokenList: [],
           localTokenConfig: {},
           newTokenCount: 0,
+          pendingNonce: null,
         };
       }
       return { ...state, shouldRefresh, isSilentRefresh: false, ...newState };
