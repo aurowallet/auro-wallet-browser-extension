@@ -63,6 +63,7 @@ All notable changes to this project will be documented in this file.
 - Presentation request loading state
 - SignTransaction tab flex/scroll rendering
 - Fix SignTransaction content flex layout to apply only for zkApp transactions
+- Fix stale token assets after switching networks
 
 ## [2.4.5]
 ### Enhancements

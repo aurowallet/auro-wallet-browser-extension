@@ -11,8 +11,8 @@ import {
   updateTokenAssets,
 } from "@/reducers/accountReducer";
 import i18n from "i18next";
-import { useCallback, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useCallback, useRef, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 
 interface CurrentAccount {
   address: string;
@@ -43,24 +43,32 @@ interface UseFetchAccountDataResult {
 const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): UseFetchAccountDataResult => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<unknown[] | null>(null);
-  const dispatch = useDispatch();
-  let isRequest = false;
+  const dispatch = useAppDispatch();
+  const currentNodeUrl = useAppSelector((state) => state.network.currentNode?.url);
+  const fetchGenerationRef = useRef(0);
   const fetchAccountData = useCallback(async (): Promise<unknown> => {
     setIsLoading(true);
     const address = currentAccount.address;
-    if (isRequest) {
-      return undefined;
-    }
-    isRequest = true;
+    const generation = ++fetchGenerationRef.current;
     try {
       const account = await getAllTokenAssets(address) as TokenAssetsResponse;
+      if (generation !== fetchGenerationRef.current) {
+        return undefined;
+      }
       if (Array.isArray(account?.accounts)) {
         if (account.accounts.length > 0) {
           const tokenIds = account.accounts.map((token: TokenAccount) => token.tokenId);
           const accountsWithTokenInfoV2 = await getAllTokenInfoV2(tokenIds) as TokenInfoResponse;
+          if (generation !== fetchGenerationRef.current) {
+            return undefined;
+          }
           if (accountsWithTokenInfoV2?.error) {
-            Toast.info(i18n.t("nodeError"), 2000, false);
-            dispatch(updateTokenAssets([]));
+            if (!isDev) {
+              Toast.info(i18n.t("nodeError"), 2000, false);
+              dispatch(updateTokenAssets([]));
+              setResult([]);
+            }
+            return [];
           } else {
             const lastTokenList = account.accounts.map((token: TokenAccount) => ({
               ...token,
@@ -104,22 +112,30 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
           }
         }
       } else {
-        dispatch(updateTokenAssets([]));
+        if (!isDev) {
+          dispatch(updateTokenAssets([]));
+          setResult([]);
+        }
         return [];
       }
-      return undefined;
     } catch (error) {
       console.error(error);
-      dispatch(updateTokenAssets([]));
+      if (generation === fetchGenerationRef.current) {
+        if (!isDev) {
+          dispatch(updateTokenAssets([]));
+          setResult(null);
+        }
+      }
       return isDev ? error : undefined;
     } finally {
-      if (!isDev) {
-        dispatch(updateShouldRequest(false));
+      if (generation === fetchGenerationRef.current) {
+        if (!isDev) {
+          dispatch(updateShouldRequest(false));
+        }
         setIsLoading(false);
       }
-      isRequest = false;
     }
-  }, [currentAccount, dispatch]);
+  }, [currentAccount, dispatch, currentNodeUrl]);
 
   return { isLoading, fetchAccountData, result };
 };

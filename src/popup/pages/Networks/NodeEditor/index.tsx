@@ -15,6 +15,7 @@ import {
 import {
   updateShouldRequest,
   updateStakingRefresh,
+  updateTokenAssets,
 } from "../../../../reducers/accountReducer";
 import {
   updateCurrentNode,
@@ -172,6 +173,7 @@ const NodeEditor = () => {
       dispatch(updateCustomNodeList(newConfig.customNodeList));
 
       if (newConfig.currentNode.networkID !== currentNode.networkID) {
+        dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
       }
@@ -216,6 +218,7 @@ const NodeEditor = () => {
         dispatch(updateCustomNodeList(newConfig.customNodeList));
 
         if (newConfig.currentNode.networkID !== currentNode.networkID) {
+          dispatch(updateTokenAssets([]));
           dispatch(updateStakingRefresh(true));
           dispatch(updateShouldRequest(true));
         }
@@ -285,6 +288,7 @@ const NodeEditor = () => {
       clearLocalCache();
       dispatch(updateCurrentNode(newConfig.currentNode));
       if (editItem.networkID !== currentConfigTemp?.networkID) {
+        dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
       }

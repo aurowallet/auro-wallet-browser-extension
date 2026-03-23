@@ -12,6 +12,7 @@ import Toast from "@/popup/component/Toast";
 import {
   updateShouldRequest,
   updateStakingRefresh,
+  updateTokenAssets,
 } from "@/reducers/accountReducer";
 import {
   updateCurrentNode,
@@ -175,6 +176,7 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }: ZkAppChainViewProps) =
       dispatch(updateCustomNodeList(config.customNodeList));
       
       if(config.currentNode.networkID !== currentNode.networkID){
+        dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
       }
@@ -204,7 +206,9 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }: ZkAppChainViewProps) =
     onRemoveNotify,
     targetConfig,
     nextChainConfig,
-    customNodeList
+    customNodeList,
+    allNodeList,
+    dispatch,
   ]);
   const onAddChain = useCallback(async () => {
     setBtnLoadingStatus(true);
@@ -252,18 +256,18 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }: ZkAppChainViewProps) =
     });
   }, [
     notifyParams,
-    allNodeList,
-    nextChainConfig,
     currentNode,
+    customNodeList,
+    dispatch
   ]);
 
   const onConfirm = useCallback(async () => {
     if (state.switchStatus) {
-      onSwitchChain();
+      await onSwitchChain();
     } else {
-      onAddChain();
+      await onAddChain();
     }
-  }, [onSwitchChain, onAddChain, isSwitch, state]);
+  }, [onSwitchChain, onAddChain, state]);
 
   const { showTargetName, showTargetId } = useMemo(() => {
     const showTargetName =

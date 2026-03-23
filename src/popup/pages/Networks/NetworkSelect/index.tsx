@@ -9,6 +9,7 @@ import IOSSwitch from "@/popup/component/Switch";
 import {
   updateShouldRequest,
   updateStakingRefresh,
+  updateTokenAssets,
 } from "@/reducers/accountReducer";
 import { updateCurrentNode, updateCustomNodeList } from "@/reducers/network";
 import i18n from "i18next";
@@ -59,6 +60,7 @@ const NetworkSelect = () => {
         dispatch(updateCustomNodeList(config.customNodeList));
 
         if (newConfig.networkID !== currentNode.networkID) {
+          dispatch(updateTokenAssets([]));
           dispatch(updateStakingRefresh(true));
           dispatch(updateShouldRequest(true));
         }

@@ -11,6 +11,7 @@ import { NET_WORK_CONFIG_V2 } from "../../../constant/storageKey";
 import {
   updateShouldRequest,
   updateStakingRefresh,
+  updateTokenAssets,
 } from "../../../reducers/accountReducer";
 import { updateCurrentNode, updateCustomNodeList } from "../../../reducers/network";
 import Button from "../../component/Button";
@@ -102,6 +103,7 @@ const NetworkPage = () => {
       dispatch(updateCustomNodeList(config.customNodeList));
       
       if(nodeItem.networkID !== currentNode.networkID){
+        dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
       }
