@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { StyledContentContainer as BaseContentContainer } from '../../component/CustomView/index.styled';
 
 interface StyledRowContainerProps {
@@ -252,7 +252,7 @@ export const StyledKeyringAddress = styled.p<StyledSelectProps>`
 export const StyledKeyringBalance = styled.p<StyledSelectProps>`
   font-size: 12px;
   font-weight: 600;
-  color: ${({ $isSelect }) => $isSelect ? "white" : "color: rgba(0, 0, 0, 0.8)"};
+  color: ${({ $isSelect }) => $isSelect ? "white" : "rgba(0, 0, 0, 0.8)"};
   margin: 8px 0 0;
 `;
 
@@ -262,7 +262,6 @@ export const StyledKeyringPointMenuContainer = styled.div`
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 50%;
   cursor: pointer;
   object-fit: scale-down;
   border-radius: 100%;
@@ -300,6 +299,62 @@ export const StyledAddWalletBtnContainer = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
+`;
+
+const shimmer = keyframes`
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+`;
+
+const skeletonBase = css`
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 400px 100%;
+  animation: ${shimmer} 1.5s ease-in-out infinite;
+  border-radius: 4px;
+`;
+
+export const StyledSkeletonGroup = styled.div`
+  margin-bottom: 20px;
+`;
+
+export const StyledSkeletonHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 4px;
+`;
+
+export const StyledSkeletonHeaderBar = styled.div`
+  width: 120px;
+  height: 16px;
+  ${skeletonBase}
+`;
+
+export const StyledSkeletonRow = styled.div`
+  background: #f9fafc;
+  border-radius: 12px;
+  padding: 10px 20px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  height: 80px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+`;
+
+export const StyledSkeletonLine = styled.div<{ $width?: string }>`
+  height: 12px;
+  width: ${({ $width }) => $width || '100%'};
+  ${skeletonBase}
+`;
+
+export const StyledSkeletonLineTall = styled.div<{ $width?: string }>`
+  height: 16px;
+  width: ${({ $width }) => $width || '100%'};
+  ${skeletonBase}
 `;
 
 export const StyledAddWalletBtn = styled.div`

@@ -49,6 +49,7 @@ All notable changes to this project will be documented in this file.
 - Add id check to internalMessageListener
 - Add zkApp sensitive update warnings for permissions, delegate, verification key, timing, voting, and zkApp URI
 - Add test cases for zkApp default permissions and risky permission rendering
+- Add loading skeleton for AccountManage page
 - Transaction precision
 
 ### Fixes

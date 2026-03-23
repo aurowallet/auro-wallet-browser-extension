@@ -73,6 +73,12 @@ import {
   StyledAddWalletBtnContainer,
   StyledAddWalletBtn,
   StyledKeyringRightContainer,
+  StyledSkeletonGroup,
+  StyledSkeletonHeader,
+  StyledSkeletonHeaderBar,
+  StyledSkeletonRow,
+  StyledSkeletonLine,
+  StyledSkeletonLineTall,
 } from "./index.styled";
 
 const AccountManagePage = () => {
@@ -82,12 +88,13 @@ const AccountManagePage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const isMounted = useRef(true);
+  const isFirstRender = useRef(true);
 
   const [commonAccountList, setCommonAccountList] = useState<AccountInfo[]>([]);
   const [watchModeAccountList, setWatchModeAccountList] = useState<AccountInfo[]>([]);
   const [keyringsList, setKeyringsList] = useState<UIKeyring[]>([]);
   const [useKeyringView, setUseKeyringView] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [vaultVersion, setVaultVersion] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeStatus, setUpgradeStatus] = useState("idle"); // idle, loading, failed
@@ -106,7 +113,7 @@ const AccountManagePage = () => {
   const fetchBalance = useCallback(async (addressList: string[]) => {
     let tempBalanceList = await getBalanceBatch(addressList);
     dispatch(updateAccountList(tempBalanceList));
-  }, []);
+  }, [dispatch]);
 
   const onUpdateAccountTypeCount = useCallback((allAccountList: AccountInfo[]) => {
     let createAccountTypeList = allAccountList.filter(
@@ -130,7 +137,7 @@ const AccountManagePage = () => {
         ledger: ledgerAccountCount,
       })
     );
-  }, []);
+  }, [dispatch, getAccountTypeIndex]);
 
   // Refetch keyrings data when navigating back to this page
   const fetchKeyringsData = useCallback(() => {
@@ -161,6 +168,10 @@ const AccountManagePage = () => {
 
   // Refresh data when location changes (e.g., navigating back from WalletDetails)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     fetchKeyringsData();
   }, [location.key]);
 
@@ -181,6 +192,7 @@ const AccountManagePage = () => {
             );
             fetchBalance(allAddresses);
           }
+          setPageLoading(false);
         });
       } else {
         // V1: Convert accounts to keyring-like structure for unified UI
@@ -252,6 +264,7 @@ const AccountManagePage = () => {
 
           let addressList = (listData.allList || []).map((item: AccountInfo) => item.address);
           fetchBalance(addressList);
+          setPageLoading(false);
         });
       }
     });
@@ -298,16 +311,12 @@ const AccountManagePage = () => {
     // Check vault version before allowing add wallet
     sendMsg({ action: WALLET_GET_VAULT_VERSION }, (result: GetVaultVersionResponse) => {
       if (result.version === "v1") {
-        // Show upgrade modal for v1 vault
         setVaultVersion("v1");
         setUpgradeSource("addWallet");
         setShowUpgradeModal(true);
         setUpgradeStatus("idle");
       } else {
-        // V3 vault, open add wallet in new tab with addWallet parameter
-        // This parameter tells Welcome page to skip the wallet existence check
         createOrActivateTab("popup.html?addWallet=true#/register_page");
-        // Close popup window so new wallet can refresh when user returns
         window.close();
       }
     });
@@ -326,19 +335,15 @@ const AccountManagePage = () => {
         setUpgradeStatus("idle");
         setVaultVersion(`v${VAULT_VERSION}`);
         
-        // Refresh keyrings list first
         sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (res: { keyrings?: UIKeyring[] }) => {
           if (res.keyrings && res.keyrings.length > 0) {
             setKeyringsList(res.keyrings);
             setUseKeyringView(true);
             
-            // Handle different actions based on upgrade source
             if (upgradeSource === "addWallet") {
-              // Add Wallet: Open welcome page in new tab
               createOrActivateTab("popup.html?addWallet=true#/register_page");
               window.close();
             } else if (upgradeSource === "addAccount") {
-              // Add Account: Find the HD keyring and add account to it
               const hdKeyring = res.keyrings.find((kr: UIKeyring) => kr.type === "hd");
               if (hdKeyring) {
                 Loading.show();
@@ -352,7 +357,6 @@ const AccountManagePage = () => {
                     if (addResult.error) {
                       Toast.info(i18n.t(addResult.error));
                     } else {
-                      // Refresh keyrings list after adding account
                       sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (refreshRes: { keyrings?: UIKeyring[] }) => {
                         if (refreshRes.keyrings && addResult.account) {
                           setKeyringsList(refreshRes.keyrings);
@@ -388,7 +392,7 @@ const AccountManagePage = () => {
   const goToAccountInfo = useCallback((item: AccountInfo | KeyringAccountItem) => {
     dispatch(setAccountInfo(item));
     navigate("/account_info");
-  }, []);
+  }, [dispatch, navigate]);
 
   const goToWalletDetails = useCallback((keyring: UIKeyring) => {
     dispatch(
@@ -396,11 +400,11 @@ const AccountManagePage = () => {
         id: keyring.id,
         name: keyring.name,
         type: keyring.type,
-        vaultVersion: vaultVersion, // Pass vault version for V1/V2 feature detection
+        vaultVersion: vaultVersion,
       })
     );
     navigate("/wallet_details");
-  }, [vaultVersion]);
+  }, [dispatch, navigate, vaultVersion]);
 
   const onClickAccount = useCallback(
     (item: AccountInfo | KeyringAccountItem) => {
@@ -441,14 +445,8 @@ const AccountManagePage = () => {
         );
       }
     },
-    [currentAddress]
+    [currentAddress, goToAccountInfo]
   );
-
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
 
   return (
     <CustomView
@@ -459,7 +457,9 @@ const AccountManagePage = () => {
       }
     >
       <StyledContentContainer>
-        {useKeyringView ? (
+        {pageLoading ? (
+          <AccountListSkeleton />
+        ) : useKeyringView ? (
           <>
             {keyringsList.map((keyring) => (
               <KeyringGroup
@@ -551,6 +551,25 @@ const StyledAddAccountBtnV2 = styled(StyledAddAccountBtn)`
     color: #594af1;
   }
 `;
+
+const AccountListSkeleton = () => (
+  <>
+    {[1, 2].map((groupIdx) => (
+      <StyledSkeletonGroup key={groupIdx}>
+        <StyledSkeletonHeader>
+          <StyledSkeletonHeaderBar />
+        </StyledSkeletonHeader>
+        {[1, 2].map((rowIdx) => (
+          <StyledSkeletonRow key={rowIdx}>
+            <StyledSkeletonLineTall $width="40%" />
+            <StyledSkeletonLine $width="55%" />
+            <StyledSkeletonLine $width="30%" />
+          </StyledSkeletonRow>
+        ))}
+      </StyledSkeletonGroup>
+    ))}
+  </>
+);
 
 // Keyring Group Component for Multi-Wallet View
 interface KeyringGroupProps {
@@ -783,7 +802,7 @@ const CommonAccountRow = ({
   const onClickMenu = useCallback((e: React.MouseEvent) => {
     goToAccountInfo();
     e.stopPropagation();
-  }, []);
+  }, [goToAccountInfo]);
   return (
     <StyledRowCommonContainer
       onClick={onClickItem}
