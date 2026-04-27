@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - Debug scripts
 - Ledger connect
 - Migrate vault from legacy array format to keyring-based structure
-- Update babel config and dependencies
+- Update Babel config and dependencies
 - Upgrade libsodium-wrappers to libsodium-wrappers-sumo
 - Upgrade obs-store to zustand
 - Upgrade bs58check to @scure/base
@@ -18,48 +18,48 @@ All notable changes to this project will be documented in this file.
 - Upgrade gulp, gulp-zip to jszip
 - Upgrade react-idle-timer, react-circular-progressbar, axios, copy-webpack-plugin, mocha, sass, sass-loader, webpack-cli, @reduxjs/toolkit, sinon, i18next, react, react-dom, react-i18next, react-redux, react-router-dom
 - Remove react-scripts, web-ext, url-loader, crypto-browserify, html-webpack-plugin, redux, react-helmet, valid-url
-- Add resolutions: cross-spawn(for webpack-cli), base-x(for bs58check)
+- Add resolutions: cross-spawn (for webpack-cli), base-x (for bs58check)
 - Add test cases to APIService & DAppService
 - Add new account token activation prompt
 - Update Auto-Lock to Security page
-- Update css/scss to styled-components
+- Update CSS/SCSS to styled-components
 - Continuous transfers
 - Upgrade network fee config
-- Update API of staking APR
+- Update API for staking APR
 - Upgrade SVG component to image
 - Update password to "CryptoKey + vaultSalt"
-- Message of PopupMonitor
-- Update Advance UI
-- Update delete tip
+- PopupMonitor messages
+- Update Advanced UI
+- Update deletion tip
 - Update toast config
-- Update ledger loading UI
-- Remove unuse CreatePassword
-- Refactor mnemonic wallet create flow
+- Update Ledger loading UI
+- Remove unused CreatePassword
+- Refactor mnemonic wallet creation flow
 - Update Zeko GraphQL queries
-- Update transaction history fetch
-- Optimize popup management 
+- Update transaction history fetching
+- Optimize popup management
 - Refresh account on ApprovePage before connection
 - Strengthen DApp security verification
 - Restrict `SvgIcon` to extension-local SVG resources only
 - Replace insecure UUID fallback with `uuid`
-- Update token build transaction verification
-- Remove firefox 'unsafe-eval'
+- Update token build transaction validation
+- Remove Firefox 'unsafe-eval'
 - Add runtime debug logging toggle
 - Update UUID of addTokenBuildList
-- Add id check to internalMessageListener
+- Add ID check to internalMessageListener
 - Add zkApp sensitive update warnings for permissions, delegate, verification key, timing, voting, and zkApp URI
 - Add test cases for zkApp default permissions and risky permission rendering
-- Add loading skeleton for AccountManage page
-- Transaction precision
+- Add loading skeleton for Account Management page
+- Improve transaction precision
 
 ### Fixes
 - E-notation of SendPage
-- Legder error message
+- Ledger error message
 - Transaction history
-- Transient prop
+- Transient props
 - Popup duplication caused by incomplete tab loading
 - getZkAppPendingTx fallback
-- Reset state update
+- Fix state reset update
 - Presentation request loading state
 - SignTransaction tab flex/scroll rendering
 - Fix SignTransaction content flex layout to apply only for zkApp transactions
