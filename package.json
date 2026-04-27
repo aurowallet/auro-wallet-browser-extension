@@ -1,12 +1,12 @@
 {
   "name": "auro-wallet",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webhid": "6.30.9",
     "@ledgerhq/devices": "8.7.0",
     "@reduxjs/toolkit": "2.11.1",
-    "@aurowallet/mina-provider": "1.0.12",
+    "@aurowallet/mina-provider": "1.0.14",
     "axios": "1.13.5",
     "axios-retry": "4.5.0",
     "bignumber.js": "9.3.0",

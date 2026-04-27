@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.1]
+### Enhancements
+- Upgrade @aurowallet/mina-provider
+
+
 ## [2.5.0]
 ### Enhancements
 - Support multi-wallet
