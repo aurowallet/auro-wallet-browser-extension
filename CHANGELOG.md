@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - Fix stale data and nonce issues after account/network switching
 - Fix concurrent request and timer cleanup in TokenDetail and transaction pages
 - Add silent refresh on same-network node switch
+- Fix new token badge count to only count hidden unseen tokens
+- Fix token manage interaction to correctly mark tokens as showed
 
 
 ## [2.5.0]

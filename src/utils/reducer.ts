@@ -71,6 +71,7 @@ export interface ProcessTokenShowStatusResult {
   tokenList: TokenItem[];
   tokenShowList: TokenItem[];
   totalShowAmount: string | number;
+  newTokenCount: number;
 }
 
 export interface ProcessNewTokenStatusResult {
@@ -228,7 +229,7 @@ export function processTokenList(
       tempToken.tokenId
     );
 
-    if (!tempToken.tokenBaseInfo.tokenShowed && !tempToken.tokenBaseInfo.isMainToken) {
+    if (!tempToken.tokenBaseInfo.tokenShowed && !tempToken.tokenBaseInfo.isMainToken && tempToken.localConfig?.hideToken) {
       newTokenCount++;
     }
 
@@ -272,27 +273,33 @@ export function processTokenShowStatus(
 ): ProcessTokenShowStatusResult {
   const tokenShowList: TokenItem[] = [];
   let totalShowAmount: string | number = 0;
+  let newTokenCount = 0;
 
   const nextTokenList = tokenAssetsList.map((tokenItem) => {
+    let resultItem: TokenItem;
     if (tokenItem.tokenId === clickTokenID) {
       const tempLocalConfig = tokenConfig[clickTokenID];
+      resultItem = { ...tokenItem, localConfig: tempLocalConfig };
       if (!tempLocalConfig?.hideToken) {
-        tokenShowList.push(tokenItem);
+        tokenShowList.push(resultItem);
         const tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
         totalShowAmount = new BigNumber(totalShowAmount).plus(tokenAmount).toString();
       }
-      return { ...tokenItem, localConfig: tempLocalConfig };
     } else {
+      resultItem = tokenItem;
       if (!tokenItem.localConfig?.hideToken) {
-        tokenShowList.push(tokenItem);
+        tokenShowList.push(resultItem);
         const tokenAmount = tokenItem.tokenBaseInfo.showAmount ?? 0;
         totalShowAmount = new BigNumber(totalShowAmount).plus(tokenAmount).toString();
       }
-      return tokenItem;
     }
+    if (!resultItem.tokenBaseInfo.tokenShowed && !resultItem.tokenBaseInfo.isMainToken && resultItem.localConfig?.hideToken) {
+      newTokenCount++;
+    }
+    return resultItem;
   });
 
-  return { tokenList: nextTokenList, tokenShowList, totalShowAmount };
+  return { tokenList: nextTokenList, tokenShowList, totalShowAmount, newTokenCount };
 }
 
 export function processNewTokenStatus(
@@ -303,7 +310,9 @@ export function processNewTokenStatus(
 
   const nextTokenList = tokenAssetsList.map((tokenItem) => {
     const tokenNew = showedTokenIdList.indexOf(tokenItem.tokenId) === -1;
-    if (tokenNew) newTokenCount++;
+    if (tokenNew && !tokenItem.tokenBaseInfo.isMainToken && tokenItem.localConfig?.hideToken) {
+      newTokenCount++;
+    }
 
     return {
       ...tokenItem,

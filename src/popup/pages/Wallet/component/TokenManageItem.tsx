@@ -2,7 +2,7 @@ import { saveLocal } from "@/background/localStorage";
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import SvgIcon from "@/popup/component/SvgIcon";
-import { updateLocalTokenConfig } from "@/reducers/accountReducer";
+import { updateLocalTokenConfig, updateLocalShowedTokenId } from "@/reducers/accountReducer";
 import { addressSlice, getBalanceForUI } from "@/utils/utils";
 import i18n from "i18next";
 import { useCallback, useMemo } from "react";
@@ -92,6 +92,9 @@ const TokenManageItem = ({ token }: TokenManageItemProps) => {
   const localTokenConfig = useAppSelector(
     (state) => state.accountInfo.localTokenConfig
   );
+  const localShowedTokenIds = useAppSelector(
+    (state) => state.accountInfo.localShowedTokenIds
+  );
 
   const currentAccount = useAppSelector(
     (state) => state.accountInfo.currentAccount
@@ -163,7 +166,16 @@ const TokenManageItem = ({ token }: TokenManageItemProps) => {
       JSON.stringify({ [currentAccount.address || ""]: tempConfig })
     );
     dispatch(updateLocalTokenConfig(tempConfig, token.tokenId));
-  }, [token, tokenList, currentAccount, localTokenConfig]);
+
+    if (!localShowedTokenIds.includes(token.tokenId)) {
+      const newShowedIds = [...localShowedTokenIds, token.tokenId];
+      saveLocal(
+        STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN,
+        JSON.stringify({ [currentAccount.address || ""]: newShowedIds })
+      );
+      dispatch(updateLocalShowedTokenId(newShowedIds));
+    }
+  }, [token, tokenList, currentAccount, localTokenConfig, localShowedTokenIds]);
 
   return (
     <StyledTokenItemWrapper $newToken={!tokenShowed}>

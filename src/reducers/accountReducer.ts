@@ -93,7 +93,7 @@ export interface AccountInfoState {
   tokenTotalAmount: string | number;
   localTokenConfig: TokenConfig;
   localShowedTokenIds: string[];
-  newTokenCount: number | string;
+  newTokenCount: number;
   supportTokenList: TokenItem[];
 }
 
@@ -399,6 +399,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         tokenList: priceUpdate.tokenList,
         tokenTotalAmount: priceUpdate.tokenTotalAmount,
         tokenShowList: priceUpdate.tokenShowList,
+        newTokenCount: priceUpdate.newTokenCount,
       };
 
     case UPDATE_LOCAL_TOKEN_CONFIG:
@@ -413,6 +414,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         tokenList: statusUpdate.tokenList,
         tokenShowList: statusUpdate.tokenShowList,
         tokenTotalAmount: statusUpdate.totalShowAmount,
+        newTokenCount: statusUpdate.newTokenCount,
       };
 
     case UPDATE_LOCAL_SHOWED_TOKEN_IDS:
