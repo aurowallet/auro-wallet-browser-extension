@@ -176,6 +176,8 @@ const NodeEditor = () => {
         dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
+      } else {
+        dispatch(updateShouldRequest(true, true));
       }
 
       sendNetworkChangeMsg(newConfig.currentNode as unknown as Parameters<typeof sendNetworkChangeMsg>[0]);
@@ -221,6 +223,8 @@ const NodeEditor = () => {
           dispatch(updateTokenAssets([]));
           dispatch(updateStakingRefresh(true));
           dispatch(updateShouldRequest(true));
+        } else {
+          dispatch(updateShouldRequest(true, true));
         }
         sendNetworkChangeMsg(newConfig.currentNode as unknown as Parameters<typeof sendNetworkChangeMsg>[0]);
       }
@@ -291,6 +295,8 @@ const NodeEditor = () => {
         dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
+      } else {
+        dispatch(updateShouldRequest(true, true));
       }
 
       sendNetworkChangeMsg(newConfig.currentNode as unknown as Parameters<typeof sendNetworkChangeMsg>[0]);

@@ -179,6 +179,8 @@ const ZkAppChainView = ({ notifyParams, onRemoveNotify }: ZkAppChainViewProps) =
         dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
+      } else {
+        dispatch(updateShouldRequest(true, true));
       }
 
       await extSaveLocal(NET_WORK_CHANGE_FLAG, true);

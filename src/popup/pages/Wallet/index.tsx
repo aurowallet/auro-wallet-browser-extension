@@ -327,9 +327,7 @@ const WalletInfo = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [currentAccount, setCurrentAccount] = useState(
-    accountInfo.currentAccount
-  );
+  const currentAccount = accountInfo.currentAccount;
 
   const { fetchAccountData } = useFetchAccountData(currentAccount as Parameters<typeof useFetchAccountData>[0]);
   const [dappConnectStatus, setDappConnectStatus] = useState(false);
@@ -338,7 +336,6 @@ const WalletInfo = () => {
   const [dappModalStatus, setDappModalStatus] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
   const [tokenModalStatus, setTokenModalStatus] = useState(false);
-  let isRequest = false;
 
   const { dappModalContent, leftBtnContent, rightBtnContent } = useMemo(() => {
     let dappModalContent = dappConnectStatus
@@ -458,10 +455,6 @@ const WalletInfo = () => {
       dappConnectStatus ? "/img/dappConnected.svg" : "/img/dappUnConnect.svg"
     );
   }, [dappConnectStatus]);
-  useEffect(() => {
-    setCurrentAccount(accountInfo.currentAccount);
-  }, [accountInfo.currentAccount]);
-
   const fetchPrice = useCallback(
     async (currency?: { key: string }) => {
       let lastCurrency = currencyConfig.currentCurrency as { key: string };

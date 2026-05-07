@@ -114,10 +114,6 @@ const SignTransaction = () => {
 
   const { fetchAccountData } = useFetchAccountData(currentAccount as Parameters<typeof useFetchAccountData>[0]);
 
-  const currentAddress = useAppSelector(
-    (state) => state.accountInfo.currentAccount.address
-  );
-
   const fetchAccountInfo = useCallback(async () => {
     if (isShowLoading.current) {
       Loading.show();
@@ -126,7 +122,7 @@ const SignTransaction = () => {
     await fetchAccountData();
     isFirstRequest.current = false;
     Loading.hide();
-  }, [dispatch, currentAddress]);
+  }, [dispatch, fetchAccountData]);
 
   const getSignParams = useCallback(() => {
     sendMsg(

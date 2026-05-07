@@ -99,7 +99,7 @@ const TokenDetail = () => {
   );
   let isFirstRequest = useRef(false);
 
-  let isRequest = false;
+  const isRequestRef = useRef(false);
 
   const postTxRetryTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const clearPostTxRetries = useCallback(() => {
@@ -207,10 +207,10 @@ const TokenDetail = () => {
   );
   const requestHistory = useCallback(
     async (address = currentAccount.address || "") => {
-      if (isRequest) {
+      if (isRequestRef.current) {
         return;
       }
-      isRequest = true;
+      isRequestRef.current = true;
       let fullTxRequest = getAllTxHistory(address, token.tokenId as string).catch(
         (err) => err
       );
@@ -266,7 +266,7 @@ const TokenDetail = () => {
 
       isFirstRequest.current = false;
       setShowLoading(false);
-      isRequest = false;
+      isRequestRef.current = false;
     },
     [currentAccount.address, isFungibleToken, token.tokenId, saveToLocal]
   );
@@ -310,6 +310,9 @@ const TokenDetail = () => {
         }, delay*1000)
       );
     }
+    return () => {
+      clearPostTxRetries();
+    };
   }, [shouldRefresh, isSilentRefresh, currentNode.networkID, requestHistory, fetchAccountData, clearPostTxRetries]);
 
   useEffect(() => {

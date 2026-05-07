@@ -106,6 +106,8 @@ const NetworkPage = () => {
         dispatch(updateTokenAssets([]));
         dispatch(updateStakingRefresh(true));
         dispatch(updateShouldRequest(true));
+      } else {
+        dispatch(updateShouldRequest(true, true));
       }
 
       sendNetworkChangeMsg(config.currentNode as unknown as Parameters<typeof sendNetworkChangeMsg>[0]);

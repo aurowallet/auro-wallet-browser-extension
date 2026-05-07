@@ -29,7 +29,6 @@ const UPDATE_CURRENT_PRICE = "UPDATE_CURRENT_PRICE";
 const UPDATE_LOCAL_TOKEN_CONFIG = "UPDATE_LOCAL_TOKEN_CONFIG";
 const UPDATE_LOCAL_SHOWED_TOKEN_IDS = "UPDATE_LOCAL_SHOWED_TOKEN_IDS";
 const UPDATE_SUPPORT_TOKEN_LIST = "UPDATE_SUPPORT_TOKEN_LIST";
-const UPDATE_PENDING_NONCE = "UPDATE_PENDING_NONCE";
 
 // ============ Interfaces ============
 
@@ -96,7 +95,6 @@ export interface AccountInfoState {
   localShowedTokenIds: string[];
   newTokenCount: number | string;
   supportTokenList: TokenItem[];
-  pendingNonce: number | null;
 }
 
 // ============ Action Interfaces ============
@@ -164,11 +162,6 @@ interface UpdateSupportTokenListAction {
   tokens: TokenItem[];
 }
 
-interface UpdatePendingNonceAction {
-  type: typeof UPDATE_PENDING_NONCE;
-  pendingNonce: number | null;
-}
-
 type AccountAction =
   | ChangeAccountTxHistoryV2Action
   | UpdateCurrentAccountAction
@@ -181,17 +174,12 @@ type AccountAction =
   | UpdateCurrentPriceAction
   | UpdateLocalTokenConfigAction
   | UpdateLocalShowedTokenIdsAction
-  | UpdateSupportTokenListAction
-  | UpdatePendingNonceAction;
+  | UpdateSupportTokenListAction;
 
 // ============ Action Creators ============
 
 export function updateSupportTokenList(tokens: TokenItem[]) {
   return { type: UPDATE_SUPPORT_TOKEN_LIST, tokens };
-}
-
-export function updatePendingNonce(pendingNonce: number | null) {
-  return { type: UPDATE_PENDING_NONCE, pendingNonce };
 }
 
 export function updateLocalShowedTokenId(tokenIds: string[]) {
@@ -279,7 +267,6 @@ const initState: AccountInfoState = {
   localShowedTokenIds: [],
   newTokenCount: 0,
   supportTokenList: [],
-  pendingNonce: null,
 };
 
 // ============ Reducer ============
@@ -296,7 +283,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         ...state.txHistoryMap,
         [tokenId]: newList,
       };
-      return { ...state, txHistoryMap: newTxHistoryMap, isSilentRefresh: false };
+      return { ...state, txHistoryMap: newTxHistoryMap };
 
     case UPDATE_CURRENT_ACCOUNT:
       return {
@@ -304,6 +291,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         currentAccount: action.account,
         txHistoryMap: {},
         shouldRefresh: true,
+        isSilentRefresh: false,
         tokenList: [],
         mainTokenNetInfo: undefined,
         tokenShowList: [],
@@ -311,7 +299,6 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         tokenTotalAmount: "0",
         localTokenConfig: {},
         newTokenCount: 0,
-        pendingNonce: null,
       };
 
     case INIT_CURRENT_ACCOUNT:
@@ -335,7 +322,6 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
           supportTokenList: [],
           localTokenConfig: {},
           newTokenCount: 0,
-          pendingNonce: null,
         };
       }
       return { ...state, shouldRefresh, isSilentRefresh: false, ...newState };
@@ -445,9 +431,6 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
 
     case UPDATE_SUPPORT_TOKEN_LIST:
       return { ...state, supportTokenList: action.tokens };
-
-    case UPDATE_PENDING_NONCE:
-      return { ...state, pendingNonce: action.pendingNonce };
 
     default:
       return state;

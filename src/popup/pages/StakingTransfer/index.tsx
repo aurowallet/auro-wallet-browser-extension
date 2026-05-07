@@ -320,7 +320,8 @@ const StakingTransfer = () => {
       );
     }, [
       currentAccount,
-      mainTokenNetInfo,
+      dispatch,
+      mainTokenNetInfo?.inferredNonce,
       inputNonce,
       nextFee,
       blockAddress,
@@ -433,7 +434,7 @@ const StakingTransfer = () => {
 
   useEffect(() => {
     fetchAccountData();
-  }, []);
+  }, [currentAccount.address]);
 
   useEffect(() => {
     if (menuAdd && (trimSpace(blockAddress || '') as string).length === 0) {

@@ -24,7 +24,7 @@ import {
 } from "../../../constant/msgTypes";
 import { ADDRESS_BOOK_CONFIG } from "../../../constant/storageKey";
 import { TimerProvider } from "../../../hooks/TimerContext";
-import { updateShouldRequest, updatePendingNonce } from "../../../reducers/accountReducer";
+import { updateShouldRequest } from "../../../reducers/accountReducer";
 import { updateAddressDetail } from "../../../reducers/cache";
 import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import { sendMsg } from "../../../utils/commonMsg";
@@ -200,23 +200,6 @@ const SendPage = () => {
   const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
   const [isNewAccount, setIsNewAccount] = useState(false);
 
-  const pendingNonce = useAppSelector((state) => state.accountInfo.pendingNonce);
-
-  const effectiveNonce = useMemo(() => {
-    const networkNonce = mainTokenNetInfo?.inferredNonce;
-    if (pendingNonce !== null && networkNonce !== undefined) {
-      return Math.max(pendingNonce, networkNonce);
-    }
-    return networkNonce ?? 0;
-  }, [mainTokenNetInfo?.inferredNonce, pendingNonce]);
-
-  useEffect(() => {
-    const networkNonce = mainTokenNetInfo?.inferredNonce;
-    if (networkNonce !== undefined && pendingNonce !== null && networkNonce >= pendingNonce) {
-      dispatch(updatePendingNonce(null));
-    }
-  }, [mainTokenNetInfo?.inferredNonce, pendingNonce, dispatch]);
-
   const nextFee = useMemo(() => {
     if (isNumber(advanceInputFee) && Number(advanceInputFee) > 0) {
       return advanceInputFee;
@@ -297,11 +280,12 @@ const SendPage = () => {
 
   const fetchAccountInfo = useCallback(async () => {
     dispatch(updateShouldRequest(true, true));
-  }, []);
+    await fetchAccountData();
+  }, [dispatch, fetchAccountData]);
 
   useEffect(() => {
     fetchAccountInfo();
-  }, []);
+  }, [fetchAccountInfo]);
 
   useEffect(() => {
     const checkTokenAccountStatus = async () => {
@@ -368,7 +352,6 @@ const SendPage = () => {
       }
       let detail = (data.sendPayment && data.sendPayment.payment) || {};
       dispatch(updateShouldRequest(true, true));
-      dispatch(updatePendingNonce(effectiveNonce + 1));
       if (type === "ledger") {
         sendMsg(
           {
@@ -390,7 +373,7 @@ const SendPage = () => {
         navigate(-1);
       }
     },
-    [i18n, isFromModal, effectiveNonce]
+    [i18n, isFromModal, dispatch, fetchAccountData]
   );
 
   useEffect(() => {
@@ -507,6 +490,7 @@ const SendPage = () => {
       isFromModal,
       i18n,
       isNewAccount,
+      fetchAccountData,
     ]
   );
   const clickNextStep = useCallback(async () => {
@@ -521,7 +505,7 @@ const SendPage = () => {
     let fromAddress = currentAddress || "";
     let toAddressValue = (trimSpace(toAddress) || "") as string;
     let amount = getRealTransferAmount();
-    let nonce = (trimSpace(inputNonce) || effectiveNonce || 0) as string | number;
+    let nonce = (trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce || 0) as string | number;
     let realMemo = memo || "";
     let fee = (trimSpace(nextFee) || "") as string;
     const payload: SendPayload = {
@@ -564,7 +548,8 @@ const SendPage = () => {
     ledgerStatus,
     currentAccount,
     currentAddress,
-    effectiveNonce,
+    dispatch,
+    mainTokenNetInfo?.inferredNonce,
     toAddress,
     inputNonce,
     memo,
@@ -659,7 +644,7 @@ const SendPage = () => {
       let fromAddress = currentAddress || "";
       let toAddressValue = (trimSpace(toAddress) || "") as string;
       let amount = getRealTransferAmount();
-      let nonce = (trimSpace(inputNonce) || effectiveNonce || 0) as string | number;
+      let nonce = (trimSpace(inputNonce) || mainTokenNetInfo?.inferredNonce || 0) as string | number;
       let realMemo = memo || "";
       let fee = (trimSpace(nextFee) || "") as string;
       let payload: SendPayload = {
@@ -698,7 +683,7 @@ const SendPage = () => {
     ledgerStatus,
     availableBalance,
     mainTokenBalance,
-    effectiveNonce,
+    mainTokenNetInfo?.inferredNonce,
     feeIntervalTime,
     isSendMainToken,
   ]);

@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Upgrade @aurowallet/mina-provider
 
+### Fixes
+- Fix stale data and nonce issues after account/network switching
+- Fix concurrent request and timer cleanup in TokenDetail and transaction pages
+- Add silent refresh on same-network node switch
+
 
 ## [2.5.0]
 ### Enhancements
