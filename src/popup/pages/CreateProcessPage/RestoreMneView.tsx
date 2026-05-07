@@ -511,7 +511,6 @@ const StyledDuplicateTipContainer = styled.div`
   .accountRepeatClick {
     color: #594af1;
     cursor: pointer;
-    text-decoration: underline;
   }
 `;
 

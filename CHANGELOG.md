@@ -7,12 +7,12 @@ All notable changes to this project will be documented in this file.
 - Upgrade @aurowallet/mina-provider
 
 ### Fixes
-- Fix stale data and nonce issues after account/network switching
-- Fix concurrent request and timer cleanup in TokenDetail and transaction pages
+- Resolve stale data and nonce issues after account/network switching
+- Clean up concurrent requests and timers in TokenDetail and transaction pages
 - Add silent refresh on same-network node switch
-- Fix new token badge count to only count hidden unseen tokens
-- Fix token manage interaction to correctly mark tokens as showed
-- Fix multi-account localStorage isolation for token config, showed tokens and cached assets
+- Correct new token badge count to only count hidden unseen tokens
+- Mark tokens as showed on manage interaction
+- Isolate multi-account localStorage for token config, showed tokens and cached assets
 
 
 ## [2.5.0]

@@ -117,8 +117,11 @@ const Reminder = styled.div`
 
 const Clickable = styled.span`
   color: #594af1;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration: none;
 `;
 
 const ButtonArea = styled.div`
