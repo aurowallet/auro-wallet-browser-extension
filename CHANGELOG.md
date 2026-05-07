@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Add silent refresh on same-network node switch
 - Fix new token badge count to only count hidden unseen tokens
 - Fix token manage interaction to correctly mark tokens as showed
+- Fix multi-account localStorage isolation for token config, showed tokens and cached assets
 
 
 ## [2.5.0]

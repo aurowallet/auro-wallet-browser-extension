@@ -88,7 +88,8 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
               STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG
             );
             if (localTokenConfig) {
-              const tokenConfigMap = JSON.parse(localTokenConfig);
+              let tokenConfigMap;
+              try { tokenConfigMap = JSON.parse(localTokenConfig); } catch (e) { /* corrupted localStorage */ }
               if (tokenConfigMap && tokenConfigMap[address]) {
                 const tokenConfig = tokenConfigMap[address];
                 if (!isDev && tokenConfig) {
@@ -99,9 +100,12 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
             if (!isDev) {
               dispatch(updateTokenAssets(lastTokenList));
               setResult(lastTokenList);
+              let existingTokenAssets = {};
+              try { existingTokenAssets = JSON.parse(getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS) || '{}'); } catch (e) { /* corrupted localStorage */ }
+              if (!existingTokenAssets || typeof existingTokenAssets !== 'object' || Array.isArray(existingTokenAssets)) existingTokenAssets = {};
               saveLocal(
                 LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
-                JSON.stringify({ [currentAccount.address]: lastTokenList })
+                JSON.stringify({ ...existingTokenAssets, [currentAccount.address]: lastTokenList })
               );
               return lastTokenList;
             } else {
@@ -113,9 +117,12 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
             if (!isSilentRef.current) {
               dispatch(updateTokenAssets([]));
               setResult([]);
+              let existingTokenAssets = {};
+              try { existingTokenAssets = JSON.parse(getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS) || '{}'); } catch (e) { /* corrupted localStorage */ }
+              if (!existingTokenAssets || typeof existingTokenAssets !== 'object' || Array.isArray(existingTokenAssets)) existingTokenAssets = {};
               saveLocal(
                 LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
-                JSON.stringify({ [currentAccount.address]: [] })
+                JSON.stringify({ ...existingTokenAssets, [currentAccount.address]: [] })
               );
             }
             return [];

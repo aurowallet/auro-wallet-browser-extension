@@ -1,4 +1,4 @@
-import { saveLocal } from "@/background/localStorage";
+import { getLocal, saveLocal } from "@/background/localStorage";
 import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import FooterPopup from "@/popup/component/FooterPopup";
 import SvgIcon from "@/popup/component/SvgIcon";
@@ -85,9 +85,12 @@ const TokenListView = ({ isInModal = false }) => {
     const newIdList = [
       ...new Set([...showedTokenIdList, ...localShowedTokenIds]),
     ];
+    let existingShowedToken = {};
+    try { existingShowedToken = JSON.parse(getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN) || '{}'); } catch (e) { /* corrupted localStorage */ }
+    if (!existingShowedToken || typeof existingShowedToken !== 'object' || Array.isArray(existingShowedToken)) existingShowedToken = {};
     saveLocal(
       STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN,
-      JSON.stringify({ [currentAccount.address || ""]: newIdList })
+      JSON.stringify({ ...existingShowedToken, [currentAccount.address || ""]: newIdList })
     );
     dispatch(updateLocalShowedTokenId(newIdList));
   }, [tokenList, currentAccount, localShowedTokenIds]);

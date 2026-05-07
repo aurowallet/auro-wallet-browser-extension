@@ -1,4 +1,4 @@
-import { saveLocal } from "@/background/localStorage";
+import { getLocal, saveLocal } from "@/background/localStorage";
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "@/constant/storageKey";
 import SvgIcon from "@/popup/component/SvgIcon";
@@ -88,7 +88,6 @@ interface TokenManageItemProps {
 
 const TokenManageItem = ({ token }: TokenManageItemProps) => {
   const currencyConfig = useAppSelector((state) => state.currencyConfig);
-  const tokenList = useAppSelector((state) => state.accountInfo.tokenList);
   const localTokenConfig = useAppSelector(
     (state) => state.accountInfo.localTokenConfig
   );
@@ -161,21 +160,27 @@ const TokenManageItem = ({ token }: TokenManageItemProps) => {
         hideToken: nextHideToken,
       };
     }
-    saveLocal(
-      STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG,
-      JSON.stringify({ [currentAccount.address || ""]: tempConfig })
-    );
-    dispatch(updateLocalTokenConfig(tempConfig, token.tokenId));
-
     if (!localShowedTokenIds.includes(token.tokenId)) {
       const newShowedIds = [...localShowedTokenIds, token.tokenId];
+      let existingShowedToken = {};
+      try { existingShowedToken = JSON.parse(getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN) || '{}'); } catch (e) { /* corrupted localStorage */ }
+      if (!existingShowedToken || typeof existingShowedToken !== 'object' || Array.isArray(existingShowedToken)) existingShowedToken = {};
       saveLocal(
         STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN,
-        JSON.stringify({ [currentAccount.address || ""]: newShowedIds })
+        JSON.stringify({ ...existingShowedToken, [currentAccount.address || ""]: newShowedIds })
       );
       dispatch(updateLocalShowedTokenId(newShowedIds));
     }
-  }, [token, tokenList, currentAccount, localTokenConfig, localShowedTokenIds]);
+
+    let existingTokenConfig = {};
+    try { existingTokenConfig = JSON.parse(getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG) || '{}'); } catch (e) { /* corrupted localStorage */ }
+    if (!existingTokenConfig || typeof existingTokenConfig !== 'object' || Array.isArray(existingTokenConfig)) existingTokenConfig = {};
+    saveLocal(
+      STABLE_LOCAL_ACCOUNT_CACHE_KEYS.TOKEN_CONFIG,
+      JSON.stringify({ ...existingTokenConfig, [currentAccount.address || ""]: tempConfig })
+    );
+    dispatch(updateLocalTokenConfig(tempConfig, token.tokenId));
+  }, [token, currentAccount, localTokenConfig, localShowedTokenIds]);
 
   return (
     <StyledTokenItemWrapper $newToken={!tokenShowed}>

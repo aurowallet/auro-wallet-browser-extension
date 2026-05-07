@@ -298,6 +298,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         tokenPrice: {},
         tokenTotalAmount: "0",
         localTokenConfig: {},
+        localShowedTokenIds: [],
         newTokenCount: 0,
       };
 
@@ -321,6 +322,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
           tokenTotalAmount: "0",
           supportTokenList: [],
           localTokenConfig: {},
+          localShowedTokenIds: [],
           newTokenCount: 0,
         };
       }
