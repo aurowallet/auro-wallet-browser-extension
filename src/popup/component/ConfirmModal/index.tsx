@@ -81,7 +81,7 @@ export const ConfirmModal = ({
           <StyledInnerContent>
             <div>
               <StyledTitleRow>
-                <StyledRowTitle>{title}</StyledRowTitle>
+                <StyledRowTitle>{waitingLedger ? i18n.t("waitingLedgerConfirm") : title}</StyledRowTitle>
                 {!waitingLedger && (
                   <StyledRightRow>
                     <LedgerStatusView />

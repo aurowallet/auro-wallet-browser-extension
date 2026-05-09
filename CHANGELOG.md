@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Add duplicate account detection with wallet group name and display name
 - Add DuplicateAccountTipContent component with navigable Wallet Management link
 - Enforce V3 vault upgrade for addHDNewAccount, addImportAccount, and addLedgerAccount
+- Update Ledger modal title
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
@@ -21,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Remove legacy V1 add-account code paths in favor of upgrade-first strategy
 - Fix duplicate detection in addAccountToKeyring and addHDKeyring to return existingAccount
 - Add missing i18n keys: notHDKeyring, noHDKeyring
+
 
 
 ## [2.5.0]

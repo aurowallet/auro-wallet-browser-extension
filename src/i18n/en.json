@@ -212,7 +212,7 @@
   "inputNewPwdRepeat": "Re-enter your <bold>new</bold> password",
   "accountAddress": "Account Address",
   "confirmTransaction": "Confirm Transaction",
-  "waitingLedgerConfirm": "Waiting for confirmation",
+  "waitingLedgerConfirm": "Waiting for signature",
   "waitingLedgerConfirmTip": "Please confirm in the Ledger hardware wallet, the signature may take 1-3 minutes.",
   "waitingLedgerConfirmTip_3": "<red>DO NOT</red> <yellow>exit this screen.</yellow><br/>Once the Ledger is complete, the page will redirect automatically.",
   "epochInfo": "Epoch Info",

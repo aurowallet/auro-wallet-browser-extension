@@ -220,7 +220,7 @@
   "inputNewPwdRepeat": "Повторно введите свой <bold>новый</bold> пароль",
   "accountAddress": "Адрес Счёта",
   "confirmTransaction": "Подтвердить транзакцию",
-  "waitingLedgerConfirm": "Ожидание подтверждения",
+  "waitingLedgerConfirm": "Ожидание подписи",
   "waitingLedgerConfirmTip": "Пожалуйста, подтвердите в аппаратном кошельке Ledger, подпись может занять 1-3 минуты.",
   "signatureRequest": "Запрос на подпись",
   "lockTime_5m": "5 минут",

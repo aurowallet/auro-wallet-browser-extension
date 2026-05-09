@@ -96,7 +96,7 @@
   "importSameAccount_2": "Mevcut bir içe aktarılmış hesap [{{accountName}}] bu adresin kopyasıdır. Auro Wallet, yinelenen hesap adreslerinin oluşturulmasını desteklemez. İçe aktarılan hesabı silmek için lütfen <acmanage>Cüzdan Yönetimi</acmanage>'ne gidin.",
   "deleteAccountTip": "Silinen cüzdan veya hesap yalnızca Anımsatıcı İfade ya da Özel Anahtar ile geri yüklenebilir. Lütfen Anımsatıcı İfadenizi veya Özel Anahtarınızı yedeklediğinizden emin olun.",
   "privateKey": "Özel Anahtar",
-  "waitingLedgerConfirm": "Onay bekliyor",
+  "waitingLedgerConfirm": "İmza bekleniyor",
   "connectionRequest": "Bağlantı İsteği",
   "start": "Başlat",
   "mneReminderContent": "Herhangi birisi sizin anımsatıcı ifadenizi ele geçirirse, cüzdanınızın tam kontrolüne sahip olacaktır, Paylaşmayınız.",

@@ -95,12 +95,14 @@ export const TransactionModal = ({
           <StyledInnerContent>
             <div>
               <StyledTitleRow>
-                <StyledRowTitle>{title}</StyledRowTitle>
-                <StyledRightRow>
-                  <LedgerStatusView />
-                  <div style={{ marginRight: "6px" }} />
-                  <NetworkStatusView />
-                </StyledRightRow>
+                <StyledRowTitle>{waitingLedger ? i18n.t("waitingLedgerConfirm") : title}</StyledRowTitle>
+                {!waitingLedger && (
+                  <StyledRightRow>
+                    <LedgerStatusView />
+                    <div style={{ marginRight: "6px" }} />
+                    <NetworkStatusView />
+                  </StyledRightRow>
+                )}
               </StyledTitleRow>
             </div>
             <StyledDividedLine />
