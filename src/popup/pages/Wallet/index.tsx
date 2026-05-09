@@ -210,9 +210,10 @@ const StyledWalletAddress = styled.div`
   color: rgba(255, 255, 255, 0.5);
   margin: 0px;
   cursor: pointer;
+  transition: opacity 0.2s ease;
 
   &:hover {
-    color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
+    opacity: 0.8;
   }
 `;
 

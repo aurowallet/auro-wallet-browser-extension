@@ -81,10 +81,12 @@ const StyledModalContent = styled.p`
 
 const StyledModalTip = styled.span`
   color: var(--mainBlue);
+  transition: opacity 0.2s ease;
+
   &:hover {
-    color: linear-gradient(0deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)),
-      var(--mainBlue);
+    opacity: 0.8;
   }
+
   cursor: pointer;
 `;
 

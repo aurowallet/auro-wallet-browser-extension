@@ -70,13 +70,10 @@ const StyledEditWrapper = styled.div`
 const StyledEdit = styled.img`
   display: block;
   cursor: pointer;
+  transition: opacity 0.2s ease;
+
   &:hover {
-    background-color: linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.05),
-        rgba(0, 0, 0, 0.05)
-      ),
-      rgba(249, 250, 252, 1);
+    opacity: 0.8;
   }
 `;
 const StyledNetworkInfo = styled.div`

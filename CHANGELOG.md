@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [2.5.1]
 ### Enhancements
 - Upgrade @aurowallet/mina-provider
+- Update hover style on Welcome, Wallet, and NetworkItem pages
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
