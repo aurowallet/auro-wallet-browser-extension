@@ -4,6 +4,7 @@ import { Trans } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "../../types/common";
 import type { AccountInfo } from "../../types/account";
+import { useNavigate } from "react-router-dom";
 import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
 import {
   ACCOUNT_ACTIONS,
@@ -17,7 +18,9 @@ import { openTab, sendMsg } from "../../../utils/commonMsg";
 import ledgerManager from "../../../utils/ledger";
 import { getQueryStringArgs } from "../../../utils/utils";
 import Button from "../../component/Button";
+import DuplicateAccountTipContent from "../../component/DuplicateAccountTipContent";
 import Input from "../../component/Input";
+import { PopupModal } from "../../component/PopupModal";
 import ProcessLayout from "../../component/ProcessLayout";
 import StepTabs from "../../component/StepTabs";
 import { CreateResultView } from "../CreateProcessPage/CreateResultView";
@@ -153,7 +156,7 @@ export const LedgerPage = ({ onClickPre, isEmbedded, onStepChange }: LedgerPageP
   }, [isShowSuccessTip, isFirstTimeSetup, connectLedger, getWalletLockStatus]);
   const onClickImport = useCallback(() => {
     onClickNextTab();
-  }, []);
+  }, [onClickNextTab]);
   const onClickDone = useCallback(() => {
     window.close();
   }, []);
@@ -327,11 +330,24 @@ const AccountNameView = ({
 
   const [tipModalVisible, setTipModalVisible] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [duplicateAccount, setDuplicateAccount] = useState<AccountInfo | null>(null);
   useEffect(() => {
     setErrorMsg(tipContent || '');
   }, [tipContent]);
 
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const onCloseDuplicateModal = useCallback(() => {
+    setDuplicateModalVisible(false);
+    setDuplicateAccount(null);
+  }, []);
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseDuplicateModal();
+    navigate("/account_manage", { replace: true });
+  }, [navigate, onCloseDuplicateModal]);
 
   const onConfirm = useCallback(async () => {
     let nextIndex: number = typeof accountIndex === 'string' ? parseInt(accountIndex) || 0 : accountIndex;
@@ -363,14 +379,20 @@ const AccountNameView = ({
             accountName: accountName || placeholderText,
           },
         },
-        (res: AccountInfo & { error?: string; type?: string }) => {
+        (res: AccountInfo & { error?: string; type?: string; existingAccount?: AccountInfo }) => {
           if (res.error) {
-            if (res.error) {
-              if (res.type === "local") {
-                setErrorMsg(i18n.t(res.error));
-              } else {
-                setErrorMsg(res.error);
-              }
+            if (
+              res.error === "importRepeat" &&
+              res.existingAccount
+            ) {
+              setDuplicateAccount(res.existingAccount);
+              setDuplicateModalVisible(true);
+              return;
+            }
+            if (res.type === "local") {
+              setErrorMsg(i18n.t(res.error));
+            } else {
+              setErrorMsg(res.error);
             }
           } else {
             sendMsg(
@@ -395,7 +417,7 @@ const AccountNameView = ({
     } catch (err) {
       setErrorMsg("Connection lost");
     }
-  }, [accountIndex, accountName, placeholderText, onClickNext, currentAddress]);
+  }, [accountIndex, accountName, placeholderText, onClickNext, currentAddress, dispatch]);
   const onNameInput = useCallback((e: InputChangeEvent) => {
     let value = e.target.value;
     if (value.length <= 16) {
@@ -476,6 +498,19 @@ const AccountNameView = ({
         onMinus={onMinus}
       />
       <LedgerModal modalVisible={tipModalVisible} />
+      <PopupModal
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
+        onRightBtnClick={onCloseDuplicateModal}
+        componentContent={
+          <DuplicateAccountTipContent
+            account={duplicateAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
+        }
+        modalVisible={duplicateModalVisible}
+        onCloseModal={onCloseDuplicateModal}
+      />
     </ProcessLayout>
   );
 };

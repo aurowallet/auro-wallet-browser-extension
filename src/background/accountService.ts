@@ -7,11 +7,7 @@ import { wordlist } from "@scure/bip39/wordlists/english";
 import { createBase58check } from "@scure/base";
 import { sha256 } from "@noble/hashes/sha256";
 
-// ============ Constants ============
-
 const bs58check = createBase58check(sha256);
-
-// ============ Types ============
 
 interface WalletResult {
   priKey: string;
@@ -31,8 +27,6 @@ interface KeyFile {
   nonce: string;
 }
 
-// ============ Internal Functions ============
-
 function reverse(bytes: Uint8Array): Buffer {
   const reversed = Buffer.alloc(bytes.length);
   for (let i = bytes.length; i > 0; i--) {
@@ -40,8 +34,6 @@ function reverse(bytes: Uint8Array): Buffer {
   }
   return reversed;
 }
-
-// ============ Exported Functions ============
 
 export function validateMnemonic(mnemonic: string): boolean {
   return bip39.validateMnemonic(mnemonic, wordlist);

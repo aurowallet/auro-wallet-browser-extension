@@ -4,7 +4,9 @@ import {
 } from "@/constant/msgTypes";
 import { useAppDispatch } from "@/hooks/useStore";
 import Button from "@/popup/component/Button";
+import DuplicateAccountTipContent from "@/popup/component/DuplicateAccountTipContent";
 import { MneItemV2 } from "@/popup/component/MneItem";
+import { PopupModal } from "@/popup/component/PopupModal";
 import ProcessLayout from "@/popup/component/ProcessLayout";
 import Toast from "@/popup/component/Toast";
 import { updateCurrentAccount } from "@/reducers/accountReducer";
@@ -15,6 +17,7 @@ import {
 import { sendMsg } from "@/utils/commonMsg";
 import i18n from "i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import type { AccountInfo } from "../../types/account";
 import type {
@@ -90,8 +93,21 @@ export const ConfirmMneView = ({
   >(Array(currentMneLength).fill(""));
   const [btnClick, setBtnClick] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [duplicateAccount, setDuplicateAccount] = useState<AccountInfo | null>(null);
 
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const onCloseDuplicateModal = useCallback(() => {
+    setDuplicateModalVisible(false);
+    setDuplicateAccount(null);
+  }, []);
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseDuplicateModal();
+    navigate("/account_manage", { replace: true });
+  }, [navigate, onCloseDuplicateModal]);
 
   const onClickPreRef = useRef(onClickPre);
   useEffect(() => {
@@ -226,10 +242,18 @@ export const ConfirmMneView = ({
           words: selectedWords,
         },
       },
-      (currentAccount: AccountInfo & { error?: string; type?: string }) => {
+      (currentAccount: AccountInfo & { error?: string; type?: string; existingAccount?: AccountInfo }) => {
         setLoadingStatus(false);
 
         if (currentAccount?.error) {
+          if (
+            currentAccount.error === "importRepeat" &&
+            currentAccount.existingAccount
+          ) {
+            setDuplicateAccount(currentAccount.existingAccount);
+            setDuplicateModalVisible(true);
+            return;
+          }
           const errorMsg =
             currentAccount.type === "local"
               ? i18n.t(currentAccount.error)
@@ -257,6 +281,7 @@ export const ConfirmMneView = ({
     mneSelectList,
     currentMneLength,
     dispatch,
+    onClickPre,
     onClickNext,
     resetSelectedWords,
   ]);
@@ -301,6 +326,19 @@ export const ConfirmMneView = ({
           );
         })}
       </StyledBottomMneContainer>
+      <PopupModal
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
+        onRightBtnClick={onCloseDuplicateModal}
+        componentContent={
+          <DuplicateAccountTipContent
+            account={duplicateAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
+        }
+        modalVisible={duplicateModalVisible}
+        onCloseModal={onCloseDuplicateModal}
+      />
     </ProcessLayout>
   );
 };

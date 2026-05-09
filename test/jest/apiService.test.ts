@@ -688,11 +688,11 @@ describe('APIService', () => {
 
       const createSpy = jest
         .spyOn(apiService, 'createAccount')
-        .mockResolvedValueOnce({ error: 'repeatTip', type: 'local' } as any);
+        .mockResolvedValueOnce({ error: 'importRepeat', type: 'local', existingAccount: { address: 'B62qExisting', accountName: 'Account 1' } } as any);
 
       const result = await apiService.confirmCreateMnemonic(['alpha', 'beta', 'gamma']);
 
-      expect(result).toEqual({ error: 'repeatTip', type: 'local' });
+      expect(result).toEqual({ error: 'importRepeat', type: 'local', existingAccount: { address: 'B62qExisting', accountName: 'Account 1' } });
       createSpy.mockRestore();
     });
 
@@ -1265,7 +1265,7 @@ describe('APIService', () => {
 
       const result = await apiService.addHDKeyring(TEST_DATA.mnemonic);
 
-      expect(result).toHaveProperty('error', 'repeatTip');
+      expect(result).toHaveProperty('error', 'importRepeat');
       expect(mockStoreState.data.nextWalletIndex).toBe(7);
       expect(mockStorageService.save).not.toHaveBeenCalled();
     });
@@ -1399,6 +1399,24 @@ describe('APIService', () => {
       expect(mockStoreState.data.currentKeyringId).toBe('kr-hd');
       expect(mockStoreState.data.keyrings[0].accounts).toHaveLength(2);
     });
+
+    it('should return importRepeat when derived address already exists in vault', async () => {
+      setupAuthenticated();
+      mockStoreState.data = createV3VaultData();
+      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValueOnce(TEST_DATA.mnemonic);
+      mockAccountService.importWalletByMnemonic.mockReturnValue({
+        pubKey: TEST_DATA.accounts[0]!.pubKey,
+        priKey: TEST_DATA.accounts[0]!.priKey,
+        hdIndex: 1,
+      });
+
+      const result = await apiService.addAccountToKeyring('kr-hd', 'HD Dup');
+
+      expect(result).toHaveProperty('error', 'importRepeat');
+      expect(result).toHaveProperty('existingAccount');
+      expect((result as any).existingAccount).toHaveProperty('address', TEST_DATA.accounts[0]!.pubKey);
+      expect(mockStorageService.save).not.toHaveBeenCalled();
+    });
   });
 
   // ==================== 17. addHDNewAccount ====================
@@ -1407,86 +1425,12 @@ describe('APIService', () => {
       expect(typeof apiService.addHDNewAccount).toBe('function');
     });
 
-    it('should add new HD account with V1 vault', async () => {
+    it('should return upgradeRequired for V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
-      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
       setupAuthenticated();
-      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
-      mockAccountService.importWalletByMnemonic.mockReturnValue({
-        pubKey: TEST_DATA.accounts[1]!.pubKey,
-        priKey: TEST_DATA.accounts[1]!.priKey,
-        hdIndex: 1,
-      });
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.addHDNewAccount('New Account');
-      expect(result).toHaveProperty('address', TEST_DATA.accounts[1]!.pubKey);
-    });
-
-    it('should return error when address already exists', async () => {
-      mockStoreState.data = createV1VaultData();
-      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
-      setupAuthenticated();
-      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
-      mockAccountService.importWalletByMnemonic.mockReturnValue({
-        pubKey: TEST_DATA.accounts[0]!.pubKey,
-        priKey: TEST_DATA.accounts[0]!.priKey,
-        hdIndex: 1,
-      });
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
-
-      const result = await apiService.addHDNewAccount('Account');
-      expect(result).toHaveProperty('error', 'importRepeat');
-    });
-
-    it('should fallback to deterministic typeIndex when legacy HD account misses typeIndex', async () => {
-      mockStoreState.data = createV1VaultData([
-        {
-          address: TEST_DATA.accounts[0]!.pubKey,
-          accountName: 'Account 1',
-          type: 'WALLET_INSIDE',
-          hdPath: 0,
-          privateKey: 'enc_key_0',
-        },
-      ]);
-      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
-      setupAuthenticated();
-      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
-      mockAccountService.importWalletByMnemonic.mockReturnValue({
-        pubKey: TEST_DATA.accounts[1]!.pubKey,
-        priKey: TEST_DATA.accounts[1]!.priKey,
-        hdIndex: 1,
-      });
-
-      const result = await apiService.addHDNewAccount('HD 2');
-
-      expect(result).toHaveProperty('typeIndex', 2);
-      expect(Number.isNaN((result as any).typeIndex)).toBe(false);
-    });
-
-    it('should fallback to deterministic hdPath when legacy HD account misses hdPath', async () => {
-      mockStoreState.data = createV1VaultData([
-        {
-          address: TEST_DATA.accounts[0]!.pubKey,
-          accountName: 'Account 1',
-          type: 'WALLET_INSIDE',
-          privateKey: 'enc_key_0',
-          typeIndex: 1,
-        },
-      ]);
-      mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
-      setupAuthenticated();
-      mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
-      mockAccountService.importWalletByMnemonic.mockReturnValue({
-        pubKey: TEST_DATA.accounts[1]!.pubKey,
-        priKey: TEST_DATA.accounts[1]!.priKey,
-        hdIndex: 1,
-      });
-
-      const result = await apiService.addHDNewAccount('HD 2');
-
-      expect(result).toHaveProperty('hdPath', 1);
-      expect(Number.isNaN((result as any).hdPath)).toBe(false);
+      expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
     });
 
     it('should update currentKeyringId when adding account via fallback HD keyring', async () => {
@@ -1537,13 +1481,13 @@ describe('APIService', () => {
       expect(mockStoreState.data.currentKeyringId).toBe('kr-hd');
     });
 
-    it('should return invalidVault when store data is non-null but unrecognized shape', async () => {
+    it('should return upgradeRequired when store data is non-null but unrecognized shape', async () => {
       setupAuthenticated();
       mockStoreState.data = { broken: true };
 
       const result = await apiService.addHDNewAccount('HD 2');
 
-      expect(result).toEqual({ error: 'invalidVault', type: 'local' });
+      expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
     });
   });
 
@@ -1553,37 +1497,8 @@ describe('APIService', () => {
       expect(typeof apiService.addImportAccount).toBe('function');
     });
 
-    it('should import account with V1 vault', async () => {
+    it('should return upgradeRequired for V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
-      setupAuthenticated();
-      mockAccountService.importWalletByPrivateKey.mockReturnValue({
-        pubKey: TEST_DATA.importedAccount.pubKey,
-        priKey: TEST_DATA.importedAccount.priKey,
-      });
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
-
-      const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
-      expect(result).toHaveProperty('address', TEST_DATA.importedAccount.pubKey);
-    });
-
-    it('should fallback to deterministic typeIndex when legacy imported account misses typeIndex', async () => {
-      mockStoreState.data = createV1VaultData([
-        {
-          address: TEST_DATA.accounts[0]!.pubKey,
-          accountName: 'Account 1',
-          type: 'WALLET_INSIDE',
-          hdPath: 0,
-          typeIndex: 1,
-          privateKey: 'enc_key_0',
-        },
-        {
-          address: 'B62qLegacyImported',
-          accountName: 'Legacy Import',
-          type: 'WALLET_OUTSIDE',
-          hdPath: null,
-          privateKey: 'enc_legacy_import',
-        },
-      ]);
       setupAuthenticated();
       mockAccountService.importWalletByPrivateKey.mockReturnValue({
         pubKey: TEST_DATA.importedAccount.pubKey,
@@ -1591,21 +1506,7 @@ describe('APIService', () => {
       });
 
       const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
-
-      expect(result).toHaveProperty('typeIndex', 1);
-      expect(Number.isNaN((result as any).typeIndex)).toBe(false);
-    });
-
-    it('should return error when address already exists', async () => {
-      mockStoreState.data = createV1VaultData();
-      setupAuthenticated();
-      mockAccountService.importWalletByPrivateKey.mockReturnValue({
-        pubKey: TEST_DATA.accounts[0]!.pubKey,
-        priKey: TEST_DATA.accounts[0]!.priKey,
-      });
-
-      const result = await apiService.addImportAccount(TEST_DATA.accounts[0]!.priKey, 'Account');
-      expect(result).toHaveProperty('error', 'importRepeat');
+      expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
     });
 
     it('should return walletNotReady when cryptoKey is missing', async () => {
@@ -1618,22 +1519,6 @@ describe('APIService', () => {
 
       const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
       expect(result).toEqual({ error: 'walletNotReady', type: 'local' });
-    });
-
-    it('should not mutate in-memory V1 data when save fails', async () => {
-      const originalData = createV1VaultData();
-      mockStoreState.data = JSON.parse(JSON.stringify(originalData));
-      setupAuthenticated();
-      mockAccountService.importWalletByPrivateKey.mockReturnValue({
-        pubKey: TEST_DATA.importedAccount.pubKey,
-        priKey: TEST_DATA.importedAccount.priKey,
-      });
-      mockStorageService.save.mockRejectedValueOnce(new Error('save failed'));
-
-      const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
-
-      expect(result).toEqual({ error: 'privateError', type: 'local' });
-      expect(mockStoreState.data).toEqual(originalData);
     });
 
     it('should initialize empty v3 vault with nextWalletIndex on first import', async () => {
@@ -1655,7 +1540,7 @@ describe('APIService', () => {
       expect(vaultEncryptCall?.[1]?.createdAt).toBeUndefined();
     });
 
-    it('should return invalidVault when store data is non-null but unrecognized shape', async () => {
+    it('should return upgradeRequired when store data is non-null but unrecognized shape', async () => {
       setupAuthenticated();
       mockStoreState.data = { broken: true };
       mockAccountService.importWalletByPrivateKey.mockReturnValue({
@@ -1665,7 +1550,7 @@ describe('APIService', () => {
 
       const result = await apiService.addImportAccount(TEST_DATA.importedAccount.priKey, 'Import');
 
-      expect(result).toEqual({ error: 'invalidVault', type: 'local' });
+      expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
     });
   });
 
@@ -1675,7 +1560,7 @@ describe('APIService', () => {
       expect(typeof apiService.addAccountByKeyStore).toBe('function');
     });
 
-    it('should import account via keystore', async () => {
+    it('should return upgradeRequired via keystore with V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
       setupAuthenticated();
       mockAccountService.importWalletByKeystore.mockResolvedValue({
@@ -1686,10 +1571,9 @@ describe('APIService', () => {
         pubKey: TEST_DATA.importedAccount.pubKey,
         priKey: TEST_DATA.importedAccount.priKey,
       });
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.addAccountByKeyStore('keystoreJson', 'password', 'Keystore');
-      expect(result).toHaveProperty('address');
+      expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
     });
 
     it('should return error when keystore decryption fails', async () => {
@@ -1713,26 +1597,16 @@ describe('APIService', () => {
       expect(typeof apiService.addLedgerAccount).toBe('function');
     });
 
-    it('should add ledger account with V1 vault', async () => {
+    it('should return upgradeRequired for V1 vault', async () => {
       mockStoreState.data = createV1VaultData();
       setupAuthenticated();
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
 
       const result = await apiService.addLedgerAccount(
         TEST_DATA.ledgerAccount.pubKey,
         TEST_DATA.ledgerAccount.accountName,
         TEST_DATA.ledgerAccount.hdPath
       );
-      expect(result).toHaveProperty('address', TEST_DATA.ledgerAccount.pubKey);
-    });
-
-    it('should return error when ledger address already exists', async () => {
-      mockStoreState.data = createV1VaultData();
-      setupAuthenticated();
-      mockEncryptUtils.encrypt.mockResolvedValue('encrypted_data');
-
-      const result = await apiService.addLedgerAccount(TEST_DATA.accounts[0]!.pubKey, 'Ledger', 0);
-      expect(result).toHaveProperty('error', 'importRepeat');
+      expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
     });
 
     it('should return walletNotReady when cryptoKey is missing', async () => {
@@ -1765,7 +1639,7 @@ describe('APIService', () => {
       expect(vaultEncryptCall?.[1]?.createdAt).toBeUndefined();
     });
 
-    it('should return invalidVault when store data is non-null but unrecognized shape', async () => {
+    it('should return upgradeRequired when store data is non-null but unrecognized shape', async () => {
       setupAuthenticated();
       mockStoreState.data = { broken: true };
 
@@ -1775,7 +1649,7 @@ describe('APIService', () => {
         TEST_DATA.ledgerAccount.hdPath
       );
 
-      expect(result).toEqual({ error: 'invalidVault', type: 'local' });
+      expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
     });
   });
 
@@ -2493,36 +2367,12 @@ describe('APIService', () => {
         expect(result).toHaveProperty('hdPath', 0);
       });
 
-      it('should derive second HD account at hdIndex 1', async () => {
+      it('should return upgradeRequired for V1 vault HD derivation', async () => {
         mockStoreState.data = createV1VaultData();
-        mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
         setupAuthenticated();
-        mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
-        mockAccountService.importWalletByMnemonic.mockReturnValue({
-          pubKey: TEST_DATA.accounts[1]!.pubKey,
-          priKey: TEST_DATA.accounts[1]!.priKey,
-          hdIndex: 1,
-        });
-        mockEncryptUtils.encrypt.mockResolvedValue('encrypted');
 
         const result = await apiService.addHDNewAccount('Account 2');
-        expect(result).toHaveProperty('hdPath', 1);
-      });
-
-      it('should derive third HD account at hdIndex 2', async () => {
-        mockStoreState.data = createV1VaultData();
-        mockStoreState.data[0].mnemonic = JSON.stringify({ version: 3, data: 'cipher', iv: 'iv' });
-        setupAuthenticated();
-        mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(TEST_DATA.mnemonic);
-        mockAccountService.importWalletByMnemonic.mockReturnValue({
-          pubKey: TEST_DATA.accounts[2]!.pubKey,
-          priKey: TEST_DATA.accounts[2]!.priKey,
-          hdIndex: 2,
-        });
-        mockEncryptUtils.encrypt.mockResolvedValue('encrypted');
-
-        const result = await apiService.addHDNewAccount('Account 3');
-        expect(result).toHaveProperty('hdPath', 1);
+        expect(result).toEqual({ error: 'upgradeRequired', type: 'local' });
       });
     });
 
@@ -2799,4 +2649,5 @@ describe('APIService', () => {
       expect(mockStorageService.save).toHaveBeenCalledWith({ autoLockTime: 300 });
     });
   });
+
 });

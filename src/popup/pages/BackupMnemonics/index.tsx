@@ -9,6 +9,8 @@ import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from "../../../reducers/entr
 import { sendMsg } from "../../../utils/commonMsg";
 import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
+import DuplicateAccountTipContent from "../../component/DuplicateAccountTipContent";
+import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import { MneItem } from "../ShowMnemonic";
 import {
@@ -29,9 +31,21 @@ export const BackupMnemonics = () => {
   const [sourceMne, setSourceMne] = useState("")
   const [btnClick, setBtnClick] = useState(false)
   const [loadingStatus, setLoadingStatus] = useState(false)
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false)
+  const [duplicateAccount, setDuplicateAccount] = useState<AccountInfo | null>(null)
 
   const dispatch = useAppDispatch()
   const navigate = useNavigate();
+
+  const onCloseDuplicateModal = useCallback(() => {
+    setDuplicateModalVisible(false)
+    setDuplicateAccount(null)
+  }, [])
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseDuplicateModal()
+    navigate("/account_manage", { replace: true })
+  }, [navigate, onCloseDuplicateModal])
 
   useEffect(() => {
     sendMsg({
@@ -121,8 +135,24 @@ export const BackupMnemonics = () => {
           mne: sourceMne,
         }
       },
-        async (currentAccount: AccountInfo) => {
+        async (currentAccount: AccountInfo & { error?: string; type?: string; existingAccount?: AccountInfo }) => {
           setLoadingStatus(false)
+          if (currentAccount.error) {
+            if (
+              currentAccount.error === "importRepeat" &&
+              currentAccount.existingAccount
+            ) {
+              setDuplicateAccount(currentAccount.existingAccount)
+              setDuplicateModalVisible(true)
+              return
+            }
+            if (currentAccount.type === "local") {
+              Toast.info(i18n.t(currentAccount.error))
+            } else {
+              Toast.info(currentAccount.error)
+            }
+            return
+          }
           dispatch(updateCurrentAccount(currentAccount))
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
           navigate("/backup_success")
@@ -136,7 +166,7 @@ export const BackupMnemonics = () => {
       })
       setMnemonicRandomList(newList)
     }
-  }, [mnemonicRandomList, i18n])
+  }, [mnemonicRandomList, i18n, sourceMne, compareList, setMneListFill, dispatch, navigate])
 
   return (
     <CustomView title={i18n.t("backupMnemonicPhrase")}>
@@ -173,9 +203,22 @@ export const BackupMnemonics = () => {
       </StyledMneContainer>
       <BottomBtn
         disable={!btnClick}
-        onClick={goToNext}
         rightLoadingStatus={loadingStatus}
-        rightBtnContent={i18n.t("next")}
+        onClick={goToNext}
+        rightBtnContent={i18n.t("confirm")}
+      />
+      <PopupModal
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
+        onRightBtnClick={onCloseDuplicateModal}
+        componentContent={
+          <DuplicateAccountTipContent
+            account={duplicateAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
+        }
+        modalVisible={duplicateModalVisible}
+        onCloseModal={onCloseDuplicateModal}
       />
     </CustomView>
   );

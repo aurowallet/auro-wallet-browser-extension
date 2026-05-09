@@ -22,33 +22,6 @@ export const StyledPlaceholder = styled.div`
   flex: 1;
 `;
 
-export const StyledTipContainer = styled.div`
-  font-size: ${({ theme }) => theme.typography.fontSizeContent};
-  line-height: 18px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-export const StyledTip = styled.p`
-  margin: 0;
-`;
-
-export const StyledAddress = styled.p`
-  margin: 0;
-  color: ${({ theme }) => theme.colors.primary};
-  word-break: break-all;
-  margin-bottom: 20px;
-`;
-
-export const StyledAccountRepeatName = styled.span`
-  margin: 0;
-`;
-
-export const StyledAccountRepeatClick = styled.span`
-  margin: 0;
-  color: ${({ theme }) => theme.colors.primary};
-  word-break: break-all;
-`;
-
 export const StyledLedgerContainer = styled.div`
   margin-top: 20px;
 `;

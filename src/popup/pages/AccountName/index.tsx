@@ -1,6 +1,5 @@
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Trans } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "../../types/common";
 import type { AccountInfo } from "../../types/account";
@@ -14,6 +13,7 @@ import { updateCurrentAccount } from "../../../reducers/accountReducer";
 import { sendMsg } from "../../../utils/commonMsg";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
+import DuplicateAccountTipContent from "../../component/DuplicateAccountTipContent";
 import Input from "../../component/Input";
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
@@ -21,11 +21,6 @@ import {
   StyledContainer,
   StyledBottomContainer,
   StyledPlaceholder,
-  StyledTipContainer,
-  StyledTip,
-  StyledAddress,
-  StyledAccountRepeatName,
-  StyledAccountRepeatClick,
   StyledLedgerContainer,
   StyledLedgerTitle,
   StyledLedgerPath,
@@ -117,12 +112,21 @@ const AccountName = () => {
           action: WALLET_CREATE_HD_ACCOUNT,
           payload: { accountName: accountText },
         },
-        (account: AccountInfo & { error?: string; account?: AccountInfo }) => {
+        (account: AccountInfo & { error?: string; type?: string; account?: AccountInfo; existingAccount?: AccountInfo }) => {
           setBtnLoadingStatus(false);
           if (account.error) {
-            if (account.error === "importRepeat") {
+            if (
+              account.error === "importRepeat" &&
+              account.existingAccount
+            ) {
               setReminderModalStatus(true);
-              setRepeatAccount(account.account ?? null);
+              setRepeatAccount(account.existingAccount);
+              return;
+            }
+            if (account.type === "local") {
+              Toast.info(i18n.t(account.error));
+            } else {
+              Toast.info(account.error);
             }
           } else {
             sendMsg(
@@ -149,13 +153,20 @@ const AccountName = () => {
     accountName,
     placeholderText,
     fromType,
-    accountIndex,
     currentAddress,
+    dispatch,
+    navigate,
   ]);
 
   const onCloseModal = useCallback(() => {
     setReminderModalStatus(false);
+    setRepeatAccount(null);
   }, []);
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseModal();
+    navigate("/account_manage", { replace: true });
+  }, [navigate, onCloseModal]);
 
   const onAccountIndexChange = useCallback((e: InputChangeEvent) => {
     let value = e.target.value;
@@ -222,20 +233,13 @@ const AccountName = () => {
         rightBtnContent={i18n.t("ok")}
         onRightBtnClick={onCloseModal}
         componentContent={
-          <StyledTipContainer>
-            <StyledTip>{i18n.t("importSameAccount_1")}</StyledTip>
-            <StyledAddress>{repeatAccount?.address}</StyledAddress>
-            <Trans
-              i18nKey={"importSameAccount_2"}
-              values={{ accountName: repeatAccount?.accountName }}
-              components={{
-                b: <StyledAccountRepeatName />,
-                click: <StyledAccountRepeatClick />,
-              }}
-            />
-          </StyledTipContainer>
+          <DuplicateAccountTipContent
+            account={repeatAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
         }
         modalVisible={reminderModalStatus}
+        onCloseModal={onCloseModal}
       />
     </CustomView>
   );

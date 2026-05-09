@@ -13,7 +13,9 @@ import { sendMsg } from "../../../utils/commonMsg";
 import Toast from "../../component/Toast";
 import Button from "../../component/Button";
 import CustomView from "../../component/CustomView";
+import DuplicateAccountTipContent from "../../component/DuplicateAccountTipContent";
 import Input from "../../component/Input";
+import { PopupModal } from "../../component/PopupModal";
 import TextArea from "../../component/TextArea";
 import {
   StyledTitle,
@@ -33,6 +35,8 @@ const ImportKeypair = () => {
   const [pwdValue, setPwdValue] = useState("");
   const [btnStatus, setBtnStatus] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [duplicateAccount, setDuplicateAccount] = useState<AccountInfo | null>(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,6 +62,16 @@ const ImportKeypair = () => {
     setPwdValue(e.target.value);
   }, []);
 
+  const onCloseDuplicateModal = useCallback(() => {
+    setDuplicateModalVisible(false);
+    setDuplicateAccount(null);
+  }, []);
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseDuplicateModal();
+    navigate("/account_manage", { replace: true });
+  }, [navigate, onCloseDuplicateModal]);
+
   const onConfirm = useCallback(
     () => {
       setLoading(true);
@@ -70,9 +84,17 @@ const ImportKeypair = () => {
             accountName: accountName,
           },
         },
-        async (account: AccountInfo & { error?: string; type?: string }) => {
+        async (account: AccountInfo & { error?: string; type?: string; existingAccount?: AccountInfo }) => {
           setLoading(false);
           if (account.error) {
+            if (
+              account.error === "importRepeat" &&
+              account.existingAccount
+            ) {
+              setDuplicateAccount(account.existingAccount);
+              setDuplicateModalVisible(true);
+              return;
+            }
             if (account.type === "local") {
               Toast.info(i18n.t(account.error));
             } else {
@@ -102,7 +124,7 @@ const ImportKeypair = () => {
         }
       );
     },
-    [keystoreValue, pwdValue, accountName, history]
+    [keystoreValue, pwdValue, accountName, navigate, currentAddress]
   );
   return (
     <CustomView title={i18n.t("importKeystone")}>
@@ -126,6 +148,19 @@ const ImportKeypair = () => {
           {i18n.t("confirm")}
         </Button>
       </StyledBottomContainer>
+      <PopupModal
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
+        onRightBtnClick={onCloseDuplicateModal}
+        componentContent={
+          <DuplicateAccountTipContent
+            account={duplicateAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
+        }
+        modalVisible={duplicateModalVisible}
+        onCloseModal={onCloseDuplicateModal}
+      />
     </CustomView>
   );
 };

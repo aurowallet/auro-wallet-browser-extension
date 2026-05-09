@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Upgrade @aurowallet/mina-provider
 - Update hover style on Welcome, Wallet, and NetworkItem pages
+- Add duplicate account detection with wallet group name and display name
+- Add DuplicateAccountTipContent component with navigable Wallet Management link
+- Enforce V3 vault upgrade for addHDNewAccount, addImportAccount, and addLedgerAccount
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
@@ -14,6 +17,10 @@ All notable changes to this project will be documented in this file.
 - Correct new token badge count to only count hidden unseen tokens
 - Mark tokens as showed on manage interaction
 - Isolate multi-account localStorage for token config, showed tokens and cached assets
+- Centralize duplicate address check into _checkDuplicateInVault with rich error details
+- Remove legacy V1 add-account code paths in favor of upgrade-first strategy
+- Fix duplicate detection in addAccountToKeyring and addHDKeyring to return existingAccount
+- Add missing i18n keys: notHDKeyring, noHDKeyring
 
 
 ## [2.5.0]

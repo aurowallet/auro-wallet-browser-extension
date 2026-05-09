@@ -12,7 +12,10 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { trimSpace } from "../../../utils/utils";
 import BottomBtn from "../../component/BottomBtn";
 import CustomView from "../../component/CustomView";
+import DuplicateAccountTipContent from "../../component/DuplicateAccountTipContent";
+import { PopupModal } from "../../component/PopupModal";
 import TextArea from "../../component/TextArea";
+import Toast from "../../component/Toast";
 import {
   StyledRestoreTip,
   StyledTextAreaContainer,
@@ -27,6 +30,8 @@ const RestoreAccount = () => {
   const [similarWordList, setSimilarWordList] = useState<string[]>([])
   const [btnLoading, setBtnLoading] = useState(false)
   const [bottomTipError, setBottomTipError] = useState("")
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false)
+  const [duplicateAccount, setDuplicateAccount] = useState<AccountInfo | null>(null)
 
   const [btnDisableStatus,setBtnDisableStatus] = useState(true)
   const childRef = useRef<{ setFocus: () => void; getCurrentCaretPosition: () => number | undefined }>(null);
@@ -89,6 +94,16 @@ const RestoreAccount = () => {
 
   }, [mneInput])
 
+  const onCloseDuplicateModal = useCallback(() => {
+    setDuplicateModalVisible(false)
+    setDuplicateAccount(null)
+  }, [])
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseDuplicateModal()
+    navigate("/account_manage", { replace: true })
+  }, [navigate, onCloseDuplicateModal])
+
   const goToCreate = useCallback(() => {
     let mnemonic: string = mneInput
 
@@ -108,13 +123,29 @@ const RestoreAccount = () => {
         mne: mnemonic
       }
     },
-      async (currentAccount: AccountInfo) => {
+      async (currentAccount: AccountInfo & { error?: string; type?: string; existingAccount?: AccountInfo }) => {
         setBtnLoading(false)
+        if (currentAccount.error) {
+          if (
+            currentAccount.error === "importRepeat" &&
+            currentAccount.existingAccount
+          ) {
+            setDuplicateAccount(currentAccount.existingAccount)
+            setDuplicateModalVisible(true)
+            return
+          }
+          if (currentAccount.type === "local") {
+            Toast.info(i18n.t(currentAccount.error))
+          } else {
+            Toast.info(currentAccount.error)
+          }
+          return
+        }
         dispatch(updateCurrentAccount(currentAccount))
         dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE))
         navigate("/backup_success", { state: { type: "restore" } })
       })
-  }, [mneInput, i18n])
+  }, [mneInput, i18n, dispatch, navigate])
 
   useEffect(()=>{
     if((trimSpace(mneInput) as string).length>0){
@@ -155,6 +186,19 @@ const RestoreAccount = () => {
         rightLoadingStatus={btnLoading}
         onClick={goToCreate}
         rightBtnContent={i18n.t("confirm")}
+      />
+      <PopupModal
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
+        onRightBtnClick={onCloseDuplicateModal}
+        componentContent={
+          <DuplicateAccountTipContent
+            account={duplicateAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
+        }
+        modalVisible={duplicateModalVisible}
+        onCloseModal={onCloseDuplicateModal}
       />
     </CustomView>
   );

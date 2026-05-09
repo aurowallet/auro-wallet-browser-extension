@@ -5,6 +5,7 @@ import {
   WALLET_NEW_HD_ACCOUNT,
 } from "@/constant/msgTypes";
 import Button from "@/popup/component/Button";
+import DuplicateAccountTipContent from "@/popup/component/DuplicateAccountTipContent";
 import Input from "@/popup/component/Input";
 import { MneItemV2 } from "@/popup/component/MneItem";
 import { PopupModal } from "@/popup/component/PopupModal";
@@ -16,11 +17,11 @@ import {
   updateEntryWitchRoute,
 } from "@/reducers/entryRouteReducer";
 import { sendMsg } from "@/utils/commonMsg";
-import { addressSlice, checkValidStrInList } from "@/utils/utils";
+import { checkValidStrInList } from "@/utils/utils";
 import { wordlist } from "@scure/bip39/wordlists/english";
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
-import { Trans } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import type {
   RestoreMneViewProps,
@@ -151,6 +152,7 @@ export const RestoreMneView = ({
   const [duplicateAccount, setDuplicateAccount] = useState<AccountInfo | null>(null);
 
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const getSimilarWord = useCallback(() => {
     if (mneInput.word.length > 0) {
       let list = wordlist.filter((item) => {
@@ -240,8 +242,7 @@ export const RestoreMneView = ({
       if (account.error) {
         // Check if it's a duplicate account error with account info
         if (
-          (account.error === "repeatTip" ||
-            account.error === "importRepeat") &&
+          account.error === "importRepeat" &&
           account.existingAccount
         ) {
           setDuplicateAccount(account.existingAccount);
@@ -266,6 +267,11 @@ export const RestoreMneView = ({
     setDuplicateModalVisible(false);
     setDuplicateAccount(null);
   }, []);
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseDuplicateModal();
+    navigate("/account_manage", { replace: true });
+  }, [navigate, onCloseDuplicateModal]);
 
   const goToCreate = useCallback(() => {
     const isMnemonic =
@@ -464,20 +470,10 @@ export const RestoreMneView = ({
         rightBtnContent={i18n.t("ok")}
         onRightBtnClick={onCloseDuplicateModal}
         componentContent={
-          duplicateAccount && (
-            <StyledDuplicateTipContainer>
-              <p className="tip">{i18n.t("importSameAccount_1")}</p>
-              <p className="address">{duplicateAccount.address}</p>
-              <Trans
-                i18nKey={"importSameAccount_2"}
-                values={{ accountName: duplicateAccount.accountName || duplicateAccount.address }}
-                components={{
-                  b: <span className="accountRepeatName" />,
-                  click: <span className="accountRepeatClick" />,
-                }}
-              />
-            </StyledDuplicateTipContainer>
-          )
+          <DuplicateAccountTipContent
+            account={duplicateAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
         }
         modalVisible={duplicateModalVisible}
         onCloseModal={onCloseDuplicateModal}
@@ -485,34 +481,6 @@ export const RestoreMneView = ({
     </ProcessLayout>
   );
 };
-
-const StyledDuplicateTipContainer = styled.div`
-  text-align: left;
-  padding: 0;
-
-  .tip {
-    font-size: 14px;
-    color: rgba(0, 0, 0, 0.5);
-    margin-bottom: 12px;
-    line-height: 1.5;
-  }
-  .address {
-    font-size: 14px;
-    color: #594af1;
-    font-weight: 500;
-    margin-bottom: 12px;
-    word-break: break-all;
-    line-height: 1.5;
-  }
-  .accountRepeatName {
-    color: #594af1;
-    font-weight: 500;
-  }
-  .accountRepeatClick {
-    color: #594af1;
-    cursor: pointer;
-  }
-`;
 
 const StyledSelectedContainer = styled.div`
   background: rgba(0, 0, 0, 0.05);

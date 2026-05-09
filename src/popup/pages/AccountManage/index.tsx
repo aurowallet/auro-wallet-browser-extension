@@ -38,7 +38,9 @@ import { sendMsg } from "../../../utils/commonMsg";
 import { createOrActivateTab } from "../../../utils/popup";
 import { addressSlice, amountDecimals } from "../../../utils/utils";
 import CustomView from "../../component/CustomView";
+import DuplicateAccountTipContent from "../../component/DuplicateAccountTipContent";
 import Loading from "../../component/Loading";
+import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import VaultUpgradeModal from "../../component/VaultUpgradeModal";
 import {
@@ -99,6 +101,8 @@ const AccountManagePage = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeStatus, setUpgradeStatus] = useState("idle"); // idle, loading, failed
   const [upgradeSource, setUpgradeSource] = useState<string | null>(null); // "addWallet" or "addAccount"
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [duplicateAccount, setDuplicateAccount] = useState<AccountInfo | null>(null);
 
   const getAccountTypeIndex = useCallback((list: AccountInfo[]) => {
     if (list.length === 0) {
@@ -286,9 +290,17 @@ const AccountManagePage = () => {
           action: WALLET_ADD_ACCOUNT_TO_KEYRING,
           payload: { keyringId },
         },
-        (result: { error?: string; account?: AccountInfo }) => {
+        (result: { error?: string; account?: AccountInfo; existingAccount?: AccountInfo }) => {
           Loading.hide();
           if (result.error) {
+            if (
+              result.error === "importRepeat" &&
+              result.existingAccount
+            ) {
+              setDuplicateAccount(result.existingAccount);
+              setDuplicateModalVisible(true);
+              return;
+            }
             Toast.info(i18n.t(result.error));
             return;
           }
@@ -327,6 +339,18 @@ const AccountManagePage = () => {
     setUpgradeStatus("idle");
   }, []);
 
+  const onCloseDuplicateModal = useCallback(() => {
+    setDuplicateModalVisible(false);
+    setDuplicateAccount(null);
+  }, []);
+
+  const onClickWalletManagement = useCallback(() => {
+    onCloseDuplicateModal();
+    if (location.pathname !== "/account_manage") {
+      navigate("/account_manage", { replace: true });
+    }
+  }, [location.pathname, navigate, onCloseDuplicateModal]);
+
   const onUpgradeVault = useCallback(() => {
     setUpgradeStatus("loading");
     sendMsg({ action: WALLET_TRY_UPGRADE_VAULT }, (result: { success?: boolean }) => {
@@ -352,9 +376,17 @@ const AccountManagePage = () => {
                     action: WALLET_ADD_ACCOUNT_TO_KEYRING,
                     payload: { keyringId: hdKeyring.id },
                   },
-                  (addResult: { error?: string; account?: AccountInfo }) => {
+                  (addResult: { error?: string; account?: AccountInfo; existingAccount?: AccountInfo }) => {
                     Loading.hide();
                     if (addResult.error) {
+                      if (
+                        addResult.error === "importRepeat" &&
+                        addResult.existingAccount
+                      ) {
+                        setDuplicateAccount(addResult.existingAccount);
+                        setDuplicateModalVisible(true);
+                        return;
+                      }
                       Toast.info(i18n.t(addResult.error));
                     } else {
                       sendMsg({ action: WALLET_GET_KEYRINGS_LIST }, (refreshRes: { keyrings?: UIKeyring[] }) => {
@@ -520,6 +552,19 @@ const AccountManagePage = () => {
         onClose={onCloseUpgradeModal}
         onUpgrade={onUpgradeVault}
         upgradeStatus={upgradeStatus}
+      />
+      <PopupModal
+        title={i18n.t("tips")}
+        rightBtnContent={i18n.t("ok")}
+        onRightBtnClick={onCloseDuplicateModal}
+        componentContent={
+          <DuplicateAccountTipContent
+            account={duplicateAccount}
+            onClickWalletManagement={onClickWalletManagement}
+          />
+        }
+        modalVisible={duplicateModalVisible}
+        onCloseModal={onCloseDuplicateModal}
       />
     </CustomView>
   );
