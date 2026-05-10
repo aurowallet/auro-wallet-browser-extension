@@ -1,5 +1,11 @@
-import React from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { HashRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { StyledAppHeader } from '../App.styled';
+import browser from 'webextension-polyfill';
+import { FROM_BACK_TO_RECORD, WALLET_GET_CREATE_FLOW_STATE, WORKER_ACTIONS } from '../../constant/msgTypes';
+import { useAppDispatch, useAppSelector } from '@/hooks/useStore';
+import { updatePopupLockStatus } from '../../reducers/cache';
+import { ENTRY_WITCH_ROUTE, updateEntryWitchRoute } from '../../reducers/entryRouteReducer';
 import MainRouter from '../pages';
 import AboutUs from '../pages/AboutUs';
 import AccountInfo from '../pages/AccountInfo';
@@ -48,13 +54,119 @@ import DevPage from '../pages/DevPage';
 import DevDetailPage from '../pages/DevPage/DevDetail';
 import VaultDebug from '../pages/DevPage/VaultDebug';
 import WalletDetails from '../pages/WalletDetails';
+import { sendMsgV2 } from '@/utils/commonMsg';
 
+const FULL_PAGE_ROUTES = ["/ledger_page", "/register_page", "/createprocess"];
+const ZK_PAGE_ROUTES = ["/approve_page", "/request_sign", "/token_sign"];
 
+interface CreateFlowState {
+  hasExistingWallet: boolean;
+  isUnlocked: boolean;
+}
 
+const LockListener = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathnameRef = useRef(location.pathname);
+
+  useEffect(() => {
+    pathnameRef.current = location.pathname;
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const syncCurrentLockStatus = async () => {
+      try {
+        const state = await sendMsgV2<CreateFlowState>({
+          action: WALLET_GET_CREATE_FLOW_STATE,
+        });
+        const isLocked = !!state?.hasExistingWallet && !state?.isUnlocked;
+        const shouldStayOnCurrentRoute = ZK_PAGE_ROUTES.some((route) => pathnameRef.current.startsWith(route));
+        if (isLocked && !shouldStayOnCurrentRoute) {
+          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
+          navigate('/lock_page');
+        }
+        dispatch(updatePopupLockStatus(isLocked));
+      } catch (e) {
+        console.warn('[LockListener] syncCurrentLockStatus failed:', e);
+      }
+    };
+
+    void syncCurrentLockStatus();
+
+    const lockEvent = (
+      message: { type: string; action: string; payload?: boolean },
+      _sender: browser.Runtime.MessageSender,
+      sendResponse: () => void
+    ) => {
+      const { type, action, payload } = message;
+      if (type === FROM_BACK_TO_RECORD && action === WORKER_ACTIONS.SET_LOCK) {
+        const shouldStayOnCurrentRoute = ZK_PAGE_ROUTES.some((route) => pathnameRef.current.startsWith(route));
+        if (!payload && !shouldStayOnCurrentRoute) {
+          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
+          navigate('/lock_page');
+        }
+        dispatch(updatePopupLockStatus(!payload));
+        sendResponse();
+      }
+      return false;
+    };
+    browser.runtime.onMessage.addListener(
+      lockEvent as Parameters<typeof browser.runtime.onMessage.addListener>[0]
+    );
+    return () => {
+      browser.runtime.onMessage.removeListener(
+        lockEvent as Parameters<typeof browser.runtime.onMessage.removeListener>[0]
+      );
+    };
+  }, [dispatch, navigate]);
+
+  return null;
+};
+
+const NotificationLockOverlay = () => {
+  const location = useLocation();
+  const popupLockStatus = useAppSelector((state) => state.cache.popupLockStatus);
+
+  const shouldShowOverlay = useMemo(() => {
+    return popupLockStatus && ZK_PAGE_ROUTES.some((route) => location.pathname.startsWith(route));
+  }, [location.pathname, popupLockStatus]);
+
+  if (!shouldShowOverlay) {
+    return null;
+  }
+
+  return <LockPage redirectAfterUnlock={false} />;
+};
+
+const LayoutShell = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+
+  const showFull = useMemo(() => {
+    const isPopup = window.location.pathname.indexOf("popup.html") !== -1;
+    const isNotification = window.location.pathname.indexOf("notification.html") !== -1;
+    const isFullPage = FULL_PAGE_ROUTES.some((route) => location.pathname.startsWith(route));
+    return (!isPopup || isFullPage) && !isNotification;
+  }, [location.pathname]);
+
+  const autoWidth = useMemo(() => {
+    return ZK_PAGE_ROUTES.some((route) => location.pathname.startsWith(route));
+  }, [location.pathname]);
+
+  return (
+    <StyledAppHeader $showFull={showFull} $autoWidth={autoWidth}>
+      {children}
+      <NotificationLockOverlay />
+      <div id="app-overlay-container" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
+    </StyledAppHeader>
+  );
+};
 
 export function getAllRouter() {
   return (
     <HashRouter>
+      <LayoutShell>
+      <LockListener />
       <Routes>
         <Route path="/" element={<MainRouter />} />
         <Route path="/show_mnemonic" element={<ShowMnemonic />} />
@@ -117,6 +229,7 @@ export function getAllRouter() {
         )}
         <Route path="/wallet_details" element={<WalletDetails />} />
       </Routes>
+      </LayoutShell>
     </HashRouter>
   );
 }

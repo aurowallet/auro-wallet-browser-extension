@@ -58,11 +58,11 @@ const DAppAdvance = ({
 
     const handleConfirm = useCallback(() => {
         if (feeValue && !isNumber(feeValue)) {
-            Toast.info(i18n.t("inputFeeError"));
+            Toast.info(i18n.t("inputFeeError"), { top: '60%' });
             return;
         }
         if (nonceValue && !isNaturalNumber(nonceValue)) {
-            Toast.info(i18n.t("inputNonceError", { nonce: "nonce" }));
+            Toast.info(i18n.t("inputNonceError", { nonce: "nonce" }), { top: '60%' });
             return;
         }
         onConfirm();
@@ -107,7 +107,7 @@ const DAppAdvance = ({
                             label={i18n.t('networkFee')}
                             onChange={onFeeInput}
                             value={feeValue}
-                            inputType={'text'}
+                            inputType={'numric'}
                             showBottomTip={true}
                             placeholder={feePlaceHolder}
                             bottomTip={feeErrorTip}
@@ -117,7 +117,7 @@ const DAppAdvance = ({
                             label={"Nonce"}
                             onChange={onNonceInput}
                             value={nonceValue}
-                            inputType={'text'}
+                            inputType={'numric'}
                             placeholder={nonceHolder}
                         />
                     </StyledBottomContent>

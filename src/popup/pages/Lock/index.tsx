@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 import i18n from "i18next";
 import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch } from "@/hooks/useStore";
+import { updatePopupLockStatus } from "../../../reducers/cache";
 import type { InputChangeEvent } from "../../types/common";
 import { useNavigate } from "react-router-dom";
 import { NET_CONFIG_VERSION } from "../../../../config";
@@ -56,7 +57,11 @@ import {
   dangerButtonClassName,
 } from "./index.styled";
 
-export const LockPage = () => {
+interface LockPageProps {
+  redirectAfterUnlock?: boolean;
+}
+
+export const LockPage = ({ redirectAfterUnlock = true }: LockPageProps) => {
   const [pwdValue, setPwdValue] = useState("");
   const [unLockBtnStatus, setUnLockBtnStatus] = useState(false);
   const [waringModalStatus, setWaringModalStatus] = useState(false);
@@ -96,13 +101,16 @@ export const LockPage = () => {
             Toast.info(account.error);
           }
         } else {
-          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
           dispatch(initCurrentAccount(account));
-          navigate("/homepage");
+          dispatch(updatePopupLockStatus(false));
+          if (redirectAfterUnlock) {
+            dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
+            navigate("/homepage");
+          }
         }
       }
     );
-  }, [pwdValue]);
+  }, [dispatch, navigate, pwdValue, redirectAfterUnlock]);
 
   const onShowResetModal = useCallback(() => {
     setWaringModalStatus(true);

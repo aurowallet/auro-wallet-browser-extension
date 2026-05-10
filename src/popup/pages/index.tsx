@@ -2,18 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import { useNavigate } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
-import browser from "webextension-polyfill";
 import { getBaseInfo } from "../../background/api";
-import { FROM_BACK_TO_RECORD, WORKER_ACTIONS } from "../../constant/msgTypes";
 import { languageInit } from "../../i18n";
 import { setLanguage } from "../../reducers/appReducer";
 import {
   updateExtensionBaseInfo,
-  updatePopupLockStatus,
 } from "../../reducers/cache";
 import {
   ENTRY_WITCH_ROUTE,
-  updateEntryWitchRoute,
 } from "../../reducers/entryRouteReducer";
 import { LockPage } from "./Lock";
 import HomePage from "./Main";
@@ -43,21 +39,6 @@ const MainRouter = () => {
     init();
   }, []);
 
-  useEffect(() => {
-    let lockEvent = (message: { type: string; action: string; payload?: boolean }, sender: browser.Runtime.MessageSender, sendResponse: () => void) => {
-      const { type, action, payload } = message;
-      if (type === FROM_BACK_TO_RECORD && action === WORKER_ACTIONS.SET_LOCK) {
-        if (!payload) {
-          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
-          navigate("/lock_page");
-        }
-        dispatch(updatePopupLockStatus(!payload));
-        sendResponse();
-      }
-      return false;
-    };
-    browser.runtime.onMessage.addListener(lockEvent as Parameters<typeof browser.runtime.onMessage.addListener>[0]);
-  }, []);
 
   useEffect(() => {
     switch (entryWitchRoute) {

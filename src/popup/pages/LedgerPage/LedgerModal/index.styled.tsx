@@ -6,10 +6,10 @@ export const StyledOuterContainer = styled.div`
   position: absolute;
   top: ${ProcessHeight};
   left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 10;
   background: rgba(0, 0, 0, 0.8);
-  width: 750px;
-  height: calc(600px - ${ProcessHeight});
   display: flex;
   align-items: center;
 `;

@@ -2,7 +2,6 @@ import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 import { PopupModalV2 } from "@/popup/component/PopupModalV2";
 import {
   StyledPageInnerContent,
-  StyledPageOuterWrapper,
 } from "@/popup/style/common";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -54,7 +53,6 @@ const StyledLedgerLink = styled.p`
 `;
 const StyledBottomContainer = styled.div`
   position: absolute;
-  width: 600px;
   bottom: 20px;
   left: 50%;
   transform: translate(-50%);
@@ -231,18 +229,16 @@ const Welcome = () => {
 
   if (isCheckingWallet) {
     return (
-      <StyledPageOuterWrapper>
-        <StyledPageInnerContent>
-          <StyledLogoContainer>
-            <img src="/img/colorful_logo.svg" />
-          </StyledLogoContainer>
-        </StyledPageInnerContent>
-      </StyledPageOuterWrapper>
+      <StyledPageInnerContent>
+        <StyledLogoContainer>
+          <img src="/img/colorful_logo.svg" />
+        </StyledLogoContainer>
+      </StyledPageInnerContent>
     );
   }
 
   return (
-    <StyledPageOuterWrapper>
+    <>
       {registerStep === RegisterStep.welcome && (
         <StyledPageInnerContent>
           <StyledTopContainer>
@@ -319,7 +315,7 @@ const Welcome = () => {
       {registerStep === RegisterStep.process && (
         <CreateProcessPage onClickPre={onClickPre} />
       )}
-    </StyledPageOuterWrapper>
+    </>
   );
 };
 export default Welcome;

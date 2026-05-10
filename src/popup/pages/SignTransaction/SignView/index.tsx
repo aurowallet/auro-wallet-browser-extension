@@ -265,6 +265,7 @@ const SignView = ({
   onUpdateAdvance,
 }: SignViewProps) => {
   const dispatch = useAppDispatch();
+  const popupLockStatus = useAppSelector((state) => state.cache.popupLockStatus);
   const currentAccount = useAppSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -1054,6 +1055,10 @@ const SignView = ({
   };
 
   const onConfirm = useCallback(async () => {
+    if (popupLockStatus) {
+      Toast.info(i18n.t("auroLocked"));
+      return;
+    }
     let params = signParams?.params;
     if (
       sendAction == DAppActions.mina_sendPayment ||
@@ -1127,6 +1132,7 @@ const SignView = ({
       clickNextStep();
     }
   }, [
+    popupLockStatus,
     i18n,
     currentAccount,
     signParams,
@@ -1563,6 +1569,7 @@ const SignView = ({
             loading={btnLoading}
             size={button_size.middle}
             onClick={onConfirm}
+            disable={popupLockStatus}
           >
             {i18n.t(nextBtnTxt)}
           </Button>

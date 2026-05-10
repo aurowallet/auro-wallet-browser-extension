@@ -17,6 +17,7 @@ interface StyledAppHeaderProps {
 }
 
 export const StyledAppHeader = styled.header<StyledAppHeaderProps>`
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 375px;
@@ -24,16 +25,24 @@ export const StyledAppHeader = styled.header<StyledAppHeaderProps>`
   margin: 0 auto;
   background-color: white;
   height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
 
   ${({ $showFull }) => $showFull && css`
+    width: 100% !important;
     height: auto !important;
-    width: auto !important;
-    min-height: 600px;
+    min-height: 100vh;
     min-width: 750px;
+    overflow: visible;
+    background-color: rgb(249, 250, 252);
+    align-items: center;
+    justify-content: center;
   `}
 
   ${({ $autoWidth }) => $autoWidth && css`
     height: auto !important;
     width: auto !important;
+    overflow: visible;
   `}
 `;

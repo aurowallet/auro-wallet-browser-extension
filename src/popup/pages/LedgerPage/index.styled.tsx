@@ -1,17 +1,10 @@
 import styled, { css } from 'styled-components';
 
-export const StyledOuterContainer = styled.div`
-  min-width: 750px;
-  min-height: 600px;
-  max-height: calc(100vh - 40px);
-  background-color: rgb(249, 250, 252);
-  z-index: 10;
-  overflow-y: auto;
-`;
-
 export const StyledInnerContainer = styled.div`
   width: 750px;
   min-height: 600px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   position: relative;
   background: #ffffff;
   border-radius: 20px;

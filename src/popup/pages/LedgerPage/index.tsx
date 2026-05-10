@@ -26,7 +26,6 @@ import StepTabs from "../../component/StepTabs";
 import { CreateResultView } from "../CreateProcessPage/CreateResultView";
 import { LedgerModal } from "./LedgerModal";
 import {
-  StyledOuterContainer,
   StyledInnerContainer,
   StyledInnerContent,
   StyledViewTip,
@@ -221,11 +220,9 @@ export const LedgerPage = ({ onClickPre, isEmbedded, onStepChange }: LedgerPageP
   }
 
   return (
-    <StyledOuterContainer>
-      <StyledInnerContainer>
-        {content}
-      </StyledInnerContainer>
-    </StyledOuterContainer>
+    <StyledInnerContainer>
+      {content}
+    </StyledInnerContainer>
   );
 };
 

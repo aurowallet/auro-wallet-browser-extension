@@ -19,7 +19,15 @@ root.render(
   </ThemeProvider>
 );
 
+const ensureInsideApp = () => {
+    const target = document.getElementById('app-overlay-container');
+    if (target && loadingContainerDiv.parentNode !== target) {
+        target.appendChild(loadingContainerDiv);
+    }
+};
+
 const show = () => {
+    ensureInsideApp();
     if (loadingContainerRef.current) {
         loadingContainerRef.current.show();
     }

@@ -11,14 +11,16 @@ const spin = keyframes`
 
 export const StyledOverlay = styled.div<StyledOverlayProps>`
   background-color: rgba(0, 0, 0, 0.8);
-  position: fixed;
+  position: absolute;
   z-index: 10;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: ${({ $show }) => $show ? 'flex' : 'none'};
   align-items: center;
   justify-content: center;
+  pointer-events: auto;
 `;
 
 export const StyledInnerContainer = styled.div`

@@ -10,6 +10,11 @@ All notable changes to this project will be documented in this file.
 - Add DuplicateAccountTipContent component with navigable Wallet Management link
 - Enforce V3 vault upgrade for addHDNewAccount, addImportAccount, and addLedgerAccount
 - Update Ledger modal title
+- Refactor layout system into `LayoutShell` with centralized lock listener
+- Add inline lock overlay for DApp notification pages
+- Add lock status check and button disable on DApp confirm and connect
+- Restrict advance fee/nonce inputs to numeric only
+- Simplify Ledger page layout and clean up unused styles
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
@@ -22,6 +27,8 @@ All notable changes to this project will be documented in this file.
 - Remove legacy V1 add-account code paths in favor of upgrade-first strategy
 - Fix duplicate detection in addAccountToKeyring and addHDKeyring to return existingAccount
 - Add missing i18n keys: notHDKeyring, noHDKeyring
+- Fix modal, overlay, and Toast sizing/positioning in popup and tab modes
+- Fix Lock page and PopupModal dimensions for proper layout containment
 
 
 

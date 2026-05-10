@@ -1,29 +1,33 @@
 import styled from 'styled-components';
 
 export const StyledToastContainer = styled.div`
+  position: absolute;
+  inset: 0;
   margin: 0;
   padding: 0;
+  pointer-events: none;
 `;
 
 export const StyledMask = styled.div`
-  position: fixed;
+  position: absolute;
   left: 0;
   right: 0;
   top: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.1);
   z-index: 301;
+  pointer-events: auto;
 `;
 
 export const StyledToastWrap = styled.div<{ $top?: string }>`
-  position: fixed;
+  position: absolute;
   top: ${({ $top }) => $top || '40%'};
-  margin: 0 auto;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   max-width: 80%;
   z-index: 302;
   width: fit-content;
+  pointer-events: auto;
 `;
 
 export const StyledToastItem = styled.div`

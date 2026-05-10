@@ -181,7 +181,7 @@ const AdvanceModal = ({
                             label={i18n.t('networkFee')}
                             onChange={onFeeInput}
                             value={inputFee}
-                            inputType={'text'}
+                            inputType={'numric'}
                             showBottomTip={true}
                             placeholder={currentFee}
                             bottomTip={feeErrorTip}
@@ -192,7 +192,7 @@ const AdvanceModal = ({
                             label={"Nonce"}
                             onChange={onNonceInput}
                             value={inputNonce}
-                            inputType={'text'}
+                            inputType={'numric'}
                             placeholder={nonceHolder || currentNonce}
                         />
                     </StyledBottomContent>

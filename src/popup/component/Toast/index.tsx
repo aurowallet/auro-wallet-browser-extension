@@ -14,6 +14,7 @@ root.render(
   </ThemeProvider>
 );
 
+
 const destroy = () => {
     root.render(
       <ThemeProvider>

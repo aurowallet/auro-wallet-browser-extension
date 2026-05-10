@@ -1,6 +1,10 @@
 import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyles = createGlobalStyle`
+  html {
+    overflow: hidden;
+  }
+
   body {
     margin: 0;
     --mainBlue: #594af1;

@@ -483,6 +483,7 @@ const AccountManagePage = () => {
   return (
     <CustomView
       title={i18n.t("accountManage")}
+      backRoute="/homepage"
       ContentWrapper={StyledContentClassName}
       rightComponent={
         <StyledLockBtn onClick={onClickLock}>{i18n.t("lock")}</StyledLockBtn>

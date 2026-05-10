@@ -15,6 +15,7 @@ import { sendMsg, sendMsgV2 } from "../../../utils/commonMsg";
 import { addressSlice } from "../../../utils/utils";
 import Button, { button_size, button_theme } from "../../component/Button";
 import DappWebsite from "../../component/DappWebsite";
+import Toast from "../../component/Toast";
 import {
   StyledContainer,
   StyledTitleRow,
@@ -30,6 +31,7 @@ import {
 const ApprovePage = () => {
 
   const dispatch = useAppDispatch();
+  const popupLockStatus = useAppSelector((state) => state.cache.popupLockStatus);
 
   const currentAccount = useAppSelector(
     (state) => state.accountInfo.currentAccount
@@ -70,8 +72,10 @@ const ApprovePage = () => {
   }, []);
 
   useEffect(() => {
-    void refreshCurrentAccount();
-  }, [refreshCurrentAccount]);
+    if (!popupLockStatus) {
+      void refreshCurrentAccount();
+    }
+  }, [popupLockStatus, refreshCurrentAccount]);
 
   const getConnectAfterLock = useCallback(() => {
     let siteUrl = params?.site?.origin || "";
@@ -128,12 +132,16 @@ const ApprovePage = () => {
   }, [currentAccount, params]);
 
   const onConfirm = useCallback(async () => {
-    const latestAccount = await refreshCurrentAccount();
-    const approvedAccount = latestAccount?.address ? latestAccount : currentAccount;
-    if (!approvedAccount?.address) {
+    if (popupLockStatus) {
+      Toast.info(i18n.t("auroLocked"));
       return;
     }
-    const selectAccount = [approvedAccount];
+    const latestAccount = await refreshCurrentAccount();
+    if (!latestAccount?.address) {
+      Toast.info(i18n.t("auroLocked"));
+      return;
+    }
+    const selectAccount = [latestAccount];
     sendMsg(
       {
         action: DAPP_ACTION_GET_ACCOUNT,
@@ -147,7 +155,7 @@ const ApprovePage = () => {
         dispatch(updateApproveStatus(false));
       }
     );
-  }, [params, currentAccount, refreshCurrentAccount, dispatch]);
+  }, [popupLockStatus, params, refreshCurrentAccount, dispatch]);
 
   const showAccountInfo = useMemo(() => {
     if (!currentAccount?.address) {
@@ -182,7 +190,7 @@ const ApprovePage = () => {
           >
             {i18n.t("cancel")}
           </Button>
-          <Button size={button_size.middle} onClick={onConfirm}>
+          <Button size={button_size.middle} onClick={onConfirm} disable={popupLockStatus}>
             {i18n.t("connect")}
           </Button>
         </StyledBtnGroup>

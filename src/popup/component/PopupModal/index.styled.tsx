@@ -24,12 +24,8 @@ export const StyledModalContent = styled.div`
   background: ${({ theme }) => theme.colors.backgroundWhite};
   border-radius: ${({ theme }) => theme.borderRadius.medium};
   margin: 0 auto;
-  width: 100%;
-  max-width: calc(375px - 40px);
-
-  @media (min-width: 750px) {
-    max-width: calc(750px - 120px);
-  }
+  width: calc(100% - 40px);
+  max-width: 630px;
 `;
 
 export const StyledTopContainer = styled.div`

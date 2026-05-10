@@ -4,8 +4,8 @@ export const StyledLockedPageWrapper = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   z-index: 200;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
@@ -19,7 +19,7 @@ export const StyledLockContent = styled.div`
   font-size: ${({ theme }) => theme.typography.fontSizeTitleBig};
   flex-direction: column;
   background-color: ${({ theme }) => theme.colors.backgroundWhite};
-  height: 100vh;
+  height: 100%;
   min-width: ${({ theme }) => theme.dimensions.appWidth};
 `;
 

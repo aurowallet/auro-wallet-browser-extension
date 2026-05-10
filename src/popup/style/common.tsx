@@ -15,17 +15,6 @@ export const GlobalStyles = createGlobalStyle`
   }
 `;
 
-/** tab page outer wrapper */
-export const StyledPageOuterWrapper = styled.div`
-  height: 100vh;
-  width: 100vw;
-  min-height: 600px;
-  background-color: ${({ theme }) => theme?.colors?.backgroundLilac || 'rgb(249, 250, 252)'};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
 /** tab page content wrapper */
 interface StyledPageInnerContentProps {
   $showMore?: boolean;

@@ -5,10 +5,7 @@ import { WALLET_CREATE_TYPE } from "@/constant/commonType";
 import {
   WALLET_CLEAR_CREATE_MNEMONIC,
   WALLET_GET_CREATE_FLOW_STATE,
-  FROM_BACK_TO_RECORD,
-  WORKER_ACTIONS,
 } from "@/constant/msgTypes";
-import browser from "webextension-polyfill";
 import StepTabs from "@/popup/component/StepTabs";
 import { StyledPageInnerContent } from "@/popup/style/common";
 import { sendMsg } from "@/utils/commonMsg";
@@ -81,25 +78,6 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
     });
   }, [navigate]);
 
-  useEffect(() => {
-    if (!hasExistingWallet) return;
-    const onLockMessage = (
-      message: { type?: string; action?: string; payload?: boolean },
-    ) => {
-      if (
-        message?.type === FROM_BACK_TO_RECORD &&
-        message?.action === WORKER_ACTIONS.SET_LOCK &&
-        !message.payload
-      ) {
-        navigate("/lock_page", { replace: true });
-      }
-    };
-    browser.runtime.onMessage.addListener(onLockMessage as Parameters<typeof browser.runtime.onMessage.addListener>[0]);
-    return () => {
-      browser.runtime.onMessage.removeListener(onLockMessage as Parameters<typeof browser.runtime.onMessage.removeListener>[0]);
-    };
-  }, [hasExistingWallet, navigate]);
-  
   const onClickNextTab = useCallback(() => {
     setTabIndex((state) => state + 1);
   }, []);
