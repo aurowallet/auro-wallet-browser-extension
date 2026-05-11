@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 - Add lock status check and button disable on DApp confirm and connect
 - Restrict advance fee/nonce inputs to numeric only
 - Simplify Ledger page layout and clean up unused styles
-- Upgrade axios (1.16.0), node-forge (1.4.0), uuid (11.1.1) to fix security
+- Upgrade axios (1.16.0), node-forge (1.4.0), uuid (11.1.1), styled-components (6.4.1) to fix security
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
