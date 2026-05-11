@@ -27,6 +27,7 @@ import {
   getRealErrorMsg,
   getShowTime,
   isNumber,
+  formatSlotDuration,
 } from "../../../../../utils/utils";
 import Button from "../../../../component/Button";
 import { LedgerInfoModal } from "../../../../component/LedgerInfoModal";
@@ -139,6 +140,9 @@ const TxListView: React.FC<TxListViewProps> = ({
   const ledgerStatus = useSelector(
     (state: RootState) => state.ledger.ledgerConnectStatus
   );
+  const daemonStatus = useSelector(
+    (state: RootState) => state.staking.daemonStatus
+  );
 
   const onGoExplorer = useCallback(() => {
     const currentNode = netConfig.currentNode;
@@ -223,15 +227,25 @@ const TxListView: React.FC<TxListViewProps> = ({
     [checkLedgerStatus, setCurrentTransactionFee]
   );
 
-  const { modalTitle, modalDesc } = useMemo<{
+  const slotTimeText = useMemo(() => {
+    const consensusConfig = daemonStatus?.consensusConfiguration as
+      | { slotDuration?: number }
+      | undefined;
+    return formatSlotDuration(consensusConfig?.slotDuration);
+  }, [daemonStatus]);
+
+  const { modalTitle, modalDesc, modalValues } = useMemo<{
     modalTitle: string;
     modalDesc: string;
+    modalValues?: Record<string, string>;
   }>(() => {
     let modalTitle = "";
     let modalDesc = "";
+    let modalValues: Record<string, string> | undefined;
     if (modalType === TransactionModalType.speedUp) {
       modalTitle = i18n.t("speedUpTitle");
       modalDesc = "speedUpTip";
+      modalValues = { slotTime: slotTimeText };
     } else {
       modalTitle = i18n.t("cancelTransaction");
       modalDesc = "transactionCancelTip";
@@ -239,8 +253,9 @@ const TxListView: React.FC<TxListViewProps> = ({
     return {
       modalTitle,
       modalDesc,
+      modalValues,
     };
-  }, [modalType]);
+  }, [modalType, slotTimeText]);
 
   const onClickClose = useCallback((): void => {
     setTransactionModalStatus(false);
@@ -493,6 +508,7 @@ const TxListView: React.FC<TxListViewProps> = ({
       <TransactionModal
         title={modalTitle}
         modalContent={modalDesc}
+        modalValues={modalValues}
         modalVisible={transactionModalStatus}
         currentFee={currentFee}
         currentNonce={String(transactionModalData?.nonce ?? "")}

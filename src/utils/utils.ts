@@ -1,4 +1,5 @@
 import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
+import i18n from "i18next";
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
 import { createBase58check } from "@scure/base";
@@ -111,6 +112,17 @@ export function isNaturalNumber(n: unknown): boolean {
 
 export function numberFormat(str: string): string {
   return str.replace(/[^\d^\.]+/g, "").replace(/\.{2,}/, "");
+}
+
+// ============ Slot Duration Utils ============
+
+const DEFAULT_SLOT_DURATION_MS = 180000; // 3 minutes
+
+export function formatSlotDuration(slotDurationMs?: number | string): string {
+  const raw = Number(slotDurationMs);
+  const ms = raw && raw > 0 ? raw : DEFAULT_SLOT_DURATION_MS;
+  const minutes = new BigNumber(ms).dividedBy(60000).decimalPlaces(1, BigNumber.ROUND_HALF_UP).toNumber();
+  return i18n.t("nMinutes", { count: minutes });
 }
 
 // ============ Validation Utils ============

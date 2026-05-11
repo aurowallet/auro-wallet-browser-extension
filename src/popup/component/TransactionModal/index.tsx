@@ -8,6 +8,7 @@ interface TransactionModalProps {
   modalVisible?: boolean;
   title?: string;
   modalContent?: string;
+  modalValues?: Record<string, string>;
   onConfirm?: (fee: string) => void;
   onClickClose?: () => void;
   currentFee?: string;
@@ -57,6 +58,7 @@ export const TransactionModal = ({
   modalVisible = false,
   title = "",
   modalContent = "",
+  modalValues,
   onConfirm = () => {},
   onClickClose = () => {},
 
@@ -129,6 +131,7 @@ export const TransactionModal = ({
                 <StyledModalContent>
                   <Trans
                     i18nKey={modalContent}
+                    values={modalValues}
                     components={{
                       light: <StyledLightFont />,
                     }}

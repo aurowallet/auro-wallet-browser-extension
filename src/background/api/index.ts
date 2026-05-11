@@ -177,10 +177,13 @@ export async function fetchDaemonStatus(): Promise<unknown> {
   const query = getDaemonStatusBody();
   const res = (await startFetchMyQuery(query, {})) as { daemonStatus?: unknown };
   const daemonStatus = res.daemonStatus || {};
-  saveLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS, JSON.stringify(daemonStatus));
+  try {
+    const cachedMap = JSON.parse(getLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS_MAP) || '{}');
+    cachedMap[netConfig.networkID] = daemonStatus;
+    saveLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS_MAP, JSON.stringify(cachedMap));
+  } catch (_e) { /* skip write on corrupted cache to preserve other networks' data */ }
   return daemonStatus;
 }
-
 /**
  * get current block info
  * @param {*} stateHash

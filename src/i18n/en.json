@@ -256,7 +256,7 @@
   "speedUp": "Speed Up",
   "speedUpTitle": "Speed Up Transaction",
   "cancelTransaction": "Cancel Transaction",
-  "speedUpTip": "Normally, a transaction takes <light>3 minutes</light> to confirm. However, when the network is congested and your transaction may take 3 minutes or longer, you can speed up the transaction by increasing the network fee.",
+  "speedUpTip": "Normally, a transaction takes <light>{{slotTime}}</light> to confirm. However, when the network is congested and your transaction may take {{slotTime}} or longer, you can speed up the transaction by increasing the network fee.",
   "transactionCancelTip": "Cancel the transaction by sending a transaction with the same Nonce to yourself address. The fee will be greater than the current network fee (+0.0001 MINA) .",
   "currentFee": "Current Fee",
   "newFee": "New Fee",
@@ -350,5 +350,7 @@
   "sixMonthsEstimate": "6 months est.",
   "staked": "Staked",
   "networkFee": "Network Fee",
-  "mnemonicLost": "Wallet creation failed. Please restart the process."
+  "mnemonicLost": "Wallet creation failed. Please restart the process.",
+  "nMinutes_one": "{{count}} minute",
+  "nMinutes_other": "{{count}} minutes"
 }

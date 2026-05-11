@@ -76,14 +76,20 @@ const HomePage = () => {
   }, [])
 
   const updateLocalDaemonStatus = useCallback(() => {
-    let localDaemonStatus = getLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS)
+    let localDaemonStatus = getLocal(LOCAL_CACHE_KEYS.DAEMON_STATUS_MAP)
     if (localDaemonStatus) {
-      let localDaemonStatusJson = safeJsonParse(localDaemonStatus)
-      if (localDaemonStatusJson) {
-        dispatch(updateDaemonStatus(localDaemonStatusJson))
+      let localDaemonStatusMap = safeJsonParse(localDaemonStatus)
+      let networkID = currentNode?.networkID || ""
+      let daemonStatusJson = localDaemonStatusMap ? localDaemonStatusMap[networkID] : ""
+      if (daemonStatusJson) {
+        dispatch(updateDaemonStatus(daemonStatusJson))
+      } else {
+        dispatch(updateDaemonStatus({}))
       }
+    } else {
+      dispatch(updateDaemonStatus({}))
     }
-  }, [])
+  }, [currentNode?.networkID])
 
   const updateLocalDelegation = useCallback((address: string) => {
     let localDelegationInfo = getLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO)
@@ -120,19 +126,20 @@ const HomePage = () => {
     let address = currentAccount?.address || ""
     shouldUpdateTxList(address)
     updateLocalPrice()
-
-
-    updateLocalDaemonStatus()
     updateLocalDelegation(address)
     updateLocalBlock()
     updateLocalStaking()
   }, [currentAccount,
-    shouldUpdateTxList, updateLocalAccount, updateLocalPrice, updateLocalDaemonStatus,
+    shouldUpdateTxList, updateLocalPrice,
     updateLocalDelegation, updateLocalBlock, updateLocalStaking])
 
   useEffect(() => {
     getLocalCache()
   }, [])
+
+  useEffect(() => {
+    updateLocalDaemonStatus()
+  }, [currentNode?.networkID])
 
   useEffect(()=>{
     updateLocalAccount(currentAccount?.address || '')

@@ -247,7 +247,7 @@
   "ledgerCloseTip": "Ledger tamamlandığında sayfa otomatik olarak yönlendirilecektir.",
   "ledgerSuccess": "Tebrikler, Bir donanım hesabını başarıyla içe aktardınız!",
   "grantLedger": "Donanım Cüzdanına İzin Ver",
-  "speedUpTip": "Normalde bir işlemin onaylanması <light>3 dakika</light> sürer. Ancak ağ yoğun olduğunda ve işleminiz 3 dakikadan uzun sürebildiğinde, ağ ücretini artırarak işlemi hızlandırabilirsiniz.",
+  "speedUpTip": "Normalde bir işlemin onaylanması <light>{{slotTime}}</light> sürer. Ancak ağ yoğun olduğunda ve işleminiz {{slotTime}} uzun sürebildiğinde, ağ ücretini artırarak işlemi hızlandırabilirsiniz.",
   "txHistoryTip": "İşlem geçmişi sağlanamıyor",
   "scam": "sahtekarlık",
   "current": "Geçerli",
@@ -350,5 +350,7 @@
   "sixMonthsEstimate": "6 ay tahmini",
   "staked": "Stake Edildi",
   "networkFee": "Ağ Ücreti",
-  "mnemonicLost": "Cüzdan oluşturulamadı. Lütfen işlemi yeniden başlatın."
+  "mnemonicLost": "Cüzdan oluşturulamadı. Lütfen işlemi yeniden başlatın.",
+  "nMinutes_one": "{{count}} dakika",
+  "nMinutes_other": "{{count}} dakika"
 }
