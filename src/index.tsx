@@ -34,6 +34,7 @@ import {
   updateEntryWitchRoute,
 } from "./reducers/entryRouteReducer";
 import { updateCurrentNode, updateCustomNodeList } from "./reducers/network";
+import { updatePopupLockStatus } from "./reducers/cache";
 import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
 
@@ -153,6 +154,7 @@ async function initAccountInfo(appStore: typeof store): Promise<string> {
             appStore.dispatch(initCurrentAccount(currentAccount));
           } else {
             nextRoute = ENTRY_WITCH_ROUTE.LOCK_PAGE;
+            appStore.dispatch(updatePopupLockStatus(true));
           }
           resolve(nextRoute);
         } else {

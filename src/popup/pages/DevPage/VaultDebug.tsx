@@ -6,7 +6,7 @@
  * Features: decrypt/display, manual upgrade with backup/rollback, plaintext toggle, simulation test.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import browser from "webextension-polyfill";
@@ -1148,28 +1148,26 @@ const VaultDebug = () => {
   // Render helpers
   // ============================================
 
-  const renderSensitiveValue = (value: unknown, fieldKey: string, label = 'encrypted'): React.ReactNode => {
+  const renderSensitiveValue = (value: unknown, fieldKey: string, label = 'encrypted'): ReactElement => {
     if (!value) return <Value>-</Value>;
     
     if (showPlaintext && plaintextData[fieldKey]) {
       return (
         <SensitiveValue $visible={true}>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {plaintextData[fieldKey] as any}
+          {String(plaintextData[fieldKey])}
         </SensitiveValue>
       );
     }
     
     return (
       <SensitiveValue $visible={false}>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {`[${label}]` as any}
+        {`[${label}]`}
       </SensitiveValue>
     );
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderV2Structure = (vault: any) => {
+  const renderV2Structure = (vault: any): ReactElement | null => {
     if (!vault || !vault.keyrings) return null;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1288,7 +1286,7 @@ const VaultDebug = () => {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderV1Structure = (data: any[]) => {
+  const renderV1Structure = (data: any[]): ReactElement | null => {
     if (!Array.isArray(data)) return null;
 
     return (
@@ -1384,7 +1382,6 @@ const VaultDebug = () => {
           <LoadingText>{processingText}</LoadingText>
         </LoadingOverlay>
       )}
-      {/* @ts-expect-error styled-components children type conflict with i18next */}
       <Container>
         {/* Page Header with Back Button */}
         <PageHeader>
@@ -1476,7 +1473,7 @@ const VaultDebug = () => {
             </Button>
           </ButtonRow>
 
-          {migrationChecks && (
+          {migrationChecks ? (
             <>
               {/* Verdict banner */}
               {migrationVerdict === 'complete' && (
@@ -1513,7 +1510,7 @@ const VaultDebug = () => {
                 ))}
               </div>
             </>
-          )}
+          ) : null}
         </Section>
 
         {/* Raw Storage Data */}
@@ -1579,7 +1576,7 @@ const VaultDebug = () => {
         </Section>
 
         {/* Decrypted Structure */}
-        {decryptedData && (
+        {decryptedData ? (
           <>
             <Section>
               <SectionTitle>{t('decryptedStructure')}</SectionTitle>
@@ -1614,10 +1611,10 @@ const VaultDebug = () => {
               </Section>
             )}
           </>
-        )}
+        ) : null}
 
         {/* Upgrade Section */}
-        {decryptedData && (
+        {decryptedData ? (
           <Section>
             <SectionTitle>{t('versionUpgrade')}</SectionTitle>
             
@@ -1639,24 +1636,24 @@ const VaultDebug = () => {
                   </Button>
                 </ButtonRow>
 
-                {upgradeResult && (
+                {upgradeResult ? (
                   upgradeResult.success ? (
                     <SuccessText>✓ {upgradeResult.message}</SuccessText>
                   ) : (
                     <ErrorBox>
                       {upgradeResult.message}
-                      {upgradeResult.rolledBack && (
+                      {upgradeResult.rolledBack ? (
                         <InfoText>{t('autoRolledBack')}</InfoText>
-                      )}
+                      ) : null}
                     </ErrorBox>
                   )
-                )}
+                ) : null}
               </>
             ) : (
               <WarningText>{t('unrecognizedFormat')}</WarningText>
             )}
           </Section>
-        )}
+        ) : null}
 
         {/* Simulation upgrade test */}
         <Section>
@@ -1712,14 +1709,14 @@ const VaultDebug = () => {
             </Button>
           </ButtonRow>
 
-          {simulationResult && (
+          {simulationResult ? (
             simulationResult.success ? (
               <>
                 <SuccessText>
                   ✓ {simulationResult.message}
                 </SuccessText>
                 {/* Show apply button if simulation succeeded but not applied */}
-                {!simulationResult.applied && simulationAfter && (
+                {!simulationResult.applied && !!simulationAfter ? (
                   <ButtonRow>
                     <Button
                       size={button_size.middle}
@@ -1730,12 +1727,12 @@ const VaultDebug = () => {
                       🚀 {t('applyToRealStorage')}
                     </Button>
                   </ButtonRow>
-                )}
+                ) : null}
               </>
             ) : (
               <ErrorBox>{simulationResult.message}</ErrorBox>
             )
-          )}
+          ) : null}
 
           {/* Before/after comparison */}
           {(simulationBefore || simulationAfter) ? (

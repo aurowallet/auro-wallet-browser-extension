@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactNode, useCallback, useState, ElementType, createElement } from "react";
+import { ChangeEvent, ReactNode, ReactElement, useCallback, useState, ElementType, createElement } from "react";
 import { Trans } from "react-i18next";
 import i18n from "i18next";
 import { numberFormat } from "../../../utils/utils";
@@ -66,7 +66,7 @@ const Input = ({
 
     transLabel = "",
     inputDisable = false
-}: InputProps) => {
+}: InputProps): ReactElement => {
 
     const [showPwd, setShowPwd] = useState(false)
     const [realType, setRealType] = useState(inputType)

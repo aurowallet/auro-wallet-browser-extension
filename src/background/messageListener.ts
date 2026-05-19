@@ -68,6 +68,8 @@ import {
   startExtensionPopup,
 } from "../utils/popup";
 import { getExtensionAction } from "../utils/browserUtils";
+import { errorCodes } from "@/constant/dappError";
+import { getMessageFromCode } from "../utils/utils";
 
 // ============ Types ============
 
@@ -76,6 +78,21 @@ interface MessagePayload {
   action?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
+}
+
+function createDappErrorResponse(responseId?: unknown): {
+  id?: string;
+  error: { code: number; message: string };
+} {
+  const code = errorCodes.throwError;
+  const nextId = typeof responseId === "string" ? responseId : undefined;
+  return {
+    ...(nextId ? { id: nextId } : {}),
+    error: {
+      code,
+      message: getMessageFromCode(code),
+    },
+  };
 }
 
 // ============ Internal Functions ============
@@ -107,12 +124,7 @@ function internalMessageListener(
           payload && typeof payload === "object" && "id" in payload
             ? (payload as { id?: unknown }).id
             : undefined;
-        sendResponse({
-          error: {
-            message: "internalError",
-          },
-          id: responseId,
-        });
+        sendResponse(createDappErrorResponse(responseId));
       });
     return true;
   }
@@ -552,7 +564,15 @@ function internalMessageListener(
     return true;
   } catch (err) {
     console.error("[messageListener] sync error", action, err);
-    sendResponse();
+    const responseId =
+      payload && typeof payload === "object" && "id" in payload
+        ? (payload as { id?: unknown }).id
+        : undefined;
+    if (messageSource === "messageFromDapp" || messageSource === "messageFromUpdate") {
+      sendResponse(createDappErrorResponse(responseId));
+    } else {
+      sendResponse();
+    }
     return true;
   }
 }
@@ -598,6 +618,7 @@ function removeListener(
     lastWindowIds[POPUP_CHANNEL_KEYS.welcome] = undefined;
   }
 }
+
 
 export function setupMessageListeners(): void {
   browser.runtime.onMessage.addListener(internalMessageListener as Parameters<typeof browser.runtime.onMessage.addListener>[0]);

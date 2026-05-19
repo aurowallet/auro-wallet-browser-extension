@@ -19,6 +19,7 @@ import {
 } from "../../config";
 import {
   DAPP_ACTION_CANCEL_ALL,
+  DAPP_ACTION_CANCEL_APPROVE,
   DAPP_ACTION_CLOSE_WINDOW,
   DAPP_ACTION_CREATE_NULLIFIER,
   DAPP_ACTION_GET_ACCOUNT,
@@ -46,6 +47,7 @@ import {
   addressValid,
   checkNodeExist,
   getArrayDiff,
+  getRealErrorMsg,
   getMessageFromCode,
   getOriginFromUrl,
   isNumber,
@@ -207,6 +209,26 @@ class DappService {
 
   constructor() {}
 
+  private normalizeRequestError(error: unknown): { code: number; message: string } {
+    if (error && typeof error === "object") {
+      const nextError = error as { code?: unknown; message?: unknown };
+      const nextCode = typeof nextError.code === "number" ? nextError.code : errorCodes.throwError;
+      const nextMessage =
+        typeof nextError.message === "string" && nextError.message.length > 0
+          ? nextError.message
+          : getRealErrorMsg(error) || getMessageFromCode(nextCode);
+      return {
+        code: nextCode,
+        message: nextMessage,
+      };
+    }
+
+    return {
+      code: errorCodes.throwError,
+      message: getRealErrorMsg(error) || getMessageFromCode(errorCodes.throwError),
+    };
+  }
+
   requestCallback(
     request: () => Promise<unknown>,
     id: string,
@@ -214,16 +236,11 @@ class DappService {
   ): void {
     request()
       .then((data) => {
-        sendResponse({
-          result: data,
-          id: id,
-        });
+        sendResponse({ result: data, id: id });
       })
       .catch((error) => {
-        sendResponse({
-          error: { ...error },
-          id: id,
-        });
+        const normalizedError = this.normalizeRequestError(error);
+        sendResponse({ error: normalizedError, id: id });
       });
   }
 
@@ -369,7 +386,7 @@ class DappService {
       default:
         this.requestCallback(
           async () => {
-            return {
+            throw {
               code: errorCodes.unsupportedMethod,
               message: getMessageFromCode(errorCodes.unsupportedMethod),
             };
@@ -882,10 +899,10 @@ class DappService {
     }
   }
 
-  clearAllPendingZk(): void {
+  clearAllPendingZk = (): void => {
     const requestList = [
-      ...signRequests,
       ...approveRequests,
+      ...signRequests,
       ...chainRequests,
       ...tokenSignRequests,
     ];
@@ -895,8 +912,8 @@ class DappService {
         message: getMessageFromCode(errorCodes.userRejectedRequest),
       });
     });
-    signRequests = [];
     approveRequests = [];
+    signRequests = [];
     chainRequests = [];
     tokenSignRequests = [];
     this.cleanupSignListener();
@@ -941,6 +958,7 @@ class DappService {
   async requestAccounts(id: string, site: Site): Promise<string[]> {
     const that = this;
     return new Promise(async (resolve, reject) => {
+      let approveRegistered = false;
       try {
         const isCreate = await this.checkLocalWallet();
         if (!isCreate) {
@@ -959,7 +977,6 @@ class DappService {
           resolve([currentAccount]);
           return;
         }
-        await startExtensionPopup(true);
         if (approveRequests.length > 0) {
           reject({
             message: getMessageFromCode(errorCodes.zkChainPending),
@@ -967,7 +984,6 @@ class DappService {
           });
           return;
         }
-
         function onMessage(
           message: { action: string; payload: Record<string, unknown> },
           sender: browser.Runtime.MessageSender,
@@ -979,8 +995,22 @@ class DappService {
           const { action, payload } = message;
           const approveId = payload?.id as string;
           const currentApproveParams = that.getApproveParamsByOpenId(approveId);
+          const userRejectedError = {
+            code: errorCodes.userRejectedRequest,
+            message: getMessageFromCode(errorCodes.userRejectedRequest),
+          };
+          const originMismatchError = {
+            message: getMessageFromCode(errorCodes.originDismatch),
+            code: errorCodes.originDismatch,
+          };
+          const cleanupApproveState = () => {
+            approveRequests = [];
+            that.cleanupApproveListener();
+            that.setBadgeContent();
+          };
+
           if (!currentApproveParams) {
-            return;
+            return false;
           }
           const nextReject = currentApproveParams.reject;
           const nextResolve = currentApproveParams.resolve;
@@ -988,15 +1018,12 @@ class DappService {
           switch (action) {
             case DAPP_ACTION_GET_ACCOUNT:
               if (payload.resultOrigin !== currentApproveParams.site.origin) {
-                nextReject({
-                  message: getMessageFromCode(errorCodes.originDismatch),
-                  code: errorCodes.originDismatch,
-                });
-                return;
+                cleanupApproveState();
+                nextReject(originMismatchError);
+                sendResponse();
+                return true;
               }
-              approveRequests = [];
-              that.cleanupApproveListener();
-              that.setBadgeContent();
+              cleanupApproveState();
               if (
                 payload.selectAccount &&
                 (payload.selectAccount as unknown[]).length > 0
@@ -1015,25 +1042,24 @@ class DappService {
                 that.updateApproveConnect(accountApprovedUrlList as Record<string, string[]>);
                 nextResolve([account!.address]);
               } else {
-                nextReject({
-                  code: errorCodes.userRejectedRequest,
-                  message: getMessageFromCode(errorCodes.userRejectedRequest),
-                });
+                nextReject(userRejectedError);
               }
+              sendResponse();
+              return true;
+            case DAPP_ACTION_CANCEL_APPROVE:
+              cleanupApproveState();
+              nextReject(userRejectedError);
               sendResponse();
               return true;
             case DAPP_ACTION_CLOSE_WINDOW:
               if (payload.resultOrigin !== currentApproveParams.site.origin) {
-                nextReject({
-                  message: getMessageFromCode(errorCodes.originDismatch),
-                  code: errorCodes.originDismatch,
-                });
-                return;
+                cleanupApproveState();
+                nextReject(originMismatchError);
+                sendResponse();
+                return true;
               }
-              that.cleanupApproveListener();
+              cleanupApproveState();
               nextResolve([payload.account]);
-              approveRequests = [];
-              that.setBadgeContent();
               sendResponse();
               return true;
             default:
@@ -1047,7 +1073,23 @@ class DappService {
           that.approveEventListener = onMessage;
         }
         approveRequests.push({ id, site, resolve: resolve as (value: unknown) => void, reject });
+        approveRegistered = true;
         this.setBadgeContent();
+        const popupWindowId = await startExtensionPopup(true);
+        if (!popupWindowId) {
+          approveRequests = [];
+          that.cleanupApproveListener();
+          that.setBadgeContent();
+          console.error("[requestAccounts] approval popup failed to open: no popup window id returned", {
+            requestId: id,
+            origin: site.origin,
+          });
+          reject({
+            code: errorCodes.internal,
+            message: getMessageFromCode(errorCodes.internal),
+          });
+          return;
+        }
         sendMsg(
           {
             action: WORKER_ACTIONS.APPROVE,
@@ -1060,9 +1102,21 @@ class DappService {
         );
       } catch (error) {
         const isDev = process.env.NODE_ENV === 'development';
+        if (approveRegistered) {
+          approveRequests = [];
+          that.cleanupApproveListener();
+          that.setBadgeContent();
+        }
+        console.error("[requestAccounts] approval popup threw during startup", {
+          requestId: id,
+          origin: site.origin,
+          error,
+        });
+        const launchErrorMessage =
+          getRealErrorMsg(error) || getMessageFromCode(errorCodes.internal);
         reject({
-          code: errorCodes.throwError,
-          message: getMessageFromCode(errorCodes.throwError),
+          code: errorCodes.internal,
+          message: launchErrorMessage,
           ...(isDev && { stack: String(error) }),
         });
       }
@@ -1122,10 +1176,17 @@ class DappService {
     };
   }
 
-  getApproveParams(): ApproveRequest | undefined {
+  getApproveParams(): Pick<ApproveRequest, "id" | "site"> | undefined {
     const list = [...approveRequests];
     if (list.length > 0) {
-      return list[0];
+      const currentApprove = list[0];
+      if (!currentApprove) {
+        return undefined;
+      }
+      return {
+        id: currentApprove.id,
+        site: currentApprove.site,
+      };
     }
     return undefined;
   }
@@ -1708,16 +1769,16 @@ class DappService {
   }
 
   getAllPendingZK(): {
-    signRequests: SignRequest[];
-    chainRequests: SignRequest[];
-    approveRequests: ApproveRequest[];
-    tokenSignRequests: SignRequest[];
+    signRequests: Array<{ id: string }>;
+    chainRequests: Array<{ id: string }>;
+    approveRequests: Array<{ id: string }>;
+    tokenSignRequests: Array<{ id: string }>;
   } {
     return {
-      signRequests,
-      chainRequests,
-      approveRequests,
-      tokenSignRequests,
+      signRequests: signRequests.map((item) => ({ id: item.id })),
+      chainRequests: chainRequests.map((item) => ({ id: item.id })),
+      approveRequests: approveRequests.map((item) => ({ id: item.id })),
+      tokenSignRequests: tokenSignRequests.map((item) => ({ id: item.id })),
     };
   }
 

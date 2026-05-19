@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode, useEffect, useState } from "react";
+import { MouseEvent, ReactNode, ReactElement, useEffect, useState } from "react";
 import {
     StyledButton,
     StyledIconContainer,
@@ -40,7 +40,7 @@ const Button = ({
     children,
     className = "",
     withEvent = false
-}: ButtonProps) => {
+}: ButtonProps): ReactElement => {
     const [btnDisable, setBtnDisable] = useState(disable)
     useEffect(() => {
         setBtnDisable(loading)

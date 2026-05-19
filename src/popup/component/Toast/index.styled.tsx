@@ -15,7 +15,7 @@ export const StyledMask = styled.div`
   top: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.1);
-  z-index: 301;
+  z-index: 10101;
   pointer-events: auto;
 `;
 
@@ -25,7 +25,7 @@ export const StyledToastWrap = styled.div<{ $top?: string }>`
   left: 50%;
   transform: translateX(-50%);
   max-width: 80%;
-  z-index: 302;
+  z-index: 10102;
   width: fit-content;
   pointer-events: auto;
 `;

@@ -6,7 +6,7 @@ export const StyledLockedPageWrapper = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 200;
+  z-index: 10000;
   background-color: ${({ theme }) => theme.colors.background};
   display: flex;
   align-items: center;

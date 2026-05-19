@@ -18,6 +18,11 @@ All notable changes to this project will be documented in this file.
 - Upgrade axios (1.16.0), node-forge (1.4.0), uuid (11.1.1), styled-components (6.4.1) to fix security
 - Display dynamic slot duration in Speed Up modal based on daemon status per network
 - Add `formatSlotDuration` utility and `nMinutes` i18n keys
+- Introduce `LockGate` lock flow and remove route-based `/lock_page`
+- Add popup router fallback `* -> /`
+- Refine approve/request lifecycle (`DAPP_ACTION_CANCEL_APPROVE`, `requestAccounts` startup cleanup)
+- Normalize DApp/content-script error response format
+- Improve TypeScript typing in shared UI/debug components
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
@@ -28,10 +33,14 @@ All notable changes to this project will be documented in this file.
 - Isolate multi-account localStorage for token config, showed tokens and cached assets
 - Centralize duplicate address check into _checkDuplicateInVault with rich error details
 - Remove legacy V1 add-account code paths in favor of upgrade-first strategy
-- Fix duplicate detection in addAccountToKeyring and addHDKeyring to return existingAccount
+- Duplicate detection in addAccountToKeyring and addHDKeyring returns existingAccount
 - Add missing i18n keys: notHDKeyring, noHDKeyring
-- Fix modal, overlay, and Toast sizing/positioning in popup and tab modes
-- Fix Lock page and PopupModal dimensions for proper layout containment
+- Modal, overlay, and Toast sizing/positioning in popup and tab modes
+- Lock page and PopupModal dimensions for proper layout containment
+- Prevent approve listener from consuming unrelated popup runtime messages
+- Sync lock state on app boot for locked wallets
+- Hide ZK approve/sign/token overlays while wallet is locked
+- Normalize unsupported-method error return path
 
 
 

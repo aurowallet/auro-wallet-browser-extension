@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { HashRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { StyledAppHeader } from '../App.styled';
 import browser from 'webextension-polyfill';
 import { FROM_BACK_TO_RECORD, WALLET_GET_CREATE_FLOW_STATE, WORKER_ACTIONS } from '../../constant/msgTypes';
@@ -66,13 +67,6 @@ interface CreateFlowState {
 
 const LockListener = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const pathnameRef = useRef(location.pathname);
-
-  useEffect(() => {
-    pathnameRef.current = location.pathname;
-  }, [location.pathname]);
 
   useEffect(() => {
     const syncCurrentLockStatus = async () => {
@@ -81,10 +75,10 @@ const LockListener = () => {
           action: WALLET_GET_CREATE_FLOW_STATE,
         });
         const isLocked = !!state?.hasExistingWallet && !state?.isUnlocked;
-        const shouldStayOnCurrentRoute = ZK_PAGE_ROUTES.some((route) => pathnameRef.current.startsWith(route));
-        if (isLocked && !shouldStayOnCurrentRoute) {
+        if (isLocked) {
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
-          navigate('/lock_page');
+        } else if (state?.hasExistingWallet) {
+          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
         }
         dispatch(updatePopupLockStatus(isLocked));
       } catch (e) {
@@ -101,13 +95,15 @@ const LockListener = () => {
     ) => {
       const { type, action, payload } = message;
       if (type === FROM_BACK_TO_RECORD && action === WORKER_ACTIONS.SET_LOCK) {
-        const shouldStayOnCurrentRoute = ZK_PAGE_ROUTES.some((route) => pathnameRef.current.startsWith(route));
-        if (!payload && !shouldStayOnCurrentRoute) {
+        const isLocked = !payload;
+        if (isLocked) {
           dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.LOCK_PAGE));
-          navigate('/lock_page');
+        } else {
+          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
         }
-        dispatch(updatePopupLockStatus(!payload));
+        dispatch(updatePopupLockStatus(isLocked));
         sendResponse();
+        return true;
       }
       return false;
     };
@@ -119,24 +115,22 @@ const LockListener = () => {
         lockEvent as Parameters<typeof browser.runtime.onMessage.removeListener>[0]
       );
     };
-  }, [dispatch, navigate]);
+  }, [dispatch]);
 
   return null;
 };
 
-const NotificationLockOverlay = () => {
-  const location = useLocation();
+const LockGate = () => {
   const popupLockStatus = useAppSelector((state) => state.cache.popupLockStatus);
 
-  const shouldShowOverlay = useMemo(() => {
-    return popupLockStatus && ZK_PAGE_ROUTES.some((route) => location.pathname.startsWith(route));
-  }, [location.pathname, popupLockStatus]);
-
-  if (!shouldShowOverlay) {
+  if (!popupLockStatus) {
     return null;
   }
 
-  return <LockPage redirectAfterUnlock={false} />;
+  return createPortal(
+    <LockPage />,
+    document.body
+  );
 };
 
 const LayoutShell = ({ children }: { children: React.ReactNode }) => {
@@ -156,7 +150,7 @@ const LayoutShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <StyledAppHeader $showFull={showFull} $autoWidth={autoWidth}>
       {children}
-      <NotificationLockOverlay />
+      <LockGate />
       <div id="app-overlay-container" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
     </StyledAppHeader>
   );
@@ -186,7 +180,6 @@ export function getAllRouter() {
         <Route path="/reveal_seed_page" element={<RevealSeedPage />} />
         <Route path="/show_privatekey_page" element={<ShowPrivateKeyPage />} />
 
-        <Route path="/lock_page" element={<LockPage />} />
         <Route path="/about_us" element={<AboutUs />} />
         <Route path="/network_page" element={<NetworkPage />} />
         <Route path="/account_name" element={<AccountName />} />
@@ -228,6 +221,7 @@ export function getAllRouter() {
           <Route path="/vault_debug" element={<VaultDebug />} />
         )}
         <Route path="/wallet_details" element={<WalletDetails />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </LayoutShell>
     </HashRouter>

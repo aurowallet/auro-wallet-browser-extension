@@ -8,11 +8,17 @@ import { sendMsg } from "@/utils/commonMsg";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { ACCOUNT_ACTIONS, POPUP_ACTIONS, WALLET_GET_CURRENT_ACCOUNT, WORKER_ACTIONS } from "../constant/msgTypes";
+import {
+  ACCOUNT_ACTIONS,
+  POPUP_ACTIONS,
+  WALLET_GET_CURRENT_ACCOUNT,
+  WORKER_ACTIONS,
+} from "../constant/msgTypes";
 import { updateSignZkModalStatus } from "../reducers/popupReducer";
 import SignTransaction from "../popup/pages/SignTransaction";
 import browser from 'webextension-polyfill';
 import { updateCurrentAccount } from "@/reducers/accountReducer";
+
 // Styled-component for the popup
 interface FullScreenPopupProps {
   isVisible: boolean;
@@ -52,7 +58,12 @@ function PopupMonitor() {
   const signZkModalStatus = useSelector(
     (state: { popupReducer: { signZkModalStatus: boolean } }) => state.popupReducer.signZkModalStatus
   );
-  
+  const popupLockStatus = useSelector(
+    (state: { cache: { popupLockStatus: boolean } }) => state.cache.popupLockStatus
+  );
+
+  const canShowZkOverlay = !popupLockStatus;
+
   useEffect(() => {
     sendMsg(
       {
@@ -124,9 +135,9 @@ function PopupMonitor() {
 
   return (
     <>
-      <ChildView status={signZkModalStatus} nextView={<SignTransaction />} />
-      <ChildView status={approveModalStatus} nextView={<ApprovePage />} />
-      <ChildView status={tokenModalStatus} nextView={<TokenSignPage />} />
+      <ChildView status={canShowZkOverlay && signZkModalStatus} nextView={<SignTransaction />} />
+      <ChildView status={canShowZkOverlay && approveModalStatus} nextView={<ApprovePage />} />
+      <ChildView status={canShowZkOverlay && tokenModalStatus} nextView={<TokenSignPage />} />
     </>
   );
 }

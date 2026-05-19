@@ -140,12 +140,7 @@ const Welcome = () => {
       // Check if wallet data exists (keyringData indicates encrypted vault exists)
       const hasWalletData = !!currentAccount?.localAccount?.keyringData;
       if (hasWalletData) {
-        // Wallet exists, redirect based on lock status
-        if (currentAccount.isUnlocked && currentAccount.address) {
-          navigate("/homepage");
-        } else {
-          navigate("/lock_page");
-        }
+        navigate("/homepage");
       } else {
         // No wallet, show welcome page
         setIsCheckingWallet(false);

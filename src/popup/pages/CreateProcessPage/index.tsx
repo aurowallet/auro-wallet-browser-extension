@@ -13,7 +13,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import type { VoidCallback } from "../../types/common";
 import { useAppSelector } from "@/hooks/useStore";
-import { useNavigate } from "react-router-dom";
 import { ConfirmMneView } from "./ConfirmMneView";
 import { CreatePwdView } from "./CreatePwdView";
 import { CreateResultView } from "./CreateResultView";
@@ -48,7 +47,6 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
   const [showMore,setShowMore] = useState(false);
   const [hasExistingWallet, setHasExistingWallet] = useState(false);
   const [ledgerStep, setLedgerStep] = useState(0);
-  const navigate = useNavigate();
 
   const showRestore = useMemo(() => {
     return welcomeNextType === WALLET_CREATE_TYPE.restore;
@@ -69,14 +67,11 @@ export const CreateProcessPage = ({onClickPre}: CreateProcessPageProps) => {
       if (state.hasExistingWallet) {
         setHasExistingWallet(true);
         setTabIndex((prev) => (prev === 0 ? 1 : prev)); 
-        if (!state.isUnlocked) {
-          navigate("/lock_page", { replace: true });
-        }
       } else {
         setHasExistingWallet(false);
       }
     });
-  }, [navigate]);
+  }, []);
 
   const onClickNextTab = useCallback(() => {
     setTabIndex((state) => state + 1);

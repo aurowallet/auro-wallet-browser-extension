@@ -1,4 +1,3 @@
-import { FALLBACK_MESSAGE, errorValues } from "@/constant/dappError";
 import i18n from "i18next";
 import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
@@ -6,6 +5,7 @@ import { createBase58check } from "@scure/base";
 import BigNumber from "bignumber.js";
 import { MAIN_COIN_CONFIG, TRANSACTION_FEE } from "../constant";
 import type { NetworkConfig } from "../constant/network";
+import { FALLBACK_MESSAGE, errorValues } from "../constant/dappError";
 
 const bs58check = createBase58check(sha256);
 
@@ -266,6 +266,15 @@ interface ErrorWithMessage {
   c?: string;
 }
 
+export function getMessageFromCode(
+  code: number | string,
+  fallbackMessage: string = FALLBACK_MESSAGE
+): string {
+  const codeString = code.toString();
+  const message = errorValues[codeString]?.message;
+  return message || fallbackMessage;
+}
+
 export function getRealErrorMsg(error: unknown): string {
   let errorMessage = "";
   try {
@@ -290,15 +299,6 @@ export function getRealErrorMsg(error: unknown): string {
     // ignore
   }
   return errorMessage;
-}
-
-export function getMessageFromCode(
-  code: number | string,
-  fallbackMessage: string = FALLBACK_MESSAGE
-): string {
-  const codeString = code.toString();
-  const message = errorValues[codeString]?.message;
-  return message || fallbackMessage;
 }
 
 // ============ Staking Utils ============

@@ -22,7 +22,6 @@ export function sendMsg<T = unknown>(
   sendResponse?: SendResponseCallback<T>,
   errorCallback?: ErrorCallback,
 ): void {
-  const { action } = message;
   browser.runtime
     .sendMessage({
       ...message,
@@ -31,6 +30,7 @@ export function sendMsg<T = unknown>(
       sendResponse?.(params as T);
     })
     .catch((err) => {
+      const { action } = message;
       console.warn("send message error", action, err);
       errorCallback?.();
     });

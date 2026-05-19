@@ -22,6 +22,7 @@ const MainRouter = () => {
   const entryWitchRoute = useAppSelector(
     (state) => state.entryRouteReducer.entryWitchRoute
   );
+  const popupLockStatus = useAppSelector((state) => state.cache.popupLockStatus);
 
   const initBaseInfo = useCallback(async () => {
     let baseInfo = await getBaseInfo().catch((err) => err);
@@ -46,7 +47,7 @@ const MainRouter = () => {
         setNextRoute(<HomePage />);
         return;
       case ENTRY_WITCH_ROUTE.LOCK_PAGE:
-        setNextRoute(<LockPage />);
+        setNextRoute(popupLockStatus ? <></> : <LockPage />);
         return;
       case ENTRY_WITCH_ROUTE.WELCOME:
         // Redirect to register page for new wallet setup
@@ -56,7 +57,7 @@ const MainRouter = () => {
         setNextRoute(<LoadingView />);
         return;
     }
-  }, [entryWitchRoute, navigate]);
+  }, [entryWitchRoute, navigate, popupLockStatus]);
 
   return nextRoute;
 };

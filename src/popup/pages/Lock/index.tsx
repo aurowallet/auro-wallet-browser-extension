@@ -57,11 +57,7 @@ import {
   dangerButtonClassName,
 } from "./index.styled";
 
-interface LockPageProps {
-  redirectAfterUnlock?: boolean;
-}
-
-export const LockPage = ({ redirectAfterUnlock = true }: LockPageProps) => {
+export const LockPage = () => {
   const [pwdValue, setPwdValue] = useState("");
   const [unLockBtnStatus, setUnLockBtnStatus] = useState(false);
   const [waringModalStatus, setWaringModalStatus] = useState(false);
@@ -103,14 +99,11 @@ export const LockPage = ({ redirectAfterUnlock = true }: LockPageProps) => {
         } else {
           dispatch(initCurrentAccount(account));
           dispatch(updatePopupLockStatus(false));
-          if (redirectAfterUnlock) {
-            dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
-            navigate("/homepage");
-          }
+          dispatch(updateEntryWitchRoute(ENTRY_WITCH_ROUTE.HOME_PAGE));
         }
       }
     );
-  }, [dispatch, navigate, pwdValue, redirectAfterUnlock]);
+  }, [dispatch, pwdValue]);
 
   const onShowResetModal = useCallback(() => {
     setWaringModalStatus(true);
@@ -169,7 +162,7 @@ export const LockPage = ({ redirectAfterUnlock = true }: LockPageProps) => {
         window.close();
       }
     );
-  }, []);
+  }, [dispatch, navigate]);
 
   const onConfirmResetClick = useCallback(() => {
     setWaringModalStatus(false);
@@ -241,7 +234,7 @@ export const LockPage = ({ redirectAfterUnlock = true }: LockPageProps) => {
         content={i18n.t("reset_tip_2")}
         modalVisible={waringModalStatus}
         onCloseModal={onCloseWarningModal}
-        zIndex={1001}
+        zIndex={10001}
       />
 
       <PopupModal
@@ -257,7 +250,7 @@ export const LockPage = ({ redirectAfterUnlock = true }: LockPageProps) => {
         onInputChange={onResetModalInput}
         inputPlaceholder={i18n.t("deleteTag")}
         clearWhenClose={true}
-        zIndex={1001}
+        zIndex={10001}
       />
     </>
   );

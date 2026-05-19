@@ -5,6 +5,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import {
+  DAPP_ACTION_CANCEL_APPROVE,
   DAPP_ACTION_CLOSE_WINDOW,
   DAPP_ACTION_GET_ACCOUNT,
   DAPP_GET_CURRENT_ACCOUNT_CONNECT_STATUS,
@@ -77,6 +78,8 @@ const ApprovePage = () => {
     }
   }, [popupLockStatus, refreshCurrentAccount]);
 
+  const approveParamsReady = Boolean(params?.id);
+
   const getConnectAfterLock = useCallback(() => {
     let siteUrl = params?.site?.origin || "";
     const address = currentAccount.address;
@@ -117,9 +120,8 @@ const ApprovePage = () => {
   const onCancel = useCallback(() => {
     sendMsg(
       {
-        action: DAPP_ACTION_GET_ACCOUNT,
+        action: DAPP_ACTION_CANCEL_APPROVE,
         payload: {
-          selectAccount: [],
           currentAddress: currentAccount.address,
           resultOrigin: params?.site?.origin,
           id: params?.id,
@@ -187,10 +189,15 @@ const ApprovePage = () => {
             onClick={onCancel}
             theme={button_theme.BUTTON_THEME_LIGHT}
             size={button_size.middle}
+            disable={popupLockStatus || !approveParamsReady}
           >
             {i18n.t("cancel")}
           </Button>
-          <Button size={button_size.middle} onClick={onConfirm} disable={popupLockStatus}>
+          <Button
+            size={button_size.middle}
+            onClick={onConfirm}
+            disable={popupLockStatus || !approveParamsReady}
+          >
             {i18n.t("connect")}
           </Button>
         </StyledBtnGroup>
