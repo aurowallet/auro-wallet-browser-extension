@@ -1659,7 +1659,7 @@
   resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.7.1.tgz"
   integrity sha512-B8XBPsn4vT/KJAGqDzbwztd+6Yte3P4V7iafm24bxgDe/mlRuK6xmWPuCNrKt2vDafZ8MfJLlchDG/vYafQEjQ==
 
-"@noble/hashes@1.8.0", "@noble/hashes@~1.8.0":
+"@noble/hashes@1.8.0", "@noble/hashes@^1.7.1", "@noble/hashes@~1.8.0":
   version "1.8.0"
   resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.8.0.tgz"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
@@ -4152,13 +4152,13 @@ mina-attestations@0.5.0:
   dependencies:
     zod "^3.24.1"
 
-mina-signer@3.1.0:
-  version "3.1.0"
-  resolved "https://registry.npmjs.org/mina-signer/-/mina-signer-3.1.0.tgz"
-  integrity sha512-YG6AeukSglI+A9ZH0qCxjDwiE0jLpP84z18ulHr+DWHvezZ0rJFOsT04YgurErOzFYHsToEtWr1zO7Ufc0zXPg==
+mina-signer@4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/mina-signer/-/mina-signer-4.0.0.tgz#4f495bbc219fea1a7c0a0ff478f75079cafc8424"
+  integrity sha512-vpPuA3OFrOL2mYTR8UyQHF/cRPJN2WbbvIS+L/FIk22TBT607SyJvXImX1XE9kTwnTO1LIDA/gOFrP3wQHHAZA==
   dependencies:
+    "@noble/hashes" "^1.7.1"
     blakejs "^1.2.1"
-    js-sha256 "^0.9.0"
 
 minimatch@9.0.7, minimatch@^3.0.4, minimatch@^3.1.1, minimatch@^8.0.2, minimatch@^9.0.4:
   version "9.0.7"
