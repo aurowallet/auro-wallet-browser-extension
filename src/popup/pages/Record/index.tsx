@@ -204,7 +204,11 @@ const Record = () => {
   }, [netConfig.currentNode]);
 
   const onGoExplorer = useCallback(() => {
-    let url = getExplorerUrl() + "/tx/" + txDetail.hash;
+    const explorerUrl = getExplorerUrl();
+    if (!explorerUrl) {
+      return;
+    }
+    let url = explorerUrl + "/tx/" + txDetail.hash;
     openTab(url);
   }, [netConfig, txDetail]);
 

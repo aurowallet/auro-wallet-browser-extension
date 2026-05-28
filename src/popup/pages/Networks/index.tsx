@@ -44,11 +44,13 @@ const NetworkPage = () => {
     let topList: NodeItem[] = [];
     let bottomList: NodeItem[] = [];
     allNodeList.map((item) => {
-        if (item.isDefaultNode) {
-        if (item.networkID !== NetworkID_MAP.mainnet) {
-          bottomList.push(item);
-        } else {
+      if (item.isDefaultNode) {
+        if (item.networkID === NetworkID_MAP.mainnet) {
           defaultMainConfig = item;
+        } else if (item.networkID === NetworkID_MAP.zekomainnet) {
+          topList.push(item);
+        } else {
+          bottomList.push(item);
         }
       } else {
         topList.push(item);
@@ -58,7 +60,7 @@ const NetworkPage = () => {
       topList.unshift(defaultMainConfig);
     }
 
-    let showEditBtn = topList.length > 1;
+    let showEditBtn = topList.some(n => !n.isDefaultNode);
     let nodeList = [
       {
         list: topList,

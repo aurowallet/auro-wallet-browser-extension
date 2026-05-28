@@ -146,6 +146,9 @@ const TxListView: React.FC<TxListViewProps> = ({
 
   const onGoExplorer = useCallback(() => {
     const currentNode = netConfig.currentNode;
+    if (!currentNode.explorer) {
+      return;
+    }
     const url =
       currentNode.explorer +
       "/account/" +
@@ -481,6 +484,9 @@ const TxListView: React.FC<TxListViewProps> = ({
       <StyledListContainer>
         {history.map((item, index) => {
           if (item.showExplorer) {
+            if (!netConfig.currentNode.explorer) {
+              return null;
+            }
             return (
               <StyledExplorerContainer key={index}>
                 <StyledExplorerContent onClick={onGoExplorer}>

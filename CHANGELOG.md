@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Refine approve/request lifecycle (`DAPP_ACTION_CANCEL_APPROVE`, `requestAccounts` startup cleanup)
 - Normalize DApp/content-script error response format
 - Improve TypeScript typing in shared UI/debug components
+- Add Support for Zeko mainnet
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching

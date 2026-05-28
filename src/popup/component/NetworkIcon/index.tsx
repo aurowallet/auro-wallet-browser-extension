@@ -59,13 +59,16 @@ interface NetworkIconProps {
 export const NetworkIcon = ({ nodeItem, size }: NetworkIconProps) => {
   const { isCustomNet, iconSource, holderIconName } = useMemo(() => {
     let isCustomNet = !nodeItem.isDefaultNode;
-    let isZeko = isZekoNet(nodeItem.networkID)
+    let isZeko = isZekoNet(nodeItem.networkID);
     let iconSource =
       nodeItem.networkID == NetworkID_MAP.mainnet
         ? "img/mina_color.svg"
         : "img/icon_mina_gray.svg";
     if (isZeko) {
-      iconSource = "img/icon_zeko_testnet.svg";
+      iconSource =
+        nodeItem.networkID === NetworkID_MAP.zekomainnet
+          ? "img/icon_zeko.svg"
+          : "img/icon_zeko_testnet.svg";
     }
     let holderIconName = "";
     if (isCustomNet) {

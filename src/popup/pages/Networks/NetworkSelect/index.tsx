@@ -276,10 +276,12 @@ const NetworkModal = ({
     const netConfigList = netConfig.allNodeList;
     netConfigList.map((item) => {
       if (item.isDefaultNode) {
-        if (item.networkID !== NetworkID_MAP.mainnet) {
-          bottomList.push(item);
-        } else {
+        if (item.networkID === NetworkID_MAP.mainnet) {
           defaultMainConfig = item;
+        } else if (item.networkID === NetworkID_MAP.zekomainnet) {
+          topList.push(item);
+        } else {
+          bottomList.push(item);
         }
       } else {
         topList.push(item);

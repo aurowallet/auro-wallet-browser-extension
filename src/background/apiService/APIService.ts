@@ -1372,6 +1372,9 @@ class APIService {
       this.notificationListenerRegistered = true;
       browser.notifications.onClicked.addListener(async (clickId) => {
         const config = await getCurrentNodeConfig();
+        if (!config.explorer) {
+          return;
+        }
         const url = config.explorer + "/tx/" + clickId;
         browser.tabs.create({ url });
       });

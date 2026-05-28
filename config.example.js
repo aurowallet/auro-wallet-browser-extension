@@ -23,6 +23,20 @@ export const DevnetUrlConfig = {
   tx: "",
 };
 
+/** zeko mainnet url */
+export const ZekoMainnetConfig = {
+  gql: "",
+  explorer: "",
+  tx: "",
+};
+
+/** zeko testnet url */
+export const ZekoTestnetConfig = {
+  gql: "",
+  explorer: "",
+  tx: "",
+};
+
 export const TOKEN_BUILD_URL = ""
 /**berkeley net url */
 // export const BerkeleyUrlConfig = {

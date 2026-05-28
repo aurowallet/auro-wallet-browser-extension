@@ -47,8 +47,8 @@ interface VerifyResult {
 
 // ============ Functions ============
 
-export async function getSignClient(): Promise<MinaSignerClient> {
-  const netConfig = await getCurrentNodeConfig();
+export async function getSignClient(existingNetConfig?: { networkID?: string }): Promise<MinaSignerClient> {
+  const netConfig = existingNetConfig || await getCurrentNodeConfig();
   let networkID = "";
   const { default: Client } = await import("mina-signer");
   if (netConfig.networkID) {
@@ -57,6 +57,8 @@ export async function getSignClient(): Promise<MinaSignerClient> {
   let client;
   if (networkID === NetworkID_MAP.mainnet) {
     client = new Client({ network: "mainnet" });
+  } else if (networkID === NetworkID_MAP.zekomainnet) {
+    client = new Client({ network: { custom: "zeko-mainnet" } });
   } else {
     client = new Client({ network: "testnet" });
   }
@@ -210,7 +212,8 @@ export async function signTransaction(
 ): Promise<SignedPayment> {
   let signResult: SignedPayment;
   try {
-    const signClient = await getSignClient();
+    const netConfig = await getCurrentNodeConfig();
+    const signClient = await getSignClient(netConfig);
     let signBody: unknown = {};
 
     if (params.sendAction === DAppActions.mina_signMessage) {
@@ -224,7 +227,7 @@ export async function signTransaction(
       ) {
         let memo = "";
         try {
-          memo = decodeMemo(parseTx.zkappCommand.memo) || "";
+          memo = decodeMemo(parseTx.memo) || "";
         } catch {}
         signBody = {
           zkappCommand: parseTx,

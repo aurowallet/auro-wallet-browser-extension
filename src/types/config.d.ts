@@ -8,6 +8,7 @@ declare module '*/config' {
   export const BASE_INFO_URL: string;
   export const MainnetUrlConfig: UrlConfig;
   export const DevnetUrlConfig: UrlConfig;
+  export const ZekoMainnetConfig: UrlConfig;
   export const ZekoTestnetConfig: UrlConfig;
   export const TOKEN_BUILD_URL: string;
   export const NET_CONFIG_VERSION: string;

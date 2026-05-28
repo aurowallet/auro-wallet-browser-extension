@@ -39,7 +39,7 @@ import store from "./store/store";
 import { sendMsg } from "./utils/commonMsg";
 
 interface NetConfig {
-  currentNode: typeof DefaultMainnetConfig;
+  currentNode: NetworkConfig;
   customNodeList: NetworkConfig[];
   nodeConfigVersion: string;
 }

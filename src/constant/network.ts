@@ -1,6 +1,7 @@
 import {
   DevnetUrlConfig,
   MainnetUrlConfig,
+  ZekoMainnetConfig,
   ZekoTestnetConfig,
 } from "../../config";
 
@@ -9,6 +10,7 @@ import {
 export const NetworkID_MAP = {
   mainnet: "mina:mainnet",
   testnet: "mina:devnet",
+  zekomainnet: "zeko:mainnet",
   zekotestnet: "zeko:testnet",
 } as const;
 
@@ -45,7 +47,16 @@ const DefaultDevnetConfig: NetworkConfig = {
   networkID: NetworkID_MAP.testnet,
 };
 
-const ZekoDevnetConfig: NetworkConfig = {
+const DefaultZekoMainnetConfig: NetworkConfig = {
+  url: ZekoMainnetConfig.gql,
+  explorer: ZekoMainnetConfig.explorer,
+  gqlTxUrl: ZekoMainnetConfig.tx,
+  name: "Zeko Mainnet",
+  isDefaultNode: true,
+  networkID: NetworkID_MAP.zekomainnet,
+};
+
+const DefaultZekoTestnetConfig: NetworkConfig = {
   url: ZekoTestnetConfig.gql,
   explorer: ZekoTestnetConfig.explorer,
   gqlTxUrl: ZekoTestnetConfig.tx,
@@ -59,5 +70,6 @@ const ZekoDevnetConfig: NetworkConfig = {
 export const Default_Network_List: NetworkConfig[] = [
   DefaultMainnetConfig,
   DefaultDevnetConfig,
-  ZekoDevnetConfig,
+  DefaultZekoMainnetConfig,
+  DefaultZekoTestnetConfig,
 ];
