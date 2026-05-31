@@ -67,7 +67,7 @@ export const NetworkIcon = ({ nodeItem, size }: NetworkIconProps) => {
     if (isZeko) {
       iconSource =
         nodeItem.networkID === NetworkID_MAP.zekomainnet
-          ? "img/icon_zeko.svg"
+          ? "img/icon_zeko_network.svg"
           : "img/icon_zeko_testnet.svg";
     }
     let holderIconName = "";

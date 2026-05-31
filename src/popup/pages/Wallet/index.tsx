@@ -481,13 +481,17 @@ const WalletInfo = () => {
 
   const { netColor, showStaking, nextChainIcon } = useMemo(() => {
     const networkID = netConfig.currentNode.networkID;
+    let isZeko = isZekoNet(networkID)
+    let nextChainIcon = isZeko ? "/img/icon_zeko.svg" : "/img/icon_mina.svg";
+
     let netColor = "rgba(0, 0, 0, 0.30)";
     if (networkID === NetworkID_MAP.mainnet) {
       netColor = "#594AF1";
+    }else if(networkID === NetworkID_MAP.zekomainnet){
+      netColor = "#E7B13F";
+      nextChainIcon = "/img/icon_zeko_mainnet.svg";
     }
     let showStaking = networkID?.startsWith("mina");
-    let isZeko = isZekoNet(networkID)
-    let nextChainIcon = isZeko ? "/img/icon_zeko.svg" : "/img/icon_mina.svg";
     return {
       netColor,
       showStaking,
