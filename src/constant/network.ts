@@ -51,7 +51,7 @@ const DefaultZekoMainnetConfig: NetworkConfig = {
   url: ZekoMainnetConfig.gql,
   explorer: ZekoMainnetConfig.explorer,
   gqlTxUrl: ZekoMainnetConfig.tx,
-  name: "Zeko Mainnet",
+  name: "Zeko",
   isDefaultNode: true,
   networkID: NetworkID_MAP.zekomainnet,
 };
