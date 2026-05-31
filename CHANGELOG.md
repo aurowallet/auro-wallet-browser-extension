@@ -24,6 +24,9 @@ All notable changes to this project will be documented in this file.
 - Normalize DApp/content-script error response format
 - Improve TypeScript typing in shared UI/debug components
 - Add Support for Zeko mainnet
+- Improve offscreen keep-alive stability and duplicate document guard
+- Improve sandbox messaging stability with handshake refresh and iframe source isolation
+- Optimize SignTransaction pending queue synchronization
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
@@ -42,6 +45,8 @@ All notable changes to this project will be documented in this file.
 - Sync lock state on app boot for locked wallets
 - Hide ZK approve/sign/token overlays while wallet is locked
 - Normalize unsupported-method error return path
+- Improve signing flow stability with sign action propagation, keep-alive handling, and empty-queue close behavior
+- Improve edge-case handling for empty-body zk fee parsing and sandbox origin checks
 
 
 

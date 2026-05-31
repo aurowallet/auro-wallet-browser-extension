@@ -408,6 +408,10 @@ class DappService {
       let listenerAdded = false;
       try {
         let nextParams: Record<string, unknown> = { ...params };
+        const actionName = params.action as string;
+        if (actionName && !nextParams.action) {
+          nextParams.action = actionName;
+        }
         const currentAccount = this.getCurrentAccountAddress();
         const approveAccountStatus = this.getCurrentAccountConnectStatus(
           site.origin,
@@ -422,7 +426,7 @@ class DappService {
           return;
         }
 
-        const sendAction = params.action as string;
+        const sendAction = actionName as string;
 
         if (
           ZKAPP_CHAIN_ACTION.indexOf(sendAction) !== -1 &&

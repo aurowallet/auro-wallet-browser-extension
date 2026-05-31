@@ -76,6 +76,7 @@ import { getMessageFromCode } from "../utils/utils";
 interface MessagePayload {
   messageSource?: string;
   action?: string;
+  method?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
 }
@@ -106,6 +107,11 @@ function internalMessageListener(
     return false;
   }
   if (!message || typeof message !== "object") {
+    return false;
+  }
+
+  if (message.method === "keep-alive") {
+    sendResponse();
     return false;
   }
 
@@ -629,6 +635,7 @@ export function setupMessageListeners(): void {
 }
 
 interface ChromeOffscreen {
+  hasDocument?(): Promise<boolean>;
   createDocument(options: {
     url: string;
     reasons: string[];
@@ -638,21 +645,74 @@ interface ChromeOffscreen {
 
 interface ChromeWithOffscreen {
   offscreen?: ChromeOffscreen;
+  runtime: browser.Runtime.Static;
+}
+
+interface ChromeRuntimeWithContexts {
+  getContexts?: (filter: {
+    contextTypes?: string[];
+    documentUrls?: string[];
+  }) => Promise<Array<{ contextType?: string; documentUrl?: string }>>;
+}
+
+async function hasOffscreenDocument(chromeWithOffscreen: ChromeWithOffscreen): Promise<boolean> {
+  if (!chromeWithOffscreen.offscreen) {
+    return false;
+  }
+
+  if (typeof chromeWithOffscreen.offscreen.hasDocument === "function") {
+    try {
+      return await chromeWithOffscreen.offscreen.hasDocument();
+    } catch {
+      // fall through to runtime contexts check
+    }
+  }
+
+  const runtimeWithContexts = chromeWithOffscreen.runtime as unknown as ChromeRuntimeWithContexts;
+  if (typeof runtimeWithContexts.getContexts !== "function") {
+    return false;
+  }
+
+  try {
+    const contexts = await runtimeWithContexts.getContexts({
+      contextTypes: ["OFFSCREEN_DOCUMENT"],
+      documentUrls: [chrome.runtime.getURL("offscreen.html")],
+    });
+    return contexts.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 async function createOffscreen(): Promise<void> {
   const chromeWithOffscreen = chrome as unknown as ChromeWithOffscreen;
-  if (chromeWithOffscreen.offscreen) {
-    await chromeWithOffscreen.offscreen
-      .createDocument({
-        url: "offscreen.html",
-        reasons: ["BLOBS"],
-        justification: "keep service worker running",
-      })
-      .catch(() => {});
+  if (!chromeWithOffscreen.offscreen) {
+    return;
+  }
+
+  const exists = await hasOffscreenDocument(chromeWithOffscreen);
+  if (exists) {
+    return;
+  }
+
+  try {
+    await chromeWithOffscreen.offscreen.createDocument({
+      url: "offscreen.html",
+      reasons: ["BLOBS"],
+      justification: "keep service worker running",
+    });
+  } catch (error) {
+    console.error("[messageListener] createOffscreen failed", error);
   }
 }
 
-browser.runtime.onStartup.addListener(createOffscreen);
+browser.runtime.onStartup?.addListener?.(createOffscreen);
+browser.runtime.onInstalled?.addListener?.(() => {
+  createOffscreen().catch((error) => {
+    console.error("[messageListener] createOffscreen onInstalled failed", error);
+  });
+});
 (self as unknown as { onmessage: () => void }).onmessage = () => {};
-createOffscreen();
+createOffscreen().catch((error) => {
+  console.error("[messageListener] createOffscreen bootstrap failed", error);
+});

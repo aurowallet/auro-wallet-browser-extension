@@ -12,17 +12,24 @@ interface PromiseCallbacks {
 }
 
 let presentationSignaturePromise: PromiseCallbacks | null = null;
-let allowedOrigin = ""
+let allowedOrigin = "";
 window.addEventListener("message", async (event) => {
   if (event.data.type === "init-sandbox" && event.source === window.parent) {
-    allowedOrigin = event.origin;
+    const parentOrigin =
+      typeof event.data.parentOrigin === "string"
+        ? event.data.parentOrigin
+        : event.origin;
+    allowedOrigin = parentOrigin;
     return;
   }
-  if(!allowedOrigin){
+  if (!allowedOrigin) {
     return;
   }
-  if (event.origin !== allowedOrigin || event.source !== window.parent) {
-    throw new Error("Invalid origin");
+  if (event.source !== window.parent) {
+    return;
+  }
+  if (event.origin !== allowedOrigin && event.origin !== "null") {
+    return;
   }
   if (event.data.type === "presentation-signature") {
     if (presentationSignaturePromise) {
@@ -47,13 +54,13 @@ window.addEventListener("message", async (event) => {
         type: "validate-credential-result",
         result: Credential.toJSON(credentialDeserialized),
       };
-      window.parent.postMessage(result, allowedOrigin);
+      window.parent.postMessage(result, "*");
     } catch (error) {
       const result = {
         type: "validate-credential-result",
         error: serializeError(error),
       };
-      window.parent.postMessage(result, allowedOrigin);
+      window.parent.postMessage(result, "*");
     }
   } else if (data.type == "presentation") {
     
@@ -95,7 +102,7 @@ window.addEventListener("message", async (event) => {
           type: "presentation-signing-request",
           fields: prepared.messageFields,
         },
-        allowedOrigin
+        "*"
       );
       const signature = await new Promise<string>((resolve, reject) => {
         presentationSignaturePromise = { resolve: resolve as (value: unknown) => void, reject };
@@ -111,13 +118,13 @@ window.addEventListener("message", async (event) => {
         type: "presentation-result",
         result: serializedPresentation,
       };
-      window.parent.postMessage(result, allowedOrigin);
+      window.parent.postMessage(result, "*");
     } catch (error) {
       const result = {
         type: "presentation-result",
         error: serializeError(error),
       };
-      window.parent.postMessage(result, allowedOrigin);
+      window.parent.postMessage(result, "*");
     }
   }
 });

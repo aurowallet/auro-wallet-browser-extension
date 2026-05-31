@@ -330,7 +330,7 @@ const SignView = ({
   } = useMemo(() => {
     let sendAction = signParams?.params?.action || "";
     const body = signParams?.params?.transaction || "";
-    const zkFee = getZkFee(body);
+    const zkFee = getZkFee(body || "");
     let siteFee =
       zkFee ||
       signParams?.params?.feePayer?.fee ||
@@ -990,8 +990,18 @@ const SignView = ({
         });
         return;
       }
+      const sandboxWindow = (sandbox as HTMLIFrameElement).contentWindow;
+      if (!sandboxWindow) {
+        resolve({
+          error: { message: "Sandbox iframe window not found" },
+        });
+        return;
+      }
       // Listen for the response from the sandbox
       const messageHandler = (event: MessageEvent) => {
+        if (event.source !== sandboxWindow) {
+          return;
+        }
         if (event.data.type === "validate-credential-result") {
           window.removeEventListener("message", messageHandler);
           resolve({
@@ -1050,7 +1060,15 @@ const SignView = ({
         }
       };
       window.addEventListener("message", messageHandler);
-      (sandbox as HTMLIFrameElement).contentWindow?.postMessage(payload, "*");
+      const allowedOrigin = `chrome-extension://${browser.runtime.id}`;
+      sandboxWindow.postMessage(
+        {
+          type: "init-sandbox",
+          parentOrigin: allowedOrigin,
+        },
+        "*"
+      );
+      sandboxWindow.postMessage(payload, "*");
     });
   };
 

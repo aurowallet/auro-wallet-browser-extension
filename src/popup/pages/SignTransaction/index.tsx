@@ -78,6 +78,7 @@ const SignTransaction = () => {
   const dispatch = useAppDispatch();
   const isFirstRequest = useRef(true);
   const isShowLoading = useRef(false);
+  const currentSignIndexRef = useRef(0);
 
   const [pendingSignList, setPendingSignList] = useState<SignItem[]>([]);
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
@@ -134,15 +135,18 @@ const SignTransaction = () => {
         const { signRequests, chainRequests, topItem } = res;
         setPendingSignList(signRequests);
 
+        if (signRequests.length === 0 && chainRequests.length === 0) {
+          dispatch(updateSignZkModalStatus(false));
+          return;
+        }
+
         if (chainRequests.length > 0 && chainRequests[0]) {
           // current support 1 event
           setNotifyData(chainRequests[0]);
         }
 
-        if (
-          topItem &&
-          ZKAPP_CHAIN_ACTION.indexOf(topItem.params?.action || "") !== -1
-        ) {
+        const topAction = topItem?.params?.action || "";
+        if (topItem && ZKAPP_CHAIN_ACTION.indexOf(topAction || "") !== -1) {
           setState({
             notifyViewStatus: true,
             signViewStatus: false,
@@ -159,19 +163,29 @@ const SignTransaction = () => {
               isShowLoading.current = true;
             }
           }
-          if (currentSignIndex < signRequests.length - 1) {
-            setRightArrowStatus(false);
+          const maxIndex = Math.max(0, signRequests.length - 1);
+          const nextIndex = Math.min(currentSignIndexRef.current, maxIndex);
+          if (nextIndex !== currentSignIndexRef.current) {
+            currentSignIndexRef.current = nextIndex;
+            setCurrentSignIndex(nextIndex);
           }
+          setLeftArrowStatus(nextIndex === 0);
+          setRightArrowStatus(nextIndex >= maxIndex);
         }
       }
     );
-  }, [pendingSignList, currentSignIndex]);
+  }, [dispatch]);
+
+  useEffect(() => {
+    currentSignIndexRef.current = currentSignIndex;
+  }, [currentSignIndex]);
 
   useEffect(() => {
     if (!popupLockStatus) {
+      getSignParams();
       fetchAccountInfo();
     }
-  }, [fetchAccountInfo, popupLockStatus]);
+  }, [fetchAccountInfo, getSignParams, popupLockStatus]);
 
   useEffect(() => {
     if (signZkRefresh) {
