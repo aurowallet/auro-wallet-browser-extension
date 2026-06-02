@@ -387,6 +387,7 @@ export function verifyTokenCommand(
     const nextBuildZkCommand: ZkAppCommand = JSON.parse(buildZkCommand);
     let senderVerified = false;
     let receiverVerified = false;
+    let accountCreationFeeUpdates = 0;
     const accountUpdateCount = isNewAccount ? 4 : 3;
 
     if (!Array.isArray(nextBuildZkCommand.accountUpdates) || 
@@ -475,11 +476,28 @@ export function verifyTokenCommand(
           }
         }
       } else {
-        if (balanceChange.magnitude !== "0" || 
+        const isAccountCreationFeeUpdate =
+          isNewAccount &&
+          sendTokenId !== ZK_DEFAULT_TOKEN_ID &&
+          publicKey === sender &&
+          tokenId === ZK_DEFAULT_TOKEN_ID &&
+          balanceChange.sgn === "Negative" &&
+          new BigNumber(balanceChange.magnitude).isGreaterThan(0);
+
+        if (isAccountCreationFeeUpdate) {
+          accountCreationFeeUpdates += 1;
+          continue;
+        }
+
+        if (balanceChange.magnitude !== "0" ||
             (balanceChange.sgn !== "Positive" && balanceChange.sgn !== "Negative")) {
           return false;
         }
       }
+    }
+
+    if (isNewAccount && accountCreationFeeUpdates !== 1) {
+      return false;
     }
 
     return senderVerified && receiverVerified;
@@ -653,8 +671,6 @@ export function extractTokenTransferInfo(
     let senderFound = false;
     let receiverFound = false;
 
-    const isNewAccount = nextZkCommand.accountUpdates.length === 4;
-
     for (const accountUpdate of nextZkCommand.accountUpdates) {
       if (!accountUpdate?.body) {
         return { success: false, error: "Invalid accountUpdate: missing body", code: ExtractionErrorCode.INVALID_STRUCTURE };
@@ -691,6 +707,17 @@ export function extractTokenTransferInfo(
     if (!new BigNumber(senderAmount).isEqualTo(receiverAmount)) {
       return { success: false, error: `Amount mismatch: sender=${senderAmount}, receiver=${receiverAmount}`, code: ExtractionErrorCode.AMOUNT_MISMATCH };
     }
+
+    const isNewAccount = nextZkCommand.accountUpdates.some((accountUpdate) => {
+      const body = accountUpdate.body;
+      return (
+        expectedTokenId !== ZK_DEFAULT_TOKEN_ID &&
+        body.publicKey === sender &&
+        body.tokenId === ZK_DEFAULT_TOKEN_ID &&
+        body.balanceChange.sgn === "Negative" &&
+        new BigNumber(body.balanceChange.magnitude).isGreaterThan(0)
+      );
+    });
 
     return {
       success: true,

@@ -1,5 +1,7 @@
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import useFetchAccountData from "@/hooks/useUpdateAccount";
+import { useZekoFee } from "@/hooks/useZekoFee";
+import { getFeeWithZekoMinimum } from "@/utils/fee";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
@@ -9,14 +11,14 @@ import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "../../types/common";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { getTokenState, getZekoNetFee, sendTx } from "../../../background/api";
+import { getTokenState, sendTx } from "../../../background/api";
 import { getLocal } from "../../../background/localStorage";
 import {
   MAIN_COIN_CONFIG,
   TRANSACTION_FEE,
-  ZEKO_FEE_INTERVAL_TIME,
 } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
+import { NetworkID_MAP } from "../../../constant/network";
 import {
   QA_SIGN_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
@@ -36,7 +38,6 @@ import {
   isNaturalNumber,
   isNumber,
   isZekoNet,
-  parsedZekoFee,
   trimSpace,
 } from "../../../utils/utils";
 import Button from "../../component/Button";
@@ -197,58 +198,35 @@ const SendPage = () => {
   const [addressOptionList, setAddressOptionList] = useState<AddressOption[]>([]);
   const [addressOptionStatus, setAddressOptionStatus] = useState(false);
 
-  const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
   const [isNewAccount, setIsNewAccount] = useState(false);
+  const shouldPollZekoFee = !(
+    isNumber(advanceInputFee) && Number(advanceInputFee) > 0
+  );
+  const {
+    zekoFee,
+    feeIntervalTime,
+    refreshZekoFee,
+  } = useZekoFee({
+    isZeko,
+    shouldPoll: shouldPollZekoFee,
+  });
 
   const nextFee = useMemo(() => {
     if (isNumber(advanceInputFee) && Number(advanceInputFee) > 0) {
-      return advanceInputFee;
+      return getFeeWithZekoMinimum(advanceInputFee, isZeko, zekoFee);
     }
     if (isZeko) {
-      return zekoPerFee;
+      return zekoFee;
     }
     if (isNumber(feeAmount) && Number(feeAmount) > 0) {
       // button fee
-      return feeAmount;
+      return getFeeWithZekoMinimum(feeAmount, isZeko, zekoFee);
     }
     if (feeConfig?.transactionFee?.medium) {
-      return feeConfig.transactionFee.medium;
+      return getFeeWithZekoMinimum(feeConfig.transactionFee.medium, isZeko, zekoFee);
     }
-    return TRANSACTION_FEE;
-  }, [advanceInputFee, isZeko, zekoPerFee, feeConfig, feeAmount]);
-
-  const feeIntervalTime = useMemo(() => {
-    if (!isZeko) {
-      return 0;
-    }
-    if (isNumber(advanceInputFee) && Number(advanceInputFee) > 0) {
-      return 0;
-    }
-    return ZEKO_FEE_INTERVAL_TIME;
-  }, [isZeko, advanceInputFee]);
-
-  useEffect(() => {
-    const fetchFee = async () => {
-      if (isZeko) {
-        const fee = await getZekoNetFee();
-        const parsedFee = parsedZekoFee(fee as string);
-        if (typeof parsedFee === 'number') {
-          setZekoPerFee(parsedFee);
-        }
-      }
-    };
-    fetchFee();
-  }, [isZeko]);
-
-  const onFeeTimerComplete = useCallback(async () => {
-    if (isZeko) {
-      const fee = await getZekoNetFee();
-      const parsedFee = parsedZekoFee(fee as string);
-      if (typeof parsedFee === 'number') {
-        setZekoPerFee(parsedFee);
-      }
-    }
-  }, [isZeko]);
+    return getFeeWithZekoMinimum(TRANSACTION_FEE, isZeko, zekoFee);
+  }, [advanceInputFee, isZeko, zekoFee, feeConfig, feeAmount]);
 
   const onToAddressInput = useCallback((e: InputChangeEvent) => {
     setToAddress(e.target.value);
@@ -495,6 +473,10 @@ const SendPage = () => {
   );
   const clickNextStep = useCallback(async () => {
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      if (currentNode.networkID === NetworkID_MAP.zekomainnet) {
+        Toast.info(i18n.t("notSupportNow"));
+        return;
+      }
       const { status } = await ledgerManager.ensureConnect();
       dispatch(updateLedgerConnectStatus(status));
       if (status !== LEDGER_STATUS.READY) {
@@ -548,6 +530,7 @@ const SendPage = () => {
     ledgerStatus,
     currentAccount,
     currentAddress,
+    currentNode,
     dispatch,
     mainTokenNetInfo?.inferredNonce,
     toAddress,
@@ -750,7 +733,7 @@ const SendPage = () => {
     >
       <TimerProvider
         intervalTime={feeIntervalTime}
-        onTimerComplete={onFeeTimerComplete}
+        onTimerComplete={refreshZekoFee}
       >
         <StyledContentContainer>
           <StyledInputContainer>

@@ -27,6 +27,8 @@ All notable changes to this project will be documented in this file.
 - Improve offscreen keep-alive stability and duplicate document guard
 - Improve sandbox messaging stability with handshake refresh and iframe source isolation
 - Optimize SignTransaction pending queue synchronization
+- Centralize Zeko fee parsing and polling with shared `useZekoFee` and fee utilities
+- Refresh Zeko token transaction history after balance changes
 
 ### Fixes
 - Resolve stale data and nonce issues after account/network switching
@@ -47,6 +49,10 @@ All notable changes to this project will be documented in this file.
 - Normalize unsupported-method error return path
 - Improve signing flow stability with sign action propagation, keep-alive handling, and empty-queue close behavior
 - Improve edge-case handling for empty-body zk fee parsing and sandbox origin checks
+- Ensure Zeko transactions use the network fee with the default 10% buffer as the minimum fee
+- Restrict Ledger transaction signing only on Zeko Mainnet while keeping other networks available
+- Fix Token Build validation for new custom token accounts and reject mismatched `isNewAccount` data
+- Preserve Ledger error messages in staking transfer failures
 
 
 

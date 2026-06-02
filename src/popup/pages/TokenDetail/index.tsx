@@ -102,6 +102,7 @@ const TokenDetail = () => {
   const isRequestRef = useRef(false);
 
   const postTxRetryTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const lastBalanceKeyRef = useRef<string>("");
   const clearPostTxRetries = useCallback(() => {
     postTxRetryTimersRef.current.forEach(t => clearTimeout(t));
     postTxRetryTimersRef.current = [];
@@ -271,6 +272,10 @@ const TokenDetail = () => {
     [currentAccount.address, isFungibleToken, token.tokenId, saveToLocal]
   );
 
+  const requestHistoryAfterZekoBalanceChange = useCallback(() => {
+    requestHistory();
+  }, [requestHistory]);
+
   const onClickRefresh = useCallback(() => {
     dispatch(updateShouldRequest(true, true));
   }, [requestHistory]);
@@ -290,6 +295,30 @@ const TokenDetail = () => {
       fetchAccountData();
     }
   }, [shouldRefresh, fetchAccountData]);
+
+  useEffect(() => {
+    if (!isZekoNet(currentNode.networkID)) {
+      lastBalanceKeyRef.current = "";
+      return;
+    }
+    const tokenBaseInfo = nextTokenInfo?.tokenBaseInfo as { showBalance?: string | number } | undefined;
+    const balanceKey = `${currentAccount.address}:${token.tokenId || ""}:${tokenBaseInfo?.showBalance ?? ""}`;
+    if (!lastBalanceKeyRef.current) {
+      lastBalanceKeyRef.current = balanceKey;
+      return;
+    }
+    if (lastBalanceKeyRef.current === balanceKey) {
+      return;
+    }
+    lastBalanceKeyRef.current = balanceKey;
+    requestHistoryAfterZekoBalanceChange();
+  }, [
+    currentNode.networkID,
+    currentAccount.address,
+    token.tokenId,
+    nextTokenInfo?.tokenBaseInfo?.showBalance,
+    requestHistoryAfterZekoBalanceChange,
+  ]);
 
   useEffect(() => {
     clearPostTxRetries();

@@ -1,5 +1,7 @@
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { ACCOUNT_TYPE } from "@/constant/commonType";
+import { useZekoFee } from "@/hooks/useZekoFee";
+import { getFeeWithZekoMinimum } from "@/utils/fee";
 import {
   DAPP_ACTION_SIGN_MESSAGE,
   QA_SIGN_TRANSACTION,
@@ -28,14 +30,12 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "@/popup/types/common";
 import styled from "styled-components";
-import { getZekoNetFee } from "../../../../background/api";
-import { TRANSACTION_FEE, ZEKO_FEE_INTERVAL_TIME } from "../../../../constant";
+import { TRANSACTION_FEE } from "../../../../constant";
 import { TimerProvider } from "../../../../hooks/TimerContext";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
 import {
   isNaturalNumber,
   isZekoNet,
-  parsedZekoFee,
 } from "../../../../utils/utils";
 import NetworkFee from "../../../component/NetworkFee";
 import { getAccountUpdateCount, extractTokenTransferInfo } from "../../../../utils/zkUtils";
@@ -123,7 +123,6 @@ const SignView = ({
 
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
-  const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
   const [extractedData, setExtractedData] = useState<{
     receiveAddress?: string;
     sender?: string;
@@ -259,35 +258,25 @@ const SignView = ({
     }
   }, [currentAdvanceData.nonce, currentAdvanceData.fee]);
 
-  useEffect(() => {
-    const fetchFee = async () => {
-      if (isZeko) {
-        const fee = await getZekoNetFee(zkAppUpdateCount + 1);
-        const parsedFee = parsedZekoFee(fee as string);
-        if (typeof parsedFee === 'number') {
-          setZekoPerFee(parsedFee);
-        }
-      }
-    };
-    fetchFee();
-  }, [isZeko, zkAppUpdateCount]);
-
-  const feeIntervalTime = useMemo(() => {
-    if (!isZeko) {
-      return 0;
-    }
-    if (isNumber(advanceFee) && Number(advanceFee) > 0) {
-      return 0;
-    }
-    return ZEKO_FEE_INTERVAL_TIME;
-  }, [isZeko, advanceFee]);
+  const shouldPollZekoFee = !(
+    isNumber(advanceFee) && Number(advanceFee) > 0
+  );
+  const {
+    zekoFee,
+    feeIntervalTime,
+    refreshZekoFee,
+  } = useZekoFee({
+    isZeko,
+    weight: zkAppUpdateCount + 1,
+    shouldPoll: shouldPollZekoFee,
+  });
 
   const nextFee = useMemo(() => {
     if (isNumber(advanceFee) && Number(advanceFee) > 0) {
-      return advanceFee;
+      return getFeeWithZekoMinimum(advanceFee, isZeko, zekoFee);
     }
     if (isZeko) {
-      return zekoPerFee;
+      return zekoFee;
     }
     const zkAccountFee = new BigNumber(feeConfig?.zkAppAccountUpdateFee ?? "0").multipliedBy(
       zkAppUpdateCount
@@ -295,15 +284,8 @@ const SignView = ({
     const defaultRecommendFee = new BigNumber(feeConfig?.transactionFee?.medium ?? TRANSACTION_FEE)
       .plus(zkAccountFee)
       .toNumber();
-    return defaultRecommendFee;
-  }, [advanceFee, zekoPerFee, isZeko, zkAppUpdateCount, feeConfig]);
-
-  const onFeeTimerComplete = useCallback(async () => {
-    if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
-      setZekoPerFee(parsedZekoFee(fee as string) as number);
-    }
-  }, [isZeko, zkAppUpdateCount]);
+    return getFeeWithZekoMinimum(defaultRecommendFee, isZeko, zekoFee);
+  }, [advanceFee, zekoFee, isZeko, zkAppUpdateCount, feeConfig]);
 
   const onCancel = useCallback(() => {
     sendMsg(
@@ -357,7 +339,7 @@ const SignView = ({
       sendMsg(
         {
           action: DAPP_ACTION_SIGN_MESSAGE,
-          payload: { error: "Not supported yet" },
+          payload: { error: i18n.t("notSupportNow") },
         },
         async (params) => {}
       );
@@ -502,7 +484,7 @@ const SignView = ({
   return (
     <TimerProvider
       intervalTime={feeIntervalTime}
-      onTimerComplete={onFeeTimerComplete}
+      onTimerComplete={refreshZekoFee}
     >
       <StyledSectionSign>
         <StyledTitleRow>

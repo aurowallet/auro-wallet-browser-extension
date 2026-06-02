@@ -26,7 +26,6 @@ import {
   mergeLocalConfigToNetToken,
   nameLengthCheck,
   numberFormat,
-  parsedZekoFee,
   parseStakingList,
   removeUrlFromArrays,
   showNameSlice,
@@ -35,6 +34,7 @@ import {
   urlValid,
   validatePassword,
 } from '@/utils/utils';
+import { parsedZekoFee } from '@/utils/fee';
 
 const TRANSACTION_FEE = 0.1001;
 
@@ -451,16 +451,16 @@ describe('Utils Test', () => {
   });
 
   describe('parsedZekoFee', () => {
-    it('should correctly parse fee with buffer and 4 decimal places', () => {
+    it('should correctly parse fee with buffer and 9 decimal places', () => {
       const fee = '11051709180756478';
       const result = parsedZekoFee(fee, 0.1);
-      expect(result).toBe('12156880.0988');
+      expect(result).toBe(12156880.098832125);
     });
 
     it('should handle fee as number input', () => {
       const fee = 11051709180756478;
       const result = parsedZekoFee(fee, 0.1);
-      expect(result).toBe('12156880.0988');
+      expect(result).toBe(12156880.098832125);
     });
 
     it('should return default TRANSACTION_FEE when fee is undefined', () => {
@@ -471,19 +471,19 @@ describe('Utils Test', () => {
     it('should handle zero buffer correctly', () => {
       const fee = '1000000000';
       const result = parsedZekoFee(fee, 0);
-      expect(result).toBe('1');
+      expect(result).toBe(1);
     });
 
     it('should handle string fee with decimals', () => {
       const fee = '123456789.123456789';
       const result = parsedZekoFee(fee, 0.1);
-      expect(result).toBe('0.1358');
+      expect(result).toBe(0.135802468);
     });
 
     it('should handle small fee values', () => {
       const fee = '1000';
       const result = parsedZekoFee(fee, 0.1);
-      expect(result).toBe('0');
+      expect(result).toBe(0.0000011);
     });
   });
 

@@ -3,7 +3,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { utf8ToBytes } from "@noble/hashes/utils";
 import { createBase58check } from "@scure/base";
 import BigNumber from "bignumber.js";
-import { MAIN_COIN_CONFIG, TRANSACTION_FEE } from "../constant";
+import { MAIN_COIN_CONFIG } from "../constant";
 import type { NetworkConfig } from "../constant/network";
 import { FALLBACK_MESSAGE, errorValues } from "../constant/dappError";
 
@@ -600,22 +600,4 @@ export const validatePassword = (password: string): PasswordValidationRule[] => 
     ...rule,
     bool: rule.expression.test(password),
   }));
-};
-
-// ============ Fee Utils ============
-
-export const parsedZekoFee = (fee: string | number | undefined, buffer: number = 0.1): string | number => {
-  let feePerWeightUnit: string | number | undefined = fee;
-  if (feePerWeightUnit) {
-    feePerWeightUnit = amountDecimals(feePerWeightUnit, MAIN_COIN_CONFIG.decimals);
-    if (buffer) {
-      feePerWeightUnit = new BigNumber(feePerWeightUnit).multipliedBy(buffer + 1).toString();
-    }
-    feePerWeightUnit = new BigNumber(feePerWeightUnit)
-      .decimalPlaces(4, BigNumber.ROUND_DOWN)
-      .toString();
-  } else {
-    feePerWeightUnit = TRANSACTION_FEE;
-  }
-  return feePerWeightUnit;
 };

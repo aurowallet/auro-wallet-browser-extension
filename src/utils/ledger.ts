@@ -246,6 +246,10 @@ class LedgerManager {
       Toast.info(i18n.t("pleaseOpenInLedger"));
       return;
     }
+    const cfg = await getCurrentNodeConfig();
+    if (cfg.networkID === NetworkID_MAP.zekomainnet) {
+      return { signature: null, error: { message: i18n.t("notSupportNow") } };
+    }
     const networkId = await this._getNetworkId();
     const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
 
@@ -327,6 +331,11 @@ class LedgerManager {
     if (this.status !== LEDGER_STATUS.READY) {
       Toast.info(i18n.t("pleaseOpenInLedger"));
       return;
+    }
+
+    const cfg = await getCurrentNodeConfig();
+    if (cfg.networkID === NetworkID_MAP.zekomainnet) {
+      return { signature: null, error: { message: i18n.t("notSupportNow") } };
     }
 
     const networkId = await this._getNetworkId();

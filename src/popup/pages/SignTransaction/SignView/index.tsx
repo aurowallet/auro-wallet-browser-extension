@@ -1,6 +1,7 @@
 import { sendStakeTx, sendTx } from "@/background/api";
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "@/constant/commonType";
+import { NetworkID_MAP } from "@/constant/network";
 import {
   DAPP_ACTION_CREATE_NULLIFIER,
   DAPP_ACTION_REQUEST_PRESENTATION,
@@ -52,6 +53,8 @@ import {
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
+import { useZekoFee } from "@/hooks/useZekoFee";
+import { getFeeWithZekoMinimum } from "@/utils/fee";
 import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
@@ -59,15 +62,13 @@ import type { InputChangeEvent } from "@/popup/types/common";
 import { serializeError } from "serialize-error";
 import styled from "styled-components";
 import browser from "webextension-polyfill";
-import { getZekoNetFee } from "../../../../background/api";
-import { TRANSACTION_FEE, ZEKO_FEE_INTERVAL_TIME } from "../../../../constant";
+import { TRANSACTION_FEE } from "../../../../constant";
 import { CredentialMsg } from "../../../../constant/msgTypes";
 import { TimerProvider } from "../../../../hooks/TimerContext";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
 import {
   getBalanceForUI,
   isZekoNet,
-  parsedZekoFee,
 } from "../../../../utils/utils";
 import CountdownTimer from "../../../component/CountdownTimer";
 import { TypeRowInfo } from "../TypeRowInfo";
@@ -298,7 +299,6 @@ const SignView = ({
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
   const [customFeeStatus, setCustomFeeStatus] = useState(false);
-  const [zekoPerFee, setZekoPerFee] = useState(TRANSACTION_FEE);
 
   const [nonceType, setNonceType] = useState("");
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
@@ -320,6 +320,9 @@ const SignView = ({
   const isZeko = useMemo(() => {
     return isZekoNet(currentNode.networkID);
   }, [currentNode]);
+  const isZekoMainnet = useMemo(() => {
+    return currentNode.networkID === NetworkID_MAP.zekomainnet;
+  }, [currentNode.networkID]);
   const {
     sendAction,
     siteRecommendFee,
@@ -430,11 +433,11 @@ const SignView = ({
     }
   }, [currentAdvanceData]);
 
-  const { nextFee, feeType } = useMemo(() => {
-    let nextFee: string | number = "";
+  const { baseFee, feeType } = useMemo(() => {
+    let baseFee: string | number = "";
     let feeType = "";
     if (isNumber(advanceFee) && Number(advanceFee) > 0) {
-      nextFee = advanceFee;
+      baseFee = advanceFee;
       feeType = ZkAppValueType.custom;
     } else {
       if (
@@ -442,52 +445,52 @@ const SignView = ({
         Number(siteRecommendFee) > 0 &&
         !customFeeStatus
       ) {
-        nextFee = siteRecommendFee;
+        baseFee = siteRecommendFee;
         feeType = ZkAppValueType.site;
       } else {
         feeType = ZkAppValueType.default;
         if (isZeko) {
-          nextFee = zekoPerFee;
+          baseFee = "";
         } else {
-          nextFee = defaultRecommendFee;
+          baseFee = defaultRecommendFee;
         }
       }
     }
     return {
-      nextFee,
+      baseFee,
       feeType,
     };
-  }, [advanceFee, siteRecommendFee, isZeko, zekoPerFee, customFeeStatus]);
+  }, [advanceFee, siteRecommendFee, isZeko, customFeeStatus, defaultRecommendFee]);
 
-  useEffect(() => {
-    const fetchFee = async () => {
-      if (isZeko) {
-        const fee = await getZekoNetFee(zkAppUpdateCount + 1);
-        setZekoPerFee(parsedZekoFee(fee as string) as number);
-      }
-    };
-    fetchFee();
-  }, [isZeko, zkAppUpdateCount]);
-
-  const onFeeTimerComplete = useCallback(async () => {
-    if (isZeko) {
-      const fee = await getZekoNetFee(zkAppUpdateCount + 1);
-      const parsedFee = parsedZekoFee(fee as string);
-      if (typeof parsedFee === 'number') {
-        setZekoPerFee(parsedFee);
-      }
-    }
-  }, [isZeko, zkAppUpdateCount]);
-
-  const feeIntervalTime = useMemo(() => {
+  const shouldPollZekoFee = useMemo(() => {
     if (!isZeko) {
-      return 0;
+      return false;
     }
     if (feeType !== ZkAppValueType.default) {
-      return 0;
+      return false;
     }
-    return ZEKO_FEE_INTERVAL_TIME;
-  }, [isZeko, feeType]);
+    if (isLedgerAccount && confirmModalStatus) {
+      return false;
+    }
+    return true;
+  }, [isZeko, feeType, isLedgerAccount, confirmModalStatus]);
+
+  const {
+    zekoFee,
+    feeIntervalTime,
+    refreshZekoFee,
+  } = useZekoFee({
+    isZeko,
+    weight: zkAppUpdateCount + 1,
+    shouldPoll: shouldPollZekoFee,
+  });
+
+  const nextFee = useMemo(() => {
+    if (isZeko && feeType === ZkAppValueType.default) {
+      return zekoFee;
+    }
+    return getFeeWithZekoMinimum(baseFee, isZeko, zekoFee);
+  }, [baseFee, feeType, isZeko, zekoFee]);
 
   useEffect(() => {
     setIsLedgerAccount(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER);
@@ -947,13 +950,22 @@ const SignView = ({
   ]);
 
   const checkLedgerSupport = useCallback(() => {
-    if (Ledger_support_action.indexOf(sendAction) === -1) {
+    if (
+      Ledger_support_action.indexOf(sendAction) === -1 ||
+      isZekoMainnet
+    ) {
       Toast.info(i18n.t("notSupportNow"));
       let resultAction = "";
       switch (sendAction) {
+        case DAppActions.mina_sendPayment:
+        case DAppActions.mina_sendStakeDelegation:
+          resultAction = DAPP_ACTION_SEND_TRANSACTION;
+          break;
         case DAppActions.mina_sendTransaction:
           resultAction = DAPP_ACTION_SEND_TRANSACTION;
           break;
+        case DAppActions.mina_signMessage:
+        case DAppActions.mina_sign_JsonMessage:
         case DAppActions.mina_signFields:
           resultAction = DAPP_ACTION_SIGN_MESSAGE;
           break;
@@ -972,14 +984,14 @@ const SignView = ({
       sendMsg(
         {
           action: resultAction,
-          payload: { error: "Not supported yet" },
+          payload: { error: i18n.t("notSupportNow") },
         },
         async (params) => {}
       );
       return false;
     }
     return true;
-  }, [sendAction]);
+  }, [sendAction, isZekoMainnet]);
 
   const sendSandboxMessage = (payload: Record<string, unknown>) => {
     return new Promise((resolve, reject) => {
@@ -1399,7 +1411,7 @@ const SignView = ({
   return (
     <TimerProvider
       intervalTime={feeIntervalTime}
-      onTimerComplete={onFeeTimerComplete}
+      onTimerComplete={refreshZekoFee}
     >
       <StyledSectionSign>
         <StyledTitleRow>

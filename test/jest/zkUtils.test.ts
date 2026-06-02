@@ -826,6 +826,7 @@ describe('ZkUtils Test Case', () => {
     });
 
     it('should accept valid token transfer with new account (4 accountUpdates)', () => {
+      const customTokenId = 'wSDmDVHrkzmf9wLek4HHRgizZTLaM7AdJ3NJJmqSPGY3onEo1b';
       const validCommand = {
         feePayer: {
           body: { publicKey: sender, fee: '100000000', validUntil: null },
@@ -835,7 +836,7 @@ describe('ZkUtils Test Case', () => {
           {
             body: {
               publicKey: sender,
-              tokenId: validTokenId,
+              tokenId: customTokenId,
               balanceChange: { magnitude: amount, sgn: 'Negative' },
               update: {},
               callDepth: 0,
@@ -847,7 +848,7 @@ describe('ZkUtils Test Case', () => {
           {
             body: {
               publicKey: receiver,
-              tokenId: validTokenId,
+              tokenId: customTokenId,
               balanceChange: { magnitude: amount, sgn: 'Positive' },
               update: {},
               callDepth: 0,
@@ -859,7 +860,7 @@ describe('ZkUtils Test Case', () => {
           {
             body: {
               publicKey: 'B62qContract789',
-              tokenId: validTokenId,
+              tokenId: customTokenId,
               balanceChange: { magnitude: '0', sgn: 'Positive' },
               update: {},
               callDepth: 0,
@@ -870,9 +871,9 @@ describe('ZkUtils Test Case', () => {
           },
           {
             body: {
-              publicKey: 'B62qNewAccount',
-              tokenId: validTokenId,
-              balanceChange: { magnitude: '0', sgn: 'Positive' },
+              publicKey: sender,
+              tokenId: 'wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf',
+              balanceChange: { magnitude: '1000000000', sgn: 'Negative' },
               update: {},
               callDepth: 0,
               events: [],
@@ -885,10 +886,69 @@ describe('ZkUtils Test Case', () => {
 
       const result = verifyTokenCommand(
         { sender, receiver, amount, isNewAccount: true },
-        validTokenId,
+        customTokenId,
         JSON.stringify(validCommand)
       );
       expect(result).toBe(true);
+    });
+
+    it('should reject account creation fee when not building a new token account', () => {
+      const customTokenId = 'wSDmDVHrkzmf9wLek4HHRgizZTLaM7AdJ3NJJmqSPGY3onEo1b';
+      const invalidCommand = {
+        feePayer: {
+          body: { publicKey: sender, fee: '100000000', validUntil: null },
+          authorization: '7mX...',
+        },
+        accountUpdates: [
+          {
+            body: {
+              publicKey: sender,
+              tokenId: customTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Negative' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: receiver,
+              tokenId: customTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Positive' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: 'B62qContract789',
+              tokenId: customTokenId,
+              balanceChange: { magnitude: '0', sgn: 'Positive' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: sender,
+              tokenId: 'wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf',
+              balanceChange: { magnitude: '1000000000', sgn: 'Negative' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+        ],
+      };
+
+      const result = verifyTokenCommand(
+        { sender, receiver, amount, isNewAccount: false },
+        customTokenId,
+        JSON.stringify(invalidCommand)
+      );
+      expect(result).toBe(false);
     });
 
     it('should reject transaction with tokenSymbol update', () => {
@@ -2029,6 +2089,7 @@ describe('ZkUtils Test Case', () => {
     });
 
     it('should detect new account creation (4 accountUpdates)', () => {
+      const customTokenId = 'wSDmDVHrkzmf9wLek4HHRgizZTLaM7AdJ3NJJmqSPGY3onEo1b';
       const newAccountCommand = {
         feePayer: {
           body: { publicKey: 'B62qFeePayer', fee: '100000000', validUntil: null },
@@ -2038,29 +2099,29 @@ describe('ZkUtils Test Case', () => {
           {
             body: {
               publicKey: 'B62qSender123',
-              tokenId: validTokenId,
+              tokenId: customTokenId,
               balanceChange: { magnitude: '1000000', sgn: 'Negative' },
             },
           },
           {
             body: {
               publicKey: 'B62qReceiver456',
-              tokenId: validTokenId,
+              tokenId: customTokenId,
               balanceChange: { magnitude: '1000000', sgn: 'Positive' },
             },
           },
           {
             body: {
               publicKey: 'B62qContract789',
-              tokenId: validTokenId,
+              tokenId: customTokenId,
               balanceChange: { magnitude: '0', sgn: 'Positive' },
             },
           },
           {
             body: {
-              publicKey: 'B62qNewAccount',
+              publicKey: 'B62qSender123',
               tokenId: validTokenId,
-              balanceChange: { magnitude: '0', sgn: 'Positive' },
+              balanceChange: { magnitude: '1000000000', sgn: 'Negative' },
             },
           },
         ],
@@ -2068,7 +2129,7 @@ describe('ZkUtils Test Case', () => {
 
       const result = extractTokenTransferInfo(
         JSON.stringify(newAccountCommand),
-        validTokenId
+        customTokenId
       );
 
       expect(result.success).toBe(true);

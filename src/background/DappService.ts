@@ -1595,11 +1595,16 @@ class DappService {
       return false;
     }
     
+    const expectedIsNewAccount = buildData.isNewAccount === true || buildData.isNewAccount === "true";
+    if (extractedInfo.isNewAccount !== expectedIsNewAccount) {
+      return false;
+    }
+    
     const sourceData = {
       sender: buildData.sender as string,
       receiver: buildData.receiver as string,
       amount: buildData.amount as string | number,
-      isNewAccount: extractedInfo.isNewAccount,
+      isNewAccount: expectedIsNewAccount,
     };
 
     try {

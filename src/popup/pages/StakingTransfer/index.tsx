@@ -267,7 +267,7 @@ const StakingTransfer = () => {
       if (result?.rejected || result?.error) {
         setWaitLedgerStatus(false);
         setConfirmModalStatus(false);
-        Toast.info(i18n.t("ledgerRejected"));
+        Toast.info(result?.error?.message || i18n.t("ledgerRejected"));
         return;
       }
       const postRes = await sendStakeTx(result?.payload as Parameters<typeof sendStakeTx>[0], {
