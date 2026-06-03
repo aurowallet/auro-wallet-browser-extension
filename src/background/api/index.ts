@@ -65,6 +65,11 @@ interface TxResult {
   tokenId?: string;
 }
 
+const MAIN_COIN_PRICE_NETWORK_IDS = new Set<string>([
+  NetworkID_MAP.mainnet,
+  NetworkID_MAP.zekomainnet,
+]);
+
 // ============ Functions ============
 
 /**
@@ -360,7 +365,7 @@ export async function getCurrencyPrice(
   currency: string
 ): Promise<Record<string, number>> {
   const netConfig = await getCurrentNodeConfig();
-  if (netConfig.networkID !== NetworkID_MAP.mainnet) {
+  if (!MAIN_COIN_PRICE_NETWORK_IDS.has(netConfig.networkID)) {
     return {};
   }
   const priceUrl =
