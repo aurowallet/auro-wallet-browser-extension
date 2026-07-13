@@ -29,16 +29,16 @@ module.exports = (env, argv) => {
       const missing = mainExports.filter((name) => !ffExports.includes(name));
 
       if (missing.length === 0) {
-        console.log("o1jsUtils.firefox.js is cover all methods.");
+        console.log("o1jsUtils.firefox.ts is cover all methods.");
       } else {
         console.warn(
-          "o1jsUtils.firefox.js less these methods:",
+          "o1jsUtils.firefox.ts less these methods:",
           missing.join(", ")
         );
         console.warn("please add, or Firefox will load error!");
       }
     } else if (fs.existsSync(mainFile)) {
-      console.warn("Warn: can not find o1jsUtils.firefox.js!");
+      console.warn("Warn: can not find o1jsUtils.firefox.ts!");
     }
   }
 

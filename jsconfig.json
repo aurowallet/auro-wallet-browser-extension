@@ -1,13 +1,17 @@
 {
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
     "jsx": "react-jsx",
-    "baseUrl": ".",
+    "noEmit": true,
     "paths": {
-      "@/*": ["src/*"],
-      "@/utils/o1jsUtils": ["src/utils/o1jsUtils.js"],
-      "@/utils/o1jsUtils.js": ["src/utils/o1jsUtils.js"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.js", "src/**/*.jsx"],
   "exclude": ["node_modules", "dist", "dist-chrome", "dist-firefox"]
 }
