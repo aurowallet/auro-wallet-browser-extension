@@ -1,13 +1,13 @@
 {
   "name": "auro-wallet",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "private": true,
   "dependencies": {
     "@ledgerhq/hw-transport-webhid": "6.30.9",
     "@ledgerhq/devices": "8.7.0",
     "@reduxjs/toolkit": "2.11.1",
     "@aurowallet/mina-provider": "1.0.14",
-    "axios": "1.16.0",
+    "axios": "1.18.1",
     "axios-retry": "4.5.0",
     "bignumber.js": "9.3.0",
     "@scure/bip32": "1.7.0",
@@ -24,7 +24,7 @@
     "react-i18next": "16.5.0",
     "react-idle-timer": "5.7.2",
     "react-redux": "9.2.0",
-    "react-router-dom": "7.12.0",
+    "react-router-dom": "7.15.1",
     "react-circular-progressbar": "2.2.0",
     "buffer": "6.0.3",
     "uuid": "11.1.1",
@@ -75,7 +75,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "7.28.5",
+    "@babel/core": "7.29.7",
     "@babel/preset-env": "7.28.5",
     "@babel/preset-react": "7.28.5",
     "@babel/preset-typescript": "7.28.5",
@@ -108,9 +108,11 @@
     "util": "0.12.5"
   },
   "resolutions": {
+    "@babel/core": "7.29.7",
     "cross-spawn": "^7.0.5",
     "base-x": "^3.0.11",
-    "**/minimatch": "9.0.7",
+    "ws": "8.21.0",
+    "js-yaml": "3.15.0",
     "ajv": ">=8.18.0",
     "serialize-javascript": ">=7.0.3"
   },

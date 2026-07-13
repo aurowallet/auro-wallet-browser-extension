@@ -171,8 +171,8 @@ module.exports = (env, argv) => {
 function getPerformance() {
   return {
     hints: "warning",
-    maxAssetSize: 4 * 1024 * 1024,
-    maxEntrypointSize: 4 * 1024 * 1024,
+    maxAssetSize: 16 * 1024 * 1024,
+    maxEntrypointSize: 16 * 1024 * 1024,
   };
 }
 

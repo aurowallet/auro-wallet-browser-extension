@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.2]
+### Enhancements
+- Refresh Browserslist compatibility data and align webpack performance thresholds with current production bundle sizes
+
+### Fixes
+- Resolve Yarn audit findings by upgrading axios, react-router-dom, and @babel/core
+- Pin transitive ws, js-yaml, and form-data dependencies to patched versions through yarn.lock/resolutions
+- Remove the broad minimatch resolution and allow compatible minimatch versions per dependency range
+
 ## [2.5.1]
 ### Enhancements
 - Upgrade @aurowallet/mina-provider
