@@ -4,6 +4,7 @@ import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "../../../constant/storageKey";
 import { updateAccountTxV2, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
 import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
+import { getTxHistoryCacheKey } from "../../../utils/utils";
 import Wallet from "../Wallet";
 
 const HomePage = () => {
@@ -15,16 +16,17 @@ const HomePage = () => {
 
   const safeJsonParse = (data: string | null) => {
     try {
-      return JSON.parse(data || '')
+      return JSON.parse(data || '{}')
     } catch (error) {
-      return ""
+      return {}
     }
   }
   const shouldUpdateTxList = useCallback((address: string) => {
     const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
-    const currentHistory = JSON.parse(txHistory || '{}');
-    if (currentHistory?.[address]) {
-      const targetHistory = currentHistory?.[address]
+    const currentHistory = safeJsonParse(txHistory);
+    const cacheKey = getTxHistoryCacheKey(address, currentNode?.networkID);
+    if (currentHistory?.[cacheKey]) {
+      const targetHistory = currentHistory?.[cacheKey]
       const tokenIdList = Object.keys(targetHistory)
       for (let index = 0; index < tokenIdList.length; index++) {
         const tokenId = tokenIdList[index]
@@ -36,7 +38,7 @@ const HomePage = () => {
         }
       }
     }
-  }, [currentNode])
+  }, [currentNode?.networkID])
 
   const updateLocalAccount = useCallback((address: string) => {
      let localShowedTokenIds = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN)
@@ -136,6 +138,10 @@ const HomePage = () => {
   useEffect(() => {
     getLocalCache()
   }, [])
+
+  useEffect(() => {
+    shouldUpdateTxList(currentAccount?.address || '')
+  }, [currentAccount?.address, currentNode?.networkID, shouldUpdateTxList])
 
   useEffect(() => {
     updateLocalDaemonStatus()

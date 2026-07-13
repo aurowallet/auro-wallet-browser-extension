@@ -11,10 +11,11 @@ import {
   addressSlice,
   getAmountForUI,
   getBalanceForUI,
+  getTxHistoryCacheKey,
   isZekoNet,
 } from "@/utils/utils";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import { useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
@@ -99,14 +100,35 @@ const TokenDetail = () => {
   );
   let isFirstRequest = useRef(false);
 
-  const isRequestRef = useRef(false);
+  const activeRequestKeyRef = useRef("");
+  const latestRequestIdRef = useRef(0);
 
   const postTxRetryTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lastBalanceKeyRef = useRef<string>("");
+  const requestContextRef = useRef({
+    address: "",
+    networkID: "",
+    tokenId: "",
+  });
   const clearPostTxRetries = useCallback(() => {
     postTxRetryTimersRef.current.forEach(t => clearTimeout(t));
     postTxRetryTimersRef.current = [];
   }, []);
+  const safeJsonParse = useCallback((data: string | null) => {
+    try {
+      return JSON.parse(data || "{}");
+    } catch (error) {
+      return {};
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    requestContextRef.current = {
+      address: currentAccount.address || "",
+      networkID: currentNode.networkID || "",
+      tokenId: String(token.tokenId || ""),
+    };
+  }, [currentAccount.address, currentNode.networkID, token.tokenId]);
 
   const {
     tokenIconUrl,
@@ -180,96 +202,145 @@ const TokenDetail = () => {
   const saveToLocal = useCallback(
     (newHistory: Record<string, unknown>[]) => {
       const address = currentAccount.address || "";
+      const cacheKey = getTxHistoryCacheKey(address, currentNode.networkID);
       const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
-      const currentHistory = JSON.parse(txHistory || '{}');
-      if (currentHistory?.[address]) {
+      const currentHistory = safeJsonParse(txHistory);
+      if (currentHistory?.[cacheKey]) {
         let newSaveHistory = {
-          ...currentHistory[address],
+          ...currentHistory[cacheKey],
           [token.tokenId as string]: newHistory,
         };
         saveLocal(
           LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
           JSON.stringify({
-            [address]: newSaveHistory,
+            ...currentHistory,
+            [cacheKey]: newSaveHistory,
           })
         );
       } else {
         saveLocal(
           LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
           JSON.stringify({
-            [address]: {
+            ...currentHistory,
+            [cacheKey]: {
               [token.tokenId as string]: newHistory,
             },
           })
         );
       }
     },
-    [currentAccount.address, token.tokenId]
+    [currentAccount.address, currentNode.networkID, safeJsonParse, token.tokenId]
   );
   const requestHistory = useCallback(
     async (address = currentAccount.address || "") => {
-      if (isRequestRef.current) {
+      const requestContext = {
+        address,
+        networkID: currentNode.networkID || "",
+        tokenId: String(token.tokenId || ""),
+      };
+      const requestKey = `${requestContext.address}:${requestContext.networkID}:${requestContext.tokenId}`;
+      if (activeRequestKeyRef.current === requestKey) {
         return;
       }
-      isRequestRef.current = true;
-      let fullTxRequest = getAllTxHistory(address, token.tokenId as string).catch(
-        (err) => err
-      );
-      let getZkAppPendingRequest = getZkAppPendingTx(
-        address
-      ).catch((err) => err);
-      let txResponse;
-      if (isFungibleToken) {
-        txResponse = await Promise.all([fullTxRequest, getZkAppPendingRequest]);
-        let zkStatus = txResponse[0]?.address == currentAccount.address;
-        let zkPendingStatus = txResponse[1]?.address == currentAccount.address;
-        let fullTxList = zkStatus ? txResponse[0].txList : [];
-        let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
-
-        let history: { fullTxList?: unknown[]; zkPendingList?: unknown[]; txPendingList?: unknown[] } = {};
-        if (zkStatus) {
-          history.fullTxList = fullTxList;
-        }
-        if (zkPendingStatus) {
-          history.zkPendingList = zkPendingList;
-        }
-        dispatch(updateAccountTxV2(history as Parameters<typeof updateAccountTxV2>[0], token.tokenId as string));
-        dispatch(updateShouldRequest(false));
-        saveToLocal(history as Record<string, unknown>[]);
-      } else {
+      activeRequestKeyRef.current = requestKey;
+      const requestId = latestRequestIdRef.current + 1;
+      latestRequestIdRef.current = requestId;
+      try {
+        let fullTxRequest = getAllTxHistory(address, token.tokenId as string).catch(
+          (err) => err
+        );
         let pendingTxRequest = getPendingTxList(address).catch((err) => err);
-        txResponse = await Promise.all([
-          pendingTxRequest,
-          getZkAppPendingRequest,
-          fullTxRequest,
-        ]).catch((err) => err);
-        let dataStatus_txPending =
-          txResponse[0]?.address == currentAccount.address;
-        let zkPendingStatus = txResponse[1]?.address == currentAccount.address;
-        let dataStatus_tx = txResponse[2]?.address == currentAccount.address;
-        let txPendingList = dataStatus_txPending ? txResponse[0].txList : [];
-        let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
-        let fullTxList = dataStatus_tx ? txResponse[2].txList : [];
-        let history: { fullTxList?: unknown[]; zkPendingList?: unknown[]; txPendingList?: unknown[] } = {};
-        if (dataStatus_txPending) {
-          history.txPendingList = txPendingList;
-        }
-        if (dataStatus_tx) {
-          history.fullTxList = fullTxList;
-        }
-        if (zkPendingStatus) {
-          history.zkPendingList = zkPendingList;
-        }
-        dispatch(updateAccountTxV2(history as Parameters<typeof updateAccountTxV2>[0], token.tokenId as string));
-        dispatch(updateShouldRequest(false));
-        saveToLocal(history as Record<string, unknown>[]);
-      }
+        let getZkAppPendingRequest = getZkAppPendingTx(
+          address
+        ).catch((err) => err);
+        let txResponse;
+        if (isFungibleToken) {
+          txResponse = await Promise.all([
+            pendingTxRequest,
+            getZkAppPendingRequest,
+            fullTxRequest,
+          ]);
+          let dataStatus_txPending =
+            txResponse[0]?.address == requestContext.address;
+          let zkPendingStatus = txResponse[1]?.address == requestContext.address;
+          let zkStatus = txResponse[2]?.address == requestContext.address;
+          let txPendingList = dataStatus_txPending ? txResponse[0].txList : [];
+          let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
+          let fullTxList = zkStatus ? txResponse[2].txList : [];
 
-      isFirstRequest.current = false;
-      setShowLoading(false);
-      isRequestRef.current = false;
+          let history: { fullTxList?: unknown[]; zkPendingList?: unknown[]; txPendingList?: unknown[] } = {};
+          if (dataStatus_txPending) {
+            history.txPendingList = txPendingList;
+          }
+          if (zkStatus) {
+            history.fullTxList = fullTxList;
+          }
+          if (zkPendingStatus) {
+            history.zkPendingList = zkPendingList;
+          }
+          const latestContext = requestContextRef.current;
+          if (
+            latestContext.address === requestContext.address &&
+            latestContext.networkID === requestContext.networkID &&
+            latestContext.tokenId === requestContext.tokenId &&
+            latestRequestIdRef.current === requestId
+          ) {
+            dispatch(updateAccountTxV2(history as Parameters<typeof updateAccountTxV2>[0], token.tokenId as string));
+            dispatch(updateShouldRequest(false));
+            saveToLocal(history as Record<string, unknown>[]);
+          }
+        } else {
+          txResponse = await Promise.all([
+            pendingTxRequest,
+            getZkAppPendingRequest,
+            fullTxRequest,
+          ]).catch((err) => err);
+          let dataStatus_txPending =
+            txResponse[0]?.address == requestContext.address;
+          let zkPendingStatus = txResponse[1]?.address == requestContext.address;
+          let dataStatus_tx = txResponse[2]?.address == requestContext.address;
+          let txPendingList = dataStatus_txPending ? txResponse[0].txList : [];
+          let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
+          let fullTxList = dataStatus_tx ? txResponse[2].txList : [];
+          let history: { fullTxList?: unknown[]; zkPendingList?: unknown[]; txPendingList?: unknown[] } = {};
+          if (dataStatus_txPending) {
+            history.txPendingList = txPendingList;
+          }
+          if (dataStatus_tx) {
+            history.fullTxList = fullTxList;
+          }
+          if (zkPendingStatus) {
+            history.zkPendingList = zkPendingList;
+          }
+          const latestContext = requestContextRef.current;
+          if (
+            latestContext.address === requestContext.address &&
+            latestContext.networkID === requestContext.networkID &&
+            latestContext.tokenId === requestContext.tokenId &&
+            latestRequestIdRef.current === requestId
+          ) {
+            dispatch(updateAccountTxV2(history as Parameters<typeof updateAccountTxV2>[0], token.tokenId as string));
+            dispatch(updateShouldRequest(false));
+            saveToLocal(history as Record<string, unknown>[]);
+          }
+        }
+      } finally {
+        const latestContext = requestContextRef.current;
+        const isLatestRequest =
+          latestContext.address === requestContext.address &&
+          latestContext.networkID === requestContext.networkID &&
+          latestContext.tokenId === requestContext.tokenId &&
+          latestRequestIdRef.current === requestId;
+        if (isLatestRequest) {
+          isFirstRequest.current = false;
+          setShowLoading(false);
+        }
+        if (activeRequestKeyRef.current === requestKey) {
+          activeRequestKeyRef.current = "";
+        }
+      }
     },
-    [currentAccount.address, isFungibleToken, token.tokenId, saveToLocal]
+    [currentAccount.address, currentNode.networkID, isFungibleToken, token.tokenId, saveToLocal]
   );
 
   const requestHistoryAfterZekoBalanceChange = useCallback(() => {

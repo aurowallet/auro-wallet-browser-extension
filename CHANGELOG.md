@@ -6,12 +6,15 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Refresh Browserslist compatibility data and align webpack performance thresholds with current production bundle sizes
 - Remove obsolete JavaScript o1js utility shims and align Firefox o1js utility checks with TypeScript sources
+- Add shared transaction history cache key handling and regression coverage for transaction speed-up eligibility
 
 ### Fixes
 - Resolve Yarn audit findings by upgrading axios, react-router-dom, and @babel/core
 - Pin transitive ws, js-yaml, and form-data dependencies to patched versions through yarn.lock/resolutions
 - Remove the broad minimatch resolution and allow compatible minimatch versions per dependency range
 - Migrate TypeScript and JavaScript path alias configuration away from the deprecated baseUrl option
+- Ensure token detail pages only show speed-up for the lowest nonce pending transaction across the current account and network
+- Isolate cached transaction history by network and harden token detail history refresh against stale requests and corrupted cache data
 
 ## [2.5.1]
 ### Enhancements

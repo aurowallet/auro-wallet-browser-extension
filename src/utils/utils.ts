@@ -45,6 +45,10 @@ export function trimSpace(str: unknown): unknown {
   return res;
 }
 
+export function getTxHistoryCacheKey(address: string, networkID?: string): string {
+  return networkID ? `${address}:${networkID}` : address;
+}
+
 // ============ Number Utils ============
 
 export function toNonExponential(ExpNumber: string | number): string {

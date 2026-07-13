@@ -9,6 +9,7 @@ import {
   setScamAndTxList,
   formatAllTxHistory,
 } from '@/utils/reducer';
+import { ZK_DEFAULT_TOKEN_ID } from '@/constant';
 
 describe('Reducer Utils Test', () => {
   // Test data
@@ -264,6 +265,157 @@ describe('Reducer Utils Test', () => {
       
       // Result should be an array
       expect(Array.isArray(result)).toBe(true);
+    });
+
+    it('should only show speed up for the lowest nonce pending transaction across token and main coin transactions', () => {
+      const tokenId = 'customTokenId';
+      const address = 'B62qpjxUpgdjzwQfd8q2gzxi99wN7SCgmofpvw27MBkfNHfHoY2VH32';
+      const result = formatAllTxHistory({
+        tokenId,
+        txPendingList: [
+          {
+            id: 'main-pending',
+            hash: 'mainHash',
+            kind: 'payment',
+            from: address,
+            to: 'B62qreceiver',
+            amount: '1000000000',
+            fee: '10000000',
+            nonce: 1,
+            memo: '',
+            status: 'PENDING',
+          },
+        ],
+        zkPendingList: [
+          {
+            hash: 'tokenHash',
+            zkappCommand: {
+              feePayer: {
+                body: {
+                  publicKey: address,
+                  fee: '10000000',
+                  nonce: 2,
+                },
+              },
+              memo: '',
+              accountUpdates: [
+                {
+                  body: {
+                    publicKey: 'B62qtokenReceiver',
+                    tokenId,
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        fullTxList: [],
+      } as any);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual(expect.objectContaining({ hash: 'tokenHash' }));
+      expect(result[0]).not.toHaveProperty('showSpeedUp');
+      expect(result[1]).toEqual(expect.objectContaining({ showExplorer: true }));
+    });
+
+    it('should show speed up on token detail when the token pending transaction has the lowest nonce', () => {
+      const tokenId = 'customTokenId';
+      const address = 'B62qpjxUpgdjzwQfd8q2gzxi99wN7SCgmofpvw27MBkfNHfHoY2VH32';
+      const result = formatAllTxHistory({
+        tokenId,
+        txPendingList: [
+          {
+            id: 'main-pending',
+            hash: 'mainHash',
+            kind: 'payment',
+            from: address,
+            to: 'B62qreceiver',
+            amount: '1000000000',
+            fee: '10000000',
+            nonce: 2,
+            memo: '',
+            status: 'PENDING',
+          },
+        ],
+        zkPendingList: [
+          {
+            hash: 'tokenHash',
+            zkappCommand: {
+              feePayer: {
+                body: {
+                  publicKey: address,
+                  fee: '10000000',
+                  nonce: 1,
+                },
+              },
+              memo: '',
+              accountUpdates: [
+                {
+                  body: {
+                    publicKey: 'B62qtokenReceiver',
+                    tokenId,
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        fullTxList: [],
+      } as any);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual(expect.objectContaining({
+        hash: 'tokenHash',
+        showSpeedUp: true,
+      }));
+      expect(result[1]).toEqual(expect.objectContaining({ showExplorer: true }));
+    });
+
+    it('should keep main coin speed up when it has the lowest nonce', () => {
+      const address = 'B62qpjxUpgdjzwQfd8q2gzxi99wN7SCgmofpvw27MBkfNHfHoY2VH32';
+      const result = formatAllTxHistory({
+        tokenId: ZK_DEFAULT_TOKEN_ID,
+        txPendingList: [
+          {
+            id: 'main-pending',
+            hash: 'mainHash',
+            kind: 'payment',
+            from: address,
+            to: 'B62qreceiver',
+            amount: '1000000000',
+            fee: '10000000',
+            nonce: 1,
+            memo: '',
+            status: 'PENDING',
+          },
+        ],
+        zkPendingList: [
+          {
+            hash: 'tokenHash',
+            zkappCommand: {
+              feePayer: {
+                body: {
+                  publicKey: address,
+                  fee: '10000000',
+                  nonce: 2,
+                },
+              },
+              memo: '',
+              accountUpdates: [],
+            },
+          },
+        ],
+        fullTxList: [],
+      } as any);
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toEqual(expect.objectContaining({ hash: 'tokenHash' }));
+      expect(result[0]).not.toHaveProperty('showSpeedUp');
+      expect(result[1]).toEqual(expect.objectContaining({
+        hash: 'mainHash',
+        showSpeedUp: true,
+      }));
+      expect(result[2]).toEqual(expect.objectContaining({ showExplorer: true }));
     });
   });
 });
