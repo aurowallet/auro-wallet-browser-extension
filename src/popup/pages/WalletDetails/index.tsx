@@ -36,10 +36,10 @@ const WalletDetails = () => {
   const dispatch = useAppDispatch();
   const cache = useAppSelector((state) => state.cache);
   
-  const keyringInfo = cache.keyringInfo || {} as { id?: string; name?: string; type?: string; vaultVersion?: number };
+  const keyringInfo = (cache.keyringInfo || {}) as { id?: string; name?: string; type?: string; vaultVersion?: string | number };
   const { id: keyringId, name: keyringName, type: keyringType, vaultVersion } = keyringInfo;
 
-  const [walletName, setWalletName] = useState(keyringName || "");
+  const [walletName, setWalletName] = useState<string>(keyringName || "");
   const [popupModalStatus, setPopupModalStatus] = useState(false);
   interface ModalConfig {
     title?: string;
@@ -68,7 +68,8 @@ const WalletDetails = () => {
 
   const onConfirmRename = useCallback(
     (data: { inputValue: string }) => {
-      let checkResult = nameLengthCheck(data.inputValue);
+      const nextWalletName = data.inputValue.trim();
+      let checkResult = nextWalletName.length > 0 && nameLengthCheck(nextWalletName);
       if (checkResult) {
         Loading.show();
         sendMsg(
@@ -76,7 +77,7 @@ const WalletDetails = () => {
             action: WALLET_RENAME_KEYRING,
             payload: {
               keyringId,
-              name: data.inputValue.trim(),
+              name: nextWalletName,
             },
           },
           (result: { error?: string }) => {
@@ -85,7 +86,7 @@ const WalletDetails = () => {
               Toast.info(result.error);
               return;
             }
-            const newName = data.inputValue.trim();
+            const newName = nextWalletName;
             setWalletName(newName);
             // Update redux cache so AccountManage reflects the new name
             dispatch(setKeyringInfo({ ...keyringInfo, name: newName }));
@@ -106,12 +107,13 @@ const WalletDetails = () => {
       onLeftBtnClick: onCloseModal,
       onRightBtnClick: onConfirmRename,
       content: "",
-      inputPlaceholder: i18n.t("accountNameLimit"),
+      inputPlaceholder: walletName || i18n.t("accountNameLimit"),
       maxInputLength: 16,
       rightBtnStyle: "",
     });
+    setResetModalBtnStatus(true);
     setPopupModalStatus(true);
-  }, [onConfirmRename]);
+  }, [onCloseModal, onConfirmRename, walletName]);
 
   const onClickSeedPhrase = useCallback(() => {
     if (!isHDWallet) {
@@ -164,7 +166,7 @@ const WalletDetails = () => {
   );
 
   const onResetModalInput = useCallback((e: InputChangeEvent) => {
-    let checkStatus = e.target.value.length > 0;
+    let checkStatus = e.target.value.trim().length > 0;
     setResetModalBtnStatus(!checkStatus);
   }, []);
 

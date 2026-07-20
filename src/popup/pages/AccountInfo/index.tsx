@@ -64,6 +64,10 @@ const AccountInfo = () => {
   const [showSecurity, setShowSecurity] = useState(false);
   const [resetModalBtnStatus,setResetModalBtnStatus] = useState(true)
   const [btnLoading, setBtnLoading] = useState(false)
+  const accountDisplayName = useMemo(
+    () => account.accountName || account.name || "",
+    [account.accountName, account.name]
+  );
 
   const onCloseModal = useCallback(() => {
     setPopupModalStatus(false);
@@ -71,14 +75,15 @@ const AccountInfo = () => {
 
   const onConfirmChange = useCallback(
     (data: { inputValue: string }) => {
-      let checkResult = nameLengthCheck(data.inputValue);
+      const nextAccountName = data.inputValue.trim();
+      let checkResult = nextAccountName.length > 0 && nameLengthCheck(nextAccountName);
       if (checkResult) {
         sendMsg(
           {
             action: WALLET_CHANGE_ACCOUNT_NAME,
             payload: {
               address: account.address,
-              accountName: data.inputValue.trim(),
+              accountName: nextAccountName,
             },
           },
           (account: { account: AccountInfoType }) => {
@@ -106,12 +111,13 @@ const AccountInfo = () => {
       onLeftBtnClick: onCloseModal,
       onRightBtnClick: onConfirmChange,
       content: "",
-      inputPlaceholder: i18n.t("accountNameLimit"),
+      inputPlaceholder: accountDisplayName || i18n.t("accountNameLimit"),
       maxInputLength: 16,
       rightBtnStyle:""
     });
+    setResetModalBtnStatus(true);
     setPopupModalStatus(true);
-  }, [i18n]);
+  }, [accountDisplayName, i18n, onCloseModal, onConfirmChange]);
 
   const showPrivateKey = useCallback(() => {
     navigate("/show_privatekey_page", { state: { address: account.address } });
@@ -241,7 +247,7 @@ const AccountInfo = () => {
   );
 
   const onResetModalInput = useCallback((e: React.ChangeEvent<HTMLInputElement>)=>{
-    let checkStatus = e.target.value.length > 0 
+    let checkStatus = e.target.value.trim().length > 0
     if (checkStatus) {
         setResetModalBtnStatus(false)
     }else{
@@ -272,7 +278,7 @@ const AccountInfo = () => {
         <StyledRowInfoContainer>
           <AccountInfoRow
             title={i18n.t("accountName")}
-            desc={account.accountName as string}
+            desc={accountDisplayName}
             onClick={onClickAccountName}
           />
           {isLedger && (
