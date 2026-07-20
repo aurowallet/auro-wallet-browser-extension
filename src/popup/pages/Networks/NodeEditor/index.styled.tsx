@@ -41,6 +41,7 @@ export const StyledDeleteBtn = styled.p`
   color: ${({ theme }) => theme.colors.error};
   margin: 0 10px 0px 0px;
   cursor: pointer;
+  text-transform: capitalize;
 `;
 
 export const StyledModalDelete = styled.span`

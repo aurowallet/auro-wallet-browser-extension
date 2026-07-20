@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade mina-signer to 4.1.0
 - Add zkApp signer era detection for Berkeley and Mesa transaction formats
 - Rename zkApp transaction status polling type from Berkeley-QA to ZKAPP_TX
-
+- Update network node editor UI
 ### Fixes
 - Resolve Yarn audit findings by upgrading axios, react-router-dom, and @babel/core
 - Pin transitive ws, js-yaml, and form-data dependencies to patched versions through yarn.lock/resolutions
