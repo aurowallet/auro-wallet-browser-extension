@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 - Refresh Browserslist compatibility data and align webpack performance thresholds with current production bundle sizes
 - Remove obsolete JavaScript o1js utility shims and align Firefox o1js utility checks with TypeScript sources
 - Add shared transaction history cache key handling and regression coverage for transaction speed-up eligibility
+- Upgrade mina-signer to 4.1.0
+- Add zkApp signer era detection for Berkeley and Mesa transaction formats
+- Rename zkApp transaction status polling type from Berkeley-QA to ZKAPP_TX
 
 ### Fixes
 - Resolve Yarn audit findings by upgrading axios, react-router-dom, and @babel/core
@@ -15,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Migrate TypeScript and JavaScript path alias configuration away from the deprecated baseUrl option
 - Ensure token detail pages only show speed-up for the lowest nonce pending transaction across the current account and network
 - Isolate cached transaction history by network and harden token detail history refresh against stale requests and corrupted cache data
+- Reject token build commands with unsupported or mixed Berkeley/Mesa zkApp state lengths
 
 ## [2.5.1]
 ### Enhancements

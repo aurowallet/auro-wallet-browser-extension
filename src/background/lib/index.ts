@@ -6,6 +6,7 @@ import i18n from "i18next";
 import { DAppActions } from "@aurowallet/mina-provider";
 import { errorCodes } from "@/constant/dappError";
 import { NetworkID_MAP } from "@/constant/network";
+import { getZkappCommandEra, type SignerEra } from "@/utils/zkAppSigner";
 
 // ============ Types ============
 
@@ -47,21 +48,33 @@ interface VerifyResult {
 
 // ============ Functions ============
 
-export async function getSignClient(existingNetConfig?: { networkID?: string }): Promise<MinaSignerClient> {
+function getSignerNetwork(networkID: string): "mainnet" | "testnet" | { custom: string } {
+  if (networkID === NetworkID_MAP.mainnet) {
+    return "mainnet";
+  }
+  if (networkID === NetworkID_MAP.zekomainnet) {
+    return { custom: "zeko-mainnet" };
+  }
+  return "testnet";
+}
+
+export async function getSignClient(
+  existingNetConfig?: { networkID?: string },
+  options?: { era?: SignerEra }
+): Promise<MinaSignerClient> {
   const netConfig = existingNetConfig || await getCurrentNodeConfig();
   let networkID = "";
   const { default: Client } = await import("mina-signer");
   if (netConfig.networkID) {
     networkID = netConfig.networkID;
   }
-  let client;
-  if (networkID === NetworkID_MAP.mainnet) {
-    client = new Client({ network: "mainnet" });
-  } else if (networkID === NetworkID_MAP.zekomainnet) {
-    client = new Client({ network: { custom: "zeko-mainnet" } });
-  } else {
-    client = new Client({ network: "testnet" });
+  const clientOptions: { network: ReturnType<typeof getSignerNetwork>; era?: SignerEra } = {
+    network: getSignerNetwork(networkID),
+  };
+  if (options?.era) {
+    clientOptions.era = options.era;
   }
+  const client = new Client(clientOptions);
   return client as unknown as MinaSignerClient;
 }
 
@@ -213,13 +226,15 @@ export async function signTransaction(
   let signResult: SignedPayment;
   try {
     const netConfig = await getCurrentNodeConfig();
-    const signClient = await getSignClient(netConfig);
+    let signClient: MinaSignerClient | null = null;
     let signBody: unknown = {};
 
     if (params.sendAction === DAppActions.mina_signMessage) {
+      signClient = await getSignClient(netConfig);
       signBody = params.message;
     } else if (params.sendAction === DAppActions.mina_sendTransaction) {
       const parseTx = JSON.parse(params.transaction || "{}");
+      signClient = await getSignClient(netConfig, { era: getZkappCommandEra(parseTx) });
       if (
         params.feePayerAddress &&
         params.feePayerAddress !== ZK_EMPTY_PUBLICKEY &&
@@ -254,6 +269,7 @@ export async function signTransaction(
         };
       }
     } else {
+      signClient = await getSignClient(netConfig);
       signBody = buildSignTxBody(params);
     }
     signResult = signClient.signTransaction(signBody, privateKey);
@@ -324,4 +340,3 @@ export async function createNullifier(
   }
   return createResult;
 }
-

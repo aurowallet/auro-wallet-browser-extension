@@ -244,7 +244,7 @@ describe('ZkUtils Test Case', () => {
       expect(result).toBe(false);
     });
 
-    it('should accept transaction with appState in update (standard Mina protocol field)', () => {
+    it('should reject transaction with unsupported appState length in update', () => {
       const maliciousCommand = {
         feePayer: {
           body: { publicKey: sender, fee: '100000000', validUntil: null },
@@ -289,7 +289,151 @@ describe('ZkUtils Test Case', () => {
         validTokenId,
         JSON.stringify(maliciousCommand)
       );
+      expect(result).toBe(false);
+    });
+
+    it('should accept token transfer with Berkeley appState length', () => {
+      const validCommand = {
+        feePayer: {
+          body: { publicKey: sender, fee: '100000000', validUntil: null },
+          authorization: '7mX...',
+        },
+        accountUpdates: [
+          {
+            body: {
+              publicKey: sender,
+              tokenId: validTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Negative' },
+              update: { appState: Array(8).fill(null) },
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: receiver,
+              tokenId: validTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Positive' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: 'B62qContract789',
+              tokenId: validTokenId,
+              balanceChange: { magnitude: '0', sgn: 'Positive' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+        ],
+      };
+
+      const result = verifyTokenCommand(
+        { sender, receiver, amount, isNewAccount: false },
+        validTokenId,
+        JSON.stringify(validCommand)
+      );
       expect(result).toBe(true);
+    });
+
+    it('should accept token transfer with Mesa appState length', () => {
+      const validCommand = {
+        feePayer: {
+          body: { publicKey: sender, fee: '100000000', validUntil: null },
+          authorization: '7mX...',
+        },
+        accountUpdates: [
+          {
+            body: {
+              publicKey: sender,
+              tokenId: validTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Negative' },
+              update: { appState: Array(32).fill(null) },
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: receiver,
+              tokenId: validTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Positive' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: 'B62qContract789',
+              tokenId: validTokenId,
+              balanceChange: { magnitude: '0', sgn: 'Positive' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+        ],
+      };
+
+      const result = verifyTokenCommand(
+        { sender, receiver, amount, isNewAccount: false },
+        validTokenId,
+        JSON.stringify(validCommand)
+      );
+      expect(result).toBe(true);
+    });
+
+    it('should reject token transfer with mixed Berkeley and Mesa state lengths', () => {
+      const mixedCommand = {
+        feePayer: {
+          body: { publicKey: sender, fee: '100000000', validUntil: null },
+          authorization: '7mX...',
+        },
+        accountUpdates: [
+          {
+            body: {
+              publicKey: sender,
+              tokenId: validTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Negative' },
+              update: { appState: Array(8).fill(null) },
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: receiver,
+              tokenId: validTokenId,
+              balanceChange: { magnitude: amount, sgn: 'Positive' },
+              update: { appState: Array(32).fill(null) },
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+          {
+            body: {
+              publicKey: 'B62qContract789',
+              tokenId: validTokenId,
+              balanceChange: { magnitude: '0', sgn: 'Positive' },
+              update: {},
+              callDepth: 0,
+            },
+            authorization: { signature: null },
+          },
+        ],
+      };
+
+      const result = verifyTokenCommand(
+        { sender, receiver, amount, isNewAccount: false },
+        validTokenId,
+        JSON.stringify(mixedCommand)
+      );
+      expect(result).toBe(false);
     });
 
     it('should accept transaction with events (standard Mina protocol field)', () => {

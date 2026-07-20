@@ -266,7 +266,8 @@ const STATUS = {
 };
 
 const default_account_name = "Account 1";
-const FETCH_TYPE_QA = "Berkeley-QA";
+const FETCH_TYPE_ZKAPP_TX = "ZKAPP_TX";
+const LEGACY_FETCH_TYPE_BERKELEY_QA = "Berkeley-QA";
 
 const shuffleWords = (words: string[]): string[] => {
   const list = [...words];
@@ -2801,7 +2802,7 @@ class APIService {
     if (!sendPartyRes.error) {
       let partyRes = sendPartyRes?.sendZkapp?.zkapp || {};
       if (partyRes.id && partyRes.hash) {
-        this.checkTxStatus(partyRes.id, partyRes.hash, FETCH_TYPE_QA);
+        this.checkTxStatus(partyRes.id, partyRes.hash, FETCH_TYPE_ZKAPP_TX);
       }
       return { ...partyRes };
     } else {
@@ -2865,7 +2866,7 @@ class APIService {
       return;
     }
     const gqlUrl = netConfig.url || undefined;
-    if (type === FETCH_TYPE_QA) {
+    if (type === FETCH_TYPE_ZKAPP_TX || type === LEGACY_FETCH_TYPE_BERKELEY_QA) {
       this.fetchQAnetTransactionStatus(paymentId, hash, gqlUrl);
     } else {
       this.fetchTransactionStatus(paymentId, hash, gqlUrl);

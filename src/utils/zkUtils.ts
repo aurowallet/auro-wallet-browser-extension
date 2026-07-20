@@ -5,6 +5,7 @@ import {
   ZK_DEFAULT_TOKEN_ID,
   ZK_EMPTY_PUBLICKEY,
 } from "@/constant";
+import { hasUnsupportedZkappStateLength } from "./zkAppSigner";
 
 interface BalanceChange {
   magnitude: string;
@@ -396,6 +397,10 @@ export function verifyTokenCommand(
     }
 
     if (nextBuildZkCommand.accountUpdates.some(item => !item?.body)) {
+      return false;
+    }
+
+    if (hasUnsupportedZkappStateLength(nextBuildZkCommand)) {
       return false;
     }
 

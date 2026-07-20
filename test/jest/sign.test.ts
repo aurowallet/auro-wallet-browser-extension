@@ -22,6 +22,34 @@ jest.mock('webextension-polyfill', () => ({
 
 // Import module after mocks are set up
 import * as libModule from '@/background/lib';
+import { getZkappCommandEra } from '@/utils/zkAppSigner';
+
+describe('zkApp signer era detection', () => {
+  function buildZkappCommand(stateLength: number) {
+    return {
+      accountUpdates: [
+        {
+          body: {
+            update: { appState: Array(stateLength).fill(null) },
+            preconditions: { account: { state: Array(stateLength).fill(null) } },
+          },
+        },
+      ],
+    };
+  }
+
+  it('should detect Berkeley zkApp command shape', () => {
+    expect(getZkappCommandEra(buildZkappCommand(8))).toBe('berkeley');
+  });
+
+  it('should use mina-signer default era for Mesa zkApp command shape', () => {
+    expect(getZkappCommandEra(buildZkappCommand(32))).toBeUndefined();
+  });
+
+  it('should use mina-signer default era when no Berkeley state length is present', () => {
+    expect(getZkappCommandEra(buildZkappCommand(0))).toBeUndefined();
+  });
+});
 
 describe('Functionality on mainnet', () => {
   beforeEach(() => {
