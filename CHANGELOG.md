@@ -13,9 +13,9 @@ All notable changes to this project will be documented in this file.
 - Update network node editor UI
 - Update account and wallet Rename placeholders
 - Update Ledger supported actions
+- Resolve Yarn audit findings by upgrading axios, react-router-dom, @babel/core, babel-loader, jest, and jest-environment-jsdom
 
 ### Fixes
-- Resolve Yarn audit findings by upgrading axios, react-router-dom, and @babel/core
 - Pin transitive ws, js-yaml, and form-data dependencies to patched versions through yarn.lock/resolutions
 - Remove the broad minimatch resolution and allow compatible minimatch versions per dependency range
 - Migrate TypeScript and JavaScript path alias configuration away from the deprecated baseUrl option
