@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Rename zkApp transaction status polling type from Berkeley-QA to ZKAPP_TX
 - Update network node editor UI
 - Update account and wallet Rename placeholders
+- Update Ledger supported actions
 
 ### Fixes
 - Resolve Yarn audit findings by upgrading axios, react-router-dom, and @babel/core

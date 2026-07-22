@@ -135,6 +135,11 @@ const Ledger_support_action = [
   DAppActions.mina_sign_JsonMessage,
 ];
 
+const Ledger_sign_message_action = [
+  DAppActions.mina_signMessage,
+  DAppActions.mina_sign_JsonMessage,
+];
+
 const StyledJsonView = styled.div`
   overflow-y: auto;
   border-radius: 4px;
@@ -656,7 +661,7 @@ const SignView = ({
             params,
             (currentAccount.hdPath || 0) as number
           );
-        } else if (SIGN_MESSAGE_EVENT.includes(sendAction)) {
+        } else if (Ledger_sign_message_action.includes(sendAction)) {
           let nextMsg = params.message;
           if (sendAction === DAppActions.mina_sign_JsonMessage) {
             nextMsg = JSON.stringify(params.message);
