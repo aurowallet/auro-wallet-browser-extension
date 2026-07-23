@@ -50,6 +50,7 @@ const WalletDetails = () => {
     onRightBtnClick?: (data: { inputValue: string }) => void;
     content?: string;
     inputPlaceholder?: string;
+    inputValue?: string;
     maxInputLength?: number;
     rightBtnStyle?: string;
   }
@@ -100,18 +101,19 @@ const WalletDetails = () => {
 
   const onClickWalletName = useCallback(() => {
     setCurrentModal({
-      title: i18n.t("changeWalletName"),
+      title: i18n.t("walletNameLabel"),
       leftBtnContent: i18n.t("cancel"),
       rightBtnContent: i18n.t("confirm"),
       type: PopupModal_type.input,
       onLeftBtnClick: onCloseModal,
       onRightBtnClick: onConfirmRename,
       content: "",
-      inputPlaceholder: walletName || i18n.t("accountNameLimit"),
+      inputPlaceholder: i18n.t("accountNameLimit"),
+      inputValue: walletName,
       maxInputLength: 16,
       rightBtnStyle: "",
     });
-    setResetModalBtnStatus(true);
+    setResetModalBtnStatus(walletName.trim().length <= 0);
     setPopupModalStatus(true);
   }, [onCloseModal, onConfirmRename, walletName]);
 
@@ -221,6 +223,7 @@ const WalletDetails = () => {
         modalVisible={popupModalStatus}
         onCloseModal={onCloseModal}
         inputPlaceholder={currentModal?.inputPlaceholder}
+        inputValue={currentModal?.inputValue}
         maxInputLength={currentModal?.maxInputLength}
         onInputChange={onResetModalInput}
         rightBtnDisable={resetModalBtnStatus}

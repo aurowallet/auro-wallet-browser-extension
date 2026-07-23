@@ -238,6 +238,24 @@ export function nameLengthCheck(name: string, defaultLength: number = 16): boole
   return realLength <= defaultLength;
 }
 
+export function truncateByCharLength(name: string, maxLength: number = 16): string {
+  let realLength = 0;
+  let result = "";
+
+  for (const char of Array.from(name)) {
+    const charLength = getCharLength(char);
+
+    if (realLength + charLength > maxLength) {
+      break;
+    }
+
+    result += char;
+    realLength += charLength;
+  }
+
+  return result;
+}
+
 // ============ URL Utils ============
 
 export function getOriginFromUrl(url: string | undefined): string {

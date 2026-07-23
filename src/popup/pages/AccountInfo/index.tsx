@@ -57,6 +57,7 @@ const AccountInfo = () => {
     onRightBtnClick?: (data: { inputValue: string }) => void;
     content?: string;
     inputPlaceholder?: string;
+    inputValue?: string;
     maxInputLength?: number;
     rightBtnStyle?: string | typeof StyledModalDelete;
   }
@@ -104,18 +105,19 @@ const AccountInfo = () => {
 
   const onClickAccountName = useCallback(() => {
     setCurrentModal({
-      title: i18n.t("changeAccountName"),
+      title: i18n.t("accountName"),
       leftBtnContent: i18n.t("cancel"),
       rightBtnContent: i18n.t("confirm"),
       type: PopupModal_type.input,
       onLeftBtnClick: onCloseModal,
       onRightBtnClick: onConfirmChange,
       content: "",
-      inputPlaceholder: accountDisplayName || i18n.t("accountNameLimit"),
+      inputPlaceholder: i18n.t("accountNameLimit"),
+      inputValue: accountDisplayName,
       maxInputLength: 16,
       rightBtnStyle:""
     });
-    setResetModalBtnStatus(true);
+    setResetModalBtnStatus(accountDisplayName.trim().length <= 0);
     setPopupModalStatus(true);
   }, [accountDisplayName, i18n, onCloseModal, onConfirmChange]);
 
@@ -319,6 +321,7 @@ const AccountInfo = () => {
         modalVisible={popupModalStatus}
         onCloseModal={onCloseModal}
         inputPlaceholder={currentModal?.inputPlaceholder}
+        inputValue={currentModal?.inputValue}
         bottomTipClass={StyledWarningTip}
         maxInputLength={currentModal?.maxInputLength}
         onInputChange={onResetModalInput}

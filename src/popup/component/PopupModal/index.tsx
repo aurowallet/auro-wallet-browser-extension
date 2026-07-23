@@ -1,5 +1,5 @@
 import { ChangeEvent, ElementType, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { isTrueNumber, nameLengthCheck } from "../../../utils/utils";
+import { getCharLength, isTrueNumber, nameLengthCheck, truncateByCharLength } from "../../../utils/utils";
 import Input from "../Input";
 import { RuleSet } from "styled-components";
 
@@ -17,6 +17,7 @@ interface PopupModalProps {
   modalVisible?: boolean;
   inputType?: string;
   inputPlaceholder?: string;
+  inputValue?: string;
   showBottomTip?: boolean;
   bottomTip?: string;
   bottomTipClass?: ElementType;
@@ -62,6 +63,7 @@ export const PopupModal = ({
 
     inputType = "text",
     inputPlaceholder = "",
+    inputValue: initialInputValue = "",
     showBottomTip = false,
     bottomTip = "",
     bottomTipClass,
@@ -74,7 +76,7 @@ export const PopupModal = ({
     zIndex
 }: PopupModalProps) => {
 
-    const [inputValue, setInputValue] = useState("")
+    const [inputValue, setInputValue] = useState(initialInputValue)
 
     const {
         modalTopIcon
@@ -101,22 +103,35 @@ export const PopupModal = ({
 
     const onInput = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         if (maxInputLength !== -1 && isTrueNumber(maxInputLength)) {
-            let checkResult = nameLengthCheck(e.target.value, maxInputLength)
-            if (checkResult) {
-                onInputChange(e)
-                setInputValue(e.target.value)
+            const nextValue = e.target.value
+            const inputType = (e.nativeEvent as InputEvent | undefined)?.inputType || ""
+            const isDeleteOrUndo = inputType.startsWith("delete") || inputType === "historyUndo"
+            const isInsert = inputType.startsWith("insert")
+            const isShortening = getCharLength(nextValue) < getCharLength(inputValue)
+            const shouldKeepOverLimitValue = isDeleteOrUndo || (!isInsert && isShortening)
+            const normalizedValue = nameLengthCheck(nextValue, maxInputLength) || shouldKeepOverLimitValue
+                ? nextValue
+                : truncateByCharLength(nextValue, maxInputLength)
+
+            if (normalizedValue !== nextValue) {
+                e.target.value = normalizedValue
+                e.currentTarget.value = normalizedValue
             }
+            onInputChange(e)
+            setInputValue(normalizedValue)
         } else {
             onInputChange(e)
             setInputValue(e.target.value)
         }
-    }, [onInputChange, maxInputLength])
+    }, [onInputChange, maxInputLength, inputValue])
 
     useEffect(() => {
-        if (!modalVisible && clearWhenClose) {
+        if (modalVisible) {
+            setInputValue(initialInputValue)
+        } else if (clearWhenClose) {
             setInputValue("")
         }
-    }, [modalVisible, clearWhenClose])
+    }, [modalVisible, clearWhenClose, initialInputValue])
 
     return (
         <>

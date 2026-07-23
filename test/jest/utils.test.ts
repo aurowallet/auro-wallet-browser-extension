@@ -30,6 +30,7 @@ import {
   removeUrlFromArrays,
   showNameSlice,
   toNonExponential,
+  truncateByCharLength,
   trimSpace,
   urlValid,
   validatePassword,
@@ -149,6 +150,16 @@ describe('Utils Test', () => {
     });
     it('should return without nameLengthCheck false', () => {
       expect(nameLengthCheck('Import Account 12')).toBe(false);
+    });
+  });
+
+  describe('truncateByCharLength', () => {
+    it('should truncate ascii text by weighted length', () => {
+      expect(truncateByCharLength('Account xxx long name', 16)).toBe('Account xxx long');
+    });
+
+    it('should truncate mixed width text by weighted length', () => {
+      expect(truncateByCharLength('账户 Account Name', 8)).toBe('账户 Acc');
     });
   });
 
