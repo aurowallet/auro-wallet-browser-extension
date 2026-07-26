@@ -48,6 +48,7 @@ import Welcome from '../pages/Welcome';
 import { CreateProcessPage } from '../pages/CreateProcessPage';
 import AddAccount from '../pages/AddAccount';
 import TokenDetail from '../pages/TokenDetail';
+import NftDetail from '../pages/NftDetail';
 import TokenSignPage from '../pages/Send/tokenSign';
 
 import Preferences from '../pages/Preferences';
@@ -210,6 +211,7 @@ export function getAllRouter() {
         <Route path="/add_account" element={<AddAccount />} />
         
         <Route path="/token_detail" element={<TokenDetail />} />
+        <Route path="/nft_detail" element={<NftDetail />} />
 
         <Route path="/credential_manage" element={<CredentialManage />} />
         <Route path="/credential_detail" element={<CredentialDetail />} />

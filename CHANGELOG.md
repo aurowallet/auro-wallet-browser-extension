@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.6.0]
+### Enhancements
+- Add NFT tab to the wallet asset list
+- Add NFT list and detail pages
+
+### Fixes
+
 ## [2.5.2]
 ### Enhancements
 - Refresh Browserslist compatibility data and align webpack performance thresholds with current production bundle sizes

@@ -33,6 +33,7 @@ import {
 import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import NetworkSelect from "../Networks/NetworkSelect";
+import AssetListView from "./component/AssetListView";
 import TokenListView from "./component/TokenListView";
 
 const StyledPageWrapper = styled.div`
@@ -136,7 +137,7 @@ const Wallet = ({}) => {
       </StyledHeaderBarWrapper>
       <StyledPageContent>
         <WalletInfo />
-        <TokenListView />
+        <AssetListView />
       </StyledPageContent>
 
       <PopupModalV2
