@@ -352,5 +352,6 @@
   "networkFee": "Ağ Ücreti",
   "mnemonicLost": "Cüzdan oluşturulamadı. Lütfen işlemi yeniden başlatın.",
   "nMinutes_one": "{{count}} dakika",
-  "nMinutes_other": "{{count}} dakika"
+  "nMinutes_other": "{{count}} dakika",
+  "ledgerZkAppBlindSigningTip": "Ledger'da Blind signing'i etkinleştirin."
 }

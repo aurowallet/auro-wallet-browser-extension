@@ -6,7 +6,7 @@ import i18n from "i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { sendStakeTx, sendTx } from "../../../../../background/api";
+import { sendParty, sendStakeTx, sendTx } from "../../../../../background/api";
 import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../../../constant";
 import {
   ACCOUNT_TYPE,
@@ -109,6 +109,12 @@ interface TxSubmitResponse {
   };
   sendPayment?: {
     payment?: {
+      id?: string;
+      hash?: string;
+    };
+  };
+  sendZkapp?: {
+    zkapp?: {
       id?: string;
       hash?: string;
     };
@@ -278,7 +284,8 @@ const TxListView: React.FC<TxListViewProps> = ({
         setTransactionModalStatus(false);
         return;
       }
-      const detail = (data.sendPayment && data.sendPayment.payment) || {};
+      const detail =
+        data.sendPayment?.payment || data.sendZkapp?.zkapp || {};
       dispatch(updateShouldRequest(true, true));
       if (type === "ledger") {
         sendMsg(
@@ -287,6 +294,7 @@ const TxListView: React.FC<TxListViewProps> = ({
             payload: {
               paymentId: detail.id,
               hash: detail.hash,
+              type: data.sendZkapp?.zkapp ? "ZKAPP_TX" : undefined,
             },
           },
           () => {},
@@ -322,6 +330,41 @@ const TxListView: React.FC<TxListViewProps> = ({
         const hdPath = typeof accountInfo.currentAccount.hdPath === 'number' 
           ? accountInfo.currentAccount.hdPath 
           : parseInt(String(accountInfo.currentAccount.hdPath || '0'), 10);
+        if (nextAction === DAppActions.mina_sendTransaction) {
+          if (!ledgerNextPayload.transaction) {
+            Toast.info(i18n.t("buildFailed"));
+            setBtnLoading(false);
+            return;
+          }
+          const zkResult = await ledgerManager.signZkApp(
+            {
+              transaction: ledgerNextPayload.transaction,
+              fromAddress: ledgerNextPayload.fromAddress,
+              fee: ledgerNextPayload.fee,
+              nonce: ledgerNextPayload.nonce,
+              memo: ledgerNextPayload.memo || "",
+              feePayerAddress: ledgerNextPayload.fromAddress,
+              zkOnlySign: false,
+            },
+            hdPath
+          );
+          if (zkResult?.rejected) {
+            Toast.info(i18n.t("ledgerRejected"));
+            setBtnLoading(false);
+            return;
+          }
+          if (zkResult?.error || !zkResult?.signedZkApp) {
+            setBtnLoading(false);
+            Toast.info(zkResult?.error?.message || "Signature failed");
+            return;
+          }
+          const postRes = await sendParty(
+            zkResult.signedZkApp.data.zkappCommand
+          );
+          onSubmitTx(postRes as TxSubmitResponse, "ledger");
+          return;
+        }
+
         if (nextAction === DAppActions.mina_sendStakeDelegation) {
           signResult = (await ledgerManager.signDelegation(
             ledgerNextPayload,
@@ -682,14 +725,7 @@ const TxItem: React.FC<TxItemProps> = ({
       txData.status === TX_STATUS.PENDING &&
       txData.from === currentAccount.address
     ) {
-      if (
-        currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER &&
-        txData.kind?.toLowerCase() === "zkapp"
-      ) {
-        setShowPendingAction(false);
-      } else {
-        setShowPendingAction(true);
-      }
+      setShowPendingAction(true);
     } else {
       setShowPendingAction(false);
     }

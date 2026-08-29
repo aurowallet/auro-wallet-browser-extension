@@ -352,5 +352,6 @@
   "networkFee": "网络费用",
   "mnemonicLost": "钱包创建失败，请重新开始创建流程。",
   "nMinutes_one": "{{count}}分钟",
-  "nMinutes_other": "{{count}}分钟"
+  "nMinutes_other": "{{count}}分钟",
+  "ledgerZkAppBlindSigningTip": "请在 Ledger 上开启 Blind signing。"
 }

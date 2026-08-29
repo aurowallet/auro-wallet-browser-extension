@@ -621,8 +621,16 @@ const SendPage = () => {
 
     if (!isSendMainToken) {
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        Toast.info(i18n.t("notSupportNow"));
-        return;
+        if (isZeko) {
+          Toast.info(i18n.t("notSupportNow"));
+          return;
+        }
+        const { status } = await ledgerManager.ensureConnect();
+        dispatch(updateLedgerConnectStatus(status));
+        if (status !== LEDGER_STATUS.READY) {
+          setLedgerModalStatus(true);
+          return;
+        }
       }
       let fromAddress = currentAddress || "";
       let toAddressValue = (trimSpace(toAddress) || "") as string;
@@ -669,6 +677,8 @@ const SendPage = () => {
     mainTokenNetInfo?.inferredNonce,
     feeIntervalTime,
     isSendMainToken,
+    isZeko,
+    dispatch,
   ]);
 
   const onLedgerInfoModalConfirm = useCallback(async () => {

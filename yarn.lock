@@ -1687,15 +1687,15 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@ledgerhq/devices@8.5.0":
-  version "8.5.0"
-  resolved "https://registry.npmjs.org/@ledgerhq/devices/-/devices-8.5.0.tgz"
-  integrity sha512-zDB6Pdk6NYYbYis8cWoLLkL9k/IvjhC3hkuuz2lhpJ2AxIs3/PDMUKoyK4DpjPtRyKk1W1lwsnpc6J1i87r4/Q==
+"@ledgerhq/devices@8.15.1":
+  version "8.15.1"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/devices/-/devices-8.15.1.tgz#1c2ce19d3a6521ebfd61f05e0c1f91cb0b76ee51"
+  integrity sha512-o4XEHiwPytnZxYUnOC5JoHX5TPDJpeMXPfXjwhsXVJ9LAbahxQWzC37Iuzk8ZY/oC2yDptzqjs/qNP2y9D9vCA==
   dependencies:
-    "@ledgerhq/errors" "^6.24.0"
-    "@ledgerhq/logs" "^6.13.0"
-    rxjs "^7.8.1"
-    semver "^7.3.5"
+    "@ledgerhq/errors" "^6.36.0"
+    "@ledgerhq/logs" "^6.17.0"
+    rxjs "7.8.2"
+    semver "7.7.3"
 
 "@ledgerhq/devices@8.7.0":
   version "8.7.0"
@@ -1707,10 +1707,15 @@
     rxjs "^7.8.1"
     semver "^7.3.5"
 
-"@ledgerhq/errors@^6.24.0", "@ledgerhq/errors@^6.27.0":
+"@ledgerhq/errors@^6.27.0":
   version "6.27.0"
   resolved "https://registry.npmjs.org/@ledgerhq/errors/-/errors-6.27.0.tgz"
   integrity sha512-EE2hATONHdNP3YWFe3rZwwpSEzI5oN+q/xTjOulnjHZo84TLjungegEJ54A/Pzld0woulkkeVA27FbW5SAO1aA==
+
+"@ledgerhq/errors@^6.36.0":
+  version "6.37.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/errors/-/errors-6.37.0.tgz#b54078180ae474d29592643e2a30e3c8043bff1e"
+  integrity sha512-T5yiKI5UX7ugeocdTF3TUsCIN2BH41Bio4ZeN410YFjFOf3es08n/5JyMzzKwzRgP0blG3HfBf7s7vJKqCSAeg==
 
 "@ledgerhq/hw-transport-webhid@6.30.9":
   version "6.30.9"
@@ -1732,20 +1737,25 @@
     "@ledgerhq/logs" "^6.13.0"
     events "^3.3.0"
 
-"@ledgerhq/hw-transport@6.31.9":
-  version "6.31.9"
-  resolved "https://registry.npmjs.org/@ledgerhq/hw-transport/-/hw-transport-6.31.9.tgz"
-  integrity sha512-HqB2Whl2qbrzyvs9gC/GmLhIy8RO4CWzjqHS4k0bPWDZRqKa8m6H32vjrbXGO//pUL1Mlu87UwvxvLyuICdjwg==
+"@ledgerhq/hw-transport@6.35.4":
+  version "6.35.4"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-6.35.4.tgz#ca9d7689b45a56a5d81c791daab64cbf2fbd7eba"
+  integrity sha512-FMVxiniQp0pgSIEBX9CjXYBuIAH9BTm3OcrN+/2LqkB8QBeFZdiwmO4BeN9nc2aWspe9z6kxN3SuUyouedNokA==
   dependencies:
-    "@ledgerhq/devices" "8.5.0"
-    "@ledgerhq/errors" "^6.24.0"
-    "@ledgerhq/logs" "^6.13.0"
+    "@ledgerhq/devices" "8.15.1"
+    "@ledgerhq/errors" "^6.36.0"
+    "@ledgerhq/logs" "^6.17.0"
     events "^3.3.0"
 
 "@ledgerhq/logs@^6.13.0":
   version "6.13.0"
   resolved "https://registry.npmjs.org/@ledgerhq/logs/-/logs-6.13.0.tgz"
   integrity sha512-4+qRW2Pc8V+btL0QEmdB2X+uyx0kOWMWE1/LWsq5sZy3Q5tpi4eItJS6mB0XL3wGW59RQ+8bchNQQ1OW/va8Og==
+
+"@ledgerhq/logs@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.17.0.tgz#370840b915a0b44fc867fc4e6afc68d26a2055dd"
+  integrity sha512-yra33g5q/AU7+PwAws+GaVpQGUuxnDREjVBnviJjcaJLVKuLzI4pnj8Bd3nY3fypM5k1yZEYKEXfUuGFUjP2+w==
 
 "@napi-rs/wasm-runtime@^0.2.11":
   version "0.2.12"
@@ -2284,19 +2294,19 @@
   resolved "https://registry.npmjs.org/@xtuc/long/-/long-4.2.2.tgz"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zondax/ledger-js@^1.0.1":
-  version "1.3.1"
-  resolved "https://registry.npmjs.org/@zondax/ledger-js/-/ledger-js-1.3.1.tgz"
-  integrity sha512-sDBwsunK2nSzkqJ5xi6QTiVVpAxSy+X1BVcMfKioBsInjktki2SezT7K8Hw6kSlYd3yfOJlw8cs+hqVtxpAGtg==
+"@zondax/ledger-js@^1.3.1":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@zondax/ledger-js/-/ledger-js-1.3.4.tgz#6cd58d722b96eb26c65c80101ed2b6a55162ac5b"
+  integrity sha512-GrMGU22do4Wl7+UkWpXe32HsOuIXF3fVCL4cr/uiEgwwbmBXqzto7yBII7YepnfdMzuNAcXbQ6gO0wh0HZGSBg==
   dependencies:
-    "@ledgerhq/hw-transport" "6.31.9"
+    "@ledgerhq/hw-transport" "6.35.4"
 
-"@zondax/ledger-mina-js@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.npmjs.org/@zondax/ledger-mina-js/-/ledger-mina-js-0.1.1.tgz"
-  integrity sha512-jlq706Vgo5myZlW3DtK+8t+cVOEPMrLiAS6TIGWf2+vQksG8ghmTeMtPdNtBB4cPGTh2d9IOrRWseKum1hbeIw==
+"@zondax/ledger-mina-js@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@zondax/ledger-mina-js/-/ledger-mina-js-0.2.0.tgz#180b34b83519bc143e4e035aa2cb8ad9046317a2"
+  integrity sha512-ADC43CWcsEWTY4DpDLfTOYuSYT8toqX8IKLFkyiub7wBlKAm3zxuKUhXCRl6qGB/aIozxWqBseIRLP7PtG45rg==
   dependencies:
-    "@zondax/ledger-js" "^1.0.1"
+    "@zondax/ledger-js" "^1.3.1"
 
 acorn-import-phases@^1.0.3:
   version "1.0.4"
@@ -4140,11 +4150,6 @@ jest@^30.4.2:
     import-local "^3.2.0"
     jest-cli "30.4.2"
 
-js-sha256@^0.9.0:
-  version "0.9.0"
-  resolved "https://registry.npmjs.org/js-sha256/-/js-sha256-0.9.0.tgz"
-  integrity sha512-sga3MHh9sgQN2+pJ9VYZ+1LPwXOxuBJBA5nrR5/ofPfuiJBE2hnjsaN8se8JznOmGLN2p49Pe5U/ttafcs/apA==
-
 js-tokens@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz"
@@ -4467,18 +4472,50 @@ nwsapi@^2.2.16:
   resolved "https://registry.yarnpkg.com/nwsapi/-/nwsapi-2.2.23.tgz#59712c3a88e6de2bb0b6ccc1070397267019cf6c"
   integrity sha512-7wfH4sLbt4M0gCDzGE6vzQBo0bfTKjU7Sfpqy/7gs1qBfYz2vEJH6vXcBKpO3+6Yu1telwd0t9HpyOoLEQQbIQ==
 
-o1js@2.4.0:
-  version "2.4.0"
-  resolved "https://registry.npmjs.org/o1js/-/o1js-2.4.0.tgz"
-  integrity sha512-IxwPmSJxN+9H+IFwJ5mzasJ6XBcWhamfN9jPqqyUsXgmI8mWuEH3A3s83F9z0570wuO69dbNFvaPCwsIi0QoPA==
+"@o1js/native-darwin-arm64@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@o1js/native-darwin-arm64/-/native-darwin-arm64-3.0.0.tgz#667379742b305a6e15a94e8dfe6a6da77e4dfc2a"
+  integrity sha512-IosDj1L2gifEI8em/WdZsVZWrgKolskMlKOqnHX8su0YLaKFCmibVTztbFNPc9IJJtmzAYCeSY+gfFzRMRlIcA==
+
+"@o1js/native-darwin-x64@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@o1js/native-darwin-x64/-/native-darwin-x64-3.0.0.tgz#1c6294088fa3e4be9032b0a05c9916f75c47ebb0"
+  integrity sha512-twsRh6UBZR+v3bB7d86NWDprsE0VN+qqWEavzhNDLXO7nh5pVf+IXotfY4RJUa02LT591ee8fLLQJ+2GdK0hxg==
+
+"@o1js/native-linux-arm64@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@o1js/native-linux-arm64/-/native-linux-arm64-3.0.0.tgz#bcbfb88867222b559402ef24d883052ab006e0b3"
+  integrity sha512-RcbLDwFSSLcey01jiPBBMdZt9moLrzcUgGjxEd9glyCiXyfre4baDwfNw/5vBoCTY//6lirq2ohk+NH9d4bTfQ==
+
+"@o1js/native-linux-x64@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@o1js/native-linux-x64/-/native-linux-x64-3.0.0.tgz#47ccf791ce345fd82100f8ac3b44dd0e17cd10fb"
+  integrity sha512-qmsYxlGSzgEgN+EzJw+MbhD7lBFttBIh3N9peNf54CKvam1ZIIz4vMJdu6flVCRPBH090vSkAgcD1eNNwvQDmw==
+
+"@o1js/native@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@o1js/native/-/native-3.0.0.tgz#836bbd5cc5408d38319be23d9428191757a6af73"
+  integrity sha512-hVnEZTeHgaZ7hNwwUsCdmRz5RjXRnfvlP5c2/OUaKWMHtwW6NeVZhJ877IUwxwbCbwFKZwe0eYxMpiQ9rP1Bug==
+  optionalDependencies:
+    "@o1js/native-darwin-arm64" "3.0.0"
+    "@o1js/native-darwin-x64" "3.0.0"
+    "@o1js/native-linux-arm64" "3.0.0"
+    "@o1js/native-linux-x64" "3.0.0"
+
+o1js@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/o1js/-/o1js-3.0.0.tgz#637895383fead8453e8c42e714b3be76b34ad3af"
+  integrity sha512-+HH4vi2EpzVSFBNK+UzGvsyElxeF1TzrK5tBHC/pTExk/nj17rQ78vT7WFYvr6UrysJw+zzFF0fKVm1yqr4Jgw==
   dependencies:
+    "@noble/hashes" "^1.7.1"
     blakejs "1.2.1"
     cachedir "^2.4.0"
-    js-sha256 "^0.9.0"
     libsodium-wrappers-sumo "^0.7.15"
     reflect-metadata "^0.1.13"
     stacktrace-js "^2.0.2"
     tslib "^2.3.0"
+  optionalDependencies:
+    "@o1js/native" "3.0.0"
 
 once@^1.3.0:
   version "1.4.0"
@@ -4939,7 +4976,7 @@ rrweb-cssom@^0.8.0:
   resolved "https://registry.yarnpkg.com/rrweb-cssom/-/rrweb-cssom-0.8.0.tgz#3021d1b4352fbf3b614aaeed0bc0d5739abe0bc2"
   integrity sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw==
 
-rxjs@^7.8.1:
+rxjs@7.8.2, rxjs@^7.8.1:
   version "7.8.2"
   resolved "https://registry.npmjs.org/rxjs/-/rxjs-7.8.2.tgz"
   integrity sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==
@@ -4992,6 +5029,11 @@ schema-utils@^4.2.0, schema-utils@^4.3.0, schema-utils@^4.3.3:
     ajv-formats "^2.1.1"
     ajv-keywords "^5.1.0"
 
+semver@7.7.3, semver@^7.3.5, semver@^7.5.3, semver@^7.5.4, semver@^7.7.2:
+  version "7.7.3"
+  resolved "https://registry.npmjs.org/semver/-/semver-7.7.3.tgz"
+  integrity sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==
+
 semver@^5.6.0:
   version "5.7.2"
   resolved "https://registry.npmjs.org/semver/-/semver-5.7.2.tgz"
@@ -5001,11 +5043,6 @@ semver@^6.3.1:
   version "6.3.1"
   resolved "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz"
   integrity sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==
-
-semver@^7.3.5, semver@^7.5.3, semver@^7.5.4, semver@^7.7.2:
-  version "7.7.3"
-  resolved "https://registry.npmjs.org/semver/-/semver-7.7.3.tgz"
-  integrity sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==
 
 semver@^7.7.4:
   version "7.8.0"

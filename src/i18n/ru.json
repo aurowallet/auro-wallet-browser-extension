@@ -352,5 +352,6 @@
   "networkFee": "Сетевая комиссия",
   "mnemonicLost": "Не удалось создать кошелёк. Пожалуйста, начните процесс заново.",
   "nMinutes_one": "{{count}} минута",
-  "nMinutes_other": "{{count}} минут"
+  "nMinutes_other": "{{count}} минут",
+  "ledgerZkAppBlindSigningTip": "Включите Blind signing на Ledger."
 }

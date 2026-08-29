@@ -352,5 +352,6 @@
   "networkFee": "Network Fee",
   "mnemonicLost": "Wallet creation failed. Please restart the process.",
   "nMinutes_one": "{{count}} minute",
-  "nMinutes_other": "{{count}} minutes"
+  "nMinutes_other": "{{count}} minutes",
+  "ledgerZkAppBlindSigningTip": "Please enable Blind signing on your Ledger."
 }

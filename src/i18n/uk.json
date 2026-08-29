@@ -352,5 +352,6 @@
   "networkFee": "Комісія мережі",
   "mnemonicLost": "Не вдалося створити гаманець. Будь ласка, почніть процес заново.",
   "nMinutes_one": "{{count}} хвилина",
-  "nMinutes_other": "{{count}} хвилин"
+  "nMinutes_other": "{{count}} хвилин",
+  "ledgerZkAppBlindSigningTip": "Увімкніть Blind signing на Ledger."
 }
