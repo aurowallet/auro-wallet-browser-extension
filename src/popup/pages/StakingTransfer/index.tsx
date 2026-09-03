@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "../../types/common";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -168,6 +168,7 @@ const StakingTransfer = () => {
   const [contentList, setContentList] = useState<{ label: string; value: string }[]>([]);
 
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
+  const ledgerOperationRef = useRef<object | null>(null);
   const [btnDisableStatus, setBtnDisableStatus] = useState(() => {
     if (routeParams.menuAdd) {
       return true;
@@ -255,37 +256,76 @@ const StakingTransfer = () => {
   }, [confirmModalStatus]);
 
   const ledgerTransfer = useCallback(
-    async (params: { fromAddress: string; toAddress: string; fee: string | number; nonce: string | number; memo: string }) => {
-      const { status } = await ledgerManager.ensureConnect();
-      if (status !== LEDGER_STATUS.READY) return;
-
-      setWaitLedgerStatus(true);
-      const result = await ledgerManager.signDelegation(
-        params,
-        typeof currentAccount.hdPath === 'number' ? currentAccount.hdPath : 0
-      );
-      if (result?.rejected || result?.error) {
-        setWaitLedgerStatus(false);
-        setConfirmModalStatus(false);
-        Toast.info(result?.error?.message || i18n.t("ledgerRejected"));
+    async (params: { fromAddress: string; toAddress: string; fee: string | number; nonce: string | number; memo: string }, operation: object) => {
+      const connection = await ledgerManager.ensureConnect();
+      dispatch(updateLedgerConnectStatus(connection.status));
+      if (connection.status !== LEDGER_STATUS.READY || !connection.app) {
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setLedgerModalStatus(true);
+        }
         return;
       }
-      const postRes = await sendStakeTx(result?.payload as Parameters<typeof sendStakeTx>[0], {
-        rawSignature: result?.signature as string,
-      });
-      setConfirmModalStatus(false);
-      onSubmitSuccess(postRes as Parameters<typeof onSubmitSuccess>[0], "ledger");
+      try {
+        const result = await ledgerManager.signDelegation(
+          params,
+          typeof currentAccount.hdPath === 'number' ? currentAccount.hdPath : 0,
+          () => {
+            if (ledgerOperationRef.current === operation) {
+              setWaitLedgerStatus(true);
+            }
+          }
+        );
+        if (ledgerOperationRef.current !== operation) return;
+        if (result?.rejected || result?.error) {
+          Toast.info(result?.error?.message || i18n.t("ledgerRejected"));
+          return;
+        }
+        const postRes = await sendStakeTx(result?.payload as Parameters<typeof sendStakeTx>[0], {
+          rawSignature: result?.signature as string,
+        });
+        if (ledgerOperationRef.current !== operation) return;
+        setConfirmModalStatus(false);
+        onSubmitSuccess(postRes as Parameters<typeof onSubmitSuccess>[0], "ledger");
+      } catch (error) {
+        if (ledgerOperationRef.current === operation) {
+          Toast.info(getRealErrorMsg(error) || i18n.t("postFailed"));
+        }
+      } finally {
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setWaitLedgerStatus(false);
+          setConfirmBtnStatus(false);
+          setConfirmModalStatus(false);
+        }
+      }
     },
-    [currentAccount]
+    [currentAccount, onSubmitSuccess, dispatch]
   );
 
     const clickNextStep = useCallback(async () => {
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+        if (ledgerOperationRef.current) {
+          if (ledgerManager.status === LEDGER_STATUS.READY && ledgerManager.app) {
+            setConfirmModalStatus(true);
+            setWaitLedgerStatus(true);
+          } else {
+            ledgerOperationRef.current = null;
+            setConfirmModalStatus(false);
+            setWaitLedgerStatus(false);
+            setLedgerModalStatus(true);
+          }
+          return;
+        }
+        const operation = {};
+        ledgerOperationRef.current = operation;
         const { status } = await ledgerManager.ensureConnect();
+        if (ledgerOperationRef.current !== operation) return;
 
         dispatch(updateLedgerConnectStatus(status));
 
         if (status !== LEDGER_STATUS.READY) {
+          ledgerOperationRef.current = null;
           setLedgerModalStatus(true);
           return;
         }
@@ -304,7 +344,12 @@ const StakingTransfer = () => {
         sendAction: "" as string | undefined,
       };
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        return ledgerTransfer(payload as Parameters<typeof ledgerTransfer>[0]);
+        const operation = ledgerOperationRef.current;
+        if (!operation) return;
+        return ledgerTransfer(
+          payload as Parameters<typeof ledgerTransfer>[0],
+          operation
+        );
       }
       setConfirmBtnStatus(true);
       payload.sendAction = DAppActions.mina_sendStakeDelegation;
@@ -382,18 +427,10 @@ const StakingTransfer = () => {
         });
       }
       setContentList(list);
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        const { status } = await ledgerManager.ensureConnect();
-        dispatch(updateLedgerConnectStatus(status));
-        if (status !== LEDGER_STATUS.READY) {
-          setLedgerModalStatus(true);
-          return;
-        }
-        setConfirmModalStatus(true);
-      } else {
+      if (currentAccount.type !== ACCOUNT_TYPE.WALLET_LEDGER) {
         dispatch(updateLedgerConnectStatus("" as Parameters<typeof updateLedgerConnectStatus>[0]));
-        setConfirmModalStatus(true);
       }
+      setConfirmModalStatus(true);
     }, [
       nodeAddress,
       mainTokenNetInfo,
@@ -413,6 +450,14 @@ const StakingTransfer = () => {
       onConfirm();
     }
   }, [onConfirm]);
+
+  const onLedgerConfirmClose = useCallback(() => {
+    ledgerOperationRef.current = null;
+    setConfirmModalStatus(false);
+    setWaitLedgerStatus(false);
+    setConfirmBtnStatus(false);
+    dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+  }, [dispatch]);
 
   const onClickBlockProducer = useCallback(() => {
     navigate("/staking_list", {
@@ -536,7 +581,7 @@ const StakingTransfer = () => {
         highlightContent={showNodeName || addressSlice(blockAddress, 8)}
         onConfirm={clickNextStep}
         loadingStatus={confirmBtnStatus}
-        onClickClose={onClickClose}
+        onClickClose={waitLedgerStatus ? onLedgerConfirmClose : onClickClose}
         contentList={contentList}
         waitingLedger={waitLedgerStatus}
         showCloseIcon={waitLedgerStatus}

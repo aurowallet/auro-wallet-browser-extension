@@ -74,7 +74,7 @@ const ApprovePage = () => {
 
   useEffect(() => {
     if (!popupLockStatus) {
-      void refreshCurrentAccount();
+      refreshCurrentAccount();
     }
   }, [popupLockStatus, refreshCurrentAccount]);
 

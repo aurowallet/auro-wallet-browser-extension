@@ -353,5 +353,7 @@
   "mnemonicLost": "Не удалось создать кошелёк. Пожалуйста, начните процесс заново.",
   "nMinutes_one": "{{count}} минута",
   "nMinutes_other": "{{count}} минут",
-  "ledgerZkAppBlindSigningTip": "Включите Blind signing на Ledger."
+  "ledgerZkAppUpdateRequired": "Обновите приложение Mina на устройстве Ledger до последней версии.",
+  "ledgerAccountMismatch": "Подключенная учетная запись Ledger не соответствует этой учетной записи кошелька.",
+  "ledgerBusyTip": "Ledger занят. Повторите попытку."
 }

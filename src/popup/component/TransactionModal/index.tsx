@@ -29,6 +29,7 @@ import {
   StyledTitleRow,
   StyledRowTitle,
   StyledRightRow,
+  StyledRowClose,
   StyledDividedLine,
   StyledBottomContent,
   StyledBottomContainer,
@@ -97,14 +98,24 @@ export const TransactionModal = ({
           <StyledInnerContent>
             <div>
               <StyledTitleRow>
-                <StyledRowTitle>{waitingLedger ? i18n.t("waitingLedgerConfirm") : title}</StyledRowTitle>
-                {!waitingLedger && (
-                  <StyledRightRow>
-                    <LedgerStatusView />
-                    <div style={{ marginRight: "6px" }} />
-                    <NetworkStatusView />
-                  </StyledRightRow>
-                )}
+                <StyledRowTitle>
+                  {waitingLedger ? i18n.t("waitingLedgerConfirm") : title}
+                </StyledRowTitle>
+                <StyledRightRow>
+                  {!waitingLedger && (
+                    <>
+                      <LedgerStatusView />
+                      <div style={{ marginRight: "6px" }} />
+                      <NetworkStatusView />
+                    </>
+                  )}
+                  {waitingLedger && (
+                    <StyledRowClose
+                      onClick={onClickClose}
+                      src="/img/icon_nav_close.svg"
+                    />
+                  )}
+                </StyledRightRow>
               </StyledTitleRow>
             </div>
             <StyledDividedLine />

@@ -353,5 +353,7 @@
   "mnemonicLost": "Не вдалося створити гаманець. Будь ласка, почніть процес заново.",
   "nMinutes_one": "{{count}} хвилина",
   "nMinutes_other": "{{count}} хвилин",
-  "ledgerZkAppBlindSigningTip": "Увімкніть Blind signing на Ledger."
+  "ledgerZkAppUpdateRequired": "Оновіть застосунок Mina на пристрої Ledger до останньої версії.",
+  "ledgerAccountMismatch": "Підключений обліковий запис Ledger не відповідає цьому обліковому запису гаманця.",
+  "ledgerBusyTip": "Ledger зайнятий. Будь ласка, повторіть спробу."
 }

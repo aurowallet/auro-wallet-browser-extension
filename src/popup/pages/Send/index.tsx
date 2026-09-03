@@ -6,7 +6,7 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "../../types/common";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -18,7 +18,6 @@ import {
   TRANSACTION_FEE,
 } from "../../../constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
-import { NetworkID_MAP } from "../../../constant/network";
 import {
   QA_SIGN_TRANSACTION,
   WALLET_CHECK_TX_STATUS,
@@ -91,7 +90,6 @@ const SendPage = () => {
     (state) => state.accountInfo.currentAccount.address
   );
   const { feeConfig } = useFeeValidation();
-  const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const token = useAppSelector((state) => state.cache.nextTokenDetail);
 
   const isZeko = useMemo(() => {
@@ -183,6 +181,7 @@ const SendPage = () => {
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [confirmBtnStatus, setConfirmBtnStatus] = useState(false);
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
+  const ledgerOperationRef = useRef<object | null>(null);
 
   const [contentList, setContentList] = useState<{ label: string; value: string; showTimer?: boolean }[]>([]);
   const [btnDisableStatus, setBtnDisableStatus] = useState(true);
@@ -360,26 +359,43 @@ const SendPage = () => {
     }
   }, [confirmModalStatus]);
   const ledgerTransfer = useCallback(
-    async (params: { fromAddress: string; toAddress: string; amount: number; fee: string; nonce: string | number; memo: string }) => {
+    async (params: { fromAddress: string; toAddress: string; amount: number; fee: string; nonce: string | number; memo: string }, operation: object) => {
       if (!ledgerManager.app || ledgerManager.status !== LEDGER_STATUS.READY) {
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+        }
         setLedgerModalStatus(true);
         return;
       }
 
-      setWaitLedgerStatus(true);
+      const connection = await ledgerManager.ensureConnect();
+      dispatch(updateLedgerConnectStatus(connection.status));
+      if (connection.status !== LEDGER_STATUS.READY || !connection.app) {
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setLedgerModalStatus(true);
+        }
+        return;
+      }
       setConfirmBtnStatus(true);
 
       try {
         const result = await ledgerManager.signPayment(
           params,
-          (currentAccount.hdPath as number) || 0
+          (currentAccount.hdPath as number) || 0,
+          () => {
+            if (ledgerOperationRef.current === operation) {
+              setWaitLedgerStatus(true);
+            }
+          }
         ) as { rejected?: boolean; error?: { message?: string }; payload?: unknown; signature?: string } | null;
+        if (ledgerOperationRef.current !== operation) return;
         if (result?.rejected) {
           Toast.info(i18n.t("ledgerRejected"));
           return;
         }
         if (result?.error) {
-          Toast.info(result.error.message || "Signature failed");
+          Toast.info(result.error.message || i18n.t("postFailed"));
           return;
         }
 
@@ -387,16 +403,22 @@ const SendPage = () => {
           rawSignature: result?.signature,
         });
 
+        if (ledgerOperationRef.current !== operation) return;
         onSubmitTx(postRes as Parameters<typeof onSubmitTx>[0], "ledger");
       } catch (err) {
-        Toast.info("Transaction failed");
+        if (ledgerOperationRef.current === operation) {
+          Toast.info(getRealErrorMsg(err) || i18n.t("postFailed"));
+        }
       } finally {
-        setWaitLedgerStatus(false);
-        setConfirmBtnStatus(false);
-        setConfirmModalStatus(false);
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setWaitLedgerStatus(false);
+          setConfirmBtnStatus(false);
+          setConfirmModalStatus(false);
+        }
       }
     },
-    [currentAccount, onSubmitTx]
+    [currentAccount, onSubmitTx, dispatch]
   );
   const buildBodyInLocal = useCallback((buildTokenData: Record<string, unknown>) => {
     sendMsg(
@@ -472,14 +494,33 @@ const SendPage = () => {
     ]
   );
   const clickNextStep = useCallback(async () => {
+    if (
+      currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER &&
+      ledgerOperationRef.current
+    ) {
+      if (ledgerManager.status === LEDGER_STATUS.READY && ledgerManager.app) {
+        setConfirmModalStatus(true);
+        setWaitLedgerStatus(true);
+      } else {
+        ledgerOperationRef.current = null;
+        setConfirmModalStatus(false);
+        setWaitLedgerStatus(false);
+        setLedgerModalStatus(true);
+      }
+      return;
+    }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      if (currentNode.networkID === NetworkID_MAP.zekomainnet) {
+      if (isZeko) {
         Toast.info(i18n.t("notSupportNow"));
         return;
       }
+      const operation = {};
+      ledgerOperationRef.current = operation;
       const { status } = await ledgerManager.ensureConnect();
+      if (ledgerOperationRef.current !== operation) return;
       dispatch(updateLedgerConnectStatus(status));
       if (status !== LEDGER_STATUS.READY) {
+        ledgerOperationRef.current = null;
         setLedgerModalStatus(true);
         return;
       }
@@ -499,7 +540,9 @@ const SendPage = () => {
       memo: realMemo,
     };
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      return ledgerTransfer(payload);
+      const operation = ledgerOperationRef.current;
+      if (!operation) return;
+      return ledgerTransfer(payload, operation);
     }
     setConfirmBtnStatus(true);
     if (!isSendMainToken) {
@@ -527,10 +570,8 @@ const SendPage = () => {
     getRealTransferAmount,
     onSubmitTx,
     ledgerTransfer,
-    ledgerStatus,
     currentAccount,
     currentAddress,
-    currentNode,
     dispatch,
     mainTokenNetInfo?.inferredNonce,
     toAddress,
@@ -539,11 +580,18 @@ const SendPage = () => {
     nextFee,
     isSendMainToken,
     getTokenBody,
+    isZeko,
   ]);
 
   const onClickClose = useCallback(() => {
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      ledgerOperationRef.current = null;
+      dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+    }
     setConfirmModalStatus(false);
-  }, []);
+    setWaitLedgerStatus(false);
+    setConfirmBtnStatus(false);
+  }, [currentAccount.type, dispatch]);
 
   useEffect(() => {
     if (!confirmModalStatus) {
@@ -620,18 +668,6 @@ const SendPage = () => {
     setContentList(list);
 
     if (!isSendMainToken) {
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        if (isZeko) {
-          Toast.info(i18n.t("notSupportNow"));
-          return;
-        }
-        const { status } = await ledgerManager.ensureConnect();
-        dispatch(updateLedgerConnectStatus(status));
-        if (status !== LEDGER_STATUS.READY) {
-          setLedgerModalStatus(true);
-          return;
-        }
-      }
       let fromAddress = currentAddress || "";
       let toAddressValue = (trimSpace(toAddress) || "") as string;
       let amount = getRealTransferAmount();
@@ -650,14 +686,6 @@ const SendPage = () => {
       return;
     }
 
-    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-      const { status } = await ledgerManager.ensureConnect();
-      dispatch(updateLedgerConnectStatus(status));
-      if (status !== LEDGER_STATUS.READY) {
-        setLedgerModalStatus(true);
-        return;
-      }
-    }
     setConfirmModalStatus(true);
   }, [
     i18n,
@@ -670,8 +698,6 @@ const SendPage = () => {
     currentAccount,
     isAllTransfer,
     getRealTransferAmount,
-    clickNextStep,
-    ledgerStatus,
     availableBalance,
     mainTokenBalance,
     mainTokenNetInfo?.inferredNonce,

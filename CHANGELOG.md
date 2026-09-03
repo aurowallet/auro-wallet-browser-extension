@@ -7,10 +7,14 @@ All notable changes to this project will be documented in this file.
 - Add Ledger zkApp transaction signing, broadcasting, and sign-only responses
 - Enable Ledger token transfers on supported networks
 - Add zkApp-aware Ledger confirmation content and transaction status tracking
+- Support Ledger transaction speed-up and cancel for payment, delegation, and zkApp transactions
+- Improve Ledger connection, device-state, and error handling
+- Improve Ledger signing reliability and payment signature compatibility
+- Improve Ledger confirmation recovery and waiting-state accuracy
+- Add an optional draggable Ledger status diagnostic widget controlled from Dev Page
 - Keep zkApp `validUntil` when preparing software signing requests
-- Upgrade `@zondax/ledger-mina-js` to 0.2.0
+- Upgrade `@zondax/ledger-mina-js` to 0.2.0 and add `@zondax/ledger-js`
 - Upgrade `o1js` to 3.0.0 for presentation compatibility
-- Support Ledger zkApp transactions speed-up and cancel
 
 ### Fixes
 - Handle zkApp transaction responses when refreshing transaction history

@@ -312,6 +312,7 @@ const SignView = ({
 
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
   const [isLedgerAccount, setIsLedgerAccount] = useState(false);
+  const ledgerOperationRef = useRef<object | null>(null);
 
   const [showRawData, setShowRawData] = useState(false);
   const [showRawDetail, setShowRawDetail] = useState(false);
@@ -642,25 +643,37 @@ const SignView = ({
   const handleLedgerSign = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (params: any) => {
-      const { status } = await ledgerManager.ensureConnect();
-      if (status !== LEDGER_STATUS.READY) {
-        setLedgerModalStatus(true);
+      const operation = ledgerOperationRef.current;
+      if (!operation) return false;
+      const connection = await ledgerManager.ensureConnect();
+      dispatch(updateLedgerConnectStatus(connection.status));
+      if (connection.status !== LEDGER_STATUS.READY || !connection.app) {
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setLedgerModalStatus(true);
+        }
         return false;
       }
-
-      setBtnLoading(true);
+      const onAwaitDevice = () => {
+        if (ledgerOperationRef.current === operation) {
+          setConfirmModalStatus(true);
+          setBtnLoading(true);
+        }
+      };
       try {
         let result;
         let response;
         if (sendAction === DAppActions.mina_sendPayment) {
           result = await ledgerManager.signPayment(
             params,
-            (currentAccount.hdPath || 0) as number
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
           );
         } else if (sendAction === DAppActions.mina_sendStakeDelegation) {
           result = await ledgerManager.signDelegation(
             params,
-            (currentAccount.hdPath || 0) as number
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
           );
         } else if (Ledger_sign_message_action.includes(sendAction)) {
           let nextMsg = params.message;
@@ -669,8 +682,10 @@ const SignView = ({
           }
           result = await ledgerManager.signMessage(
             nextMsg as string,
-            (currentAccount.hdPath || 0) as number
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
           );
+          if (ledgerOperationRef.current !== operation) return false;
           const { signature, signedMessage, error } = result || {};
           if (error) {
             setConfirmModalStatus(false);
@@ -685,7 +700,8 @@ const SignView = ({
         } else if (sendAction === DAppActions.mina_sendTransaction) {
           result = await ledgerManager.signZkApp(
             params,
-            (currentAccount.hdPath || 0) as number
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
           );
         } else {
           Toast.info(i18n.t("notSupportNow"));
@@ -693,13 +709,14 @@ const SignView = ({
           return false;
         }
 
+        if (ledgerOperationRef.current !== operation) return false;
         if (result?.rejected) {
           Toast.info(i18n.t("ledgerRejected"));
           setConfirmModalStatus(false);
           return false;
         }
         if (result?.error) {
-          Toast.info(result.error.message || "Signature failed");
+          Toast.info(result.error.message || i18n.t("postFailed"));
           setConfirmModalStatus(false);
           return false;
         }
@@ -708,12 +725,14 @@ const SignView = ({
           if (params.zkOnlySign) {
             response = result.signedZkApp.data;
           } else {
+            if (ledgerOperationRef.current !== operation) return false;
             const sendResponse = (await sendParty(
               result.signedZkApp.data.zkappCommand
             )) as {
               error?: unknown;
               sendZkapp?: { zkapp?: { hash?: string; id?: string } };
             };
+            if (ledgerOperationRef.current !== operation) return false;
             if (sendResponse.error) {
               Toast.info(
                 getRealErrorMsg(sendResponse.error) || i18n.t("postFailed")
@@ -726,6 +745,7 @@ const SignView = ({
         }
 
         if (result?.signature && result?.payload) {
+          if (ledgerOperationRef.current !== operation) return false;
           const sendFn =
             sendAction === DAppActions.mina_sendStakeDelegation
               ? sendStakeTx
@@ -734,6 +754,7 @@ const SignView = ({
           // Ledger returns signature as string for payment/delegation
           const rawSignature = typeof result.signature === 'string' ? result.signature : undefined;
           response = await sendFn(result.payload, { rawSignature });
+          if (ledgerOperationRef.current !== operation) return false;
 
           // Check for error in response
           const txResponse = response as { error?: unknown };
@@ -748,14 +769,19 @@ const SignView = ({
 
         return true;
       } catch (err) {
-        Toast.info("Transaction failed");
-        setConfirmModalStatus(false);
+        if (ledgerOperationRef.current === operation) {
+          Toast.info(getRealErrorMsg(err) || i18n.t("postFailed"));
+          setConfirmModalStatus(false);
+        }
         return false;
       } finally {
-        setBtnLoading(false);
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setBtnLoading(false);
+        }
       }
     },
-    [currentAccount, onSubmitSuccess, sendAction]
+    [currentAccount, onSubmitSuccess, sendAction, dispatch]
   );
   const onStoreInfo = async () => {
     const stringifiedCredential = JSON.stringify(credentialData);
@@ -1173,22 +1199,38 @@ const SignView = ({
       Toast.info(i18n.t("notSupportNow"));
       return;
     }
+    if (
+      currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER &&
+      ledgerOperationRef.current
+    ) {
+      if (ledgerManager.status === LEDGER_STATUS.READY && ledgerManager.app) {
+        setConfirmModalStatus(true);
+      } else {
+        ledgerOperationRef.current = null;
+        setConfirmModalStatus(false);
+        setLedgerModalStatus(true);
+      }
+      return;
+    }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       let support = checkLedgerSupport();
       if (!support) {
         return;
       }
+      const operation = {};
+      ledgerOperationRef.current = operation;
       const { status } = await ledgerManager.ensureConnect();
+      if (ledgerOperationRef.current !== operation) return;
       dispatch(updateLedgerConnectStatus(status));
       if (status !== LEDGER_STATUS.READY) {
+        ledgerOperationRef.current = null;
         setLedgerModalStatus(true);
         return;
       }
-      setConfirmModalStatus(true);
-      clickNextStep();
+      await clickNextStep();
     } else {
       dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
-      clickNextStep();
+      await clickNextStep();
     }
   }, [
     popupLockStatus,
@@ -1421,6 +1463,13 @@ const SignView = ({
     }
   }, [onConfirm]);
 
+  const onLedgerConfirmClose = useCallback(() => {
+    ledgerOperationRef.current = null;
+    setConfirmModalStatus(false);
+    setBtnLoading(false);
+    dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+  }, [dispatch]);
+
   const onResetNonce = useCallback(() => {
     setNonceType(ZkAppValueType.custom);
     setAdvanceNonce("");
@@ -1650,11 +1699,8 @@ const SignView = ({
           modalVisible={confirmModalStatus}
           title={i18n.t("transactionDetails")}
           waitingLedger={isLedgerAccount}
-          waitingContent={
-            isSendZk ? i18n.t("ledgerZkAppBlindSigningTip") : undefined
-          }
           showCloseIcon={isLedgerAccount}
-          onClickClose={() => setConfirmModalStatus(false)}
+          onClickClose={onLedgerConfirmClose}
         />
         <LedgerInfoModal
           modalVisible={ledgerModalStatus}

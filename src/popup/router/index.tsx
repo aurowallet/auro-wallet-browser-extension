@@ -86,7 +86,7 @@ const LockListener = () => {
       }
     };
 
-    void syncCurrentLockStatus();
+    syncCurrentLockStatus();
 
     const lockEvent = (
       message: { type: string; action: string; payload?: boolean },

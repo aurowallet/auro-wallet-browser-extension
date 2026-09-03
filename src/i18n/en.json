@@ -353,5 +353,7 @@
   "mnemonicLost": "Wallet creation failed. Please restart the process.",
   "nMinutes_one": "{{count}} minute",
   "nMinutes_other": "{{count}} minutes",
-  "ledgerZkAppBlindSigningTip": "Please enable Blind signing on your Ledger."
+  "ledgerZkAppUpdateRequired": "Please update the Mina app on your Ledger hardware to the latest version.",
+  "ledgerAccountMismatch": "The connected Ledger account does not match this wallet account.",
+  "ledgerBusyTip": "Ledger is busy. Please try again."
 }

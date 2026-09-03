@@ -1,6 +1,6 @@
 import ledgerManager from "@/utils/ledger";
 import i18n from "i18next";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Trans } from "react-i18next";
 import { useAppSelector } from "@/hooks/useStore";
 import styled, { keyframes } from "styled-components";
@@ -145,6 +145,13 @@ export const LedgerInfoModal = ({
   onClickClose = () => {},
 }: LedgerInfoModalProps) => {
   const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
+  const connectAttemptRef = useRef<object | null>(null);
+
+  useEffect(() => {
+    if (!modalVisible) {
+      connectAttemptRef.current = null;
+    }
+  }, [modalVisible]);
 
   const { nextLedgerTip } = useMemo(() => {
     let tip = "";
@@ -155,8 +162,15 @@ export const LedgerInfoModal = ({
     if (ledgerStatus === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
       tip = "ledgerAppConnectTip";
     }
+    if (ledgerStatus === LEDGER_STATUS.LEDGER_BUSY) {
+      tip = "ledgerBusyTip";
+    }
     return { nextLedgerTip: tip };
   }, [ledgerStatus]);
+  const ledgerErrorMessage =
+    ledgerStatus === LEDGER_STATUS.LEDGER_BUSY
+      ? ledgerManager.getLastErrorMessage()
+      : null;
 
   const onClickReminder = useCallback(() => {
     const params = new URLSearchParams({
@@ -165,8 +179,17 @@ export const LedgerInfoModal = ({
     browser.tabs.create({ url: `popup.html#/ledger_page?${params}` });
   }, []);
 
+  const handleClose = useCallback(() => {
+    connectAttemptRef.current = null;
+    onClickClose();
+  }, [onClickClose]);
+
   const onClickConfirm = async () => {
+    const attempt = {};
+    connectAttemptRef.current = attempt;
     const { status } = await ledgerManager.ensureConnect();
+    if (connectAttemptRef.current !== attempt) return;
+    connectAttemptRef.current = null;
     if (status === LEDGER_STATUS.READY) {
       onConfirm();
     }
@@ -176,14 +199,14 @@ export const LedgerInfoModal = ({
 
   return (
     <>
-      <Overlay onClick={onClickClose} />
+      <Overlay onClick={handleClose} />
 
       <ModalContainer>
         <Header>
           <Title>{title || i18n.t("connectHardwareWallet")}</Title>
           <CloseBtn
             src="/img/icon_nav_close.svg"
-            onClick={onClickClose}
+            onClick={handleClose}
             alt="close"
           />
         </Header>
@@ -205,10 +228,14 @@ export const LedgerInfoModal = ({
 
         {nextLedgerTip && (
           <Reminder>
-            <Trans
-              i18nKey={nextLedgerTip}
-              components={{ click: <Clickable onClick={onClickReminder} /> }}
-            />
+            {ledgerErrorMessage ? (
+              ledgerErrorMessage
+            ) : (
+              <Trans
+                i18nKey={nextLedgerTip}
+                components={{ click: <Clickable onClick={onClickReminder} /> }}
+              />
+            )}
           </Reminder>
         )}
 
