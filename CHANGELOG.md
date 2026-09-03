@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Add Ledger zkApp transaction signing, broadcasting, and sign-only responses
 - Enable Ledger token transfers on supported networks
-- Add zkApp-aware Ledger confirmation content and transaction status tracking
+- Add zkApp-aware Ledger confirmation content, Blind signing reminders, and transaction status tracking
 - Support Ledger transaction speed-up and cancel for payment, delegation, and zkApp transactions
 - Improve Ledger connection, device-state, and error handling
 - Improve Ledger signing reliability and payment signature compatibility

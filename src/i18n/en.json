@@ -355,5 +355,6 @@
   "nMinutes_other": "{{count}} minutes",
   "ledgerZkAppUpdateRequired": "Please update the Mina app on your Ledger hardware to the latest version.",
   "ledgerAccountMismatch": "The connected Ledger account does not match this wallet account.",
-  "ledgerBusyTip": "Ledger is busy. Please try again."
+  "ledgerBusyTip": "Ledger is busy. Please try again.",
+  "ledgerZkAppBlindSigningTip": "Please enable <b>Blind signing</b> on your Ledger."
 }

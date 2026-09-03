@@ -55,6 +55,7 @@ import { useFeeValidation } from "@/hooks/useFeeValidation";
 import { useZekoFee } from "@/hooks/useZekoFee";
 import { getFeeWithZekoMinimum } from "@/utils/fee";
 import i18n from "i18next";
+import { Trans } from "react-i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "@/popup/types/common";
@@ -77,6 +78,7 @@ import {
   StyledTitleRight,
   StyledTitle,
   StyledContent,
+  StyledWebsiteContainer,
   StyledAccountRow,
   StyledRowLeft,
   StyledRowTitle,
@@ -311,7 +313,8 @@ const SignView = ({
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
 
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
-  const [isLedgerAccount, setIsLedgerAccount] = useState(false);
+  const isLedgerAccount =
+    currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER;
   const ledgerOperationRef = useRef<object | null>(null);
 
   const [showRawData, setShowRawData] = useState(false);
@@ -494,10 +497,6 @@ const SignView = ({
     }
     return getFeeWithZekoMinimum(baseFee, isZeko, zekoFee);
   }, [baseFee, feeType, isZeko, zekoFee]);
-
-  useEffect(() => {
-    setIsLedgerAccount(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER);
-  }, [currentAccount]);
 
   const onSelectedTab = useCallback((tabIndex: number) => {
     setSelectedTabIndex(tabIndex);
@@ -1501,12 +1500,20 @@ const SignView = ({
           </StyledTitleRight>
         </StyledTitleRow>
         <StyledContent $showMultiView={showMultiView} $flexLayout={isSendZk}>
-          <div>
+          <StyledWebsiteContainer>
+            {isLedgerAccount && isSendZk && (
+              <StyledHighFeeTip>
+                <Trans
+                  i18nKey="ledgerZkAppBlindSigningTip"
+                  components={{ b: <b /> }}
+                />
+              </StyledHighFeeTip>
+            )}
             <DappWebsite
               siteIcon={signParams?.site?.webIcon}
               siteUrl={signParams?.site?.origin}
             />
-          </div>
+          </StyledWebsiteContainer>
           {sendAction === DAppActions.mina_storePrivateCredential ? (
             <CredentialView
               currentAccount={currentAccount}

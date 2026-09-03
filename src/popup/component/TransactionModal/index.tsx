@@ -16,6 +16,7 @@ interface TransactionModalProps {
   currentNonce?: string;
   btnLoading?: boolean;
   waitingLedger?: boolean;
+  showLedgerBlindSigningTip?: boolean;
 }
 import { Trans } from "react-i18next";
 import { MAIN_COIN_CONFIG } from "../../../constant";
@@ -55,6 +56,7 @@ export const TransactionModalType = {
   speedUp: "SPEED_UP",
   cancel: "CANCEL",
 };
+
 export const TransactionModal = ({
   modalVisible = false,
   title = "",
@@ -68,6 +70,7 @@ export const TransactionModal = ({
   currentNonce = "",
   btnLoading = false,
   waitingLedger = false,
+  showLedgerBlindSigningTip = false,
 }: TransactionModalProps) => {
   const [advanceModalVisible, setAdvanceModalVisible] = useState(false);
   const [nextInputFee, setNextInputFee] = useState(nextFee);
@@ -139,6 +142,18 @@ export const TransactionModal = ({
               </StyledLedgerContent>
             ) : (
               <>
+                {showLedgerBlindSigningTip && (
+                  <StyledModalContent>
+                    <StyledFeeTitle>
+                      <StyledYellowFont>
+                        <Trans
+                          i18nKey="ledgerZkAppBlindSigningTip"
+                          components={{ b: <b /> }}
+                        />
+                      </StyledYellowFont>
+                    </StyledFeeTitle>
+                  </StyledModalContent>
+                )}
                 <StyledModalContent>
                   <Trans
                     i18nKey={modalContent}

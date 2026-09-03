@@ -622,6 +622,10 @@ const TxListView: React.FC<TxListViewProps> = ({
         onConfirm={onClickConfirm as (nextInputFee?: string | number) => void}
         btnLoading={btnLoading}
         waitingLedger={waitLedgerStatus}
+        showLedgerBlindSigningTip={
+          isLedgerAccount &&
+          transactionModalData?.kind?.toLowerCase() === "zkapp"
+        }
       />
       <LedgerInfoModal
         modalVisible={ledgerModalStatus}

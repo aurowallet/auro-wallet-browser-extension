@@ -30,6 +30,7 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
+import { Trans } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "@/popup/types/common";
@@ -629,6 +630,14 @@ const SignView = ({
         </StyledTitleRow>
         <StyledContent>
           <StyledWebsiteContainer>
+            {currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER && (
+              <StyledHighFeeTip>
+                <Trans
+                  i18nKey="ledgerZkAppBlindSigningTip"
+                  components={{ b: <b /> }}
+                />
+              </StyledHighFeeTip>
+            )}
             <DappWebsite
               siteIcon={signParams?.site?.webIcon}
               siteUrl={signParams?.site?.origin}
