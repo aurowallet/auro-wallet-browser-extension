@@ -12,6 +12,7 @@ import {
   getAmountForUI,
   getBalanceForUI,
   getCredentialDisplayData,
+  formatSlotDuration,
   getMessageFromCode,
   getOriginFromUrl,
   getQueryStringArgs,
@@ -36,6 +37,7 @@ import {
   validatePassword,
 } from '@/utils/utils';
 import { parsedZekoFee } from '@/utils/fee';
+import i18n from 'i18next';
 
 const TRANSACTION_FEE = 0.1001;
 
@@ -252,6 +254,29 @@ describe('Utils Test', () => {
   describe('numberFormat', () => {
     it('should return without numberFormat true', () => {
       expect(numberFormat('12.1233a')).toBe('12.1233');
+    });
+  });
+
+  describe('formatSlotDuration', () => {
+    beforeEach(() => {
+      jest.spyOn(i18n, 't').mockImplementation(((_key: string, options?: { count?: number }) => {
+        return `${options?.count} minutes`;
+      }) as typeof i18n.t);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should default to 1.5 minutes when slot duration is unavailable', () => {
+      expect(formatSlotDuration()).toBe('1.5 minutes');
+      expect(formatSlotDuration(0)).toBe('1.5 minutes');
+      expect(formatSlotDuration('invalid')).toBe('1.5 minutes');
+    });
+
+    it('should use a valid slot duration returned by the node', () => {
+      expect(formatSlotDuration(180000)).toBe('3 minutes');
+      expect(formatSlotDuration('90000')).toBe('1.5 minutes');
     });
   });
 

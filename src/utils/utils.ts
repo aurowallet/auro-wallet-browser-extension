@@ -120,7 +120,7 @@ export function numberFormat(str: string): string {
 
 // ============ Slot Duration Utils ============
 
-const DEFAULT_SLOT_DURATION_MS = 180000; // 3 minutes
+const DEFAULT_SLOT_DURATION_MS = 90000; // 1.5 minutes
 
 export function formatSlotDuration(slotDurationMs?: number | string): string {
   const raw = Number(slotDurationMs);

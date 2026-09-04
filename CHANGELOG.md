@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Improve Ledger confirmation recovery and waiting-state accuracy
 - Add an optional draggable Ledger status diagnostic widget controlled from Dev Page
 - Keep zkApp `validUntil` when preparing software signing requests
+- Set the default slot duration display to 1.5 minutes
 - Upgrade `@zondax/ledger-mina-js` to 0.2.0 and add `@zondax/ledger-js`
 - Upgrade `o1js` to 3.0.0 for presentation compatibility
 
