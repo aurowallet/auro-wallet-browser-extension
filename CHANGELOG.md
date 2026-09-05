@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Keep zkApp `validUntil` when preparing software signing requests
 - Remove Zeko networks from the default network list
 - Set the default slot duration display to 1.5 minutes
+- Upgrade router and build dependencies, refresh transitive packages, and remove obsolete resolutions/overrides to address security advisories
 - Upgrade `@zondax/ledger-mina-js` to 0.2.0 and add `@zondax/ledger-js`
 - Upgrade `o1js` to 3.0.0 for presentation compatibility
 

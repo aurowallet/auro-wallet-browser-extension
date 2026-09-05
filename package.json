@@ -25,7 +25,7 @@
     "react-i18next": "16.5.0",
     "react-idle-timer": "5.7.2",
     "react-redux": "9.2.0",
-    "react-router-dom": "7.15.1",
+    "react-router-dom": "7.18.2",
     "react-circular-progressbar": "2.2.0",
     "buffer": "6.0.3",
     "uuid": "11.1.1",
@@ -92,35 +92,21 @@
     "babel-loader": "10.1.1",
     "babel-plugin-module-resolver": "5.0.2",
     "babel-plugin-import": "1.13.8",
-    "copy-webpack-plugin": "13.0.1",
+    "copy-webpack-plugin": "14.0.0",
     "css-loader": "7.1.1",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "ts-jest": "^29.4.6",
+    "terser-webpack-plugin": "5.6.1",
     "path-browserify": "1.0.1",
     "process": "0.11.10",
     "stream-browserify": "3.0.0",
     "style-loader": "4.0.0",
     "typescript": "5.8.3",
-    "webpack": "5.105.3",
+    "webpack": "5.110.3",
     "webpack-cli": "6.0.1",
     "jszip": "3.10.1",
     "deepmerge": "4.2.2",
     "util": "0.12.5"
-  },
-  "resolutions": {
-    "@babel/core": "7.29.7",
-    "cross-spawn": "^7.0.5",
-    "base-x": "^3.0.11",
-    "ws": "8.21.0",
-    "js-yaml": "3.15.0",
-    "ajv": ">=8.18.0",
-    "serialize-javascript": ">=7.0.3"
-  },
-  "overrides": {
-    "cross-spawn": "^7.0.5",
-    "base-x": "^3.0.11",
-    "ajv": ">=8.18.0",
-    "serialize-javascript": ">=7.0.3"
   }
 }
