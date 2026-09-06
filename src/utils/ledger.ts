@@ -10,7 +10,6 @@ import { NetworkID_MAP } from "../constant/network";
 import Loading from "../popup/component/Loading";
 import { getCurrentNodeConfig } from "./browserUtils";
 import { isZekoNet } from "./utils";
-import Toast from "@/popup/component/Toast";
 import {
   applyLedgerZkAppSignature,
   fieldElementToLedgerBytes,
@@ -96,6 +95,7 @@ interface LedgerResponseInfo {
   success: boolean;
   rejected: boolean;
   busy: boolean;
+  appNotOpen: boolean;
   message: string;
 }
 
@@ -151,6 +151,7 @@ function resolveLedgerResponse(
   const transportBusy =
     value?.id === "TransportLocked" ||
     value?.name === "TransportRaceCondition";
+  const appNotOpen = hasCode(LedgerError.AppDoesNotSeemToBeOpen);
   const busy =
     !rejected &&
     (transportBusy ||
@@ -172,6 +173,7 @@ function resolveLedgerResponse(
     success: hasCode(LedgerError.NoErrors),
     rejected,
     busy,
+    appNotOpen,
     message,
   };
 }
@@ -304,6 +306,8 @@ export class LedgerManager {
     const info = resolveLedgerResponse(response, options);
     if (info.busy) {
       this._update(LEDGER_STATUS.LEDGER_BUSY, info.message);
+    } else if (info.appNotOpen) {
+      this._update(LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN);
     }
     return info;
   }
@@ -405,7 +409,7 @@ export class LedgerManager {
     }
 
     if (sawBusy) {
-      this._update(LEDGER_STATUS.LEDGER_BUSY);
+      this._update(LEDGER_STATUS.LEDGER_BUSY, null);
     } else if (sawAppNotOpen) {
       this._update(LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN);
     }
@@ -582,7 +586,7 @@ export class LedgerManager {
     ) {
       // Do not wait indefinitely behind a previous APDU after its UI was closed.
       if (await this._isDeviceLockHeld()) {
-        this._update(LEDGER_STATUS.LEDGER_BUSY);
+        this._update(LEDGER_STATUS.LEDGER_BUSY, null);
         return this._result();
       }
       try {
@@ -658,6 +662,8 @@ export class LedgerManager {
     expectedAddress: string,
     accountIndex: number
   ): Promise<AccountVerificationResult> {
+    // Field-element APDUs do not contain a sender address, so zkApp signing
+    // must bind the requested account to the Ledger-derived public key first.
     if (!expectedAddress) {
       return {
         verified: false,
@@ -695,7 +701,6 @@ export class LedgerManager {
   ): Promise<AddressResult> {
     const connection = await this.ensureConnect();
     if (this.status !== LEDGER_STATUS.READY) {
-      Toast.info(i18n.t("pleaseOpenInLedger"));
       return {
         error: {
           message: resolveLedgerResponse({ status: connection.status }).message,
@@ -726,32 +731,11 @@ export class LedgerManager {
   ): Promise<SignResult | undefined> {
     await this.ensureConnect();
     if (this.status !== LEDGER_STATUS.READY) {
-      Toast.info(i18n.t("pleaseOpenInLedger"));
       return;
     }
     const cfg = await getCurrentNodeConfig();
     if (isZekoNet(cfg.networkID)) {
       return { signature: null, error: { message: i18n.t("notSupportNow") } };
-    }
-
-    try {
-      const verification = await this._verifySigningAccount(
-        body.fromAddress,
-        accountIndex
-      );
-      if (!verification.verified) {
-        return {
-          rejected: verification.rejected,
-          signature: null,
-          error: verification.error,
-        };
-      }
-    } catch (error) {
-      const info = this._resolveLedgerResponse(error);
-      return {
-        signature: null,
-        ...toLedgerFailure(info),
-      };
     }
 
     const networkId = await this._getNetworkId();
@@ -838,7 +822,6 @@ export class LedgerManager {
   ): Promise<SignResult | undefined> {
     await this.ensureConnect();
     if (this.status !== LEDGER_STATUS.READY) {
-      Toast.info(i18n.t("pleaseOpenInLedger"));
       return;
     }
 
@@ -893,7 +876,6 @@ export class LedgerManager {
   ): Promise<SignResult | undefined> {
     await this.ensureConnect();
     if (this.status !== LEDGER_STATUS.READY) {
-      Toast.info(i18n.t("pleaseOpenInLedger"));
       return;
     }
 

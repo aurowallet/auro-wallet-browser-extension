@@ -400,6 +400,7 @@ const SignView = ({
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       const operation = ledgerOperationRef.current;
       if (!operation) return;
+      setBtnLoading(true);
       try {
         const result = await ledgerManager.signZkApp(
           payload,
@@ -407,13 +408,22 @@ const SignView = ({
           () => {
             if (ledgerOperationRef.current === operation) {
               setLedgerConfirmModalStatus(true);
-              setBtnLoading(true);
             }
           }
         );
         if (ledgerOperationRef.current !== operation) return;
-        if (!result) return;
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!result) {
+          setLedgerConfirmModalStatus(false);
+          setLedgerModalStatus(true);
+          return;
+        }
         if (result.error) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerConfirmModalStatus(false);
+            setLedgerModalStatus(true);
+            return;
+          }
           Toast.info(result.error.message);
           return;
         }
@@ -481,6 +491,7 @@ const SignView = ({
     sender,
     showMemo,
     isZeko,
+    dispatch,
   ]);
 
   const startLedgerSigning = useCallback(async (operation?: object) => {
@@ -540,14 +551,6 @@ const SignView = ({
     if (isLedgerAccount) {
       const operation = {};
       ledgerOperationRef.current = operation;
-      const { status } = await ledgerManager.ensureConnect();
-      if (ledgerOperationRef.current !== operation) return;
-      dispatch(updateLedgerConnectStatus(status));
-      if (status !== LEDGER_STATUS.READY) {
-        ledgerOperationRef.current = null;
-        setLedgerModalStatus(true);
-        return;
-      }
       await startLedgerSigning(operation);
       return;
     }
@@ -565,7 +568,6 @@ const SignView = ({
     sender,
     availableBalance,
     tokenDecimal,
-    dispatch,
     startLedgerSigning,
     isZeko,
   ]);

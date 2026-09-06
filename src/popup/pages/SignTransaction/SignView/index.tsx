@@ -644,19 +644,10 @@ const SignView = ({
     async (params: any) => {
       const operation = ledgerOperationRef.current;
       if (!operation) return false;
-      const connection = await ledgerManager.ensureConnect();
-      dispatch(updateLedgerConnectStatus(connection.status));
-      if (connection.status !== LEDGER_STATUS.READY || !connection.app) {
-        if (ledgerOperationRef.current === operation) {
-          ledgerOperationRef.current = null;
-          setLedgerModalStatus(true);
-        }
-        return false;
-      }
+      setBtnLoading(true);
       const onAwaitDevice = () => {
         if (ledgerOperationRef.current === operation) {
           setConfirmModalStatus(true);
-          setBtnLoading(true);
         }
       };
       try {
@@ -685,17 +676,6 @@ const SignView = ({
             onAwaitDevice
           );
           if (ledgerOperationRef.current !== operation) return false;
-          const { signature, signedMessage, error } = result || {};
-          if (error) {
-            setConfirmModalStatus(false);
-            Toast.info(error.message);
-            return;
-          }
-          response = {
-            data: signedMessage,
-            publicKey: params.fromAddress,
-            signature: signature,
-          };
         } else if (sendAction === DAppActions.mina_sendTransaction) {
           result = await ledgerManager.signZkApp(
             params,
@@ -709,15 +689,39 @@ const SignView = ({
         }
 
         if (ledgerOperationRef.current !== operation) return false;
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!result) {
+          setConfirmModalStatus(false);
+          setLedgerModalStatus(true);
+          return false;
+        }
         if (result?.rejected) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setConfirmModalStatus(false);
+            setLedgerModalStatus(true);
+            return false;
+          }
           Toast.info(i18n.t("ledgerRejected"));
           setConfirmModalStatus(false);
           return false;
         }
         if (result?.error) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setConfirmModalStatus(false);
+            setLedgerModalStatus(true);
+            return false;
+          }
           Toast.info(result.error.message || i18n.t("postFailed"));
           setConfirmModalStatus(false);
           return false;
+        }
+
+        if (Ledger_sign_message_action.includes(sendAction)) {
+          response = {
+            data: result.signedMessage,
+            publicKey: params.fromAddress,
+            signature: result.signature,
+          };
         }
 
         if (result?.signedZkApp) {
@@ -1001,6 +1005,7 @@ const SignView = ({
     onStoreInfo,
     onPresentation,
     onRemoveTx,
+    handleLedgerSign,
   ]);
 
   const checkLedgerSupport = useCallback(() => {
@@ -1218,14 +1223,6 @@ const SignView = ({
       }
       const operation = {};
       ledgerOperationRef.current = operation;
-      const { status } = await ledgerManager.ensureConnect();
-      if (ledgerOperationRef.current !== operation) return;
-      dispatch(updateLedgerConnectStatus(status));
-      if (status !== LEDGER_STATUS.READY) {
-        ledgerOperationRef.current = null;
-        setLedgerModalStatus(true);
-        return;
-      }
       await clickNextStep();
     } else {
       dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
@@ -1454,12 +1451,9 @@ const SignView = ({
     return title;
   }, [sendAction, zkOnlySign]);
 
-  const onLedgerInfoModalConfirm = useCallback(async () => {
-    const { status } = await ledgerManager.ensureConnect();
-    if (status === LEDGER_STATUS.READY) {
-      setLedgerModalStatus(false);
-      (onConfirm as (isLedger?: boolean) => void)(true);
-    }
+  const onLedgerInfoModalConfirm = useCallback(() => {
+    setLedgerModalStatus(false);
+    onConfirm();
   }, [onConfirm]);
 
   const onLedgerConfirmClose = useCallback(() => {

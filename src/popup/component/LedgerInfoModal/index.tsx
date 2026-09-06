@@ -1,11 +1,12 @@
 import ledgerManager from "@/utils/ledger";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
-import { useAppSelector } from "@/hooks/useStore";
+import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import styled, { keyframes } from "styled-components";
 import browser from "webextension-polyfill";
 import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
+import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import Button from "../Button";
 
 const slideUp = keyframes`
@@ -104,9 +105,10 @@ const StepText = styled.div`
   }
 `;
 
-const Reminder = styled.div`
+const Reminder = styled.div<{ $hidden?: boolean }>`
   margin: 0 20px 30px;
   padding: 12px;
+  visibility: ${({ $hidden }) => ($hidden ? "hidden" : "visible")};
   background: rgba(214, 90, 90, 0.1);
   border: 1px solid #d65a5a;
   border-radius: 10px;
@@ -144,12 +146,15 @@ export const LedgerInfoModal = ({
   onConfirm = () => {},
   onClickClose = () => {},
 }: LedgerInfoModalProps) => {
+  const dispatch = useAppDispatch();
   const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const connectAttemptRef = useRef<object | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
 
   useEffect(() => {
     if (!modalVisible) {
       connectAttemptRef.current = null;
+      setIsChecking(false);
     }
   }, [modalVisible]);
 
@@ -181,17 +186,33 @@ export const LedgerInfoModal = ({
 
   const handleClose = useCallback(() => {
     connectAttemptRef.current = null;
+    setIsChecking(false);
     onClickClose();
   }, [onClickClose]);
 
   const onClickConfirm = async () => {
+    if (connectAttemptRef.current) return;
+
     const attempt = {};
     connectAttemptRef.current = attempt;
-    const { status } = await ledgerManager.ensureConnect();
-    if (connectAttemptRef.current !== attempt) return;
-    connectAttemptRef.current = null;
-    if (status === LEDGER_STATUS.READY) {
-      onConfirm();
+    setIsChecking(true);
+
+    try {
+      const { status } = await ledgerManager.ensureConnect();
+      if (connectAttemptRef.current !== attempt) return;
+
+      dispatch(updateLedgerConnectStatus(status));
+      if (status === LEDGER_STATUS.READY) {
+        onConfirm();
+      }
+    } catch {
+      if (connectAttemptRef.current !== attempt) return;
+      dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+    } finally {
+      if (connectAttemptRef.current === attempt) {
+        connectAttemptRef.current = null;
+        setIsChecking(false);
+      }
     }
   };
 
@@ -227,7 +248,7 @@ export const LedgerInfoModal = ({
         </Steps>
 
         {nextLedgerTip && (
-          <Reminder>
+          <Reminder $hidden={isChecking}>
             {ledgerErrorMessage ? (
               ledgerErrorMessage
             ) : (

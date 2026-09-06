@@ -319,15 +319,7 @@ const TxListView: React.FC<TxListViewProps> = ({
       const nextAction = nextPayload.sendAction;
       const operation = {};
       ledgerOperationRef.current = operation;
-      const connection = await ledgerManager.ensureConnect();
-      dispatch(updateLedgerConnectStatus(connection.status));
-      if (connection.status !== LEDGER_STATUS.READY || !connection.app) {
-        if (ledgerOperationRef.current === operation) {
-          ledgerOperationRef.current = null;
-          setLedgerModalStatus(true);
-        }
-        return;
-      }
+      setBtnLoading(true);
       const onAwaitDevice = () => {
         if (ledgerOperationRef.current === operation) {
           setWaitLedgerStatus(true);
@@ -349,7 +341,6 @@ const TxListView: React.FC<TxListViewProps> = ({
         if (nextAction === DAppActions.mina_sendTransaction) {
           if (!ledgerNextPayload.transaction) {
             showTransactionModalToast(i18n.t("buildFailed"));
-            setBtnLoading(false);
             return;
           }
           const zkResult = await ledgerManager.signZkApp(
@@ -366,13 +357,24 @@ const TxListView: React.FC<TxListViewProps> = ({
             onAwaitDevice
           );
           if (ledgerOperationRef.current !== operation) return;
+          dispatch(updateLedgerConnectStatus(ledgerManager.status));
+          if (!zkResult) {
+            setLedgerModalStatus(true);
+            return;
+          }
           if (zkResult?.rejected) {
+            if (ledgerManager.status !== LEDGER_STATUS.READY) {
+              setLedgerModalStatus(true);
+              return;
+            }
             showTransactionModalToast(i18n.t("ledgerRejected"));
-            setBtnLoading(false);
             return;
           }
           if (zkResult?.error || !zkResult?.signedZkApp) {
-            setBtnLoading(false);
+            if (ledgerManager.status !== LEDGER_STATUS.READY) {
+              setLedgerModalStatus(true);
+              return;
+            }
             showTransactionModalToast(
               zkResult?.error?.message || i18n.t("postFailed")
             );
@@ -401,14 +403,24 @@ const TxListView: React.FC<TxListViewProps> = ({
         }
 
         if (ledgerOperationRef.current !== operation) return;
-
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!signResult) {
+          setLedgerModalStatus(true);
+          return;
+        }
         if (signResult.rejected) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerModalStatus(true);
+            return;
+          }
           showTransactionModalToast(i18n.t("ledgerRejected"));
-          setBtnLoading(false);
           return;
         }
         if (signResult.error) {
-          setBtnLoading(false);
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerModalStatus(true);
+            return;
+          }
           showTransactionModalToast(
             signResult.error.message || i18n.t("postFailed")
           );
@@ -462,7 +474,6 @@ const TxListView: React.FC<TxListViewProps> = ({
         setLedgerModalStatus(true);
         return;
       }
-      setBtnLoading(true);
       const currentAddress = accountInfo.currentAccount.address || '';
       let nextAction = "";
       let nextPayload: TransactionPayload = {} as TransactionPayload;
@@ -538,6 +549,7 @@ const TxListView: React.FC<TxListViewProps> = ({
         return;
       }
 
+      setBtnLoading(true);
       sendMsg<TxSubmitResponse>(
         {
           action: nextAction,
@@ -570,12 +582,9 @@ const TxListView: React.FC<TxListViewProps> = ({
     setTransactionModalStatus(false);
   }, [dispatch, isLedgerAccount, waitLedgerStatus]);
 
-  const onLedgerInfoModalConfirm = useCallback(async (): Promise<void> => {
-    const { status } = await ledgerManager.ensureConnect();
-    if (status === LEDGER_STATUS.READY) {
-      setLedgerModalStatus(false);
-      onClickConfirm(nextFee);
-    }
+  const onLedgerInfoModalConfirm = useCallback((): void => {
+    setLedgerModalStatus(false);
+    onClickConfirm(nextFee);
   }, [nextFee, onClickConfirm]);
 
   return (

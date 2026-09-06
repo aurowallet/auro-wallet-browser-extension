@@ -82,7 +82,6 @@ const StakingTransfer = () => {
     (state) => state.accountInfo.mainTokenNetInfo
   );
   const { feeConfig } = useFeeValidation();
-  const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const { fetchAccountData } = useFetchAccountData(currentAccount as Parameters<typeof useFetchAccountData>[0]);
 
   const stakingList = useAppSelector((state) => state.staking.stakingList);
@@ -286,15 +285,7 @@ const StakingTransfer = () => {
 
   const ledgerTransfer = useCallback(
     async (params: { fromAddress: string; toAddress: string; fee: string | number; nonce: string | number; memo: string }, operation: object) => {
-      const connection = await ledgerManager.ensureConnect();
-      dispatch(updateLedgerConnectStatus(connection.status));
-      if (connection.status !== LEDGER_STATUS.READY || !connection.app) {
-        if (ledgerOperationRef.current === operation) {
-          ledgerOperationRef.current = null;
-          setLedgerModalStatus(true);
-        }
-        return;
-      }
+      setConfirmBtnStatus(true);
       try {
         const result = await ledgerManager.signDelegation(
           params,
@@ -306,7 +297,16 @@ const StakingTransfer = () => {
           }
         );
         if (ledgerOperationRef.current !== operation) return;
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!result) {
+          setLedgerModalStatus(true);
+          return;
+        }
         if (result?.rejected || result?.error) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerModalStatus(true);
+            return;
+          }
           Toast.info(result?.error?.message || i18n.t("ledgerRejected"));
           return;
         }
@@ -348,16 +348,6 @@ const StakingTransfer = () => {
         }
         const operation = {};
         ledgerOperationRef.current = operation;
-        const { status } = await ledgerManager.ensureConnect();
-        if (ledgerOperationRef.current !== operation) return;
-
-        dispatch(updateLedgerConnectStatus(status));
-
-        if (status !== LEDGER_STATUS.READY) {
-          ledgerOperationRef.current = null;
-          setLedgerModalStatus(true);
-          return;
-        }
       }
       let fromAddress = currentAccount.address || "";
       let toAddress = nodeAddress || String(trimSpace(blockAddress) || "");
@@ -394,13 +384,11 @@ const StakingTransfer = () => {
       );
     }, [
       currentAccount,
-      dispatch,
       mainTokenNetInfo?.inferredNonce,
       inputNonce,
       nextFee,
       blockAddress,
       ledgerTransfer,
-      ledgerStatus,
       memo,
     ]);
 
@@ -466,18 +454,13 @@ const StakingTransfer = () => {
       nextFee,
       inputNonce,
       currentAccount,
-      clickNextStep,
       blockAddress,
       memo,
-      ledgerStatus,
     ]);
 
-  const onLedgerInfoModalConfirm = useCallback(async () => {
-    const { status } = await ledgerManager.ensureConnect();
-    if (status === LEDGER_STATUS.READY) {
-      setLedgerModalStatus(false);
-      onConfirm();
-    }
+  const onLedgerInfoModalConfirm = useCallback(() => {
+    setLedgerModalStatus(false);
+    onConfirm();
   }, [onConfirm]);
 
   const onLedgerConfirmClose = useCallback(() => {

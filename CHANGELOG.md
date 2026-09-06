@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixes
 - Handle zkApp transaction responses when refreshing transaction history
+- Consolidate Ledger signing loading and connection checks, prevent duplicate prompts, and clear state on manual close
 
 ## [2.5.2]
 ### Enhancements
