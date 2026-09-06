@@ -1,9 +1,10 @@
 import { useCallback, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
+import { NetworkID_MAP } from "@/constant/network";
 import { getLocal } from "../../../background/localStorage";
 import { LOCAL_CACHE_KEYS, STABLE_LOCAL_ACCOUNT_CACHE_KEYS } from "../../../constant/storageKey";
 import { updateAccountTxV2, updateCurrentPrice, updateLocalShowedTokenId, updateLocalTokenConfig, updateShouldRequest, updateTokenAssets } from "../../../reducers/accountReducer";
-import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingList } from "../../../reducers/stakingReducer";
+import { updateBlockInfo, updateDaemonStatus, updateDelegationInfo, updateStakingAPR, updateStakingList } from "../../../reducers/stakingReducer";
 import { getTxHistoryCacheKey } from "../../../utils/utils";
 import Wallet from "../Wallet";
 
@@ -40,7 +41,7 @@ const HomePage = () => {
     }
   }, [currentNode?.networkID])
 
-  const updateLocalAccount = useCallback((address: string) => {
+  const updateLocalAccount = useCallback((address: string, networkID?: string) => {
      let localShowedTokenIds = getLocal(STABLE_LOCAL_ACCOUNT_CACHE_KEYS.SHOWED_TOKEN)
      if (localShowedTokenIds) {
        let tokenIdsMap = safeJsonParse(localShowedTokenIds)
@@ -57,15 +58,19 @@ const HomePage = () => {
       }
     }
 
-    let localTokenAssets = getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS)
+    let localTokenAssets = getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS_V2)
     if (localTokenAssets) {
       let tokenAssetsMap = safeJsonParse(localTokenAssets)
-      let tokenAssets = tokenAssetsMap ? tokenAssetsMap[address] : ""
+      let tokenAssets = networkID ? tokenAssetsMap?.[networkID]?.[address] : undefined
       if (tokenAssets) {
         dispatch(updateTokenAssets(tokenAssets,true));
+      } else {
+        dispatch(updateTokenAssets([], true));
       }
+    } else {
+      dispatch(updateTokenAssets([], true));
     }
-  }, [])
+  }, [dispatch])
 
   const updateLocalPrice = useCallback(() => {
     let localTokenPrice = getLocal(LOCAL_CACHE_KEYS.COIN_PRICE)
@@ -93,51 +98,64 @@ const HomePage = () => {
     }
   }, [currentNode?.networkID])
 
-  const updateLocalDelegation = useCallback((address: string) => {
-    let localDelegationInfo = getLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO)
+  const updateLocalDelegation = useCallback((address: string, networkID?: string) => {
+    let localDelegationInfo = getLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO_V2)
     if (localDelegationInfo) {
       let localDelegationInfoJson = safeJsonParse(localDelegationInfo)
-      let delegationInfoJson = localDelegationInfoJson ? localDelegationInfoJson[address] : ""
-      if (delegationInfoJson) {
-        dispatch(updateDelegationInfo(delegationInfoJson))
-      }
+      let delegationInfoJson = networkID
+        ? localDelegationInfoJson?.[networkID]?.[address]
+        : undefined
+      dispatch(updateDelegationInfo(delegationInfoJson || {}))
+    } else {
+      dispatch(updateDelegationInfo({}))
     }
-  }, [])
+  }, [dispatch])
 
-  const updateLocalBlock = useCallback(() => {
-    let localBlockInfo = getLocal(LOCAL_CACHE_KEYS.BLOCK_INFO)
+  const updateLocalBlock = useCallback((networkID?: string) => {
+    let localBlockInfo = getLocal(LOCAL_CACHE_KEYS.BLOCK_INFO_V2)
     if (localBlockInfo) {
       let localBlockInfoJson = safeJsonParse(localBlockInfo)
-      if (localBlockInfoJson) {
-        dispatch(updateBlockInfo(localBlockInfoJson))
-      }
+      const blockInfo = networkID ? localBlockInfoJson?.[networkID] : undefined
+      dispatch(updateBlockInfo(blockInfo || {}))
+    } else {
+      dispatch(updateBlockInfo({}))
     }
-  }, [])
+  }, [dispatch])
 
-  const updateLocalStaking = useCallback(() => {
-    let localStakingList = getLocal(LOCAL_CACHE_KEYS.STAKING_LIST)
-    if (localStakingList) {
-      let localStakingListJson = safeJsonParse(localStakingList)
-      if (localStakingListJson) {
-        dispatch(updateStakingList({ stakingList: localStakingListJson }))
-      }
+  const updateLocalStaking = useCallback((networkID?: string) => {
+    if (networkID !== NetworkID_MAP.mainnet) {
+      dispatch(updateStakingList({ stakingList: { active: [], inactive: [] } }))
+      dispatch(updateStakingAPR(null))
+      return
     }
-  }, [])
+    let localStakingList = getLocal(LOCAL_CACHE_KEYS.STAKING_LIST)
+    const localStakingListJson = localStakingList ? safeJsonParse(localStakingList) : undefined
+    if (
+      localStakingListJson &&
+      Array.isArray(localStakingListJson.active) &&
+      Array.isArray(localStakingListJson.inactive)
+    ) {
+      dispatch(updateStakingList({ stakingList: localStakingListJson }))
+    } else {
+      dispatch(updateStakingList({ stakingList: { active: [], inactive: [] } }))
+    }
+  }, [dispatch])
 
   const getLocalCache = useCallback(() => {
     let address = currentAccount?.address || ""
+    let networkID = currentNode?.networkID || ""
     shouldUpdateTxList(address)
     updateLocalPrice()
-    updateLocalDelegation(address)
-    updateLocalBlock()
-    updateLocalStaking()
-  }, [currentAccount,
+    updateLocalDelegation(address, networkID)
+    updateLocalBlock(networkID)
+    updateLocalStaking(networkID)
+  }, [currentAccount?.address, currentNode?.networkID,
     shouldUpdateTxList, updateLocalPrice,
     updateLocalDelegation, updateLocalBlock, updateLocalStaking])
 
   useEffect(() => {
     getLocalCache()
-  }, [])
+  }, [getLocalCache])
 
   useEffect(() => {
     shouldUpdateTxList(currentAccount?.address || '')
@@ -148,8 +166,8 @@ const HomePage = () => {
   }, [currentNode?.networkID])
 
   useEffect(()=>{
-    updateLocalAccount(currentAccount?.address || '')
-  },[currentAccount?.address])
+    updateLocalAccount(currentAccount?.address || '', currentNode?.networkID)
+  },[currentAccount?.address, currentNode?.networkID, updateLocalAccount])
 
   return (<div
     style={{

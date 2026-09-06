@@ -14,6 +14,7 @@ import {
   getRealErrorMsg,
   isNaturalNumber,
   isNumber,
+  roundEpochDaysUp,
   trimSpace,
 } from "../../../utils/utils";
 import Button from "../../component/Button";
@@ -62,6 +63,12 @@ import { updateShouldRequest } from "../../../reducers/accountReducer";
 import ledgerManager from "../../../utils/ledger";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const EPOCH_DAYS = 7.5;
+const THREE_MONTHS_DAYS = 90;
+const SIX_MONTHS_DAYS = 180;
+const ESTIMATE_DECIMALS = 4;
+
 const StakingTransfer = () => {
 
   const dispatch = useAppDispatch();
@@ -81,9 +88,31 @@ const StakingTransfer = () => {
   const stakingList = useAppSelector((state) => state.staking.stakingList);
   const delegationKey = useDelegationKey();
   const stakingAPR = useAppSelector((state) => state.staking.stakingAPR);
+  const daemonStatus = useAppSelector((state) => state.staking.daemonStatus);
   const networkID = useAppSelector((state) => state.network.currentNode.networkID);
 
-  const [routeParams] = useState(() => {
+  const epochDays = useMemo(() => {
+    const consensusConfiguration = daemonStatus?.consensusConfiguration as
+      | {
+          epochDuration?: number;
+          slotsPerEpoch?: number;
+          slotDuration?: number;
+        }
+      | undefined;
+    const epochDuration = Number(consensusConfiguration?.epochDuration);
+    const slotsPerEpoch = Number(consensusConfiguration?.slotsPerEpoch);
+    const slotDuration = Number(consensusConfiguration?.slotDuration);
+    const derivedEpochDurationMs = slotsPerEpoch * slotDuration;
+    const epochDurationMs =
+      Number.isFinite(derivedEpochDurationMs) && derivedEpochDurationMs > 0
+        ? derivedEpochDurationMs
+        : epochDuration;
+    return Number.isFinite(epochDurationMs) && epochDurationMs > 0
+      ? roundEpochDaysUp(epochDurationMs / DAY_MS)
+      : EPOCH_DAYS;
+  }, [daemonStatus]);
+
+  const routeParams = useMemo(() => {
     const params = (location?.state || {}) as {
       menuAdd?: boolean;
       nodeName?: string;
@@ -98,7 +127,7 @@ const StakingTransfer = () => {
       icon: params.icon,
       isRedelegate: !!params.isRedelegate,
     };
-  });
+  }, [location.state]);
 
   const { menuAdd, nodeAddress, showNodeName, nodeIcon, isRedelegate, currentValidatorName, currentValidatorIcon, hasToValidator, isActiveValidator } = useMemo(() => {
     let menuAdd = routeParams.menuAdd;
@@ -564,6 +593,7 @@ const StakingTransfer = () => {
               balanceTotal={mainTokenNetInfo?.balance?.total || "0"}
               decimals={(mainTokenNetInfo?.tokenBaseInfo as { decimals?: number } | undefined)?.decimals || 9}
               stakingAPR={isActiveValidator ? (stakingAPR || 0) : 0}
+              epochDays={epochDays}
             />
           </StyledValidatorSection>
         )}
@@ -647,18 +677,14 @@ const ValidatorIcon = ({ icon, name }: ValidatorIconProps) => {
   );
 };
 
-const EPOCH_DAYS = 15;
-const THREE_MONTHS_DAYS = 90;
-const SIX_MONTHS_DAYS = 180;
-const ESTIMATE_DECIMALS = 4;
-
 interface EarningsEstimateProps {
   balanceTotal: string;
   decimals?: number;
   stakingAPR?: number;
+  epochDays?: number;
 }
 
-const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPR = 0 }: EarningsEstimateProps) => {
+const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPR = 0, epochDays = EPOCH_DAYS }: EarningsEstimateProps) => {
   const balance = useMemo(() => {
     return new BigNumber(balanceTotal).dividedBy(new BigNumber(10).pow(decimals));
   }, [balanceTotal, decimals]);
@@ -669,18 +695,21 @@ const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPR = 0 }: Earnin
     const calc = (days: number) => dailyEarnings.multipliedBy(days).toFixed(ESTIMATE_DECIMALS, BigNumber.ROUND_DOWN);
 
     return {
-      epoch: calc(EPOCH_DAYS),
+      epoch: calc(epochDays),
       threeMonths: calc(THREE_MONTHS_DAYS),
       sixMonths: calc(SIX_MONTHS_DAYS),
     };
-  }, [balance, stakingAPR]);
+  }, [balance, stakingAPR, epochDays]);
 
   const formatValue = (val: string) => val === '--' ? '--' : `${val} ${MAIN_COIN_CONFIG.symbol}`;
+  const epochLabel = i18n.t("epochEstimate", {
+    days: Number.isInteger(epochDays) ? epochDays : epochDays.toFixed(1),
+  });
 
   return (
     <StyledEarningsCard>
       <StyledEarningsRow>
-        <StyledEarningsLabel>{i18n.t("epochEstimate")}</StyledEarningsLabel>
+        <StyledEarningsLabel>{epochLabel}</StyledEarningsLabel>
         <StyledEarningsValue>{formatValue(estimates.epoch)}</StyledEarningsValue>
       </StyledEarningsRow>
       <StyledEarningsRow>

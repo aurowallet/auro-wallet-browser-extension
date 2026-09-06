@@ -18,6 +18,9 @@ All notable changes to this project will be documented in this file.
 - Upgrade router and build dependencies, refresh transitive packages, and remove obsolete resolutions/overrides to address security advisories
 - Upgrade `@zondax/ledger-mina-js` to 0.2.0 and add `@zondax/ledger-js`
 - Upgrade `o1js` to 3.0.0 for presentation compatibility
+- Isolate block, delegation, and token asset caches by network and account with V2 storage keys
+- Prevent stale Mainnet staking data from appearing on non-Mainnet networks and route non-Mainnet staking directly to manual validator input
+- Calculate Epoch duration from node slot configuration
 
 ### Fixes
 - Handle zkApp transaction responses when refreshing transaction history

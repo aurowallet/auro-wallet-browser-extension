@@ -49,6 +49,10 @@ export function getTxHistoryCacheKey(address: string, networkID?: string): strin
   return networkID ? `${address}:${networkID}` : address;
 }
 
+export function roundEpochDaysUp(days: number): number {
+  return Math.ceil(days * 10) / 10;
+}
+
 // ============ Number Utils ============
 
 export function toNonExponential(ExpNumber: string | number): string {
