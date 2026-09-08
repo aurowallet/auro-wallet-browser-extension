@@ -1,8 +1,8 @@
 import {
   DevnetUrlConfig,
   MainnetUrlConfig,
-  ZekoMainnetConfig,
-  ZekoTestnetConfig,
+  // ZekoMainnetConfig,
+  // ZekoTestnetConfig,
 } from "../../config";
 
 // ============ Network ID Map ============
@@ -47,29 +47,29 @@ const DefaultDevnetConfig: NetworkConfig = {
   networkID: NetworkID_MAP.testnet,
 };
 
-const DefaultZekoMainnetConfig: NetworkConfig = {
-  url: ZekoMainnetConfig.gql,
-  explorer: ZekoMainnetConfig.explorer,
-  gqlTxUrl: ZekoMainnetConfig.tx,
-  name: "Zeko",
-  isDefaultNode: true,
-  networkID: NetworkID_MAP.zekomainnet,
-};
+// const DefaultZekoMainnetConfig: NetworkConfig = {
+//   url: ZekoMainnetConfig.gql,
+//   explorer: ZekoMainnetConfig.explorer,
+//   gqlTxUrl: ZekoMainnetConfig.tx,
+//   name: "Zeko",
+//   isDefaultNode: true,
+//   networkID: NetworkID_MAP.zekomainnet,
+// };
 
-const DefaultZekoTestnetConfig: NetworkConfig = {
-  url: ZekoTestnetConfig.gql,
-  explorer: ZekoTestnetConfig.explorer,
-  gqlTxUrl: ZekoTestnetConfig.tx,
-  name: "Zeko Testnet",
-  isDefaultNode: true,
-  networkID: NetworkID_MAP.zekotestnet,
-};
+// const DefaultZekoTestnetConfig: NetworkConfig = {
+//   url: ZekoTestnetConfig.gql,
+//   explorer: ZekoTestnetConfig.explorer,
+//   gqlTxUrl: ZekoTestnetConfig.tx,
+//   name: "Zeko Testnet",
+//   isDefaultNode: true,
+//   networkID: NetworkID_MAP.zekotestnet,
+// };
 
 // ============ Default Network List ============
 
 export const Default_Network_List: NetworkConfig[] = [
   DefaultMainnetConfig,
   DefaultDevnetConfig,
-  DefaultZekoMainnetConfig,
-  DefaultZekoTestnetConfig,
+  // DefaultZekoMainnetConfig,
+  // DefaultZekoTestnetConfig,
 ];

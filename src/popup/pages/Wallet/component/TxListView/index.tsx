@@ -3,10 +3,10 @@ import { getZkAppUpdateInfo } from "@/utils/zkUtils";
 import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { sendStakeTx, sendTx } from "../../../../../background/api";
+import { sendParty, sendStakeTx, sendTx } from "../../../../../background/api";
 import { MAIN_COIN_CONFIG, ZK_DEFAULT_TOKEN_ID } from "../../../../../constant";
 import {
   ACCOUNT_TYPE,
@@ -42,6 +42,7 @@ import type {
   AccountInfo,
 } from "../../../../../types/tx.types";
 import type { RootState } from "@/reducers";
+import { useAppDispatch } from "@/hooks/useStore";
 import { TX_STATUS } from "../../../../../types/tx.types";
 import type { TxStatusStyle } from "./index.styled";
 import {
@@ -113,6 +114,12 @@ interface TxSubmitResponse {
       hash?: string;
     };
   };
+  sendZkapp?: {
+    zkapp?: {
+      id?: string;
+      hash?: string;
+    };
+  };
 }
 
 interface LedgerSignResult {
@@ -124,13 +131,17 @@ interface LedgerSignResult {
   signature?: string;
 }
 
+const showTransactionModalToast = (message: string, duration?: number) => {
+  Toast.info(message, { duration, top: "70%" });
+};
+
 // ============ Main Component ============
 
 const TxListView: React.FC<TxListViewProps> = ({
   history = [],
   tokenInfo = {},
 }) => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const accountInfo = useSelector((state: RootState) => state.accountInfo);
   const netConfig = useSelector((state: RootState) => state.network);
@@ -173,6 +184,8 @@ const TxListView: React.FC<TxListViewProps> = ({
 
   const [ledgerModalStatus, setLedgerModalStatus] = useState<boolean>(false);
   const [waitLedgerStatus, setWaitLedgerStatus] = useState<boolean>(false);
+  // Modal visibility is UI-only; this token protects the request and stale responses.
+  const ledgerOperationRef = useRef<object | null>(null);
 
   const { nextNetFee } = useMemo<{ nextNetFee: string | number }>(() => {
     let nextNetFee: string | number = feeConfig?.speedUpBuffer ?? "";
@@ -193,8 +206,7 @@ const TxListView: React.FC<TxListViewProps> = ({
   const checkLedgerStatus = useCallback(async (): Promise<void> => {
     if (isLedgerAccount) {
       const { status } = await ledgerManager.ensureConnect();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      dispatch(updateLedgerConnectStatus(status) as any);
+      dispatch(updateLedgerConnectStatus(status));
     }
   }, [isLedgerAccount, dispatch]);
 
@@ -260,10 +272,6 @@ const TxListView: React.FC<TxListViewProps> = ({
     };
   }, [modalType, slotTimeText]);
 
-  const onClickClose = useCallback((): void => {
-    setTransactionModalStatus(false);
-  }, []);
-
   const onSubmitTx = useCallback(
     async (data: TxSubmitResponse, type?: string): Promise<void> => {
       setBtnLoading(false);
@@ -271,14 +279,14 @@ const TxListView: React.FC<TxListViewProps> = ({
         let errorMessage = i18n.t("postFailed");
         const realMsg = getRealErrorMsg(data.error);
         errorMessage = realMsg ? realMsg : errorMessage;
-        Toast.info(errorMessage, 5 * 1000);
+        showTransactionModalToast(errorMessage, 5 * 1000);
 
         setWaitLedgerStatus(false);
         setLedgerModalStatus(false);
-        setTransactionModalStatus(false);
         return;
       }
-      const detail = (data.sendPayment && data.sendPayment.payment) || {};
+      const detail =
+        data.sendPayment?.payment || data.sendZkapp?.zkapp || {};
       dispatch(updateShouldRequest(true, true));
       if (type === "ledger") {
         sendMsg(
@@ -287,6 +295,7 @@ const TxListView: React.FC<TxListViewProps> = ({
             payload: {
               paymentId: detail.id,
               hash: detail.hash,
+              type: data.sendZkapp?.zkapp ? "ZKAPP_TX" : undefined,
             },
           },
           () => {},
@@ -308,7 +317,14 @@ const TxListView: React.FC<TxListViewProps> = ({
   const ledgerTransfer = useCallback(
     async (nextPayload: TransactionPayload): Promise<void> => {
       const nextAction = nextPayload.sendAction;
-      setWaitLedgerStatus(true);
+      const operation = {};
+      ledgerOperationRef.current = operation;
+      setBtnLoading(true);
+      const onAwaitDevice = () => {
+        if (ledgerOperationRef.current === operation) {
+          setWaitLedgerStatus(true);
+        }
+      };
 
       const ledgerNextPayload: TransactionPayload = { ...nextPayload };
       if (modalType === TransactionModalType.cancel) {
@@ -322,26 +338,92 @@ const TxListView: React.FC<TxListViewProps> = ({
         const hdPath = typeof accountInfo.currentAccount.hdPath === 'number' 
           ? accountInfo.currentAccount.hdPath 
           : parseInt(String(accountInfo.currentAccount.hdPath || '0'), 10);
+        if (nextAction === DAppActions.mina_sendTransaction) {
+          if (!ledgerNextPayload.transaction) {
+            showTransactionModalToast(i18n.t("buildFailed"));
+            return;
+          }
+          const zkResult = await ledgerManager.signZkApp(
+            {
+              transaction: ledgerNextPayload.transaction,
+              fromAddress: ledgerNextPayload.fromAddress,
+              fee: ledgerNextPayload.fee,
+              nonce: ledgerNextPayload.nonce,
+              memo: ledgerNextPayload.memo || "",
+              feePayerAddress: ledgerNextPayload.fromAddress,
+              zkOnlySign: false,
+            },
+            hdPath,
+            onAwaitDevice
+          );
+          if (ledgerOperationRef.current !== operation) return;
+          dispatch(updateLedgerConnectStatus(ledgerManager.status));
+          if (!zkResult) {
+            setLedgerModalStatus(true);
+            return;
+          }
+          if (zkResult?.rejected) {
+            if (ledgerManager.status !== LEDGER_STATUS.READY) {
+              setLedgerModalStatus(true);
+              return;
+            }
+            showTransactionModalToast(i18n.t("ledgerRejected"));
+            return;
+          }
+          if (zkResult?.error || !zkResult?.signedZkApp) {
+            if (ledgerManager.status !== LEDGER_STATUS.READY) {
+              setLedgerModalStatus(true);
+              return;
+            }
+            showTransactionModalToast(
+              zkResult?.error?.message || i18n.t("postFailed")
+            );
+            return;
+          }
+          const postRes = await sendParty(
+            zkResult.signedZkApp.data.zkappCommand
+          );
+          if (ledgerOperationRef.current !== operation) return;
+          onSubmitTx(postRes as TxSubmitResponse, "ledger");
+          return;
+        }
+
         if (nextAction === DAppActions.mina_sendStakeDelegation) {
           signResult = (await ledgerManager.signDelegation(
             ledgerNextPayload,
-            hdPath
+            hdPath,
+            onAwaitDevice
           )) as LedgerSignResult;
         } else {
           signResult = (await ledgerManager.signPayment(
             ledgerNextPayload,
-            hdPath
+            hdPath,
+            onAwaitDevice
           )) as LedgerSignResult;
         }
 
+        if (ledgerOperationRef.current !== operation) return;
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!signResult) {
+          setLedgerModalStatus(true);
+          return;
+        }
         if (signResult.rejected) {
-          Toast.info(i18n.t("ledgerRejected"));
-          setBtnLoading(false);
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerModalStatus(true);
+            return;
+          }
+          showTransactionModalToast(i18n.t("ledgerRejected"));
           return;
         }
         if (signResult.error) {
-          setBtnLoading(false);
-          Toast.info(signResult.error.message || "Signature failed");
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerModalStatus(true);
+            return;
+          }
+          showTransactionModalToast(
+            signResult.error.message || i18n.t("postFailed")
+          );
           return;
         }
 
@@ -355,25 +437,43 @@ const TxListView: React.FC<TxListViewProps> = ({
           { rawSignature: signResult.signature }
         );
 
+        if (ledgerOperationRef.current !== operation) return;
         onSubmitTx(postRes as TxSubmitResponse, "ledger");
       } catch (err) {
-        console.error("Ledger transfer failed:", err);
-        const error = err as Error;
-        Toast.info(error.message || "Transaction failed");
+        if (ledgerOperationRef.current === operation) {
+          showTransactionModalToast(
+            getRealErrorMsg(err) || i18n.t("postFailed")
+          );
+        }
       } finally {
-        setWaitLedgerStatus(false);
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setWaitLedgerStatus(false);
+          setBtnLoading(false);
+        }
       }
     },
-    [modalType, accountInfo.currentAccount.hdPath, onSubmitTx]
+    [modalType, accountInfo.currentAccount.hdPath, onSubmitTx, dispatch]
   );
 
   const onClickConfirm = useCallback(
     (nextInputFee: string | number): void => {
+      if (isLedgerAccount && ledgerOperationRef.current) {
+        if (ledgerManager.status === LEDGER_STATUS.READY && ledgerManager.app) {
+          setTransactionModalStatus(true);
+          setWaitLedgerStatus(true);
+        } else {
+          ledgerOperationRef.current = null;
+          setTransactionModalStatus(false);
+          setWaitLedgerStatus(false);
+          setLedgerModalStatus(true);
+        }
+        return;
+      }
       if (isLedgerAccount && ledgerStatus !== LEDGER_STATUS.READY) {
         setLedgerModalStatus(true);
         return;
       }
-      setBtnLoading(true);
       const currentAddress = accountInfo.currentAccount.address || '';
       let nextAction = "";
       let nextPayload: TransactionPayload = {} as TransactionPayload;
@@ -449,6 +549,7 @@ const TxListView: React.FC<TxListViewProps> = ({
         return;
       }
 
+      setBtnLoading(true);
       sendMsg<TxSubmitResponse>(
         {
           action: nextAction,
@@ -471,12 +572,19 @@ const TxListView: React.FC<TxListViewProps> = ({
     ]
   );
 
-  const onLedgerInfoModalConfirm = useCallback(async (): Promise<void> => {
-    const { status } = await (ledgerManager as any).ensureConnect();
-    if (status === LEDGER_STATUS.READY) {
-      setLedgerModalStatus(false);
-      onClickConfirm(nextFee);
+  const onTransactionModalClose = useCallback(() => {
+    if (isLedgerAccount && (ledgerOperationRef.current || waitLedgerStatus)) {
+      ledgerOperationRef.current = null;
+      setWaitLedgerStatus(false);
+      setBtnLoading(false);
+      dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
     }
+    setTransactionModalStatus(false);
+  }, [dispatch, isLedgerAccount, waitLedgerStatus]);
+
+  const onLedgerInfoModalConfirm = useCallback((): void => {
+    setLedgerModalStatus(false);
+    onClickConfirm(nextFee);
   }, [nextFee, onClickConfirm]);
 
   return (
@@ -519,10 +627,14 @@ const TxListView: React.FC<TxListViewProps> = ({
         currentFee={currentFee}
         currentNonce={String(transactionModalData?.nonce ?? "")}
         nextFee={String(nextFee)}
-        onClickClose={onClickClose}
+        onClickClose={onTransactionModalClose}
         onConfirm={onClickConfirm as (nextInputFee?: string | number) => void}
         btnLoading={btnLoading}
         waitingLedger={waitLedgerStatus}
+        showLedgerBlindSigningTip={
+          isLedgerAccount &&
+          transactionModalData?.kind?.toLowerCase() === "zkapp"
+        }
       />
       <LedgerInfoModal
         modalVisible={ledgerModalStatus}
@@ -682,14 +794,7 @@ const TxItem: React.FC<TxItemProps> = ({
       txData.status === TX_STATUS.PENDING &&
       txData.from === currentAccount.address
     ) {
-      if (
-        currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER &&
-        txData.kind?.toLowerCase() === "zkapp"
-      ) {
-        setShowPendingAction(false);
-      } else {
-        setShowPendingAction(true);
-      }
+      setShowPendingAction(true);
     } else {
       setShowPendingAction(false);
     }

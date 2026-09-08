@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "../../types/common";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -14,6 +14,7 @@ import {
   getRealErrorMsg,
   isNaturalNumber,
   isNumber,
+  roundEpochDaysUp,
   trimSpace,
 } from "../../../utils/utils";
 import Button from "../../component/Button";
@@ -62,6 +63,12 @@ import { updateShouldRequest } from "../../../reducers/accountReducer";
 import ledgerManager from "../../../utils/ledger";
 import { LedgerInfoModal } from "../../component/LedgerInfoModal";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const EPOCH_DAYS = 7.5;
+const THREE_MONTHS_DAYS = 90;
+const SIX_MONTHS_DAYS = 180;
+const ESTIMATE_DECIMALS = 4;
+
 const StakingTransfer = () => {
 
   const dispatch = useAppDispatch();
@@ -75,15 +82,36 @@ const StakingTransfer = () => {
     (state) => state.accountInfo.mainTokenNetInfo
   );
   const { feeConfig } = useFeeValidation();
-  const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
   const { fetchAccountData } = useFetchAccountData(currentAccount as Parameters<typeof useFetchAccountData>[0]);
 
   const stakingList = useAppSelector((state) => state.staking.stakingList);
   const delegationKey = useDelegationKey();
   const stakingAPR = useAppSelector((state) => state.staking.stakingAPR);
+  const daemonStatus = useAppSelector((state) => state.staking.daemonStatus);
   const networkID = useAppSelector((state) => state.network.currentNode.networkID);
 
-  const [routeParams] = useState(() => {
+  const epochDays = useMemo(() => {
+    const consensusConfiguration = daemonStatus?.consensusConfiguration as
+      | {
+          epochDuration?: number;
+          slotsPerEpoch?: number;
+          slotDuration?: number;
+        }
+      | undefined;
+    const epochDuration = Number(consensusConfiguration?.epochDuration);
+    const slotsPerEpoch = Number(consensusConfiguration?.slotsPerEpoch);
+    const slotDuration = Number(consensusConfiguration?.slotDuration);
+    const derivedEpochDurationMs = slotsPerEpoch * slotDuration;
+    const epochDurationMs =
+      Number.isFinite(derivedEpochDurationMs) && derivedEpochDurationMs > 0
+        ? derivedEpochDurationMs
+        : epochDuration;
+    return Number.isFinite(epochDurationMs) && epochDurationMs > 0
+      ? roundEpochDaysUp(epochDurationMs / DAY_MS)
+      : EPOCH_DAYS;
+  }, [daemonStatus]);
+
+  const routeParams = useMemo(() => {
     const params = (location?.state || {}) as {
       menuAdd?: boolean;
       nodeName?: string;
@@ -98,7 +126,7 @@ const StakingTransfer = () => {
       icon: params.icon,
       isRedelegate: !!params.isRedelegate,
     };
-  });
+  }, [location.state]);
 
   const { menuAdd, nodeAddress, showNodeName, nodeIcon, isRedelegate, currentValidatorName, currentValidatorIcon, hasToValidator, isActiveValidator } = useMemo(() => {
     let menuAdd = routeParams.menuAdd;
@@ -168,6 +196,7 @@ const StakingTransfer = () => {
   const [contentList, setContentList] = useState<{ label: string; value: string }[]>([]);
 
   const [waitLedgerStatus, setWaitLedgerStatus] = useState(false);
+  const ledgerOperationRef = useRef<object | null>(null);
   const [btnDisableStatus, setBtnDisableStatus] = useState(() => {
     if (routeParams.menuAdd) {
       return true;
@@ -255,40 +284,70 @@ const StakingTransfer = () => {
   }, [confirmModalStatus]);
 
   const ledgerTransfer = useCallback(
-    async (params: { fromAddress: string; toAddress: string; fee: string | number; nonce: string | number; memo: string }) => {
-      const { status } = await ledgerManager.ensureConnect();
-      if (status !== LEDGER_STATUS.READY) return;
-
-      setWaitLedgerStatus(true);
-      const result = await ledgerManager.signDelegation(
-        params,
-        typeof currentAccount.hdPath === 'number' ? currentAccount.hdPath : 0
-      );
-      if (result?.rejected || result?.error) {
-        setWaitLedgerStatus(false);
+    async (params: { fromAddress: string; toAddress: string; fee: string | number; nonce: string | number; memo: string }, operation: object) => {
+      setConfirmBtnStatus(true);
+      try {
+        const result = await ledgerManager.signDelegation(
+          params,
+          typeof currentAccount.hdPath === 'number' ? currentAccount.hdPath : 0,
+          () => {
+            if (ledgerOperationRef.current === operation) {
+              setWaitLedgerStatus(true);
+            }
+          }
+        );
+        if (ledgerOperationRef.current !== operation) return;
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!result) {
+          setLedgerModalStatus(true);
+          return;
+        }
+        if (result?.rejected || result?.error) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerModalStatus(true);
+            return;
+          }
+          Toast.info(result?.error?.message || i18n.t("ledgerRejected"));
+          return;
+        }
+        const postRes = await sendStakeTx(result?.payload as Parameters<typeof sendStakeTx>[0], {
+          rawSignature: result?.signature as string,
+        });
+        if (ledgerOperationRef.current !== operation) return;
         setConfirmModalStatus(false);
-        Toast.info(result?.error?.message || i18n.t("ledgerRejected"));
-        return;
+        onSubmitSuccess(postRes as Parameters<typeof onSubmitSuccess>[0], "ledger");
+      } catch (error) {
+        if (ledgerOperationRef.current === operation) {
+          Toast.info(getRealErrorMsg(error) || i18n.t("postFailed"));
+        }
+      } finally {
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setWaitLedgerStatus(false);
+          setConfirmBtnStatus(false);
+          setConfirmModalStatus(false);
+        }
       }
-      const postRes = await sendStakeTx(result?.payload as Parameters<typeof sendStakeTx>[0], {
-        rawSignature: result?.signature as string,
-      });
-      setConfirmModalStatus(false);
-      onSubmitSuccess(postRes as Parameters<typeof onSubmitSuccess>[0], "ledger");
     },
-    [currentAccount]
+    [currentAccount, onSubmitSuccess, dispatch]
   );
 
     const clickNextStep = useCallback(async () => {
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        const { status } = await ledgerManager.ensureConnect();
-
-        dispatch(updateLedgerConnectStatus(status));
-
-        if (status !== LEDGER_STATUS.READY) {
-          setLedgerModalStatus(true);
+        if (ledgerOperationRef.current) {
+          if (ledgerManager.status === LEDGER_STATUS.READY && ledgerManager.app) {
+            setConfirmModalStatus(true);
+            setWaitLedgerStatus(true);
+          } else {
+            ledgerOperationRef.current = null;
+            setConfirmModalStatus(false);
+            setWaitLedgerStatus(false);
+            setLedgerModalStatus(true);
+          }
           return;
         }
+        const operation = {};
+        ledgerOperationRef.current = operation;
       }
       let fromAddress = currentAccount.address || "";
       let toAddress = nodeAddress || String(trimSpace(blockAddress) || "");
@@ -304,7 +363,12 @@ const StakingTransfer = () => {
         sendAction: "" as string | undefined,
       };
       if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        return ledgerTransfer(payload as Parameters<typeof ledgerTransfer>[0]);
+        const operation = ledgerOperationRef.current;
+        if (!operation) return;
+        return ledgerTransfer(
+          payload as Parameters<typeof ledgerTransfer>[0],
+          operation
+        );
       }
       setConfirmBtnStatus(true);
       payload.sendAction = DAppActions.mina_sendStakeDelegation;
@@ -320,13 +384,11 @@ const StakingTransfer = () => {
       );
     }, [
       currentAccount,
-      dispatch,
       mainTokenNetInfo?.inferredNonce,
       inputNonce,
       nextFee,
       blockAddress,
       ledgerTransfer,
-      ledgerStatus,
       memo,
     ]);
 
@@ -382,37 +444,32 @@ const StakingTransfer = () => {
         });
       }
       setContentList(list);
-      if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
-        const { status } = await ledgerManager.ensureConnect();
-        dispatch(updateLedgerConnectStatus(status));
-        if (status !== LEDGER_STATUS.READY) {
-          setLedgerModalStatus(true);
-          return;
-        }
-        setConfirmModalStatus(true);
-      } else {
+      if (currentAccount.type !== ACCOUNT_TYPE.WALLET_LEDGER) {
         dispatch(updateLedgerConnectStatus("" as Parameters<typeof updateLedgerConnectStatus>[0]));
-        setConfirmModalStatus(true);
       }
+      setConfirmModalStatus(true);
     }, [
       nodeAddress,
       mainTokenNetInfo,
       nextFee,
       inputNonce,
       currentAccount,
-      clickNextStep,
       blockAddress,
       memo,
-      ledgerStatus,
     ]);
 
-  const onLedgerInfoModalConfirm = useCallback(async () => {
-    const { status } = await ledgerManager.ensureConnect();
-    if (status === LEDGER_STATUS.READY) {
-      setLedgerModalStatus(false);
-      onConfirm();
-    }
+  const onLedgerInfoModalConfirm = useCallback(() => {
+    setLedgerModalStatus(false);
+    onConfirm();
   }, [onConfirm]);
+
+  const onLedgerConfirmClose = useCallback(() => {
+    ledgerOperationRef.current = null;
+    setConfirmModalStatus(false);
+    setWaitLedgerStatus(false);
+    setConfirmBtnStatus(false);
+    dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+  }, [dispatch]);
 
   const onClickBlockProducer = useCallback(() => {
     navigate("/staking_list", {
@@ -519,6 +576,7 @@ const StakingTransfer = () => {
               balanceTotal={mainTokenNetInfo?.balance?.total || "0"}
               decimals={(mainTokenNetInfo?.tokenBaseInfo as { decimals?: number } | undefined)?.decimals || 9}
               stakingAPR={isActiveValidator ? (stakingAPR || 0) : 0}
+              epochDays={epochDays}
             />
           </StyledValidatorSection>
         )}
@@ -536,7 +594,7 @@ const StakingTransfer = () => {
         highlightContent={showNodeName || addressSlice(blockAddress, 8)}
         onConfirm={clickNextStep}
         loadingStatus={confirmBtnStatus}
-        onClickClose={onClickClose}
+        onClickClose={waitLedgerStatus ? onLedgerConfirmClose : onClickClose}
         contentList={contentList}
         waitingLedger={waitLedgerStatus}
         showCloseIcon={waitLedgerStatus}
@@ -602,18 +660,14 @@ const ValidatorIcon = ({ icon, name }: ValidatorIconProps) => {
   );
 };
 
-const EPOCH_DAYS = 15;
-const THREE_MONTHS_DAYS = 90;
-const SIX_MONTHS_DAYS = 180;
-const ESTIMATE_DECIMALS = 4;
-
 interface EarningsEstimateProps {
   balanceTotal: string;
   decimals?: number;
   stakingAPR?: number;
+  epochDays?: number;
 }
 
-const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPR = 0 }: EarningsEstimateProps) => {
+const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPR = 0, epochDays = EPOCH_DAYS }: EarningsEstimateProps) => {
   const balance = useMemo(() => {
     return new BigNumber(balanceTotal).dividedBy(new BigNumber(10).pow(decimals));
   }, [balanceTotal, decimals]);
@@ -624,18 +678,21 @@ const EarningsEstimate = ({ balanceTotal, decimals = 9, stakingAPR = 0 }: Earnin
     const calc = (days: number) => dailyEarnings.multipliedBy(days).toFixed(ESTIMATE_DECIMALS, BigNumber.ROUND_DOWN);
 
     return {
-      epoch: calc(EPOCH_DAYS),
+      epoch: calc(epochDays),
       threeMonths: calc(THREE_MONTHS_DAYS),
       sixMonths: calc(SIX_MONTHS_DAYS),
     };
-  }, [balance, stakingAPR]);
+  }, [balance, stakingAPR, epochDays]);
 
   const formatValue = (val: string) => val === '--' ? '--' : `${val} ${MAIN_COIN_CONFIG.symbol}`;
+  const epochLabel = i18n.t("epochEstimate", {
+    days: Number.isInteger(epochDays) ? epochDays : epochDays.toFixed(1),
+  });
 
   return (
     <StyledEarningsCard>
       <StyledEarningsRow>
-        <StyledEarningsLabel>{i18n.t("epochEstimate")}</StyledEarningsLabel>
+        <StyledEarningsLabel>{epochLabel}</StyledEarningsLabel>
         <StyledEarningsValue>{formatValue(estimates.epoch)}</StyledEarningsValue>
       </StyledEarningsRow>
       <StyledEarningsRow>

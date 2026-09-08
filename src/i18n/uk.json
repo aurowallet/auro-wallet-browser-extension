@@ -345,12 +345,16 @@
   "toValidator": "До валідатора",
   "currentValidator": "Поточний валідатор",
   "selectValidator": "Вибрати",
-  "epochEstimate": "15 днів (1 епоха) прогноз",
+  "epochEstimate": "{{days}} днів (1 епоха) прогноз",
   "threeMonthsEstimate": "3 місяці прогноз",
   "sixMonthsEstimate": "6 місяців прогноз",
   "staked": "Застейкано",
   "networkFee": "Комісія мережі",
   "mnemonicLost": "Не вдалося створити гаманець. Будь ласка, почніть процес заново.",
   "nMinutes_one": "{{count}} хвилина",
-  "nMinutes_other": "{{count}} хвилин"
+  "nMinutes_other": "{{count}} хвилин",
+  "ledgerZkAppUpdateRequired": "Оновіть застосунок Mina на пристрої Ledger до останньої версії.",
+  "ledgerAccountMismatch": "Підключений обліковий запис Ledger не відповідає цьому обліковому запису гаманця.",
+  "ledgerBusyTip": "Ledger зайнятий. Будь ласка, повторіть спробу.",
+  "ledgerZkAppBlindSigningTip": "Будь ласка, увімкніть <b>Blind signing</b> на Ledger."
 }

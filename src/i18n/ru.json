@@ -345,12 +345,16 @@
   "toValidator": "К валидатору",
   "currentValidator": "Текущий валидатор",
   "selectValidator": "Выбрать",
-  "epochEstimate": "15 дней (1 эпоха) прогноз",
+  "epochEstimate": "{{days}} дней (1 эпоха) прогноз",
   "threeMonthsEstimate": "3 месяца прогноз",
   "sixMonthsEstimate": "6 месяцев прогноз",
   "staked": "Застейкано",
   "networkFee": "Сетевая комиссия",
   "mnemonicLost": "Не удалось создать кошелёк. Пожалуйста, начните процесс заново.",
   "nMinutes_one": "{{count}} минута",
-  "nMinutes_other": "{{count}} минут"
+  "nMinutes_other": "{{count}} минут",
+  "ledgerZkAppUpdateRequired": "Обновите приложение Mina на устройстве Ledger до последней версии.",
+  "ledgerAccountMismatch": "Подключенная учетная запись Ledger не соответствует этой учетной записи кошелька.",
+  "ledgerBusyTip": "Ledger занят. Повторите попытку.",
+  "ledgerZkAppBlindSigningTip": "Пожалуйста, включите <b>Blind signing</b> на Ledger."
 }

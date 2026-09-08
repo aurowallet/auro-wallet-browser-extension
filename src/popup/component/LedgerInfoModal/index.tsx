@@ -1,11 +1,12 @@
 import ledgerManager from "@/utils/ledger";
 import i18n from "i18next";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "react-i18next";
-import { useAppSelector } from "@/hooks/useStore";
+import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import styled, { keyframes } from "styled-components";
 import browser from "webextension-polyfill";
 import { LEDGER_PAGE_TYPE, LEDGER_STATUS } from "../../../constant/commonType";
+import { updateLedgerConnectStatus } from "../../../reducers/ledger";
 import Button from "../Button";
 
 const slideUp = keyframes`
@@ -104,9 +105,10 @@ const StepText = styled.div`
   }
 `;
 
-const Reminder = styled.div`
+const Reminder = styled.div<{ $hidden?: boolean }>`
   margin: 0 20px 30px;
   padding: 12px;
+  visibility: ${({ $hidden }) => ($hidden ? "hidden" : "visible")};
   background: rgba(214, 90, 90, 0.1);
   border: 1px solid #d65a5a;
   border-radius: 10px;
@@ -144,7 +146,17 @@ export const LedgerInfoModal = ({
   onConfirm = () => {},
   onClickClose = () => {},
 }: LedgerInfoModalProps) => {
+  const dispatch = useAppDispatch();
   const ledgerStatus = useAppSelector((state) => state.ledger.ledgerConnectStatus);
+  const connectAttemptRef = useRef<object | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+
+  useEffect(() => {
+    if (!modalVisible) {
+      connectAttemptRef.current = null;
+      setIsChecking(false);
+    }
+  }, [modalVisible]);
 
   const { nextLedgerTip } = useMemo(() => {
     let tip = "";
@@ -155,8 +167,15 @@ export const LedgerInfoModal = ({
     if (ledgerStatus === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
       tip = "ledgerAppConnectTip";
     }
+    if (ledgerStatus === LEDGER_STATUS.LEDGER_BUSY) {
+      tip = "ledgerBusyTip";
+    }
     return { nextLedgerTip: tip };
   }, [ledgerStatus]);
+  const ledgerErrorMessage =
+    ledgerStatus === LEDGER_STATUS.LEDGER_BUSY
+      ? ledgerManager.getLastErrorMessage()
+      : null;
 
   const onClickReminder = useCallback(() => {
     const params = new URLSearchParams({
@@ -165,10 +184,35 @@ export const LedgerInfoModal = ({
     browser.tabs.create({ url: `popup.html#/ledger_page?${params}` });
   }, []);
 
+  const handleClose = useCallback(() => {
+    connectAttemptRef.current = null;
+    setIsChecking(false);
+    onClickClose();
+  }, [onClickClose]);
+
   const onClickConfirm = async () => {
-    const { status } = await ledgerManager.ensureConnect();
-    if (status === LEDGER_STATUS.READY) {
-      onConfirm();
+    if (connectAttemptRef.current) return;
+
+    const attempt = {};
+    connectAttemptRef.current = attempt;
+    setIsChecking(true);
+
+    try {
+      const { status } = await ledgerManager.ensureConnect();
+      if (connectAttemptRef.current !== attempt) return;
+
+      dispatch(updateLedgerConnectStatus(status));
+      if (status === LEDGER_STATUS.READY) {
+        onConfirm();
+      }
+    } catch {
+      if (connectAttemptRef.current !== attempt) return;
+      dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+    } finally {
+      if (connectAttemptRef.current === attempt) {
+        connectAttemptRef.current = null;
+        setIsChecking(false);
+      }
     }
   };
 
@@ -176,14 +220,14 @@ export const LedgerInfoModal = ({
 
   return (
     <>
-      <Overlay onClick={onClickClose} />
+      <Overlay onClick={handleClose} />
 
       <ModalContainer>
         <Header>
           <Title>{title || i18n.t("connectHardwareWallet")}</Title>
           <CloseBtn
             src="/img/icon_nav_close.svg"
-            onClick={onClickClose}
+            onClick={handleClose}
             alt="close"
           />
         </Header>
@@ -204,11 +248,15 @@ export const LedgerInfoModal = ({
         </Steps>
 
         {nextLedgerTip && (
-          <Reminder>
-            <Trans
-              i18nKey={nextLedgerTip}
-              components={{ click: <Clickable onClick={onClickReminder} /> }}
-            />
+          <Reminder $hidden={isChecking}>
+            {ledgerErrorMessage ? (
+              ledgerErrorMessage
+            ) : (
+              <Trans
+                i18nKey={nextLedgerTip}
+                components={{ click: <Clickable onClick={onClickReminder} /> }}
+              />
+            )}
           </Reminder>
         )}
 

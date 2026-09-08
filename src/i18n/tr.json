@@ -345,12 +345,16 @@
   "toValidator": "Yeni Doğrulayıcı",
   "currentValidator": "Mevcut Doğrulayıcı",
   "selectValidator": "Seç",
-  "epochEstimate": "15 gün (1 dönem) tahmini",
+  "epochEstimate": "{{days}} gün (1 dönem) tahmini",
   "threeMonthsEstimate": "3 ay tahmini",
   "sixMonthsEstimate": "6 ay tahmini",
   "staked": "Stake Edildi",
   "networkFee": "Ağ Ücreti",
   "mnemonicLost": "Cüzdan oluşturulamadı. Lütfen işlemi yeniden başlatın.",
   "nMinutes_one": "{{count}} dakika",
-  "nMinutes_other": "{{count}} dakika"
+  "nMinutes_other": "{{count}} dakika",
+  "ledgerZkAppUpdateRequired": "Ledger donanımındaki Mina uygulamasını en son sürüme güncelleyin.",
+  "ledgerAccountMismatch": "Bağlı Ledger hesabı bu cüzdan hesabıyla eşleşmiyor.",
+  "ledgerBusyTip": "Ledger meşgul. Lütfen tekrar deneyin.",
+  "ledgerZkAppBlindSigningTip": "Lütfen Ledger'ınızda <b>Blind signing</b>'i açın."
 }

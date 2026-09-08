@@ -1,19 +1,23 @@
 import { MAIN_COIN_CONFIG } from "@/constant";
-import { ACCOUNT_TYPE } from "@/constant/commonType";
+import { ACCOUNT_TYPE, LEDGER_STATUS } from "@/constant/commonType";
 import { useZekoFee } from "@/hooks/useZekoFee";
 import { getFeeWithZekoMinimum } from "@/utils/fee";
 import {
-  DAPP_ACTION_SIGN_MESSAGE,
   QA_SIGN_TRANSACTION,
+  WALLET_CHECK_TX_STATUS,
 } from "@/constant/msgTypes";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import Button, { button_size, button_theme } from "@/popup/component/Button";
+import { ConfirmModal } from "@/popup/component/ConfirmModal";
 import DAppAdvance from "@/popup/component/DAppAdvance";
 import DappWebsite from "@/popup/component/DappWebsite";
+import { LedgerInfoModal } from "@/popup/component/LedgerInfoModal";
 import NetworkStatusView from "@/popup/component/StatusView/NetworkStatusView";
 import Toast from "@/popup/component/Toast";
 import { copyText } from "@/utils/browserUtils";
 import { sendMsg } from "@/utils/commonMsg";
+import ledgerManager from "@/utils/ledger";
+import { sendParty } from "@/background/api";
 import {
   addressSlice,
   amountDecimals,
@@ -26,6 +30,7 @@ import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
+import { Trans } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "@/popup/types/common";
@@ -33,6 +38,7 @@ import styled from "styled-components";
 import { TRANSACTION_FEE } from "../../../../constant";
 import { TimerProvider } from "../../../../hooks/TimerContext";
 import { updateShouldRequest } from "../../../../reducers/accountReducer";
+import { updateLedgerConnectStatus } from "../../../../reducers/ledger";
 import {
   isNaturalNumber,
   isZekoNet,
@@ -120,6 +126,9 @@ const SignView = ({
 
   const [advanceStatus, setAdvanceStatus] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
+  const [ledgerConfirmModalStatus, setLedgerConfirmModalStatus] =
+    useState(false);
+  const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
 
   const [advanceFee, setAdvanceFee] = useState("");
   const [advanceNonce, setAdvanceNonce] = useState("");
@@ -133,6 +142,7 @@ const SignView = ({
     extractionError: string;
   } | null>(null);
   const toastShownRef = useRef(false);
+  const ledgerOperationRef = useRef<object | null>(null);
 
   const {
     sendAction,
@@ -304,7 +314,11 @@ const SignView = ({
   }, [currentAccount, signParams, sendAction, onRemoveTx]);
 
   const onSubmitSuccess = useCallback(
-    (data: { error?: { message?: string }; hash?: string }, nonce: string, type?: string) => {
+    (
+      data: { error?: unknown; hash?: string; id?: string },
+      nonce: string,
+      type?: string
+    ) => {
       if (data.error) {
         let errorMessage = i18n.t("postFailed");
         let realMsg = getRealErrorMsg(data.error);
@@ -319,6 +333,19 @@ const SignView = ({
         payload.hash = data.hash;
         resultAction = TOKEN_BUILD.requestSign;
         dispatch(updateShouldRequest(true, true));
+        if (type === "ledger" && data.id && data.hash) {
+          sendMsg(
+            {
+              action: WALLET_CHECK_TX_STATUS,
+              payload: {
+                paymentId: data.id,
+                hash: data.hash,
+                type: "ZKAPP_TX",
+              },
+            },
+            () => {}
+          );
+        }
         sendMsg(
           {
             action: resultAction,
@@ -330,19 +357,15 @@ const SignView = ({
         );
       }
     },
-    [signParams, sendAction, onRemoveTx]
+    [dispatch, signParams, onRemoveTx]
   );
 
   const clickNextStep = useCallback(async () => {
-    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+    if (
+      currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER &&
+      isZeko
+    ) {
       Toast.info(i18n.t("notSupportNow"));
-      sendMsg(
-        {
-          action: DAPP_ACTION_SIGN_MESSAGE,
-          payload: { error: i18n.t("notSupportNow") },
-        },
-        async (params) => {}
-      );
       return;
     }
 
@@ -353,6 +376,7 @@ const SignView = ({
     let toAddress = receiveAddress;
     let fee = trimSpace(nextFee);
     let fromAddress = sender;
+    const transaction = JSON.stringify(params?.result);
 
     let payload: {
       fromAddress: string;
@@ -361,7 +385,7 @@ const SignView = ({
       currentAccount: typeof currentAccount;
       fee: string;
       memo: string;
-      transaction?: string;
+      transaction: string;
       sendAction?: string;
     } = {
       fromAddress: fromAddress || "",
@@ -370,9 +394,78 @@ const SignView = ({
       currentAccount,
       fee: (fee || "") as string,
       memo: showMemo || "",
+      transaction,
     };
 
-    payload.transaction = JSON.stringify(params?.result);
+    if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
+      const operation = ledgerOperationRef.current;
+      if (!operation) return;
+      setBtnLoading(true);
+      try {
+        const result = await ledgerManager.signZkApp(
+          payload,
+          (currentAccount.hdPath || 0) as number,
+          () => {
+            if (ledgerOperationRef.current === operation) {
+              setLedgerConfirmModalStatus(true);
+            }
+          }
+        );
+        if (ledgerOperationRef.current !== operation) return;
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!result) {
+          setLedgerConfirmModalStatus(false);
+          setLedgerModalStatus(true);
+          return;
+        }
+        if (result.error) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setLedgerConfirmModalStatus(false);
+            setLedgerModalStatus(true);
+            return;
+          }
+          Toast.info(result.error.message);
+          return;
+        }
+        if (!result.signedZkApp) {
+          Toast.info(i18n.t("buildFailed"));
+          return;
+        }
+
+        const sendResponse = (await sendParty(
+          result.signedZkApp.data.zkappCommand
+        )) as {
+          error?: unknown;
+          sendZkapp?: { zkapp?: { hash?: string; id?: string } };
+        };
+        if (ledgerOperationRef.current !== operation) return;
+        if (sendResponse.error) {
+          Toast.info(
+            getRealErrorMsg(sendResponse.error) || i18n.t("postFailed")
+          );
+          return;
+        }
+
+        const zkAppResult = sendResponse.sendZkapp?.zkapp;
+        if (!zkAppResult?.hash) {
+          Toast.info(i18n.t("postFailed"));
+          return;
+        }
+        onSubmitSuccess(zkAppResult, payload.nonce, "ledger");
+      } catch (error) {
+        if (ledgerOperationRef.current === operation) {
+          Toast.info(getRealErrorMsg(error) || i18n.t("postFailed"));
+        }
+      } finally {
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setBtnLoading(false);
+          setLedgerConfirmModalStatus(false);
+        }
+      }
+      return;
+    }
+
     setBtnLoading(true);
     let connectAction = QA_SIGN_TRANSACTION;
     payload.sendAction = DAppActions.mina_sendTransaction;
@@ -397,9 +490,30 @@ const SignView = ({
     receiveAddress,
     sender,
     showMemo,
+    isZeko,
+    dispatch,
   ]);
 
+  const startLedgerSigning = useCallback(async (operation?: object) => {
+    if (ledgerOperationRef.current && ledgerOperationRef.current !== operation) {
+      setLedgerConfirmModalStatus(true);
+      return;
+    }
+    if (isZeko) {
+      Toast.info(i18n.t("notSupportNow"));
+      return;
+    }
+    ledgerOperationRef.current = operation || {};
+    setLedgerModalStatus(false);
+    await clickNextStep();
+  }, [clickNextStep, i18n, isZeko]);
+
   const onConfirm = useCallback(async () => {
+    const isLedgerAccount = currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER;
+    if (isLedgerAccount && isZeko) {
+      Toast.info(i18n.t("notSupportNow"));
+      return;
+    }
     if (extractionFailed) {
       Toast.info(i18n.t("postFailed"));
       return;
@@ -430,7 +544,17 @@ const SignView = ({
       Toast.info(i18n.t("balanceNotEnough"));
       return;
     }
-    clickNextStep();
+    if (isLedgerAccount && ledgerOperationRef.current) {
+      setLedgerConfirmModalStatus(true);
+      return;
+    }
+    if (isLedgerAccount) {
+      const operation = {};
+      ledgerOperationRef.current = operation;
+      await startLedgerSigning(operation);
+      return;
+    }
+    await clickNextStep();
   }, [
     extractionFailed,
     i18n,
@@ -444,7 +568,13 @@ const SignView = ({
     sender,
     availableBalance,
     tokenDecimal,
+    startLedgerSigning,
+    isZeko,
   ]);
+
+  const onLedgerInfoModalConfirm = useCallback(async () => {
+    await onConfirm();
+  }, [onConfirm]);
 
   const onClickAdvance = useCallback(() => {
     setAdvanceStatus((state) => !state);
@@ -452,6 +582,12 @@ const SignView = ({
   const onClickClose = useCallback(() => {
     setAdvanceStatus(false);
   }, []);
+  const onLedgerConfirmClose = useCallback(() => {
+    ledgerOperationRef.current = null;
+    setLedgerConfirmModalStatus(false);
+    setBtnLoading(false);
+    dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+  }, [dispatch]);
 
   const onFeeInput = useCallback(
     (e: InputChangeEvent) => {
@@ -496,6 +632,14 @@ const SignView = ({
         </StyledTitleRow>
         <StyledContent>
           <StyledWebsiteContainer>
+            {currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER && (
+              <StyledHighFeeTip>
+                <Trans
+                  i18nKey="ledgerZkAppBlindSigningTip"
+                  components={{ b: <b /> }}
+                />
+              </StyledHighFeeTip>
+            )}
             <DappWebsite
               siteIcon={signParams?.site?.webIcon}
               siteUrl={signParams?.site?.origin}
@@ -544,6 +688,18 @@ const SignView = ({
             {i18n.t("confirm")}
           </Button>
         </StyledBtnGroup>
+        <ConfirmModal
+          modalVisible={ledgerConfirmModalStatus}
+          title={i18n.t("transactionDetails")}
+          waitingLedger={currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER}
+          showCloseIcon={currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER}
+          onClickClose={onLedgerConfirmClose}
+        />
+        <LedgerInfoModal
+          modalVisible={ledgerModalStatus}
+          onClickClose={() => setLedgerModalStatus(false)}
+          onConfirm={onLedgerInfoModalConfirm}
+        />
         <DAppAdvance
           modalVisible={advanceStatus}
           title={i18n.t("advanceMode")}

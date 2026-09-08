@@ -345,12 +345,16 @@
   "toValidator": "新验证人",
   "currentValidator": "当前验证人",
   "selectValidator": "选择",
-  "epochEstimate": "15天 (1 epoch) 预估",
+  "epochEstimate": "{{days}}天 (1 epoch) 预估",
   "threeMonthsEstimate": "3个月预估",
   "sixMonthsEstimate": "6个月预估",
   "staked": "已质押",
   "networkFee": "网络费用",
   "mnemonicLost": "钱包创建失败，请重新开始创建流程。",
   "nMinutes_one": "{{count}}分钟",
-  "nMinutes_other": "{{count}}分钟"
+  "nMinutes_other": "{{count}}分钟",
+  "ledgerZkAppUpdateRequired": "请将 Ledger 硬件中的 Mina 应用升级到最新版本。",
+  "ledgerAccountMismatch": "当前连接的 Ledger 账户与钱包账户不匹配。",
+  "ledgerBusyTip": "Ledger 繁忙，请重试。",
+  "ledgerZkAppBlindSigningTip": "请在 Ledger 上开启 <b>Blind signing</b>。"
 }

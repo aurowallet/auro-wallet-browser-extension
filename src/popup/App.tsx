@@ -24,6 +24,7 @@ import {
 import { NetworkID_MAP } from "@/constant/network";
 import { getReadableNetworkId } from "@/utils/utils";
 import LedgerStatusSyncer from "./component/LedgerStatusSyncer";
+import { LedgerStatusFloatingProvider } from "./component/LedgerStatusFloating";
 import { RootState } from "@/reducers";
 
 function setLastActiveTime() {
@@ -112,7 +113,9 @@ function App() {
     <StyledApp>
       <GlobalStyles />
       <LedgerStatusSyncer />
-      <AllRouter />
+      <LedgerStatusFloatingProvider>
+        <AllRouter />
+      </LedgerStatusFloatingProvider>
     </StyledApp>
   );
 }
