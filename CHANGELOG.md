@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.4]
+### Enhancements
+- Store completed transaction history in the V3 cache only
+- Update pending transaction cache
+
+### Fixes
+- Clear outstanding transaction refresh retries when the active account, network, or node changes
+
 ## [2.5.3]
 ### Enhancements
 - Add Ledger zkApp transaction signing, broadcasting, and sign-only responses

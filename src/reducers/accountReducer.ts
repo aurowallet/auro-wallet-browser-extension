@@ -198,15 +198,7 @@ export function updateCurrentPrice(tokenPrice: TokenPrice, isCachePrice: boolean
 }
 
 export function updateAccountTxV2(
-  {
-    txPendingList,
-    zkPendingList,
-    fullTxList,
-  }: {
-    txPendingList: FormattedTx[];
-    zkPendingList: FormattedTx[];
-    fullTxList: FormattedTx[];
-  },
+  { txPendingList, zkPendingList, fullTxList }: TxHistoryAction,
   tokenId: string
 ) {
   return {
