@@ -70,3 +70,8 @@ export const SUPPORT_TOKEN_LIST = "SUPPORT_TOKEN_LIST";
 // ============ Debug ============
 
 export const DEBUG_LOG_STORAGE_KEY = "DEBUG_LOG_ENABLED";
+
+// ============ Ledger ============
+
+// Defaults to legacy WebHID. DMK is an opt-in rollout path managed by LedgerConnectionManager.
+export const LEDGER_TRANSPORT_MODE_STORAGE_KEY = "LEDGER_TRANSPORT_MODE";

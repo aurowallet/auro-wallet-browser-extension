@@ -25,6 +25,7 @@ import CurrencyUnit from '../pages/CurrencyUnit';
 import ImportAccount from '../pages/ImportAccount';
 import ImportKeypair from '../pages/ImportKeypair';
 import LanguageManagement from '../pages/LanguageManage';
+import LedgerConnectionMode from '../pages/LedgerConnectionMode';
 import { LedgerPage } from '../pages/LedgerPage';
 import {LockPage} from '../pages/Lock';
 import HomePage from '../pages/Main';
@@ -194,6 +195,7 @@ export function getAllRouter() {
         <Route path="/setting" element={<Setting />} />
         <Route path="/address_book" element={<AddressBook />} />
         <Route path="/currency_unit" element={<CurrencyUnit />} />
+        <Route path="/ledger_connection_mode" element={<LedgerConnectionMode />} />
         <Route path="/register_page" element={<Welcome />} />
 
         <Route path="/request_sign" element={<SignTransaction />} />

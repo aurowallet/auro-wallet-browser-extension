@@ -356,5 +356,6 @@
   "ledgerZkAppUpdateRequired": "Обновите приложение Mina на устройстве Ledger до последней версии.",
   "ledgerAccountMismatch": "Подключенная учетная запись Ledger не соответствует этой учетной записи кошелька.",
   "ledgerBusyTip": "Ledger занят. Повторите попытку.",
-  "ledgerZkAppBlindSigningTip": "Пожалуйста, включите <b>Blind signing</b> на Ledger."
+  "ledgerZkAppBlindSigningTip": "Пожалуйста, включите <b>Blind signing</b> на Ledger.",
+  "ledgerMode": "Режим Ledger"
 }

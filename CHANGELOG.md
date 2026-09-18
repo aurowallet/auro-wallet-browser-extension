@@ -6,9 +6,13 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Store completed transaction history in the V3 cache only
 - Update pending transaction cache
+- Upgrade LedgerJS and Mina Ledger packages and add DMK WebHID transport support
+- Add Legacy/DMK Ledger mode selection in Preferences
+- Refactor Ledger connection and session management with transport diagnostics
 
 ### Fixes
 - Clear outstanding transaction refresh retries when the active account, network, or node changes
+- Improve Ledger device discovery, permission handling, and transport state synchronization
 
 ## [2.5.3]
 ### Enhancements

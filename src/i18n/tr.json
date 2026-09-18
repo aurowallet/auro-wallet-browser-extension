@@ -356,5 +356,6 @@
   "ledgerZkAppUpdateRequired": "Ledger donanımındaki Mina uygulamasını en son sürüme güncelleyin.",
   "ledgerAccountMismatch": "Bağlı Ledger hesabı bu cüzdan hesabıyla eşleşmiyor.",
   "ledgerBusyTip": "Ledger meşgul. Lütfen tekrar deneyin.",
-  "ledgerZkAppBlindSigningTip": "Lütfen Ledger'ınızda <b>Blind signing</b>'i açın."
+  "ledgerZkAppBlindSigningTip": "Lütfen Ledger'ınızda <b>Blind signing</b>'i açın.",
+  "ledgerMode": "Ledger modu"
 }

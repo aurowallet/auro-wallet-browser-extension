@@ -356,5 +356,6 @@
   "ledgerZkAppUpdateRequired": "请将 Ledger 硬件中的 Mina 应用升级到最新版本。",
   "ledgerAccountMismatch": "当前连接的 Ledger 账户与钱包账户不匹配。",
   "ledgerBusyTip": "Ledger 繁忙，请重试。",
-  "ledgerZkAppBlindSigningTip": "请在 Ledger 上开启 <b>Blind signing</b>。"
+  "ledgerZkAppBlindSigningTip": "请在 Ledger 上开启 <b>Blind signing</b>。",
+  "ledgerMode": "Ledger 模式"
 }
