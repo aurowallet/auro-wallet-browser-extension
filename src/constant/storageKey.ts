@@ -37,8 +37,7 @@ export const LOCAL_CACHE_KEYS = {
   STAKING_LIST: "STAKING_LIST",
   STAKING_APR: "STAKING_APR",
   BASE_TOKEN_ASSETS_V2: "BASE_TOKEN_ASSETS_V2",
-  ALL_TX_HISTORY: "ALL_TX_HISTORY",
-  ALL_TX_HISTORY_V2: "ALL_TX_HISTORY_V2",
+  ALL_TX_HISTORY_V3: "ALL_TX_HISTORY_V3",
 } as const;
 
 export type LocalCacheKey = keyof typeof LOCAL_CACHE_KEYS;
@@ -71,3 +70,8 @@ export const SUPPORT_TOKEN_LIST = "SUPPORT_TOKEN_LIST";
 // ============ Debug ============
 
 export const DEBUG_LOG_STORAGE_KEY = "DEBUG_LOG_ENABLED";
+
+// ============ Ledger ============
+
+// Defaults to legacy WebHID. DMK is an opt-in rollout path managed by LedgerConnectionManager.
+export const LEDGER_TRANSPORT_MODE_STORAGE_KEY = "LEDGER_TRANSPORT_MODE";

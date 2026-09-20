@@ -23,7 +23,7 @@ const HomePage = () => {
     }
   }
   const shouldUpdateTxList = useCallback((address: string) => {
-    const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
+    const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V3);
     const currentHistory = safeJsonParse(txHistory);
     const cacheKey = getTxHistoryCacheKey(address, currentNode?.networkID);
     if (currentHistory?.[cacheKey]) {
@@ -33,8 +33,11 @@ const HomePage = () => {
         const tokenId = tokenIdList[index]
         if (tokenId) {
           const tokenTxHistory = targetHistory[tokenId];
+          const fullTxList = Array.isArray(tokenTxHistory?.fullTxList)
+            ? tokenTxHistory.fullTxList
+            : [];
           dispatch(
-            updateAccountTxV2(tokenTxHistory, tokenId)
+            updateAccountTxV2({ fullTxList }, tokenId)
           );
         }
       }

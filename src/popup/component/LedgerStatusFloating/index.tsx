@@ -1,4 +1,8 @@
 import ledgerManager, { LedgerDiagnostics } from "@/utils/ledger";
+import {
+  getLedgerTransportConnectionLabel,
+  getLedgerTransportModeLabel,
+} from "@/utils/ledgerTransport";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "@/constant/commonType";
 import {
   useCallback,
@@ -304,6 +308,18 @@ export default function LedgerStatusFloating() {
     status === LEDGER_STATUS.READY
       ? "/img/icon_ledger_connect.svg"
       : "/img/icon_ledger_disconnect.svg";
+  const visibleTransportMode =
+    diagnostics.activeTransportMode || diagnostics.selectedTransportMode;
+  const transportLabel = getLedgerTransportConnectionLabel(visibleTransportMode);
+  const selectedTransportLabel = getLedgerTransportModeLabel(
+    diagnostics.selectedTransportMode
+  );
+  const activeTransportLabel = getLedgerTransportModeLabel(
+    diagnostics.activeTransportMode
+  );
+  const modeDetails = diagnostics.sessionModeMatchesSelected
+    ? `Mode ${selectedTransportLabel} | session ${activeTransportLabel}`
+    : `Mode conflict: ${selectedTransportLabel}/${activeTransportLabel}`;
 
   if (!isLedgerAccount) return null;
 
@@ -334,8 +350,15 @@ export default function LedgerStatusFloating() {
           <Detail>
             {diagnostics.appVersion ? `Mina ${diagnostics.appVersion}` : "Mina -"}
             {" · "}
-            {diagnostics.deviceOpened ? "HID open" : "HID closed"}
+            {diagnostics.transportOpen
+              ? `${transportLabel} open`
+              : `${transportLabel} closed`}
           </Detail>
+          {process.env.NODE_ENV === "development" && (
+            <Detail data-testid="ledger-transport-mode-diagnostics">
+              {modeDetails}
+            </Detail>
+          )}
         </Content>
       </StatusPanel>
     </FloatingContainer>
