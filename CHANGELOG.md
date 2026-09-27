@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.5]
+### Enhancements
+- Upgrade o1js to 3.1.0
+
 ## [2.5.4]
 ### Enhancements
 - Store completed transaction history in the V3 cache only
