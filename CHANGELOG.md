@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Upgrade o1js to 3.1.0
 
+### Fixes
+- Apply Auto-Lock settings immediately, including Never
+- Clear Auto-Lock timers when locking the wallet
+- Lock before storage cleanup and preserve cleanup on UI errors
+
 ## [2.5.4]
 ### Enhancements
 - Store completed transaction history in the V3 cache only

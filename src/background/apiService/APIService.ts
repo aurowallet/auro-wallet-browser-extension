@@ -1134,8 +1134,9 @@ class APIService {
     let localData = this.getStore().data;
     let isUnlocked = this.getStore().isUnlocked;
     if (localData && isUnlocked) {
-      if (this.activeTimer) {
+      if (this.activeTimer !== null) {
         clearTimeout(this.activeTimer);
+        this.activeTimer = null;
       }
       if (timeoutMs <= 0) {
         return;
@@ -1153,6 +1154,7 @@ class APIService {
       ? autoLockTime.value 
       : autoLockTime;
     memStore.updateState({ autoLockTime: timeValue as number });
+    this.setLastActiveTime();
     await save({ autoLockTime: timeValue });
   }
   getCurrentAutoLockTime() {
@@ -1160,18 +1162,28 @@ class APIService {
   }
   setUnlockedStatus = async (status: boolean): Promise<void> => {
     if (!status) {
+      if (this.activeTimer !== null) {
+        clearTimeout(this.activeTimer);
+        this.activeTimer = null;
+      }
       this._clearVolatileMnemonic();
-      await removeValue("pendingCreateMnemonic");
       memStore.lock();
     }
 
-    sendMsg({
-      type: FROM_BACK_TO_RECORD,
-      action: WORKER_ACTIONS.SET_LOCK,
-      payload: status as any,
-    });
+    try {
+      sendMsg({
+        type: FROM_BACK_TO_RECORD,
+        action: WORKER_ACTIONS.SET_LOCK,
+        payload: status as any,
+      });
 
-    this.setPopupIcon(status);
+      this.setPopupIcon(status);
+    } finally {
+      if (!status) {
+        // Lock first; always clean up the draft even if UI notification throws.
+        await removeValue("pendingCreateMnemonic");
+      }
+    }
   };
   getCurrentAccount = async () => {
     let initStatus = false;

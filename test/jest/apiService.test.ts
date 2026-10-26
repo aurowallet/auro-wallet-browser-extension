@@ -773,6 +773,89 @@ describe('APIService', () => {
 
   // ==================== 7. updateLockTime ====================
   describe('updateLockTime', () => {
+    describe('apply duration changes without further activity', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+        apiService.activeTimer = null;
+        mockStoreState.isUnlocked = true;
+        mockStoreState.data = createV3VaultData();
+        mockStoreState.cryptoKey = MOCK_CRYPTO_KEY;
+      });
+
+      afterEach(() => {
+        jest.clearAllTimers();
+        apiService.activeTimer = null;
+        jest.useRealTimers();
+      });
+
+      it.each([
+        ['30 minutes to 5 minutes', 1800000, 300000],
+        ['5 minutes to 1 hour', 300000, 3600000],
+        ['Never to 5 minutes', -1, 300000],
+      ])('should restart the deadline when changing %s', async (_label, previous, next) => {
+        mockStoreState.autoLockTime = previous;
+        apiService.setLastActiveTime();
+        await jest.advanceTimersByTimeAsync(60000);
+
+        await apiService.updateLockTime(next);
+        expect(jest.getTimerCount()).toBe(1);
+        await jest.advanceTimersByTimeAsync(next - 1);
+        expect(mockStoreState.isUnlocked).toBe(true);
+
+        await jest.advanceTimersByTimeAsync(1);
+        expect(mockStoreState.isUnlocked).toBe(false);
+        expect(mockStoreState.cryptoKey).toBeNull();
+        expect(apiService.activeTimer).toBeNull();
+      });
+
+      it('should cancel the running timer immediately when selecting Never', async () => {
+        mockStoreState.autoLockTime = 300000;
+        apiService.setLastActiveTime();
+        await jest.advanceTimersByTimeAsync(60000);
+
+        await apiService.updateLockTime(-1);
+        expect(apiService.activeTimer).toBeNull();
+        expect(jest.getTimerCount()).toBe(0);
+        await jest.advanceTimersByTimeAsync(3600000);
+        expect(mockStoreState.isUnlocked).toBe(true);
+        expect(mockStoreState.cryptoKey).toBe(MOCK_CRYPTO_KEY);
+      });
+
+      it('should start a timer when the unlocked session has no timer yet', async () => {
+        await apiService.updateLockTime({ value: 300000 });
+        expect(mockStorageService.save).toHaveBeenCalledWith({ autoLockTime: 300000 });
+        expect(jest.getTimerCount()).toBe(1);
+
+        await jest.advanceTimersByTimeAsync(300000);
+        expect(mockStoreState.isUnlocked).toBe(false);
+      });
+
+      it('should allow later activity to reset the newly selected duration', async () => {
+        await apiService.updateLockTime(300000);
+        await jest.advanceTimersByTimeAsync(240000);
+        apiService.setLastActiveTime();
+        expect(jest.getTimerCount()).toBe(1);
+
+        await jest.advanceTimersByTimeAsync(60000);
+        expect(mockStoreState.isUnlocked).toBe(true);
+        await jest.advanceTimersByTimeAsync(240000);
+        expect(mockStoreState.isUnlocked).toBe(false);
+      });
+
+      it('should save the setting without starting a timer while locked', async () => {
+        await apiService.setUnlockedStatus(false);
+        mockMemStore.lock.mockClear();
+
+        await apiService.updateLockTime(300000);
+        expect(mockStorageService.save).toHaveBeenCalledWith({ autoLockTime: 300000 });
+        expect(apiService.activeTimer).toBeNull();
+        expect(jest.getTimerCount()).toBe(0);
+        await jest.advanceTimersByTimeAsync(300000);
+        expect(mockMemStore.lock).not.toHaveBeenCalled();
+        expect(mockStoreState.isUnlocked).toBe(false);
+      });
+    });
+
     it('should update autoLockTime in state and storage', async () => {
       await apiService.updateLockTime(600);
       expect(mockStoreState.autoLockTime).toBe(600);
@@ -1146,6 +1229,127 @@ describe('APIService', () => {
 
   // ==================== 10. setUnlockedStatus ====================
   describe('setUnlockedStatus', () => {
+    describe('auto-lock timer cleanup', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+        apiService.activeTimer = null;
+        mockStorageData.keyringData = JSON.stringify({ version: 3, data: 'blob', iv: 'iv' });
+        mockStorageData.vaultSalt = 'mock-vault-salt';
+        mockStorageData.autoLockTime = 300000;
+        mockEncryptUtils.decryptWithCryptoKey.mockResolvedValue(createV3VaultData());
+      });
+
+      afterEach(() => {
+        jest.clearAllTimers();
+        apiService.activeTimer = null;
+        jest.useRealTimers();
+      });
+
+      it('should cancel the old deadline on manual lock so it cannot lock a later session', async () => {
+        const firstUnlock = await apiService.submitPassword(TEST_DATA.password);
+        expect(firstUnlock).not.toHaveProperty('error');
+        apiService.setLastActiveTime();
+        await jest.advanceTimersByTimeAsync(240000);
+
+        await apiService.setUnlockedStatus(false);
+        expect(apiService.activeTimer).toBeNull();
+        expect(mockStoreState.isUnlocked).toBe(false);
+        expect(mockStoreState.cryptoKey).toBeNull();
+        expect(jest.getTimerCount()).toBe(0);
+
+        const secondUnlock = await apiService.submitPassword(TEST_DATA.password);
+        expect(secondUnlock).not.toHaveProperty('error');
+        await jest.advanceTimersByTimeAsync(60000);
+        expect(mockStoreState.isUnlocked).toBe(true);
+        expect(mockMemStore.lock).toHaveBeenCalledTimes(1);
+
+        apiService.setLastActiveTime();
+        await jest.advanceTimersByTimeAsync(300000);
+        expect(mockStoreState.isUnlocked).toBe(false);
+        expect(apiService.activeTimer).toBeNull();
+      });
+
+      it('should clear the timer reference when automatic locking completes', async () => {
+        const result = await apiService.submitPassword(TEST_DATA.password);
+        expect(result).not.toHaveProperty('error');
+        apiService.setLastActiveTime();
+        expect(apiService.activeTimer).not.toBeNull();
+
+        await jest.advanceTimersByTimeAsync(300000);
+
+        expect(mockStoreState.isUnlocked).toBe(false);
+        expect(mockStoreState.cryptoKey).toBeNull();
+        expect(apiService.activeTimer).toBeNull();
+        expect(jest.getTimerCount()).toBe(0);
+      });
+
+      it('should lock before storage cleanup and not affect a session unlocked during cleanup', async () => {
+        await apiService.submitPassword(TEST_DATA.password);
+        apiService.setLastActiveTime();
+        let finishCleanup!: () => void;
+        mockStorageService.removeValue.mockImplementationOnce(() => new Promise<void>((resolve) => {
+          finishCleanup = resolve;
+        }));
+
+        const locking = apiService.setUnlockedStatus(false);
+        expect(mockStoreState.isUnlocked).toBe(false);
+        expect(mockStoreState.cryptoKey).toBeNull();
+        apiService.setLastActiveTime();
+        await apiService.updateLockTime(600000);
+        expect(apiService.activeTimer).toBeNull();
+        expect(jest.getTimerCount()).toBe(0);
+        expect(mockSendMsg).toHaveBeenLastCalledWith(expect.objectContaining({ payload: false }));
+
+        const result = await apiService.submitPassword(TEST_DATA.password);
+        expect(result).not.toHaveProperty('error');
+        apiService.setLastActiveTime();
+        const newTimer = apiService.activeTimer;
+        mockSendMsg.mockClear();
+        finishCleanup();
+        await locking;
+
+        expect(mockStoreState.isUnlocked).toBe(true);
+        expect(apiService.activeTimer).toBe(newTimer);
+        expect(mockSendMsg).not.toHaveBeenCalled();
+      });
+
+      it('should remain locked with no timer even if storage cleanup fails', async () => {
+        await apiService.submitPassword(TEST_DATA.password);
+        apiService.setLastActiveTime();
+        mockStorageService.removeValue.mockRejectedValueOnce(new Error('storage unavailable'));
+
+        await expect(apiService.setUnlockedStatus(false)).rejects.toThrow('storage unavailable');
+
+        expect(mockStoreState.isUnlocked).toBe(false);
+        expect(mockStoreState.cryptoKey).toBeNull();
+        expect(apiService.activeTimer).toBeNull();
+        expect(jest.getTimerCount()).toBe(0);
+        expect(mockSendMsg).toHaveBeenLastCalledWith(expect.objectContaining({ payload: false }));
+      });
+
+      it.each(['message', 'icon'])('should clear the draft even if %s notification throws', async (notification) => {
+        await apiService.submitPassword(TEST_DATA.password);
+        apiService.setLastActiveTime();
+        mockStorageData.pendingCreateMnemonic = 'encrypted_draft';
+        const fail = () => { throw new Error('notification unavailable'); };
+        const iconSpy = notification === 'icon'
+          ? jest.spyOn(apiService, 'setPopupIcon').mockImplementationOnce(fail)
+          : undefined;
+        if (notification === 'message') mockSendMsg.mockImplementationOnce(fail);
+
+        try {
+          await expect(apiService.setUnlockedStatus(false)).rejects.toThrow('notification unavailable');
+          expect(mockStoreState.isUnlocked).toBe(false);
+          expect(mockStoreState.cryptoKey).toBeNull();
+          expect(apiService.activeTimer).toBeNull();
+          expect(jest.getTimerCount()).toBe(0);
+          expect(mockStorageData).not.toHaveProperty('pendingCreateMnemonic');
+        } finally {
+          iconSpy?.mockRestore();
+        }
+      });
+    });
+
     it('should update state when locking', async () => {
       mockStoreState.autoLockTime = 900;
       mockStoreState.currentAccount = { address: 'B62qTestAddr' };
@@ -1163,9 +1367,18 @@ describe('APIService', () => {
     });
 
     it('should clear pendingCreateMnemonic from storage on lock', async () => {
+      mockStoreState.mne = 'encrypted_draft';
+      mockStorageData.pendingCreateMnemonic = 'encrypted_draft';
+      mockStorageData.keyringData = 'encrypted_wallet';
+      mockStorageData.vaultSalt = 'wallet_salt';
+
       await apiService.setUnlockedStatus(false);
 
       expect(mockStorageService.removeValue).toHaveBeenCalledWith('pendingCreateMnemonic');
+      expect(mockStoreState.mne).toBe('');
+      expect(mockStorageData).not.toHaveProperty('pendingCreateMnemonic');
+      expect(mockStorageData.keyringData).toBe('encrypted_wallet');
+      expect(mockStorageData.vaultSalt).toBe('wallet_salt');
     });
 
     it('should not clear pendingCreateMnemonic when unlocking', async () => {
