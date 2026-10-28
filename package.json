@@ -9,7 +9,7 @@
     "@ledgerhq/device-transport-kit-web-hid": "1.2.4",
     "@reduxjs/toolkit": "2.11.1",
     "@aurowallet/mina-provider": "1.0.14",
-    "axios": "1.18.1",
+    "axios": "1.20.0",
     "axios-retry": "4.5.0",
     "bignumber.js": "9.3.0",
     "@scure/bip32": "1.7.0",
@@ -37,7 +37,7 @@
     "node-forge": "1.4.0",
     "o1js": "3.1.0",
     "serialize-error": "12.0.0",
-    "mina-attestations": "0.5.0",
+    "mina-attestations": "0.6.0",
     "@noble/hashes": "1.7.1",
     "immer": "10.1.1"
   },
@@ -93,23 +93,31 @@
     "@types/react-dom": "19.2.3",
     "@types/webextension-polyfill": "0.12.3",
     "babel-loader": "10.1.1",
-    "babel-plugin-module-resolver": "5.0.2",
+    "babel-plugin-module-resolver": "5.0.3",
     "babel-plugin-import": "1.13.8",
     "copy-webpack-plugin": "14.0.0",
-    "css-loader": "7.1.1",
-    "jest": "^30.4.2",
-    "jest-environment-jsdom": "^30.4.1",
-    "ts-jest": "^29.4.6",
+    "css-loader": "7.1.5",
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
+    "ts-jest": "^29.4.15",
     "terser-webpack-plugin": "5.6.1",
     "path-browserify": "1.0.1",
     "process": "0.11.10",
     "stream-browserify": "3.0.0",
     "style-loader": "4.0.0",
     "typescript": "5.8.3",
-    "webpack": "5.110.3",
+    "webpack": "5.112.2",
     "webpack-cli": "6.0.1",
     "jszip": "3.10.1",
     "deepmerge": "4.2.2",
     "util": "0.12.5"
+  },
+  "resolutions": {
+    "mina-attestations/zod": "4.6.7"
+  },
+  "overrides": {
+    "mina-attestations": {
+      "zod": "4.6.7"
+    }
   }
 }
