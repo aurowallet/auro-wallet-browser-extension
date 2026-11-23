@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Enhancements
 - Upgrade o1js to 3.1.0
 - Upgrade mina-attestations to 0.6.0
+- Update WalletPage UI
 
 ### Fixes
 - Update dependencies to address security advisories

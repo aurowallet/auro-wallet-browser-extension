@@ -239,65 +239,24 @@ const StyledWalletBaseAction = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
-  border-radius: 10px;
+  gap: 32px;
   z-index: 1;
 `;
 interface StyledBaseBtnProps {
   $netColor?: string;
 }
-const StyledBaseBtn = styled.div<StyledBaseBtnProps>`
+const StyledBaseBtn = styled.button<StyledBaseBtnProps>`
   font-weight: 500;
   font-size: 14px;
-  text-align: center;
   color: ${(props) =>
     props.$netColor ? props.$netColor : "rgba(0, 0, 0, 0.30)"};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  margin: 0;
+  border: none;
+  border-radius: 24px;
+  background: #ffffff;
+  min-width: 0;
   padding: 10px 0px;
   flex: 1;
   cursor: pointer;
-`;
-const StyledSendBtn = styled(StyledBaseBtn)`
-  &:hover {
-    background: #f2f2f2;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-  }
-`;
-
-const borderCss = css`
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-`
-interface StyledReceiveBtnProps extends StyledBaseBtnProps {
-  $showStaking?: boolean;
-}
-const StyledReceiveBtn = styled(StyledBaseBtn)<StyledReceiveBtnProps>`
-  &:hover {
-    background: #f2f2f2;
-    ${(props) => (props.$showStaking ? "" : borderCss)};
-  }
-`;
-
-const StyledStakeBtn = styled(StyledBaseBtn)`
-  &:hover {
-    background: #f2f2f2;
-    ${borderCss};
-  }
-`;
-const StyledDivideColumnWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0px;
-`;
-const StyledDivideColumn = styled.div`
-  border: 0.5px solid #f2f2f2;
-  height: 24px;
 `;
 
 const StyledIconBackground = styled.div`
@@ -410,9 +369,6 @@ const WalletInfo = () => {
   const toReceive = useCallback(() => {
     navigate("/receive_page");
   }, []);
-  const toStaking = useCallback(() => {
-    navigate("/staking");
-  }, []);
 
 
   const setDappDisconnect = useCallback(() => {
@@ -479,7 +435,7 @@ const WalletInfo = () => {
     fetchPrice();
   }, [currencyConfig.currentCurrency, netConfig.currentNode.networkID]);
 
-  const { netColor, showStaking, nextChainIcon } = useMemo(() => {
+  const { netColor, nextChainIcon } = useMemo(() => {
     const networkID = netConfig.currentNode.networkID;
     let isZeko = isZekoNet(networkID)
     let nextChainIcon = isZeko ? "/img/icon_zeko.svg" : "/img/icon_mina.svg";
@@ -491,10 +447,8 @@ const WalletInfo = () => {
       netColor = "#E7B13F";
       nextChainIcon = "/img/icon_zeko_mainnet.svg";
     }
-    let showStaking = networkID?.startsWith("mina");
     return {
       netColor,
-      showStaking,
       nextChainIcon,
     };
   }, [netConfig.currentNode.networkID]);
@@ -514,29 +468,12 @@ const WalletInfo = () => {
         </StyledWalletAddress>
         <StyledCurrencyRow $isCache={isCache}>{unitBalance}</StyledCurrencyRow>
         <StyledWalletBaseAction>
-          <StyledSendBtn $netColor={netColor} onClick={toSend}>
+          <StyledBaseBtn type="button" $netColor={netColor} onClick={toSend}>
             {i18n.t("send")}
-          </StyledSendBtn>
-          <StyledDivideColumnWrapper>
-            <StyledDivideColumn />
-          </StyledDivideColumnWrapper>
-          <StyledReceiveBtn
-            $netColor={netColor}
-            onClick={toReceive}
-            $showStaking={showStaking}
-          >
+          </StyledBaseBtn>
+          <StyledBaseBtn type="button" $netColor={netColor} onClick={toReceive}>
             {i18n.t("receive")}
-          </StyledReceiveBtn>
-          {showStaking && (
-            <>
-              <StyledDivideColumnWrapper>
-                <StyledDivideColumn />
-              </StyledDivideColumnWrapper>
-              <StyledStakeBtn $netColor={netColor} onClick={toStaking}>
-                {i18n.t("staking")}
-              </StyledStakeBtn>
-            </>
-          )}
+          </StyledBaseBtn>
         </StyledWalletBaseAction>
         <StyledIconBackground>
           <img src={nextChainIcon} />
