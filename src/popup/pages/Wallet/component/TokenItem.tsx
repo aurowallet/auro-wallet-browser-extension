@@ -175,7 +175,7 @@ const TokenItem = ({ token, isInModal }: TokenItemProps) => {
           <StyledTokenSymbolWrapper>
             <StyledTokenSymbol>{tokenSymbol}</StyledTokenSymbol>
             {!isFungibleToken && !isInModal && showStaking && (
-              <StyledEarnTag onClick={(event) => event.stopPropagation()}>
+              <StyledEarnTag>
                 {i18n.t("earn")}
                 <StyledEarnIcon src="/img/icon_earn.svg" alt="" />
               </StyledEarnTag>
