@@ -12,7 +12,8 @@ import { LoadingView } from "./StatusView";
 import TokenItem from "./TokenItem";
 import TokenManageList from "./TokenManageList";
 
-const StyledTokenWrapper = styled.div`
+const StyledTokenWrapper = styled.div<{ $isLoading: boolean }>`
+  flex: ${({ $isLoading }) => $isLoading ? "1 0 auto" : "0 0 auto"};
   background-color: white;
 `;
 const StyledTokenHeaderRow = styled.div`
@@ -60,6 +61,7 @@ const TokenListView = ({ isInModal = false }) => {
   const isSilentRefresh = useAppSelector(
     (state) => state.accountInfo.isSilentRefresh
   );
+  const isLoading = shouldRefresh && !isSilentRefresh && tokenList.length === 0 && !isInModal;
   const currentAccount = useAppSelector(
     (state) => state.accountInfo.currentAccount
   );
@@ -95,7 +97,7 @@ const TokenListView = ({ isInModal = false }) => {
     dispatch(updateLocalShowedTokenId(newIdList));
   }, [tokenList, currentAccount, localShowedTokenIds]);
   return (
-    <StyledTokenWrapper>
+    <StyledTokenWrapper $isLoading={isLoading}>
       {!isInModal && (
         <StyledTokenHeaderRow>
           <StyledTokenRowTitle>{i18n.t("tokens")}</StyledTokenRowTitle>
@@ -106,10 +108,7 @@ const TokenListView = ({ isInModal = false }) => {
             />}
         </StyledTokenHeaderRow>
       )}
-      {shouldRefresh &&
-      !isSilentRefresh &&
-      tokenList.length == 0 &&
-      !isInModal ? (
+      {isLoading ? (
         <LoadingView />
       ) : (
         (tokenShowList as TokenListItem[]).map((token: TokenListItem, index: number) => {

@@ -183,6 +183,8 @@
   "disconnectSuccess": "Відключено",
   "nodeError": "помилка серверу",
   "earn": "Заробляйте",
+  "getMina": "Отримати MINA",
+  "getMinaFrom": "Де отримати MINA",
   "staking": "Ставка",
   "history": "ІСТОРІЯ",
   "goToExplorer": "Перевірте більше історії транзакцій",

@@ -138,6 +138,7 @@ interface UpdateTokenAssetsAction {
   type: typeof UPDATE_TOKEN_ASSETS;
   tokenList: TokenInfo[];
   isCache?: boolean;
+  refreshComplete?: boolean;
 }
 
 interface UpdateCurrentPriceAction {
@@ -234,8 +235,8 @@ export function updateScamList(scamList: ScamData[]) {
   return { type: UPDATE_SCAM_LIST, scamList };
 }
 
-export function updateTokenAssets(tokenList: TokenInfo[], isCache?: boolean) {
-  return { type: UPDATE_TOKEN_ASSETS, tokenList, isCache };
+export function updateTokenAssets(tokenList: TokenInfo[], isCache?: boolean, refreshComplete?: boolean) {
+  return { type: UPDATE_TOKEN_ASSETS, tokenList, isCache, refreshComplete };
 }
 
 // ============ Initial State ============
@@ -301,6 +302,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
       const isSilent = action.isSilent;
       const shouldRefresh = action.shouldRefresh;
       if (isSilent) {
+        if (shouldRefresh && state.shouldRefresh && !state.isSilentRefresh) return state;
         return { ...state, shouldRefresh, isSilentRefresh: true };
       }
       let newState: Partial<AccountInfoState> = {};
@@ -363,6 +365,7 @@ const accountInfo = (state: AccountInfoState = initState, action: AccountAction)
         tokenShowList: result.tokenShowList,
         mainTokenNetInfo: result.mainTokenNetInfo,
         newTokenCount: result.newTokenCount,
+        ...(action.refreshComplete ? { shouldRefresh: false, isSilentRefresh: false } : {}),
       };
 
     case UPDATE_CURRENT_PRICE:

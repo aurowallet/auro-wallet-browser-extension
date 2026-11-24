@@ -1,6 +1,7 @@
 import { Terms_default, DEFAULT_FEE_CONFIG } from "@/constant";
 import type { FeeConfig } from "@/types/tx.types";
 import type { TokenItem } from "@/utils/reducer";
+import type { MinaExchangesConfig } from "@/utils/minaExchanges";
 
 // ============ Action Types ============
 
@@ -17,6 +18,7 @@ const UPDATE_ACCOUNT_TYPE_COUNT = "UPDATE_ACCOUNT_TYPE_COUNT";
 const UPDATE_NEXT_TOKEN_DETAIL = "UPDATE_NEXT_TOKEN_DETAIL";
 const UPDATE_POPUP_LOCK_STATUS = "UPDATE_POPUP_LOCK_STATUS";
 const SET_KEYRING_INFO = "SET_KEYRING_INFO";
+const UPDATE_MINA_EXCHANGES_CONFIG = "UPDATE_MINA_EXCHANGES_CONFIG";
 
 // ============ Interfaces ============
 
@@ -46,6 +48,7 @@ export interface ExtensionBaseInfo {
 }
 
 export interface CacheState {
+  minaExchangesConfig: MinaExchangesConfig | null;
   fromType: string;
   accountInfo: Record<string, unknown>;
   welcomeNextType: string;
@@ -136,6 +139,11 @@ interface SetKeyringInfoAction {
   keyringInfo: Record<string, unknown>;
 }
 
+interface UpdateMinaExchangesConfigAction {
+  type: typeof UPDATE_MINA_EXCHANGES_CONFIG;
+  config: MinaExchangesConfig | null;
+}
+
 type CacheAction =
   | SetAccountInfoAction
   | SetWelcomeNextTypeAction
@@ -149,9 +157,14 @@ type CacheAction =
   | UpdateAccountTypeCountAction
   | UpdateNextTokenDetailAction
   | UpdatePopupLockStatusAction
-  | SetKeyringInfoAction;
+  | SetKeyringInfoAction
+  | UpdateMinaExchangesConfigAction;
 
 // ============ Action Creators ============
+
+export function updateMinaExchangesConfig(config: MinaExchangesConfig | null) {
+  return { type: UPDATE_MINA_EXCHANGES_CONFIG, config };
+}
 
 export function updatePopupLockStatus(status: boolean) {
   return { type: UPDATE_POPUP_LOCK_STATUS, status };
@@ -208,6 +221,7 @@ export function updateNextTokenDetail(token: Partial<TokenItem>) {
 // ============ Initial State ============
 
 const initState: CacheState = {
+  minaExchangesConfig: null,
   fromType: "",
   accountInfo: {},
   welcomeNextType: "",
@@ -235,6 +249,8 @@ const initState: CacheState = {
 
 const cacheReducer = (state: CacheState = initState, action: CacheAction): CacheState => {
   switch (action.type) {
+    case UPDATE_MINA_EXCHANGES_CONFIG:
+      return { ...state, minaExchangesConfig: action.config };
     case SET_ACCOUNT_INFO:
       return { ...state, accountInfo: action.info };
     case SET_WELCOME_NEXT_TYPE:

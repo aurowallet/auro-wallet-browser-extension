@@ -77,7 +77,8 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
 
   useEffect(() => {
     fetchGenerationRef.current++;
-  }, [currentAccount.address, currentNodeUrl]);
+    return () => { fetchGenerationRef.current++; };
+  }, [currentAccount.address, currentNodeUrl, currentNetworkID]);
 
   const fetchAccountData = useCallback(async (): Promise<unknown> => {
     setIsLoading(true);
@@ -99,8 +100,7 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
             if (!isDev) {
               Toast.info(i18n.t("nodeError"), 2000, false);
               if (!isSilentRef.current) {
-                dispatch(updateTokenAssets([]));
-                setResult([]);
+                setResult(null);
               }
             }
             return [];
@@ -123,7 +123,7 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
               }
             }
             if (!isDev) {
-              dispatch(updateTokenAssets(lastTokenList));
+              dispatch(updateTokenAssets(lastTokenList, false, true));
               setResult(lastTokenList);
               saveTokenAssetsCache(currentNetworkID, currentAccount.address, lastTokenList);
               return lastTokenList;
@@ -133,11 +133,9 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
           }
         } else {
           if (!isDev) {
-            if (!isSilentRef.current) {
-              dispatch(updateTokenAssets([]));
-              setResult([]);
-              saveTokenAssetsCache(currentNetworkID, currentAccount.address, []);
-            }
+            dispatch(updateTokenAssets([], false, true));
+            setResult([]);
+            saveTokenAssetsCache(currentNetworkID, currentAccount.address, []);
             return [];
           } else {
             return [];
@@ -145,8 +143,7 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
         }
       } else {
         if (!isDev && !isSilentRef.current) {
-          dispatch(updateTokenAssets([]));
-          setResult([]);
+          setResult(null);
         }
         return [];
       }
@@ -154,7 +151,6 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
       console.error(error);
       if (generation === fetchGenerationRef.current) {
         if (!isDev && !isSilentRef.current) {
-          dispatch(updateTokenAssets([]));
           setResult(null);
         }
       }

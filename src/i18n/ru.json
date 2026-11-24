@@ -272,6 +272,8 @@
   "disconnect": "Отключить",
   "disconnectSuccess": "Отключено",
   "earn": "Зарабатывайте",
+  "getMina": "Получить MINA",
+  "getMinaFrom": "Где получить MINA",
   "staking": "Стейкинг",
   "history": "ИСТОРИЯ",
   "goToExplorer": "Проверьте историю транзакций",

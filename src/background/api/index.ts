@@ -7,6 +7,7 @@ import {
   RECOMMEND_FEE,
   SCAM_LIST,
   SUPPORT_TOKEN_LIST,
+  MINA_EXCHANGES_CACHE_KEY,
 } from "../../constant/storageKey";
 import { getCurrentNodeConfig } from "../../utils/browserUtils";
 import { getReadableNetworkId, isZekoNet, parseStakingList, type StakingListResult } from "../../utils/utils";
@@ -40,6 +41,8 @@ import {
   getZkAppTransactionListBody,
 } from "./gqlparams";
 import type { FeeConfig } from "@/types/tx.types";
+import { extSaveLocal } from "../extensionStorage";
+import { parseMinaExchangesConfig } from "@/utils/minaExchanges";
 
 // ============ Types ============
 
@@ -286,6 +289,21 @@ export async function getRecommendFee(): Promise<FeeConfig> {
     }
   }
   return DEFAULT_FEE_CONFIG;
+}
+
+export async function refreshMinaExchanges(): Promise<void> {
+  try {
+    const data = await commonFetch(BASE_INFO_URL + "/v1/config/mina-exchanges");
+    if (data && typeof data === "object" && "error" in data) {
+      throw data.error;
+    }
+    const config = parseMinaExchangesConfig(data);
+    if (config) {
+      await extSaveLocal(MINA_EXCHANGES_CACHE_KEY, { config });
+    }
+  } catch (error) {
+    console.error("Failed to refresh MINA exchanges", error);
+  }
 }
 
 /**

@@ -66,6 +66,7 @@ export const ZKAPP_APPROVE_LIST = "ZKAPP_APPROVE_LIST";
 // ============ Token ============
 
 export const SUPPORT_TOKEN_LIST = "SUPPORT_TOKEN_LIST";
+export const MINA_EXCHANGES_CACHE_KEY = "MINA_EXCHANGES_CONFIG_V1";
 
 // ============ Debug ============
 

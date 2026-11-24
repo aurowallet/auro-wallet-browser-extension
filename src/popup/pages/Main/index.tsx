@@ -65,13 +65,9 @@ const HomePage = () => {
     if (localTokenAssets) {
       let tokenAssetsMap = safeJsonParse(localTokenAssets)
       let tokenAssets = networkID ? tokenAssetsMap?.[networkID]?.[address] : undefined
-      if (tokenAssets) {
+      if (Array.isArray(tokenAssets)) {
         dispatch(updateTokenAssets(tokenAssets,true));
-      } else {
-        dispatch(updateTokenAssets([], true));
       }
-    } else {
-      dispatch(updateTokenAssets([], true));
     }
   }, [dispatch])
 

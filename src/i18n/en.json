@@ -183,6 +183,8 @@
   "disconnectSuccess": "Disconnected",
   "nodeError": "Server Error",
   "earn": "Earn",
+  "getMina": "Get MINA",
+  "getMinaFrom": "Get MINA From",
   "staking": "Staking",
   "history": "HISTORY",
   "goToExplorer": "Check more transaction history",

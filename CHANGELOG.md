@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade o1js to 3.1.0
 - Upgrade mina-attestations to 0.6.0
 - Update WalletPage UI
+- Add a Get MINA entry
 
 ### Fixes
 - Update dependencies to address security advisories
@@ -14,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Apply Auto-Lock settings immediately, including Never
 - Clear Auto-Lock timers when locking the wallet
 - Lock before storage cleanup and preserve cleanup on UI errors
+- Fill the home token loading area with a white background while retaining gray space below short loaded lists
 
 ## [2.5.4]
 ### Enhancements

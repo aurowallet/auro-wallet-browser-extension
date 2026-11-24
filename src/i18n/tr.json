@@ -226,6 +226,8 @@
   "privateKeyTip_1": "Özel anahtar bir dizi karakterden oluşur ve özel anahtara sahip olmak, varlığa sahip olmakla eşdeğerdir.",
   "accountNameLimit": "En fazla 16 karakter",
   "earn": "Kazan",
+  "getMina": "MINA Al",
+  "getMinaFrom": "MINA Alabileceğiniz Platformlar",
   "staking": "Staking",
   "done": "Tamamlandı",
   "changePassword": "Şifreyi Değiştir",

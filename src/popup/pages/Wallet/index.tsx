@@ -34,9 +34,10 @@ import { PopupModal } from "../../component/PopupModal";
 import Toast from "../../component/Toast";
 import NetworkSelect from "../Networks/NetworkSelect";
 import TokenListView from "./component/TokenListView";
+import GetMina from "./component/GetMina";
 
 const StyledPageWrapper = styled.div`
-  background: white;
+  background: #edeff2;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -70,6 +71,10 @@ const StyledHeaderBarIcon = styled.img`
 
 const StyledPageContent = styled.div`
   margin-top: 58px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   background: #edeff2;
 `;
@@ -138,6 +143,7 @@ const Wallet = ({}) => {
         <WalletInfo />
         <TokenListView />
       </StyledPageContent>
+      <GetMina />
 
       <PopupModalV2
         title={i18n.t("watchModeDeleteBtn")}
@@ -167,6 +173,7 @@ interface StyledWalletInfoWrapperProps {
   $netColor?: string;
 }
 const StyledWalletInfoWrapper = styled.div<StyledWalletInfoWrapperProps>`
+  flex-shrink: 0;
   border-radius: 20px;
   background: ${(props) =>
     props.$netColor ? props.$netColor : "rgba(0, 0, 0, 0.30)"};
