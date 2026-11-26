@@ -1,5 +1,7 @@
 import { getLocal, saveLocal } from "@/background/localStorage";
 import { MAIN_COIN_CONFIG } from "@/constant";
+import { NetworkID_MAP } from "@/constant/network";
+import MinaExchangePopup from "@/popup/component/MinaExchangePopup";
 import { LOCAL_CACHE_KEYS } from "@/constant/storageKey";
 import Clock from "@/popup/component/Clock";
 import CustomViewV2 from "@/popup/component/CustomViewV2";
@@ -60,9 +62,7 @@ const StyledActionRow = styled.div`
   margin-top: 16px;
   display: flex;
   align-items: center;
-  > :not(:first-of-type) {
-    margin-left: 10px;
-  }
+  gap: 10px;
 `;
 const StyledHistoryWrapper = styled.div`
   box-sizing: content-box;
@@ -476,6 +476,11 @@ const TokenDetail = () => {
         <StyledBalanceRow>{displayBalance}</StyledBalanceRow>
         <StyledAmountRow>{displayAmount}</StyledAmountRow>
         <StyledActionRow>
+          {!isFungibleToken && currentNode.networkID === NetworkID_MAP.mainnet && (
+            <TokenBuyAction
+              key={JSON.stringify([currentAccount.address, currentNode.url])}
+            />
+          )}
           <TokenAction
             type={token_action_type.send}
             isFungibleToken={isFungibleToken}
@@ -520,6 +525,7 @@ const TokenDetail = () => {
 };
 
 const token_action_type = {
+  buy: "buy",
   send: "send",
   receive: "receive",
   delegation: "delegation",
@@ -572,9 +578,31 @@ const StyledActionItemWrapper = styled.div`
 interface TokenActionProps {
   type: string;
   isFungibleToken?: boolean;
+  onClick?: () => void;
 }
 
-export const TokenAction = ({ type, isFungibleToken }: TokenActionProps) => {
+const TokenBuyAction = () => {
+  const config = useAppSelector((state) => state.cache.minaExchangesConfig);
+  const exchanges = config?.enabled ? config.exchanges.filter((exchange) => exchange.enabled) : [];
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!exchanges.length) setIsOpen(false);
+  }, [exchanges.length]);
+
+  if (!exchanges.length) return null;
+
+  return (
+    <>
+      <TokenAction type={token_action_type.buy} onClick={() => setIsOpen(true)} />
+      {isOpen && (
+        <MinaExchangePopup exchanges={exchanges} onClose={() => setIsOpen(false)} />
+      )}
+    </>
+  );
+};
+
+export const TokenAction = ({ type, isFungibleToken, onClick }: TokenActionProps) => {
   const navigate = useNavigate();
   const { title, nextRouter, actionIconUrl, isReceive } = useMemo(() => {
     let title = "";
@@ -582,6 +610,10 @@ export const TokenAction = ({ type, isFungibleToken }: TokenActionProps) => {
     let actionIconUrl = "";
     let isReceive = false;
     switch (type) {
+      case token_action_type.buy:
+        title = i18n.t("buy");
+        actionIconUrl = "img/tx_buy.svg";
+        break;
       case token_action_type.send:
         title = i18n.t("send");
         nextRouter = "/send_page";
@@ -594,7 +626,7 @@ export const TokenAction = ({ type, isFungibleToken }: TokenActionProps) => {
         isReceive = true;
         break;
       case token_action_type.delegation:
-        title = i18n.t("staking");
+        title = i18n.t("earn");
         nextRouter = "/staking";
         actionIconUrl = "img/tx_delegation.svg";
         break;
@@ -611,7 +643,7 @@ export const TokenAction = ({ type, isFungibleToken }: TokenActionProps) => {
     navigate(nextRouter, { state: { isFromTokenPage: true, isFungibleToken } });
   }, [nextRouter, isFungibleToken, type]);
   return (
-    <StyledActionItemWrapper onClick={onClickActionBtn}>
+    <StyledActionItemWrapper onClick={onClick ?? onClickActionBtn}>
       <StyledIconWrapper $rotate={String(isReceive)}>
         {actionIconUrl && <img src={actionIconUrl} />}
       </StyledIconWrapper>

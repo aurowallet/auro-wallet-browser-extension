@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.6]
+### Enhancements
+- Add a Buy action to MINA details
+- Rename the MINA detail Staking action
+- Update HomePage UI
+
+### Fixes
+
 ## [2.5.5]
 ### Enhancements
 - Upgrade o1js to 3.1.0

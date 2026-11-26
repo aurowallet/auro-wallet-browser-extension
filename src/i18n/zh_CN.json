@@ -183,6 +183,7 @@
   "undelegated": "未委托",
   "disconnectSuccess": "已断开连接",
   "nodeError": "服务器错误",
+  "buy": "购买",
   "earn": "赚取",
   "getMina": "获取 MINA",
   "getMinaFrom": "获取 MINA 的方式",
