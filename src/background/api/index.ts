@@ -7,11 +7,12 @@ import {
   RECOMMEND_FEE,
   SCAM_LIST,
   SUPPORT_TOKEN_LIST,
+  MINA_EXCHANGES_CACHE_KEY,
 } from "../../constant/storageKey";
 import { getCurrentNodeConfig } from "../../utils/browserUtils";
 import { getReadableNetworkId, isZekoNet, parseStakingList, type StakingListResult } from "../../utils/utils";
 
-import { getLocal, saveLocal } from "../localStorage";
+import { getLocal, getLocalJsonObject, saveLocal } from "../localStorage";
 import {
   commonFetch,
   startFetchMyMutation,
@@ -40,6 +41,8 @@ import {
   getZkAppTransactionListBody,
 } from "./gqlparams";
 import type { FeeConfig } from "@/types/tx.types";
+import { extSaveLocal } from "../extensionStorage";
+import { parseMinaExchangesConfig } from "@/utils/minaExchanges";
 
 // ============ Types ============
 
@@ -202,7 +205,13 @@ export async function fetchBlockInfo(stateHash: string): Promise<unknown> {
   const query = getBlockInfoBody();
   const res = (await startFetchMyQuery(query, { stateHash })) as { block?: unknown };
   const block = res.block || {};
-  saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO, JSON.stringify(block));
+  if (netConfig.networkID) {
+    const cachedMap = getLocalJsonObject(LOCAL_CACHE_KEYS.BLOCK_INFO_V2);
+    saveLocal(LOCAL_CACHE_KEYS.BLOCK_INFO_V2, JSON.stringify({
+      ...cachedMap,
+      [netConfig.networkID]: block,
+    }));
+  }
   return block;
 }
 
@@ -219,10 +228,17 @@ export async function fetchDelegationInfo(publicKey: string): Promise<unknown> {
   const query = getDelegationInfoBody();
   const res = (await startFetchMyQuery(query, { publicKey })) as { account?: unknown };
   const account = res.account || {};
-  saveLocal(
-    LOCAL_CACHE_KEYS.DELEGATION_INFO,
-    JSON.stringify({ [publicKey]: account })
-  );
+  if (netConfig.networkID) {
+    const cachedMap = getLocalJsonObject(LOCAL_CACHE_KEYS.DELEGATION_INFO_V2);
+    const cachedNetwork = cachedMap[netConfig.networkID];
+    const networkCache = cachedNetwork && typeof cachedNetwork === "object" && !Array.isArray(cachedNetwork)
+      ? cachedNetwork as Record<string, unknown>
+      : {};
+    saveLocal(LOCAL_CACHE_KEYS.DELEGATION_INFO_V2, JSON.stringify({
+      ...cachedMap,
+      [netConfig.networkID]: { ...networkCache, [publicKey]: account },
+    }));
+  }
   return account;
 }
 
@@ -273,6 +289,21 @@ export async function getRecommendFee(): Promise<FeeConfig> {
     }
   }
   return DEFAULT_FEE_CONFIG;
+}
+
+export async function refreshMinaExchanges(): Promise<void> {
+  try {
+    const data = await commonFetch(BASE_INFO_URL + "/v1/config/mina-exchanges");
+    if (data && typeof data === "object" && "error" in data) {
+      throw data.error;
+    }
+    const config = parseMinaExchangesConfig(data);
+    if (config) {
+      await extSaveLocal(MINA_EXCHANGES_CACHE_KEY, { config });
+    }
+  } catch (error) {
+    console.error("Failed to refresh MINA exchanges", error);
+  }
 }
 
 /**

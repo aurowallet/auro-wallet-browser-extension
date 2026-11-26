@@ -108,6 +108,7 @@ const TokenDetail = () => {
   const requestContextRef = useRef({
     address: "",
     networkID: "",
+    nodeUrl: "",
     tokenId: "",
   });
   const clearPostTxRetries = useCallback(() => {
@@ -126,9 +127,10 @@ const TokenDetail = () => {
     requestContextRef.current = {
       address: currentAccount.address || "",
       networkID: currentNode.networkID || "",
+      nodeUrl: currentNode.url || "",
       tokenId: String(token.tokenId || ""),
     };
-  }, [currentAccount.address, currentNode.networkID, token.tokenId]);
+  }, [currentAccount.address, currentNode.networkID, currentNode.url, token.tokenId]);
 
   const {
     tokenIconUrl,
@@ -200,18 +202,23 @@ const TokenDetail = () => {
   }, [showTxHistory]);
 
   const saveToLocal = useCallback(
-    (newHistory: Record<string, unknown>[]) => {
+    (newHistory: { fullTxList?: unknown[] }) => {
+      if (!Array.isArray(newHistory.fullTxList)) {
+        return;
+      }
       const address = currentAccount.address || "";
       const cacheKey = getTxHistoryCacheKey(address, currentNode.networkID);
-      const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2);
+      const txHistory = getLocal(LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V3);
       const currentHistory = safeJsonParse(txHistory);
+      const tokenId = token.tokenId as string;
+      const completedHistory = { fullTxList: newHistory.fullTxList };
       if (currentHistory?.[cacheKey]) {
         let newSaveHistory = {
           ...currentHistory[cacheKey],
-          [token.tokenId as string]: newHistory,
+          [tokenId]: completedHistory,
         };
         saveLocal(
-          LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
+          LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V3,
           JSON.stringify({
             ...currentHistory,
             [cacheKey]: newSaveHistory,
@@ -219,11 +226,11 @@ const TokenDetail = () => {
         );
       } else {
         saveLocal(
-          LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V2,
+          LOCAL_CACHE_KEYS.ALL_TX_HISTORY_V3,
           JSON.stringify({
             ...currentHistory,
             [cacheKey]: {
-              [token.tokenId as string]: newHistory,
+              [tokenId]: completedHistory,
             },
           })
         );
@@ -236,9 +243,10 @@ const TokenDetail = () => {
       const requestContext = {
         address,
         networkID: currentNode.networkID || "",
+        nodeUrl: currentNode.url || "",
         tokenId: String(token.tokenId || ""),
       };
-      const requestKey = `${requestContext.address}:${requestContext.networkID}:${requestContext.tokenId}`;
+      const requestKey = `${requestContext.address}:${requestContext.networkID}:${requestContext.nodeUrl}:${requestContext.tokenId}`;
       if (activeRequestKeyRef.current === requestKey) {
         return;
       }
@@ -268,7 +276,7 @@ const TokenDetail = () => {
           let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
           let fullTxList = zkStatus ? txResponse[2].txList : [];
 
-          let history: { fullTxList?: unknown[]; zkPendingList?: unknown[]; txPendingList?: unknown[] } = {};
+          let history: Parameters<typeof updateAccountTxV2>[0] = {};
           if (dataStatus_txPending) {
             history.txPendingList = txPendingList;
           }
@@ -282,12 +290,15 @@ const TokenDetail = () => {
           if (
             latestContext.address === requestContext.address &&
             latestContext.networkID === requestContext.networkID &&
+            latestContext.nodeUrl === requestContext.nodeUrl &&
             latestContext.tokenId === requestContext.tokenId &&
             latestRequestIdRef.current === requestId
           ) {
-            dispatch(updateAccountTxV2(history as Parameters<typeof updateAccountTxV2>[0], token.tokenId as string));
+            dispatch(updateAccountTxV2(history, token.tokenId as string));
             dispatch(updateShouldRequest(false));
-            saveToLocal(history as Record<string, unknown>[]);
+            if (zkStatus) {
+              saveToLocal({ fullTxList });
+            }
           }
         } else {
           txResponse = await Promise.all([
@@ -302,7 +313,7 @@ const TokenDetail = () => {
           let txPendingList = dataStatus_txPending ? txResponse[0].txList : [];
           let zkPendingList = zkPendingStatus ? txResponse[1].txList : [];
           let fullTxList = dataStatus_tx ? txResponse[2].txList : [];
-          let history: { fullTxList?: unknown[]; zkPendingList?: unknown[]; txPendingList?: unknown[] } = {};
+          let history: Parameters<typeof updateAccountTxV2>[0] = {};
           if (dataStatus_txPending) {
             history.txPendingList = txPendingList;
           }
@@ -316,12 +327,15 @@ const TokenDetail = () => {
           if (
             latestContext.address === requestContext.address &&
             latestContext.networkID === requestContext.networkID &&
+            latestContext.nodeUrl === requestContext.nodeUrl &&
             latestContext.tokenId === requestContext.tokenId &&
             latestRequestIdRef.current === requestId
           ) {
-            dispatch(updateAccountTxV2(history as Parameters<typeof updateAccountTxV2>[0], token.tokenId as string));
+            dispatch(updateAccountTxV2(history, token.tokenId as string));
             dispatch(updateShouldRequest(false));
-            saveToLocal(history as Record<string, unknown>[]);
+            if (dataStatus_tx) {
+              saveToLocal({ fullTxList });
+            }
           }
         }
       } finally {
@@ -329,6 +343,7 @@ const TokenDetail = () => {
         const isLatestRequest =
           latestContext.address === requestContext.address &&
           latestContext.networkID === requestContext.networkID &&
+          latestContext.nodeUrl === requestContext.nodeUrl &&
           latestContext.tokenId === requestContext.tokenId &&
           latestRequestIdRef.current === requestId;
         if (isLatestRequest) {
@@ -340,7 +355,7 @@ const TokenDetail = () => {
         }
       }
     },
-    [currentAccount.address, currentNode.networkID, isFungibleToken, token.tokenId, saveToLocal]
+    [currentAccount.address, currentNode.networkID, currentNode.url, isFungibleToken, token.tokenId, saveToLocal]
   );
 
   const requestHistoryAfterZekoBalanceChange = useCallback(() => {
@@ -349,7 +364,7 @@ const TokenDetail = () => {
 
   const onClickRefresh = useCallback(() => {
     dispatch(updateShouldRequest(true, true));
-  }, [requestHistory]);
+  }, [dispatch]);
 
   useEffect(() => {
     requestHistory();
@@ -393,7 +408,7 @@ const TokenDetail = () => {
 
   useEffect(() => {
     clearPostTxRetries();
-  }, [currentAccount.address, currentNode.networkID]);
+  }, [currentAccount.address, currentNode.networkID, currentNode.url]);
 
   useEffect(() => {
     if (shouldRefresh && isSilentRefresh) {
@@ -413,7 +428,7 @@ const TokenDetail = () => {
     return () => {
       clearPostTxRetries();
     };
-  }, [shouldRefresh, isSilentRefresh, currentNode.networkID, requestHistory, fetchAccountData, clearPostTxRetries]);
+  }, [shouldRefresh, isSilentRefresh, currentNode.networkID, currentNode.url, requestHistory, fetchAccountData, clearPostTxRetries]);
 
   useEffect(() => {
     let onMessageListening = (message: { type: string; action: string; hash?: string }, sender: browser.Runtime.MessageSender, sendResponse: () => void) => {

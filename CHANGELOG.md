@@ -1,13 +1,64 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-
 ## [2.6.0]
 ### Enhancements
 - Add NFT tab to the wallet asset list
 - Add NFT list and detail pages
 
 ### Fixes
+
+
+## [2.5.5]
+### Enhancements
+- Upgrade o1js to 3.1.0
+- Upgrade mina-attestations to 0.6.0
+- Update WalletPage UI
+- Add a Get MINA entry
+
+### Fixes
+- Update dependencies to address security advisories
+- Fix scalar and array credential display
+- Apply Auto-Lock settings immediately, including Never
+- Clear Auto-Lock timers when locking the wallet
+- Lock before storage cleanup and preserve cleanup on UI errors
+- Fill the home token loading area with a white background while retaining gray space below short loaded lists
+
+## [2.5.4]
+### Enhancements
+- Store completed transaction history in the V3 cache only
+- Update pending transaction cache
+- Upgrade LedgerJS and Mina Ledger packages and add DMK WebHID transport support
+- Add Legacy/DMK Ledger mode selection in Preferences
+- Refactor Ledger connection and session management with transport diagnostics
+
+### Fixes
+- Clear outstanding transaction refresh retries when the active account, network, or node changes
+- Improve Ledger device discovery, permission handling, and transport state synchronization
+
+## [2.5.3]
+### Enhancements
+- Add Ledger zkApp transaction signing, broadcasting, and sign-only responses
+- Enable Ledger token transfers on supported networks
+- Add zkApp-aware Ledger confirmation content, Blind signing reminders, and transaction status tracking
+- Support Ledger transaction speed-up and cancel for payment, delegation, and zkApp transactions
+- Improve Ledger connection, device-state, and error handling
+- Improve Ledger signing reliability and payment signature compatibility
+- Improve Ledger confirmation recovery and waiting-state accuracy
+- Add an optional draggable Ledger status diagnostic widget controlled from Dev Page
+- Keep zkApp `validUntil` when preparing software signing requests
+- Remove Zeko networks from the default network list
+- Set the default slot duration display to 1.5 minutes
+- Upgrade router and build dependencies, refresh transitive packages, and remove obsolete resolutions/overrides to address security advisories
+- Upgrade `@zondax/ledger-mina-js` to 0.2.0 and add `@zondax/ledger-js`
+- Upgrade `o1js` to 3.0.0 for presentation compatibility
+- Isolate block, delegation, and token asset caches by network and account with V2 storage keys
+- Prevent stale Mainnet staking data from appearing on non-Mainnet networks and route non-Mainnet staking directly to manual validator input
+- Calculate Epoch duration from node slot configuration
+
+### Fixes
+- Handle zkApp transaction responses when refreshing transaction history
+- Consolidate Ledger signing loading and connection checks, prevent duplicate prompts, and clear state on manual close
 
 ## [2.5.2]
 ### Enhancements

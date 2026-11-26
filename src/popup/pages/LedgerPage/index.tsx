@@ -52,6 +52,7 @@ const Tip_Type = {
   init: "init",
   openLedger: "openLedger",
   openLedgerApp: "openLedgerApp",
+  ledgerBusy: "ledgerBusy",
   openLockStatus: "openLockStatus",
 
   grantSuccess: "grantSuccess",
@@ -125,6 +126,8 @@ export const LedgerPage = ({ onClickPre, isEmbedded, onStepChange }: LedgerPageP
         }
       } else if (status === LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN) {
         setTipType(Tip_Type.openLedgerApp);
+      } else if (status === LEDGER_STATUS.LEDGER_BUSY) {
+        setTipType(Tip_Type.ledgerBusy);
       } else {
         setTipType(Tip_Type.openLedger);
       }
@@ -167,6 +170,9 @@ export const LedgerPage = ({ onClickPre, isEmbedded, onStepChange }: LedgerPageP
         break;
       case Tip_Type.openLedgerApp:
         msg = i18n.t("ledgerConnectOpenTip");
+        break;
+      case Tip_Type.ledgerBusy:
+        msg = ledgerManager.getLastErrorMessage() || i18n.t("ledgerBusyTip");
         break;
       case Tip_Type.openLockStatus:
         msg = i18n.t("auroLocked");
@@ -354,16 +360,27 @@ const AccountNameView = ({
     const { status } = await ledgerManager.ensureConnect();
 
     if (status !== LEDGER_STATUS.READY) {
-      setErrorMsg(i18n.t("pleaseOpenInLedger"));
+      setErrorMsg(
+        status === LEDGER_STATUS.LEDGER_BUSY
+          ? ledgerManager.getLastErrorMessage() || i18n.t("ledgerRejected")
+          : i18n.t("pleaseOpenInLedger")
+      );
       return;
     }
     setTipModalVisible(true);
     try {
-      const { publicKey, rejected } = await ledgerManager.getAddress(nextIndex) as { publicKey?: string; rejected?: boolean };
+      const result = await ledgerManager.getAddress(nextIndex);
       setTipModalVisible(false);
+      const { publicKey, rejected, error } = result as {
+        publicKey?: string;
+        rejected?: boolean;
+        error?: { message?: string };
+      };
       if (rejected || !publicKey) {
         setErrorMsg(
-          rejected ? i18n.t("ledgerRejected") : "Failed to get address"
+          rejected
+            ? i18n.t("ledgerRejected")
+            : error?.message || JSON.stringify(error) || String(error)
         );
         return;
       }
@@ -412,7 +429,12 @@ const AccountNameView = ({
         }
       );
     } catch (err) {
-      setErrorMsg("Connection lost");
+      setTipModalVisible(false);
+      setErrorMsg(
+        err instanceof Error && err.message
+          ? err.message
+          : JSON.stringify(err) || String(err)
+      );
     }
   }, [accountIndex, accountName, placeholderText, onClickNext, currentAddress, dispatch]);
   const onNameInput = useCallback((e: InputChangeEvent) => {
@@ -571,4 +593,3 @@ const InputNumber = ({
     </StyledInputNumberContainer>
   );
 };
-

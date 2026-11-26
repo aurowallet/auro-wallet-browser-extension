@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode, ReactElement, useEffect, useState } from "react";
+import { MouseEvent, ReactNode, ReactElement } from "react";
 import {
     StyledButton,
     StyledIconContainer,
@@ -41,11 +41,6 @@ const Button = ({
     className = "",
     withEvent = false
 }: ButtonProps): ReactElement => {
-    const [btnDisable, setBtnDisable] = useState(disable)
-    useEffect(() => {
-        setBtnDisable(loading)
-    }, [loading])
-
     const onRealClick = (e: MouseEvent<HTMLButtonElement>) => {
         if (!loading && !disable) {
             if (withEvent) {
@@ -66,7 +61,7 @@ const Button = ({
     return (
         <StyledButton
             className={className}
-            disabled={btnDisable || disable}
+            disabled={loading || disable}
             onClick={onRealClick}
             $themeType={theme === button_theme.BUTTON_THEME_LIGHT ? 'light' : 'color'}
             $size={getSizeValue()}

@@ -139,10 +139,10 @@ const Setting = () => {
       rightHoverContent={i18n.t("popOutWindow")}
       ContentWrapper={StyledContentContainer}
     >
-      {routeList.map((routeItem, index) => {
+      {routeList.map((routeItem) => {
         return (
           <RowItem
-            key={index}
+            key={routeItem.targetRoute}
             action={routeItem.action}
             icon={routeItem.icon}
             title={routeItem.title}

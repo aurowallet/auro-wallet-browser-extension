@@ -101,3 +101,9 @@ declare module 'libsodium-wrappers-sumo' {
     key: Uint8Array
   ): Uint8Array;
 }
+
+// Webpack handles CSS imports; this declaration supplies their TypeScript shape.
+declare module '*.css' {
+  const styles: Record<string, string>;
+  export default styles;
+}

@@ -23,7 +23,9 @@ export default function LedgerStatusSyncer() {
     };
 
     ledgerManager.addStatusListener(syncStatus);
-    ledgerManager.ensureConnect?.();
+    ledgerManager.ensureConnect().catch((error) => {
+      console.error("[Ledger] check failed", error);
+    });
 
     return () => {
       ledgerManager.removeStatusListener(syncStatus);

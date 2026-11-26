@@ -16,6 +16,7 @@ interface TransactionModalProps {
   currentNonce?: string;
   btnLoading?: boolean;
   waitingLedger?: boolean;
+  showLedgerBlindSigningTip?: boolean;
 }
 import { Trans } from "react-i18next";
 import { MAIN_COIN_CONFIG } from "../../../constant";
@@ -29,6 +30,7 @@ import {
   StyledTitleRow,
   StyledRowTitle,
   StyledRightRow,
+  StyledRowClose,
   StyledDividedLine,
   StyledBottomContent,
   StyledBottomContainer,
@@ -54,6 +56,7 @@ export const TransactionModalType = {
   speedUp: "SPEED_UP",
   cancel: "CANCEL",
 };
+
 export const TransactionModal = ({
   modalVisible = false,
   title = "",
@@ -67,6 +70,7 @@ export const TransactionModal = ({
   currentNonce = "",
   btnLoading = false,
   waitingLedger = false,
+  showLedgerBlindSigningTip = false,
 }: TransactionModalProps) => {
   const [advanceModalVisible, setAdvanceModalVisible] = useState(false);
   const [nextInputFee, setNextInputFee] = useState(nextFee);
@@ -97,14 +101,24 @@ export const TransactionModal = ({
           <StyledInnerContent>
             <div>
               <StyledTitleRow>
-                <StyledRowTitle>{waitingLedger ? i18n.t("waitingLedgerConfirm") : title}</StyledRowTitle>
-                {!waitingLedger && (
-                  <StyledRightRow>
-                    <LedgerStatusView />
-                    <div style={{ marginRight: "6px" }} />
-                    <NetworkStatusView />
-                  </StyledRightRow>
-                )}
+                <StyledRowTitle>
+                  {waitingLedger ? i18n.t("waitingLedgerConfirm") : title}
+                </StyledRowTitle>
+                <StyledRightRow>
+                  {!waitingLedger && (
+                    <>
+                      <LedgerStatusView />
+                      <div style={{ marginRight: "6px" }} />
+                      <NetworkStatusView />
+                    </>
+                  )}
+                  {waitingLedger && (
+                    <StyledRowClose
+                      onClick={onClickClose}
+                      src="/img/icon_nav_close.svg"
+                    />
+                  )}
+                </StyledRightRow>
               </StyledTitleRow>
             </div>
             <StyledDividedLine />
@@ -128,6 +142,18 @@ export const TransactionModal = ({
               </StyledLedgerContent>
             ) : (
               <>
+                {showLedgerBlindSigningTip && (
+                  <StyledModalContent>
+                    <StyledFeeTitle>
+                      <StyledYellowFont>
+                        <Trans
+                          i18nKey="ledgerZkAppBlindSigningTip"
+                          components={{ b: <b /> }}
+                        />
+                      </StyledYellowFont>
+                    </StyledFeeTitle>
+                  </StyledModalContent>
+                )}
                 <StyledModalContent>
                   <Trans
                     i18nKey={modalContent}

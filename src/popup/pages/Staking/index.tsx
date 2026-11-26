@@ -25,7 +25,7 @@ import {
 import { copyText } from "../../../utils/browserUtils";
 import { openTab } from "../../../utils/commonMsg";
 import { useLatestRef } from "../../../utils/hooks";
-import { addressSlice, getBalanceForUI, isNumber } from "../../../utils/utils";
+import { addressSlice, getBalanceForUI } from "../../../utils/utils";
 import Clock from "../../component/Clock";
 import CustomView from "../../component/CustomView";
 import Toast from "../../component/Toast";
@@ -107,7 +107,8 @@ const Staking = () => {
   const consensusConfig = daemonStatus?.consensusConfiguration as
     | { slotsPerEpoch?: number }
     | undefined;
-  const hasInitialData = isNumber(consensusConfig?.slotsPerEpoch);
+  const slotsPerEpoch = Number(consensusConfig?.slotsPerEpoch);
+  const hasInitialData = Number.isFinite(slotsPerEpoch) && slotsPerEpoch > 0;
   const isFirstRequest = useRef(true);
   const fetchContextRef = useRef({
     address: currentAddress,
@@ -311,7 +312,7 @@ const EmptyView = ({ onClickGuide }: { onClickGuide?: () => void }) => {
       }
       navigate("/staking_transfer", { state: params });
     } else {
-      navigate("/staking_list");
+      navigate("/staking_transfer", { state: { menuAdd: true } });
     }
   }, [stakingList, networkID, navigate]);
 
@@ -373,10 +374,19 @@ const DelegationInfo = ({
   const mainTokenNetInfo = useAppSelector(
     (state) => state.accountInfo.mainTokenNetInfo,
   );
+  const networkID = useAppSelector(
+    (state) => state.network.currentNode.networkID,
+  );
 
   const onRedelegate = useCallback(() => {
-    navigate("/staking_transfer", { state: { isRedelegate: true } });
-  }, [navigate]);
+    if (networkID === NetworkID_MAP.mainnet) {
+      navigate("/staking_transfer", { state: { isRedelegate: true } });
+    } else {
+      navigate("/staking_transfer", {
+        state: { isRedelegate: true, menuAdd: true },
+      });
+    }
+  }, [navigate, networkID]);
 
   const { nodeName, nodeIcon, stakedBalance } = useMemo(() => {
     let nodeName = addressSlice(delegatePublicKey, 8);
@@ -491,7 +501,7 @@ const EpochInfo = () => {
       days: "-",
       hours: "-",
       minutes: "-",
-      percentage: "-",
+      percentage: 0,
     };
   }, []);
 
@@ -502,7 +512,7 @@ const EpochInfo = () => {
     days: number | string;
     hours: number | string;
     minutes: number | string;
-    percentage: number | string;
+    percentage: number;
   }
   const epochDataAction = useCallback(
     (
@@ -510,16 +520,30 @@ const EpochInfo = () => {
       block: Record<string, unknown>,
     ): EpochData | undefined => {
       const typedConsensusConfig = daemonStatus?.consensusConfiguration as
-        | { slotsPerEpoch?: number; slotDuration?: number }
+        | {
+            slotsPerEpoch?: number;
+            slotDuration?: number;
+          }
         | undefined;
       const typedProtocolState = block?.protocolState as
         | { consensusState?: { slot?: number; epoch?: number } }
         | undefined;
       if (daemonStatus && typedConsensusConfig && block && typedProtocolState) {
-        const slotsPerEpoch = typedConsensusConfig.slotsPerEpoch || 0;
-        const slotDuration = typedConsensusConfig.slotDuration || 0;
-        const slot = typedProtocolState.consensusState?.slot || 0;
-        const epoch = typedProtocolState.consensusState?.epoch || 0;
+        const slotsPerEpoch = Number(typedConsensusConfig.slotsPerEpoch);
+        const slotDuration = Number(typedConsensusConfig.slotDuration);
+        const rawSlot = Number(typedProtocolState.consensusState?.slot);
+        const epoch = Number(typedProtocolState.consensusState?.epoch);
+        if (
+          !Number.isFinite(slotsPerEpoch) ||
+          slotsPerEpoch <= 0 ||
+          !Number.isFinite(slotDuration) ||
+          slotDuration <= 0 ||
+          !Number.isFinite(rawSlot) ||
+          !Number.isFinite(epoch)
+        ) {
+          return undefined;
+        }
+        const slot = Math.min(Math.max(rawSlot, 0), slotsPerEpoch);
         const lastTime = ((slotsPerEpoch - slot) * slotDuration) / 1000;
         let days: number | string = Math.floor(lastTime / 60 / 60 / 24);
         days = BigNumber(days).gte(10) ? days : "0" + days;
@@ -536,7 +560,7 @@ const EpochInfo = () => {
           days,
           hours,
           minutes,
-          percentage: parseInt(((100 * slot) / slotsPerEpoch).toFixed(0)),
+          percentage: Math.min(100, Math.max(0, Math.round((100 * slot) / slotsPerEpoch))),
         };
         return epochData;
       }
@@ -547,7 +571,7 @@ const EpochInfo = () => {
 
   const [epochData, setEpochData] = useState(() => {
     if (daemonStatus.stateHash && block.protocolState) {
-      return epochDataAction(daemonStatus, block);
+      return epochDataAction(daemonStatus, block) || initEpochData;
     } else {
       return initEpochData;
     }
@@ -555,10 +579,12 @@ const EpochInfo = () => {
 
   useEffect(() => {
     if (daemonStatus.stateHash && block.protocolState) {
-      let epochData = epochDataAction(daemonStatus, block);
-      setEpochData(epochData);
+      const nextEpochData = epochDataAction(daemonStatus, block);
+      setEpochData(nextEpochData || initEpochData);
+    } else {
+      setEpochData(initEpochData);
     }
-  }, [daemonStatus, block]);
+  }, [daemonStatus, block, epochDataAction, initEpochData]);
 
   return (
     <div>
@@ -607,11 +633,11 @@ const EpochInfo = () => {
             />
             <CircularProgressbar
               strokeWidth={10}
-              value={epochData?.percentage as number}
+              value={epochData?.percentage ?? 0}
             />
             <StyledPercentageContainer>
               <StyledPercentage>
-                {epochData?.percentage}
+                {epochData?.percentage ?? 0}
                 <StyledPercentageUnit> %</StyledPercentageUnit>
               </StyledPercentage>
             </StyledPercentageContainer>

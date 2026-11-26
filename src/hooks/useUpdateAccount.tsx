@@ -1,5 +1,5 @@
 import { getAllTokenAssets, getAllTokenInfoV2 } from "@/background/api";
-import { getLocal, saveLocal } from "@/background/localStorage";
+import { getLocal, getLocalJsonObject, saveLocal } from "@/background/localStorage";
 import {
   LOCAL_CACHE_KEYS,
   STABLE_LOCAL_ACCOUNT_CACHE_KEYS,
@@ -40,11 +40,36 @@ interface UseFetchAccountDataResult {
   result: unknown[] | null;
 }
 
+function saveTokenAssetsCache(
+  networkID: string | undefined,
+  address: string,
+  assets: unknown[],
+): void {
+  if (!networkID) return;
+
+  const cache = getLocalJsonObject(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS_V2) as Record<string, Record<string, unknown>>;
+
+  const networkCache =
+    cache[networkID] &&
+    typeof cache[networkID] === "object" &&
+    !Array.isArray(cache[networkID])
+      ? cache[networkID]
+      : {};
+  saveLocal(
+    LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS_V2,
+    JSON.stringify({
+      ...cache,
+      [networkID]: { ...networkCache, [address]: assets },
+    }),
+  );
+}
+
 const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): UseFetchAccountDataResult => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<unknown[] | null>(null);
   const dispatch = useAppDispatch();
   const currentNodeUrl = useAppSelector((state) => state.network.currentNode?.url);
+  const currentNetworkID = useAppSelector((state) => state.network.currentNode?.networkID);
   const isSilentRefresh = useAppSelector((state) => state.accountInfo.isSilentRefresh);
   const isSilentRef = useRef(isSilentRefresh);
   isSilentRef.current = isSilentRefresh;
@@ -52,7 +77,8 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
 
   useEffect(() => {
     fetchGenerationRef.current++;
-  }, [currentAccount.address, currentNodeUrl]);
+    return () => { fetchGenerationRef.current++; };
+  }, [currentAccount.address, currentNodeUrl, currentNetworkID]);
 
   const fetchAccountData = useCallback(async (): Promise<unknown> => {
     setIsLoading(true);
@@ -74,8 +100,7 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
             if (!isDev) {
               Toast.info(i18n.t("nodeError"), 2000, false);
               if (!isSilentRef.current) {
-                dispatch(updateTokenAssets([]));
-                setResult([]);
+                setResult(null);
               }
             }
             return [];
@@ -98,15 +123,9 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
               }
             }
             if (!isDev) {
-              dispatch(updateTokenAssets(lastTokenList));
+              dispatch(updateTokenAssets(lastTokenList, false, true));
               setResult(lastTokenList);
-              let existingTokenAssets = {};
-              try { existingTokenAssets = JSON.parse(getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS) || '{}'); } catch (e) { /* corrupted localStorage */ }
-              if (!existingTokenAssets || typeof existingTokenAssets !== 'object' || Array.isArray(existingTokenAssets)) existingTokenAssets = {};
-              saveLocal(
-                LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
-                JSON.stringify({ ...existingTokenAssets, [currentAccount.address]: lastTokenList })
-              );
+              saveTokenAssetsCache(currentNetworkID, currentAccount.address, lastTokenList);
               return lastTokenList;
             } else {
               return lastTokenList;
@@ -114,17 +133,9 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
           }
         } else {
           if (!isDev) {
-            if (!isSilentRef.current) {
-              dispatch(updateTokenAssets([]));
-              setResult([]);
-              let existingTokenAssets = {};
-              try { existingTokenAssets = JSON.parse(getLocal(LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS) || '{}'); } catch (e) { /* corrupted localStorage */ }
-              if (!existingTokenAssets || typeof existingTokenAssets !== 'object' || Array.isArray(existingTokenAssets)) existingTokenAssets = {};
-              saveLocal(
-                LOCAL_CACHE_KEYS.BASE_TOKEN_ASSETS,
-                JSON.stringify({ ...existingTokenAssets, [currentAccount.address]: [] })
-              );
-            }
+            dispatch(updateTokenAssets([], false, true));
+            setResult([]);
+            saveTokenAssetsCache(currentNetworkID, currentAccount.address, []);
             return [];
           } else {
             return [];
@@ -132,8 +143,7 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
         }
       } else {
         if (!isDev && !isSilentRef.current) {
-          dispatch(updateTokenAssets([]));
-          setResult([]);
+          setResult(null);
         }
         return [];
       }
@@ -141,7 +151,6 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
       console.error(error);
       if (generation === fetchGenerationRef.current) {
         if (!isDev && !isSilentRef.current) {
-          dispatch(updateTokenAssets([]));
           setResult(null);
         }
       }
@@ -154,7 +163,7 @@ const useFetchAccountData = (currentAccount: CurrentAccount, isDev = false): Use
         setIsLoading(false);
       }
     }
-  }, [currentAccount, dispatch, currentNodeUrl]);
+  }, [currentAccount, currentNetworkID, dispatch, currentNodeUrl]);
 
   return { isLoading, fetchAccountData, result };
 };

@@ -3,7 +3,8 @@ import styled from "styled-components";
 import { LoadingView } from "./StatusView";
 import TokenItem from "./TokenItem";
 
-const StyledTokenWrapper = styled.div`
+const StyledTokenWrapper = styled.div<{ $isLoading: boolean }>`
+  flex: ${({ $isLoading }) => $isLoading ? "1 0 auto" : "0 0 auto"};
   background-color: white;
 `;
 
@@ -14,16 +15,14 @@ const TokenListView = ({ isInModal = false }) => {
   const isSilentRefresh = useAppSelector(
     (state) => state.accountInfo.isSilentRefresh
   );
+  const isLoading = shouldRefresh && !isSilentRefresh && tokenList.length === 0 && !isInModal;
 
   type TokenListItem = { tokenId: string };
 
   return (
-    <StyledTokenWrapper>
-      {shouldRefresh &&
-        !isSilentRefresh &&
-        tokenList.length == 0 &&
-        !isInModal ? (
-          <LoadingView />
+    <StyledTokenWrapper $isLoading={isLoading}>
+      {isLoading ? (
+        <LoadingView />
       ) : (
         (tokenShowList as TokenListItem[]).map((token: TokenListItem, index: number) => {
           return <TokenItem key={index} token={token as Parameters<typeof TokenItem>[0]["token"]} isInModal={isInModal} />;

@@ -251,6 +251,7 @@ export async function signTransaction(
             fee: parseTx.feePayer.body.fee,
             nonce: parseTx.feePayer.body.nonce,
             memo: memo,
+            validUntil: parseTx.feePayer.body.validUntil ?? null,
           },
         };
       } else {
@@ -265,6 +266,7 @@ export async function signTransaction(
             fee: sendFee,
             nonce: params.nonce,
             memo: params.memo || "",
+            validUntil: parseTx.feePayer.body.validUntil ?? null,
           },
         };
       }

@@ -1,7 +1,6 @@
-import { sendStakeTx, sendTx } from "@/background/api";
+import { sendParty, sendStakeTx, sendTx } from "@/background/api";
 import { MAIN_COIN_CONFIG } from "@/constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "@/constant/commonType";
-import { NetworkID_MAP } from "@/constant/network";
 import {
   DAPP_ACTION_CREATE_NULLIFIER,
   DAPP_ACTION_REQUEST_PRESENTATION,
@@ -56,6 +55,7 @@ import { useFeeValidation } from "@/hooks/useFeeValidation";
 import { useZekoFee } from "@/hooks/useZekoFee";
 import { getFeeWithZekoMinimum } from "@/utils/fee";
 import i18n from "i18next";
+import { Trans } from "react-i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useStore";
 import type { InputChangeEvent } from "@/popup/types/common";
@@ -78,6 +78,7 @@ import {
   StyledTitleRight,
   StyledTitle,
   StyledContent,
+  StyledWebsiteContainer,
   StyledAccountRow,
   StyledRowLeft,
   StyledRowTitle,
@@ -131,6 +132,7 @@ const COMMON_TRANSACTION_ACTION = [
 const Ledger_support_action = [
   DAppActions.mina_sendPayment,
   DAppActions.mina_sendStakeDelegation,
+  DAppActions.mina_sendTransaction,
   DAppActions.mina_signMessage,
   DAppActions.mina_sign_JsonMessage,
 ];
@@ -311,7 +313,9 @@ const SignView = ({
   const [ledgerModalStatus, setLedgerModalStatus] = useState(false);
 
   const [confirmModalStatus, setConfirmModalStatus] = useState(false);
-  const [isLedgerAccount, setIsLedgerAccount] = useState(false);
+  const isLedgerAccount =
+    currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER;
+  const ledgerOperationRef = useRef<object | null>(null);
 
   const [showRawData, setShowRawData] = useState(false);
   const [showRawDetail, setShowRawDetail] = useState(false);
@@ -325,9 +329,6 @@ const SignView = ({
   const isZeko = useMemo(() => {
     return isZekoNet(currentNode.networkID);
   }, [currentNode]);
-  const isZekoMainnet = useMemo(() => {
-    return currentNode.networkID === NetworkID_MAP.zekomainnet;
-  }, [currentNode.networkID]);
   const {
     sendAction,
     siteRecommendFee,
@@ -497,10 +498,6 @@ const SignView = ({
     return getFeeWithZekoMinimum(baseFee, isZeko, zekoFee);
   }, [baseFee, feeType, isZeko, zekoFee]);
 
-  useEffect(() => {
-    setIsLedgerAccount(currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER);
-  }, [currentAccount]);
-
   const onSelectedTab = useCallback((tabIndex: number) => {
     setSelectedTabIndex(tabIndex);
   }, []);
@@ -616,6 +613,10 @@ const SignView = ({
               payload: {
                 paymentId: id,
                 hash: payload.hash,
+                type:
+                  sendAction === DAppActions.mina_sendTransaction
+                    ? "ZKAPP_TX"
+                    : undefined,
               },
             },
             () => {}
@@ -641,25 +642,28 @@ const SignView = ({
   const handleLedgerSign = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (params: any) => {
-      const { status } = await ledgerManager.ensureConnect();
-      if (status !== LEDGER_STATUS.READY) {
-        setLedgerModalStatus(true);
-        return false;
-      }
-
+      const operation = ledgerOperationRef.current;
+      if (!operation) return false;
       setBtnLoading(true);
+      const onAwaitDevice = () => {
+        if (ledgerOperationRef.current === operation) {
+          setConfirmModalStatus(true);
+        }
+      };
       try {
         let result;
         let response;
         if (sendAction === DAppActions.mina_sendPayment) {
           result = await ledgerManager.signPayment(
             params,
-            (currentAccount.hdPath || 0) as number
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
           );
         } else if (sendAction === DAppActions.mina_sendStakeDelegation) {
           result = await ledgerManager.signDelegation(
             params,
-            (currentAccount.hdPath || 0) as number
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
           );
         } else if (Ledger_sign_message_action.includes(sendAction)) {
           let nextMsg = params.message;
@@ -668,40 +672,83 @@ const SignView = ({
           }
           result = await ledgerManager.signMessage(
             nextMsg as string,
-            (currentAccount.hdPath || 0) as number
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
           );
-          const { signature, signedMessage, error } = result || {};
-          if (error) {
-            setConfirmModalStatus(false);
-            Toast.info(error.message);
-            return;
-          }
-          response = {
-            data: signedMessage,
-            publicKey: params.fromAddress,
-            signature: signature,
-          };
+          if (ledgerOperationRef.current !== operation) return false;
         } else if (sendAction === DAppActions.mina_sendTransaction) {
-          setConfirmModalStatus(false);
-          return true;
+          result = await ledgerManager.signZkApp(
+            params,
+            (currentAccount.hdPath || 0) as number,
+            onAwaitDevice
+          );
         } else {
           Toast.info(i18n.t("notSupportNow"));
           setConfirmModalStatus(false);
           return false;
         }
 
+        if (ledgerOperationRef.current !== operation) return false;
+        dispatch(updateLedgerConnectStatus(ledgerManager.status));
+        if (!result) {
+          setConfirmModalStatus(false);
+          setLedgerModalStatus(true);
+          return false;
+        }
         if (result?.rejected) {
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setConfirmModalStatus(false);
+            setLedgerModalStatus(true);
+            return false;
+          }
           Toast.info(i18n.t("ledgerRejected"));
           setConfirmModalStatus(false);
           return false;
         }
         if (result?.error) {
-          Toast.info(result.error.message || "Signature failed");
+          if (ledgerManager.status !== LEDGER_STATUS.READY) {
+            setConfirmModalStatus(false);
+            setLedgerModalStatus(true);
+            return false;
+          }
+          Toast.info(result.error.message || i18n.t("postFailed"));
           setConfirmModalStatus(false);
           return false;
         }
 
+        if (Ledger_sign_message_action.includes(sendAction)) {
+          response = {
+            data: result.signedMessage,
+            publicKey: params.fromAddress,
+            signature: result.signature,
+          };
+        }
+
+        if (result?.signedZkApp) {
+          if (params.zkOnlySign) {
+            response = result.signedZkApp.data;
+          } else {
+            if (ledgerOperationRef.current !== operation) return false;
+            const sendResponse = (await sendParty(
+              result.signedZkApp.data.zkappCommand
+            )) as {
+              error?: unknown;
+              sendZkapp?: { zkapp?: { hash?: string; id?: string } };
+            };
+            if (ledgerOperationRef.current !== operation) return false;
+            if (sendResponse.error) {
+              Toast.info(
+                getRealErrorMsg(sendResponse.error) || i18n.t("postFailed")
+              );
+              setConfirmModalStatus(false);
+              return false;
+            }
+            response = sendResponse.sendZkapp?.zkapp || {};
+          }
+        }
+
         if (result?.signature && result?.payload) {
+          if (ledgerOperationRef.current !== operation) return false;
           const sendFn =
             sendAction === DAppActions.mina_sendStakeDelegation
               ? sendStakeTx
@@ -710,6 +757,7 @@ const SignView = ({
           // Ledger returns signature as string for payment/delegation
           const rawSignature = typeof result.signature === 'string' ? result.signature : undefined;
           response = await sendFn(result.payload, { rawSignature });
+          if (ledgerOperationRef.current !== operation) return false;
 
           // Check for error in response
           const txResponse = response as { error?: unknown };
@@ -724,14 +772,19 @@ const SignView = ({
 
         return true;
       } catch (err) {
-        Toast.info("Transaction failed");
-        setConfirmModalStatus(false);
+        if (ledgerOperationRef.current === operation) {
+          Toast.info(getRealErrorMsg(err) || i18n.t("postFailed"));
+          setConfirmModalStatus(false);
+        }
         return false;
       } finally {
-        setBtnLoading(false);
+        if (ledgerOperationRef.current === operation) {
+          ledgerOperationRef.current = null;
+          setBtnLoading(false);
+        }
       }
     },
-    [signParams, currentAccount, inferredNonce, nextFee]
+    [currentAccount, onSubmitSuccess, sendAction, dispatch]
   );
   const onStoreInfo = async () => {
     const stringifiedCredential = JSON.stringify(credentialData);
@@ -952,12 +1005,13 @@ const SignView = ({
     onStoreInfo,
     onPresentation,
     onRemoveTx,
+    handleLedgerSign,
   ]);
 
   const checkLedgerSupport = useCallback(() => {
     if (
       Ledger_support_action.indexOf(sendAction) === -1 ||
-      isZekoMainnet
+      isZeko
     ) {
       Toast.info(i18n.t("notSupportNow"));
       let resultAction = "";
@@ -996,7 +1050,7 @@ const SignView = ({
       return false;
     }
     return true;
-  }, [sendAction, isZekoMainnet]);
+  }, [sendAction, isZeko]);
 
   const sendSandboxMessage = (payload: Record<string, unknown>) => {
     return new Promise((resolve, reject) => {
@@ -1149,22 +1203,30 @@ const SignView = ({
       Toast.info(i18n.t("notSupportNow"));
       return;
     }
+    if (
+      currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER &&
+      ledgerOperationRef.current
+    ) {
+      if (ledgerManager.status === LEDGER_STATUS.READY && ledgerManager.app) {
+        setConfirmModalStatus(true);
+      } else {
+        ledgerOperationRef.current = null;
+        setConfirmModalStatus(false);
+        setLedgerModalStatus(true);
+      }
+      return;
+    }
     if (currentAccount.type === ACCOUNT_TYPE.WALLET_LEDGER) {
       let support = checkLedgerSupport();
       if (!support) {
         return;
       }
-      const { status } = await ledgerManager.ensureConnect();
-      dispatch(updateLedgerConnectStatus(status));
-      if (status !== LEDGER_STATUS.READY) {
-        setLedgerModalStatus(true);
-        return;
-      }
-      setConfirmModalStatus(true);
-      clickNextStep();
+      const operation = {};
+      ledgerOperationRef.current = operation;
+      await clickNextStep();
     } else {
       dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
-      clickNextStep();
+      await clickNextStep();
     }
   }, [
     popupLockStatus,
@@ -1389,13 +1451,17 @@ const SignView = ({
     return title;
   }, [sendAction, zkOnlySign]);
 
-  const onLedgerInfoModalConfirm = useCallback(async () => {
-    const { status } = await ledgerManager.ensureConnect();
-    if (status === LEDGER_STATUS.READY) {
-      setLedgerModalStatus(false);
-      (onConfirm as (isLedger?: boolean) => void)(true);
-    }
+  const onLedgerInfoModalConfirm = useCallback(() => {
+    setLedgerModalStatus(false);
+    onConfirm();
   }, [onConfirm]);
+
+  const onLedgerConfirmClose = useCallback(() => {
+    ledgerOperationRef.current = null;
+    setConfirmModalStatus(false);
+    setBtnLoading(false);
+    dispatch(updateLedgerConnectStatus(LEDGER_STATUS.LEDGER_DISCONNECT));
+  }, [dispatch]);
 
   const onResetNonce = useCallback(() => {
     setNonceType(ZkAppValueType.custom);
@@ -1428,12 +1494,20 @@ const SignView = ({
           </StyledTitleRight>
         </StyledTitleRow>
         <StyledContent $showMultiView={showMultiView} $flexLayout={isSendZk}>
-          <div>
+          <StyledWebsiteContainer>
+            {isLedgerAccount && isSendZk && (
+              <StyledHighFeeTip>
+                <Trans
+                  i18nKey="ledgerZkAppBlindSigningTip"
+                  components={{ b: <b /> }}
+                />
+              </StyledHighFeeTip>
+            )}
             <DappWebsite
               siteIcon={signParams?.site?.webIcon}
               siteUrl={signParams?.site?.origin}
             />
-          </div>
+          </StyledWebsiteContainer>
           {sendAction === DAppActions.mina_storePrivateCredential ? (
             <CredentialView
               currentAccount={currentAccount}
@@ -1627,7 +1701,7 @@ const SignView = ({
           title={i18n.t("transactionDetails")}
           waitingLedger={isLedgerAccount}
           showCloseIcon={isLedgerAccount}
-          onClickClose={() => setConfirmModalStatus(false)}
+          onClickClose={onLedgerConfirmClose}
         />
         <LedgerInfoModal
           modalVisible={ledgerModalStatus}

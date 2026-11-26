@@ -59,6 +59,11 @@ export const StyledRightRow = styled.div`
   align-items: center;
 `;
 
+export const StyledRowClose = styled.img`
+  display: block;
+  cursor: pointer;
+`;
+
 export const StyledDividedLine = styled.div`
   width: 100%;
   height: 0.5px;

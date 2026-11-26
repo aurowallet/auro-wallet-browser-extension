@@ -24,7 +24,9 @@ import {
 import { NetworkID_MAP } from "@/constant/network";
 import { getReadableNetworkId } from "@/utils/utils";
 import LedgerStatusSyncer from "./component/LedgerStatusSyncer";
+import { LedgerStatusFloatingProvider } from "./component/LedgerStatusFloating";
 import { RootState } from "@/reducers";
+import useMinaExchangesCache from "@/hooks/useMinaExchangesCache";
 
 function setLastActiveTime() {
   sendMsg(
@@ -36,6 +38,7 @@ function setLastActiveTime() {
 }
 
 function App() {
+  useMinaExchangesCache();
   const dispatch = useDispatch();
   const currentNode = useSelector((state: RootState) => state.network.currentNode);
   const shouldRefresh = useSelector((state: RootState) => state.accountInfo.shouldRefresh);
@@ -112,7 +115,9 @@ function App() {
     <StyledApp>
       <GlobalStyles />
       <LedgerStatusSyncer />
-      <AllRouter />
+      <LedgerStatusFloatingProvider>
+        <AllRouter />
+      </LedgerStatusFloatingProvider>
     </StyledApp>
   );
 }

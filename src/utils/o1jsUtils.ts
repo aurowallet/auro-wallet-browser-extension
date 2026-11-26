@@ -25,7 +25,12 @@ export const getSimplifyCredentialData = (
   credential: any
 ): Record<string, unknown> => {
   try {
-    return PrettyPrinter.simplifyCredentialData(credential) || {};
+    const data = PrettyPrinter.simplifyCredentialData(credential);
+    if (data == null) return {};
+    // Credential data can also be a scalar or array; retain it for the field-based UI.
+    return typeof data === "object" && !Array.isArray(data)
+      ? data
+      : { value: data };
   } catch (error) {
     console.error("Error in getSimplifyCredentialData:", error);
     return {};

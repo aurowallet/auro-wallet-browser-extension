@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import CustomView from "../../component/CustomView";
 import IOSSwitch from "../../component/Switch";
 import { getDebugLogEnabled, setDebugLogEnabled } from "../../../utils/runtimeLog";
+import { useLedgerStatusFloating } from "../../component/LedgerStatusFloating";
 import { t as vt } from "./vaultDebugI18n";
 import {
   StyledContainer,
@@ -16,6 +17,10 @@ import {
 const DevPage = () => {
 
   const navigate = useNavigate();
+  const {
+    enabled: ledgerStatusFloatingEnabled,
+    setEnabled: setLedgerStatusFloatingEnabled,
+  } = useLedgerStatusFloating();
   const [debugLogEnabled, setDebugLogEnabledState] = useState(false);
 
   useEffect(() => {
@@ -31,6 +36,13 @@ const DevPage = () => {
       setDebugLogEnabledState(!enabled);
     }
   }, []);
+
+  const handleLedgerStatusFloatingToggle = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setLedgerStatusFloatingEnabled(e.target.checked);
+    },
+    [setLedgerStatusFloatingEnabled]
+  );
 
   const goToPage = useCallback((nextRoute: string, { pageType, title }: { pageType?: string; title?: string }) => {
     navigate(nextRoute, { state: { pageType, title } });
@@ -82,6 +94,17 @@ const DevPage = () => {
           <IOSSwitch
             isChecked={String(debugLogEnabled)}
             toggleSwitch={handleDebugLogToggle}
+          />
+        </StyledRowLeft>
+      </StyledRowContainer>
+      <StyledRowContainer>
+        <div>
+          <StyledRowTitle>{i18n.t("ledgerStatus")}</StyledRowTitle>
+        </div>
+        <StyledRowLeft>
+          <IOSSwitch
+            isChecked={String(ledgerStatusFloatingEnabled)}
+            toggleSwitch={handleLedgerStatusFloatingToggle}
           />
         </StyledRowLeft>
       </StyledRowContainer>

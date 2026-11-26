@@ -16,7 +16,10 @@ import TokenManageList from "./TokenManageList";
 type AssetTab = "tokens" | "nfts";
 type AssetRouteState = { walletAssetTab?: AssetTab };
 
-const StyledAssetWrapper = styled.div`
+const StyledAssetWrapper = styled.div<{ $isLoading: boolean }>`
+  display: flex;
+  flex-direction: column;
+  flex: ${({ $isLoading }) => $isLoading ? "1 0 auto" : "0 0 auto"};
   background-color: #ffffff;
 `;
 
@@ -26,6 +29,7 @@ const StyledAssetHeaderRow = styled.div`
   align-items: center;
   justify-content: space-between;
   height: 35px;
+  flex-shrink: 0;
 `;
 
 const StyledAssetTabRow = styled.div`
@@ -89,6 +93,10 @@ const AssetListView = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const tokenList = useAppSelector((state) => state.accountInfo.tokenList);
+  const shouldRefresh = useAppSelector((state) => state.accountInfo.shouldRefresh);
+  const isSilentRefresh = useAppSelector(
+    (state) => state.accountInfo.isSilentRefresh
+  );
   const newTokenCount = useAppSelector((state) => state.accountInfo.newTokenCount);
   const localShowedTokenIds = useAppSelector(
     (state) => state.accountInfo.localShowedTokenIds
@@ -101,6 +109,7 @@ const AssetListView = () => {
     const routeState = location.state as AssetRouteState | null;
     return routeState?.walletAssetTab === "nfts" ? "nfts" : "tokens";
   }, [location.state]);
+  const isLoading = activeAssetTab === "tokens" && shouldRefresh && !isSilentRefresh && tokenList.length === 0;
 
   const { showCount, showTokenTip } = useMemo(() => {
     const showTokenTip = BigNumber(newTokenCount).gt(0);
@@ -163,7 +172,7 @@ const AssetListView = () => {
   }, [tokenList, currentAccount, localShowedTokenIds]);
 
   return (
-    <StyledAssetWrapper>
+    <StyledAssetWrapper $isLoading={isLoading}>
       <StyledAssetHeaderRow>
         <StyledAssetTabRow>
           <StyledAssetTabTitle

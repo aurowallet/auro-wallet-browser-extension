@@ -15,6 +15,17 @@ export function getLocal(key: string): string | null {
   return localStorage.getItem(key);
 }
 
+export function getLocalJsonObject(key: string): Record<string, unknown> {
+  try {
+    const parsed: unknown = JSON.parse(getLocal(key) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : {};
+  } catch (_e) {
+    return {};
+  }
+}
+
 /**
  * remove local value
  * @param {*} value

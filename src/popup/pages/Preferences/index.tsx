@@ -1,8 +1,10 @@
 import i18n from "i18next";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "@/hooks/useStore";
 import { useNavigate } from "react-router-dom";
 import { languageOption } from "../../../i18n";
+import ledgerManager from "../../../utils/ledger";
+import { getLedgerTransportModeLabel } from "../../../utils/ledgerTransport";
 import CustomView from "../../component/CustomView";
 import {
   StyledContainer,
@@ -16,8 +18,14 @@ const Preferences = () => {
 
   const navigate = useNavigate();
   const currency = useAppSelector((state) => state.currencyConfig.currentCurrency);
+  const [ledgerTransportMode, setLedgerTransportMode] =
+    useState(ledgerManager.getTransportMode());
 
-  const { displayLanguage, displayCurrency } = useMemo(() => {
+  useEffect(() => {
+    ledgerManager.getStoredTransportMode().then(setLedgerTransportMode);
+  }, []);
+
+  const { displayLanguage, displayCurrency, displayLedgerTransportMode } = useMemo(() => {
     let currentLanguage = languageOption.filter((language) => {
       return language.key === i18n.language;
     });
@@ -28,8 +36,11 @@ const Preferences = () => {
     return {
       displayLanguage,
       displayCurrency,
+      displayLedgerTransportMode: getLedgerTransportModeLabel(
+        ledgerTransportMode
+      ),
     };
-  }, [i18n, currency]);
+  }, [i18n, currency, ledgerTransportMode]);
 
   const goToPage = useCallback((nextRoute: string) => {
     navigate(nextRoute);
@@ -52,6 +63,13 @@ const Preferences = () => {
         content={displayCurrency}
         onClickItem={() => {
           goToPage("/currency_unit");
+        }}
+      />
+      <RowItem
+        title={i18n.t("ledgerMode")}
+        content={displayLedgerTransportMode}
+        onClickItem={() => {
+          goToPage("/ledger_connection_mode");
         }}
       />
     </CustomView>

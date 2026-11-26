@@ -1,47 +1,178 @@
-import TransportWebHID from "@ledgerhq/hw-transport-webhid";
-import { ledgerUSBVendorId } from "@ledgerhq/devices";
 import { MinaApp } from "@zondax/ledger-mina-js";
+import { LedgerError } from "@zondax/ledger-js";
 import BigNumber from "bignumber.js";
 import i18n from "i18next";
 import { MAIN_COIN_CONFIG } from "../constant";
 import { LEDGER_STATUS, LedgerStatusType } from "../constant/commonType";
 import { NetworkID_MAP } from "../constant/network";
-import Loading from "../popup/component/Loading";
 import { getCurrentNodeConfig } from "./browserUtils";
-import Toast from "@/popup/component/Toast";
-
-// ============ WebHID Type Declarations ============
-
-interface HIDDevice {
-  vendorId: number;
-  productId: number;
-  opened: boolean;
-  collections: unknown[];
-  productName: string;
-  open(): Promise<void>;
-  close(): Promise<void>;
-}
-
-interface HID extends EventTarget {
-  getDevices(): Promise<HIDDevice[]>;
-  requestDevice(options: { filters: Array<{ vendorId: number }> }): Promise<HIDDevice[]>;
-  addEventListener(type: string, listener: EventListener): void;
-}
-
-declare const navigator: Navigator & { hid?: HID };
+import {
+  LedgerConnectionManager,
+  type LedgerDiagnostics,
+  type LedgerResponseInfo,
+} from "./ledgerConnection";
+import type { LedgerTransportMode } from "./ledgerTransport";
+import { isZekoNet } from "./utils";
+import {
+  applyLedgerZkAppSignature,
+  fieldElementToLedgerBytes,
+  getLedgerSignedZkApp,
+  LedgerSignedZkApp,
+  LedgerZkAppBody,
+  ledgerSignatureToBase58,
+  prepareLedgerZkApp,
+} from "./ledgerZkApp";
+export type { LedgerDiagnostics } from "./ledgerConnection";
 
 // ============ Constants ============
 
 const Networks = { MAINNET: 0x01, DEVNET: 0x00 } as const;
 const TxType = { PAYMENT: 0x00, DELEGATION: 0x04 } as const;
 
-const statusCode = {
-  rejectCode_str: "27013",
-};
+// Web Locks requires a stable name so extension pages share one APDU queue.
+// This is an internal browser resource name, not a Ledger protocol value.
+const LEDGER_DEVICE_LOCK_NAME = "aurowallet-ledger-device";
+
+function stringifyLedgerError(error: unknown): string {
+  try {
+    const serialized = JSON.stringify(error, (_key, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    );
+    if (serialized && serialized !== "{}") return serialized;
+  } catch {
+    // Fall through to the native string representation for circular values.
+  }
+
+  return String(error);
+}
+
+function normalizeLedgerReturnCode(
+  returnCode?: string | number | null
+): number | undefined {
+  if (typeof returnCode === "number") {
+    return Number.isFinite(returnCode) ? returnCode : undefined;
+  }
+  if (typeof returnCode !== "string" || !returnCode.trim()) return undefined;
+
+  const value = returnCode.trim();
+  if (/^0x[\da-f]+$/i.test(value)) return Number.parseInt(value.slice(2), 16);
+
+  const decimal = Number(value);
+  if (
+    Number.isInteger(decimal) &&
+    (decimal < 0 || LedgerError[decimal] !== undefined)
+  ) {
+    return decimal;
+  }
+
+  if (/^[\da-f]+$/i.test(value)) {
+    const hexadecimal = Number.parseInt(value, 16);
+    if (LedgerError[hexadecimal] !== undefined) return hexadecimal;
+  }
+
+  return Number.isInteger(decimal) ? decimal : undefined;
+}
+
+interface LedgerResponseOptions {
+  detectUnsupported?: boolean;
+}
+
+function resolveLedgerResponse(
+  response: unknown,
+  options: LedgerResponseOptions = {}
+): LedgerResponseInfo {
+  const value =
+    response && typeof response === "object"
+      ? (response as {
+          name?: string;
+          id?: string;
+          statusCode?: string | number;
+          returnCode?: string | number;
+          return_code?: string | number;
+          message?: unknown;
+          errorMessage?: unknown;
+          statusText?: unknown;
+        })
+      : undefined;
+  const returnCode = normalizeLedgerReturnCode(
+    value?.returnCode ??
+      value?.return_code ??
+      value?.statusCode ??
+      (typeof response === "string" || typeof response === "number"
+        ? response
+        : undefined)
+  );
+  const hasCode = (...codes: LedgerError[]) =>
+    returnCode !== undefined && codes.includes(returnCode);
+  const conditionsNotSatisfied = hasCode(
+    LedgerError.ConditionsOfUseNotSatisfied
+  );
+  let returnedMessage: string | null = null;
+  if (value) {
+    for (const message of [value.message, value.errorMessage, value.statusText]) {
+      if (typeof message === "string" && message.trim()) {
+        returnedMessage = message.trim();
+        break;
+      }
+    }
+  }
+  // Mina App versions may report a user rejection as either 0x6986 or
+  // 0x6985 (ConditionsOfUseNotSatisfied). Classification is code-based;
+  // returned messages are used only for display.
+  const rejected =
+    hasCode(LedgerError.TransactionRejected, LedgerError.UserRefusedOnDevice) ||
+    conditionsNotSatisfied;
+  const transportBusy =
+    value?.id === "TransportLocked" ||
+    value?.name === "TransportRaceCondition";
+  const appNotOpen = hasCode(LedgerError.AppDoesNotSeemToBeOpen);
+  const busy =
+    !rejected &&
+    (transportBusy ||
+      conditionsNotSatisfied ||
+      hasCode(LedgerError.LockedDevice, LedgerError.DeviceIsBusy));
+  const unsupported =
+    !!options.detectUnsupported &&
+    hasCode(
+      LedgerError.InstructionNotSupported,
+      LedgerError.UnknownApdu,
+      LedgerError.ClaNotSupported
+    );
+  let message = returnedMessage || stringifyLedgerError(response);
+  if (rejected) message = i18n.t("ledgerRejected");
+  if (busy && !returnedMessage) message = i18n.t("ledgerBusyTip");
+  if (unsupported) message = i18n.t("ledgerZkAppUpdateRequired");
+
+  return {
+    success: hasCode(LedgerError.NoErrors),
+    rejected,
+    busy,
+    appNotOpen,
+    message,
+  };
+}
+
+function toLedgerFailure(info: LedgerResponseInfo): {
+  rejected?: boolean;
+  error: { message: string };
+} {
+  return {
+    rejected: info.rejected || undefined,
+    error: { message: info.message },
+  };
+}
+
+function normalizeLedgerTransactionSignature(signature: string): string {
+  const normalized = String(signature || "").replace(/^0x/i, "");
+  if (!/^[0-9a-f]+$/i.test(normalized) || normalized.length !== 128) {
+    throw new Error("Ledger payment signature must contain exactly 64 bytes");
+  }
+  const reverseBytes = (part: string): string =>
+    part.match(/.{2}/g)!.reverse().join("");
+  return reverseBytes(normalized.slice(0, 64)) + reverseBytes(normalized.slice(64));
+}
 
 // ============ Types ============
-
-type StatusListener = (status: LedgerStatusType) => void;
 
 interface TransactionBody {
   fromAddress: string;
@@ -67,325 +198,436 @@ interface SignResult {
   };
   error?: { message: string };
   signedMessage?: string;
+  signedZkApp?: LedgerSignedZkApp;
 }
 
 interface AddressResult {
   rejected?: boolean;
   publicKey?: string;
+  error?: { message: string };
 }
 
-interface ConnectResult {
-  status: LedgerStatusType;
-  app: MinaApp | null;
+interface AccountVerificationResult {
+  verified: boolean;
+  rejected?: boolean;
+  error?: { message: string };
 }
+
+type AwaitDeviceCallback = () => void;
 
 // ============ LedgerManager Class ============
 
-let instance: LedgerManager | null = null;
+export class LedgerManager {
+  private readonly connection: LedgerConnectionManager;
+  private ledgerOperationDepth = 0;
+  private ledgerOperationIdleResolvers: Array<() => void> = [];
 
-class LedgerManager {
-  transport: TransportWebHID | null = null;
-  app: MinaApp | null = null;
-  status: LedgerStatusType = LEDGER_STATUS.LEDGER_DISCONNECT;
-  listeners: StatusListener[] = [];
-
-  constructor() {
-    if (instance) return instance;
-
-    if ("hid" in navigator && navigator.hid) {
-      navigator.hid.addEventListener("connect", () =>
-        this._tryConnectFromExisting()
-      );
-      navigator.hid.addEventListener("disconnect", () =>
-        this._reset(LEDGER_STATUS.LEDGER_DISCONNECT)
-      );
-    }
-
-    this._tryConnectFromExisting();
-    instance = this;
+  constructor(options: { autoConnect?: boolean } = {}) {
+    this.connection = new LedgerConnectionManager({
+      autoConnect: options.autoConnect,
+      withDeviceLock: (task) => this._withDeviceLock(task),
+      isDeviceLockHeld: () => this._isDeviceLockHeld(),
+      waitForActiveLedgerOperations: () => this._waitForActiveLedgerOperations(),
+      resolveResponse: (response) => resolveLedgerResponse(response),
+    });
   }
 
-  async _tryConnectFromExisting(): Promise<void> {
+  get app(): MinaApp | null {
+    return this.connection.app;
+  }
+
+  get status(): LedgerStatusType {
+    return this.connection.status;
+  }
+
+  private _resolveLedgerResponse(
+    response: unknown,
+    options?: LedgerResponseOptions
+  ): LedgerResponseInfo {
+    const info = resolveLedgerResponse(response, options);
+    this.connection.applyResponseInfo(info);
+    return info;
+  }
+
+  private async _withDeviceLock<T>(
+    task: () => Promise<T>
+  ): Promise<T> {
+    const lockManager =
+      typeof navigator !== "undefined" ? navigator.locks : undefined;
+    if (!lockManager) return task();
+
+    return lockManager.request(
+      LEDGER_DEVICE_LOCK_NAME,
+      { mode: "exclusive" },
+      task
+    );
+  }
+
+  private async _isDeviceLockHeld(): Promise<boolean> {
+    const lockManager =
+      typeof navigator !== "undefined" ? navigator.locks : undefined;
+    if (!lockManager) return false;
     try {
-      if (!navigator.hid) return;
-      const devices = await navigator.hid.getDevices();
-      const ledgerDevice = devices.find(
-        (d: HIDDevice) => d.vendorId === ledgerUSBVendorId
+      const snapshot = await lockManager.query();
+      return !!snapshot.held?.some(
+        (lock) => lock.name === LEDGER_DEVICE_LOCK_NAME
       );
-      if (!ledgerDevice) {
-        this._reset(LEDGER_STATUS.LEDGER_DISCONNECT);
-        return;
-      }
-      await this._connectWithDevice(ledgerDevice);
-    } catch (e) {
-      console.log("[aurowallet-ledger] _tryConnectFromExisting error:", e);
+    } catch {
+      return false;
     }
   }
 
-  async _close(): Promise<void> {
-    if (this.transport) {
-      try {
-        await this.transport.close();
-      } catch {
-        // ignore
-      }
-      this.transport = null;
-      this.app = null;
+  async _tryConnectFromExisting() {
+    return this.connection.tryConnectFromExisting();
+  }
+
+  async requestConnect() {
+    return this.connection.requestConnect();
+  }
+
+  async ensureConnect() {
+    return this._withLedgerOperation(() => this.connection.ensureConnect());
+  }
+
+  addStatusListener(listener: (status: LedgerStatusType) => void): void {
+    this.connection.addStatusListener(listener);
+  }
+
+  removeStatusListener(listener: (status: LedgerStatusType) => void): void {
+    this.connection.removeStatusListener(listener);
+  }
+
+  getDiagnostics(): LedgerDiagnostics {
+    return this.connection.getDiagnostics();
+  }
+
+  getLastErrorMessage(): string | null {
+    return this.connection.getLastErrorMessage();
+  }
+
+  getTransportMode(): LedgerTransportMode {
+    return this.connection.getTransportMode();
+  }
+
+  async getStoredTransportMode(): Promise<LedgerTransportMode> {
+    return this.connection.getStoredTransportMode();
+  }
+
+  async setTransportMode(mode: LedgerTransportMode): Promise<void> {
+    return this.connection.setTransportMode(mode, this.ledgerOperationDepth > 0);
+  }
+
+  private async _withLedgerOperation<T>(
+    operation: () => Promise<T>
+  ): Promise<T> {
+    if (this.connection.isTransitioning) {
+      throw new Error("Ledger transport is switching");
     }
-  }
-
-  _reset(newStatus: LedgerStatusType): void {
-    if (this.status === newStatus) return;
-    this._close();
-    this.status = newStatus;
-    this.listeners.forEach((cb) => cb(newStatus));
-  }
-
-  async _connectWithDevice(device: HIDDevice): Promise<void> {
-    await this._close();
-
-    let transport: TransportWebHID | null = null;
-    let app: MinaApp | null = null;
-
+    this.ledgerOperationDepth += 1;
     try {
-      if (device.opened) {
-        transport = new TransportWebHID(device);
-      } else {
-        transport = await TransportWebHID.open(device);
-      }
-      app = new MinaApp(transport);
-
-      const resp = await app.getAppVersion();
-      const isReady = resp.returnCode === "9000" || Number(resp.returnCode) === 0x9000;
-
-      if (isReady) {
-        this.transport = transport;
-        this.app = app;
-        this._update(LEDGER_STATUS.READY);
-      } else {
-        this.transport = transport;
-        this.app = app;
-        this._update(LEDGER_STATUS.LEDGER_CONNECT_APP_NOT_OPEN);
-      }
-    } catch (err) {
-      console.warn("[aurowallet-ledger] connect failed:", (err as Error).message || err);
-      await this._close();
-      this._update(LEDGER_STATUS.LEDGER_DISCONNECT);
-    }
-  }
-
-  _update(s: LedgerStatusType): void {
-    if (this.status === s) return;
-    this.status = s;
-    this.listeners.forEach((cb) => cb(s));
-  }
-
-  async requestConnect(): Promise<ConnectResult> {
-    Loading.show();
-    try {
-      if (!navigator.hid) {
-        return { status: this.status, app: this.app };
-      }
-      const devices = await navigator.hid.requestDevice({
-        filters: [{ vendorId: ledgerUSBVendorId }],
-      });
-
-      if (devices.length === 0) {
-        return { status: this.status, app: this.app };
-      }
-
-      const device = devices[0];
-      if (device) {
-        await this._connectWithDevice(device);
-      }
-    } catch (err) {
-      console.warn("[aurowallet-ledger] requestConnect error:", err);
+      return await operation();
     } finally {
-      Loading.hide();
+      this.ledgerOperationDepth -= 1;
+      if (this.ledgerOperationDepth === 0) {
+        const resolvers = this.ledgerOperationIdleResolvers;
+        this.ledgerOperationIdleResolvers = [];
+        resolvers.forEach((resolve) => resolve());
+      }
     }
-    return { status: this.status, app: this.app };
   }
 
-  async ensureConnect(): Promise<ConnectResult> {
-    await this._tryConnectFromExisting();
-    return { status: this.status, app: this.app };
+  private _waitForActiveLedgerOperations(): Promise<void> {
+    if (this.ledgerOperationDepth === 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      this.ledgerOperationIdleResolvers.push(resolve);
+    });
   }
 
-  addStatusListener(cb: StatusListener): void {
-    this.listeners.push(cb);
-  }
+  private async _verifySigningAccount(
+    expectedAddress: string,
+    accountIndex: number
+  ): Promise<AccountVerificationResult> {
+    // Field-element APDUs do not contain a sender address, so zkApp signing
+    // must bind the requested account to the Ledger-derived public key first.
+    if (!expectedAddress) {
+      return {
+        verified: false,
+        error: { message: i18n.t("buildFailed") },
+      };
+    }
 
-  removeStatusListener(cb: StatusListener): void {
-    this.listeners = this.listeners.filter((l) => l !== cb);
+    const response = await this._withDeviceLock(() =>
+      this.app!.getAddress(accountIndex, false)
+    );
+    const info = this._resolveLedgerResponse(response);
+    const addressMatches =
+      !!response.publicKey && response.publicKey === expectedAddress;
+
+    if (!info.success || !response.publicKey) {
+      return {
+        verified: false,
+        ...toLedgerFailure(info),
+      };
+    }
+    if (!addressMatches) {
+      return {
+        verified: false,
+        error: { message: i18n.t("ledgerAccountMismatch") },
+      };
+    }
+
+    this.connection.updateStatus(LEDGER_STATUS.READY);
+    return { verified: true };
   }
 
   async getAddress(
     accountIndex: number = 0,
     showOnDevice: boolean = true
-  ): Promise<AddressResult | undefined> {
-    await this.ensureConnect();
-    if (this.status !== LEDGER_STATUS.READY) {
-      Toast.info(i18n.t("pleaseOpenInLedger"));
-      return;
-    }
-    const resp = await this.app!.getAddress(accountIndex, showOnDevice);
-    const returnCode = resp.returnCode?.toString();
-    if (returnCode === statusCode.rejectCode_str) {
-      return { rejected: true };
-    }
-    return { publicKey: resp.publicKey || undefined };
+  ): Promise<AddressResult> {
+    return this._withLedgerOperation(async () => {
+      const connection = await this.ensureConnect();
+      if (this.status !== LEDGER_STATUS.READY) {
+        return {
+          error: {
+            message: resolveLedgerResponse({ status: connection.status }).message,
+          },
+        };
+      }
+
+      try {
+        const resp = await this._withDeviceLock(() =>
+          this.app!.getAddress(accountIndex, showOnDevice)
+        );
+        const info = this._resolveLedgerResponse(resp);
+        if (!info.success || !resp.publicKey) {
+          return toLedgerFailure(info);
+        }
+        return { publicKey: resp.publicKey || undefined };
+      } catch (error) {
+        const info = this._resolveLedgerResponse(error);
+        return toLedgerFailure(info);
+      }
+    });
   }
 
   async _sign(
     body: TransactionBody,
     type: number,
-    accountIndex: number
+    accountIndex: number,
+    onAwaitDevice?: AwaitDeviceCallback
   ): Promise<SignResult | undefined> {
-    await this.ensureConnect();
-    if (this.status !== LEDGER_STATUS.READY) {
-      Toast.info(i18n.t("pleaseOpenInLedger"));
-      return;
-    }
-    const cfg = await getCurrentNodeConfig();
-    if (cfg.networkID === NetworkID_MAP.zekomainnet) {
-      return { signature: null, error: { message: i18n.t("notSupportNow") } };
-    }
-    const networkId = await this._getNetworkId();
-    const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
+    return this._withLedgerOperation(async () => {
+      await this.ensureConnect();
+      if (this.status !== LEDGER_STATUS.READY) {
+        return;
+      }
+      const cfg = await getCurrentNodeConfig();
+      if (isZekoNet(cfg.networkID)) {
+        return { signature: null, error: { message: i18n.t("notSupportNow") } };
+      }
 
-    const amountNano = new BigNumber(body.amount || 0).multipliedBy(decimal);
-    const feeNano = new BigNumber(body.fee).multipliedBy(decimal);
+      const networkId = await this._getNetworkId();
+      const decimal = new BigNumber(10).pow(MAIN_COIN_CONFIG.decimals);
 
-    const payload = {
-      txType: type,
-      senderAccount: accountIndex,
-      senderAddress: body.fromAddress,
-      receiverAddress: body.toAddress || body.receiverAddress || "",
-      amount: amountNano.toNumber(),
-      fee: feeNano.toNumber(),
-      nonce: +body.nonce,
-      memo: body.memo || "",
-      networkId,
-      validUntil: 4294967295,
-    };
+      const amountNano = new BigNumber(body.amount || 0).multipliedBy(decimal);
+      const feeNano = new BigNumber(body.fee).multipliedBy(decimal);
 
-    const { signature, returnCode, statusText, message } =
-      (await this.app!.signTransaction(payload)) as {
-        signature: string;
-        returnCode: string | number;
-        statusText?: string;
-        message?: string;
+      const payload = {
+        txType: type,
+        senderAccount: accountIndex,
+        senderAddress: body.fromAddress,
+        receiverAddress: body.toAddress || body.receiverAddress || "",
+        amount: amountNano.toNumber(),
+        fee: feeNano.toNumber(),
+        nonce: +body.nonce,
+        memo: body.memo || "",
+        networkId,
+        validUntil: 4294967295,
       };
 
-    const returnCodeStr = returnCode?.toString();
-    if (returnCodeStr === statusCode.rejectCode_str) {
-      return { rejected: true, error: { message: i18n.t("ledgerRejected") } };
-    }
+      try {
+        const { signature, returnCode, statusText, message } =
+          (await this._withDeviceLock(() => {
+            onAwaitDevice?.();
+            return this.app!.signTransaction(payload);
+          })) as {
+            signature: string;
+            returnCode: string | number;
+            statusText?: string;
+            message?: string;
+          };
 
-    const isSuccess = returnCode === "9000" || returnCode === 0x9000;
-    if (!isSuccess) {
-      return {
-        signature: null,
-        error: { message: statusText || message || "Sign failed" },
-      };
-    }
-
-    const shuffle = (h: string) =>
-      h
-        .match(/.{2}/g)!
-        .reverse()
-        .join("");
-    return {
-      signature: shuffle(signature.slice(0, 64)) + shuffle(signature.slice(64)),
-      payload: {
-        fee: payload.fee,
-        from: payload.senderAddress,
-        to: payload.receiverAddress,
-        nonce: payload.nonce,
-        amount: payload.amount,
-        memo: payload.memo,
-        validUntil: payload.validUntil,
-      },
-    };
+        const info = this._resolveLedgerResponse({
+          returnCode,
+          statusText,
+          message,
+        });
+        if (!info.success) {
+          return {
+            signature: null,
+            ...toLedgerFailure(info),
+          };
+        }
+        return {
+          signature:
+            normalizeLedgerTransactionSignature(signature),
+          payload: {
+            fee: payload.fee,
+            from: payload.senderAddress,
+            to: payload.receiverAddress,
+            nonce: payload.nonce,
+            amount: payload.amount,
+            memo: payload.memo,
+            validUntil: payload.validUntil,
+          },
+        };
+      } catch (error) {
+        const info = this._resolveLedgerResponse(error);
+        return { signature: null, ...toLedgerFailure(info) };
+      }
+    });
   }
 
   async signPayment(
     body: TransactionBody,
-    accountIndex: number = 0
+    accountIndex: number = 0,
+    onAwaitDevice?: AwaitDeviceCallback
   ): Promise<SignResult | undefined> {
-    return this._sign(body, TxType.PAYMENT, accountIndex);
+    return this._sign(body, TxType.PAYMENT, accountIndex, onAwaitDevice);
   }
 
   async signDelegation(
     body: TransactionBody,
-    accountIndex: number = 0
+    accountIndex: number = 0,
+    onAwaitDevice?: AwaitDeviceCallback
   ): Promise<SignResult | undefined> {
-    return this._sign(body, TxType.DELEGATION, accountIndex);
+    return this._sign(body, TxType.DELEGATION, accountIndex, onAwaitDevice);
   }
 
   async signMessage(
     message: string,
-    accountIndex: number = 0
+    accountIndex: number = 0,
+    onAwaitDevice?: AwaitDeviceCallback
   ): Promise<SignResult | undefined> {
-    await this.ensureConnect();
-    if (this.status !== LEDGER_STATUS.READY) {
-      Toast.info(i18n.t("pleaseOpenInLedger"));
-      return;
-    }
-
-    const cfg = await getCurrentNodeConfig();
-    if (cfg.networkID === NetworkID_MAP.zekomainnet) {
-      return { signature: null, error: { message: i18n.t("notSupportNow") } };
-    }
-
-    const networkId = await this._getNetworkId();
-
-    try {
-      const resp = (await this.app!.signMessage(accountIndex, networkId, message)) as {
-        returnCode?: string | number;
-        return_code?: string | number;
-        statusText?: string;
-        message?: string;
-        field?: string;
-        scalar?: string;
-        signed_message?: string;
-      };
-
-      const returnCode =
-        resp.returnCode?.toString() || resp.return_code?.toString();
-
-      if (returnCode === statusCode.rejectCode_str) {
-        return {
-          rejected: true,
-          error: { message: i18n.t("ledgerRejected") },
-        };
+    return this._withLedgerOperation(async () => {
+      await this.ensureConnect();
+      if (this.status !== LEDGER_STATUS.READY) {
+        return;
       }
 
-      if (returnCode !== "9000") {
+      const cfg = await getCurrentNodeConfig();
+      if (isZekoNet(cfg.networkID)) {
+        return { signature: null, error: { message: i18n.t("notSupportNow") } };
+      }
+
+      const networkId = await this._getNetworkId();
+
+      try {
+        const resp = (await this._withDeviceLock(() => {
+          onAwaitDevice?.();
+          return this.app!.signMessage(accountIndex, networkId, message);
+        })) as {
+          returnCode?: string | number;
+          return_code?: string | number;
+          statusText?: string;
+          message?: string;
+          field?: string;
+          scalar?: string;
+          signed_message?: string;
+        };
+
+        const info = this._resolveLedgerResponse(resp);
+        if (!info.success) {
+          return {
+            signature: null,
+            ...toLedgerFailure(info),
+          };
+        }
+        return {
+          signature: {
+            field: resp.field || "",
+            scalar: resp.scalar || "",
+          },
+          signedMessage: resp.signed_message,
+        };
+      } catch (err) {
+        const info = this._resolveLedgerResponse(err);
         return {
           signature: null,
-          error: {
-            message: resp.statusText || resp.message || "Sign message failed",
-          },
+          ...toLedgerFailure(info),
         };
       }
+    });
+  }
 
-      return {
-        signature: {
-          field: resp.field || "",
-          scalar: resp.scalar || "",
-        },
-        signedMessage: resp.signed_message,
-      };
-    } catch (err) {
-      console.error("[aurowallet-ledger] signMessage exception:", err);
-      return {
-        signature: null,
-        error: {
-          message: (err as Error).message || "Unknown error during message signing",
-        },
-      };
-    }
+  async signZkApp(
+    body: LedgerZkAppBody,
+    accountIndex: number = 0,
+    onAwaitDevice?: AwaitDeviceCallback
+  ): Promise<SignResult | undefined> {
+    return this._withLedgerOperation(async () => {
+      await this.ensureConnect();
+      if (this.status !== LEDGER_STATUS.READY) {
+        return;
+      }
+
+      const cfg = await getCurrentNodeConfig();
+      if (isZekoNet(cfg.networkID)) {
+        return { signature: null, error: { message: i18n.t("notSupportNow") } };
+      }
+
+      try {
+        const verification = await this._verifySigningAccount(
+          body.fromAddress,
+          accountIndex
+        );
+        if (!verification.verified) {
+          return {
+            rejected: verification.rejected,
+            signature: null,
+            error: verification.error,
+          };
+        }
+
+        const prepared = await prepareLedgerZkApp(body, cfg.networkID);
+        const networkId = await this._getNetworkId();
+
+        for (const request of prepared.signingRequests) {
+          const resp = await this._withDeviceLock(() => {
+            onAwaitDevice?.();
+            return this.app!.signFieldElement(
+              accountIndex,
+              networkId,
+              fieldElementToLedgerBytes(request.fieldElement)
+            );
+          });
+          const info = this._resolveLedgerResponse(resp, {
+            detectUnsupported: true,
+          });
+          if (!info.success || !resp.field || !resp.scalar) {
+            return {
+              signature: null,
+              ...toLedgerFailure(info),
+            };
+          }
+
+          applyLedgerZkAppSignature(
+            prepared,
+            request,
+            ledgerSignatureToBase58(resp.field, resp.scalar)
+          );
+        }
+        return { signedZkApp: getLedgerSignedZkApp(prepared) };
+      } catch (err) {
+        const info = this._resolveLedgerResponse(err, {
+          detectUnsupported: true,
+        });
+        return {
+          signature: null,
+          ...toLedgerFailure(info),
+        };
+      }
+    });
   }
 
   async _getNetworkId(): Promise<number> {
@@ -395,12 +637,9 @@ class LedgerManager {
       : Networks.DEVNET;
   }
 
-  destroy(): void {
-    this._close();
-    if ("hid" in navigator) {
-      // Event listeners cleanup would need stored references
-    }
+  async destroy(): Promise<void> {
+    await this.connection.destroy();
   }
 }
 
-export default new LedgerManager();
+export default new LedgerManager({ autoConnect: false });

@@ -43,30 +43,22 @@ const StyledTokenSymbol = styled.div`
   font-size: 14px;
   font-weight: 500;
 `;
-const StyledDelegateStatus = styled.div`
-  display: flex;
-  padding: 0px 4px;
-  justify-content: center;
+const StyledEarnTag = styled.span`
+  display: inline-flex;
   align-items: center;
-  border-radius: 4px;
-  color: #fff;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-
+  gap: 4px;
   margin-left: 4px;
-  background-color: ${(props) =>
-    (props as { $isChecked?: boolean }).$isChecked ? "#594AF1" : "rgba(0, 0, 0, 0.30)"};
-`;
-const StyledScamTag = styled.div`
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 14px;
-  color: #d65a5a;
-
-  border: 1px solid #d65a5a;
+  padding: 2px 4px;
   border-radius: 2px;
-  margin-left: 4px;
+  background: #f2f2f2;
+  color: #594af1;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+`;
+const StyledEarnIcon = styled.img`
+  width: 12px;
+  height: 12px;
 `;
 const StyledTokenId = styled.div`
   color: #808080;
@@ -113,9 +105,6 @@ interface TokenItemProps {
 const TokenItem = ({ token, isInModal }: TokenItemProps) => {
   const navigate = useNavigate();
   const currencyConfig = useAppSelector((state) => state.currencyConfig);
-  const currentAccount = useAppSelector(
-    (state) => state.accountInfo.currentAccount
-  );
   const currentNode = useAppSelector((state) => state.network.currentNode);
 
   const dispatch = useAppDispatch();
@@ -126,13 +115,8 @@ const TokenItem = ({ token, isInModal }: TokenItemProps) => {
     displayAmount,
     tokenName,
     isFungibleToken,
-    delegationText,
   } = useMemo(() => {
     const isFungibleToken = !token.tokenBaseInfo.isMainToken;
-
-    let delegationText = token.tokenBaseInfo.isDelegation
-      ? i18n.t("delegated")
-      : i18n.t("undelegated");
 
     let tokenIconUrl = token.tokenBaseInfo.iconUrl;
     let tokenSymbol;
@@ -163,9 +147,8 @@ const TokenItem = ({ token, isInModal }: TokenItemProps) => {
       displayAmount,
       tokenName,
       isFungibleToken,
-      delegationText,
     };
-  }, [token, currencyConfig, currentAccount]);
+  }, [token, currencyConfig]);
 
   const onClickToken = useCallback(() => {
     dispatch(updateNextTokenDetail(token));
@@ -176,13 +159,12 @@ const TokenItem = ({ token, isInModal }: TokenItemProps) => {
     }
   }, [dispatch, token, isInModal]);
 
-  // const {showStaking} = useMemo(() => {
-  //   const networkID = currentNode.networkID;
-  //   let showStaking = networkID?.startsWith("mina");
-  //   return {
-  //     showStaking
-  //   }
-  // }, [currentNode.networkID]);
+  const { showStaking } = useMemo(() => {
+    const networkID = currentNode.networkID;
+    return {
+      showStaking: networkID?.startsWith("mina"),
+    };
+  }, [currentNode.networkID]);
   return (
     <StyledTokenItemWrapper onClick={onClickToken}>
       <StyledTokenLeft>
@@ -192,15 +174,12 @@ const TokenItem = ({ token, isInModal }: TokenItemProps) => {
         <StyledTokenInfo>
           <StyledTokenSymbolWrapper>
             <StyledTokenSymbol>{tokenSymbol}</StyledTokenSymbol>
-            {/* {!isFungibleToken && !isInModal && showStaking && (
-              <StyledDelegateStatus
-                $isChecked={token.tokenBaseInfo.isDelegation}
-              >
-                {delegationText}
-              </StyledDelegateStatus>
-            )} */}
-            {/* scam status */}
-            {/*  {!isInModal && <StyledScamTag>{i18n.t("scam")}</StyledScamTag>} */}
+            {!isFungibleToken && !isInModal && showStaking && (
+              <StyledEarnTag>
+                {i18n.t("earn")}
+                <StyledEarnIcon src="/img/icon_earn.svg" alt="" />
+              </StyledEarnTag>
+            )}
           </StyledTokenSymbolWrapper>
           <StyledTokenId>{tokenName}</StyledTokenId>
         </StyledTokenInfo>

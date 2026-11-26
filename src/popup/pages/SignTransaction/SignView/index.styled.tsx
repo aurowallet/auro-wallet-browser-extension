@@ -65,7 +65,11 @@ export const StyledContent = styled.div<StyledContentProps>`
   `}
 `;
 
-export const StyledWebsiteContainer = styled.div``;
+export const StyledWebsiteContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
 
 export const StyledAccountRow = styled.div<StyledAccountRowProps>`
   margin-top: 20px;

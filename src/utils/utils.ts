@@ -49,6 +49,10 @@ export function getTxHistoryCacheKey(address: string, networkID?: string): strin
   return networkID ? `${address}:${networkID}` : address;
 }
 
+export function roundEpochDaysUp(days: number): number {
+  return Math.ceil(days * 10) / 10;
+}
+
 // ============ Number Utils ============
 
 export function toNonExponential(ExpNumber: string | number): string {
@@ -120,7 +124,7 @@ export function numberFormat(str: string): string {
 
 // ============ Slot Duration Utils ============
 
-const DEFAULT_SLOT_DURATION_MS = 180000; // 3 minutes
+const DEFAULT_SLOT_DURATION_MS = 90000; // 1.5 minutes
 
 export function formatSlotDuration(slotDurationMs?: number | string): string {
   const raw = Number(slotDurationMs);

@@ -23,6 +23,7 @@ interface ConfirmModalProps {
   waitingLedger?: boolean;
   showCloseIcon?: boolean;
   rightBtnCom?: ReactNode;
+  waitingContent?: ReactNode;
 }
 import CountdownTimer from "../CountdownTimer";
 import LedgerStatusView from "../StatusView/LedgerStatusView";
@@ -73,6 +74,7 @@ export const ConfirmModal = ({
   waitingLedger = false,
   showCloseIcon = false,
   rightBtnCom = <></>,
+  waitingContent,
 }: ConfirmModalProps) => {
   return (
     <>
@@ -82,21 +84,17 @@ export const ConfirmModal = ({
             <div>
               <StyledTitleRow>
                 <StyledRowTitle>{waitingLedger ? i18n.t("waitingLedgerConfirm") : title}</StyledRowTitle>
-                {!waitingLedger && (
-                  <StyledRightRow>
-                    <LedgerStatusView />
-                    <div style={{ marginRight: "6px" }} />
-                    <NetworkStatusView />
-                  </StyledRightRow>
-                )}
-                {showCloseIcon && (
-                  <StyledRightRow>
+                <StyledRightRow>
+                  <LedgerStatusView />
+                  <div style={{ marginRight: "6px" }} />
+                  <NetworkStatusView />
+                  {showCloseIcon && (
                     <StyledRowClose
                       onClick={onClickClose}
                       src="/img/icon_nav_close.svg"
                     />
-                  </StyledRightRow>
-                )}
+                  )}
+                </StyledRightRow>
               </StyledTitleRow>
             </div>
             <StyledDividedLine />
@@ -104,7 +102,7 @@ export const ConfirmModal = ({
               <StyledLedgerContent>
                 <StyledLoadingSpinner />
                 <StyledWaitingContent>
-                  {i18n.t("waitingLedgerConfirmTip")}
+                  {waitingContent || i18n.t("waitingLedgerConfirmTip")}
                 </StyledWaitingContent>
                 <StyledWaitingTip>
                   <Trans
