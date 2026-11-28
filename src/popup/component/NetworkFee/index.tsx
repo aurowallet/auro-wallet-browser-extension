@@ -66,7 +66,7 @@ const NetworkFee = ({
                     {i18n.t("advanceMode")}
                 </StyledAdvanceLink>
             )}
-            {!onAdvanceClick && (
+            {!hideAdvanceLink && !onAdvanceClick && (
                 <AdvanceModal
                     modalVisible={modalVisible}
                     onClickClose={onClickClose}

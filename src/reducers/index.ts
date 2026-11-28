@@ -9,6 +9,7 @@ import tabRouteConfig from "./tabRouteReducer";
 import currencyConfig from "./currency";
 import ledger, { LedgerState } from "./ledger";
 import popupReducer from "./popupReducer";
+import nft from "./nft";
 
 // ============ Action Types ============
 
@@ -42,6 +43,7 @@ export interface RootState {
   currencyConfig: ReturnType<typeof currencyConfig>;
   ledger: LedgerState;
   popupReducer: ReturnType<typeof popupReducer>;
+  nft: ReturnType<typeof nft>;
 }
 
 // ============ Combined Reducer ============
@@ -57,6 +59,7 @@ const appRootReducer = combineReducers({
   currencyConfig,
   ledger,
   popupReducer,
+  nft,
 });
 
 // ============ Root Reducer with Reset ============

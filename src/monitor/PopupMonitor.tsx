@@ -1,14 +1,16 @@
 import ApprovePage from "@/popup/pages/ApprovePage";
 import TokenSignPage from "@/popup/pages/Send/tokenSign";
+import NFTSign from "@/popup/pages/NFTSign";
 import {
   updateApproveStatus,
   updateTokenSignStatus,
 } from "@/reducers/popupReducer";
 import { sendMsg } from "@/utils/commonMsg";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
+  NFT_WEB_ACTION,
   ACCOUNT_ACTIONS,
   POPUP_ACTIONS,
   WALLET_GET_CURRENT_ACCOUNT,
@@ -49,6 +51,7 @@ const StyledContentWrapper = styled.div`
 
 function PopupMonitor() {
   const dispatch = useDispatch();
+  const [nftJobs, setNFTJobs] = useState<string[]>([]);
   const tokenModalStatus = useSelector(
     (state: { popupReducer: { tokenModalStatus: boolean } }) => state.popupReducer.tokenModalStatus
   );
@@ -63,6 +66,15 @@ function PopupMonitor() {
   );
 
   const canShowZkOverlay = !popupLockStatus;
+
+  useEffect(() => {
+    if (popupLockStatus) {setNFTJobs([]);return;}
+    let active = true;
+    sendMsg({action:NFT_WEB_ACTION,payload:{route:'transaction/pending',body:{}}}, (jobs: string[]) => {
+      if (active && Array.isArray(jobs)) setNFTJobs(current => [...new Set([...current,...jobs])]);
+    });
+    return () => {active = false;};
+  }, [popupLockStatus]);
 
   useEffect(() => {
     sendMsg(
@@ -120,6 +132,13 @@ function PopupMonitor() {
           }
           sendResponse();
           return true;
+        case WORKER_ACTIONS.BUILD_NFT_SEND: {
+          const jobId = (payload as {jobId?:string})?.jobId;
+          if (typeof jobId !== 'string' || !jobId) return false;
+          setNFTJobs(current => current.includes(jobId) ? current : [...current,jobId]);
+          sendResponse(true);
+          return true;
+        }
         default:
           return false;
       }
@@ -138,6 +157,11 @@ function PopupMonitor() {
       <ChildView status={canShowZkOverlay && signZkModalStatus} nextView={<SignTransaction />} />
       <ChildView status={canShowZkOverlay && approveModalStatus} nextView={<ApprovePage />} />
       <ChildView status={canShowZkOverlay && tokenModalStatus} nextView={<TokenSignPage />} />
+      <ChildView
+        status={canShowZkOverlay && nftJobs.length > 0}
+        nextView={nftJobs[0] && <NFTSign key={nftJobs[0]}
+        jobId={nftJobs[0]}
+        onClose={() => setNFTJobs(current => current.filter(id => id !== nftJobs[0]))} />} />
     </>
   );
 }

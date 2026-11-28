@@ -9,7 +9,7 @@ import i18n from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import NftListView from "./NftListView";
+import NFTListView from "./NFTListView";
 import TokenListView from "./TokenListView";
 import TokenManageList from "./TokenManageList";
 
@@ -196,7 +196,7 @@ const AssetListView = () => {
           />
         )}
       </StyledAssetHeaderRow>
-      {activeAssetTab === "tokens" ? <TokenListView /> : <NftListView />}
+      {activeAssetTab === "tokens" ? <TokenListView /> : <NFTListView />}
 
       <FooterPopup
         isOpen={tokenManageStatus}

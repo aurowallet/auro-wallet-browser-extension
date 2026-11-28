@@ -135,6 +135,20 @@ export function formatSlotDuration(slotDurationMs?: number | string): string {
 
 // ============ Validation Utils ============
 
+/** Trust only the configured HTTPS builder. */
+export function isTrustedBuildOrigin(
+  origin: string,
+  configuredUrl: string,
+): boolean {
+  try {
+    const candidate = new URL(origin);
+    const configured = new URL(configuredUrl);
+    return candidate.protocol === "https:" && candidate.origin === configured.origin;
+  } catch {
+    return false;
+  }
+}
+
 export function urlValid(url: string): boolean {
   try {
     const parsedUrl = new URL(url);

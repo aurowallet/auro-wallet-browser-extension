@@ -3,6 +3,7 @@ import { errorCodes } from "@/constant/dappError";
 import { Default_Network_List, type NetworkConfig } from "@/constant/network";
 import { ZKAPP_APPROVE_LIST } from "@/constant/storageKey";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
+import { nftWebBuild, type INFTBuildResult } from "./nftWebBuild";
 import { decryptData, encryptData } from "@/utils/fore";
 import {
   checkPresentationRequestSchema,
@@ -45,6 +46,7 @@ import {
 } from "../utils/popup";
 import {
   addressValid,
+  isTrustedBuildOrigin,
   checkNodeExist,
   getArrayDiff,
   getRealErrorMsg,
@@ -179,7 +181,7 @@ function getExtensionBaseUrl(): string {
 
 function isExtensionPopupUrl(url: string): boolean {
   const baseUrl = getExtensionBaseUrl();
-  return url.startsWith(`${baseUrl}popup.html`);
+  return url.split(/[?#]/, 1)[0] === `${baseUrl}popup.html`;
 }
 
 function getSenderUrls(sender: browser.Runtime.MessageSender): string[] {
@@ -242,6 +244,21 @@ class DappService {
         const normalizedError = this.normalizeRequestError(error);
         sendResponse({ error: normalizedError, id: id });
       });
+  }
+
+  handleNFTBuild(
+    payload: { route: string; body: unknown },
+    sender: browser.Runtime.MessageSender,
+    sendResponse: (response: unknown) => void,
+  ): boolean {
+    if (sender.id !== browser.runtime.id || !sender.url || !isExtensionPopupUrl(sender.url)) {
+      return false;
+    }
+    Promise.resolve()
+      .then(() => nftWebBuild.handle(payload.route, payload.body))
+      .then(sendResponse)
+      .catch(error => sendResponse({ error: this.normalizeRequestError(error) }));
+    return true;
   }
 
   async handleMessage(
@@ -361,14 +378,21 @@ class DappService {
         break;
       case TOKEN_BUILD.getParams:
         this.requestCallback(
-          () => this.getTokenParamsById(message.payload as any),
+          () => this.getTokenParamsById(message.payload as any, sender),
           id,
           sendResponse
         );
         break;
       case TOKEN_BUILD.requestSign:
         this.requestCallback(
-          () => this.requestTokenBuildSign(id, { ...params, action }, site),
+          async () => {
+            const data = this.getDecryptData(params as any);
+            if (data.kind === 'nft') {
+              const origin = new URL(sender.url || sender.tab?.url || '').origin;
+              return nftWebBuild.result(data as unknown as INFTBuildResult, origin, sender.tab?.id);
+            }
+            return this.requestTokenBuildSign(id, { ...params, action }, site);
+          },
           id,
           sendResponse
         );
@@ -1486,18 +1510,7 @@ class DappService {
   }
 
   checkSafeBuild(site: Site): boolean {
-    try {
-      const buildUrl = new URL(site.origin);
-      const whiteUrl = new URL(TOKEN_BUILD_URL);
-
-      if (buildUrl.protocol !== 'https:') return false;
-
-      if (buildUrl.origin !== whiteUrl.origin) return false;
-
-      return true;
-    } catch {
-      return false;
-    }
+    return isTrustedBuildOrigin(site.origin, TOKEN_BUILD_URL);
   }
 
   getAllTokenSignParams(): SignRequest[] {
@@ -1509,15 +1522,19 @@ class DappService {
   async getTokenParamsById(payload: {
     site: Site;
     params: string;
-  }): Promise<unknown> {
-    const site = payload.site;
-    if (!this.checkSafeBuild(site)) {
+  }, sender?: browser.Runtime.MessageSender): Promise<unknown> {
+    const buildId = payload.params;
+    if (nftWebBuild.hasJob(buildId)) {
+      const origin = new URL(sender?.url || sender?.tab?.url || '').origin;
+      const data = await nftWebBuild.getParams(buildId, origin, sender?.tab?.id);
+      return encryptData(JSON.stringify(data), node_public_keys);
+    }
+    if (!this.checkSafeBuild(payload.site)) {
       return {
         message: getMessageFromCode(errorCodes.originDismatch),
         code: errorCodes.originDismatch,
       };
     }
-    const buildId = payload.params;
     const buildList = dappStore.getState().tokenBuildList as Record<
       string,
       unknown

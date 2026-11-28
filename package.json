@@ -39,7 +39,11 @@
     "serialize-error": "12.0.0",
     "mina-attestations": "0.6.0",
     "@noble/hashes": "1.7.1",
-    "immer": "10.1.1"
+    "immer": "10.1.1",
+    "@silvana-one/nft": "https://github.com/lvshaoping007/silvana-lib/releases/download/mesa-o1js-v3-adac5c3/silvana-one-nft-1.2.16.tgz",
+    "@silvana-one/storage": "https://github.com/lvshaoping007/silvana-lib/releases/download/mesa-o1js-v3-adac5c3/silvana-one-storage-1.2.16.tgz",
+    "@silvana-one/token": "https://github.com/lvshaoping007/silvana-lib/releases/download/mesa-o1js-v3-adac5c3/silvana-one-token-1.2.16.tgz",
+    "@silvana-one/upgradable": "https://github.com/lvshaoping007/silvana-lib/releases/download/mesa-o1js-v3-adac5c3/silvana-one-upgradable-1.2.16.tgz"
   },
   "scripts": {
     "clean": "rm -rf dist dist-chrome dist-firefox zip",

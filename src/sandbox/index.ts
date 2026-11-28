@@ -1,3 +1,4 @@
+import { handleNFTOperation } from "./nftMessages";
 import {
   Credential,
   Presentation,
@@ -14,7 +15,14 @@ interface PromiseCallbacks {
 let presentationSignaturePromise: PromiseCallbacks | null = null;
 let allowedOrigin = "";
 window.addEventListener("message", async (event) => {
-  if (event.data.type === "init-sandbox" && event.source === window.parent) {
+  if (event.source !== window.parent) return;
+  const data = event.data;
+  if (data?.type === "nft-operation") {
+    const result = await handleNFTOperation(data);
+    window.parent.postMessage(result, event.origin);
+    return;
+  }
+  if (data?.type === "init-sandbox") {
     const parentOrigin =
       typeof event.data.parentOrigin === "string"
         ? event.data.parentOrigin
@@ -23,9 +31,6 @@ window.addEventListener("message", async (event) => {
     return;
   }
   if (!allowedOrigin) {
-    return;
-  }
-  if (event.source !== window.parent) {
     return;
   }
   if (event.origin !== allowedOrigin && event.origin !== "null") {
@@ -44,7 +49,6 @@ window.addEventListener("message", async (event) => {
     return;
   }
 
-  const data = event.data;
   if (data.type == "validate-credential") {
     try {
       const payload = data.payload;

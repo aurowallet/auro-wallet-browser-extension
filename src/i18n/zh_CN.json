@@ -360,5 +360,18 @@
   "ledgerAccountMismatch": "当前连接的 Ledger 账户与钱包账户不匹配。",
   "ledgerBusyTip": "Ledger 繁忙，请重试。",
   "ledgerZkAppBlindSigningTip": "请在 Ledger 上开启 <b>Blind signing</b>。",
-  "ledgerMode": "Ledger 模式"
+  "ledgerMode": "Ledger 模式",
+  "nftCollectionTransferFee": "集合转让费",
+  "nftCollectionFeeRecipient": "集合费用接收人",
+  "nftTotalDebit": "合计",
+  "nftCollection": "收藏品",
+  "nftCollectionContract": "集合合约地址",
+  "nftAddress": "NFT 地址",
+  "nftTokenId": "代币 ID",
+  "nftCollectionName": "收藏品名称",
+  "nftAttributes": "属性",
+  "showMore": "查看更多",
+  "nftOwnedCount": "持有 {{count}} 个",
+  "nftNotOwned": "当前账户未持有此 NFT。",
+  "nftTransferPermissionDenied": "请检查当前 NFT 的转让权限"
 }

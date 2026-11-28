@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { LOCK_TIME_DEFAULT } from '../constant';
 import type { Vault } from '../constant/vaultTypes';
+import type { ILocalTransferJob } from '@/types/nft';
 
 // VaultData can be V3 modern Vault, V1 array format, or null
 type V1Wallet = { mnemonic?: string; accounts: unknown[]; currentAddress?: string };
@@ -26,6 +27,7 @@ export interface StoreState {
   accountApprovedUrlList: Record<string, string[]>;
   currentConnect: Record<string, unknown>;
   tokenBuildList: Record<string, unknown>;
+  nftBuildList: Record<string, ILocalTransferJob>;
   _directSet: (newState: Partial<StoreState>) => void;
   _directUpdate: (partial: Partial<StoreState>) => void;
   unlock: (payload: UnlockPayload) => void;
@@ -58,6 +60,7 @@ const useInternalStore = create<StoreState>((set, get) => ({
   accountApprovedUrlList: {},
   currentConnect: {},
   tokenBuildList: {},
+  nftBuildList: {},
 
   _directSet: (newState: Partial<StoreState>) => set(newState),
   _directUpdate: (partial: Partial<StoreState>) => set((state) => ({ ...state, ...partial })),
@@ -92,6 +95,7 @@ const useInternalStore = create<StoreState>((set, get) => ({
     accountApprovedUrlList: {},
     currentConnect: {},
     tokenBuildList: {},
+    nftBuildList: {},
   }),
 
   setCurrentAccount: (account: AccountInfo) => set({ currentAccount: account }),

@@ -2,7 +2,7 @@ import { copyText } from "@/utils/browserUtils";
 import i18n from "i18next";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import Toast from "./Toast";
 
 const StyledCustomView = styled.div`
@@ -25,17 +25,22 @@ const StyledBackArrow = styled.div`
   cursor: pointer;
   z-index: 1;
 `;
-const StyledTitleWrapper = styled.div`
+const StyledTitleWrapper = styled.div<{ $truncateTitle: boolean }>`
   position: absolute;
   left: 50%;
   transform: translate(-50%, 0%);
+  ${({ $truncateTitle }) => $truncateTitle && css`max-width: calc(100% - 100px);`}
   white-space: nowrap;
 
   display: flex;
   flex-direction: column;
 `;
 
-const StyledTitle = styled.div`
+const StyledTitle = styled.div<{ $truncateTitle: boolean }>`
+  ${({ $truncateTitle }) => $truncateTitle && css`
+    overflow: hidden;
+    text-overflow: ellipsis;
+  `}
   font-weight: 600;
   font-size: 18px;
   text-align: center;
@@ -67,11 +72,13 @@ const CustomViewV2 = ({
   title = "",
   subTitle = "",
   copyContent = "",
+  truncateTitle = false,
 }: {
   children?: React.ReactNode;
   title?: string;
   subTitle?: string;
   copyContent?: string;
+  truncateTitle?: boolean;
 }) => {
   const navigate = useNavigate();
   const goBack = useCallback(() => {
@@ -90,8 +97,8 @@ const CustomViewV2 = ({
         <StyledBackArrow onClick={goBack}>
           <img src={"/img/icon_back.svg"} />
         </StyledBackArrow>
-        <StyledTitleWrapper>
-          <StyledTitle>{title}</StyledTitle>
+        <StyledTitleWrapper $truncateTitle={truncateTitle}>
+          <StyledTitle $truncateTitle={truncateTitle} title={truncateTitle ? title : undefined}>{title}</StyledTitle>
           <StyledSubTitleWrapper
             $canCopy={!!copyContent}
             onClick={onCopySubTitle}

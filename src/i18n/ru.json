@@ -360,5 +360,18 @@
   "ledgerAccountMismatch": "Подключенная учетная запись Ledger не соответствует этой учетной записи кошелька.",
   "ledgerBusyTip": "Ledger занят. Повторите попытку.",
   "ledgerZkAppBlindSigningTip": "Пожалуйста, включите <b>Blind signing</b> на Ledger.",
-  "ledgerMode": "Режим Ledger"
+  "ledgerMode": "Режим Ledger",
+  "nftCollectionTransferFee": "Комиссия за перевод коллекции",
+  "nftCollectionFeeRecipient": "Получатель комиссии коллекции",
+  "nftTotalDebit": "Итого к списанию",
+  "nftCollection": "Коллекция",
+  "nftCollectionContract": "Контракт коллекции",
+  "nftAddress": "Адрес NFT",
+  "nftTokenId": "ID токена",
+  "nftCollectionName": "Название коллекции",
+  "nftAttributes": "Атрибуты",
+  "showMore": "Показать больше",
+  "nftOwnedCount": "В наличии: {{count}}",
+  "nftNotOwned": "Этот аккаунт не владеет данным NFT.",
+  "nftTransferPermissionDenied": "Проверьте разрешения на передачу этого NFT"
 }

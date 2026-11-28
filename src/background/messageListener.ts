@@ -54,6 +54,7 @@ import {
   WALLET_GET_CREATE_FLOW_STATE,
 } from "../constant/msgTypes";
 import apiService from "./apiService";
+import {NFT_WEB_ACTION} from "@/constant/msgTypes";
 import * as storage from "./storageService";
 import dappService from "./DappService";
 import browser from "webextension-polyfill";
@@ -564,6 +565,8 @@ function internalMessageListener(
         sendResponse();
       });
       break;
+    case NFT_WEB_ACTION:
+      return dappService.handleNFTBuild(payload, sender, sendResponse);
     default:
       return false;
     }

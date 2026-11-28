@@ -208,3 +208,13 @@ describe('Functionality on testnet', () => {
     });
   });
 });
+
+describe('signing client network selection', () => {
+  it.each([
+    ['mina:mainnet', 'mainnet'], ['mina:devnet', 'testnet'],
+    ['zeko:mainnet', {custom: 'zeko-mainnet'}], ['zeko:testnet', 'testnet'],
+  ])('maps %s using the existing wallet rules', async (network, expected) => {
+    const client = await libModule.getSignClient({networkID: network as string});
+    expect(client).toHaveProperty('network', expected);
+  });
+});

@@ -122,12 +122,13 @@ export async function startPopupWindow(
 }
 
 export function closePopupWindow(channel: string): void {
-  (async () => {
-    const windowId = lastWindowIds[channel];
-    if (windowId) {
-      await browser.windows.remove(windowId);
-    }
-  })();
+  const windowId = lastWindowIds[channel];
+  delete lastWindowIds[channel];
+  if (windowId !== undefined && windowId !== null) {
+    void browser.windows.remove(windowId).catch(() => {
+      // The user may already have closed the window.
+    });
+  }
 }
 
 export function startExtensionPopup(withListener: boolean = false): Promise<number | undefined> {

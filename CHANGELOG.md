@@ -4,10 +4,13 @@ All notable changes to this project will be documented in this file.
 ## [2.6.0]
 ### Enhancements
 - Add NFT tab to the wallet asset list
-- Add NFT list and detail pages
+- Enhance NFT list and detail pages with grouped holdings, collection information, and metadata attributes
+- Add NFT transfer preparation and confirmation pages with web-based transaction building
+- Share Token and NFT zkApp signing, broadcasting, and transaction status tracking, including Ledger signing
+- Add NFT caching and refresh by account and network
 
 ### Fixes
-
+- Truncate long NFT detail titles to avoid layout overflow
 
 ## [2.5.5]
 ### Enhancements

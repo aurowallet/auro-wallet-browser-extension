@@ -360,5 +360,18 @@
   "ledgerAccountMismatch": "The connected Ledger account does not match this wallet account.",
   "ledgerBusyTip": "Ledger is busy. Please try again.",
   "ledgerZkAppBlindSigningTip": "Please enable <b>Blind signing</b> on your Ledger.",
-  "ledgerMode": "Ledger mode"
+  "ledgerMode": "Ledger mode",
+  "nftCollectionTransferFee": "Collection transfer fee",
+  "nftCollectionFeeRecipient": "Collection fee recipient",
+  "nftTotalDebit": "Total debit",
+  "nftCollection": "Collection",
+  "nftCollectionContract": "Collection contract",
+  "nftAddress": "NFT address",
+  "nftTokenId": "Token ID",
+  "nftCollectionName": "Collection name",
+  "nftAttributes": "Attributes",
+  "showMore": "Show more",
+  "nftOwnedCount": "{{count}} owned",
+  "nftNotOwned": "This account does not own this NFT.",
+  "nftTransferPermissionDenied": "Please check this NFT’s transfer permissions"
 }

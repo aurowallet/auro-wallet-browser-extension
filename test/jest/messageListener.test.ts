@@ -63,6 +63,7 @@ const mockMsgBrowser = {
 };
 
 jest.mock('webextension-polyfill', () => mockMsgBrowser);
+const mockNFTHandle=jest.fn().mockReturnValue(true);
 export {}; // Make this file a module to avoid TS block-scope conflicts
 
 // Mock apiService to prevent real initialization
@@ -82,6 +83,7 @@ jest.mock('@/background/DappService', () => ({
   __esModule: true,
   default: {
     handleMessage: jest.fn().mockResolvedValue(undefined),
+    handleNFTBuild: (...args: any[]) => mockNFTHandle(...args),
     clearAllPendingZk: jest.fn(),
     getSignParamsByOpenId: jest.fn(),
     getSignParams: jest.fn().mockReturnValue([]),
@@ -239,6 +241,23 @@ describe('messageListener sender.id verification', () => {
       expect(result).toBe(false);
       expect(sendResponse).not.toHaveBeenCalled();
     });
+  });
+
+  it('delegates internal NFT messages and the channel lifetime to DappService', () => {
+    const message = {action: 'NFT_WEB_BUILD', payload: {route: 'transaction/send', body: {jobId: 'test'}}};
+    const sender = {id: SELF_EXTENSION_ID, url: `chrome-extension://${SELF_EXTENSION_ID}/popup.html`};
+    const respond = jest.fn();
+    expect(internalMessageListener(message, sender, respond)).toBe(true);
+    expect(mockNFTHandle).toHaveBeenCalledWith(message.payload, sender, respond);
+    mockNFTHandle.mockReturnValueOnce(false);
+    expect(internalMessageListener(message, sender, respond)).toBe(false);
+  });
+
+  it('does not route a DApp NFT management action to the internal handler', async () => {
+    const message = {messageSource: 'messageFromDapp', action: 'NFT_WEB_BUILD', payload: {id: '1', params: {}, site: {origin: 'https://builder.example'}}};
+    expect(internalMessageListener(message, {id: SELF_EXTENSION_ID}, jest.fn())).toBe(true);
+    await Promise.resolve();
+    expect(mockNFTHandle).not.toHaveBeenCalled();
   });
 
   // ---- Test 3: Edge cases ----

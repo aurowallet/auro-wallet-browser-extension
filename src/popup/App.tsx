@@ -26,6 +26,7 @@ import { getReadableNetworkId } from "@/utils/utils";
 import LedgerStatusSyncer from "./component/LedgerStatusSyncer";
 import { LedgerStatusFloatingProvider } from "./component/LedgerStatusFloating";
 import { RootState } from "@/reducers";
+import useNFTList from "@/hooks/useNFTList";
 import useMinaExchangesCache from "@/hooks/useMinaExchangesCache";
 
 function setLastActiveTime() {
@@ -38,6 +39,7 @@ function setLastActiveTime() {
 }
 
 function App() {
+  useNFTList();
   useMinaExchangesCache();
   const dispatch = useDispatch();
   const currentNode = useSelector((state: RootState) => state.network.currentNode);

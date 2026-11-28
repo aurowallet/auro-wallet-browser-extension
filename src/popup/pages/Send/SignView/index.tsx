@@ -2,10 +2,6 @@ import { MAIN_COIN_CONFIG } from "@/constant";
 import { ACCOUNT_TYPE, LEDGER_STATUS } from "@/constant/commonType";
 import { useZekoFee } from "@/hooks/useZekoFee";
 import { getFeeWithZekoMinimum } from "@/utils/fee";
-import {
-  QA_SIGN_TRANSACTION,
-  WALLET_CHECK_TX_STATUS,
-} from "@/constant/msgTypes";
 import { TOKEN_BUILD } from "@/constant/tokenMsgTypes";
 import Button, { button_size, button_theme } from "@/popup/component/Button";
 import { ConfirmModal } from "@/popup/component/ConfirmModal";
@@ -17,7 +13,7 @@ import Toast from "@/popup/component/Toast";
 import { copyText } from "@/utils/browserUtils";
 import { sendMsg } from "@/utils/commonMsg";
 import ledgerManager from "@/utils/ledger";
-import { sendParty } from "@/background/api";
+import { signZkAppTransaction, sendZkAppTransaction } from "@/utils/zkAppTransfer";
 import {
   addressSlice,
   amountDecimals,
@@ -26,7 +22,6 @@ import {
   isNumber,
   trimSpace,
 } from "@/utils/utils";
-import { DAppActions } from "@aurowallet/mina-provider";
 import BigNumber from "bignumber.js";
 import { useFeeValidation } from "@/hooks/useFeeValidation";
 import i18n from "i18next";
@@ -316,8 +311,7 @@ const SignView = ({
   const onSubmitSuccess = useCallback(
     (
       data: { error?: unknown; hash?: string; id?: string },
-      nonce: string,
-      type?: string
+      nonce: string
     ) => {
       if (data.error) {
         let errorMessage = i18n.t("postFailed");
@@ -333,19 +327,6 @@ const SignView = ({
         payload.hash = data.hash;
         resultAction = TOKEN_BUILD.requestSign;
         dispatch(updateShouldRequest(true, true));
-        if (type === "ledger" && data.id && data.hash) {
-          sendMsg(
-            {
-              action: WALLET_CHECK_TX_STATUS,
-              payload: {
-                paymentId: data.id,
-                hash: data.hash,
-                type: "ZKAPP_TX",
-              },
-            },
-            () => {}
-          );
-        }
         sendMsg(
           {
             action: resultAction,
@@ -402,9 +383,9 @@ const SignView = ({
       if (!operation) return;
       setBtnLoading(true);
       try {
-        const result = await ledgerManager.signZkApp(
+        const result = await signZkAppTransaction(
           payload,
-          (currentAccount.hdPath || 0) as number,
+          currentAccount,
           () => {
             if (ledgerOperationRef.current === operation) {
               setLedgerConfirmModalStatus(true);
@@ -424,20 +405,15 @@ const SignView = ({
             setLedgerModalStatus(true);
             return;
           }
-          Toast.info(result.error.message);
+          Toast.info(getRealErrorMsg(result.error) || i18n.t("buildFailed"));
           return;
         }
-        if (!result.signedZkApp) {
+        if (!result.data) {
           Toast.info(i18n.t("buildFailed"));
           return;
         }
 
-        const sendResponse = (await sendParty(
-          result.signedZkApp.data.zkappCommand
-        )) as {
-          error?: unknown;
-          sendZkapp?: { zkapp?: { hash?: string; id?: string } };
-        };
+        const sendResponse = await sendZkAppTransaction(result.data.zkappCommand);
         if (ledgerOperationRef.current !== operation) return;
         if (sendResponse.error) {
           Toast.info(
@@ -446,12 +422,12 @@ const SignView = ({
           return;
         }
 
-        const zkAppResult = sendResponse.sendZkapp?.zkapp;
+        const zkAppResult = sendResponse;
         if (!zkAppResult?.hash) {
           Toast.info(i18n.t("postFailed"));
           return;
         }
-        onSubmitSuccess(zkAppResult, payload.nonce, "ledger");
+        onSubmitSuccess(zkAppResult, payload.nonce);
       } catch (error) {
         if (ledgerOperationRef.current === operation) {
           Toast.info(getRealErrorMsg(error) || i18n.t("postFailed"));
@@ -467,18 +443,23 @@ const SignView = ({
     }
 
     setBtnLoading(true);
-    let connectAction = QA_SIGN_TRANSACTION;
-    payload.sendAction = DAppActions.mina_sendTransaction;
-    sendMsg(
-      {
-        action: connectAction,
-        payload,
-      },
-      (data) => {
-        setBtnLoading(false);
-        onSubmitSuccess(data as Parameters<typeof onSubmitSuccess>[0], payload.nonce, undefined);
+    try {
+      const signed = await signZkAppTransaction(payload, currentAccount);
+      if (signed?.error || !signed?.data) {
+        Toast.info(getRealErrorMsg(signed?.error) || i18n.t("buildFailed"));
+        return;
       }
-    );
+      const result = await sendZkAppTransaction(signed.data.zkappCommand);
+      if (!result.hash && !result.error) {
+        Toast.info(i18n.t("postFailed"));
+        return;
+      }
+      onSubmitSuccess(result, payload.nonce);
+    } catch (error) {
+      Toast.info(getRealErrorMsg(error) || i18n.t("postFailed"));
+    } finally {
+      setBtnLoading(false);
+    }
   }, [
     currentAccount,
     signParams,

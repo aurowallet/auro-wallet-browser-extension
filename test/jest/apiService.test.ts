@@ -74,7 +74,7 @@ const mockStorageService = {
     Object.assign(mockStorageData, data);
     return Promise.resolve(undefined);
   }),
-  removeValue: jest.fn((keys: string | string[]) => {
+  removeValue: jest.fn((keys: string | string[]): Promise<void> => {
     const keysArray = Array.isArray(keys) ? keys : [keys];
     for (const k of keysArray) { delete mockStorageData[k]; }
     return Promise.resolve(undefined);
@@ -227,6 +227,7 @@ jest.mock('../../src/background/vaultMigration', () => ({
 // Import after mocks
 import apiService from '../../src/background/apiService/APIService';
 import { normalizeVault } from '../../src/background/vaultMigration';
+import * as signingLib from '../../src/background/lib';
 
 // ==================== Test Data ====================
 const TEST_DATA = {
@@ -2426,6 +2427,21 @@ describe('APIService', () => {
 
   // ==================== 28. sendTransaction (Multiple Tests) ====================
   describe('sendTransaction', () => {
+    it('returns signed data without broadcasting when zkOnlySign is set', async () => {
+      setupAuthenticated();
+      const key = jest.spyOn(apiService, 'getCurrentPrivateKey').mockResolvedValue('test-key');
+      const signer = jest.spyOn(signingLib, 'signTransaction').mockResolvedValue({data: {zkappCommand: 'signed'}});
+      const broadcast = jest.spyOn(apiService, 'postZkTx');
+      try {
+        const params = {zkOnlySign: true, sendAction: 'mina_sendTransaction'};
+        expect(await apiService.sendTransaction(params)).toEqual({zkappCommand: 'signed'});
+        expect(signer).toHaveBeenCalledWith('test-key', params);
+        expect(broadcast).not.toHaveBeenCalled();
+      } finally {
+        key.mockRestore(); signer.mockRestore(); broadcast.mockRestore();
+      }
+    });
+
     it('should handle payment transaction', async () => {
       // This is a placeholder for transaction tests
       expect(apiService.sendTransaction).toBeDefined();

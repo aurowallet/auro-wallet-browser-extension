@@ -43,6 +43,7 @@ import {
 import type { FeeConfig } from "@/types/tx.types";
 import { extSaveLocal } from "../extensionStorage";
 import { parseMinaExchangesConfig } from "@/utils/minaExchanges";
+import type { INFTIdentity } from "@/types/nft";
 
 // ============ Types ============
 
@@ -169,7 +170,7 @@ export async function sendParty(sendJson: unknown): Promise<unknown> {
   const variables = {
     zkappCommandInput: sendJson,
   };
-  const res = await startFetchMyMutation(txBody, variables as Record<string, unknown>);
+  const res = await startFetchMyMutation(txBody, variables);
   return res;
 }
 
@@ -289,6 +290,10 @@ export async function getRecommendFee(): Promise<FeeConfig> {
     }
   }
   return DEFAULT_FEE_CONFIG;
+}
+
+export async function getNFTAssets(): Promise<(INFTIdentity & { chain: string })[]> {
+  return [];
 }
 
 export async function refreshMinaExchanges(): Promise<void> {

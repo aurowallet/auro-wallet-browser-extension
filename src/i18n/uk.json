@@ -360,5 +360,18 @@
   "ledgerAccountMismatch": "Підключений обліковий запис Ledger не відповідає цьому обліковому запису гаманця.",
   "ledgerBusyTip": "Ledger зайнятий. Будь ласка, повторіть спробу.",
   "ledgerZkAppBlindSigningTip": "Будь ласка, увімкніть <b>Blind signing</b> на Ledger.",
-  "ledgerMode": "Режим Ledger"
+  "ledgerMode": "Режим Ledger",
+  "nftCollectionTransferFee": "Комісія за переказ колекції",
+  "nftCollectionFeeRecipient": "Отримувач комісії колекції",
+  "nftTotalDebit": "Усього до списання",
+  "nftCollection": "Колекція",
+  "nftCollectionContract": "Контракт колекції",
+  "nftAddress": "Адреса NFT",
+  "nftTokenId": "ID токена",
+  "nftCollectionName": "Назва колекції",
+  "nftAttributes": "Атрибути",
+  "showMore": "Показати більше",
+  "nftOwnedCount": "У власності: {{count}}",
+  "nftNotOwned": "Цей обліковий запис не володіє цим NFT.",
+  "nftTransferPermissionDenied": "Перевірте дозволи на передачу цього NFT"
 }

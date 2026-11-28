@@ -360,5 +360,18 @@
   "ledgerAccountMismatch": "Bağlı Ledger hesabı bu cüzdan hesabıyla eşleşmiyor.",
   "ledgerBusyTip": "Ledger meşgul. Lütfen tekrar deneyin.",
   "ledgerZkAppBlindSigningTip": "Lütfen Ledger'ınızda <b>Blind signing</b>'i açın.",
-  "ledgerMode": "Ledger modu"
+  "ledgerMode": "Ledger modu",
+  "nftCollectionTransferFee": "Koleksiyon transfer ücreti",
+  "nftCollectionFeeRecipient": "Koleksiyon ücreti alıcısı",
+  "nftTotalDebit": "Toplam tutar",
+  "nftCollection": "Koleksiyon",
+  "nftCollectionContract": "Koleksiyon sözleşmesi",
+  "nftAddress": "NFT adresi",
+  "nftTokenId": "Token kimliği",
+  "nftCollectionName": "Koleksiyon adı",
+  "nftAttributes": "Özellikler",
+  "showMore": "Daha fazla göster",
+  "nftOwnedCount": "Sahip olunan: {{count}}",
+  "nftNotOwned": "Bu hesap bu NFT’ye sahip değil.",
+  "nftTransferPermissionDenied": "Lütfen bu NFT’nin transfer izinlerini kontrol edin"
 }
